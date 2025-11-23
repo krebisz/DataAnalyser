@@ -13,7 +13,6 @@ namespace DataVisualiser
         private static readonly List<Color> _colors = new()
     {
         Colors.SlateBlue,
-        Colors.SteelBlue,
         Colors.MediumSeaGreen,
         Colors.IndianRed,
         Colors.DarkOrange,
@@ -23,7 +22,8 @@ namespace DataVisualiser
         Colors.Teal,
         Colors.Lavender,
         Colors.Firebrick,
-        Colors.Brown
+        Colors.Brown,
+        Colors.SteelBlue
     };
 
         private static readonly Dictionary<object, int> _chartColorIndex = new();

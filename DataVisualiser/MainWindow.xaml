@@ -2,17 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        Title="Health Data Viz" Height="1200" Width="1600" FontSize="10" Background="#FFD4CFCF">
+        Title="Health Data Viz" Height="1400" Width="1800" FontSize="10" Background="#FFD4CFCF">
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
             <Label Content="Resolution:" VerticalAlignment="Center" Margin="5,0" />
             <ComboBox x:Name="ResolutionCombo" Width="120" Margin="5" IsEditable="False" SelectionChanged="OnResolutionSelectionChanged" />
             <Label Content="Metric Type:" VerticalAlignment="Center" Margin="5,0" />
             <ComboBox x:Name="TablesCombo" Width="300" Margin="5" IsEditable="False" SelectionChanged="OnMetricTypeSelectionChanged" />
-            <Label Content="Metric Subtype:" VerticalAlignment="Center" Margin="5,0" />
-            <ComboBox x:Name="SubtypeCombo" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtypeSelectionChanged" IsEnabled="False" />
-            <Label Content="Metric Subtype 2:" VerticalAlignment="Center" Margin="5,0" />
-            <ComboBox x:Name="SubtypeCombo2" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtype2SelectionChanged" IsEnabled="False" />
+
             <Label Content="From:" VerticalAlignment="Center" Margin="5,0" />
             <DatePicker x:Name="FromDate" Margin="5" Width="150" />
             <Label Content="To:" VerticalAlignment="Center" Margin="5,0" />
@@ -21,7 +18,17 @@
             <Separator Margin="10,0" />
             <Button Content="Reset Zoom" Click="OnResetZoom" Margin="5" Padding="10,5" ToolTip="Reset zoom and pan to show all data" />
         </StackPanel>
-
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5" Name="MetricSubtypePanel">
+            <Label Content="Metric Subtype 1:" VerticalAlignment="Center" Margin="5,0" />
+            <ComboBox x:Name="SubtypeCombo" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtypeSelectionChanged" IsEnabled="False" />
+            <Label Content="Metric Subtype 2:" VerticalAlignment="Center" Margin="5,0" />
+            <!-- <ComboBox x:Name="SubtypeCombo2" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtype2SelectionChanged" IsEnabled="False" Visibility="Hidden" />
+            <Label Content="Metric Subtype 3:" VerticalAlignment="Center" Margin="5,0" />
+            <ComboBox x:Name="SubtypeCombo3" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtype3SelectionChanged" IsEnabled="False" Visibility="Hidden" />
+            <Label Content="Metric Subtype 4:" VerticalAlignment="Center" Margin="5,0" />
+            <ComboBox x:Name="SubtypeCombo4" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtype4SelectionChanged" IsEnabled="False" Visibility="Hidden" />-->
+            <Button Content="Add Subtype" Click="AddSubtypeComboBox" Margin="5" Padding="10,5" />
+        </StackPanel>
         <!-- Charts are placed in a vertically-stacked panel inside a ScrollViewer.
              Each chart has a TextBlock title above it that will be set from code-behind.
              The ScrollViewer allows vertical scrolling when combined chart heights exceed the window. -->

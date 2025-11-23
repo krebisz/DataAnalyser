@@ -1,4 +1,8 @@
-﻿using LiveCharts;
+﻿using DataVisualiser.Charts;
+using DataVisualiser.Charts.Strategies;
+using DataVisualiser.Class;
+using DataVisualiser.Helper;
+using LiveCharts;
 using LiveCharts.Wpf;
 using Microsoft.Data.SqlClient;
 using System;
@@ -10,10 +14,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using DataVisualiser.Class;
-using DataVisualiser.Helper;
-using DataVisualiser.Charts;
-using DataVisualiser.Charts.Strategies;
+using static Azure.Core.HttpHeader;
 
 
 
@@ -24,6 +25,9 @@ namespace DataVisualiser
     {
         private readonly ChartComputationEngine _chartComputationEngine;
         private readonly ChartRenderEngine _chartRenderEngine;
+
+        private SubtypeComboBoxManager _comboManager;
+
 
         private readonly string _connectionString;
         private bool _isLoadingMetricTypes = false;
@@ -40,10 +44,12 @@ namespace DataVisualiser
         private AxisSection? _verticalLineRatio;
 
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps = new();
+        List<string> subtypeList;
 
         public MainWindow()
         {
             InitializeComponent();
+            _comboManager = new SubtypeComboBoxManager(MetricSubtypePanel);
 
             _chartComputationEngine = new ChartComputationEngine();
             _chartRenderEngine = new ChartRenderEngine(
@@ -283,10 +289,14 @@ namespace DataVisualiser
 
 
             TablesCombo.Items.Clear();
+
+
+            _comboManager.ClearDynamic(keepFirstCount: 1);
+
             SubtypeCombo.Items.Clear();
             SubtypeCombo.IsEnabled = false;
-            SubtypeCombo2.Items.Clear();
-            SubtypeCombo2.IsEnabled = false;
+            //SubtypeCombo2.Items.Clear();
+            //SubtypeCombo2.IsEnabled = false;
 
 
             LoadMetricTypes();
@@ -325,8 +335,10 @@ namespace DataVisualiser
 
                     SubtypeCombo.Items.Clear();
                     SubtypeCombo.IsEnabled = false;
-                    SubtypeCombo2.Items.Clear();
-                    SubtypeCombo2.IsEnabled = false;
+                    //SubtypeCombo2.Items.Clear();
+                    //SubtypeCombo2.IsEnabled = false;
+
+                    _comboManager.ClearDynamic(keepFirstCount: 1);
                 }
             }
             catch (Exception ex)
@@ -372,6 +384,16 @@ namespace DataVisualiser
             await LoadDateRangeForSelectedMetrics();
         }
 
+        private async void OnSubtype3SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            await LoadDateRangeForSelectedMetrics();
+        }
+
+        private async void OnSubtype4SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            await LoadDateRangeForSelectedMetrics();
+        }
+
         private async Task LoadDateRangeForSelectedMetrics()
         {
             if (_isLoadingSubtypes || _isLoadingMetricTypes)
@@ -392,8 +414,9 @@ namespace DataVisualiser
             {
                 SubtypeCombo.Items.Clear();
                 SubtypeCombo.IsEnabled = false;
-                SubtypeCombo2.Items.Clear();
-                SubtypeCombo2.IsEnabled = false;
+                //SubtypeCombo2.Items.Clear();
+                //SubtypeCombo2.IsEnabled = false;
+                _comboManager.ClearDynamic(keepFirstCount: 1);
                 return;
             }
 
@@ -402,51 +425,80 @@ namespace DataVisualiser
             {
                 SubtypeCombo.Items.Clear();
                 SubtypeCombo.IsEnabled = false;
-                SubtypeCombo2.Items.Clear();
-                SubtypeCombo2.IsEnabled = false;
+                //SubtypeCombo2.Items.Clear();
+                //SubtypeCombo2.IsEnabled = false;
+                _comboManager.ClearDynamic(keepFirstCount: 1);
                 return;
             }
+
+
+            List<ComboBox> active = _comboManager.GetActiveComboBoxes();
 
             try
             {
                 _isLoadingSubtypes = true;
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 var dataFetcher = new DataFetcher(_connectionString);
-                var subtypes = await dataFetcher.GetSubtypesForBaseType(selectedMetricType, tableName);
+                IEnumerable<string> subtypes = await dataFetcher.GetSubtypesForBaseType(selectedMetricType, tableName);
 
                 SubtypeCombo.Items.Clear();
-                SubtypeCombo2.Items.Clear();
-                var subtypeList = subtypes.ToList();
+                //SubtypeCombo2.Items.Clear();
+                _comboManager.ClearDynamic(keepFirstCount: 1);
+                subtypeList = subtypes.ToList();
+
+
 
                 if (subtypeList.Count > 0)
                 {
 
                     SubtypeCombo.Items.Add("(All)");
-                    SubtypeCombo2.Items.Add("(All)");
+                    //SubtypeCombo2.Items.Add("(All)");
+
+                    //foreach (var combo in active)
+                    //{
+                    //combo.Items.Add("(All)");
+
                     foreach (var subtype in subtypeList)
                     {
+                        //combo.Items.Add(subtype);
                         SubtypeCombo.Items.Add(subtype);
-                        SubtypeCombo2.Items.Add(subtype);
                     }
+
+                    //combo.IsEnabled = true;
+                    //combo.SelectedIndex = 0;
+                    //}
+
                     SubtypeCombo.IsEnabled = true;
-                    SubtypeCombo2.IsEnabled = true;
+                    //SubtypeCombo2.IsEnabled = true;
                     SubtypeCombo.SelectedIndex = 0;
-                    SubtypeCombo2.SelectedIndex = 0;
+                    //SubtypeCombo2.SelectedIndex = 0;
                 }
                 else
                 {
 
                     SubtypeCombo.IsEnabled = false;
-                    SubtypeCombo2.IsEnabled = false;
+                    //SubtypeCombo2.IsEnabled = false;
+
+                    foreach (var combo in active)
+                    {
+                        combo.IsEnabled = false;
+                    }
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading subtypes for {selectedMetricType}: {ex.Message}");
                 SubtypeCombo.Items.Clear();
-                SubtypeCombo2.Items.Clear();
+                //SubtypeCombo2.Items.Clear();
                 SubtypeCombo.IsEnabled = false;
-                SubtypeCombo2.IsEnabled = false;
+                //SubtypeCombo2.IsEnabled = false;
+
+
+                foreach (var combo in active)
+                {
+                    combo.IsEnabled = false;
+                    combo.Items.Clear();
+                }
             }
             finally
             {
@@ -513,34 +565,21 @@ namespace DataVisualiser
                 return;
             }
 
-            var selectedMetricType = TablesCombo.SelectedItem.ToString();
+            string? selectedMetricType = TablesCombo.SelectedItem.ToString();
+
             if (string.IsNullOrEmpty(selectedMetricType))
             {
                 MessageBox.Show("Please select a valid MetricType", "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            List<ComboBox> active = _comboManager.GetActiveComboBoxes();
 
-            string? selectedSubtype = null;
-            if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
-            {
-                var subtypeValue = SubtypeCombo.SelectedItem.ToString();
-                if (!string.IsNullOrEmpty(subtypeValue) && subtypeValue != "(All)")
-                {
-                    selectedSubtype = subtypeValue;
-                }
-            }
-
-
-            string? selectedSubtype2 = null;
-            if (SubtypeCombo2.IsEnabled && SubtypeCombo2.SelectedItem != null)
-            {
-                var subtypeValue2 = SubtypeCombo2.SelectedItem.ToString();
-                if (!string.IsNullOrEmpty(subtypeValue2) && subtypeValue2 != "(All)")
-                {
-                    selectedSubtype2 = subtypeValue2;
-                }
-            }
+            string? selectedSubtype = ChartHelper.GetSubMetricType(SubtypeCombo);
+            //string? selectedSubtype2 = ChartHelper.GetSubMetricType(SubtypeCombo2);
+            // Get the first dynamic combo (excluding the static SubtypeCombo)
+            var dynamicCombo = active.FirstOrDefault(cb => cb != SubtypeCombo);
+            string? selectedSubtype2 = dynamicCombo != null ? ChartHelper.GetSubMetricType(dynamicCombo) : null;
 
 
             var display1 = !string.IsNullOrEmpty(selectedSubtype) ? selectedSubtype : selectedMetricType;
@@ -628,6 +667,20 @@ namespace DataVisualiser
             }
         }
 
+        private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
+        {
+            ComboBox newCombo = _comboManager.AddSubtypeComboBox();
+
+            foreach (var subtype in subtypeList)
+            {
+                newCombo.Items.Add(subtype);
+            }
+
+            newCombo.SelectionChanged += OnSubtypeSelectionChanged; // or dynamically choose
+            newCombo.SelectedIndex = 0;
+            newCombo.IsEnabled = true;
+        }
+
         #endregion
 
         #region Chart Configuration and Helper Methods
@@ -637,23 +690,9 @@ namespace DataVisualiser
         /// </summary>
         private void OnResetZoom(object sender, RoutedEventArgs e)
         {
-            if (ChartMain != null && ChartMain.AxisX.Count > 0)
-            {
-                ChartMain.AxisX[0].MinValue = double.NaN;
-                ChartMain.AxisX[0].MaxValue = double.NaN;
-            }
-
-            if (ChartDiff != null && ChartDiff.AxisX.Count > 0)
-            {
-                ChartDiff.AxisX[0].MinValue = double.NaN;
-                ChartDiff.AxisX[0].MaxValue = double.NaN;
-            }
-
-            if (ChartRatio != null && ChartRatio.AxisX.Count > 0)
-            {
-                ChartRatio.AxisX[0].MinValue = double.NaN;
-                ChartRatio.AxisX[0].MaxValue = double.NaN;
-            }
+            ChartHelper.ResetZoom(ref ChartMain);
+            ChartHelper.ResetZoom(ref ChartDiff);
+            ChartHelper.ResetZoom(ref ChartRatio);
         }
 
 
@@ -892,6 +931,10 @@ namespace DataVisualiser
         /// </summary>
         private void UpdateChartTitlesFromCombos()
         {
+            List<ComboBox> active = _comboManager.GetActiveComboBoxes();
+            // Get the first dynamic combo (excluding the static SubtypeCombo)
+            var SubtypeCombo2 = active.FirstOrDefault(cb => cb != SubtypeCombo);
+
             string[] titles = ChartHelper.GetChartTitlesFromCombos(TablesCombo, SubtypeCombo, SubtypeCombo2);
             string display1 = titles.Length > 0 ? titles[0] : string.Empty;
             string display2 = titles.Length > 1 ? titles[1] : string.Empty;

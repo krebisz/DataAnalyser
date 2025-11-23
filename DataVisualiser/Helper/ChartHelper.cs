@@ -47,7 +47,7 @@ namespace DataVisualiser.Helper
             };
         }
 
-        public static string[] GetChartTitlesFromCombos(ComboBox TablesCombo, ComboBox SubtypeCombo, ComboBox SubtypeCombo2)
+        public static string[] GetChartTitlesFromCombos(ComboBox TablesCombo, ComboBox SubtypeCombo, ComboBox? SubtypeCombo2)
         {
             var baseMetric = TablesCombo.SelectedItem?.ToString() ?? string.Empty;
 
@@ -63,7 +63,7 @@ namespace DataVisualiser.Helper
             }
 
             string display2;
-            if (SubtypeCombo2.IsEnabled && SubtypeCombo2.SelectedItem != null)
+            if (SubtypeCombo2 != null && SubtypeCombo2.IsEnabled && SubtypeCombo2.SelectedItem != null)
             {
                 var s2 = SubtypeCombo2.SelectedItem.ToString();
                 display2 = !string.IsNullOrEmpty(s2) && s2 != "(All)" ? s2 : baseMetric;
@@ -231,40 +231,6 @@ namespace DataVisualiser.Helper
             return _hoverTimestampText;
         }
 
-        public static TextBlock SetHoverMainText()
-        {
-            TextBlock _hoverMainText = new TextBlock
-            {
-                Foreground = Brushes.White,
-                Margin = new Thickness(6, 2, 6, 2)
-            };
-
-            return _hoverMainText;
-        }
-
-        public static TextBlock SetHoverDiffText()
-        {
-            TextBlock _hoverDiffText = new TextBlock
-            {
-                Foreground = Brushes.White,
-                Margin = new Thickness(6, 2, 6, 2)
-            };
-
-            return _hoverDiffText;
-        }
-
-        public static TextBlock SetHoverRatioText()
-        {
-            TextBlock _hoverRatioText = new TextBlock
-            {
-                Foreground = Brushes.White,
-                Margin = new Thickness(6, 2, 6, 2)
-            };
-
-            return _hoverRatioText;
-        }
-
-
         public static TextBlock SetHoverText(bool isBold = false)
         {
             TextBlock _hoverTimestampText = new TextBlock
@@ -303,6 +269,30 @@ namespace DataVisualiser.Helper
                     }
                 }
                 axisSection = null;
+            }
+        }
+
+        public static string? GetSubMetricType(ComboBox subMetricTypeCombo)
+        {
+            string? selectedSubtype = null;
+            if (subMetricTypeCombo.IsEnabled && subMetricTypeCombo.SelectedItem != null)
+            {
+                var subtypeValue = subMetricTypeCombo.SelectedItem.ToString();
+                if (!string.IsNullOrEmpty(subtypeValue) && subtypeValue != "(All)")
+                {
+                    selectedSubtype = subtypeValue;
+                }
+            }
+
+            return selectedSubtype;
+        }
+
+        public static void ResetZoom(ref CartesianChart chart)
+        {
+            if (chart != null && chart.AxisX.Count > 0)
+            {
+                chart.AxisX[0].MinValue = double.NaN;
+                chart.AxisX[0].MaxValue = double.NaN;
             }
         }
     }
