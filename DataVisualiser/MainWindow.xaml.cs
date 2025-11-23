@@ -14,68 +14,81 @@ using DataVisualiser.Class;
 using DataVisualiser.Helper;
 using System.Xml.Linq;
 
+
+using DataVisualiser.Charts;
+using DataVisualiser.Charts.Strategies;
+
+
+
+
 namespace DataVisualiser
 {
     public partial class MainWindow : Window
     {
+        private readonly ChartComputationEngine _chartComputationEngine;
+        private readonly ChartRenderEngine _chartRenderEngine;
+
         private readonly string _connectionString;
         private List<HealthMetricData> _currentData = new();
         private List<HealthMetricData> _currentData2 = new();
         private bool _isLoadingMetricTypes = false;
         private bool _isLoadingSubtypes = false;
 
-        // --- Hover / coordinated-line state ---
         private Popup? _sharedHoverPopup;
         private TextBlock? _hoverTimestampText;
         private TextBlock? _hoverMainText;
         private TextBlock? _hoverDiffText;
         private TextBlock? _hoverRatioText;
 
-        // Keep axis vertical line sections so we can remove/move them
         private AxisSection? _verticalLineMain;
         private AxisSection? _verticalLineDiff;
         private AxisSection? _verticalLineRatio;
 
-        // Map charts to their X-axis timestamp lists (index -> DateTime)
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps = new();
 
         public MainWindow()
         {
             InitializeComponent();
 
+            _chartComputationEngine = new ChartComputationEngine();
+            _chartRenderEngine = new ChartRenderEngine(
+                normalizeYAxisDelegate: (axis, rawData, smoothed) => NormalizeYAxis(axis, rawData, smoothed),
+                adjustHeightDelegate: (chart, minHeight) => AdjustChartHeightBasedOnYAxis(chart, minHeight)
+            );
+
+
             _connectionString = ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
 
             FromDate.SelectedDate = DateTime.UtcNow.AddDays(-30);
             ToDate.SelectedDate = DateTime.UtcNow;
 
-            // Initialize resolution dropdown
+
             ResolutionCombo.Items.Add("All");
             ResolutionCombo.Items.Add("Hourly");
             ResolutionCombo.Items.Add("Daily");
             ResolutionCombo.Items.Add("Weekly");
             ResolutionCombo.Items.Add("Monthly");
             ResolutionCombo.Items.Add("Yearly");
-            ResolutionCombo.SelectedItem = "All"; // Default selection
+            ResolutionCombo.SelectedItem = "All";
 
             LoadMetricTypes();
 
             ChartMain.Zoom = ZoomingOptions.X;
             ChartMain.Pan = PanningOptions.X;
 
-            // Initialize ChartDiff and ChartRatio so zoom/pan work and chart properties are consistent
+
             ChartDiff.Zoom = ZoomingOptions.X;
             ChartDiff.Pan = PanningOptions.X;
 
             ChartRatio.Zoom = ZoomingOptions.X;
             ChartRatio.Pan = PanningOptions.X;
 
-            // Ensure titles reflect initial selections (may be empty until types/subtypes loaded)
+
             UpdateChartTitlesFromCombos();
 
-            // Create the shared hover popup and wire events
             CreateSharedHoverPopup();
 
-            // Wire hover events on charts (LiveCharts DataHover provides ChartPoint)
+
             ChartMain.DataHover += OnChartDataHover;
             ChartDiff.DataHover += OnChartDataHover;
             ChartRatio.DataHover += OnChartDataHover;
@@ -85,7 +98,86 @@ namespace DataVisualiser
             ChartRatio.MouseLeave += OnChartMouseLeave;
         }
 
-        // Create a small popup to act as the shared toolbar showing timest amp + values
+        private async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0)
+        {
+            var result = await _chartComputationEngine.ComputeAsync(strategy);
+
+            if (result == null)
+            {
+                targetChart?.Series.Clear();
+                if (targetChart != null) _chartTimestamps.Remove(targetChart);
+                return;
+            }
+
+            var model = new ChartRenderModel
+            {
+                PrimarySeriesName = strategy.PrimaryLabel ?? primaryLabel,
+                SecondarySeriesName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
+                PrimaryRaw = result.PrimaryRawValues,
+                PrimarySmoothed = result.PrimarySmoothed,
+                SecondaryRaw = result.SecondaryRawValues,
+                SecondarySmoothed = result.SecondarySmoothed,
+                PrimaryColor = ColourPalette.Next(targetChart),
+                SecondaryColor = result.SecondaryRawValues != null && result.SecondarySmoothed != null
+                    ? ColourPalette.Next(targetChart)
+                    : Colors.Red,
+                Unit = result.Unit,
+                Timestamps = result.Timestamps,
+                IntervalIndices = result.IntervalIndices,
+                NormalizedIntervals = result.NormalizedIntervals,
+                TickInterval = result.TickInterval
+            };
+
+
+            try
+            {
+                _chartRenderEngine.Render(targetChart, model, minHeight);
+
+                _chartTimestamps[targetChart] = model.Timestamps;
+
+
+                if (targetChart.AxisY.Count > 0)
+                {
+                    var yAxis = targetChart.AxisY[0];
+
+                    var syntheticRawData = new List<HealthMetricData>();
+                    var timestamps = model.Timestamps;
+                    var primaryRaw = model.PrimaryRaw;
+                    for (int i = 0; i < timestamps.Count; i++)
+                    {
+                        var val = primaryRaw[i];
+                        syntheticRawData.Add(new HealthMetricData
+                        {
+                            NormalizedTimestamp = timestamps[i],
+                            Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
+                            Unit = model.Unit
+                        });
+                    }
+
+
+                    var smoothedList = model.PrimarySmoothed.ToList();
+                    if (model.SecondarySmoothed != null)
+                        smoothedList.AddRange(model.SecondarySmoothed);
+
+
+                    _chartRenderEngine.Render(targetChart, model, minHeight);
+
+
+                    NormalizeYAxis(targetChart.AxisY[0], syntheticRawData, smoothedList);
+
+
+                    AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
+
+                    if (targetChart.DataTooltip == null) targetChart.DataTooltip = new DefaultTooltip();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Chart update/render error: {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void CreateSharedHoverPopup()
         {
             _hoverTimestampText = ChartHelper.SetHoverText(true);
@@ -106,12 +198,11 @@ namespace DataVisualiser
                 Placement = PlacementMode.Mouse,
                 StaysOpen = true,
                 AllowsTransparency = true,
-                PlacementTarget = this // Attach to the window
+                PlacementTarget = this
             };
 
             return popup;
         }
-
 
         public StackPanel CreateStackPanel()
         {
@@ -135,18 +226,17 @@ namespace DataVisualiser
             return stack;
         }
 
-        // Called when LiveCharts reports DataHover on any chart
         private void OnChartDataHover(ChartPoint chartPoint)
         {
             if (chartPoint == null) return;
 
-            // Round X to nearest integer index used by our charts
+
             int index = (int)Math.Round(chartPoint.X);
 
-            // Determine and format timestamp (prefer ChartMain timestamps if available)
+
             string timestampText = GetTimestampTextForIndex(index);
 
-            // Gather values from each chart at the same index
+
             string mainValues = ChartHelper.GetChartValuesAtIndex(ChartMain, index);
             string diffValues = ChartHelper.GetChartValuesAtIndex(ChartDiff, index);
             string ratioValues = ChartHelper.GetChartValuesAtIndex(ChartRatio, index);
@@ -159,14 +249,14 @@ namespace DataVisualiser
             if (_sharedHoverPopup != null)
             {
                 if (!_sharedHoverPopup.IsOpen) _sharedHoverPopup.IsOpen = true;
-                // Force popup to update position when mouse moves
+
                 _sharedHoverPopup.HorizontalOffset = 0;
                 _sharedHoverPopup.VerticalOffset = 0;
-                _sharedHoverPopup.HorizontalOffset = 10; // Small offset to avoid cursor
+                _sharedHoverPopup.HorizontalOffset = 10;
                 _sharedHoverPopup.VerticalOffset = 10;
             }
 
-            // Add/move vertical black line for each chart at same index
+
             ChartHelper.UpdateVerticalLineForChart(ref ChartMain, index, ref _verticalLineMain);
             ChartHelper.UpdateVerticalLineForChart(ref ChartDiff, index, ref _verticalLineDiff);
             ChartHelper.UpdateVerticalLineForChart(ref ChartRatio, index, ref _verticalLineRatio);
@@ -177,7 +267,6 @@ namespace DataVisualiser
             ClearHoverVisuals();
         }
 
-        // Clear popup and remove vertical lines
         private void ClearHoverVisuals()
         {
             if (_sharedHoverPopup != null && _sharedHoverPopup.IsOpen) _sharedHoverPopup.IsOpen = false;
@@ -199,7 +288,7 @@ namespace DataVisualiser
 
             if (ts.HasValue)
             {
-                // Show a human friendly timestamp including date + time
+
                 return ts.Value.ToString("yyyy-MM-dd HH:mm:ss");
             }
 
@@ -214,14 +303,14 @@ namespace DataVisualiser
             if (ResolutionCombo.SelectedItem == null)
                 return;
 
-            // Clear current selections
+
             TablesCombo.Items.Clear();
             SubtypeCombo.Items.Clear();
             SubtypeCombo.IsEnabled = false;
             SubtypeCombo2.Items.Clear();
             SubtypeCombo2.IsEnabled = false;
 
-            // Reload MetricTypes from the newly selected table
+
             LoadMetricTypes();
         }
 
@@ -255,7 +344,7 @@ namespace DataVisualiser
                 }
                 else
                 {
-                    // Clear subtype dropdown if no metric types
+
                     SubtypeCombo.Items.Clear();
                     SubtypeCombo.IsEnabled = false;
                     SubtypeCombo2.Items.Clear();
@@ -310,11 +399,11 @@ namespace DataVisualiser
             if (_isLoadingSubtypes || _isLoadingMetricTypes)
                 return;
 
-            // Recalculate date range for primary selection. This keeps behavior predictable.
+
             await LoadDateRangeForSelectedMetric();
 
             UpdateChartTitlesFromCombos();
-        } 
+        }
 
         /// <summary>
         /// Loads subtypes for the currently selected metric type into the subtype combo boxes.
@@ -353,7 +442,7 @@ namespace DataVisualiser
 
                 if (subtypeList.Count > 0)
                 {
-                    // Add an option for "All" or "None" to show data without subtype filtering
+
                     SubtypeCombo.Items.Add("(All)");
                     SubtypeCombo2.Items.Add("(All)");
                     foreach (var subtype in subtypeList)
@@ -363,12 +452,12 @@ namespace DataVisualiser
                     }
                     SubtypeCombo.IsEnabled = true;
                     SubtypeCombo2.IsEnabled = true;
-                    SubtypeCombo.SelectedIndex = 0; // Select "(All)" by default
+                    SubtypeCombo.SelectedIndex = 0;
                     SubtypeCombo2.SelectedIndex = 0;
                 }
                 else
                 {
-                    // No subtypes available for this metric type
+
                     SubtypeCombo.IsEnabled = false;
                     SubtypeCombo2.IsEnabled = false;
                 }
@@ -403,7 +492,7 @@ namespace DataVisualiser
                 return;
             }
 
-            // Get selected subtype (if any) - uses first subtype combo as the primary reference
+
             string? selectedSubtype = null;
             if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
             {
@@ -453,7 +542,7 @@ namespace DataVisualiser
                 return;
             }
 
-            // Get selected subtype for chart 1 (if any)
+
             string? selectedSubtype = null;
             if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
             {
@@ -464,7 +553,7 @@ namespace DataVisualiser
                 }
             }
 
-            // Get selected subtype for chart 2 (if any)
+
             string? selectedSubtype2 = null;
             if (SubtypeCombo2.IsEnabled && SubtypeCombo2.SelectedItem != null)
             {
@@ -475,7 +564,7 @@ namespace DataVisualiser
                 }
             }
 
-            // Update titles immediately based on selection (use base metric when subtype is null)
+
             var display1 = !string.IsNullOrEmpty(selectedSubtype) ? selectedSubtype : selectedMetricType;
             var display2 = !string.IsNullOrEmpty(selectedSubtype2) ? selectedSubtype2 : selectedMetricType;
             SetChartTitles(display1, display2);
@@ -502,7 +591,7 @@ namespace DataVisualiser
                 var data1 = dataTask1.Result;
                 var data2 = dataTask2.Result;
 
-                // Update Chart 1 as before (single dataset view)
+
                 if (data1 == null || !data1.Any())
                 {
                     var subtypeText = !string.IsNullOrEmpty(selectedSubtype) ? $" and Subtype '{selectedSubtype}'" : "";
@@ -514,20 +603,23 @@ namespace DataVisualiser
                     var displayName = !string.IsNullOrEmpty(selectedSubtype) ? $"{selectedMetricType} - {selectedSubtype}" : selectedMetricType;
                 }
 
-                // For ChartMain, ChartDiff and ChartRatio: if both datasets exist, draw combined + diff + ratio; otherwise fallback
+
                 if ((data1 != null && data1.Any()) && (data2 != null && data2.Any()))
                 {
                     _currentData2 = data2.ToList();
                     var displayName1 = !string.IsNullOrEmpty(selectedSubtype) ? $"{selectedMetricType} - {selectedSubtype}" : selectedMetricType;
                     var displayName2 = !string.IsNullOrEmpty(selectedSubtype2) ? $"{selectedMetricType} - {selectedSubtype2}" : selectedMetricType;
 
-                    await UpdateCombinedChartAsync(ChartMain, data1, data2, displayName1, displayName2, from, to);
 
-                    // Update difference chart (raw + smoothed)
-                    await UpdateDifferenceChartAsync(ChartDiff, data1, data2, displayName1, displayName2, from, to);
+                    await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to), displayName1, displayName2);
 
-                    // Update ratio chart (raw ratio and smoothed ratio)
-                    await UpdateRatioChartAsync(ChartRatio, data1, data2, displayName1, displayName2, from, to);
+
+
+                    await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
+
+
+
+                    await UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
                 }
                 else if (data2 == null || !data2.Any())
                 {
@@ -537,20 +629,24 @@ namespace DataVisualiser
                     ChartDiff.Series.Clear();
                     ChartRatio.Series.Clear();
 
-                    // Remove timestamp mappings for cleared charts
+
                     _chartTimestamps.Remove(ChartMain);
                     _chartTimestamps.Remove(ChartDiff);
                     _chartTimestamps.Remove(ChartRatio);
                 }
                 else
                 {
-                    // Only data2 exists — single dataset rendering for ChartMain; clear diff & ratio
+
                     _currentData2 = data2.ToList();
                     var displayName2 = !string.IsNullOrEmpty(selectedSubtype2)
                         ? $"{selectedMetricType} - {selectedSubtype2}"
                         : selectedMetricType;
 
-                    await UpdateChartForAsync(ChartMain, _currentData2, displayName2, from, to);
+
+                    await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1, displayName2, from, to), displayName2);
+
+
+
                     ChartDiff.Series.Clear();
                     ChartRatio.Series.Clear();
 
@@ -569,28 +665,27 @@ namespace DataVisualiser
         /// </summary>
         private void OnResetZoom(object sender, RoutedEventArgs e)
         {
-            // Reset ChartMain X axis
+
             if (ChartMain != null && ChartMain.AxisX.Count > 0)
             {
                 ChartMain.AxisX[0].MinValue = double.NaN;
                 ChartMain.AxisX[0].MaxValue = double.NaN;
             }
 
-            // Reset difference chart X axis
+
             if (ChartDiff != null && ChartDiff.AxisX.Count > 0)
             {
                 ChartDiff.AxisX[0].MinValue = double.NaN;
                 ChartDiff.AxisX[0].MaxValue = double.NaN;
             }
 
-            // Reset ratio chart X axis
+
             if (ChartRatio != null && ChartRatio.AxisX.Count > 0)
             {
                 ChartRatio.AxisX[0].MinValue = double.NaN;
                 ChartRatio.AxisX[0].MaxValue = double.NaN;
             }
         }
-
 
         /// <summary>
         /// Updates the given chart with the retrieved data (async version to prevent UI freezing).
@@ -619,10 +714,10 @@ namespace DataVisualiser
                 var tickInterval = MathHelper.DetermineTickInterval(dateRange);
                 var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
 
-                // Generate normalized intervals for X-axis
+
                 var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(fromDate, toDate, tickInterval);
 
-                // Map each data point to its normalized interval index
+
                 var intervalIndices = rawTimestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
 
                 var smoothedData = MathHelper.CreateSmoothedData(orderedData, fromDate, toDate);
@@ -665,8 +760,8 @@ namespace DataVisualiser
                 var tickInterval = chartData.TickInterval;
                 var dateRange = chartData.DateRange;
 
-
-                var smoothedSeries = ChartHelper.CreateLineSeries($"{metricType} (Smoothed)", 5, 2, Colors.Blue);
+                //var smoothedSeries = ChartHelper.CreateLineSeries($"{metricType} (Smoothed)", 5, 2, Colors.Blue);
+                var smoothedSeries = ChartHelper.CreateLineSeries($"{metricType} (Smoothed)", 5, 2, ColourPalette.Next(targetChart));
 
                 foreach (var value in smoothedValues)
                 {
@@ -674,6 +769,7 @@ namespace DataVisualiser
                 }
 
                 var rawSeries = ChartHelper.CreateLineSeries($"{metricType} (Raw)", 3, 1, Colors.DarkGray);
+                //var rawSeries = ChartHelper.CreateLineSeries($"{metricType} (Raw)", 3, 1, ColourPalette.Next(targetChart));
 
                 foreach (var point in orderedData)
                 {
@@ -683,7 +779,7 @@ namespace DataVisualiser
                 AddSeriesToChart(targetChart, rawSeries);
                 AddSeriesToChart(targetChart, smoothedSeries);
 
-                // Store timestamps mapping for this chart (index -> DateTime)
+
                 _chartTimestamps[targetChart] = rawTimestamps;
 
                 if (targetChart.AxisX.Count > 0)
@@ -691,7 +787,7 @@ namespace DataVisualiser
                     var xAxis = targetChart.AxisX[0];
                     xAxis.Title = "Time";
 
-                    // Pre-calculate which data point indices should show labels (first occurrence of each interval)
+
                     var labelDataPointIndices = new HashSet<int>();
                     var seenIntervals = new HashSet<int>();
                     for (int i = 0; i < intervalIndices.Count; i++)
@@ -785,7 +881,7 @@ namespace DataVisualiser
                         {
                             yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(allValues.Min());
                             yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(allValues.Max());
-                            // provide a default step so around 10 ticks are shown
+
                             var fallbackStep = MathHelper.RoundToThreeSignificantDigits((allValues.Max() - allValues.Min()) / 10.0);
                             if (fallbackStep > 0 && !double.IsNaN(fallbackStep) && !double.IsInfinity(fallbackStep))
                                 yAxis.Separator = new LiveCharts.Wpf.Separator { Step = fallbackStep };
@@ -794,7 +890,7 @@ namespace DataVisualiser
                         }
                     }
 
-                    // Adjust chart height based on Y-axis tick count
+
                     double minHeight = targetChart == ChartMain ? 500.0 : 400.0;
                     AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
 
@@ -815,7 +911,6 @@ namespace DataVisualiser
         {
             chart.Series.Add(series);
         }
-
 
         /// <summary>
         /// Updates ChartMain with both datasets on a single shared axis.
@@ -844,7 +939,7 @@ namespace DataVisualiser
                 var dateRange = toDate - fromDate;
                 var tickInterval = MathHelper.DetermineTickInterval(dateRange);
 
-                // Combined sorted unique timestamps from both datasets
+
                 var combinedTimestamps = ordered1.Select(d => d.NormalizedTimestamp)
                     .Concat(ordered2.Select(d => d.NormalizedTimestamp))
                     .Distinct()
@@ -856,19 +951,19 @@ namespace DataVisualiser
 
                 var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(fromDate, toDate, tickInterval);
 
-                // Map each combined timestamp to interval index
+
                 var intervalIndices = combinedTimestamps.Select(ts =>
                     MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
 
-                // Smoothed and interpolated values per dataset aligned to combined timestamps
+
                 var smoothed1 = MathHelper.CreateSmoothedData(ordered1, fromDate, toDate);
                 var smoothed2 = MathHelper.CreateSmoothedData(ordered2, fromDate, toDate);
 
                 var interpSmoothed1 = MathHelper.InterpolateSmoothedData(smoothed1, combinedTimestamps);
                 var interpSmoothed2 = MathHelper.InterpolateSmoothedData(smoothed2, combinedTimestamps);
 
-                // Build raw values aligned to combined timestamps (missing -> NaN)
-                // Group by timestamp and take the first value if duplicates exist to avoid ToDictionary exception
+
+
                 var dict1 = ordered1.GroupBy(d => d.NormalizedTimestamp)
                     .ToDictionary(g => g.Key, g => (double)g.First().Value!.Value);
                 var dict2 = ordered2.GroupBy(d => d.NormalizedTimestamp)
@@ -920,7 +1015,8 @@ namespace DataVisualiser
                 var rawValues2 = chartData.RawValues2;
                 var tickInterval = chartData.TickInterval;
 
-                var smoothedSeries1 = ChartHelper.CreateLineSeries($"{chartData.Label1} (Smoothed)", 5, 2, Colors.Blue);
+                //var smoothedSeries1 = ChartHelper.CreateLineSeries($"{chartData.Label1} (Smoothed)", 5, 2, Colors.Blue);
+                var smoothedSeries1 = ChartHelper.CreateLineSeries($"{chartData.Label1}  (Smoothed)", 5, 2, ColourPalette.Next(targetChart));
 
                 foreach (var v in interpSmoothed1) smoothedSeries1.Values.Add(v);
 
@@ -928,21 +1024,22 @@ namespace DataVisualiser
 
                 foreach (var v in rawValues1) rawSeries1.Values.Add(v);
 
-                var smoothedSeries2 = ChartHelper.CreateLineSeries($"{chartData.Label2} (Smoothed)", 5, 2, Colors.Red);
+                //var smoothedSeries2 = ChartHelper.CreateLineSeries($"{chartData.Label2} (Smoothed)", 5, 2, Colors.Red);
+                var smoothedSeries2 = ChartHelper.CreateLineSeries($"{chartData.Label2}  (Smoothed)", 5, 2, ColourPalette.Next(targetChart));
 
                 foreach (var v in interpSmoothed2) smoothedSeries2.Values.Add(v);
 
-                var rawSeries2 = ChartHelper.CreateLineSeries($"{chartData.Label2} (Raw)", 3, 1, Colors.Orange);
+                var rawSeries2 = ChartHelper.CreateLineSeries($"{chartData.Label2} (Raw)", 3, 1, Colors.DarkGray);
 
                 foreach (var v in rawValues2) rawSeries2.Values.Add(v);
 
-                // Add series to chart in a sensible order (smoothed then raw)
+
                 targetChart.Series.Add(smoothedSeries1);
                 targetChart.Series.Add(rawSeries1);
                 targetChart.Series.Add(smoothedSeries2);
                 targetChart.Series.Add(rawSeries2);
 
-                // Store combined timestamps mapping for this chart
+
                 _chartTimestamps[targetChart] = combinedTimestamps;
 
                 if (targetChart.AxisX.Count > 0)
@@ -950,7 +1047,7 @@ namespace DataVisualiser
                     var xAxis = targetChart.AxisX[0];
                     xAxis.Title = "Time";
 
-                    // Pre-calculate which data point indices should show labels (first occurrence of each interval)
+
                     var labelDataPointIndices = new HashSet<int>();
                     var seenIntervals = new HashSet<int>();
                     for (int i = 0; i < intervalIndices.Count; i++)
@@ -1025,7 +1122,7 @@ namespace DataVisualiser
                     xAxis.MaxValue = double.NaN;
                 }
 
-                // Normalize Y-axis across both datasets: combine raw points and smoothed values
+
                 var combinedRawData = chartData.Ordered1.Concat(chartData.Ordered2).ToList();
                 var combinedSmoothed = interpSmoothed1.Concat(interpSmoothed2).ToList();
 
@@ -1057,7 +1154,7 @@ namespace DataVisualiser
                         }
                     }
 
-                    // Adjust chart height based on Y-axis tick count
+
                     double minHeight = targetChart == ChartMain ? 500.0 : 400.0;
                     AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
 
@@ -1101,7 +1198,7 @@ namespace DataVisualiser
                 var dateRange = toDate - fromDate;
                 var tickInterval = MathHelper.DetermineTickInterval(dateRange);
 
-                // Combined sorted unique timestamps from both datasets
+
                 var combinedTimestamps = ordered1.Select(d => d.NormalizedTimestamp)
                     .Concat(ordered2.Select(d => d.NormalizedTimestamp))
                     .Distinct()
@@ -1113,18 +1210,18 @@ namespace DataVisualiser
 
                 var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(fromDate, toDate, tickInterval);
 
-                // Map each combined timestamp to interval index
+
                 var intervalIndices = combinedTimestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
 
-                // Smoothed and interpolated values per dataset aligned to combined timestamps
+
                 var smoothed1 = MathHelper.CreateSmoothedData(ordered1, fromDate, toDate);
                 var smoothed2 = MathHelper.CreateSmoothedData(ordered2, fromDate, toDate);
 
                 var interpSmoothed1 = MathHelper.InterpolateSmoothedData(smoothed1, combinedTimestamps);
                 var interpSmoothed2 = MathHelper.InterpolateSmoothedData(smoothed2, combinedTimestamps);
 
-                // Build raw values aligned to combined timestamps (missing -> NaN)
-                // Group by timestamp and take the first value if duplicates exist to avoid ToDictionary exception
+
+
                 var dict1 = ordered1.GroupBy(d => d.NormalizedTimestamp)
                     .ToDictionary(g => g.Key, g => (double)g.First().Value!.Value);
                 var dict2 = ordered2.GroupBy(d => d.NormalizedTimestamp)
@@ -1133,7 +1230,7 @@ namespace DataVisualiser
                 var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).ToList();
                 var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
 
-                // Differences (raw and smoothed)
+
                 var rawDiffs = MathHelper.ReturnValueDifferences(rawValues1, rawValues2);
                 var smoothedDiffs = MathHelper.ReturnValueDifferences(interpSmoothed1, interpSmoothed2);
 
@@ -1173,7 +1270,8 @@ namespace DataVisualiser
                 var smoothedDiffs = chartData.SmoothedDiffs;
                 var tickInterval = chartData.TickInterval;
 
-                var smoothedSeries = ChartHelper.CreateLineSeries($"Difference (Smoothed)", 5, 2, Colors.Purple);
+                //var smoothedSeries = ChartHelper.CreateLineSeries($"Difference (Smoothed)", 5, 2, Colors.Purple);
+                var smoothedSeries = ChartHelper.CreateLineSeries($"Difference (Smoothed)", 5, 2, ColourPalette.Next(targetChart));
 
                 if (smoothedDiffs != null)
                 {
@@ -1191,7 +1289,7 @@ namespace DataVisualiser
                 targetChart.Series.Add(smoothedSeries);
                 targetChart.Series.Add(rawSeries);
 
-                // store timestamps mapping for this chart
+
                 _chartTimestamps[targetChart] = combinedTimestamps;
 
                 if (targetChart.AxisX.Count > 0)
@@ -1199,7 +1297,7 @@ namespace DataVisualiser
                     var xAxis = targetChart.AxisX[0];
                     xAxis.Title = "Time";
 
-                    // Pre-calculate which data point indices should show labels (first occurrence of each interval)
+
                     var labelDataPointIndices = new HashSet<int>();
                     var seenIntervals = new HashSet<int>();
                     for (int i = 0; i < intervalIndices.Count; i++)
@@ -1274,7 +1372,7 @@ namespace DataVisualiser
                     xAxis.MaxValue = double.NaN;
                 }
 
-                // Build synthetic rawData list for axis normalization function
+
                 var syntheticRawData = new List<HealthMetricData>();
                 for (int i = 0; i < combinedTimestamps.Count; i++)
                 {
@@ -1315,7 +1413,7 @@ namespace DataVisualiser
                         }
                     }
 
-                    // Adjust chart height based on Y-axis tick count
+
                     AdjustChartHeightBasedOnYAxis(targetChart, 400.0);
 
                     if (targetChart.DataTooltip == null)
@@ -1358,7 +1456,7 @@ namespace DataVisualiser
                 var dateRange = toDate - fromDate;
                 var tickInterval = MathHelper.DetermineTickInterval(dateRange);
 
-                // Combined sorted unique timestamps from both datasets
+
                 var combinedTimestamps = ordered1.Select(d => d.NormalizedTimestamp)
                     .Concat(ordered2.Select(d => d.NormalizedTimestamp))
                     .Distinct()
@@ -1370,19 +1468,19 @@ namespace DataVisualiser
 
                 var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(fromDate, toDate, tickInterval);
 
-                // Map each combined timestamp to interval index
+
                 var intervalIndices = combinedTimestamps.Select(ts =>
                     MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
 
-                // Smoothed and interpolated values per dataset aligned to combined timestamps
+
                 var smoothed1 = MathHelper.CreateSmoothedData(ordered1, fromDate, toDate);
                 var smoothed2 = MathHelper.CreateSmoothedData(ordered2, fromDate, toDate);
 
                 var interpSmoothed1 = MathHelper.InterpolateSmoothedData(smoothed1, combinedTimestamps);
                 var interpSmoothed2 = MathHelper.InterpolateSmoothedData(smoothed2, combinedTimestamps);
 
-                // Build raw values aligned to combined timestamps (missing -> NaN)
-                // Group by timestamp and take the first value if duplicates exist to avoid ToDictionary exception
+
+
                 var dict1 = ordered1.GroupBy(d => d.NormalizedTimestamp)
                     .ToDictionary(g => g.Key, g => (double)g.First().Value!.Value);
                 var dict2 = ordered2.GroupBy(d => d.NormalizedTimestamp)
@@ -1391,7 +1489,7 @@ namespace DataVisualiser
                 var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).ToList();
                 var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
 
-                // Ratios (raw and smoothed). Guard against divide-by-zero and NaN
+
                 var rawRatios = MathHelper.ReturnValueRatios(rawValues1, rawValues2);
                 var smoothedRatios = MathHelper.ReturnValueRatios(interpSmoothed1, interpSmoothed2);
 
@@ -1436,7 +1534,8 @@ namespace DataVisualiser
                 var tickInterval = chartData.TickInterval;
 
 
-                var smoothedSeries = ChartHelper.CreateLineSeries($"Ratio (Smoothed)", 5, 2, Colors.DarkGreen);
+                //var smoothedSeries = ChartHelper.CreateLineSeries($"Ratio (Smoothed)", 5, 2, Colors.DarkGreen);
+                var smoothedSeries = ChartHelper.CreateLineSeries($"Ratio (Smoothed)", 5, 2, ColourPalette.Next(targetChart));
 
                 foreach (var v in smoothedRatios) smoothedSeries.Values.Add(v);
 
@@ -1448,7 +1547,7 @@ namespace DataVisualiser
                 targetChart.Series.Add(smoothedSeries);
                 targetChart.Series.Add(rawSeries);
 
-                // store timestamps mapping for this chart
+
                 _chartTimestamps[targetChart] = combinedTimestamps;
 
                 if (targetChart.AxisX.Count > 0)
@@ -1530,7 +1629,7 @@ namespace DataVisualiser
                     xAxis.MaxValue = double.NaN;
                 }
 
-                // Build synthetic rawData list for axis normalization function
+
                 var syntheticRawData = new List<HealthMetricData>();
                 for (int i = 0; i < combinedTimestamps.Count; i++)
                 {
@@ -1571,7 +1670,7 @@ namespace DataVisualiser
                         }
                     }
 
-                    // Adjust chart height based on Y-axis tick count
+
                     AdjustChartHeightBasedOnYAxis(targetChart, 400.0);
 
                     if (targetChart.DataTooltip == null)
@@ -1612,7 +1711,7 @@ namespace DataVisualiser
 
             if (!allValues.Any())
             {
-                // Leave axis defaults if there's no data
+
                 yAxis.MinValue = double.NaN;
                 yAxis.MaxValue = double.NaN;
                 yAxis.Separator = new LiveCharts.Wpf.Separator();
@@ -1636,11 +1735,11 @@ namespace DataVisualiser
             double maxValue = dataMax;
             double range = maxValue - minValue;
 
-            // If all values are equal, provide a small symmetric padding (or absolute padding for zero)
+
             if (range <= double.Epsilon)
             {
-                double padding = Math.Max(Math.Abs(minValue) * 0.1, 1e-3); // 0.1x value or small absolute
-                // If value is zero, choose a sensible default window
+                double padding = Math.Max(Math.Abs(minValue) * 0.1, 1e-3);
+
                 if (Math.Abs(minValue) < 1e-6)
                 {
                     minValue = -padding;
@@ -1652,7 +1751,7 @@ namespace DataVisualiser
                     maxValue = maxValue + padding;
                     if (dataMin >= 0)
                     {
-                        // keep floor at zero if all data non-negative but allow a small gap for readability
+
                         minValue = Math.Max(0, minValue);
                     }
                 }
@@ -1661,12 +1760,12 @@ namespace DataVisualiser
             }
             else
             {
-                // Add small proportional padding for readability (5%)
+
                 double padding = range * 0.05;
                 minValue -= padding;
                 maxValue += padding;
 
-                // Avoid tiny negatives when data are strictly positive: keep min >= 0 if it was non-negative originally but allow small gap
+
                 if (dataMin >= 0)
                 {
                     minValue = Math.Max(0, minValue);
@@ -1675,7 +1774,7 @@ namespace DataVisualiser
                 range = maxValue - minValue;
             }
 
-            // Target ~10 ticks
+
             const double targetTicks = 10.0;
             double rawTickInterval = range / targetTicks;
             if (rawTickInterval <= 0 || double.IsNaN(rawTickInterval) || double.IsInfinity(rawTickInterval))
@@ -1689,7 +1788,7 @@ namespace DataVisualiser
                 return;
             }
 
-            // Choose a "nice" interval (1,2,5 * magnitude)
+
             double magnitude;
             try
             {
@@ -1714,15 +1813,15 @@ namespace DataVisualiser
             if (niceInterval <= 0 || double.IsNaN(niceInterval) || double.IsInfinity(niceInterval))
                 niceInterval = rawTickInterval;
 
-            // Round axis bounds to multiples of the interval and add one extra interval of padding
+
             var niceMin = Math.Floor(minValue / niceInterval) * niceInterval;
             var niceMax = Math.Ceiling(maxValue / niceInterval) * niceInterval;
 
-            // Small extra margin so highest/lowest points aren't pinned to edge
+
             niceMin -= niceInterval * 0.0;
             niceMax += niceInterval * 0.0;
 
-            // If original data are all non-negative, avoid negative axis minimum
+
             if (dataMin >= 0 && niceMin < 0)
             {
                 niceMin = 0;
@@ -1731,7 +1830,7 @@ namespace DataVisualiser
             yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(niceMin);
             yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(niceMax);
 
-            // Ensure separator step approximately yields targetTicks
+
             double step = MathHelper.RoundToThreeSignificantDigits(niceInterval);
             if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
             {
@@ -1754,11 +1853,11 @@ namespace DataVisualiser
 
             var yAxis = chart.AxisY[0];
 
-            // Check if Y-axis has valid values (MinValue/MaxValue are double, can be NaN for auto)
+
             if (double.IsNaN(yAxis.MinValue) || double.IsNaN(yAxis.MaxValue) ||
                 double.IsInfinity(yAxis.MinValue) || double.IsInfinity(yAxis.MaxValue))
             {
-                // Use minimum height if axis is not properly configured
+
                 chart.Height = minHeight;
                 return;
             }
@@ -1767,10 +1866,10 @@ namespace DataVisualiser
             double maxValue = yAxis.MaxValue;
             double step = yAxis.Separator?.Step ?? 0;
 
-            // If step is invalid, try to calculate from min/max
+
             if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
             {
-                // Fallback: assume ~10 ticks
+
                 step = (maxValue - minValue) / 10.0;
                 if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
                 {
@@ -1779,25 +1878,25 @@ namespace DataVisualiser
                 }
             }
 
-            // Calculate number of ticks
-            // Number of intervals = (max - min) / step, number of ticks = intervals + 1
+
+
             double range = maxValue - minValue;
             int tickCount = (int)Math.Ceiling(range / step) + 1;
 
-            // Ensure at least 2 ticks
+
             tickCount = Math.Max(2, tickCount);
 
-            // Calculate height based on tick spacing (target 30px per tick, range 20-40px)
-            // Use 30px as average spacing for calculation
+
+
             const double tickSpacingPx = 30.0;
-            const double paddingPx = 100.0; // Padding for margins, axis labels, legend, etc.
+            const double paddingPx = 100.0;
 
             double calculatedHeight = (tickCount * tickSpacingPx) + paddingPx;
 
-            // Ensure height is at least the minimum
+
             calculatedHeight = Math.Max(minHeight, calculatedHeight);
 
-            // Set a reasonable maximum to prevent runaway growth (e.g., 2000px)
+
             const double maxHeight = 2000.0;
             calculatedHeight = Math.Min(maxHeight, calculatedHeight);
 
@@ -1809,7 +1908,7 @@ namespace DataVisualiser
         /// </summary>
         private void SetChartTitles(string leftName, string rightName)
         {
-            // Defensive null checks
+
             leftName ??= string.Empty;
             rightName ??= string.Empty;
 
@@ -1824,7 +1923,7 @@ namespace DataVisualiser
         /// </summary>
         private void UpdateChartTitlesFromCombos()
         {
-            // Fix: Use array assignment to unpack the result of UpdateChartTitlesFromCombos
+
             string[] titles = ChartHelper.GetChartTitlesFromCombos(TablesCombo, SubtypeCombo, SubtypeCombo2);
             string display1 = titles.Length > 0 ? titles[0] : string.Empty;
             string display2 = titles.Length > 1 ? titles[1] : string.Empty;
@@ -1834,7 +1933,7 @@ namespace DataVisualiser
 
         private void OnChartDataHover(object? sender, ChartPoint chartPoint)
         {
-            // Delegate to the existing handler so both possible DataHoverHandler signatures are supported.
+
             OnChartDataHover(chartPoint);
         }
     }

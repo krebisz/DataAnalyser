@@ -1,0 +1,49 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Windows.Media;
+
+namespace DataVisualiser
+{
+    public static class ColourPalette
+    {
+        private static readonly List<Color> _colors = new()
+    {
+        Colors.SlateBlue,
+        Colors.SteelBlue,
+        Colors.MediumSeaGreen,
+        Colors.IndianRed,
+        Colors.DarkOrange,
+        Colors.MediumPurple,
+        Colors.CadetBlue,
+        Colors.Goldenrod,
+        Colors.Teal,
+        Colors.Lavender,
+        Colors.Firebrick,
+        Colors.Brown
+    };
+
+        private static readonly Dictionary<object, int> _chartColorIndex = new();
+
+        public static Color Next(object chart)
+        {
+            if (!_chartColorIndex.ContainsKey(chart))
+                _chartColorIndex[chart] = 0;
+
+            int index = _chartColorIndex[chart];
+            Color color = _colors[index];
+
+            _chartColorIndex[chart] = (index + 1) % _colors.Count;
+            return color;
+        }
+
+        public static void Reset(object chart)
+        {
+            if (_chartColorIndex.ContainsKey(chart))
+                _chartColorIndex[chart] = 0;
+        }
+    }
+}
