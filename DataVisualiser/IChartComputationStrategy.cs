@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace DataVisualiser.Charts
+﻿namespace DataVisualiser.Charts
 {
     public interface IChartComputationStrategy
     {

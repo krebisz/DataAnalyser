@@ -1,20 +1,13 @@
 ﻿using DataVisualiser.Charts;
-using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Class;
 using DataVisualiser.Helper;
 using LiveCharts;
 using LiveCharts.Wpf;
-using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using static Azure.Core.HttpHeader;
 
 
 

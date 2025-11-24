@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Dapper;
+using DataVisualiser.Class;
+using Microsoft.Data.SqlClient;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Dapper;
-using Microsoft.Data.SqlClient;
-using DataVisualiser.Class;
 
 namespace DataVisualiser.Helper
 {

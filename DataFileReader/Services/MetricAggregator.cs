@@ -1,6 +1,5 @@
 ﻿using DataFileReader.Class;
 using DataFileReader.Helper;
-using Microsoft.Extensions.Logging;
 
 namespace DataFileReader.Services;
 

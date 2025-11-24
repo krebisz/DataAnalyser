@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace DataVisualiser.Charts
+﻿namespace DataVisualiser.Charts
 {
     public sealed class ChartComputationResult
     {

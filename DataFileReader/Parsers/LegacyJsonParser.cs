@@ -1,5 +1,4 @@
-﻿using DataFileReader;
-using DataFileReader.Class;
+﻿using DataFileReader.Class;
 using DataFileReader.Helper;
 using DataFileReader.Parsers;
 using Newtonsoft.Json.Linq;

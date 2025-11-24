@@ -1,12 +1,6 @@
 ﻿using DataVisualiser.Class;
 using LiveCharts;
 using LiveCharts.Wpf;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -237,7 +231,7 @@ namespace DataVisualiser.Helper
             TextBlock _hoverTimestampText = new TextBlock
             {
                 Foreground = Brushes.White,
-                FontWeight = isBold? FontWeights.Bold : FontWeights.Normal,
+                FontWeight = isBold ? FontWeights.Bold : FontWeights.Normal,
                 Margin = new Thickness(6, 2, 6, 4)
             };
 
@@ -550,4 +544,4 @@ namespace DataVisualiser.Helper
             chart.Height = calculatedHeight;
         }
     }
-}   
+}

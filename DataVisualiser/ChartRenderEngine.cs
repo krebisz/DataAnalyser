@@ -1,9 +1,6 @@
 ﻿using DataVisualiser.Class;
 using DataVisualiser.Helper;
-using LiveCharts;
 using LiveCharts.Wpf;
-using System;
-using System.Linq;
 using System.Windows.Media;
 
 namespace DataVisualiser.Charts

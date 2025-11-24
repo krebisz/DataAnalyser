@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace DataVisualiser.Charts.Strategies
+﻿namespace DataVisualiser.Charts.Strategies
 {
-    using DataVisualiser; // for HealthMetricData
     using DataVisualiser.Class;
     using DataVisualiser.Helper;
 

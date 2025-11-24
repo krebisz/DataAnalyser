@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace DataVisualiser.Charts
+﻿namespace DataVisualiser.Charts
 {
     /// <summary>
     /// Pure computation engine — executes strategy Compute() on a background thread and returns the result.

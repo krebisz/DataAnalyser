@@ -1,18 +1,17 @@
 using DataFileReader.App;
 using DataFileReader.Parsers;
 using DataFileReader.Services;
-using Microsoft.Extensions.Logging;
 
 internal class Program
 {
     static void Main(string[] args)
     {
-    var parsers = new IHealthFileParser[]
-        {
+        var parsers = new IHealthFileParser[]
+            {
             new SamsungJsonParser(),
             new SamsungCsvParser(),
             new LegacyJsonParser()
-        };
+            };
 
         var aggregator = new MetricAggregator();
         var fileProcessor = new FileProcessingService(parsers);

@@ -1,9 +1,8 @@
 ﻿using DataFileReader.Class;
-using System.Collections.Generic;
+using Newtonsoft.Json;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace DataFileReader.Helper;
 
