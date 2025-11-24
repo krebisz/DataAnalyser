@@ -20,7 +20,7 @@
         </StackPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5" Name="MetricSubtypePanel">
             <Label Content="Metric Subtype 1:" VerticalAlignment="Center" Margin="5,0" />
-            <ComboBox x:Name="SubtypeCombo" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtypeSelectionChanged" IsEnabled="False" />
+            <ComboBox x:Name="SubtypeCombo" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnAnySubtypeSelectionChanged" IsEnabled="False" />
             <Label Content="Metric Subtype 2:" VerticalAlignment="Center" Margin="5,0" />
             <!-- <ComboBox x:Name="SubtypeCombo2" Width="250" Margin="5" IsEditable="False" SelectionChanged="OnSubtype2SelectionChanged" IsEnabled="False" Visibility="Hidden" />
             <Label Content="Metric Subtype 3:" VerticalAlignment="Center" Margin="5,0" />

@@ -369,27 +369,10 @@ namespace DataVisualiser
         }
 
         /// <summary>
-        /// Event handler for MetricSubtype selection change - updates date range to match data availability.
+        /// Generalized event handler for any MetricSubtype ComboBox selection change - updates date range to match data availability.
+        /// This handler is used by all subtype ComboBoxes (both static and dynamically added).
         /// </summary>
-        private async void OnSubtypeSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            await LoadDateRangeForSelectedMetrics();
-        }
-
-        /// <summary>
-        /// Event handler for second MetricSubtype selection change - updates date range (recalculate) if needed.
-        /// </summary>
-        private async void OnSubtype2SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            await LoadDateRangeForSelectedMetrics();
-        }
-
-        private async void OnSubtype3SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            await LoadDateRangeForSelectedMetrics();
-        }
-
-        private async void OnSubtype4SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private async void OnAnySubtypeSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             await LoadDateRangeForSelectedMetrics();
         }
@@ -676,7 +659,7 @@ namespace DataVisualiser
                 newCombo.Items.Add(subtype);
             }
 
-            newCombo.SelectionChanged += OnSubtypeSelectionChanged; // or dynamically choose
+            newCombo.SelectionChanged += OnAnySubtypeSelectionChanged;
             newCombo.SelectedIndex = 0;
             newCombo.IsEnabled = true;
         }
