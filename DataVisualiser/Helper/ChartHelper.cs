@@ -1,4 +1,5 @@
-﻿using LiveCharts;
+﻿using DataVisualiser.Class;
+using LiveCharts;
 using LiveCharts.Wpf;
 using System;
 using System.Collections;
@@ -294,6 +295,259 @@ namespace DataVisualiser.Helper
                 chart.AxisX[0].MinValue = double.NaN;
                 chart.AxisX[0].MaxValue = double.NaN;
             }
+        }
+
+        /// <summary>
+        /// Initializes common chart behavior settings (zoom and pan options).
+        /// </summary>
+        public static void InitializeChartBehavior(CartesianChart chart)
+        {
+            if (chart == null) return;
+            chart.Zoom = ZoomingOptions.X;
+            chart.Pan = PanningOptions.X;
+        }
+
+        /// <summary>
+        /// Clears all series from a chart and removes it from the timestamps dictionary.
+        /// </summary>
+        public static void ClearChart(CartesianChart? chart, Dictionary<CartesianChart, List<DateTime>>? chartTimestamps = null)
+        {
+            if (chart == null) return;
+            chart.Series.Clear();
+            chartTimestamps?.Remove(chart);
+        }
+
+        /// <summary>
+        /// Initializes the default tooltip for a chart if it doesn't already have one.
+        /// </summary>
+        public static void InitializeChartTooltip(CartesianChart chart)
+        {
+            if (chart == null) return;
+            if (chart.DataTooltip == null)
+                chart.DataTooltip = new DefaultTooltip();
+        }
+
+        /// <summary>
+        /// Gets the timestamp text for a given index from a chart's timestamp dictionary.
+        /// </summary>
+        public static string GetTimestampTextForIndex(int index, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, params CartesianChart[] charts)
+        {
+            foreach (var chart in charts)
+            {
+                if (chartTimestamps.TryGetValue(chart, out var list) && index >= 0 && index < list.Count)
+                {
+                    return list[index].ToString("yyyy-MM-dd HH:mm:ss");
+                }
+            }
+            return "Timestamp: N/A";
+        }
+
+        /// <summary>
+        /// Positions a hover popup with standard offsets.
+        /// </summary>
+        public static void PositionHoverPopup(Popup popup, double horizontalOffset = 10, double verticalOffset = 10)
+        {
+            if (popup == null) return;
+            if (!popup.IsOpen) popup.IsOpen = true;
+            popup.HorizontalOffset = 0;
+            popup.VerticalOffset = 0;
+            popup.HorizontalOffset = horizontalOffset;
+            popup.VerticalOffset = verticalOffset;
+        }
+
+        /// <summary>
+        /// Normalizes Y-axis ticks to show uniform intervals (~10 ticks) with rounded bounds.
+        /// </summary>
+        public static void NormalizeYAxis(Axis yAxis, List<HealthMetricData> rawData, List<double> smoothedValues)
+        {
+            var allValues = new List<double>();
+
+            foreach (var point in rawData)
+            {
+                if (point.Value.HasValue)
+                {
+                    allValues.Add((double)point.Value.Value);
+                }
+            }
+
+            foreach (var value in smoothedValues)
+            {
+                if (!double.IsNaN(value) && !double.IsInfinity(value))
+                {
+                    allValues.Add(value);
+                }
+            }
+
+            if (!allValues.Any())
+            {
+                yAxis.MinValue = double.NaN;
+                yAxis.MaxValue = double.NaN;
+                yAxis.Separator = new LiveCharts.Wpf.Separator();
+                yAxis.ShowLabels = false;
+                return;
+            }
+
+            double dataMin = allValues.Min();
+            double dataMax = allValues.Max();
+
+            if (double.IsNaN(dataMin) || double.IsNaN(dataMax) || double.IsInfinity(dataMin) || double.IsInfinity(dataMax))
+            {
+                yAxis.MinValue = double.NaN;
+                yAxis.MaxValue = double.NaN;
+                yAxis.Separator = new LiveCharts.Wpf.Separator();
+                yAxis.ShowLabels = false;
+                return;
+            }
+
+            double minValue = dataMin;
+            double maxValue = dataMax;
+            double range = maxValue - minValue;
+
+            if (range <= double.Epsilon)
+            {
+                double padding = Math.Max(Math.Abs(minValue) * 0.1, 1e-3);
+
+                if (Math.Abs(minValue) < 1e-6)
+                {
+                    minValue = -padding;
+                    maxValue = padding;
+                }
+                else
+                {
+                    minValue = minValue - padding;
+                    maxValue = maxValue + padding;
+                    if (dataMin >= 0)
+                    {
+                        minValue = Math.Max(0, minValue);
+                    }
+                }
+
+                range = maxValue - minValue;
+            }
+            else
+            {
+                double padding = range * 0.05;
+                minValue -= padding;
+                maxValue += padding;
+
+                if (dataMin >= 0)
+                {
+                    minValue = Math.Max(0, minValue);
+                }
+
+                range = maxValue - minValue;
+            }
+
+            const double targetTicks = 10.0;
+            double rawTickInterval = range / targetTicks;
+            if (rawTickInterval <= 0 || double.IsNaN(rawTickInterval) || double.IsInfinity(rawTickInterval))
+            {
+                yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(minValue);
+                yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(maxValue);
+                var fallbackStep = MathHelper.RoundToThreeSignificantDigits((maxValue - minValue) / targetTicks);
+                yAxis.Separator = fallbackStep > 0 ? new LiveCharts.Wpf.Separator { Step = fallbackStep } : new LiveCharts.Wpf.Separator();
+                yAxis.ShowLabels = true;
+                yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+                return;
+            }
+
+            double magnitude;
+            try
+            {
+                var logValue = Math.Log10(Math.Abs(rawTickInterval));
+                magnitude = Math.Pow(10, Math.Floor(logValue));
+            }
+            catch
+            {
+                magnitude = Math.Pow(10, Math.Floor(Math.Log10(Math.Max(1e-6, rawTickInterval))));
+            }
+
+            var normalizedInterval = rawTickInterval / magnitude;
+            double niceInterval = normalizedInterval switch
+            {
+                <= 1 => 1 * magnitude,
+                <= 2 => 2 * magnitude,
+                <= 5 => 5 * magnitude,
+                _ => 10 * magnitude
+            };
+
+            niceInterval = MathHelper.RoundToThreeSignificantDigits(niceInterval);
+            if (niceInterval <= 0 || double.IsNaN(niceInterval) || double.IsInfinity(niceInterval))
+                niceInterval = rawTickInterval;
+
+            var niceMin = Math.Floor(minValue / niceInterval) * niceInterval;
+            var niceMax = Math.Ceiling(maxValue / niceInterval) * niceInterval;
+
+            niceMin -= niceInterval * 0.0;
+            niceMax += niceInterval * 0.0;
+
+            if (dataMin >= 0 && niceMin < 0)
+            {
+                niceMin = 0;
+            }
+
+            yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(niceMin);
+            yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(niceMax);
+
+            double step = MathHelper.RoundToThreeSignificantDigits(niceInterval);
+            if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
+            {
+                step = MathHelper.RoundToThreeSignificantDigits((yAxis.MaxValue - yAxis.MinValue) / targetTicks);
+            }
+
+            yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
+            yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+            yAxis.ShowLabels = true;
+            yAxis.Labels = null;
+        }
+
+        /// <summary>
+        /// Adjusts chart control Height based on Y-axis tick count to ensure ticks are spaced 20-40px apart.
+        /// Charts live inside a ScrollViewer; if total chart heights exceed window height a scrollbar will appear.
+        /// </summary>
+        public static void AdjustChartHeightBasedOnYAxis(CartesianChart chart, double minHeight)
+        {
+            if (chart == null || chart.AxisY.Count == 0) return;
+
+            var yAxis = chart.AxisY[0];
+
+            if (double.IsNaN(yAxis.MinValue) || double.IsNaN(yAxis.MaxValue) ||
+                double.IsInfinity(yAxis.MinValue) || double.IsInfinity(yAxis.MaxValue))
+            {
+                chart.Height = minHeight;
+                return;
+            }
+
+            double minValue = yAxis.MinValue;
+            double maxValue = yAxis.MaxValue;
+            double step = yAxis.Separator?.Step ?? 0;
+
+            if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
+            {
+                step = (maxValue - minValue) / 10.0;
+                if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
+                {
+                    chart.Height = minHeight;
+                    return;
+                }
+            }
+
+            double range = maxValue - minValue;
+            int tickCount = (int)Math.Ceiling(range / step) + 1;
+
+            tickCount = Math.Max(2, tickCount);
+
+            const double tickSpacingPx = 30.0;
+            const double paddingPx = 100.0;
+
+            double calculatedHeight = (tickCount * tickSpacingPx) + paddingPx;
+
+            calculatedHeight = Math.Max(minHeight, calculatedHeight);
+
+            const double maxHeight = 2000.0;
+            calculatedHeight = Math.Min(maxHeight, calculatedHeight);
+
+            chart.Height = calculatedHeight;
         }
     }
 }   
