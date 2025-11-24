@@ -57,42 +57,52 @@
 
                 <!-- Difference chart: title + chart -->
                 <StackPanel Orientation="Vertical" Margin="0,0,0,10">
-                    <TextBlock x:Name="ChartDiffTitle" Text="ChartDiff" FontWeight="Bold" FontSize="14" Margin="20,5,10,0" />
-                    <lvc:CartesianChart x:Name="ChartDiff"
-                                        LegendLocation="Right"
-                                        Zoom="X"
-                                        Pan="X"
-                                        Hoverable="True"
-                                        Margin="20,5,10,20"
-                                        VerticalAlignment="Top"
-                                        MinHeight="400">
-                        <lvc:CartesianChart.AxisX>
-                            <lvc:Axis Title="Time" />
-                        </lvc:CartesianChart.AxisX>
-                        <lvc:CartesianChart.AxisY>
-                            <lvc:Axis Title="Difference" ShowLabels="True" />
-                        </lvc:CartesianChart.AxisY>
-                    </lvc:CartesianChart>
+                    <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                        <TextBlock x:Name="ChartDiffTitle" Text="ChartDiff" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
+                        <Button x:Name="ChartDiffToggleButton" Content="Show" Margin="10,0,0,0" Padding="10,3" Click="OnChartDiffToggle" />
+                    </StackPanel>
+                    <StackPanel x:Name="ChartDiffPanel" Orientation="Vertical">
+                        <lvc:CartesianChart x:Name="ChartDiff"
+                                            LegendLocation="Right"
+                                            Zoom="X"
+                                            Pan="X"
+                                            Hoverable="True"
+                                            Margin="20,5,10,20"
+                                            VerticalAlignment="Top"
+                                            MinHeight="400">
+                            <lvc:CartesianChart.AxisX>
+                                <lvc:Axis Title="Time" />
+                            </lvc:CartesianChart.AxisX>
+                            <lvc:CartesianChart.AxisY>
+                                <lvc:Axis Title="Difference" ShowLabels="True" />
+                            </lvc:CartesianChart.AxisY>
+                        </lvc:CartesianChart>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Ratio chart: title + chart -->
                 <StackPanel Orientation="Vertical" Margin="0,0,0,10">
-                    <TextBlock x:Name="ChartRatioTitle" Text="ChartRatio" FontWeight="Bold" FontSize="14" Margin="20,5,10,0" />
-                    <lvc:CartesianChart x:Name="ChartRatio"
-                                        LegendLocation="Right"
-                                        Zoom="X"
-                                        Pan="X"
-                                        Hoverable="True"
-                                        Margin="20,5,10,20"
-                                        VerticalAlignment="Top"
-                                        MinHeight="400">
-                        <lvc:CartesianChart.AxisX>
-                            <lvc:Axis Title="Time" />
-                        </lvc:CartesianChart.AxisX>
-                        <lvc:CartesianChart.AxisY>
-                            <lvc:Axis Title="Ratio" ShowLabels="True" />
-                        </lvc:CartesianChart.AxisY>
-                    </lvc:CartesianChart>
+                    <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                        <TextBlock x:Name="ChartRatioTitle" Text="ChartRatio" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
+                        <Button x:Name="ChartRatioToggleButton" Content="Show" Margin="10,0,0,0" Padding="10,3" Click="OnChartRatioToggle" />
+                    </StackPanel>
+                    <StackPanel x:Name="ChartRatioPanel" Orientation="Vertical">
+                        <lvc:CartesianChart x:Name="ChartRatio"
+                                            LegendLocation="Right"
+                                            Zoom="X"
+                                            Pan="X"
+                                            Hoverable="True"
+                                            Margin="20,5,10,20"
+                                            VerticalAlignment="Top"
+                                            MinHeight="400">
+                            <lvc:CartesianChart.AxisX>
+                                <lvc:Axis Title="Time" />
+                            </lvc:CartesianChart.AxisX>
+                            <lvc:CartesianChart.AxisY>
+                                <lvc:Axis Title="Ratio" ShowLabels="True" />
+                            </lvc:CartesianChart.AxisY>
+                        </lvc:CartesianChart>
+                    </StackPanel>
                 </StackPanel>
 
             </StackPanel>

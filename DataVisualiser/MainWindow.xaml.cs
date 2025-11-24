@@ -46,6 +46,23 @@ namespace DataVisualiser
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps = new();
         List<string>? subtypeList;
 
+        // Chart visibility tracking
+        private bool _isChartDiffVisible = false;
+        private bool _isChartRatioVisible = false;
+
+        // Store last loaded data for charts so they can be reloaded when toggled visible
+        private class ChartDataContext
+        {
+            public IEnumerable<HealthMetricData>? Data1 { get; set; }
+            public IEnumerable<HealthMetricData>? Data2 { get; set; }
+            public string DisplayName1 { get; set; } = string.Empty;
+            public string DisplayName2 { get; set; } = string.Empty;
+            public DateTime From { get; set; }
+            public DateTime To { get; set; }
+        }
+
+        private ChartDataContext? _lastChartDataContext;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -88,6 +105,12 @@ namespace DataVisualiser
             ChartMain.MouseLeave += OnChartMouseLeave;
             ChartDiff.MouseLeave += OnChartMouseLeave;
             ChartRatio.MouseLeave += OnChartMouseLeave;
+
+            // Hide ChartDiff and ChartRatio initially
+            ChartDiffPanel.Visibility = Visibility.Collapsed;
+            ChartRatioPanel.Visibility = Visibility.Collapsed;
+            ChartDiffToggleButton.Content = "Show";
+            ChartRatioToggleButton.Content = "Show";
         }
 
         #region Chart Update Methods
@@ -221,7 +244,8 @@ namespace DataVisualiser
             if (_hoverDiffText != null) _hoverDiffText.Text = $"Diff: {diffValues}";
             if (_hoverRatioText != null) _hoverRatioText.Text = $"Ratio: {ratioValues}";
 
-            ChartHelper.PositionHoverPopup(_sharedHoverPopup);
+            if (_sharedHoverPopup != null)
+                ChartHelper.PositionHoverPopup(_sharedHoverPopup);
 
             ChartHelper.UpdateVerticalLineForChart(ref ChartMain, index, ref _verticalLineMain);
             ChartHelper.UpdateVerticalLineForChart(ref ChartDiff, index, ref _verticalLineDiff);
@@ -570,16 +594,37 @@ namespace DataVisualiser
                     var displayName1 = !string.IsNullOrEmpty(selectedSubtype) ? $"{selectedMetricType} - {selectedSubtype}" : selectedMetricType;
                     var displayName2 = !string.IsNullOrEmpty(selectedSubtype2) ? $"{selectedMetricType} - {selectedSubtype2}" : selectedMetricType;
 
+                    // Store data context for potential reload when charts are toggled visible
+                    _lastChartDataContext = new ChartDataContext
+                    {
+                        Data1 = data1,
+                        Data2 = data2,
+                        DisplayName1 = displayName1,
+                        DisplayName2 = displayName2,
+                        From = from,
+                        To = to
+                    };
 
                     await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to), displayName1, displayName2);
 
+                    // Only update visible charts
+                    if (_isChartDiffVisible)
+                    {
+                        await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
+                    }
+                    else
+                    {
+                        ChartHelper.ClearChart(ChartDiff, _chartTimestamps);
+                    }
 
-
-                    await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
-
-
-
-                    await UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
+                    if (_isChartRatioVisible)
+                    {
+                        await UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
+                    }
+                    else
+                    {
+                        ChartHelper.ClearChart(ChartRatio, _chartTimestamps);
+                    }
                 }
                 else if (data2 == null || !data2.Any())
                 {
@@ -588,6 +633,7 @@ namespace DataVisualiser
                     ChartHelper.ClearChart(ChartMain, _chartTimestamps);
                     ChartHelper.ClearChart(ChartDiff, _chartTimestamps);
                     ChartHelper.ClearChart(ChartRatio, _chartTimestamps);
+                    _lastChartDataContext = null; // Clear stored context when no data
                 }
                 else
                 {
@@ -595,9 +641,20 @@ namespace DataVisualiser
                         ? $"{selectedMetricType} - {selectedSubtype2}"
                         : selectedMetricType;
 
+                    // Store data context for potential reload when charts are toggled visible
+                    _lastChartDataContext = new ChartDataContext
+                    {
+                        Data1 = data1,
+                        Data2 = null,
+                        DisplayName1 = displayName2,
+                        DisplayName2 = string.Empty,
+                        From = from,
+                        To = to
+                    };
 
                     await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1 ?? Enumerable.Empty<HealthMetricData>(), displayName2, from, to), displayName2);
 
+                    // Clear hidden charts
                     ChartHelper.ClearChart(ChartDiff, _chartTimestamps);
                     ChartHelper.ClearChart(ChartRatio, _chartTimestamps);
                 }
@@ -623,6 +680,82 @@ namespace DataVisualiser
             newCombo.SelectionChanged += OnAnySubtypeSelectionChanged;
             newCombo.SelectedIndex = 0;
             newCombo.IsEnabled = true;
+        }
+
+        #endregion
+
+        #region Chart Visibility Toggle Handlers
+
+        /// <summary>
+        /// Toggles ChartDiff visibility and reloads data if available.
+        /// </summary>
+        private async void OnChartDiffToggle(object sender, RoutedEventArgs e)
+        {
+            _isChartDiffVisible = !_isChartDiffVisible;
+
+            if (_isChartDiffVisible)
+            {
+                ChartDiffPanel.Visibility = Visibility.Visible;
+                ChartDiffToggleButton.Content = "Hide";
+
+                // Reload data if available
+                if (_lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
+                {
+                    await UpdateChartUsingStrategyAsync(
+                        ChartDiff,
+                        new DataVisualiser.Charts.Strategies.DifferenceStrategy(
+                            _lastChartDataContext.Data1,
+                            _lastChartDataContext.Data2,
+                            _lastChartDataContext.DisplayName1,
+                            _lastChartDataContext.DisplayName2,
+                            _lastChartDataContext.From,
+                            _lastChartDataContext.To),
+                        $"{_lastChartDataContext.DisplayName1} - {_lastChartDataContext.DisplayName2}",
+                        minHeight: 400);
+                }
+            }
+            else
+            {
+                ChartDiffPanel.Visibility = Visibility.Collapsed;
+                ChartDiffToggleButton.Content = "Show";
+                ChartHelper.ClearChart(ChartDiff, _chartTimestamps);
+            }
+        }
+
+        /// <summary>
+        /// Toggles ChartRatio visibility and reloads data if available.
+        /// </summary>
+        private async void OnChartRatioToggle(object sender, RoutedEventArgs e)
+        {
+            _isChartRatioVisible = !_isChartRatioVisible;
+
+            if (_isChartRatioVisible)
+            {
+                ChartRatioPanel.Visibility = Visibility.Visible;
+                ChartRatioToggleButton.Content = "Hide";
+
+                // Reload data if available
+                if (_lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
+                {
+                    await UpdateChartUsingStrategyAsync(
+                        ChartRatio,
+                        new DataVisualiser.Charts.Strategies.RatioStrategy(
+                            _lastChartDataContext.Data1,
+                            _lastChartDataContext.Data2,
+                            _lastChartDataContext.DisplayName1,
+                            _lastChartDataContext.DisplayName2,
+                            _lastChartDataContext.From,
+                            _lastChartDataContext.To),
+                        $"{_lastChartDataContext.DisplayName1} / {_lastChartDataContext.DisplayName2}",
+                        minHeight: 400);
+                }
+            }
+            else
+            {
+                ChartRatioPanel.Visibility = Visibility.Collapsed;
+                ChartRatioToggleButton.Content = "Show";
+                ChartHelper.ClearChart(ChartRatio, _chartTimestamps);
+            }
         }
 
         #endregion
