@@ -49,6 +49,31 @@
                     </lvc:CartesianChart>
                 </StackPanel>
 
+                <!-- Normalized chart: title + chart -->
+                <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                        <TextBlock x:Name="ChartNormTitle" Text="ChartNorm" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
+                        <Button x:Name="ChartNormToggleButton" Content="Show" Margin="10,0,0,0" Padding="10,3" Click="OnChartNormToggle" />
+                    </StackPanel>
+                    <StackPanel x:Name="ChartNormPanel" Orientation="Vertical">
+                        <lvc:CartesianChart x:Name="ChartNorm"
+                                            LegendLocation="Right"
+                                            Zoom="X"
+                                            Pan="X"
+                                            Hoverable="True"
+                                            Margin="20,5,10,20"
+                                            VerticalAlignment="Top"
+                                            MinHeight="400">
+                            <lvc:CartesianChart.AxisX>
+                                <lvc:Axis Title="Time" />
+                            </lvc:CartesianChart.AxisX>
+                            <lvc:CartesianChart.AxisY>
+                                <lvc:Axis Title="Relative" ShowLabels="True" />
+                            </lvc:CartesianChart.AxisY>
+                        </lvc:CartesianChart>
+                    </StackPanel>
+                </StackPanel>
+
                 <!-- Difference chart: title + chart -->
                 <StackPanel Orientation="Vertical" Margin="0,0,0,10">
                     <StackPanel Orientation="Horizontal" Margin="20,5,10,0">

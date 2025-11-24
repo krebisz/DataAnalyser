@@ -29,10 +29,12 @@ namespace DataVisualiser
         private Popup? _sharedHoverPopup;
         private TextBlock? _hoverTimestampText;
         private TextBlock? _hoverMainText;
+        private TextBlock? _hoverNormText;
         private TextBlock? _hoverDiffText;
         private TextBlock? _hoverRatioText;
 
         private AxisSection? _verticalLineMain;
+        private AxisSection? _verticalLineNorm;
         private AxisSection? _verticalLineDiff;
         private AxisSection? _verticalLineRatio;
 
@@ -40,6 +42,7 @@ namespace DataVisualiser
         List<string>? subtypeList;
 
         // Chart visibility tracking
+        private bool _isChartNormVisible = false;
         private bool _isChartDiffVisible = false;
         private bool _isChartRatioVisible = false;
 
@@ -84,6 +87,7 @@ namespace DataVisualiser
             LoadMetricTypes();
 
             ChartHelper.InitializeChartBehavior(ChartMain);
+            ChartHelper.InitializeChartBehavior(ChartNorm);
             ChartHelper.InitializeChartBehavior(ChartDiff);
             ChartHelper.InitializeChartBehavior(ChartRatio);
 
@@ -92,16 +96,20 @@ namespace DataVisualiser
             CreateSharedHoverPopup();
 
             ChartMain.DataHover += OnChartDataHover;
+            ChartNorm.DataHover += OnChartDataHover;
             ChartDiff.DataHover += OnChartDataHover;
             ChartRatio.DataHover += OnChartDataHover;
 
             ChartMain.MouseLeave += OnChartMouseLeave;
+            ChartNorm.MouseLeave += OnChartMouseLeave;
             ChartDiff.MouseLeave += OnChartMouseLeave;
             ChartRatio.MouseLeave += OnChartMouseLeave;
 
             // Hide ChartDiff and ChartRatio initially
+            ChartNormPanel.Visibility = Visibility.Collapsed;
             ChartDiffPanel.Visibility = Visibility.Collapsed;
             ChartRatioPanel.Visibility = Visibility.Collapsed;
+            ChartNormToggleButton.Content = "Show";
             ChartDiffToggleButton.Content = "Show";
             ChartRatioToggleButton.Content = "Show";
         }
@@ -185,6 +193,7 @@ namespace DataVisualiser
         {
             _hoverTimestampText = ChartHelper.SetHoverText(true);
             _hoverMainText = ChartHelper.SetHoverText();
+            _hoverNormText = ChartHelper.SetHoverText();
             _hoverDiffText = ChartHelper.SetHoverText();
             _hoverRatioText = ChartHelper.SetHoverText();
 
@@ -195,6 +204,7 @@ namespace DataVisualiser
                 {
                     _hoverTimestampText,
                     _hoverMainText,
+                    _hoverNormText,
                     _hoverDiffText,
                     _hoverRatioText
                 }
@@ -227,13 +237,15 @@ namespace DataVisualiser
             if (chartPoint == null) return;
 
             int index = (int)Math.Round(chartPoint.X);
-            string timestampText = ChartHelper.GetTimestampTextForIndex(index, _chartTimestamps, ChartMain, ChartDiff, ChartRatio);
+            string timestampText = ChartHelper.GetTimestampTextForIndex(index, _chartTimestamps, ChartMain, ChartNorm, ChartDiff, ChartRatio);
             string mainValues = ChartHelper.GetChartValuesAtIndex(ChartMain, index);
+            string normValues = ChartHelper.GetChartValuesAtIndex(ChartNorm, index);
             string diffValues = ChartHelper.GetChartValuesAtIndex(ChartDiff, index);
             string ratioValues = ChartHelper.GetChartValuesAtIndex(ChartRatio, index);
 
             if (_hoverTimestampText != null) _hoverTimestampText.Text = timestampText;
             if (_hoverMainText != null) _hoverMainText.Text = $"Main: {mainValues}";
+            if (_hoverNormText != null) _hoverNormText.Text = $"Norm: {normValues}";
             if (_hoverDiffText != null) _hoverDiffText.Text = $"Diff: {diffValues}";
             if (_hoverRatioText != null) _hoverRatioText.Text = $"Ratio: {ratioValues}";
 
@@ -241,6 +253,7 @@ namespace DataVisualiser
                 ChartHelper.PositionHoverPopup(_sharedHoverPopup);
 
             ChartHelper.UpdateVerticalLineForChart(ref ChartMain, index, ref _verticalLineMain);
+            ChartHelper.UpdateVerticalLineForChart(ref ChartNorm, index, ref _verticalLineNorm);
             ChartHelper.UpdateVerticalLineForChart(ref ChartDiff, index, ref _verticalLineDiff);
             ChartHelper.UpdateVerticalLineForChart(ref ChartRatio, index, ref _verticalLineRatio);
         }
@@ -255,6 +268,7 @@ namespace DataVisualiser
             if (_sharedHoverPopup != null && _sharedHoverPopup.IsOpen) _sharedHoverPopup.IsOpen = false;
 
             ChartHelper.RemoveAxisSection(ref ChartMain, _verticalLineMain);
+            ChartHelper.RemoveAxisSection(ref ChartNorm, _verticalLineNorm);
             ChartHelper.RemoveAxisSection(ref ChartDiff, _verticalLineDiff);
             ChartHelper.RemoveAxisSection(ref ChartRatio, _verticalLineRatio);
         }
@@ -601,6 +615,14 @@ namespace DataVisualiser
                     await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to), displayName1, displayName2);
 
                     // Only update visible charts
+                    if (_isChartNormVisible)
+                    {
+                        await UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} ~ {displayName2}", minHeight: 400);
+                    }
+                    else
+                    {
+                        ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
+                    }
                     if (_isChartDiffVisible)
                     {
                         await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
@@ -624,15 +646,14 @@ namespace DataVisualiser
                     var subtypeText2 = !string.IsNullOrEmpty(selectedSubtype2) ? $" and Subtype '{selectedSubtype2}'" : "";
                     MessageBox.Show($"No data found for MetricType '{selectedMetricType}'{subtypeText2} in the selected date range (Chart 2).", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
                     ChartHelper.ClearChart(ChartMain, _chartTimestamps);
+                    ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
                     ChartHelper.ClearChart(ChartDiff, _chartTimestamps);
                     ChartHelper.ClearChart(ChartRatio, _chartTimestamps);
                     _lastChartDataContext = null; // Clear stored context when no data
                 }
                 else
                 {
-                    var displayName2 = !string.IsNullOrEmpty(selectedSubtype2)
-                        ? $"{selectedMetricType} - {selectedSubtype2}"
-                        : selectedMetricType;
+                    var displayName2 = !string.IsNullOrEmpty(selectedSubtype2) ? $"{selectedMetricType} - {selectedSubtype2}" : selectedMetricType;
 
                     // Store data context for potential reload when charts are toggled visible
                     _lastChartDataContext = new ChartDataContext
@@ -648,6 +669,7 @@ namespace DataVisualiser
                     await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1 ?? Enumerable.Empty<HealthMetricData>(), displayName2, from, to), displayName2);
 
                     // Clear hidden charts
+                    ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
                     ChartHelper.ClearChart(ChartDiff, _chartTimestamps);
                     ChartHelper.ClearChart(ChartRatio, _chartTimestamps);
                 }
@@ -678,6 +700,42 @@ namespace DataVisualiser
         #endregion
 
         #region Chart Visibility Toggle Handlers
+
+        /// <summary>
+        /// Toggles ChartNorm visibility and reloads data if available.
+        /// </summary>
+        private async void OnChartNormToggle(object sender, RoutedEventArgs e)
+        {
+            _isChartNormVisible = !_isChartNormVisible;
+
+            if (_isChartNormVisible)
+            {
+                ChartNormPanel.Visibility = Visibility.Visible;
+                ChartNormToggleButton.Content = "Hide";
+
+                // Reload data if available
+                if (_lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
+                {
+                    await UpdateChartUsingStrategyAsync(
+                        ChartNorm,
+                        new DataVisualiser.Charts.Strategies.NormalizedStrategy(
+                            _lastChartDataContext.Data1,
+                            _lastChartDataContext.Data2,
+                            _lastChartDataContext.DisplayName1,
+                            _lastChartDataContext.DisplayName2,
+                            _lastChartDataContext.From,
+                            _lastChartDataContext.To),
+                        $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
+                        minHeight: 400);
+                }
+            }
+            else
+            {
+                ChartNormPanel.Visibility = Visibility.Collapsed;
+                ChartNormToggleButton.Content = "Show";
+                ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
+            }
+        }
 
         /// <summary>
         /// Toggles ChartDiff visibility and reloads data if available.
@@ -761,6 +819,7 @@ namespace DataVisualiser
         private void OnResetZoom(object sender, RoutedEventArgs e)
         {
             ChartHelper.ResetZoom(ref ChartMain);
+            ChartHelper.ResetZoom(ref ChartNorm);
             ChartHelper.ResetZoom(ref ChartDiff);
             ChartHelper.ResetZoom(ref ChartRatio);
         }
@@ -776,8 +835,9 @@ namespace DataVisualiser
             rightName ??= string.Empty;
 
             ChartMainTitle.Text = $"{leftName} vs. {rightName}";
-            ChartRatioTitle.Text = $"{leftName} / {rightName}";
+            ChartNormTitle.Text = $"{leftName} ~ {rightName}";
             ChartDiffTitle.Text = $"{leftName} - {rightName}";
+            ChartRatioTitle.Text = $"{leftName} / {rightName}";
         }
 
         /// <summary>

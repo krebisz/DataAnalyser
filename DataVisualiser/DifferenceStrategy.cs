@@ -9,7 +9,8 @@
         private readonly IEnumerable<HealthMetricData> _right;
         private readonly DateTime _from;
         private readonly DateTime _to;
-        private readonly string _labelLeft, _labelRight;
+        private readonly string _labelLeft;
+        private readonly string _labelRight;
 
         public DifferenceStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to)
         {
@@ -57,8 +58,8 @@
             var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).ToList();
             var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
 
-            var rawDiffs = MathHelper.ReturnValueDifferences(rawValues1, rawValues2);
-            var smoothedDiffs = MathHelper.ReturnValueDifferences(interpSmoothed1, interpSmoothed2);
+            var rawResults = MathHelper.ReturnValueDifferences(rawValues1, rawValues2);
+            var smoothedResults = MathHelper.ReturnValueDifferences(interpSmoothed1, interpSmoothed2);
 
             Unit = ordered1.FirstOrDefault()?.Unit ?? ordered2.FirstOrDefault()?.Unit;
 
@@ -67,8 +68,8 @@
                 Timestamps = combinedTimestamps,
                 IntervalIndices = intervalIndices,
                 NormalizedIntervals = normalizedIntervals,
-                PrimaryRawValues = rawDiffs,
-                PrimarySmoothed = smoothedDiffs,
+                PrimaryRawValues = rawResults,
+                PrimarySmoothed = smoothedResults,
                 TickInterval = tickInterval,
                 DateRange = dateRange,
                 Unit = Unit

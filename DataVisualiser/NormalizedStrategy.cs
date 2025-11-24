@@ -3,7 +3,7 @@
     using DataVisualiser.Class;
     using DataVisualiser.Helper;
 
-    public sealed class RatioStrategy : IChartComputationStrategy
+    public sealed class NormalizedStrategy : IChartComputationStrategy
     {
         private readonly IEnumerable<HealthMetricData> _left;
         private readonly IEnumerable<HealthMetricData> _right;
@@ -12,7 +12,7 @@
         private readonly string _labelLeft;
         private readonly string _labelRight;
 
-        public RatioStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to)
+        public NormalizedStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to)
         {
             _left = left ?? Array.Empty<HealthMetricData>();
             _right = right ?? Array.Empty<HealthMetricData>();
@@ -22,7 +22,7 @@
             _to = to;
         }
 
-        public string PrimaryLabel => $"{_labelLeft} / {_labelRight}";
+        public string PrimaryLabel => $"{_labelLeft} ~ {_labelRight}";
         public string SecondaryLabel => string.Empty;
         public string? Unit { get; private set; }
 
@@ -58,20 +58,36 @@
             var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).ToList();
             var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
 
-            var rawResults = MathHelper.ReturnValueRatios(rawValues1, rawValues2);
-            var smoothedResults = MathHelper.ReturnValueRatios(interpSmoothed1, interpSmoothed2);
+            var rawResults1 = MathHelper.ReturnValueNormalized(rawValues1, NormalizationMode.PercentageOfMax);
+            var rawResults12 = MathHelper.ReturnValueNormalized(rawValues2, NormalizationMode.PercentageOfMax);
 
-            var unit1 = ordered1.FirstOrDefault()?.Unit;
-            var unit2 = ordered2.FirstOrDefault()?.Unit;
-            Unit = (!string.IsNullOrEmpty(unit1) && !string.IsNullOrEmpty(unit2)) ? $"{unit1}/{unit2}" : null;
+            var smoothedResults1 = MathHelper.ReturnValueNormalized(interpSmoothed1, NormalizationMode.PercentageOfMax);
+            var smoothedResults2 = MathHelper.ReturnValueNormalized(interpSmoothed2, NormalizationMode.PercentageOfMax);
+
+
+            Unit = ordered1.FirstOrDefault()?.Unit ?? ordered2.FirstOrDefault()?.Unit;
+
+            //return new ChartComputationResult
+            //{
+            //    Timestamps = combinedTimestamps,
+            //    IntervalIndices = intervalIndices,
+            //    NormalizedIntervals = normalizedIntervals,
+            //    PrimaryRawValues = rawResults,
+            //    PrimarySmoothed = smoothedResults,
+            //    TickInterval = tickInterval,
+            //    DateRange = dateRange,
+            //    Unit = Unit
+            //};
 
             return new ChartComputationResult
             {
                 Timestamps = combinedTimestamps,
                 IntervalIndices = intervalIndices,
                 NormalizedIntervals = normalizedIntervals,
-                PrimaryRawValues = rawResults,
-                PrimarySmoothed = smoothedResults,
+                PrimaryRawValues = rawResults1,
+                PrimarySmoothed = smoothedResults1,
+                SecondaryRawValues = rawResults12,
+                SecondarySmoothed = smoothedResults2,
                 TickInterval = tickInterval,
                 DateRange = dateRange,
                 Unit = Unit

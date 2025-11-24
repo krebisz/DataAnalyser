@@ -1,0 +1,19 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DataVisualiser.Class
+{
+    public class BinaryOperatorRegistry
+    {
+        private readonly Dictionary<string, Func<double, double, double>> _ops = new(StringComparer.OrdinalIgnoreCase);
+
+        public void Register(string name, Func<double, double, double> op) => _ops[name] = op;
+
+        public bool TryGet(string name, out Func<double, double, double>? op) => _ops.TryGetValue(name, out op);
+
+        public IEnumerable<string> Names => _ops.Keys;
+    }
+}

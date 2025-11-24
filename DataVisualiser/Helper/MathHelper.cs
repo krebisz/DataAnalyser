@@ -484,6 +484,62 @@ namespace DataVisualiser.Helper
             return Math.Round(value * multiplier) / multiplier;
         }
 
+        public static List<double>? ReturnValueNormalized(List<double>? values)
+        {
+            if (values == null || values.Count == 0)
+                return null;
+
+            double min = values.Where(v => !double.IsNaN(v)).DefaultIfEmpty(double.NaN).Min();
+            double max = values.Where(v => !double.IsNaN(v)).DefaultIfEmpty(double.NaN).Max();
+
+            // Avoid zero-range situations (all values identical)
+            if (double.IsNaN(min) || double.IsNaN(max) || min == max)
+            {
+                return values.Select(v => double.NaN).ToList();
+            }
+
+            return values.Select(v =>
+                double.IsNaN(v) ? double.NaN : (v - min) / (max - min)
+            ).ToList();
+        }
+
+        public static List<double>? ReturnValueNormalized(List<double>? values, NormalizationMode mode = NormalizationMode.ZeroToOne)
+        {
+            if (values == null || values.Count == 0)
+                return null;
+
+            var valid = values.Where(v => !double.IsNaN(v)).ToList();
+
+            if (valid.Count == 0)
+                return values.Select(_ => double.NaN).ToList();
+
+            double min = valid.Min();
+            double max = valid.Max();
+
+            if (double.IsNaN(min) || double.IsNaN(max) || min == max)
+                return values.Select(_ => double.NaN).ToList();
+
+            return mode switch
+            {
+                NormalizationMode.ZeroToOne =>
+                    values.Select(v =>
+                        double.IsNaN(v)
+                            ? double.NaN
+                            : (v - min) / (max - min)
+                    ).ToList(),
+
+                NormalizationMode.PercentageOfMax =>
+                    values.Select(v =>
+                        double.IsNaN(v)
+                            ? double.NaN
+                            : (v / max) * 100.0
+                    ).ToList(),
+
+                _ => throw new NotSupportedException()
+            };
+        }
+
+
         public static List<double>? ReturnValueDifferences(List<double>? valueList1, List<double>? valueList2)
         {
             var valueDiffernces = valueList1.Zip(valueList2, (a, b) => (double.IsNaN(a) || double.IsNaN(b)) ? double.NaN : (a - b)).ToList();
@@ -494,6 +550,34 @@ namespace DataVisualiser.Helper
         {
             var valueRatios = valueList1.Zip(valueLiat2, (a, b) => (double.IsNaN(a) || double.IsNaN(b) || b == 0.0) ? double.NaN : (a / b)).ToList();
             return valueRatios;
+        }
+
+        public static List<double> ApplyBinaryOperation(List<double>? list1, List<double>? list2, Func<double, double, double> operation)
+        {
+            if (list1 == null || list2 == null)
+                return new List<double>();
+
+            int count = Math.Min(list1.Count, list2.Count);
+
+            var result = new List<double>(capacity: count);
+
+            for (int i = 0; i < count; i++)
+            {
+                double a = list1[i];
+                double b = list2[i];
+
+                // Maintain NaN semantics
+                if (double.IsNaN(a) || double.IsNaN(b))
+                {
+                    result.Add(double.NaN);
+                    continue;
+                }
+
+                double value = operation(a, b);
+                result.Add(value);
+            }
+
+            return result;
         }
 
     }
