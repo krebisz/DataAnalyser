@@ -3,14 +3,15 @@ using DataVisualiser.Class;
 using DataVisualiser.Helper;
 using LiveCharts;
 using LiveCharts.Wpf;
+using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-
-
-
 
 namespace DataVisualiser
 {
@@ -20,7 +21,6 @@ namespace DataVisualiser
         private readonly ChartRenderEngine _chartRenderEngine;
 
         private SubtypeComboBoxManager _comboManager;
-
 
         private readonly string _connectionString;
         private bool _isLoadingMetricTypes = false;
@@ -59,6 +59,13 @@ namespace DataVisualiser
 
         private ChartDataContext? _lastChartDataContext;
 
+        // ============================================================
+        // Normalization mode state (defaults to PercentageOfMax)
+        // This maps to the radio buttons added in MainWindow.xaml
+        // ============================================================
+        private NormalizationMode _selectedNormalizationMode = NormalizationMode.PercentageOfMax;
+        // ============================================================
+
         public MainWindow()
         {
             InitializeComponent();
@@ -69,7 +76,6 @@ namespace DataVisualiser
                 normalizeYAxisDelegate: (axis, rawData, smoothed) => ChartHelper.NormalizeYAxis(axis, rawData, smoothed),
                 adjustHeightDelegate: (chart, minHeight) => ChartHelper.AdjustChartHeightBasedOnYAxis(chart, minHeight)
             );
-
 
             _connectionString = ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
 
@@ -144,7 +150,6 @@ namespace DataVisualiser
                 NormalizedIntervals = result.NormalizedIntervals,
                 TickInterval = result.TickInterval
             };
-
 
             try
             {
@@ -273,7 +278,6 @@ namespace DataVisualiser
             ChartHelper.RemoveAxisSection(ref ChartRatio, _verticalLineRatio);
         }
 
-
         #endregion
 
         #region Data Loading and Selection Event Handlers
@@ -286,17 +290,12 @@ namespace DataVisualiser
             if (ResolutionCombo.SelectedItem == null)
                 return;
 
-
             TablesCombo.Items.Clear();
-
 
             _comboManager.ClearDynamic(keepFirstCount: 1);
 
             SubtypeCombo.Items.Clear();
             SubtypeCombo.IsEnabled = false;
-            //SubtypeCombo2.Items.Clear();
-            //SubtypeCombo2.IsEnabled = false;
-
 
             LoadMetricTypes();
         }
@@ -331,12 +330,8 @@ namespace DataVisualiser
                 }
                 else
                 {
-
                     SubtypeCombo.Items.Clear();
                     SubtypeCombo.IsEnabled = false;
-                    //SubtypeCombo2.Items.Clear();
-                    //SubtypeCombo2.IsEnabled = false;
-
                     _comboManager.ClearDynamic(keepFirstCount: 1);
                 }
             }
@@ -381,7 +376,6 @@ namespace DataVisualiser
             if (_isLoadingSubtypes || _isLoadingMetricTypes)
                 return;
 
-
             await LoadDateRangeForSelectedMetric();
 
             UpdateChartTitlesFromCombos();
@@ -396,8 +390,6 @@ namespace DataVisualiser
             {
                 SubtypeCombo.Items.Clear();
                 SubtypeCombo.IsEnabled = false;
-                //SubtypeCombo2.Items.Clear();
-                //SubtypeCombo2.IsEnabled = false;
                 _comboManager.ClearDynamic(keepFirstCount: 1);
                 return;
             }
@@ -407,12 +399,9 @@ namespace DataVisualiser
             {
                 SubtypeCombo.Items.Clear();
                 SubtypeCombo.IsEnabled = false;
-                //SubtypeCombo2.Items.Clear();
-                //SubtypeCombo2.IsEnabled = false;
                 _comboManager.ClearDynamic(keepFirstCount: 1);
                 return;
             }
-
 
             List<ComboBox> active = _comboManager.GetActiveComboBoxes();
 
@@ -424,42 +413,24 @@ namespace DataVisualiser
                 IEnumerable<string> subtypes = await dataFetcher.GetSubtypesForBaseType(selectedMetricType, tableName);
 
                 SubtypeCombo.Items.Clear();
-                //SubtypeCombo2.Items.Clear();
                 _comboManager.ClearDynamic(keepFirstCount: 1);
                 subtypeList = subtypes.ToList();
 
-
-
                 if (subtypeList.Count > 0)
                 {
-
                     SubtypeCombo.Items.Add("(All)");
-                    //SubtypeCombo2.Items.Add("(All)");
-
-                    //foreach (var combo in active)
-                    //{
-                    //combo.Items.Add("(All)");
 
                     foreach (var subtype in subtypeList)
                     {
-                        //combo.Items.Add(subtype);
                         SubtypeCombo.Items.Add(subtype);
                     }
 
-                    //combo.IsEnabled = true;
-                    //combo.SelectedIndex = 0;
-                    //}
-
                     SubtypeCombo.IsEnabled = true;
-                    //SubtypeCombo2.IsEnabled = true;
                     SubtypeCombo.SelectedIndex = 0;
-                    //SubtypeCombo2.SelectedIndex = 0;
                 }
                 else
                 {
-
                     SubtypeCombo.IsEnabled = false;
-                    //SubtypeCombo2.IsEnabled = false;
 
                     foreach (var combo in active)
                     {
@@ -471,10 +442,7 @@ namespace DataVisualiser
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading subtypes for {selectedMetricType}: {ex.Message}");
                 SubtypeCombo.Items.Clear();
-                //SubtypeCombo2.Items.Clear();
                 SubtypeCombo.IsEnabled = false;
-                //SubtypeCombo2.IsEnabled = false;
-
 
                 foreach (var combo in active)
                 {
@@ -503,7 +471,6 @@ namespace DataVisualiser
             {
                 return;
             }
-
 
             string? selectedSubtype = null;
             if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
@@ -558,11 +525,8 @@ namespace DataVisualiser
             List<ComboBox> active = _comboManager.GetActiveComboBoxes();
 
             string? selectedSubtype = ChartHelper.GetSubMetricType(SubtypeCombo);
-            //string? selectedSubtype2 = ChartHelper.GetSubMetricType(SubtypeCombo2);
-            // Get the first dynamic combo (excluding the static SubtypeCombo)
             var dynamicCombo = active.FirstOrDefault(cb => cb != SubtypeCombo);
             string? selectedSubtype2 = dynamicCombo != null ? ChartHelper.GetSubMetricType(dynamicCombo) : null;
-
 
             var display1 = !string.IsNullOrEmpty(selectedSubtype) ? selectedSubtype : selectedMetricType;
             var display2 = !string.IsNullOrEmpty(selectedSubtype2) ? selectedSubtype2 : selectedMetricType;
@@ -590,7 +554,6 @@ namespace DataVisualiser
                 var data1 = dataTask1.Result;
                 var data2 = dataTask2.Result;
 
-
                 if (data1 == null || !data1.Any())
                 {
                     var subtypeText = !string.IsNullOrEmpty(selectedSubtype) ? $" and Subtype '{selectedSubtype}'" : "";
@@ -617,7 +580,11 @@ namespace DataVisualiser
                     // Only update visible charts
                     if (_isChartNormVisible)
                     {
-                        await UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} ~ {displayName2}", minHeight: 400);
+                        // Pass normalization mode into NormalizedStrategy
+                        await UpdateChartUsingStrategyAsync(ChartNorm,
+                            new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to, _selectedNormalizationMode),
+                            $"{displayName1} ~ {displayName2}",
+                            minHeight: 400);
                     }
                     else
                     {
@@ -724,7 +691,9 @@ namespace DataVisualiser
                             _lastChartDataContext.DisplayName1,
                             _lastChartDataContext.DisplayName2,
                             _lastChartDataContext.From,
-                            _lastChartDataContext.To),
+                            _lastChartDataContext.To,
+                            _selectedNormalizationMode // pass selected mode
+                        ),
                         $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
                         minHeight: 400);
                 }
@@ -824,8 +793,6 @@ namespace DataVisualiser
             ChartHelper.ResetZoom(ref ChartRatio);
         }
 
-
-
         /// <summary>
         /// Sets the three chart title TextBlocks based on provided display names.
         /// </summary>
@@ -855,6 +822,51 @@ namespace DataVisualiser
             string display2 = titles.Length > 1 ? titles[1] : string.Empty;
 
             SetChartTitles(display1, display2);
+        }
+
+        #endregion
+
+        #region Normalization mode UI handling
+
+        /// <summary>
+        /// Handler for the normalization-mode radio buttons (wired in XAML).
+        /// Refreshes the normalized chart if visible and data exists.
+        /// </summary>
+        private async void OnNormalizationModeChanged(object sender, RoutedEventArgs e)
+        {
+            // Radio button names taken from your XAML:
+            // NormZeroToOneRadio, NormPercentOfMaxRadio, NormRelativeToMaxRadio
+            try
+            {
+                if (NormZeroToOneRadio.IsChecked == true)
+                    _selectedNormalizationMode = NormalizationMode.ZeroToOne;
+                else if (NormPercentOfMaxRadio.IsChecked == true)
+                    _selectedNormalizationMode = NormalizationMode.PercentageOfMax;
+                else if (NormRelativeToMaxRadio.IsChecked == true)
+                    _selectedNormalizationMode = NormalizationMode.RelativeToMax;
+
+                // If Norm chart visible and we have a stored data context, refresh only Normalized chart
+                if (_isChartNormVisible && _lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
+                {
+                    await UpdateChartUsingStrategyAsync(
+                        ChartNorm,
+                        new DataVisualiser.Charts.Strategies.NormalizedStrategy(
+                            _lastChartDataContext.Data1,
+                            _lastChartDataContext.Data2,
+                            _lastChartDataContext.DisplayName1,
+                            _lastChartDataContext.DisplayName2,
+                            _lastChartDataContext.From,
+                            _lastChartDataContext.To,
+                            _selectedNormalizationMode // pass selected mode
+                        ),
+                        $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
+                        minHeight: 400);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Normalization mode change error: {ex.Message}");
+            }
         }
 
         #endregion

@@ -505,6 +505,9 @@ namespace DataVisualiser.Helper
 
         public static List<double>? ReturnValueNormalized(List<double>? values, NormalizationMode mode = NormalizationMode.ZeroToOne)
         {
+            if (mode == NormalizationMode.RelativeToMax)
+                throw new InvalidOperationException("RelativeToMax requires two lists. Use the overload.");
+
             if (values == null || values.Count == 0)
                 return null;
 
@@ -523,20 +526,58 @@ namespace DataVisualiser.Helper
             {
                 NormalizationMode.ZeroToOne =>
                     values.Select(v =>
-                        double.IsNaN(v)
-                            ? double.NaN
-                            : (v - min) / (max - min)
+                        double.IsNaN(v) ? double.NaN : (v - min) / (max - min)
                     ).ToList(),
 
                 NormalizationMode.PercentageOfMax =>
                     values.Select(v =>
-                        double.IsNaN(v)
-                            ? double.NaN
-                            : (v / max) * 100.0
+                        double.IsNaN(v) ? double.NaN : (v / max) * 100.0
                     ).ToList(),
 
                 _ => throw new NotSupportedException()
             };
+        }
+
+
+        public static (List<double>? FirstNormalized, List<double>? SecondNormalized) ReturnValueNormalized(List<double>? first, List<double>? second, NormalizationMode mode)
+        {
+            if (mode != NormalizationMode.RelativeToMax)
+                throw new NotSupportedException("This overload only supports RelativeToMax.");
+
+            if (first == null || second == null)
+                return (null, null);
+
+            int count = Math.Min(first.Count, second.Count);
+
+            // First normalize each list independently using PercentageOfMax
+            var firstPercent = ReturnValueNormalized(first, NormalizationMode.PercentageOfMax);
+            var secondPercent = ReturnValueNormalized(second, NormalizationMode.PercentageOfMax);
+
+            if (firstPercent == null || secondPercent == null)
+                return (null, null);
+
+            var relative = new List<double>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                double a = firstPercent[i];
+                double b = secondPercent[i];
+
+                if (double.IsNaN(a) || double.IsNaN(b) || b == 0)
+                {
+                    relative.Add(double.NaN);
+                    continue;
+                }
+
+                // a and b are both in percentage units already
+                // e.g., a=80, b=80 => (80/80)*100 = 100
+                relative.Add((a / b) * 100.0);
+            }
+
+            // Second list is always a straight 100% line
+            var straight100 = Enumerable.Repeat(100.0, count).ToList();
+
+            return (relative, straight100);
         }
 
 

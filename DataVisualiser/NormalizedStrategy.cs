@@ -11,6 +11,7 @@
         private readonly DateTime _to;
         private readonly string _labelLeft;
         private readonly string _labelRight;
+        private readonly NormalizationMode _mode = NormalizationMode.PercentageOfMax;
 
         public NormalizedStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to)
         {
@@ -20,6 +21,18 @@
             _labelRight = labelRight ?? "Right";
             _from = from;
             _to = to;
+        }
+
+
+        public NormalizedStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, NormalizationMode mode)
+        {
+            _left = left ?? Array.Empty<HealthMetricData>();
+            _right = right ?? Array.Empty<HealthMetricData>();
+            _labelLeft = labelLeft ?? "Left";
+            _labelRight = labelRight ?? "Right";
+            _from = from;
+            _to = to;
+            _mode = mode;
         }
 
         public string PrimaryLabel => $"{_labelLeft} ~ {_labelRight}";
@@ -58,26 +71,33 @@
             var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).ToList();
             var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
 
-            var rawResults1 = MathHelper.ReturnValueNormalized(rawValues1, NormalizationMode.PercentageOfMax);
-            var rawResults12 = MathHelper.ReturnValueNormalized(rawValues2, NormalizationMode.PercentageOfMax);
 
-            var smoothedResults1 = MathHelper.ReturnValueNormalized(interpSmoothed1, NormalizationMode.PercentageOfMax);
-            var smoothedResults2 = MathHelper.ReturnValueNormalized(interpSmoothed2, NormalizationMode.PercentageOfMax);
+            List<double> rawResults1 = null!;
+            List<double> rawResults12 = null!;
 
+            List<double> smoothedResults1 = null!;
+            List<double> smoothedResults2 = null!;
+
+
+            if (_mode != NormalizationMode.RelativeToMax)
+            {
+                rawResults1 = MathHelper.ReturnValueNormalized(rawValues1, NormalizationMode.ZeroToOne);
+                rawResults12 = MathHelper.ReturnValueNormalized(rawValues2, NormalizationMode.ZeroToOne);
+                smoothedResults1 = MathHelper.ReturnValueNormalized(interpSmoothed1, NormalizationMode.ZeroToOne);
+                smoothedResults2 = MathHelper.ReturnValueNormalized(interpSmoothed2, NormalizationMode.ZeroToOne);
+            }
+            else
+            {
+                (List<double>? rawResults1, List<double>? rawResults2) rawResults = MathHelper.ReturnValueNormalized(rawValues1, rawValues2, _mode);
+                rawResults1 = rawResults.rawResults1;
+                rawResults12 = rawResults.rawResults2;
+
+                (List<double>? smoothResults1, List<double>? smoothResults2) smoothResults = MathHelper.ReturnValueNormalized(interpSmoothed1, interpSmoothed2, _mode);
+                smoothedResults1 = smoothResults.smoothResults1;
+                smoothedResults2 = smoothResults.smoothResults2;
+            }
 
             Unit = ordered1.FirstOrDefault()?.Unit ?? ordered2.FirstOrDefault()?.Unit;
-
-            //return new ChartComputationResult
-            //{
-            //    Timestamps = combinedTimestamps,
-            //    IntervalIndices = intervalIndices,
-            //    NormalizedIntervals = normalizedIntervals,
-            //    PrimaryRawValues = rawResults,
-            //    PrimarySmoothed = smoothedResults,
-            //    TickInterval = tickInterval,
-            //    DateRange = dateRange,
-            //    Unit = Unit
-            //};
 
             return new ChartComputationResult
             {
