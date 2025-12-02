@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Class;
+using DataVisualiser.Class;
 using LiveCharts;
 using LiveCharts.Wpf;
 using System.Windows;
@@ -135,6 +135,152 @@ namespace DataVisualiser.Helper
             return string.Join(" | ", parts);
         }
 
+        /// <summary>
+        /// Returns formatted values in the order: Primary Smoothed, Secondary Smoothed, Primary Raw, Secondary Raw.
+        /// Format: "{metric subtype} Smoothed: {value}" or "{metric subtype} Raw: {value}"
+        /// </summary>
+        public static string GetChartValuesFormattedAtIndex(CartesianChart chart, int index)
+        {
+            if (chart == null) return "N/A";
+            if (chart.Series == null || chart.Series.Count == 0) return "No series";
+
+            // Store values by series type
+            string? primarySmoothedValue = null;
+            string? primaryRawValue = null;
+            string? secondarySmoothedValue = null;
+            string? secondaryRawValue = null;
+            string? primarySeriesName = null;
+            string? secondarySeriesName = null;
+
+            // First pass: identify primary and secondary series names
+            var seenBaseNames = new HashSet<string>();
+            foreach (var s in chart.Series)
+            {
+                if (s is LineSeries lineSeries)
+                {
+                    var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
+                    string baseName = title;
+
+                    if (title.EndsWith(" (Raw)"))
+                    {
+                        baseName = title.Substring(0, title.Length - 6); // Remove " (Raw)"
+                    }
+                    else if (title.EndsWith(" (Smoothed)"))
+                    {
+                        baseName = title.Substring(0, title.Length - 11); // Remove " (Smoothed)"
+                    }
+
+                    if (!seenBaseNames.Contains(baseName))
+                    {
+                        seenBaseNames.Add(baseName);
+                        if (primarySeriesName == null)
+                        {
+                            primarySeriesName = baseName;
+                        }
+                        else if (secondarySeriesName == null && baseName != primarySeriesName)
+                        {
+                            secondarySeriesName = baseName;
+                        }
+                    }
+                }
+            }
+
+            // Second pass: extract values
+            foreach (var s in chart.Series)
+            {
+                if (s is LineSeries lineSeries)
+                {
+                    var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
+
+                    // Extract value
+                    string? value = null;
+                    if (lineSeries.Values != null && index >= 0 && index < lineSeries.Values.Count)
+                    {
+                        try
+                        {
+                            var raw = lineSeries.Values[index];
+                            var val = Convert.ToDouble(raw);
+                            value = MathHelper.FormatToThreeSignificantDigits(val);
+                        }
+                        catch
+                        {
+                            value = "N/A";
+                        }
+                    }
+                    else
+                    {
+                        value = "N/A";
+                    }
+
+                    // Parse title to determine if it's Primary/Secondary and Raw/Smoothed
+                    bool isRaw = false;
+                    bool isSmoothed = false;
+                    string baseName = title;
+
+                    if (title.EndsWith(" (Raw)"))
+                    {
+                        baseName = title.Substring(0, title.Length - 6); // Remove " (Raw)"
+                        isRaw = true;
+                    }
+                    else if (title.EndsWith(" (Smoothed)"))
+                    {
+                        baseName = title.Substring(0, title.Length - 11); // Remove " (Smoothed)"
+                        isSmoothed = true;
+                    }
+
+                    // Determine if this is primary or secondary
+                    bool isPrimary = (baseName == primarySeriesName);
+                    bool isSecondary = (baseName == secondarySeriesName);
+
+                    // Store the value in the appropriate slot
+                    if (isPrimary && isSmoothed)
+                    {
+                        primarySmoothedValue = value;
+                    }
+                    else if (isPrimary && isRaw)
+                    {
+                        primaryRawValue = value;
+                    }
+                    else if (isSecondary && isSmoothed)
+                    {
+                        secondarySmoothedValue = value;
+                    }
+                    else if (isSecondary && isRaw)
+                    {
+                        secondaryRawValue = value;
+                    }
+                }
+            }
+
+            // Build the formatted string in the specified order
+            var parts = new List<string>();
+
+            // 1. Primary Smoothed
+            if (primarySeriesName != null && primarySmoothedValue != null)
+            {
+                parts.Add($"{primarySeriesName} Smoothed: {primarySmoothedValue}");
+            }
+
+            // 2. Secondary Smoothed
+            if (secondarySeriesName != null && secondarySmoothedValue != null)
+            {
+                parts.Add($"{secondarySeriesName} Smoothed: {secondarySmoothedValue}");
+            }
+
+            // 3. Primary Raw
+            if (primarySeriesName != null && primaryRawValue != null)
+            {
+                parts.Add($"{primarySeriesName} Raw: {primaryRawValue}");
+            }
+
+            // 4. Secondary Raw
+            if (secondarySeriesName != null && secondaryRawValue != null)
+            {
+                parts.Add($"{secondarySeriesName} Raw: {secondaryRawValue}");
+            }
+
+            return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
+        }
 
         // Draw (or move) a thin black vertical line by using an AxisSection with zero width
         public static void UpdateVerticalLineForChart(ref CartesianChart chart, int index, ref AxisSection? sectionField)

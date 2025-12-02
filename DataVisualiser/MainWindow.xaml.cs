@@ -26,17 +26,7 @@ namespace DataVisualiser
         private bool _isLoadingMetricTypes = false;
         private bool _isLoadingSubtypes = false;
 
-        private Popup? _sharedHoverPopup;
-        private TextBlock? _hoverTimestampText;
-        private TextBlock? _hoverMainText;
-        private TextBlock? _hoverNormText;
-        private TextBlock? _hoverDiffText;
-        private TextBlock? _hoverRatioText;
-
-        private AxisSection? _verticalLineMain;
-        private AxisSection? _verticalLineNorm;
-        private AxisSection? _verticalLineDiff;
-        private AxisSection? _verticalLineRatio;
+        private ChartTooltipManager? _tooltipManager;
 
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps = new();
         List<string>? subtypeList;
@@ -45,6 +35,7 @@ namespace DataVisualiser
         private bool _isChartNormVisible = false;
         private bool _isChartDiffVisible = false;
         private bool _isChartRatioVisible = false;
+        private bool _isChartWeeklyVisible = false;
 
         // Store last loaded data for charts so they can be reloaded when toggled visible
         private class ChartDataContext
@@ -99,17 +90,19 @@ namespace DataVisualiser
 
             UpdateChartTitlesFromCombos();
 
-            CreateSharedHoverPopup();
-
-            ChartMain.DataHover += OnChartDataHover;
-            ChartNorm.DataHover += OnChartDataHover;
-            ChartDiff.DataHover += OnChartDataHover;
-            ChartRatio.DataHover += OnChartDataHover;
-
-            ChartMain.MouseLeave += OnChartMouseLeave;
-            ChartNorm.MouseLeave += OnChartMouseLeave;
-            ChartDiff.MouseLeave += OnChartMouseLeave;
-            ChartRatio.MouseLeave += OnChartMouseLeave;
+            // Initialize tooltip manager and attach all charts
+            var chartLabels = new Dictionary<CartesianChart, string>
+            {
+                { ChartMain, "Main" },
+                { ChartNorm, "Norm" },
+                { ChartDiff, "Diff" },
+                { ChartRatio, "Ratio" }
+            };
+            _tooltipManager = new ChartTooltipManager(this, chartLabels);
+            _tooltipManager.AttachChart(ChartMain, "Main");
+            _tooltipManager.AttachChart(ChartNorm, "Norm");
+            _tooltipManager.AttachChart(ChartDiff, "Diff");
+            _tooltipManager.AttachChart(ChartRatio, "Ratio");
 
             // Hide ChartDiff and ChartRatio initially
             ChartNormPanel.Visibility = Visibility.Collapsed;
@@ -156,6 +149,9 @@ namespace DataVisualiser
                 _chartRenderEngine.Render(targetChart, model, minHeight);
                 _chartTimestamps[targetChart] = model.Timestamps;
 
+                // Update tooltip manager with new timestamps
+                _tooltipManager?.UpdateChartTimestamps(targetChart, model.Timestamps);
+
                 if (targetChart.AxisY.Count > 0)
                 {
                     var yAxis = targetChart.AxisY[0];
@@ -193,91 +189,11 @@ namespace DataVisualiser
         #endregion
 
         #region UI Initialization
-
-        private void CreateSharedHoverPopup()
-        {
-            _hoverTimestampText = ChartHelper.SetHoverText(true);
-            _hoverMainText = ChartHelper.SetHoverText();
-            _hoverNormText = ChartHelper.SetHoverText();
-            _hoverDiffText = ChartHelper.SetHoverText();
-            _hoverRatioText = ChartHelper.SetHoverText();
-
-            var stack = new StackPanel
-            {
-                Orientation = Orientation.Vertical,
-                Children =
-                {
-                    _hoverTimestampText,
-                    _hoverMainText,
-                    _hoverNormText,
-                    _hoverDiffText,
-                    _hoverRatioText
-                }
-            };
-
-            var border = ChartHelper.CreateBorder(stack);
-            _sharedHoverPopup = CreatePopUp(border);
-        }
-
-        public Popup CreatePopUp(Border border)
-        {
-            var popup = new Popup
-            {
-                Child = border,
-                Placement = PlacementMode.Mouse,
-                StaysOpen = true,
-                AllowsTransparency = true,
-                PlacementTarget = this
-            };
-
-            return popup;
-        }
-
+        // Tooltip initialization is now handled by ChartTooltipManager
         #endregion
 
         #region Chart Interaction (Hover/Mouse Events)
-
-        private void OnChartDataHover(object? sender, ChartPoint chartPoint)
-        {
-            if (chartPoint == null) return;
-
-            int index = (int)Math.Round(chartPoint.X);
-            string timestampText = ChartHelper.GetTimestampTextForIndex(index, _chartTimestamps, ChartMain, ChartNorm, ChartDiff, ChartRatio);
-            string mainValues = ChartHelper.GetChartValuesAtIndex(ChartMain, index);
-            string normValues = ChartHelper.GetChartValuesAtIndex(ChartNorm, index);
-            string diffValues = ChartHelper.GetChartValuesAtIndex(ChartDiff, index);
-            string ratioValues = ChartHelper.GetChartValuesAtIndex(ChartRatio, index);
-
-            if (_hoverTimestampText != null) _hoverTimestampText.Text = timestampText;
-            if (_hoverMainText != null) _hoverMainText.Text = $"Main: {mainValues}";
-            if (_hoverNormText != null) _hoverNormText.Text = $"Norm: {normValues}";
-            if (_hoverDiffText != null) _hoverDiffText.Text = $"Diff: {diffValues}";
-            if (_hoverRatioText != null) _hoverRatioText.Text = $"Ratio: {ratioValues}";
-
-            if (_sharedHoverPopup != null)
-                ChartHelper.PositionHoverPopup(_sharedHoverPopup);
-
-            ChartHelper.UpdateVerticalLineForChart(ref ChartMain, index, ref _verticalLineMain);
-            ChartHelper.UpdateVerticalLineForChart(ref ChartNorm, index, ref _verticalLineNorm);
-            ChartHelper.UpdateVerticalLineForChart(ref ChartDiff, index, ref _verticalLineDiff);
-            ChartHelper.UpdateVerticalLineForChart(ref ChartRatio, index, ref _verticalLineRatio);
-        }
-
-        private void OnChartMouseLeave(object? sender, System.Windows.Input.MouseEventArgs e)
-        {
-            ClearHoverVisuals();
-        }
-
-        private void ClearHoverVisuals()
-        {
-            if (_sharedHoverPopup != null && _sharedHoverPopup.IsOpen) _sharedHoverPopup.IsOpen = false;
-
-            ChartHelper.RemoveAxisSection(ref ChartMain, _verticalLineMain);
-            ChartHelper.RemoveAxisSection(ref ChartNorm, _verticalLineNorm);
-            ChartHelper.RemoveAxisSection(ref ChartDiff, _verticalLineDiff);
-            ChartHelper.RemoveAxisSection(ref ChartRatio, _verticalLineRatio);
-        }
-
+        // Tooltip and hover interactions are now handled by ChartTooltipManager
         #endregion
 
         #region Data Loading and Selection Event Handlers
@@ -380,6 +296,161 @@ namespace DataVisualiser
 
             UpdateChartTitlesFromCombos();
         }
+
+        /// <summary>
+        /// Builds a Monday->Sunday min-max stacked column visualization:
+        ///  - baseline (transparent) = min per day
+        ///  - range column (blue) = max - min per day (stacked)
+        /// </summary>
+        private async Task UpdateWeeklyDistributionChartAsync(CartesianChart targetChart, IEnumerable<HealthMetricData> data, string displayName, DateTime from, DateTime to, double minHeight = 400.0)
+        {
+            if (data == null)
+            {
+                ChartHelper.ClearChart(targetChart, _chartTimestamps);
+                return;
+            }
+
+            // compute using strategy inside Task.Run to avoid blocking UI (consistent with your pattern)
+            var computeTask = Task.Run(() =>
+            {
+                var strat = new DataVisualiser.Charts.Strategies.WeeklyDistributionStrategy(data, displayName, from, to);
+                var res = strat.Compute();
+                return res;
+            });
+
+            var result = await computeTask;
+
+            if (result == null)
+            {
+                ChartHelper.ClearChart(targetChart, _chartTimestamps);
+                return;
+            }
+
+            try
+            {
+                // Clear previous series
+                targetChart.Series.Clear();
+
+                // Monday->Sunday names already set in XAML labels, but we'll keep an ordered array if needed
+                var dayLabels = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+
+                // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
+                var mins = result.PrimaryRawValues;
+                var ranges = result.PrimarySmoothed;
+
+                // If mins or ranges are missing or lengths differ, bail gracefully
+                if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
+                {
+                    ChartHelper.ClearChart(targetChart, _chartTimestamps);
+                    return;
+                }
+
+                // Baseline series: invisible columns used to set the bottom of each stacked column
+                var baselineSeries = new LiveCharts.Wpf.StackedColumnSeries
+                {
+                    Title = $"{displayName} baseline",
+                    Values = new LiveCharts.ChartValues<double>(),
+                    Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+                    StrokeThickness = 0,
+                    MaxColumnWidth = 40
+                };
+
+                // Range series: visible blue stacked columns placed on top of baseline
+                var rangeSeries = new LiveCharts.Wpf.StackedColumnSeries
+                {
+                    Title = $"{displayName} range",
+                    Values = new LiveCharts.ChartValues<double>(),
+                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)), // light blue
+                    Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                    StrokeThickness = 1,
+                    MaxColumnWidth = 40
+                };
+
+                // Populate values Monday -> Sunday
+                for (int i = 0; i < 7; i++)
+                {
+                    var minVal = mins[i];
+                    var rangeVal = ranges[i];
+
+                    // Replace NaN with 0 so columns show nothing for empty days
+                    if (double.IsNaN(minVal)) minVal = 0.0;
+                    if (double.IsNaN(rangeVal) || rangeVal < 0) rangeVal = 0.0;
+
+                    baselineSeries.Values.Add(minVal);
+                    rangeSeries.Values.Add(rangeVal);
+                }
+
+                // Add baseline first, then range (stacked)
+                targetChart.Series.Add(baselineSeries);
+                targetChart.Series.Add(rangeSeries);
+
+                //// --- ensure categorical alignment for Monday(0)..Sunday(6) ---
+                //if (targetChart.AxisX.Count > 0)
+                //{
+                //    var xAxis = targetChart.AxisX[0];
+
+                //    // enforce labels and ordering (defensive)
+                //    xAxis.Labels = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+                //    // lock tick step to 1 so integer ticks align with columns
+                //    xAxis.Separator = new LiveCharts.Wpf.Separator { Step = 1 };
+
+                //    // Give the axis half-unit padding so integer-indexed columns (0..6) are centered on ticks.
+                //    // This ensures stable alignment while zooming/panning.
+                //    xAxis.MinValue = -0.5;
+                //    xAxis.MaxValue = 6.5;
+
+                //    // Optional: keep labels visible and let the chart show them
+                //    xAxis.ShowLabels = true;
+                //}
+
+                // Configure axes: Y axis floor/ceiling from underlying raw data
+                var allValues = new List<double>();
+                for (int i = 0; i < 7; i++)
+                {
+                    if (!double.IsNaN(mins[i])) allValues.Add(mins[i]);
+                    if (!double.IsNaN(mins[i]) && !double.IsNaN(ranges[i])) allValues.Add(mins[i] + ranges[i]);
+                }
+
+                if (allValues.Count > 0)
+                {
+                    var min = Math.Floor(allValues.Min() / 5.0) * 5.0; // round down to nearest 5
+                    var max = Math.Ceiling(allValues.Max() / 5.0) * 5.0; // round up to nearest 5
+
+                    // small padding
+                    var pad = Math.Max(5, (max - min) * 0.05);
+                    var yMin = Math.Max(0, min - pad);
+                    var yMax = max + pad;
+
+                    if (targetChart.AxisY.Count > 0)
+                    {
+                        var yAxis = targetChart.AxisY[0];
+                        yAxis.MinValue = yMin;
+                        yAxis.MaxValue = yMax;
+
+                        // Set a sensible step
+                        var step = MathHelper.RoundToThreeSignificantDigits((yMax - yMin) / 8.0);
+                        if (step > 0 && !double.IsNaN(step) && !double.IsInfinity(step))
+                            yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
+
+                        yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+                    }
+                }
+
+                // Keep consistent UI patterns (tooltip, timestamps)
+                _chartTimestamps[targetChart] = new List<DateTime>(); // not used for categorical chart
+
+                ChartHelper.InitializeChartTooltip(targetChart);
+
+                ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"Error updating weekly distribution chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
 
         /// <summary>
         /// Loads subtypes for the currently selected metric type into the subtype combo boxes.
@@ -590,6 +661,15 @@ namespace DataVisualiser
                     {
                         ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
                     }
+                    // Insert after ChartNorm update (and before ChartDiff)
+                    if (_isChartWeeklyVisible)
+                    {
+                        await UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, from, to, minHeight: 400);
+                    }
+                    else
+                    {
+                        ChartHelper.ClearChart(ChartWeekly, _chartTimestamps);
+                    }
                     if (_isChartDiffVisible)
                     {
                         await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
@@ -705,6 +785,37 @@ namespace DataVisualiser
                 ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
             }
         }
+
+        /// <summary>
+        /// Toggles Weekly Distribution chart visibility and reloads data if available.
+        /// Default state is collapsed — toggle shows it.
+        /// </summary>
+        private async void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
+        {
+            _isChartWeeklyVisible = !_isChartWeeklyVisible;
+
+            if (_isChartWeeklyVisible)
+            {
+                ChartWeeklyPanel.Visibility = Visibility.Visible;
+                ChartWeeklyToggleButton.Content = "Hide";
+
+                // reload if we have a stored data context (single metric series required)
+                if (_lastChartDataContext != null && _lastChartDataContext.Data1 != null)
+                {
+                    // we use Data1 for this chart (single-series distribution)
+                    var data = _lastChartDataContext.Data1;
+
+                    await UpdateWeeklyDistributionChartAsync(ChartWeekly, data, _lastChartDataContext.DisplayName1, _lastChartDataContext.From, _lastChartDataContext.To, minHeight: 400);
+                }
+            }
+            else
+            {
+                ChartWeeklyPanel.Visibility = Visibility.Collapsed;
+                ChartWeeklyToggleButton.Content = "Show";
+                ChartHelper.ClearChart(ChartWeekly, _chartTimestamps);
+            }
+        }
+
 
         /// <summary>
         /// Toggles ChartDiff visibility and reloads data if available.
@@ -870,5 +981,14 @@ namespace DataVisualiser
         }
 
         #endregion
+
+        /// <summary>
+        /// Handles window closing to dispose of resources.
+        /// </summary>
+        protected override void OnClosed(EventArgs e)
+        {
+            _tooltipManager?.Dispose();
+            base.OnClosed(e);
+        }
     }
 }
