@@ -302,152 +302,140 @@ namespace DataVisualiser
         ///  - baseline (transparent) = min per day
         ///  - range column (blue) = max - min per day (stacked)
         /// </summary>
-        private async Task UpdateWeeklyDistributionChartAsync(CartesianChart targetChart, IEnumerable<HealthMetricData> data, string displayName, DateTime from, DateTime to, double minHeight = 400.0)
+        private async Task UpdateWeeklyDistributionChartAsync(
+            CartesianChart chart,
+            IEnumerable<HealthMetricData> metrics,
+            string title,
+            double minHeight = 400)
         {
-            if (data == null)
-            {
-                ChartHelper.ClearChart(targetChart, _chartTimestamps);
-                return;
-            }
-
-            // compute using strategy inside Task.Run to avoid blocking UI (consistent with your pattern)
-            var computeTask = Task.Run(() =>
-            {
-                var strat = new DataVisualiser.Charts.Strategies.WeeklyDistributionStrategy(data, displayName, from, to);
-                var res = strat.Compute();
-                return res;
-            });
-
-            var result = await computeTask;
-
-            if (result == null)
-            {
-                ChartHelper.ClearChart(targetChart, _chartTimestamps);
-                return;
-            }
-
             try
             {
-                // Clear previous series
-                targetChart.Series.Clear();
+                chart.Visibility = Visibility.Visible;
 
-                // Monday->Sunday names already set in XAML labels, but we'll keep an ordered array if needed
-                var dayLabels = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+                var metricsList = metrics
+                    .Where(m => m.Value.HasValue)
+                    .ToList();
 
-                // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
-                var mins = result.PrimaryRawValues;
-                var ranges = result.PrimarySmoothed;
-
-                // If mins or ranges are missing or lengths differ, bail gracefully
-                if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
+                if (!metricsList.Any())
                 {
-                    ChartHelper.ClearChart(targetChart, _chartTimestamps);
+                    chart.Series = new SeriesCollection();
                     return;
                 }
 
-                // Baseline series: invisible columns used to set the bottom of each stacked column
-                var baselineSeries = new LiveCharts.Wpf.StackedColumnSeries
+                // -----------------------------
+                // 1. Compute per-day min/max
+                // -----------------------------
+                var dayGroups = metricsList
+                    .GroupBy(m => m.NormalizedTimestamp.DayOfWeek)
+                    .OrderBy(g => g.Key)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => new
+                        {
+                            Min = (double)g.Min(x => x.Value!.Value),
+                            Max = (double)g.Max(x => x.Value!.Value),
+                            Values = g.Select(x => (double)x.Value!.Value).ToList()
+                        });
+
+                // -----------------------------
+                // 2. Compute frequency buckets
+                // -----------------------------
+                double globalMin = dayGroups.Min(g => g.Value.Min);
+                double globalMax = dayGroups.Max(g => g.Value.Max);
+
+                double range = globalMax - globalMin;
+                int bucketCount = range < 20 ? 5 : range < 50 ? 10 : 15;
+
+                double bucketSize = range / bucketCount;
+
+                // Make buckets
+                List<(double Min, double Max)> buckets = new();
+
+                for (int i = 0; i < bucketCount; i++)
                 {
-                    Title = $"{displayName} baseline",
-                    Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                    StrokeThickness = 0,
-                    MaxColumnWidth = 40
-                };
-
-                // Range series: visible blue stacked columns placed on top of baseline
-                var rangeSeries = new LiveCharts.Wpf.StackedColumnSeries
-                {
-                    Title = $"{displayName} range",
-                    Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)), // light blue
-                    Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
-                    StrokeThickness = 1,
-                    MaxColumnWidth = 40
-                };
-
-                // Populate values Monday -> Sunday
-                for (int i = 0; i < 7; i++)
-                {
-                    var minVal = mins[i];
-                    var rangeVal = ranges[i];
-
-                    // Replace NaN with 0 so columns show nothing for empty days
-                    if (double.IsNaN(minVal)) minVal = 0.0;
-                    if (double.IsNaN(rangeVal) || rangeVal < 0) rangeVal = 0.0;
-
-                    baselineSeries.Values.Add(minVal);
-                    rangeSeries.Values.Add(rangeVal);
+                    double bMin = globalMin + i * bucketSize;
+                    double bMax = (i == bucketCount - 1) ? globalMax : bMin + bucketSize;
+                    buckets.Add((bMin, bMax));
                 }
 
-                // Add baseline first, then range (stacked)
-                targetChart.Series.Add(baselineSeries);
-                targetChart.Series.Add(rangeSeries);
+                // Count frequencies per day per bucket
+                Dictionary<DayOfWeek, int[]> freq = new();
 
-                //// --- ensure categorical alignment for Monday(0)..Sunday(6) ---
-                //if (targetChart.AxisX.Count > 0)
-                //{
-                //    var xAxis = targetChart.AxisX[0];
-
-                //    // enforce labels and ordering (defensive)
-                //    xAxis.Labels = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-
-                //    // lock tick step to 1 so integer ticks align with columns
-                //    xAxis.Separator = new LiveCharts.Wpf.Separator { Step = 1 };
-
-                //    // Give the axis half-unit padding so integer-indexed columns (0..6) are centered on ticks.
-                //    // This ensures stable alignment while zooming/panning.
-                //    xAxis.MinValue = -0.5;
-                //    xAxis.MaxValue = 6.5;
-
-                //    // Optional: keep labels visible and let the chart show them
-                //    xAxis.ShowLabels = true;
-                //}
-
-                // Configure axes: Y axis floor/ceiling from underlying raw data
-                var allValues = new List<double>();
-                for (int i = 0; i < 7; i++)
+                foreach (var kv in dayGroups)
                 {
-                    if (!double.IsNaN(mins[i])) allValues.Add(mins[i]);
-                    if (!double.IsNaN(mins[i]) && !double.IsNaN(ranges[i])) allValues.Add(mins[i] + ranges[i]);
-                }
+                    int[] counts = new int[bucketCount];
 
-                if (allValues.Count > 0)
-                {
-                    var min = Math.Floor(allValues.Min() / 5.0) * 5.0; // round down to nearest 5
-                    var max = Math.Ceiling(allValues.Max() / 5.0) * 5.0; // round up to nearest 5
-
-                    // small padding
-                    var pad = Math.Max(5, (max - min) * 0.05);
-                    var yMin = Math.Max(0, min - pad);
-                    var yMax = max + pad;
-
-                    if (targetChart.AxisY.Count > 0)
+                    foreach (var v in kv.Value.Values)
                     {
-                        var yAxis = targetChart.AxisY[0];
-                        yAxis.MinValue = yMin;
-                        yAxis.MaxValue = yMax;
+                        int idx = (int)Math.Floor((v - globalMin) / bucketSize);
+                        if (idx >= bucketCount) idx = bucketCount - 1;
+                        if (idx < 0) idx = 0;
 
-                        // Set a sensible step
-                        var step = MathHelper.RoundToThreeSignificantDigits((yMax - yMin) / 8.0);
-                        if (step > 0 && !double.IsNaN(step) && !double.IsInfinity(step))
-                            yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
-
-                        yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+                        counts[idx]++;
                     }
+
+                    freq[kv.Key] = counts;
                 }
 
-                // Keep consistent UI patterns (tooltip, timestamps)
-                _chartTimestamps[targetChart] = new List<DateTime>(); // not used for categorical chart
+                // -----------------------------
+                // 3. Build stacked columns
+                // -----------------------------
+                int globalMaxFreq = freq.Max(f => f.Value.Max());
 
-                ChartHelper.InitializeChartTooltip(targetChart);
+                SeriesCollection series = new SeriesCollection();
 
-                ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
+                for (int b = 0; b < bucketCount; b++)
+                {
+                    byte shade = (byte)(40 + (200 * (b + 1) / bucketCount));
+
+                    SolidColorBrush brush = new SolidColorBrush(Color.FromRgb(0, 0, shade));
+
+                    var bucketSeries = new ColumnSeries
+                    {
+                        Title = $"B{b + 1}",
+                        Fill = brush,
+                        Stroke = brush,
+                        StrokeThickness = 1,
+                        ColumnPadding = 1,
+                        Values = new ChartValues<double>()
+                    };
+
+                    foreach (DayOfWeek dow in Enum.GetValues(typeof(DayOfWeek)))
+                    {
+                        bucketSeries.Values.Add(Convert.ToDouble(freq.ContainsKey(dow) ? freq[dow][b] : 0));
+                    }
+
+                    series.Add(bucketSeries);
+                }
+
+                // Update UI on dispatcher
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    chart.MinHeight = minHeight;
+                    chart.Series = series;
+
+                    chart.AxisX.Clear();
+                    chart.AxisX.Add(new Axis
+                    {
+                        Title = "Day of Week",
+                        Labels = new[]
+                        {
+                    "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+                }
+                    });
+
+                    chart.AxisY.Clear();
+                    chart.AxisY.Add(new Axis
+                    {
+                        Title = "Frequency",
+                        MinValue = 0,
+                        MaxValue = globalMaxFreq + 1
+                    });
+                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
-                MessageBox.Show($"Error updating weekly distribution chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Console.WriteLine("Error in Weekly Distribution Chart: " + ex.Message);
             }
         }
 
@@ -664,7 +652,7 @@ namespace DataVisualiser
                     // Insert after ChartNorm update (and before ChartDiff)
                     if (_isChartWeeklyVisible)
                     {
-                        await UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, from, to, minHeight: 400);
+                        await UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, "Weekly Distribution");
                     }
                     else
                     {
@@ -805,7 +793,7 @@ namespace DataVisualiser
                     // we use Data1 for this chart (single-series distribution)
                     var data = _lastChartDataContext.Data1;
 
-                    await UpdateWeeklyDistributionChartAsync(ChartWeekly, data, _lastChartDataContext.DisplayName1, _lastChartDataContext.From, _lastChartDataContext.To, minHeight: 400);
+                    await UpdateWeeklyDistributionChartAsync(ChartWeekly, data, "Weekly Distribution");
                 }
             }
             else
