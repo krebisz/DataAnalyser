@@ -34,10 +34,10 @@
         <!-- ====== SUBTYPE PANEL ====== -->
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5" Name="MetricSubtypePanel">
             <Label Content="Metric Subtype 1:" VerticalAlignment="Center" Margin="5,0"/>
-            <ComboBox x:Name="SubtypeCombo" Width="250" Margin="5"
-                      IsEditable="False"
-                      SelectionChanged="OnAnySubtypeSelectionChanged"
-                      IsEnabled="False"/>
+            <ComboBox x:Name="SubtypeCombo"
+                Width="250" Margin="5"
+                IsEditable="False"
+                IsEnabled="False"/>
             <Button Content="Add Subtype" Click="AddSubtypeComboBox" Margin="5" Padding="10,5"/>
         </StackPanel>
 

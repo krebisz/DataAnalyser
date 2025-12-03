@@ -2,6 +2,7 @@
 using DataVisualiser.Class;
 using DataVisualiser.Helper;
 using DataVisualiser.Services;
+using DataVisualiser.UI.SubtypeSelectors;
 using LiveCharts;
 using LiveCharts.Wpf;
 using System;
@@ -41,6 +42,7 @@ namespace DataVisualiser
         private MetricSelectionService _metricSelectionService;
         private ChartUpdateCoordinator _chartUpdateCoordinator;
         private WeeklyDistributionService _weeklyDistributionService;
+        private SubtypeSelectorManager _selectorManager;
 
         // Store last loaded data for charts so they can be reloaded when toggled visible
         private class ChartDataContext
@@ -68,6 +70,14 @@ namespace DataVisualiser
 
             _chartComputationEngine = new ChartComputationEngine();
             _chartRenderEngine = new ChartRenderEngine(normalizeYAxisDelegate: (axis, rawData, smoothed) => ChartHelper.NormalizeYAxis(axis, rawData, smoothed), adjustHeightDelegate: (chart, minHeight) => ChartHelper.AdjustChartHeightBasedOnYAxis(chart, minHeight));
+
+            _selectorManager = new SubtypeSelectorManager(MetricSubtypePanel, SubtypeCombo);
+
+            _selectorManager.SubtypeSelectionChanged += (s, e) =>
+            {
+                UpdateChartTitlesFromCombos();
+                OnAnySubtypeSelectionChanged(s, null);
+            };
 
 
             _comboManager = new SubtypeComboBoxManager(MetricSubtypePanel);
@@ -133,89 +143,6 @@ namespace DataVisualiser
             ChartDiffToggleButton.Content = "Show";
             ChartRatioToggleButton.Content = "Show";
         }
-
-        #region Chart Update Methods
-
-        private async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0)
-        {
-            var result = await _chartComputationEngine.ComputeAsync(strategy);
-
-            if (result == null)
-            {
-                ChartHelper.ClearChart(targetChart, _chartTimestamps);
-                return;
-            }
-
-            var model = new ChartRenderModel
-            {
-                PrimarySeriesName = strategy.PrimaryLabel ?? primaryLabel,
-                SecondarySeriesName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
-                PrimaryRaw = result.PrimaryRawValues,
-                PrimarySmoothed = result.PrimarySmoothed,
-                SecondaryRaw = result.SecondaryRawValues,
-                SecondarySmoothed = result.SecondarySmoothed,
-                PrimaryColor = ColourPalette.Next(targetChart),
-                SecondaryColor = result.SecondaryRawValues != null && result.SecondarySmoothed != null
-                    ? ColourPalette.Next(targetChart)
-                    : Colors.Red,
-                Unit = result.Unit,
-                Timestamps = result.Timestamps,
-                IntervalIndices = result.IntervalIndices,
-                NormalizedIntervals = result.NormalizedIntervals,
-                TickInterval = result.TickInterval
-            };
-
-            try
-            {
-                _chartRenderEngine.Render(targetChart, model, minHeight);
-                _chartTimestamps[targetChart] = model.Timestamps;
-
-                // Update tooltip manager with new timestamps
-                _tooltipManager?.UpdateChartTimestamps(targetChart, model.Timestamps);
-
-                if (targetChart.AxisY.Count > 0)
-                {
-                    var yAxis = targetChart.AxisY[0];
-                    var syntheticRawData = new List<HealthMetricData>();
-                    var timestamps = model.Timestamps;
-                    var primaryRaw = model.PrimaryRaw;
-
-                    for (int i = 0; i < timestamps.Count; i++)
-                    {
-                        var val = primaryRaw[i];
-                        syntheticRawData.Add(new HealthMetricData
-                        {
-                            NormalizedTimestamp = timestamps[i],
-                            Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
-                            Unit = model.Unit
-                        });
-                    }
-
-                    var smoothedList = model.PrimarySmoothed.ToList();
-                    if (model.SecondarySmoothed != null)
-                        smoothedList.AddRange(model.SecondarySmoothed);
-
-                    ChartHelper.NormalizeYAxis(yAxis, syntheticRawData, smoothedList);
-                    ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
-                    ChartHelper.InitializeChartTooltip(targetChart);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Chart update/render error: {ex.Message}\n{ex.StackTrace}");
-                MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        #endregion
-
-        #region UI Initialization
-        // Tooltip initialization is now handled by ChartTooltipManager
-        #endregion
-
-        #region Chart Interaction (Hover/Mouse Events)
-        // Tooltip and hover interactions are now handled by ChartTooltipManager
-        #endregion
 
         #region Data Loading and Selection Event Handlers
 
@@ -320,161 +247,6 @@ namespace DataVisualiser
         }
 
         /// <summary>
-        /// Builds a Monday->Sunday min-max stacked column visualization:
-        ///  - baseline (transparent) = min per day
-        ///  - range column (blue) = max - min per day (stacked)
-        /// </summary>
-        private async Task UpdateWeeklyDistributionChartAsync(CartesianChart targetChart, IEnumerable<HealthMetricData> data, string displayName, DateTime from, DateTime to, double minHeight = 400.0)
-        {
-            if (data == null)
-            {
-                ChartHelper.ClearChart(targetChart, _chartTimestamps);
-                return;
-            }
-
-            // compute using strategy inside Task.Run to avoid blocking UI (consistent with your pattern)
-            var computeTask = Task.Run(() =>
-            {
-                var strat = new DataVisualiser.Charts.Strategies.WeeklyDistributionStrategy(data, displayName, from, to);
-                var res = strat.Compute();
-                return res;
-            });
-
-            var result = await computeTask;
-
-            if (result == null)
-            {
-                ChartHelper.ClearChart(targetChart, _chartTimestamps);
-                return;
-            }
-
-            try
-            {
-                // Clear previous series
-                targetChart.Series.Clear();
-
-                // Monday->Sunday names already set in XAML labels, but we'll keep an ordered array if needed
-                var dayLabels = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-
-                // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
-                var mins = result.PrimaryRawValues;
-                var ranges = result.PrimarySmoothed;
-
-                // If mins or ranges are missing or lengths differ, bail gracefully
-                if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
-                {
-                    ChartHelper.ClearChart(targetChart, _chartTimestamps);
-                    return;
-                }
-
-                // Baseline series: invisible columns used to set the bottom of each stacked column
-                var baselineSeries = new LiveCharts.Wpf.StackedColumnSeries
-                {
-                    Title = $"{displayName} baseline",
-                    Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                    StrokeThickness = 0,
-                    MaxColumnWidth = 40
-                };
-
-                // Range series: visible blue stacked columns placed on top of baseline
-                var rangeSeries = new LiveCharts.Wpf.StackedColumnSeries
-                {
-                    Title = $"{displayName} range",
-                    Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)), // light blue
-                    Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
-                    StrokeThickness = 1,
-                    MaxColumnWidth = 40
-                };
-
-                // Populate values Monday -> Sunday
-                for (int i = 0; i < 7; i++)
-                {
-                    var minVal = mins[i];
-                    var rangeVal = ranges[i];
-
-                    // Replace NaN with 0 so columns show nothing for empty days
-                    if (double.IsNaN(minVal)) minVal = 0.0;
-                    if (double.IsNaN(rangeVal) || rangeVal < 0) rangeVal = 0.0;
-
-                    baselineSeries.Values.Add(minVal);
-                    rangeSeries.Values.Add(rangeVal);
-                }
-
-                // Add baseline first, then range (stacked)
-                targetChart.Series.Add(baselineSeries);
-                targetChart.Series.Add(rangeSeries);
-
-                //// --- ensure categorical alignment for Monday(0)..Sunday(6) ---
-                //if (targetChart.AxisX.Count > 0)
-                //{
-                //    var xAxis = targetChart.AxisX[0];
-
-                //    // enforce labels and ordering (defensive)
-                //    xAxis.Labels = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-
-                //    // lock tick step to 1 so integer ticks align with columns
-                //    xAxis.Separator = new LiveCharts.Wpf.Separator { Step = 1 };
-
-                //    // Give the axis half-unit padding so integer-indexed columns (0..6) are centered on ticks.
-                //    // This ensures stable alignment while zooming/panning.
-                //    xAxis.MinValue = -0.5;
-                //    xAxis.MaxValue = 6.5;
-
-                //    // Optional: keep labels visible and let the chart show them
-                //    xAxis.ShowLabels = true;
-                //}
-
-                // Configure axes: Y axis floor/ceiling from underlying raw data
-                var allValues = new List<double>();
-                for (int i = 0; i < 7; i++)
-                {
-                    if (!double.IsNaN(mins[i])) allValues.Add(mins[i]);
-                    if (!double.IsNaN(mins[i]) && !double.IsNaN(ranges[i])) allValues.Add(mins[i] + ranges[i]);
-                }
-
-                if (allValues.Count > 0)
-                {
-                    var min = Math.Floor(allValues.Min() / 5.0) * 5.0; // round down to nearest 5
-                    var max = Math.Ceiling(allValues.Max() / 5.0) * 5.0; // round up to nearest 5
-
-                    // small padding
-                    var pad = Math.Max(5, (max - min) * 0.05);
-                    var yMin = Math.Max(0, min - pad);
-                    var yMax = max + pad;
-
-                    if (targetChart.AxisY.Count > 0)
-                    {
-                        var yAxis = targetChart.AxisY[0];
-                        yAxis.MinValue = yMin;
-                        yAxis.MaxValue = yMax;
-
-                        // Set a sensible step
-                        var step = MathHelper.RoundToThreeSignificantDigits((yMax - yMin) / 8.0);
-                        if (step > 0 && !double.IsNaN(step) && !double.IsInfinity(step))
-                            yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
-
-                        yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
-                    }
-                }
-
-                // Keep consistent UI patterns (tooltip, timestamps)
-                _chartTimestamps[targetChart] = new List<DateTime>(); // not used for categorical chart
-
-                ChartHelper.InitializeChartTooltip(targetChart);
-
-                ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
-                MessageBox.Show($"Error updating weekly distribution chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-
-        /// <summary>
         /// Loads subtypes for the currently selected metric type into the subtype combo boxes.
         /// </summary>
         private async Task LoadSubtypesForSelectedMetricType()
@@ -496,7 +268,8 @@ namespace DataVisualiser
                 return;
             }
 
-            List<ComboBox> active = _comboManager.GetActiveComboBoxes();
+            //List<ComboBox> active = _comboManager.GetActiveComboBoxes();
+            var active = _selectorManager.GetActiveCombos();
 
             try
             {
@@ -618,11 +391,8 @@ namespace DataVisualiser
                 return;
             }
 
-            List<ComboBox> active = _comboManager.GetActiveComboBoxes();
-
-            string? selectedSubtype = ChartHelper.GetSubMetricType(SubtypeCombo);
-            var dynamicCombo = active.FirstOrDefault(cb => cb != SubtypeCombo);
-            string? selectedSubtype2 = dynamicCombo != null ? ChartHelper.GetSubMetricType(dynamicCombo) : null;
+            var selectedSubtype = _selectorManager.GetPrimarySubtype();
+            var selectedSubtype2 = _selectorManager.GetSecondarySubtype();
 
             var display1 = !string.IsNullOrEmpty(selectedSubtype) ? selectedSubtype : selectedMetricType;
             var display2 = !string.IsNullOrEmpty(selectedSubtype2) ? selectedSubtype2 : selectedMetricType;
@@ -759,20 +529,22 @@ namespace DataVisualiser
 
         private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
         {
-            ComboBox newCombo = _comboManager.AddSubtypeComboBox();
+            var newCombo = _selectorManager.AddSubtypeCombo(subtypeList);
 
-            if (subtypeList != null)
+            _selectorManager.SubtypeSelectionChanged += (s, e) =>
             {
-                foreach (var subtype in subtypeList)
-                {
-                    newCombo.Items.Add(subtype);
-                }
-            }
+                UpdateChartTitlesFromCombos();
+                OnAnySubtypeSelectionChanged(s, null);
+            };
 
-            newCombo.SelectionChanged += OnAnySubtypeSelectionChanged;
+
             newCombo.SelectedIndex = 0;
             newCombo.IsEnabled = true;
+
+            // 🚀 NEW LINE — ensure second subtype label appears
+            UpdateChartTitlesFromCombos();
         }
+
 
         #endregion
 
@@ -961,15 +733,25 @@ namespace DataVisualiser
         /// </summary>
         private void UpdateChartTitlesFromCombos()
         {
-            List<ComboBox> active = _comboManager.GetActiveComboBoxes();
-            // Get the first dynamic combo (excluding the static SubtypeCombo)
-            var SubtypeCombo2 = active.FirstOrDefault(cb => cb != SubtypeCombo);
+            string subtype1 = _selectorManager.GetPrimarySubtype() ?? "";
+            string subtype2 = _selectorManager.GetSecondarySubtype() ?? "";
 
-            string[] titles = ChartHelper.GetChartTitlesFromCombos(TablesCombo, SubtypeCombo, SubtypeCombo2);
-            string display1 = titles.Length > 0 ? titles[0] : string.Empty;
-            string display2 = titles.Length > 1 ? titles[1] : string.Empty;
+            string baseType = TablesCombo.SelectedItem?.ToString() ?? "";
+
+            string display1 = !string.IsNullOrEmpty(subtype1) && subtype1 != "(All)"
+                ? subtype1
+                : baseType;
+
+            string display2 = !string.IsNullOrEmpty(subtype2)
+                ? subtype2
+                : "";
+
+            System.Diagnostics.Debug.WriteLine(
+    $"[DEBUG] subtype1='{_selectorManager.GetPrimarySubtype()}', subtype2='{_selectorManager.GetSecondarySubtype()}'");
+
 
             SetChartTitles(display1, display2);
+
         }
 
         #endregion
@@ -1021,14 +803,5 @@ namespace DataVisualiser
         }
 
         #endregion
-
-        /// <summary>
-        /// Handles window closing to dispose of resources.
-        /// </summary>
-        protected override void OnClosed(EventArgs e)
-        {
-            _tooltipManager?.Dispose();
-            base.OnClosed(e);
-        }
     }
 }
