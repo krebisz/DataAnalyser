@@ -22,7 +22,6 @@ namespace DataVisualiser.State
         public string RightTitle { get; set; } = string.Empty;
 
         // Timestamps linked to each chart
-        public Dictionary<CartesianChart, List<DateTime>> ChartTimestamps { get; } =
-            new Dictionary<CartesianChart, List<DateTime>>();
+        public Dictionary<CartesianChart, List<DateTime>> ChartTimestamps { get; } = new Dictionary<CartesianChart, List<DateTime>>();
     }
 }
