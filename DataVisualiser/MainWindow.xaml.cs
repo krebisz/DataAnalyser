@@ -2,9 +2,11 @@
 using DataVisualiser.Class;
 using DataVisualiser.Helper;
 using DataVisualiser.Services;
+using DataVisualiser.State;
 using DataVisualiser.UI.SubtypeSelectors;
 using LiveCharts;
 using LiveCharts.Wpf;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -25,8 +27,8 @@ namespace DataVisualiser
         private SubtypeComboBoxManager _comboManager;
 
         private readonly string _connectionString;
-        private bool _isLoadingMetricTypes = false;
-        private bool _isLoadingSubtypes = false;
+        //private bool _isLoadingMetricTypes = false;
+        //private bool _isLoadingSubtypes = false;
 
         private ChartTooltipManager? _tooltipManager;
 
@@ -34,39 +36,40 @@ namespace DataVisualiser
         List<string>? subtypeList;
 
         // Chart visibility tracking
-        private bool _isChartNormVisible = false;
-        private bool _isChartDiffVisible = false;
-        private bool _isChartRatioVisible = false;
-        private bool _isChartWeeklyVisible = false;
+        //private bool _isChartNormVisible = false;
+        //private bool _isChartDiffVisible = false;
+        //private bool _isChartRatioVisible = false;
+        //private bool _isChartWeeklyVisible = false;
 
         private MetricSelectionService _metricSelectionService;
         private ChartUpdateCoordinator _chartUpdateCoordinator;
         private WeeklyDistributionService _weeklyDistributionService;
         private SubtypeSelectorManager _selectorManager;
 
-        // Store last loaded data for charts so they can be reloaded when toggled visible
-        private class ChartDataContext
-        {
-            public IEnumerable<HealthMetricData>? Data1 { get; set; }
-            public IEnumerable<HealthMetricData>? Data2 { get; set; }
-            public string DisplayName1 { get; set; } = string.Empty;
-            public string DisplayName2 { get; set; } = string.Empty;
-            public DateTime From { get; set; }
-            public DateTime To { get; set; }
-        }
-
         private ChartDataContext? _lastChartDataContext;
+
+        private readonly ChartState _chartState = new();
+        private readonly MetricState _metricState = new();
+        private readonly UiState _uiState = new();
 
         // ============================================================
         // Normalization mode state (defaults to PercentageOfMax)
         // This maps to the radio buttons added in MainWindow.xaml
         // ============================================================
-        private NormalizationMode _selectedNormalizationMode = NormalizationMode.PercentageOfMax;
+        //private NormalizationMode _selectedNormalizationMode = NormalizationMode.PercentageOfMax;
         // ============================================================
 
         public MainWindow()
         {
             InitializeComponent();
+
+            _uiState.IsLoadingMetricTypes = false;
+            _uiState.IsLoadingSubtypes = false;
+            _chartState.IsNormalizedVisible = false;
+            _chartState.IsDifferenceVisible = false;
+            _chartState.IsRatioVisible = false;
+            _chartState.IsWeeklyVisible = false;
+            _chartState.SelectedNormalizationMode = NormalizationMode.PercentageOfMax;
 
             _chartComputationEngine = new ChartComputationEngine();
             _chartRenderEngine = new ChartRenderEngine(normalizeYAxisDelegate: (axis, rawData, smoothed) => ChartHelper.NormalizeYAxis(axis, rawData, smoothed), adjustHeightDelegate: (chart, minHeight) => ChartHelper.AdjustChartHeightBasedOnYAxis(chart, minHeight));
@@ -172,7 +175,8 @@ namespace DataVisualiser
         {
             try
             {
-                _isLoadingMetricTypes = true;
+                //_isLoadingMetricTypes = true;
+                _uiState.IsLoadingMetricTypes = true;
 
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 var dataFetcher = new DataFetcher(_connectionString);
@@ -189,7 +193,8 @@ namespace DataVisualiser
                 if (TablesCombo.Items.Count > 0)
                 {
                     TablesCombo.SelectedIndex = 0;
-                    _isLoadingMetricTypes = false;
+                    //_isLoadingMetricTypes = false;
+                    _uiState.IsLoadingMetricTypes = false;
                     await LoadSubtypesForSelectedMetricType();
                     await LoadDateRangeForSelectedMetric();
                 }
@@ -209,7 +214,8 @@ namespace DataVisualiser
             }
             finally
             {
-                _isLoadingMetricTypes = false;
+                //_isLoadingMetricTypes = false;
+                _uiState.IsLoadingMetricTypes = false;
             }
         }
 
@@ -218,7 +224,8 @@ namespace DataVisualiser
         /// </summary>
         private async void OnMetricTypeSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (_isLoadingMetricTypes)
+            //if (_isLoadingMetricTypes)
+            if (_uiState.IsLoadingMetricTypes)
                 return;
 
             await LoadSubtypesForSelectedMetricType();
@@ -238,7 +245,8 @@ namespace DataVisualiser
 
         private async Task LoadDateRangeForSelectedMetrics()
         {
-            if (_isLoadingSubtypes || _isLoadingMetricTypes)
+            //if (_isLoadingSubtypes || _isLoadingMetricTypes)
+            if (_uiState.IsLoadingSubtypes || _uiState.IsLoadingMetricTypes)
                 return;
 
             await LoadDateRangeForSelectedMetric();
@@ -273,7 +281,8 @@ namespace DataVisualiser
 
             try
             {
-                _isLoadingSubtypes = true;
+                //_isLoadingSubtypes = true;
+                _uiState.IsLoadingSubtypes = true;
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 var dataFetcher = new DataFetcher(_connectionString);
                 //IEnumerable<string> subtypes = await dataFetcher.GetSubtypesForBaseType(selectedMetricType, tableName);
@@ -319,7 +328,8 @@ namespace DataVisualiser
             }
             finally
             {
-                _isLoadingSubtypes = false;
+                //_isLoadingSubtypes = false;
+                _uiState.IsLoadingSubtypes = false;
             }
         }
 
@@ -446,18 +456,20 @@ namespace DataVisualiser
 
 
                     // Only update visible charts
-                    if (_isChartNormVisible)
+                    //if (_isChartNormVisible)
+                    if (_chartState.IsNormalizedVisible)
                     {
                         // Pass normalization mode into NormalizedStrategy
                         //await UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to, _selectedNormalizationMode), $"{displayName1} ~ {displayName2}", minHeight: 400);
-                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to, _selectedNormalizationMode), $"{displayName1} ~ {displayName2}", minHeight: 400);
+                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to, _chartState.SelectedNormalizationMode), $"{displayName1} ~ {displayName2}", minHeight: 400);
                     }
                     else
                     {
                         ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
                     }
                     // Insert after ChartNorm update (and before ChartDiff)
-                    if (_isChartWeeklyVisible)
+                    //if (_isChartWeeklyVisible)
+                    if (_chartState.IsWeeklyVisible)
                     {
                         //await UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, from, to, minHeight: 400);
                         await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, from, to, minHeight: 400);
@@ -467,7 +479,8 @@ namespace DataVisualiser
                     {
                         ChartHelper.ClearChart(ChartWeekly, _chartTimestamps);
                     }
-                    if (_isChartDiffVisible)
+                    //if (_isChartDiffVisible)
+                    if (_chartState.IsDifferenceVisible)
                     {
                         //await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
                         await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
@@ -477,7 +490,8 @@ namespace DataVisualiser
                         ChartHelper.ClearChart(ChartDiff, _chartTimestamps);
                     }
 
-                    if (_isChartRatioVisible)
+                    //if (_isChartRatioVisible)
+                    if (_chartState.IsRatioVisible)
                     {
                         //await UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
                         await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
@@ -555,9 +569,12 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartNormToggle(object sender, RoutedEventArgs e)
         {
-            _isChartNormVisible = !_isChartNormVisible;
+            //_isChartNormVisible = !_isChartNormVisible;
+            _chartState.IsNormalizedVisible = !_chartState.IsNormalizedVisible;
 
-            if (_isChartNormVisible)
+
+            //if (_isChartNormVisible)
+            if (_chartState.IsNormalizedVisible)
             {
                 ChartNormPanel.Visibility = Visibility.Visible;
                 ChartNormToggleButton.Content = "Hide";
@@ -579,7 +596,7 @@ namespace DataVisualiser
                     //    $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
                     //    minHeight: 400);
 
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To, _selectedNormalizationMode), $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}", minHeight: 400);
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To, _chartState.SelectedNormalizationMode), $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}", minHeight: 400);
                 }
             }
             else
@@ -596,9 +613,11 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
         {
-            _isChartWeeklyVisible = !_isChartWeeklyVisible;
+            //_isChartWeeklyVisible = !_isChartWeeklyVisible;
+            _chartState.IsWeeklyVisible = !_chartState.IsWeeklyVisible;
 
-            if (_isChartWeeklyVisible)
+            //if (_isChartWeeklyVisible)
+            if (_chartState.IsWeeklyVisible)
             {
                 ChartWeeklyPanel.Visibility = Visibility.Visible;
                 ChartWeeklyToggleButton.Content = "Hide";
@@ -627,10 +646,12 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartDiffToggle(object sender, RoutedEventArgs e)
         {
-            _isChartDiffVisible = !_isChartDiffVisible;
+            //_isChartDiffVisible = !_isChartDiffVisible;
+            _chartState.IsDifferenceVisible = !_chartState.IsDifferenceVisible;
 
-            if (_isChartDiffVisible)
-            {
+                //if (_isChartDiffVisible)
+                if (_chartState.IsDifferenceVisible)
+                {
                 ChartDiffPanel.Visibility = Visibility.Visible;
                 ChartDiffToggleButton.Content = "Hide";
 
@@ -665,9 +686,11 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartRatioToggle(object sender, RoutedEventArgs e)
         {
-            _isChartRatioVisible = !_isChartRatioVisible;
+            //_isChartRatioVisible = !_isChartRatioVisible;
+            _chartState.IsRatioVisible = !_chartState.IsRatioVisible;
 
-            if (_isChartRatioVisible)
+            //if (_isChartRatioVisible)
+            if (_chartState.IsRatioVisible)
             {
                 ChartRatioPanel.Visibility = Visibility.Visible;
                 ChartRatioToggleButton.Content = "Hide";
@@ -769,14 +792,15 @@ namespace DataVisualiser
             try
             {
                 if (NormZeroToOneRadio.IsChecked == true)
-                    _selectedNormalizationMode = NormalizationMode.ZeroToOne;
+                    _chartState.SelectedNormalizationMode = NormalizationMode.ZeroToOne;
                 else if (NormPercentOfMaxRadio.IsChecked == true)
-                    _selectedNormalizationMode = NormalizationMode.PercentageOfMax;
+                    _chartState.SelectedNormalizationMode = NormalizationMode.PercentageOfMax;
                 else if (NormRelativeToMaxRadio.IsChecked == true)
-                    _selectedNormalizationMode = NormalizationMode.RelativeToMax;
+                    _chartState.SelectedNormalizationMode = NormalizationMode.RelativeToMax;
 
                 // If Norm chart visible and we have a stored data context, refresh only Normalized chart
-                if (_isChartNormVisible && _lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
+                //if (_isChartNormVisible && _lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
+                if (_chartState.IsNormalizedVisible && _lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
                 {
                     //await UpdateChartUsingStrategyAsync(
                     //    ChartNorm,
@@ -793,7 +817,7 @@ namespace DataVisualiser
                     //    minHeight: 400);
 
 
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To), $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}", minHeight: 400);
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To, _chartState.SelectedNormalizationMode), $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}", minHeight: 400);
             }
             }
             catch (Exception ex)
