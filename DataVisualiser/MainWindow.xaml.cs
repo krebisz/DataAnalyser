@@ -1,6 +1,7 @@
 ﻿using DataVisualiser.Charts;
 using DataVisualiser.Class;
 using DataVisualiser.Helper;
+using DataVisualiser.Services;
 using LiveCharts;
 using LiveCharts.Wpf;
 using System;
@@ -37,6 +38,9 @@ namespace DataVisualiser
         private bool _isChartRatioVisible = false;
         private bool _isChartWeeklyVisible = false;
 
+        private ChartUpdateCoordinator _chartUpdateCoordinator;
+        private WeeklyDistributionService _weeklyDistributionService;
+
         // Store last loaded data for charts so they can be reloaded when toggled visible
         private class ChartDataContext
         {
@@ -60,13 +64,18 @@ namespace DataVisualiser
         public MainWindow()
         {
             InitializeComponent();
-            _comboManager = new SubtypeComboBoxManager(MetricSubtypePanel);
 
             _chartComputationEngine = new ChartComputationEngine();
-            _chartRenderEngine = new ChartRenderEngine(
-                normalizeYAxisDelegate: (axis, rawData, smoothed) => ChartHelper.NormalizeYAxis(axis, rawData, smoothed),
-                adjustHeightDelegate: (chart, minHeight) => ChartHelper.AdjustChartHeightBasedOnYAxis(chart, minHeight)
-            );
+            _chartRenderEngine = new ChartRenderEngine(normalizeYAxisDelegate: (axis, rawData, smoothed) => ChartHelper.NormalizeYAxis(axis, rawData, smoothed), adjustHeightDelegate: (chart, minHeight) => ChartHelper.AdjustChartHeightBasedOnYAxis(chart, minHeight));
+
+
+            _comboManager = new SubtypeComboBoxManager(MetricSubtypePanel);
+
+            //_chartComputationEngine = new ChartComputationEngine();
+            //_chartRenderEngine = new ChartRenderEngine(
+            //    normalizeYAxisDelegate: (axis, rawData, smoothed) => ChartHelper.NormalizeYAxis(axis, rawData, smoothed),
+            //    adjustHeightDelegate: (chart, minHeight) => ChartHelper.AdjustChartHeightBasedOnYAxis(chart, minHeight)
+            //);
 
             _connectionString = ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
 
@@ -103,6 +112,15 @@ namespace DataVisualiser
             _tooltipManager.AttachChart(ChartNorm, "Norm");
             _tooltipManager.AttachChart(ChartDiff, "Diff");
             _tooltipManager.AttachChart(ChartRatio, "Ratio");
+
+            _chartUpdateCoordinator = new ChartUpdateCoordinator(_chartComputationEngine, _chartRenderEngine, _tooltipManager, _chartTimestamps);
+            _weeklyDistributionService = new WeeklyDistributionService(_chartTimestamps);
+
+
+
+
+            //public ChartTooltipManager(Window parentWindow, Dictionary<CartesianChart, string>? chartLabels = null)
+
 
             // Hide ChartDiff and ChartRatio initially
             ChartNormPanel.Visibility = Visibility.Collapsed;
@@ -646,16 +664,16 @@ namespace DataVisualiser
                         To = to
                     };
 
-                    await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to), displayName1, displayName2);
+                    //await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to), displayName1, displayName2);
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to), displayName1, displayName2);
+
 
                     // Only update visible charts
                     if (_isChartNormVisible)
                     {
                         // Pass normalization mode into NormalizedStrategy
-                        await UpdateChartUsingStrategyAsync(ChartNorm,
-                            new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to, _selectedNormalizationMode),
-                            $"{displayName1} ~ {displayName2}",
-                            minHeight: 400);
+                        //await UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to, _selectedNormalizationMode), $"{displayName1} ~ {displayName2}", minHeight: 400);
+                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, from, to, _selectedNormalizationMode), $"{displayName1} ~ {displayName2}", minHeight: 400);
                     }
                     else
                     {
@@ -664,7 +682,9 @@ namespace DataVisualiser
                     // Insert after ChartNorm update (and before ChartDiff)
                     if (_isChartWeeklyVisible)
                     {
-                        await UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, from, to, minHeight: 400);
+                        //await UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, from, to, minHeight: 400);
+                        await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, from, to, minHeight: 400);
+
                     }
                     else
                     {
@@ -672,7 +692,8 @@ namespace DataVisualiser
                     }
                     if (_isChartDiffVisible)
                     {
-                        await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
+                        //await UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
+                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} - {displayName2}", minHeight: 400);
                     }
                     else
                     {
@@ -681,7 +702,8 @@ namespace DataVisualiser
 
                     if (_isChartRatioVisible)
                     {
-                        await UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
+                        //await UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
+                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, from, to), $"{displayName1} / {displayName2}", minHeight: 400);
                     }
                     else
                     {
@@ -713,7 +735,8 @@ namespace DataVisualiser
                         To = to
                     };
 
-                    await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1 ?? Enumerable.Empty<HealthMetricData>(), displayName2, from, to), displayName2);
+                    //await UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1 ?? Enumerable.Empty<HealthMetricData>(), displayName2, from, to), displayName2);
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1 ?? Enumerable.Empty<HealthMetricData>(), displayName2, from, to), displayName2, minHeight: 400);
 
                     // Clear hidden charts
                     ChartHelper.ClearChart(ChartNorm, _chartTimestamps);
@@ -763,19 +786,21 @@ namespace DataVisualiser
                 // Reload data if available
                 if (_lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
                 {
-                    await UpdateChartUsingStrategyAsync(
-                        ChartNorm,
-                        new DataVisualiser.Charts.Strategies.NormalizedStrategy(
-                            _lastChartDataContext.Data1,
-                            _lastChartDataContext.Data2,
-                            _lastChartDataContext.DisplayName1,
-                            _lastChartDataContext.DisplayName2,
-                            _lastChartDataContext.From,
-                            _lastChartDataContext.To,
-                            _selectedNormalizationMode // pass selected mode
-                        ),
-                        $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
-                        minHeight: 400);
+                    //await UpdateChartUsingStrategyAsync(
+                    //    ChartNorm,
+                    //    new DataVisualiser.Charts.Strategies.NormalizedStrategy(
+                    //        _lastChartDataContext.Data1,
+                    //        _lastChartDataContext.Data2,
+                    //        _lastChartDataContext.DisplayName1,
+                    //        _lastChartDataContext.DisplayName2,
+                    //        _lastChartDataContext.From,
+                    //        _lastChartDataContext.To,
+                    //        _selectedNormalizationMode),
+
+                    //    $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
+                    //    minHeight: 400);
+
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To, _selectedNormalizationMode), $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}", minHeight: 400);
                 }
             }
             else
@@ -805,7 +830,8 @@ namespace DataVisualiser
                     // we use Data1 for this chart (single-series distribution)
                     var data = _lastChartDataContext.Data1;
 
-                    await UpdateWeeklyDistributionChartAsync(ChartWeekly, data, _lastChartDataContext.DisplayName1, _lastChartDataContext.From, _lastChartDataContext.To, minHeight: 400);
+                    //await UpdateWeeklyDistributionChartAsync(ChartWeekly, data, _lastChartDataContext.DisplayName1, _lastChartDataContext.From, _lastChartDataContext.To, minHeight: 400);
+                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, data, _lastChartDataContext.DisplayName1, _lastChartDataContext.From, _lastChartDataContext.To, minHeight: 400);
                 }
             }
             else
@@ -832,17 +858,19 @@ namespace DataVisualiser
                 // Reload data if available
                 if (_lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
                 {
-                    await UpdateChartUsingStrategyAsync(
-                        ChartDiff,
-                        new DataVisualiser.Charts.Strategies.DifferenceStrategy(
-                            _lastChartDataContext.Data1,
-                            _lastChartDataContext.Data2,
-                            _lastChartDataContext.DisplayName1,
-                            _lastChartDataContext.DisplayName2,
-                            _lastChartDataContext.From,
-                            _lastChartDataContext.To),
-                        $"{_lastChartDataContext.DisplayName1} - {_lastChartDataContext.DisplayName2}",
-                        minHeight: 400);
+                    //await UpdateChartUsingStrategyAsync(
+                    //    ChartDiff,
+                    //    new DataVisualiser.Charts.Strategies.DifferenceStrategy(
+                    //        _lastChartDataContext.Data1,
+                    //        _lastChartDataContext.Data2,
+                    //        _lastChartDataContext.DisplayName1,
+                    //        _lastChartDataContext.DisplayName2,
+                    //        _lastChartDataContext.From,
+                    //        _lastChartDataContext.To),
+                    //    $"{_lastChartDataContext.DisplayName1} - {_lastChartDataContext.DisplayName2}",
+                    //    minHeight: 400);
+
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To), $"{_lastChartDataContext.DisplayName1} - {_lastChartDataContext.DisplayName2}", minHeight: 400);
                 }
             }
             else
@@ -868,17 +896,19 @@ namespace DataVisualiser
                 // Reload data if available
                 if (_lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
                 {
-                    await UpdateChartUsingStrategyAsync(
-                        ChartRatio,
-                        new DataVisualiser.Charts.Strategies.RatioStrategy(
-                            _lastChartDataContext.Data1,
-                            _lastChartDataContext.Data2,
-                            _lastChartDataContext.DisplayName1,
-                            _lastChartDataContext.DisplayName2,
-                            _lastChartDataContext.From,
-                            _lastChartDataContext.To),
-                        $"{_lastChartDataContext.DisplayName1} / {_lastChartDataContext.DisplayName2}",
-                        minHeight: 400);
+                    //await UpdateChartUsingStrategyAsync(
+                    //    ChartRatio,
+                    //    new DataVisualiser.Charts.Strategies.RatioStrategy(
+                    //        _lastChartDataContext.Data1,
+                    //        _lastChartDataContext.Data2,
+                    //        _lastChartDataContext.DisplayName1,
+                    //        _lastChartDataContext.DisplayName2,
+                    //        _lastChartDataContext.From,
+                    //        _lastChartDataContext.To),
+                    //    $"{_lastChartDataContext.DisplayName1} / {_lastChartDataContext.DisplayName2}",
+                    //    minHeight: 400);
+
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To), $"{_lastChartDataContext.DisplayName1} / {_lastChartDataContext.DisplayName2}", minHeight: 400);
                 }
             }
             else
@@ -959,20 +989,23 @@ namespace DataVisualiser
                 // If Norm chart visible and we have a stored data context, refresh only Normalized chart
                 if (_isChartNormVisible && _lastChartDataContext != null && _lastChartDataContext.Data1 != null && _lastChartDataContext.Data2 != null)
                 {
-                    await UpdateChartUsingStrategyAsync(
-                        ChartNorm,
-                        new DataVisualiser.Charts.Strategies.NormalizedStrategy(
-                            _lastChartDataContext.Data1,
-                            _lastChartDataContext.Data2,
-                            _lastChartDataContext.DisplayName1,
-                            _lastChartDataContext.DisplayName2,
-                            _lastChartDataContext.From,
-                            _lastChartDataContext.To,
-                            _selectedNormalizationMode // pass selected mode
-                        ),
-                        $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
-                        minHeight: 400);
-                }
+                    //await UpdateChartUsingStrategyAsync(
+                    //    ChartNorm,
+                    //    new DataVisualiser.Charts.Strategies.NormalizedStrategy(
+                    //        _lastChartDataContext.Data1,
+                    //        _lastChartDataContext.Data2,
+                    //        _lastChartDataContext.DisplayName1,
+                    //        _lastChartDataContext.DisplayName2,
+                    //        _lastChartDataContext.From,
+                    //        _lastChartDataContext.To,
+                    //        _selectedNormalizationMode // pass selected mode
+                    //    ),
+                    //    $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}",
+                    //    minHeight: 400);
+
+
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_lastChartDataContext.Data1, _lastChartDataContext.Data2, _lastChartDataContext.DisplayName1, _lastChartDataContext.DisplayName2, _lastChartDataContext.From, _lastChartDataContext.To), $"{_lastChartDataContext.DisplayName1} ~ {_lastChartDataContext.DisplayName2}", minHeight: 400);
+            }
             }
             catch (Exception ex)
             {

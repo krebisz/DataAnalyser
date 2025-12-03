@@ -1,3 +1,4 @@
+using DataVisualiser.Charts;
 using DataVisualiser.Class;
 using LiveCharts;
 using LiveCharts.Wpf;
