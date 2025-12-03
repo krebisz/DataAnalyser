@@ -38,6 +38,7 @@ namespace DataVisualiser
         private bool _isChartRatioVisible = false;
         private bool _isChartWeeklyVisible = false;
 
+        private MetricSelectionService _metricSelectionService;
         private ChartUpdateCoordinator _chartUpdateCoordinator;
         private WeeklyDistributionService _weeklyDistributionService;
 
@@ -78,6 +79,8 @@ namespace DataVisualiser
             //);
 
             _connectionString = ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
+            _metricSelectionService = new MetricSelectionService(_connectionString);
+
 
             FromDate.SelectedDate = DateTime.UtcNow.AddDays(-30);
             ToDate.SelectedDate = DateTime.UtcNow;
@@ -246,7 +249,8 @@ namespace DataVisualiser
 
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 var dataFetcher = new DataFetcher(_connectionString);
-                var baseMetricTypes = await dataFetcher.GetBaseMetricTypes(tableName);
+                //var baseMetricTypes = await dataFetcher.GetBaseMetricTypes(tableName);
+                var baseMetricTypes = await _metricSelectionService.LoadMetricTypesAsync(tableName);
 
                 TablesCombo.Items.Clear();
 
@@ -499,7 +503,8 @@ namespace DataVisualiser
                 _isLoadingSubtypes = true;
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 var dataFetcher = new DataFetcher(_connectionString);
-                IEnumerable<string> subtypes = await dataFetcher.GetSubtypesForBaseType(selectedMetricType, tableName);
+                //IEnumerable<string> subtypes = await dataFetcher.GetSubtypesForBaseType(selectedMetricType, tableName);
+                var subtypes = await _metricSelectionService.LoadSubtypesAsync(selectedMetricType, tableName);
 
                 SubtypeCombo.Items.Clear();
                 _comboManager.ClearDynamic(keepFirstCount: 1);
@@ -575,7 +580,9 @@ namespace DataVisualiser
             {
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 DataFetcher dataFetcher = new DataFetcher(_connectionString);
-                var dateRange = await dataFetcher.GetBaseTypeDateRange(selectedMetricType, selectedSubtype, tableName);
+                //var dateRange = await dataFetcher.GetBaseTypeDateRange(selectedMetricType, selectedSubtype, tableName);
+                var dateRange = await _metricSelectionService.LoadDateRangeAsync(selectedMetricType, selectedSubtype, tableName);
+
 
                 if (dateRange.HasValue)
                 {
