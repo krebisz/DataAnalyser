@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DataVisualiser.Class; // for HealthMetricData
+﻿using DataVisualiser.Class; // for HealthMetricData
 // ensure the namespace matches your strategies namespace
 namespace DataVisualiser.Charts.Strategies
 {
