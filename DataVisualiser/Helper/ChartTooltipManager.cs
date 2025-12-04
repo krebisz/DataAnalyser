@@ -141,6 +141,20 @@ namespace DataVisualiser.Helper
         }
 
         /// <summary>
+        /// Updates the label for a chart.
+        /// </summary>
+        /// <param name="chart">The chart whose label should be updated.</param>
+        /// <param name="label">The new label for the chart.</param>
+        public void UpdateChartLabel(CartesianChart chart, string label)
+        {
+            if (chart == null) return;
+            if (_chartLabels.ContainsKey(chart))
+            {
+                _chartLabels[chart] = label;
+            }
+        }
+
+        /// <summary>
         /// Handles the DataHover event from any attached chart.
         /// </summary>
         private void OnChartDataHover(object? sender, ChartPoint chartPoint)

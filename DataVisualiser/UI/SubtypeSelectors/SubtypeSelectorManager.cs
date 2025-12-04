@@ -1,4 +1,4 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 
 namespace DataVisualiser.UI.SubtypeSelectors
 {
@@ -69,6 +69,7 @@ namespace DataVisualiser.UI.SubtypeSelectors
             _parentPanel.Children.Add(combo);
 
             _dynamicControls.Add(new SubtypeControlPair(label, combo));
+            _dynamicCombos.Add(combo); // Also add to _dynamicCombos for GetSecondarySubtype()
 
             return combo;
         }
@@ -86,6 +87,7 @@ namespace DataVisualiser.UI.SubtypeSelectors
             }
 
             _dynamicControls.Clear();
+            _dynamicCombos.Clear(); // Also clear _dynamicCombos
         }
 
 
