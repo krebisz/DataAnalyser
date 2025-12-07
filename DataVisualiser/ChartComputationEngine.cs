@@ -32,6 +32,7 @@ namespace DataVisualiser.Charts
                     // Log the exception with context before returning null
                     Debug.WriteLine($"ChartComputationEngine.ComputeAsync: Exception in strategy '{strategy?.GetType().Name ?? "Unknown"}': {ex.Message}");
                     Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
                     if (ex.InnerException != null)
                     {
                         Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");

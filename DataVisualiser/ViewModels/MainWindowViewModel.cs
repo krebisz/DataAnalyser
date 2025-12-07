@@ -56,7 +56,8 @@ namespace DataVisualiser.ViewModels
             // Initialize commands (we wire up real methods later)
             LoadMetricsCommand = new RelayCommand(_ => LoadMetrics());
             LoadSubtypesCommand = new RelayCommand(_ => LoadSubtypes());
-            LoadDataCommand = new RelayCommand(_ => LoadData());
+            //LoadDataCommand = new RelayCommand(_ => LoadData());
+            LoadDataCommand = new RelayCommand(_ => LoadData(), _ => CanLoadData());
             ToggleNormCommand = new RelayCommand(_ => ToggleNorm());
             ToggleRatioCommand = new RelayCommand(_ => ToggleRatio());
             ToggleDiffCommand = new RelayCommand(_ => ToggleDiff());
@@ -141,10 +142,54 @@ namespace DataVisualiser.ViewModels
             }
         }
 
-
         private void LoadData()
         {
+            try
+            {
+                // Validate high-level state before we attempt rendering
+                if (!ValidateDataLoadRequirements(out var errorMessage))
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = errorMessage
+                    });
+                    return;
+                }
+
+                // Expect that the view (OnLoadData) has already populated ChartState.LastContext
+                if (ChartState.LastContext == null ||
+                    ChartState.LastContext.Data1 == null ||
+                    !ChartState.LastContext.Data1.Any())
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = "No data is available to render charts. Please load data first."
+                    });
+                    return;
+                }
+
+                // Fire event for the view to actually render charts
+                DataLoaded?.Invoke(this, new DataLoadedEventArgs
+                {
+                    DataContext = ChartState.LastContext
+                });
+            }
+            catch (Exception ex)
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = FormatDatabaseError(ex)
+                });
+            }
         }
+
+
+        private bool CanLoadData()
+        {
+            // At minimum, we need a metric type; date range can be validated at execution time.
+            return !string.IsNullOrWhiteSpace(MetricState.SelectedMetricType);
+        }
+
 
         public void ToggleNorm()
         {
@@ -267,6 +312,17 @@ namespace DataVisualiser.ViewModels
         {
             return !string.IsNullOrWhiteSpace(MetricState.SelectedMetricType);
         }
+        private bool ValidateMetricTypeSelected(out string message)
+        {
+            if (string.IsNullOrWhiteSpace(MetricState.SelectedMetricType))
+            {
+                message = "Please select a Metric Type before loading data.";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
 
         /// <summary>
         /// Validates that the date range is valid (from <= to).
@@ -277,6 +333,23 @@ namespace DataVisualiser.ViewModels
                 return false;
 
             return MetricState.FromDate.Value <= MetricState.ToDate.Value;
+        }
+        private bool ValidateDateRange(out string message)
+        {
+            if (MetricState.FromDate == null || MetricState.ToDate == null)
+            {
+                message = "Please select both From and To dates before loading data.";
+                return false;
+            }
+
+            if (MetricState.FromDate > MetricState.ToDate)
+            {
+                message = "From date must be before To date.";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
         }
 
         /// <summary>
@@ -295,6 +368,17 @@ namespace DataVisualiser.ViewModels
             }
 
             return (true, null);
+        }
+        private bool ValidateDataLoadRequirements(out string message)
+        {
+            if (!ValidateMetricTypeSelected(out message))
+                return false;
+
+            if (!ValidateDateRange(out message))
+                return false;
+
+            message = string.Empty;
+            return true;
         }
 
         // ======================
@@ -322,16 +406,14 @@ namespace DataVisualiser.ViewModels
         /// </summary>
         public string FormatDatabaseError(Exception ex)
         {
-            if (ex is Microsoft.Data.SqlClient.SqlException sqlEx)
-            {
-                return $"Database connection error: {sqlEx.Message}\n\nPlease check:\n1. SQL Server is running\n2. Database 'Health' exists\n3. Connection string in App.config is correct";
-            }
-            return $"Error: {ex.Message}";
+            //if (ex is Microsoft.Data.SqlClient.SqlException sqlEx)
+            //{
+            //    return $"Database connection error: {sqlEx.Message}\n\nPlease check:\n1. SQL Server is running\n2. Database 'Health' exists\n3. Connection string in App.config is correct";
+            //}
+            //return $"Error: {ex.Message}";
+
+            // Centralised error formatting if we want to get fancier later
+            return $"An error occurred while loading data: {ex.Message}";
         }
-
-
-
-
-
     }
 }

@@ -60,7 +60,7 @@ namespace DataVisualiser
             _tooltipManager.AttachChart(ChartDiff, "Diff");
             _tooltipManager.AttachChart(ChartRatio, "Ratio");
 
-            // Create services using _chartState.ChartTimestamps (same reference as _viewModel.ChartState.ChartTimestamps)
+
             _chartUpdateCoordinator = new ChartUpdateCoordinator(_chartComputationEngine, _chartRenderEngine, _tooltipManager, _chartState.ChartTimestamps);
             _weeklyDistributionService = new WeeklyDistributionService(_chartState.ChartTimestamps);
 
@@ -72,6 +72,7 @@ namespace DataVisualiser
             _viewModel.ErrorOccured += OnErrorOccured;
             _viewModel.MetricTypesLoaded += OnMetricTypesLoaded;
             _viewModel.SubtypesLoaded += OnSubtypesLoaded;
+            _viewModel.DataLoaded += OnDataLoaded;
 
             // Initialize date range through viewModel
             var initialFromDate = DateTime.UtcNow.AddDays(-30);
@@ -80,17 +81,12 @@ namespace DataVisualiser
             FromDate.SelectedDate = _viewModel.MetricState.FromDate;
             ToDate.SelectedDate = _viewModel.MetricState.ToDate;
 
-            //_uiState.IsLoadingMetricTypes = false;
+
             _viewModel.SetLoadingMetricTypes(false);
-            //_uiState.IsLoadingSubtypes = false;
             _viewModel.SetLoadingSubtypes(false);
-            //_chartState.IsNormalizedVisible = false;
             _viewModel.SetNormalizedVisible(false);
-            //_chartState.IsDifferenceVisible = false;
             _viewModel.SetDifferenceVisible(false);
-            //_chartState.IsRatioVisible = false;
             _viewModel.SetRatioVisible(false);
-            //_chartState.IsWeeklyVisible = false;
             _viewModel.SetWeeklyVisible(false);
 
             _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
@@ -160,61 +156,9 @@ namespace DataVisualiser
             SubtypeCombo.Items.Clear();
             SubtypeCombo.IsEnabled = false;
 
-            //LoadMetricTypes();
             _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
             _viewModel.LoadMetricsCommand.Execute(null);
         }
-
-        ///// <summary>
-        ///// Loads distinct base MetricType values from the selected resolution table into the combo box.
-        ///// Only includes metric types that have data with valid date ranges.
-        ///// </summary>
-        //private async void LoadMetricTypes()
-        //{
-        //    try
-        //    {
-        //        //_uiState.IsLoadingMetricTypes = true;
-        //        _viewModel.SetLoadingMetricTypes(true);
-
-        //        var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
-        //        var dataFetcher = new DataFetcher(_connectionString);
-        //        var baseMetricTypes = await _metricSelectionService.LoadMetricTypesAsync(tableName);
-
-        //        TablesCombo.Items.Clear();
-
-        //        foreach (var baseType in baseMetricTypes)
-        //        {
-        //            TablesCombo.Items.Add(baseType);
-        //        }
-
-        //        if (TablesCombo.Items.Count > 0)
-        //        {
-        //            TablesCombo.SelectedIndex = 0;
-        //            //_uiState.IsLoadingMetricTypes = false;
-        //            _viewModel.SetLoadingMetricTypes(false);
-        //            await LoadSubtypesForSelectedMetricType();
-        //            await LoadDateRangeForSelectedMetric();
-        //        }
-        //        else
-        //        {
-        //            SubtypeCombo.Items.Clear();
-        //            SubtypeCombo.IsEnabled = false;
-        //            _selectorManager.ClearDynamic();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var errorMsg = ex is Microsoft.Data.SqlClient.SqlException sqlEx
-        //            ? $"Database connection error: {sqlEx.Message}\n\nPlease check:\n1. SQL Server is running\n2. Database 'Health' exists\n3. Connection string in App.config is correct"
-        //            : $"Error loading metric types: {ex.Message}";
-        //        MessageBox.Show(errorMsg, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-        //    finally
-        //    {
-        //        //_uiState.IsLoadingMetricTypes = false;
-        //        _viewModel.SetLoadingMetricTypes(false);
-        //    }
-        //}
 
         /// <summary>
         /// Event handler for MetricType selection change - loads subtypes and updates date range.
@@ -393,6 +337,165 @@ namespace DataVisualiser
         /// ChartMain will show both series on a single shared axis when both datasets exist.
         /// ChartDiff shows the difference (data1 - data2) aligned to ChartMain's X axis.
         /// </summary>
+        //private async void OnLoadData(object sender, RoutedEventArgs e)
+        //{
+        //    // Guard against null reference during initialization
+        //    if (_isInitializing || _viewModel == null)
+        //        return;
+
+        //    if (TablesCombo.SelectedItem == null)
+        //    {
+        //        MessageBox.Show("Please select a MetricType", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //        return;
+        //    }
+
+        //    _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
+
+        //    if (string.IsNullOrEmpty(_viewModel.MetricState.SelectedMetricType))
+        //    {
+        //        MessageBox.Show("Please select a valid MetricType", "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //        return;
+        //    }
+
+        //    var selectedSubtype = _selectorManager.GetPrimarySubtype();
+        //    var selectedSubtype2 = _selectorManager.GetSecondarySubtype();
+
+        //    // Use the same logic as UpdateChartTitlesFromCombos for consistency
+        //    string baseType = _viewModel.MetricState.SelectedMetricType;
+        //    string display1 = !string.IsNullOrEmpty(selectedSubtype) && selectedSubtype != "(All)"
+        //        ? selectedSubtype
+        //        : baseType;
+        //    string display2 = !string.IsNullOrEmpty(selectedSubtype2)
+        //        ? selectedSubtype2
+        //        : "";
+
+        //    SetChartTitles(display1, display2);
+        //    // Update chart labels using actual subtype values, not display values that fall back to base type
+        //    UpdateChartLabels(selectedSubtype ?? "", selectedSubtype2 ?? "");
+
+        //    var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
+        //    var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
+        //    _viewModel.SetDateRange(fromDate, toDate);
+
+        //    if (_viewModel.MetricState.FromDate > _viewModel.MetricState.ToDate)
+        //    {
+        //        MessageBox.Show("From date must be before To date", "Invalid Date Range", MessageBoxButton.OK, MessageBoxImage.Warning);
+        //        return;
+        //    }
+
+        //    try
+        //    {
+        //        var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
+        //        DataFetcher dataFetcher = new DataFetcher(_connectionString);
+
+        //        var dataTask1 = dataFetcher.GetHealthMetricsDataByBaseType(_viewModel.MetricState.SelectedMetricType, selectedSubtype, _viewModel.MetricState.FromDate, _viewModel.MetricState.ToDate, tableName);
+        //        var dataTask2 = dataFetcher.GetHealthMetricsDataByBaseType(_viewModel.MetricState.SelectedMetricType, selectedSubtype2, _viewModel.MetricState.FromDate, _viewModel.MetricState.ToDate, tableName);
+
+        //        await Task.WhenAll(dataTask1, dataTask2);
+
+        //        var data1 = dataTask1.Result;
+        //        var data2 = dataTask2.Result;
+
+        //        if (data1 == null || !data1.Any())
+        //        {
+        //            var subtypeText = !string.IsNullOrEmpty(selectedSubtype) ? $" and Subtype '{selectedSubtype}'" : "";
+        //            MessageBox.Show($"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText} in the selected date range.", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
+        //        }
+        //        if ((data1 != null && data1.Any()) && (data2 != null && data2.Any()))
+        //        {
+        //            var displayName1 = !string.IsNullOrEmpty(selectedSubtype) ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype}" : _viewModel.MetricState.SelectedMetricType;
+        //            var displayName2 = !string.IsNullOrEmpty(selectedSubtype2) ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype2}" : _viewModel.MetricState.SelectedMetricType;
+
+        //            _viewModel.ChartState.LastContext = new ChartDataContext
+        //            {
+        //                Data1 = data1,
+        //                Data2 = data2,
+        //                DisplayName1 = displayName1,
+        //                DisplayName2 = displayName2,
+        //                From = (DateTime)_viewModel.MetricState.FromDate,
+        //                To = (DateTime)_viewModel.MetricState.ToDate
+        //            };
+
+        //            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), displayName1, displayName2);
+
+
+        //            // Only update visible charts
+        //            if (_viewModel.ChartState.IsNormalizedVisible)
+        //            {
+        //                // Pass normalization mode into NormalizedStrategy
+        //                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, _viewModel.ChartState.SelectedNormalizationMode), $"{displayName1} ~ {displayName2}", minHeight: 400);
+        //            }
+        //            else
+        //            {
+        //                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+        //            }
+        //            // Insert after ChartNorm update (and before ChartDiff)
+        //            if (_viewModel.ChartState.IsWeeklyVisible)
+        //            {
+        //                await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, minHeight: 400);
+
+        //            }
+        //            else
+        //            {
+        //                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+        //            }
+        //            if (_viewModel.ChartState.IsDifferenceVisible)
+        //            {
+        //                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{displayName1} - {displayName2}", minHeight: 400);
+        //            }
+        //            else
+        //            {
+        //                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+        //            }
+
+        //            if (_viewModel.ChartState.IsRatioVisible)
+        //            {
+        //                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{displayName1} / {displayName2}", minHeight: 400);
+        //            }
+        //            else
+        //            {
+        //                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+        //            }
+        //        }
+        //        else if (data2 == null || !data2.Any())
+        //        {
+        //            var subtypeText2 = !string.IsNullOrEmpty(selectedSubtype2) ? $" and Subtype '{selectedSubtype2}'" : "";
+        //            MessageBox.Show($"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText2} in the selected date range (Chart 2).", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
+        //            ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
+        //            ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+        //            ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+        //            ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+        //            _viewModel.ChartState.LastContext = null; // Clear stored context when no data
+        //        }
+        //        else
+        //        {
+        //            var displayName2 = !string.IsNullOrEmpty(selectedSubtype2) ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype2}" : _viewModel.MetricState.SelectedMetricType;
+
+        //            // Store data context for potential reload when charts are toggled visible
+        //            _viewModel.ChartState.LastContext = new ChartDataContext
+        //            {
+        //                Data1 = data1,
+        //                Data2 = null,
+        //                DisplayName1 = displayName2,
+        //                DisplayName2 = string.Empty,
+        //                From = (DateTime)_viewModel.MetricState.FromDate,
+        //                To = (DateTime)_viewModel.MetricState.ToDate
+        //            };
+
+        //            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1 ?? Enumerable.Empty<HealthMetricData>(), displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), displayName2, minHeight: 400);
+
+        //            // Clear hidden charts
+        //            ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+        //            ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+        //            ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show($"Error loading data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+
         private async void OnLoadData(object sender, RoutedEventArgs e)
         {
             // Guard against null reference during initialization
@@ -401,7 +504,7 @@ namespace DataVisualiser
 
             if (TablesCombo.SelectedItem == null)
             {
-                MessageBox.Show("Please select a MetricType", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please select a Metric Type", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -409,14 +512,14 @@ namespace DataVisualiser
 
             if (string.IsNullOrEmpty(_viewModel.MetricState.SelectedMetricType))
             {
-                MessageBox.Show("Please select a valid MetricType", "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please select a valid Metric Type", "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             var selectedSubtype = _selectorManager.GetPrimarySubtype();
             var selectedSubtype2 = _selectorManager.GetSecondarySubtype();
 
-            // Use the same logic as UpdateChartTitlesFromCombos for consistency
+            // Titles & tooltip labels driven by the actual subtype selections
             string baseType = _viewModel.MetricState.SelectedMetricType;
             string display1 = !string.IsNullOrEmpty(selectedSubtype) && selectedSubtype != "(All)"
                 ? selectedSubtype
@@ -426,8 +529,7 @@ namespace DataVisualiser
                 : "";
 
             SetChartTitles(display1, display2);
-            // Update chart labels using actual subtype values, not display values that fall back to base type
-            UpdateChartLabels(selectedSubtype ?? "", selectedSubtype2 ?? "");
+            UpdateChartLabels(selectedSubtype ?? string.Empty, selectedSubtype2 ?? string.Empty);
 
             var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
             var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
@@ -444,113 +546,92 @@ namespace DataVisualiser
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 DataFetcher dataFetcher = new DataFetcher(_connectionString);
 
-                var dataTask1 = dataFetcher.GetHealthMetricsDataByBaseType(_viewModel.MetricState.SelectedMetricType, selectedSubtype, _viewModel.MetricState.FromDate, _viewModel.MetricState.ToDate, tableName);
-                var dataTask2 = dataFetcher.GetHealthMetricsDataByBaseType(_viewModel.MetricState.SelectedMetricType, selectedSubtype2, _viewModel.MetricState.FromDate, _viewModel.MetricState.ToDate, tableName);
+                var dataTask1 = dataFetcher.GetHealthMetricsDataByBaseType(
+                    _viewModel.MetricState.SelectedMetricType,
+                    selectedSubtype,
+                    _viewModel.MetricState.FromDate,
+                    _viewModel.MetricState.ToDate,
+                    tableName);
+
+                var dataTask2 = dataFetcher.GetHealthMetricsDataByBaseType(
+                    _viewModel.MetricState.SelectedMetricType,
+                    selectedSubtype2,
+                    _viewModel.MetricState.FromDate,
+                    _viewModel.MetricState.ToDate,
+                    tableName);
 
                 await Task.WhenAll(dataTask1, dataTask2);
 
                 var data1 = dataTask1.Result;
                 var data2 = dataTask2.Result;
 
+                // Handle "no data" scenarios here and DO NOT call into the viewmodel for rendering
                 if (data1 == null || !data1.Any())
                 {
                     var subtypeText = !string.IsNullOrEmpty(selectedSubtype) ? $" and Subtype '{selectedSubtype}'" : "";
-                    MessageBox.Show($"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText} in the selected date range.", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                if ((data1 != null && data1.Any()) && (data2 != null && data2.Any()))
-                {
-                    var displayName1 = !string.IsNullOrEmpty(selectedSubtype) ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype}" : _viewModel.MetricState.SelectedMetricType;
-                    var displayName2 = !string.IsNullOrEmpty(selectedSubtype2) ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype2}" : _viewModel.MetricState.SelectedMetricType;
+                    MessageBox.Show(
+                        $"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText} in the selected date range.",
+                        "No Data",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
 
-                    _viewModel.ChartState.LastContext = new ChartDataContext
-                    {
-                        Data1 = data1,
-                        Data2 = data2,
-                        DisplayName1 = displayName1,
-                        DisplayName2 = displayName2,
-                        From = (DateTime)_viewModel.MetricState.FromDate,
-                        To = (DateTime)_viewModel.MetricState.ToDate
-                    };
-
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), displayName1, displayName2);
-
-
-                    // Only update visible charts
-                    if (_viewModel.ChartState.IsNormalizedVisible)
-                    {
-                        // Pass normalization mode into NormalizedStrategy
-                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, _viewModel.ChartState.SelectedNormalizationMode), $"{displayName1} ~ {displayName2}", minHeight: 400);
-                    }
-                    else
-                    {
-                        ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-                    }
-                    // Insert after ChartNorm update (and before ChartDiff)
-                    if (_viewModel.ChartState.IsWeeklyVisible)
-                    {
-                        await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, data1, displayName1, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, minHeight: 400);
-
-                    }
-                    else
-                    {
-                        ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
-                    }
-                    if (_viewModel.ChartState.IsDifferenceVisible)
-                    {
-                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{displayName1} - {displayName2}", minHeight: 400);
-                    }
-                    else
-                    {
-                        ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-                    }
-
-                    if (_viewModel.ChartState.IsRatioVisible)
-                    {
-                        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(data1, data2, displayName1, displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{displayName1} / {displayName2}", minHeight: 400);
-                    }
-                    else
-                    {
-                        ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
-                    }
-                }
-                else if (data2 == null || !data2.Any())
-                {
-                    var subtypeText2 = !string.IsNullOrEmpty(selectedSubtype2) ? $" and Subtype '{selectedSubtype2}'" : "";
-                    MessageBox.Show($"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText2} in the selected date range (Chart 2).", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
                     ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
                     ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
                     ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
                     ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
-                    _viewModel.ChartState.LastContext = null; // Clear stored context when no data
+                    ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+                    _viewModel.ChartState.LastContext = null;
+                    return;
                 }
-                else
+
+                if (data2 == null || !data2.Any())
                 {
-                    var displayName2 = !string.IsNullOrEmpty(selectedSubtype2) ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype2}" : _viewModel.MetricState.SelectedMetricType;
+                    // We *could* still show single-series charts here, but current behaviour is to treat it as "Chart 2 has no data"
+                    var subtypeText2 = !string.IsNullOrEmpty(selectedSubtype2) ? $" and Subtype '{selectedSubtype2}'" : "";
+                    MessageBox.Show(
+                        $"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText2} in the selected date range (Chart 2).",
+                        "No Data",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
 
-                    // Store data context for potential reload when charts are toggled visible
-                    _viewModel.ChartState.LastContext = new ChartDataContext
-                    {
-                        Data1 = data1,
-                        Data2 = null,
-                        DisplayName1 = displayName2,
-                        DisplayName2 = string.Empty,
-                        From = (DateTime)_viewModel.MetricState.FromDate,
-                        To = (DateTime)_viewModel.MetricState.ToDate
-                    };
-
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartMain, new DataVisualiser.Charts.Strategies.SingleMetricStrategy(data1 ?? Enumerable.Empty<HealthMetricData>(), displayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), displayName2, minHeight: 400);
-
-                    // Clear hidden charts
+                    ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
                     ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
                     ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
                     ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+                    ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+                    _viewModel.ChartState.LastContext = null;
+                    return;
                 }
+
+                // Both data sets have points – build the context but DO NOT render here
+                var displayName1 = !string.IsNullOrEmpty(selectedSubtype)
+                    ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype}"
+                    : _viewModel.MetricState.SelectedMetricType;
+
+                var displayName2 = !string.IsNullOrEmpty(selectedSubtype2)
+                    ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype2}"
+                    : _viewModel.MetricState.SelectedMetricType;
+
+                _viewModel.ChartState.LastContext = new ChartDataContext
+                {
+                    Data1 = data1,
+                    Data2 = data2,
+                    DisplayName1 = displayName1,
+                    DisplayName2 = displayName2,
+                    From = (DateTime)_viewModel.MetricState.FromDate,
+                    To = (DateTime)_viewModel.MetricState.ToDate
+                };
+
+                // Hand off to the ViewModel to validate and raise DataLoaded
+                _viewModel.LoadDataCommand.Execute(null);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+
 
         private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
         {
@@ -934,55 +1015,11 @@ namespace DataVisualiser
             _ = LoadDateRangeForSelectedMetrics();
         }
 
-
-        /// <summary>
-        /// Rebuilds all dynamic subtype selector controls based on the subtype list
-        /// received from the ViewModel.
-        /// 
-        /// This preserves all existing logic previously applied inside 
-        /// LoadSubtypesForSelectedMetricType:
-        /// - Clears the panel
-        /// - Resets the selector manager
-        /// - Adds dynamic selectors
-        /// - Hooks selection change events
-        /// - Syncs selected subtypes back into the ViewModel
-        /// </summary>
-        /// <summary>
-        /// Rebuilds all dynamic subtype ComboBoxes using SubtypeSelectorManager,
-        /// while preserving the primary static SubtypeCombo (PrimaryCombo).
-        /// </summary>
-        //private void BuildDynamicSubtypeControls(IEnumerable<string> subtypes)
-        //{
-        //    _selectorManager.ClearDynamic();
-
-        //    var list = subtypes.ToList();
-
-        //    // We keep SubtypeCombo as primary; dynamic ones start at "Metric Subtype 2"
-        //    if (list.Count > 1)
-        //    {
-        //        // every dynamic combo gets full subtype list (same as before)
-        //        for (int i = 1; i < list.Count; i++)
-        //        {
-        //            _selectorManager.AddSubtypeCombo(list);
-        //        }
-        //    }
-
-        //    UpdateSelectedSubtypesInViewModel();
-        //}
-
         private void BuildDynamicSubtypeControls(IEnumerable<string> subtypes)
         {
-            // 1. Clear old dynamic subtype controls
             _selectorManager.ClearDynamic();
-
-            // 2. DO NOT create any dynamic subtype controls here.
-            //    Only the static primary combo should exist after subtype load.
-            //    Dynamic ones are created ONLY when the user clicks Add Subtype.
-
             UpdateSelectedSubtypesInViewModel();
         }
-
-
 
         private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
         {
@@ -990,17 +1027,142 @@ namespace DataVisualiser
             ToDate.SelectedDate = e.MaxDate;
         }
 
+        //private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
+        //{
+        //    var ctx = e.DataContext;
+
+        //    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+        //        ChartMain,
+        //        new CombinedMetricStrategy(ctx.Data1!, ctx.Data2!, ctx.DisplayName1!, ctx.DisplayName2!, ctx.From, ctx.To),
+        //        ctx.DisplayName1!,
+        //        ctx.DisplayName2!
+        //    );
+        //}
+
         private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
         {
-            var ctx = e.DataContext;
+            if (_viewModel == null)
+                return;
 
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                ChartMain,
-                new CombinedMetricStrategy(ctx.Data1!, ctx.Data2!, ctx.DisplayName1!, ctx.DisplayName2!, ctx.From, ctx.To),
-                ctx.DisplayName1!,
-                ctx.DisplayName2!
-            );
+            var ctx = e.DataContext ?? _viewModel.ChartState.LastContext;
+            if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
+                return;
+
+            var data1 = ctx.Data1;
+            var data2 = ctx.Data2;
+            var displayName1 = ctx.DisplayName1 ?? string.Empty;
+            var displayName2 = ctx.DisplayName2 ?? string.Empty;
+
+            // Update main chart
+            if (data2 != null && data2.Any())
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartMain,
+                    new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(
+                        data1,
+                        data2,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To),
+                    displayName1,
+                    displayName2);
+            }
+            else
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartMain,
+                    new DataVisualiser.Charts.Strategies.SingleMetricStrategy(
+                        data1,
+                        displayName1,
+                        ctx.From,
+                        ctx.To),
+                    displayName1,
+                    minHeight: 400);
+
+                // When only a single dataset exists, clear the others
+                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+                return;
+            }
+
+            // Only update *visible* charts, mirroring the toggle behaviour
+            if (_viewModel.ChartState.IsNormalizedVisible)
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartNorm,
+                    new DataVisualiser.Charts.Strategies.NormalizedStrategy(
+                        data1,
+                        data2!,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To,
+                        _viewModel.ChartState.SelectedNormalizationMode),
+                    $"{displayName1} ~ {displayName2}",
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+            }
+
+            if (_viewModel.ChartState.IsWeeklyVisible)
+            {
+                await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
+                    ChartWeekly,
+                    data1,
+                    displayName1,
+                    ctx.From,
+                    ctx.To,
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+            }
+
+            if (_viewModel.ChartState.IsDifferenceVisible)
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartDiff,
+                    new DataVisualiser.Charts.Strategies.DifferenceStrategy(
+                        data1,
+                        data2!,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To),
+                    $"{displayName1} - {displayName2}",
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+            }
+
+            if (_viewModel.ChartState.IsRatioVisible)
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartRatio,
+                    new DataVisualiser.Charts.Strategies.RatioStrategy(
+                        data1,
+                        data2!,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To),
+                    $"{displayName1} / {displayName2}",
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+            }
         }
+
 
         private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
         {
