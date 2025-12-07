@@ -2,6 +2,7 @@ using DataVisualiser.Class;
 using DataVisualiser.Services;
 using DataVisualiser.State;
 using DataVisualiser.ViewModels.Commands;
+using DataVisualiser.ViewModels.Events;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -10,6 +11,13 @@ namespace DataVisualiser.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
+        public event EventHandler<MetricTypesLoadedEventArgs>? MetricTypesLoaded;
+        public event EventHandler<SubtypesLoadedEventArgs>? SubtypesLoaded;
+        public event EventHandler<DateRangeLoadedEventArgs>? DateRangeLoaded;
+        public event EventHandler<DataLoadedEventArgs>? DataLoaded;
+        public event EventHandler<ChartVisibilityChangedEventArgs>? ChartVisibilityChanged;
+        public event EventHandler<ErrorEventArgs>? ErrorOccured;
+
         // STATE OBJECTS
         public ChartState ChartState { get; }
         public MetricState MetricState { get; }
@@ -76,24 +84,48 @@ namespace DataVisualiser.ViewModels
         {
             ChartState.IsNormalizedVisible = !ChartState.IsNormalizedVisible;
             OnPropertyChanged(nameof(ChartState));
+
+            ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
+            {
+                ChartName = "Norm",
+                IsVisible = ChartState.IsNormalizedVisible
+            });
         }
 
         private void ToggleRatio()
         {
             ChartState.IsRatioVisible = !ChartState.IsRatioVisible;
             OnPropertyChanged(nameof(ChartState));
+
+            ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
+            {
+                ChartName = "Ratio",
+                IsVisible = ChartState.IsRatioVisible
+            });
         }
 
         private void ToggleDiff()
         {
             ChartState.IsDifferenceVisible = !ChartState.IsDifferenceVisible;
             OnPropertyChanged(nameof(ChartState));
+
+            ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
+            {
+                ChartName = "Diff",
+                IsVisible = ChartState.IsDifferenceVisible
+            });
         }
 
         private void ToggleWeekly()
         {
             ChartState.IsWeeklyVisible = !ChartState.IsWeeklyVisible;
             OnPropertyChanged(nameof(ChartState));
+
+            ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
+            {
+                ChartName = "Weekly",
+                IsVisible = ChartState.IsWeeklyVisible
+            });
         }
 
         // Notify UI of changes
@@ -230,6 +262,10 @@ namespace DataVisualiser.ViewModels
             }
             return $"Error: {ex.Message}";
         }
+
+
+
+
 
     }
 }

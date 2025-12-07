@@ -1,10 +1,12 @@
 using DataVisualiser.Charts;
+using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Class;
 using DataVisualiser.Helper;
 using DataVisualiser.Services;
 using DataVisualiser.State;
 using DataVisualiser.UI.SubtypeSelectors;
 using DataVisualiser.ViewModels;
+using DataVisualiser.ViewModels.Events;
 using LiveCharts.Wpf;
 using System.Configuration;
 using System.Windows;
@@ -65,6 +67,9 @@ namespace DataVisualiser
             // Now create _viewModel with all dependencies
             _viewModel = new MainWindowViewModel(_chartState, _metricState, _uiState, _metricSelectionService, _chartUpdateCoordinator, _weeklyDistributionService);
             DataContext = _viewModel;
+            // Subscribe to ViewModel events (Phase 5C – event wiring, no behaviour change yet)
+            _viewModel.ChartVisibilityChanged += OnChartVisibilityChanged;
+            _viewModel.ErrorOccured += OnErrorOccured;
 
             // Initialize date range through viewModel
             var initialFromDate = DateTime.UtcNow.AddDays(-30);
@@ -867,6 +872,67 @@ namespace DataVisualiser
             if (_isInitializing || _viewModel == null) return;
 
             _viewModel.SetDateRange(FromDate.SelectedDate, ToDate.SelectedDate);
+        }
+
+        private void OnMetricTypesLoaded(object? sender, MetricTypesLoadedEventArgs e)
+        {
+            TablesCombo.Items.Clear();
+            foreach (var type in e.MetricTypes)
+                TablesCombo.Items.Add(type);
+
+            if (TablesCombo.Items.Count > 0)
+                TablesCombo.SelectedIndex = 0;
+        }
+
+        private void OnSubtypesLoaded(object? sender, SubtypesLoadedEventArgs e)
+        {
+            SubtypeCombo.Items.Clear();
+            foreach (var sub in e.Subtypes)
+                SubtypeCombo.Items.Add(sub);
+
+            SubtypeCombo.IsEnabled = e.Subtypes.Any();
+        }
+
+        private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
+        {
+            FromDate.SelectedDate = e.MinDate;
+            ToDate.SelectedDate = e.MaxDate;
+        }
+
+        private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
+        {
+            var ctx = e.DataContext;
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                ChartMain,
+                new CombinedMetricStrategy(ctx.Data1!, ctx.Data2!, ctx.DisplayName1!, ctx.DisplayName2!, ctx.From, ctx.To),
+                ctx.DisplayName1!,
+                ctx.DisplayName2!
+            );
+        }
+
+        private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
+        {
+            switch (e.ChartName)
+            {       
+                case "Norm":
+                    ChartNormPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+                    break;
+                case "Diff":
+                    ChartDiffPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+                    break;
+                case "Ratio":
+                    ChartRatioPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+                    break;
+                case "Weekly":
+                    ChartWeeklyPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+                    break;
+            }
+        }
+
+        private void OnErrorOccured(object? sender, ErrorEventArgs e)
+        {
+            MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
     }
