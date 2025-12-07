@@ -70,6 +70,8 @@ namespace DataVisualiser
             // Subscribe to ViewModel events (Phase 5C – event wiring, no behaviour change yet)
             _viewModel.ChartVisibilityChanged += OnChartVisibilityChanged;
             _viewModel.ErrorOccured += OnErrorOccured;
+            _viewModel.MetricTypesLoaded += OnMetricTypesLoaded;
+            _viewModel.SubtypesLoaded += OnSubtypesLoaded;
 
             // Initialize date range through viewModel
             var initialFromDate = DateTime.UtcNow.AddDays(-30);
@@ -110,7 +112,9 @@ namespace DataVisualiser
             ResolutionCombo.Items.Add("Yearly");
             ResolutionCombo.SelectedItem = "All";
 
-            LoadMetricTypes();
+            //LoadMetricTypes();
+            _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
+            _viewModel.LoadMetricsCommand.Execute(null);
 
             ChartHelper.InitializeChartBehavior(ChartMain);
             ChartHelper.InitializeChartBehavior(ChartNorm);
@@ -156,59 +160,61 @@ namespace DataVisualiser
             SubtypeCombo.Items.Clear();
             SubtypeCombo.IsEnabled = false;
 
-            LoadMetricTypes();
+            //LoadMetricTypes();
+            _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
+            _viewModel.LoadMetricsCommand.Execute(null);
         }
 
-        /// <summary>
-        /// Loads distinct base MetricType values from the selected resolution table into the combo box.
-        /// Only includes metric types that have data with valid date ranges.
-        /// </summary>
-        private async void LoadMetricTypes()
-        {
-            try
-            {
-                //_uiState.IsLoadingMetricTypes = true;
-                _viewModel.SetLoadingMetricTypes(true);
+        ///// <summary>
+        ///// Loads distinct base MetricType values from the selected resolution table into the combo box.
+        ///// Only includes metric types that have data with valid date ranges.
+        ///// </summary>
+        //private async void LoadMetricTypes()
+        //{
+        //    try
+        //    {
+        //        //_uiState.IsLoadingMetricTypes = true;
+        //        _viewModel.SetLoadingMetricTypes(true);
 
-                var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
-                var dataFetcher = new DataFetcher(_connectionString);
-                var baseMetricTypes = await _metricSelectionService.LoadMetricTypesAsync(tableName);
+        //        var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
+        //        var dataFetcher = new DataFetcher(_connectionString);
+        //        var baseMetricTypes = await _metricSelectionService.LoadMetricTypesAsync(tableName);
 
-                TablesCombo.Items.Clear();
+        //        TablesCombo.Items.Clear();
 
-                foreach (var baseType in baseMetricTypes)
-                {
-                    TablesCombo.Items.Add(baseType);
-                }
+        //        foreach (var baseType in baseMetricTypes)
+        //        {
+        //            TablesCombo.Items.Add(baseType);
+        //        }
 
-                if (TablesCombo.Items.Count > 0)
-                {
-                    TablesCombo.SelectedIndex = 0;
-                    //_uiState.IsLoadingMetricTypes = false;
-                    _viewModel.SetLoadingMetricTypes(false);
-                    await LoadSubtypesForSelectedMetricType();
-                    await LoadDateRangeForSelectedMetric();
-                }
-                else
-                {
-                    SubtypeCombo.Items.Clear();
-                    SubtypeCombo.IsEnabled = false;
-                    _selectorManager.ClearDynamic();
-                }
-            }
-            catch (Exception ex)
-            {
-                var errorMsg = ex is Microsoft.Data.SqlClient.SqlException sqlEx
-                    ? $"Database connection error: {sqlEx.Message}\n\nPlease check:\n1. SQL Server is running\n2. Database 'Health' exists\n3. Connection string in App.config is correct"
-                    : $"Error loading metric types: {ex.Message}";
-                MessageBox.Show(errorMsg, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                //_uiState.IsLoadingMetricTypes = false;
-                _viewModel.SetLoadingMetricTypes(false);
-            }
-        }
+        //        if (TablesCombo.Items.Count > 0)
+        //        {
+        //            TablesCombo.SelectedIndex = 0;
+        //            //_uiState.IsLoadingMetricTypes = false;
+        //            _viewModel.SetLoadingMetricTypes(false);
+        //            await LoadSubtypesForSelectedMetricType();
+        //            await LoadDateRangeForSelectedMetric();
+        //        }
+        //        else
+        //        {
+        //            SubtypeCombo.Items.Clear();
+        //            SubtypeCombo.IsEnabled = false;
+        //            _selectorManager.ClearDynamic();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var errorMsg = ex is Microsoft.Data.SqlClient.SqlException sqlEx
+        //            ? $"Database connection error: {sqlEx.Message}\n\nPlease check:\n1. SQL Server is running\n2. Database 'Health' exists\n3. Connection string in App.config is correct"
+        //            : $"Error loading metric types: {ex.Message}";
+        //        MessageBox.Show(errorMsg, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //    finally
+        //    {
+        //        //_uiState.IsLoadingMetricTypes = false;
+        //        _viewModel.SetLoadingMetricTypes(false);
+        //    }
+        //}
 
         /// <summary>
         /// Event handler for MetricType selection change - loads subtypes and updates date range.
@@ -282,7 +288,7 @@ namespace DataVisualiser
             try
             {
                 //_uiState.IsLoadingSubtypes = true;
-                _viewModel.SetLoadingMetricTypes(true);
+                _viewModel.SetLoadingSubtypes(true);
                 var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
                 var dataFetcher = new DataFetcher(_connectionString);
                 var subtypes = await _metricSelectionService.LoadSubtypesAsync(_viewModel.MetricState.SelectedMetricType, tableName);
@@ -548,7 +554,8 @@ namespace DataVisualiser
 
         private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
         {
-            if (subtypeList == null) return;
+            //if (subtypeList == null) return;
+            if (subtypeList == null || !subtypeList.Any()) return;
             var newCombo = _selectorManager.AddSubtypeCombo(subtypeList);
             newCombo.SelectedIndex = 0;
             newCombo.IsEnabled = true;
@@ -571,7 +578,7 @@ namespace DataVisualiser
         {
             if (_viewModel == null) return;
 
-            _viewModel.ChartState.IsNormalizedVisible = !_viewModel.ChartState.IsNormalizedVisible;
+            _viewModel.ToggleNorm();
 
             if (_viewModel.ChartState.IsNormalizedVisible)
             {
@@ -600,7 +607,7 @@ namespace DataVisualiser
         {
             if (_viewModel == null) return;
 
-            _viewModel.ChartState.IsWeeklyVisible = !_viewModel.ChartState.IsWeeklyVisible;
+            _viewModel.ToggleWeekly();
 
             if (_viewModel.ChartState.IsWeeklyVisible)
             {
@@ -631,7 +638,7 @@ namespace DataVisualiser
         {
             if (_viewModel == null) return;
 
-            _viewModel.ChartState.IsDifferenceVisible = !_viewModel.ChartState.IsDifferenceVisible;
+            _viewModel.ToggleDiff();
 
             if (_viewModel.ChartState.IsDifferenceVisible)
             {
@@ -659,7 +666,7 @@ namespace DataVisualiser
         {
             if (_viewModel == null) return;
 
-            _viewModel.ChartState.IsRatioVisible = !_viewModel.ChartState.IsRatioVisible;
+            _viewModel.ToggleRatio();
 
             if (_viewModel.ChartState.IsRatioVisible)
             {
@@ -881,17 +888,101 @@ namespace DataVisualiser
                 TablesCombo.Items.Add(type);
 
             if (TablesCombo.Items.Count > 0)
+            {
+                // 1. Select first metric type in UI
                 TablesCombo.SelectedIndex = 0;
+
+                // 2. Sync that selection into the ViewModel
+                _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
+
+                // 3. Now it is safe to load subtypes
+                _viewModel.LoadSubtypesCommand.Execute(null);
+            }
+            else
+            {
+                // No metric types -> clear subtypes & dynamic controls
+                SubtypeCombo.Items.Clear();
+                SubtypeCombo.IsEnabled = false;
+                _selectorManager.ClearDynamic();
+            }
         }
+
 
         private void OnSubtypesLoaded(object? sender, SubtypesLoadedEventArgs e)
         {
-            SubtypeCombo.Items.Clear();
-            foreach (var sub in e.Subtypes)
-                SubtypeCombo.Items.Add(sub);
+            // Materialize list once
+            var subtypeListLocal = e.Subtypes.ToList();
 
-            SubtypeCombo.IsEnabled = e.Subtypes.Any();
+            // 1. Static SubtypeCombo
+            SubtypeCombo.Items.Clear();
+            SubtypeCombo.Items.Add("(All)");
+
+            foreach (var st in subtypeListLocal)
+                SubtypeCombo.Items.Add(st);
+
+            SubtypeCombo.IsEnabled = subtypeListLocal.Any();
+            SubtypeCombo.SelectedIndex = 0;
+
+            // 2. Store for AddSubtype button
+            subtypeList = subtypeListLocal;
+
+            // 3. Build dynamic selectors
+            BuildDynamicSubtypeControls(subtypeListLocal);
+
+            // 4. Sync VM and date range
+            UpdateSelectedSubtypesInViewModel();
+            _ = LoadDateRangeForSelectedMetrics();
         }
+
+
+        /// <summary>
+        /// Rebuilds all dynamic subtype selector controls based on the subtype list
+        /// received from the ViewModel.
+        /// 
+        /// This preserves all existing logic previously applied inside 
+        /// LoadSubtypesForSelectedMetricType:
+        /// - Clears the panel
+        /// - Resets the selector manager
+        /// - Adds dynamic selectors
+        /// - Hooks selection change events
+        /// - Syncs selected subtypes back into the ViewModel
+        /// </summary>
+        /// <summary>
+        /// Rebuilds all dynamic subtype ComboBoxes using SubtypeSelectorManager,
+        /// while preserving the primary static SubtypeCombo (PrimaryCombo).
+        /// </summary>
+        //private void BuildDynamicSubtypeControls(IEnumerable<string> subtypes)
+        //{
+        //    _selectorManager.ClearDynamic();
+
+        //    var list = subtypes.ToList();
+
+        //    // We keep SubtypeCombo as primary; dynamic ones start at "Metric Subtype 2"
+        //    if (list.Count > 1)
+        //    {
+        //        // every dynamic combo gets full subtype list (same as before)
+        //        for (int i = 1; i < list.Count; i++)
+        //        {
+        //            _selectorManager.AddSubtypeCombo(list);
+        //        }
+        //    }
+
+        //    UpdateSelectedSubtypesInViewModel();
+        //}
+
+        private void BuildDynamicSubtypeControls(IEnumerable<string> subtypes)
+        {
+            // 1. Clear old dynamic subtype controls
+            _selectorManager.ClearDynamic();
+
+            // 2. DO NOT create any dynamic subtype controls here.
+            //    Only the static primary combo should exist after subtype load.
+            //    Dynamic ones are created ONLY when the user clicks Add Subtype.
+
+            UpdateSelectedSubtypesInViewModel();
+        }
+
+
 
         private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
         {

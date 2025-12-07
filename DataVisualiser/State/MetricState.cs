@@ -8,7 +8,7 @@
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
 
-        public string? TableName { get; set; }
+        public string? ResolutionTableName { get; set; }
 
         public void SetSubtypes(IEnumerable<string?> subs)
         {

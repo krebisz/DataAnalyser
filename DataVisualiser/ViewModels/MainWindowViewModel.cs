@@ -67,20 +67,86 @@ namespace DataVisualiser.ViewModels
         // COMMAND TARGET METHODS
         // ======================
 
-        private void LoadMetrics()
+        private async void LoadMetrics()
         {
-            // The logic moves from MainWindow into here incrementally
+            try
+            {
+                UiState.IsLoadingMetricTypes = true;
+
+                if (MetricState == null)
+                    return;
+
+                var tableName = MetricState.ResolutionTableName;
+                if (string.IsNullOrEmpty(tableName))
+                    return;
+
+                var metricTypes = await _metricService.LoadMetricTypesAsync(tableName);
+
+                // Raise event — let UI populate the combo box
+                MetricTypesLoaded?.Invoke(this, new MetricTypesLoadedEventArgs
+                {
+                    MetricTypes = metricTypes
+                });
+            }
+            catch (Exception ex)
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = FormatDatabaseError(ex)
+                });
+            }
+            finally
+            {
+                UiState.IsLoadingMetricTypes = false;
+            }
         }
 
-        private void LoadSubtypes()
+        private async void LoadSubtypes()
         {
+            try
+            {
+                UiState.IsLoadingSubtypes = true;
+
+                if (!ValidateMetricTypeSelected())
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = "Please select a Metric Type before loading subtypes."
+                    });
+                    return;
+                }
+
+                var metricType = MetricState.SelectedMetricType!;
+                var tableName = MetricState.ResolutionTableName!;
+
+                // Fetch subtype list
+                var subtypes = await _metricService.LoadSubtypesAsync(metricType, tableName);
+
+                // Raise event — UI updates SubtypeCombo + dynamic controls
+                SubtypesLoaded?.Invoke(this, new SubtypesLoadedEventArgs
+                {
+                    Subtypes = subtypes
+                });
+            }
+            catch (Exception ex)
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = FormatDatabaseError(ex)
+                });
+            }
+            finally
+            {
+                UiState.IsLoadingSubtypes = false;
+            }
         }
+
 
         private void LoadData()
         {
         }
 
-        private void ToggleNorm()
+        public void ToggleNorm()
         {
             ChartState.IsNormalizedVisible = !ChartState.IsNormalizedVisible;
             OnPropertyChanged(nameof(ChartState));
@@ -92,7 +158,7 @@ namespace DataVisualiser.ViewModels
             });
         }
 
-        private void ToggleRatio()
+        public void ToggleRatio()
         {
             ChartState.IsRatioVisible = !ChartState.IsRatioVisible;
             OnPropertyChanged(nameof(ChartState));
@@ -104,7 +170,7 @@ namespace DataVisualiser.ViewModels
             });
         }
 
-        private void ToggleDiff()
+        public void ToggleDiff()
         {
             ChartState.IsDifferenceVisible = !ChartState.IsDifferenceVisible;
             OnPropertyChanged(nameof(ChartState));
@@ -116,7 +182,7 @@ namespace DataVisualiser.ViewModels
             });
         }
 
-        private void ToggleWeekly()
+        public void ToggleWeekly()
         {
             ChartState.IsWeeklyVisible = !ChartState.IsWeeklyVisible;
             OnPropertyChanged(nameof(ChartState));
