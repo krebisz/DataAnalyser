@@ -230,6 +230,9 @@ namespace DataVisualiser
         /// </summary>
         private async void OnAnySubtypeSelectionChanged(object? sender, System.Windows.Controls.SelectionChangedEventArgs? e)
         {
+            // NEW: keep VM in sync with all selected subtypes
+            UpdateSelectedSubtypesInViewModel();
+
             await LoadDateRangeForSelectedMetrics();
         }
 
@@ -294,6 +297,9 @@ namespace DataVisualiser
 
                     SubtypeCombo.IsEnabled = true;
                     SubtypeCombo.SelectedIndex = 0;
+
+                    // NEW: propagate this default selection into the VM
+                    UpdateSelectedSubtypesInViewModel();
                 }
                 else
                 {
@@ -543,6 +549,9 @@ namespace DataVisualiser
             newCombo.IsEnabled = true;
 
             UpdateChartTitlesFromCombos();
+
+            // NEW: update VM with new collection of subtypes
+            UpdateSelectedSubtypesInViewModel();
         }
 
 
@@ -811,5 +820,54 @@ namespace DataVisualiser
         }
 
         #endregion
+
+        /// <summary>
+        /// Reads all selected subtypes (primary + dynamic) and pushes them into the ViewModel.
+        /// </summary>
+        private void UpdateSelectedSubtypesInViewModel()
+        {
+            if (_viewModel == null) return;
+
+            var selectedSubtypes = new List<string?>();
+
+            // Primary (static) subtype combo
+            if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
+            {
+                selectedSubtypes.Add(SubtypeCombo.SelectedItem.ToString());
+            }
+
+            // Dynamic subtypes managed by SubtypeSelectorManager
+            var activeCombos = _selectorManager.GetActiveCombos();
+            foreach (var combo in activeCombos)
+            {
+                if (combo.SelectedItem != null)
+                {
+                    selectedSubtypes.Add(combo.SelectedItem.ToString());
+                }
+            }
+
+            _viewModel.SetSelectedSubtypes(selectedSubtypes);
+        }
+
+        /// <summary>
+        /// Keeps ViewModel date range in sync when the From date changes.
+        /// </summary>
+        private void OnFromDateChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (_isInitializing || _viewModel == null) return;
+
+            _viewModel.SetDateRange(FromDate.SelectedDate, ToDate.SelectedDate);
+        }
+
+        /// <summary>
+        /// Keeps ViewModel date range in sync when the To date changes.
+        /// </summary>
+        private void OnToDateChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (_isInitializing || _viewModel == null) return;
+
+            _viewModel.SetDateRange(FromDate.SelectedDate, ToDate.SelectedDate);
+        }
+
     }
 }

@@ -21,10 +21,10 @@
                       IsEditable="False" SelectionChanged="OnMetricTypeSelectionChanged"/>
 
             <Label Content="From:" VerticalAlignment="Center" Margin="5,0"/>
-            <DatePicker x:Name="FromDate" Width="150" Margin="5"/>
+            <DatePicker x:Name="FromDate" SelectedDateChanged="OnFromDateChanged" Width="150" Margin="5"/>
 
             <Label Content="To:" VerticalAlignment="Center" Margin="5,0"/>
-            <DatePicker x:Name="ToDate" Width="150" Margin="5"/>
+            <DatePicker x:Name="ToDate" SelectedDateChanged="OnToDateChanged" Width="150" Margin="5"/>
 
             <Button Content="Load Data" Click="OnLoadData" Margin="5" Padding="10,5"/>
             <Separator Margin="10,0"/>
