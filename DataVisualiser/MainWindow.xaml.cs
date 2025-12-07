@@ -89,6 +89,7 @@ namespace DataVisualiser
             _viewModel.SetDifferenceVisible(false);
             _viewModel.SetRatioVisible(false);
             _viewModel.SetWeeklyVisible(false);
+            _viewModel.CompleteInitialization();
 
             _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
             _viewModel.ChartState.LastContext = new ChartDataContext();
@@ -114,18 +115,26 @@ namespace DataVisualiser
             _viewModel.LoadMetricsCommand.Execute(null);
 
             ChartHelper.InitializeChartBehavior(ChartMain);
+            ChartHelper.InitializeChartBehavior(ChartWeekly); //NEW
             ChartHelper.InitializeChartBehavior(ChartNorm);
             ChartHelper.InitializeChartBehavior(ChartDiff);
             ChartHelper.InitializeChartBehavior(ChartRatio);
 
             UpdateChartTitlesFromCombos();
 
-            ChartNormPanel.Visibility = Visibility.Collapsed;
-            ChartDiffPanel.Visibility = Visibility.Collapsed;
-            ChartRatioPanel.Visibility = Visibility.Collapsed;
-            ChartNormToggleButton.Content = "Show";
-            ChartDiffToggleButton.Content = "Show";
-            ChartRatioToggleButton.Content = "Show";
+            //ChartNormPanel.Visibility = Visibility.Collapsed;
+            //ChartDiffPanel.Visibility = Visibility.Collapsed;
+            //ChartRatioPanel.Visibility = Visibility.Collapsed;
+            //ChartNormToggleButton.Content = "Show";
+            //ChartDiffToggleButton.Content = "Show";
+            //ChartRatioToggleButton.Content = "Show";
+
+            //_viewModel.ToggleNorm();
+            //_viewModel.ToggleWeekly();
+            //_viewModel.ToggleDiff();
+            //_viewModel.ToggleRatio();
+            _viewModel.RequestChartUpdate();
+
 
             // Handle window closing to dispose resources
             this.Closing += MainWindow_Closing;
@@ -656,117 +665,138 @@ namespace DataVisualiser
         /// <summary>
         /// Toggles ChartNorm visibility and reloads data if available.
         /// </summary>
-        private async void OnChartNormToggle(object sender, RoutedEventArgs e)
-        {
-            if (_viewModel == null) return;
+        //private async void OnChartNormToggle(object sender, RoutedEventArgs e)
+        //{
+        //    if (_viewModel == null) return;
 
+        //    _viewModel.ToggleNorm();
+
+        //    if (_viewModel.ChartState.IsNormalizedVisible)
+        //    {
+        //        ChartNormPanel.Visibility = Visibility.Visible;
+        //        ChartNormToggleButton.Content = "Hide";
+
+        //        // Reload data if available
+        //        if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
+        //        {
+        //            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_viewModel.ChartState.LastContext.Data1, _viewModel.ChartState.LastContext.Data2, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.DisplayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, _viewModel.ChartState.SelectedNormalizationMode), $"{_viewModel.ChartState.LastContext.DisplayName1} ~ {_viewModel.ChartState.LastContext.DisplayName2}", minHeight: 400);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        ChartNormPanel.Visibility = Visibility.Collapsed;
+        //        ChartNormToggleButton.Content = "Show";
+        //        ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+        //    }
+        //}
+        private void OnChartNormToggle(object sender, RoutedEventArgs e)
+        {
             _viewModel.ToggleNorm();
-
-            if (_viewModel.ChartState.IsNormalizedVisible)
-            {
-                ChartNormPanel.Visibility = Visibility.Visible;
-                ChartNormToggleButton.Content = "Hide";
-
-                // Reload data if available
-                if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
-                {
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new DataVisualiser.Charts.Strategies.NormalizedStrategy(_viewModel.ChartState.LastContext.Data1, _viewModel.ChartState.LastContext.Data2, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.DisplayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, _viewModel.ChartState.SelectedNormalizationMode), $"{_viewModel.ChartState.LastContext.DisplayName1} ~ {_viewModel.ChartState.LastContext.DisplayName2}", minHeight: 400);
-                }
-            }
-            else
-            {
-                ChartNormPanel.Visibility = Visibility.Collapsed;
-                ChartNormToggleButton.Content = "Show";
-                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-            }
+            _viewModel.RequestChartUpdate();
         }
 
-        /// <summary>
-        /// Toggles Weekly Distribution chart visibility and reloads data if available.
-        /// Default state is collapsed — toggle shows it.
-        /// </summary>
-        private async void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
+        ///// <summary>
+        ///// Toggles Weekly Distribution chart visibility and reloads data if available.
+        ///// Default state is collapsed — toggle shows it.
+        ///// </summary>
+        //private async void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
+        //{
+        //    if (_viewModel == null) return;
+
+        //    _viewModel.ToggleWeekly();
+
+        //    if (_viewModel.ChartState.IsWeeklyVisible)
+        //    {
+        //        ChartWeeklyPanel.Visibility = Visibility.Visible;
+        //        ChartWeeklyToggleButton.Content = "Hide";
+
+        //        // reload if we have a stored data context (single metric series required)
+        //        if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null)
+        //        {
+        //            // we use Data1 for this chart (single-series distribution)
+        //            var data = _viewModel.ChartState.LastContext.Data1;
+        //            await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, data, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, minHeight: 400);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        ChartWeeklyPanel.Visibility = Visibility.Collapsed;
+        //        ChartWeeklyToggleButton.Content = "Show";
+        //        ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+        //    }
+        //}
+
+        private void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
         {
-            if (_viewModel == null) return;
-
             _viewModel.ToggleWeekly();
-
-            if (_viewModel.ChartState.IsWeeklyVisible)
-            {
-                ChartWeeklyPanel.Visibility = Visibility.Visible;
-                ChartWeeklyToggleButton.Content = "Hide";
-
-                // reload if we have a stored data context (single metric series required)
-                if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null)
-                {
-                    // we use Data1 for this chart (single-series distribution)
-                    var data = _viewModel.ChartState.LastContext.Data1;
-                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, data, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To, minHeight: 400);
-                }
-            }
-            else
-            {
-                ChartWeeklyPanel.Visibility = Visibility.Collapsed;
-                ChartWeeklyToggleButton.Content = "Show";
-                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
-            }
+            _viewModel.RequestChartUpdate();
         }
-
 
         /// <summary>
         /// Toggles ChartDiff visibility and reloads data if available.
         /// </summary>
-        private async void OnChartDiffToggle(object sender, RoutedEventArgs e)
+        //private async void OnChartDiffToggle(object sender, RoutedEventArgs e)
+        //{
+        //    if (_viewModel == null) return;
+
+        //    _viewModel.ToggleDiff();
+
+        //    if (_viewModel.ChartState.IsDifferenceVisible)
+        //    {
+        //        ChartDiffPanel.Visibility = Visibility.Visible;
+        //        ChartDiffToggleButton.Content = "Hide";
+
+        //        // Reload data if available
+        //        if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
+        //        {
+        //            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(_viewModel.ChartState.LastContext.Data1, _viewModel.ChartState.LastContext.Data2, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.DisplayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{_viewModel.ChartState.LastContext.DisplayName1} - {_viewModel.ChartState.LastContext.DisplayName2}", minHeight: 400);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        ChartDiffPanel.Visibility = Visibility.Collapsed;
+        //        ChartDiffToggleButton.Content = "Show";
+        //        ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+        //    }
+        //}
+
+        private void OnChartDiffToggle(object sender, RoutedEventArgs e)
         {
-            if (_viewModel == null) return;
-
             _viewModel.ToggleDiff();
-
-            if (_viewModel.ChartState.IsDifferenceVisible)
-            {
-                ChartDiffPanel.Visibility = Visibility.Visible;
-                ChartDiffToggleButton.Content = "Hide";
-
-                // Reload data if available
-                if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
-                {
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiff, new DataVisualiser.Charts.Strategies.DifferenceStrategy(_viewModel.ChartState.LastContext.Data1, _viewModel.ChartState.LastContext.Data2, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.DisplayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{_viewModel.ChartState.LastContext.DisplayName1} - {_viewModel.ChartState.LastContext.DisplayName2}", minHeight: 400);
-                }
-            }
-            else
-            {
-                ChartDiffPanel.Visibility = Visibility.Collapsed;
-                ChartDiffToggleButton.Content = "Show";
-                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-            }
+            _viewModel.RequestChartUpdate();
         }
 
         /// <summary>
         /// Toggles ChartRatio visibility and reloads data if available.
         /// </summary>
-        private async void OnChartRatioToggle(object sender, RoutedEventArgs e)
+        //private async void OnChartRatioToggle(object sender, RoutedEventArgs e)
+        //{
+        //    if (_viewModel == null) return;
+
+        //    _viewModel.ToggleRatio();
+
+        //    if (_viewModel.ChartState.IsRatioVisible)
+        //    {
+        //        ChartRatioPanel.Visibility = Visibility.Visible;
+        //        ChartRatioToggleButton.Content = "Hide";
+
+        //        // Reload data if available
+        //        if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
+        //        {
+        //            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(_viewModel.ChartState.LastContext.Data1, _viewModel.ChartState.LastContext.Data2, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.DisplayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{_viewModel.ChartState.LastContext.DisplayName1} / {_viewModel.ChartState.LastContext.DisplayName2}", minHeight: 400);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        ChartRatioPanel.Visibility = Visibility.Collapsed;
+        //        ChartRatioToggleButton.Content = "Show";
+        //        ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+        //    }
+        //}
+        private void OnChartRatioToggle(object sender, RoutedEventArgs e)
         {
-            if (_viewModel == null) return;
-
             _viewModel.ToggleRatio();
-
-            if (_viewModel.ChartState.IsRatioVisible)
-            {
-                ChartRatioPanel.Visibility = Visibility.Visible;
-                ChartRatioToggleButton.Content = "Hide";
-
-                // Reload data if available
-                if (_viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
-                {
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartRatio, new DataVisualiser.Charts.Strategies.RatioStrategy(_viewModel.ChartState.LastContext.Data1, _viewModel.ChartState.LastContext.Data2, _viewModel.ChartState.LastContext.DisplayName1, _viewModel.ChartState.LastContext.DisplayName2, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To), $"{_viewModel.ChartState.LastContext.DisplayName1} / {_viewModel.ChartState.LastContext.DisplayName2}", minHeight: 400);
-                }
-            }
-            else
-            {
-                ChartRatioPanel.Visibility = Visibility.Collapsed;
-                ChartRatioToggleButton.Content = "Show";
-                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
-            }
+            _viewModel.RequestChartUpdate();
         }
 
         #endregion
@@ -1164,10 +1194,146 @@ namespace DataVisualiser
             }
         }
 
-        private void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
+        private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
         {
-            // NO behavior yet. Behaviour will be introduced in 5D-4.
+            // 1. UI panel visibility + button text updates
+
+            ChartNormPanel.Visibility = e.ShowNormalized ? Visibility.Visible : Visibility.Collapsed;
+            ChartNormToggleButton.Content = e.ShowNormalized ? "Hide" : "Show";
+
+            ChartDiffPanel.Visibility = e.ShowDifference ? Visibility.Visible : Visibility.Collapsed;
+            ChartDiffToggleButton.Content = e.ShowDifference ? "Hide" : "Show";
+
+            ChartRatioPanel.Visibility = e.ShowRatio ? Visibility.Visible : Visibility.Collapsed;
+            ChartRatioToggleButton.Content = e.ShowRatio ? "Hide" : "Show";
+
+            ChartWeeklyPanel.Visibility = e.ShowWeekly ? Visibility.Visible : Visibility.Collapsed;
+            ChartWeeklyToggleButton.Content = e.ShowWeekly ? "Hide" : "Show";
+
+            // 2. Render charts if appropriate
+            if (e.ShouldRenderCharts)
+            {
+                await RenderChartsFromLastContext();
+            }
         }
+
+        private async Task RenderChartsFromLastContext()
+        {
+            var ctx = _viewModel.ChartState.LastContext;
+            if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
+                return;
+
+            var data1 = ctx.Data1;
+            var data2 = ctx.Data2;
+            var displayName1 = ctx.DisplayName1 ?? string.Empty;
+            var displayName2 = ctx.DisplayName2 ?? string.Empty;
+
+            // MAIN CHART - always updates
+            if (data2 != null && data2.Any())
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartMain,
+                    new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(
+                        data1,
+                        data2,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To),
+                    displayName1,
+                    displayName2);
+            }
+            else
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartMain,
+                    new DataVisualiser.Charts.Strategies.SingleMetricStrategy(
+                        data1,
+                        displayName1,
+                        ctx.From,
+                        ctx.To),
+                    displayName1,
+                    minHeight: 400);
+            }
+
+            // NORMALIZED
+            if (_viewModel.ChartState.IsNormalizedVisible)
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartNorm,
+                    new DataVisualiser.Charts.Strategies.NormalizedStrategy(
+                        data1,
+                        data2!,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To,
+                        _viewModel.ChartState.SelectedNormalizationMode),
+                    $"{displayName1} ~ {displayName2}",
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+            }
+
+            // WEEKLY
+            if (_viewModel.ChartState.IsWeeklyVisible)
+            {
+                await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
+                    ChartWeekly,
+                    data1,
+                    displayName1,
+                    ctx.From,
+                    ctx.To,
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+            }
+
+            // DIFFERENCE
+            if (_viewModel.ChartState.IsDifferenceVisible)
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartDiff,
+                    new DataVisualiser.Charts.Strategies.DifferenceStrategy(
+                        data1,
+                        data2!,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To),
+                    $"{displayName1} - {displayName2}",
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+            }
+
+            // RATIO
+            if (_viewModel.ChartState.IsRatioVisible)
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartRatio,
+                    new DataVisualiser.Charts.Strategies.RatioStrategy(
+                        data1,
+                        data2!,
+                        displayName1,
+                        displayName2,
+                        ctx.From,
+                        ctx.To),
+                    $"{displayName1} / {displayName2}",
+                    minHeight: 400);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+            }
+        }
+
 
         private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
         {

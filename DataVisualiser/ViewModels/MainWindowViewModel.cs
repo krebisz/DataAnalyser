@@ -24,6 +24,8 @@ namespace DataVisualiser.ViewModels
         public MetricState MetricState { get; }
         public UiState UiState { get; }
 
+        private bool _isInitializing = true;
+
         // SERVICES (injected)
         private readonly MetricSelectionService _metricService;
         private readonly ChartUpdateCoordinator _chartCoordinator;
@@ -202,7 +204,11 @@ namespace DataVisualiser.ViewModels
                 ChartName = "Norm",
                 IsVisible = ChartState.IsNormalizedVisible
             });
+
+            // NEW
+            RequestChartUpdate();
         }
+
 
         public void ToggleRatio()
         {
@@ -214,7 +220,11 @@ namespace DataVisualiser.ViewModels
                 ChartName = "Ratio",
                 IsVisible = ChartState.IsRatioVisible
             });
+
+            // NEW
+            RequestChartUpdate();
         }
+
 
         public void ToggleDiff()
         {
@@ -226,7 +236,11 @@ namespace DataVisualiser.ViewModels
                 ChartName = "Diff",
                 IsVisible = ChartState.IsDifferenceVisible
             });
+
+            // NEW
+            RequestChartUpdate();
         }
+
 
         public void ToggleWeekly()
         {
@@ -238,7 +252,11 @@ namespace DataVisualiser.ViewModels
                 ChartName = "Weekly",
                 IsVisible = ChartState.IsWeeklyVisible
             });
+
+            // NEW
+            RequestChartUpdate();
         }
+
 
         // Notify UI of changes
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -246,25 +264,30 @@ namespace DataVisualiser.ViewModels
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
 
-        public void SetNormalizedVisible(bool isVisible)
+        public void SetNormalizedVisible(bool value)
         {
-            ChartState.IsNormalizedVisible = isVisible;
+            ChartState.IsNormalizedVisible = value;
+            RequestChartUpdate();
         }
 
-        public void SetDifferenceVisible(bool isVisible)
+        public void SetDifferenceVisible(bool value)
         {
-            ChartState.IsDifferenceVisible = isVisible;
+            ChartState.IsDifferenceVisible = value;
+            RequestChartUpdate();
         }
 
-        public void SetRatioVisible(bool isVisible)
+        public void SetRatioVisible(bool value)
         {
-            ChartState.IsRatioVisible = isVisible;
+            ChartState.IsRatioVisible = value;
+            RequestChartUpdate();
         }
 
-        public void SetWeeklyVisible(bool isVisible)
+        public void SetWeeklyVisible(bool value)
         {
-            ChartState.IsWeeklyVisible = isVisible;
+            ChartState.IsWeeklyVisible = value;
+            RequestChartUpdate();
         }
+
 
         public void SetNormalizationMode(NormalizationMode mode)
         {
@@ -419,13 +442,22 @@ namespace DataVisualiser.ViewModels
 
         public void RequestChartUpdate()
         {
+            if (_isInitializing)
+                return;
+
             ChartUpdateRequested?.Invoke(this, new ChartUpdateRequestedEventArgs
             {
                 ShowNormalized = ChartState.IsNormalizedVisible,
                 ShowDifference = ChartState.IsDifferenceVisible,
                 ShowRatio = ChartState.IsRatioVisible,
-                ShowWeekly = ChartState.IsWeeklyVisible
+                ShowWeekly = ChartState.IsWeeklyVisible,
+                ShouldRenderCharts = ChartState.LastContext != null
             });
+        }
+        public void CompleteInitialization()
+        {
+            _isInitializing = false;
+            RequestChartUpdate(); // give UI the real initial state
         }
 
 
