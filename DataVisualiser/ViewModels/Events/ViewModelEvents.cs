@@ -38,4 +38,13 @@ namespace DataVisualiser.ViewModels.Events
         public string Message { get; set; } = "";
     }
 
+    public class ChartUpdateRequestedEventArgs : EventArgs
+    {
+        public bool ShowNormalized { get; set; }
+        public bool ShowDifference { get; set; }
+        public bool ShowRatio { get; set; }
+        public bool ShowWeekly { get; set; }
+    }
+
+
 }

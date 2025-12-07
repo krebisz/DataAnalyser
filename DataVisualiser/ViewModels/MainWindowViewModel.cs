@@ -17,6 +17,7 @@ namespace DataVisualiser.ViewModels
         public event EventHandler<DataLoadedEventArgs>? DataLoaded;
         public event EventHandler<ChartVisibilityChangedEventArgs>? ChartVisibilityChanged;
         public event EventHandler<ErrorEventArgs>? ErrorOccured;
+        public event EventHandler<ChartUpdateRequestedEventArgs>? ChartUpdateRequested;
 
         // STATE OBJECTS
         public ChartState ChartState { get; }
@@ -415,5 +416,18 @@ namespace DataVisualiser.ViewModels
             // Centralised error formatting if we want to get fancier later
             return $"An error occurred while loading data: {ex.Message}";
         }
+
+        public void RequestChartUpdate()
+        {
+            ChartUpdateRequested?.Invoke(this, new ChartUpdateRequestedEventArgs
+            {
+                ShowNormalized = ChartState.IsNormalizedVisible,
+                ShowDifference = ChartState.IsDifferenceVisible,
+                ShowRatio = ChartState.IsRatioVisible,
+                ShowWeekly = ChartState.IsWeeklyVisible
+            });
+        }
+
+
     }
 }

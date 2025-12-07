@@ -73,6 +73,7 @@ namespace DataVisualiser
             _viewModel.MetricTypesLoaded += OnMetricTypesLoaded;
             _viewModel.SubtypesLoaded += OnSubtypesLoaded;
             _viewModel.DataLoaded += OnDataLoaded;
+            _viewModel.ChartUpdateRequested += OnChartUpdateRequested;
 
             // Initialize date range through viewModel
             var initialFromDate = DateTime.UtcNow.AddDays(-30);
@@ -1163,6 +1164,10 @@ namespace DataVisualiser
             }
         }
 
+        private void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
+        {
+            // NO behavior yet. Behaviour will be introduced in 5D-4.
+        }
 
         private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
         {
