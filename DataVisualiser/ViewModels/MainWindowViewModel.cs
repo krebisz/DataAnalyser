@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Class;
+using DataVisualiser.Class;
 using DataVisualiser.Services;
 using DataVisualiser.State;
 using DataVisualiser.ViewModels.Commands;
@@ -156,6 +156,79 @@ namespace DataVisualiser.ViewModels
         public void SetLoadingData(bool isLoading)
         {
             UiState.IsLoadingData = isLoading;
+        }
+
+        // ======================
+        // VALIDATION METHODS
+        // ======================
+
+        /// <summary>
+        /// Validates that a metric type is selected.
+        /// </summary>
+        public bool ValidateMetricTypeSelected()
+        {
+            return !string.IsNullOrWhiteSpace(MetricState.SelectedMetricType);
+        }
+
+        /// <summary>
+        /// Validates that the date range is valid (from <= to).
+        /// </summary>
+        public bool ValidateDateRange()
+        {
+            if (!MetricState.FromDate.HasValue || !MetricState.ToDate.HasValue)
+                return false;
+
+            return MetricState.FromDate.Value <= MetricState.ToDate.Value;
+        }
+
+        /// <summary>
+        /// Validates that all required data is available for loading charts.
+        /// </summary>
+        public (bool IsValid, string? ErrorMessage) ValidateDataLoadRequirements()
+        {
+            if (!ValidateMetricTypeSelected())
+            {
+                return (false, "Please select a MetricType");
+            }
+
+            if (!ValidateDateRange())
+            {
+                return (false, "From date must be before To date");
+            }
+
+            return (true, null);
+        }
+
+        // ======================
+        // ERROR HANDLING
+        // ======================
+
+        /// <summary>
+        /// Event raised when an error occurs that should be displayed to the user.
+        /// </summary>
+        public event EventHandler<string>? ErrorOccurred;
+
+        /// <summary>
+        /// Raises an error event with the specified message.
+        /// </summary>
+        public void RaiseError(string errorMessage)
+        {
+            if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                ErrorOccurred?.Invoke(this, errorMessage);
+            }
+        }
+
+        /// <summary>
+        /// Handles database exceptions and formats user-friendly error messages.
+        /// </summary>
+        public string FormatDatabaseError(Exception ex)
+        {
+            if (ex is Microsoft.Data.SqlClient.SqlException sqlEx)
+            {
+                return $"Database connection error: {sqlEx.Message}\n\nPlease check:\n1. SQL Server is running\n2. Database 'Health' exists\n3. Connection string in App.config is correct";
+            }
+            return $"Error: {ex.Message}";
         }
 
     }

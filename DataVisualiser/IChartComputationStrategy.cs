@@ -1,12 +1,13 @@
-﻿namespace DataVisualiser.Charts
+namespace DataVisualiser.Charts
 {
     public interface IChartComputationStrategy
     {
         /// <summary>
         /// Pure data computation: given inputs produce a ChartComputationResult.
         /// Must be synchronous (invoked inside a Task.Run by the engine).
+        /// Returns null if no data is available or computation fails.
         /// </summary>
-        ChartComputationResult Compute();
+        ChartComputationResult? Compute();
 
         /// <summary>
         /// Optional friendly name for series/default labels.

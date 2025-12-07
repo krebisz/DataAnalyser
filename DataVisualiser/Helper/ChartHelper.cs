@@ -113,10 +113,17 @@ namespace DataVisualiser.Helper
                         try
                         {
                             var raw = lineSeries.Values[index];
-                            var val = Convert.ToDouble(raw);
-                            parts.Add($"{title}: {MathHelper.FormatToThreeSignificantDigits(val)}");
+                            if (raw == null)
+                            {
+                                parts.Add($"{title}: N/A");
+                            }
+                            else
+                            {
+                                var val = Convert.ToDouble(raw);
+                                parts.Add($"{title}: {MathHelper.FormatToThreeSignificantDigits(val)}");
+                            }
                         }
-                        catch
+                        catch (Exception)
                         {
                             parts.Add($"{title}: N/A");
                         }
@@ -199,10 +206,17 @@ namespace DataVisualiser.Helper
                         try
                         {
                             var raw = lineSeries.Values[index];
-                            var val = Convert.ToDouble(raw);
-                            value = MathHelper.FormatToThreeSignificantDigits(val);
+                            if (raw == null)
+                            {
+                                value = "N/A";
+                            }
+                            else
+                            {
+                                var val = Convert.ToDouble(raw);
+                                value = MathHelper.FormatToThreeSignificantDigits(val);
+                            }
                         }
-                        catch
+                        catch (Exception)
                         {
                             value = "N/A";
                         }
@@ -287,6 +301,7 @@ namespace DataVisualiser.Helper
         {
             if (chart == null) return;
             if (chart.AxisX == null || chart.AxisX.Count == 0) return;
+            if (index < 0) return; // Validate index is non-negative
 
             // Remove existing - get fresh references right before the operation
             if (sectionField != null)
@@ -430,10 +445,14 @@ namespace DataVisualiser.Helper
 
         public static void ResetZoom(ref CartesianChart chart)
         {
-            if (chart != null && chart.AxisX.Count > 0)
+            if (chart != null && chart.AxisX != null && chart.AxisX.Count > 0)
             {
-                chart.AxisX[0].MinValue = double.NaN;
-                chart.AxisX[0].MaxValue = double.NaN;
+                var axis = chart.AxisX[0];
+                if (axis != null)
+                {
+                    axis.MinValue = double.NaN;
+                    axis.MaxValue = double.NaN;
+                }
             }
         }
 

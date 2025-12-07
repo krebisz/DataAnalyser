@@ -1,4 +1,4 @@
-﻿namespace DataVisualiser.Charts.Strategies
+namespace DataVisualiser.Charts.Strategies
 {
     using DataVisualiser.Class;
     using DataVisualiser.Helper;
@@ -22,10 +22,12 @@
         public string SecondaryLabel => string.Empty;
         public string? Unit { get; private set; }
 
-        public ChartComputationResult Compute()
+        public ChartComputationResult? Compute()
         {
+            if (_data == null) return null;
+
             var orderedData = _data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-            if (!orderedData.Any()) return null!; // engine will treat null as no-data
+            if (!orderedData.Any()) return null; // engine will treat null as no-data
 
             var dateRange = _to - _from;
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);

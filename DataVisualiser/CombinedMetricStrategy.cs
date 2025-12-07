@@ -26,14 +26,21 @@ namespace DataVisualiser.Charts.Strategies
         public string SecondaryLabel => _labelRight;
         public string? Unit { get; private set; }
 
-        public ChartComputationResult Compute()
+        public ChartComputationResult? Compute()
         {
-            var ordered1 = _left.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-            var ordered2 = _right.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+            if (_left == null && _right == null) return null;
 
-            if (!ordered1.Any() && !ordered2.Any()) return null!;
+            var ordered1 = _left?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<HealthMetricData>();
+            var ordered2 = _right?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<HealthMetricData>();
+
+            if (!ordered1.Any() && !ordered2.Any()) return null;
+
+            // Validate date range
+            if (_from > _to) return null;
 
             var dateRange = _to - _from;
+            if (dateRange.TotalMilliseconds <= 0) return null;
+
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);
 
             var combinedTimestamps = ordered1.Select(d => d.NormalizedTimestamp)
@@ -42,7 +49,7 @@ namespace DataVisualiser.Charts.Strategies
                 .OrderBy(dt => dt)
                 .ToList();
 
-            if (!combinedTimestamps.Any()) return null!;
+            if (!combinedTimestamps.Any()) return null;
 
             var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
             var intervalIndices = combinedTimestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();

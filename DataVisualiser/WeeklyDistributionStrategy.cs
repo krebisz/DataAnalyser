@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Class; // for HealthMetricData
+using DataVisualiser.Class; // for HealthMetricData
 // ensure the namespace matches your strategies namespace
 namespace DataVisualiser.Charts.Strategies
 {
@@ -31,8 +31,13 @@ namespace DataVisualiser.Charts.Strategies
         /// Uses ChartComputationResult.PrimaryRawValues = mins
         /// and PrimarySmoothed = ranges (max - min).
         /// </summary>
-        public ChartComputationResult Compute()
+        public ChartComputationResult? Compute()
         {
+            if (_data == null) return null;
+
+            // Validate date range
+            if (_from > _to) return null;
+
             // Prepare 7 buckets Monday (1) -> Sunday (7)
             var buckets = Enumerable.Range(0, 7)
                 .Select(i => new List<double>())
@@ -41,6 +46,8 @@ namespace DataVisualiser.Charts.Strategies
             var ordered = _data.Where(d => d.Value.HasValue)
                                .Where(d => d.NormalizedTimestamp >= _from && d.NormalizedTimestamp <= _to)
                                .ToList();
+
+            if (!ordered.Any()) return null;
 
             foreach (var d in ordered)
             {

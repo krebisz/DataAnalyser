@@ -1,4 +1,4 @@
-﻿namespace DataVisualiser.Charts.Strategies
+namespace DataVisualiser.Charts.Strategies
 {
     using DataVisualiser.Class;
     using DataVisualiser.Helper;
@@ -39,14 +39,21 @@
         public string SecondaryLabel => string.Empty;
         public string? Unit { get; private set; }
 
-        public ChartComputationResult Compute()
+        public ChartComputationResult? Compute()
         {
-            var ordered1 = _left.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-            var ordered2 = _right.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+            if (_left == null && _right == null) return null;
 
-            if (!ordered1.Any() && !ordered2.Any()) return null!;
+            var ordered1 = _left?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<HealthMetricData>();
+            var ordered2 = _right?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<HealthMetricData>();
+
+            if (!ordered1.Any() && !ordered2.Any()) return null;
+
+            // Validate date range
+            if (_from > _to) return null;
 
             var dateRange = _to - _from;
+            if (dateRange.TotalMilliseconds <= 0) return null;
+
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);
 
             var combinedTimestamps = ordered1.Select(d => d.NormalizedTimestamp)
@@ -55,7 +62,7 @@
                 .OrderBy(dt => dt)
                 .ToList();
 
-            if (!combinedTimestamps.Any()) return null!;
+            if (!combinedTimestamps.Any()) return null;
 
             var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
             var intervalIndices = combinedTimestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
@@ -72,17 +79,16 @@
             var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
 
 
-            List<double> rawResults1 = null!;
-            List<double> rawResults12 = null!;
+            List<double>? rawResults1;
+            List<double>? rawResults2;
 
-            List<double> smoothedResults1 = null!;
-            List<double> smoothedResults2 = null!;
-
+            List<double>? smoothedResults1;
+            List<double>? smoothedResults2;
 
             if (_mode != NormalizationMode.RelativeToMax)
             {
                 rawResults1 = MathHelper.ReturnValueNormalized(rawValues1, NormalizationMode.ZeroToOne);
-                rawResults12 = MathHelper.ReturnValueNormalized(rawValues2, NormalizationMode.ZeroToOne);
+                rawResults2 = MathHelper.ReturnValueNormalized(rawValues2, NormalizationMode.ZeroToOne);
                 smoothedResults1 = MathHelper.ReturnValueNormalized(interpSmoothed1, NormalizationMode.ZeroToOne);
                 smoothedResults2 = MathHelper.ReturnValueNormalized(interpSmoothed2, NormalizationMode.ZeroToOne);
             }
@@ -90,12 +96,15 @@
             {
                 (List<double>? rawResults1, List<double>? rawResults2) rawResults = MathHelper.ReturnValueNormalized(rawValues1, rawValues2, _mode);
                 rawResults1 = rawResults.rawResults1;
-                rawResults12 = rawResults.rawResults2;
+                rawResults2 = rawResults.rawResults2;
 
                 (List<double>? smoothResults1, List<double>? smoothResults2) smoothResults = MathHelper.ReturnValueNormalized(interpSmoothed1, interpSmoothed2, _mode);
                 smoothedResults1 = smoothResults.smoothResults1;
                 smoothedResults2 = smoothResults.smoothResults2;
             }
+
+            // Validate normalized results
+            if (rawResults1 == null || smoothedResults1 == null) return null;
 
             Unit = ordered1.FirstOrDefault()?.Unit ?? ordered2.FirstOrDefault()?.Unit;
 
@@ -106,7 +115,7 @@
                 NormalizedIntervals = normalizedIntervals,
                 PrimaryRawValues = rawResults1,
                 PrimarySmoothed = smoothedResults1,
-                SecondaryRawValues = rawResults12,
+                SecondaryRawValues = rawResults2,
                 SecondarySmoothed = smoothedResults2,
                 TickInterval = tickInterval,
                 DateRange = dateRange,

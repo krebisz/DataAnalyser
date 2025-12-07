@@ -31,6 +31,7 @@ namespace DataVisualiser
 
         // Replace existing fields
         private readonly MainWindowViewModel _viewModel;
+        private bool _isInitializing = true; // Flag to prevent event handlers from running during initialization
 
 
         public MainWindow()
@@ -92,7 +93,8 @@ namespace DataVisualiser
             _selectorManager.SubtypeSelectionChanged += (s, e) =>
             {
                 UpdateChartTitlesFromCombos();
-                OnAnySubtypeSelectionChanged(s, null);
+                // Pass null for SelectionChangedEventArgs since SubtypeSelectionChanged uses EventArgs
+                OnAnySubtypeSelectionChanged(s ?? this, null);
             };
 
             ResolutionCombo.Items.Add("All");
@@ -118,6 +120,19 @@ namespace DataVisualiser
             ChartNormToggleButton.Content = "Show";
             ChartDiffToggleButton.Content = "Show";
             ChartRatioToggleButton.Content = "Show";
+
+            // Handle window closing to dispose resources
+            this.Closing += MainWindow_Closing;
+
+            // Mark initialization as complete - event handlers can now safely use _viewModel
+            _isInitializing = false;
+        }
+
+        private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // Dispose tooltip manager to prevent memory leaks
+            _tooltipManager?.Dispose();
+            _tooltipManager = null;
         }
 
         #region Data Loading and Selection Event Handlers
@@ -195,6 +210,10 @@ namespace DataVisualiser
         /// </summary>
         private async void OnMetricTypeSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+            // Guard against null reference during initialization
+            if (_isInitializing || _viewModel == null)
+                return;
+
             //if (_uiState.IsLoadingMetricTypes)
             if (_viewModel.UiState.IsLoadingMetricTypes)
                 return;
@@ -209,13 +228,17 @@ namespace DataVisualiser
         /// Generalized event handler for any MetricSubtype ComboBox selection change - updates date range to match data availability.
         /// This handler is used by all subtype ComboBoxes (both static and dynamically added).
         /// </summary>
-        private async void OnAnySubtypeSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private async void OnAnySubtypeSelectionChanged(object? sender, System.Windows.Controls.SelectionChangedEventArgs? e)
         {
             await LoadDateRangeForSelectedMetrics();
         }
 
         private async Task LoadDateRangeForSelectedMetrics()
         {
+            // Guard against null reference during initialization
+            if (_isInitializing || _viewModel == null)
+                return;
+
             if (_viewModel.UiState.IsLoadingSubtypes || _viewModel.UiState.IsLoadingMetricTypes)
                 return;
 
@@ -355,6 +378,10 @@ namespace DataVisualiser
         /// </summary>
         private async void OnLoadData(object sender, RoutedEventArgs e)
         {
+            // Guard against null reference during initialization
+            if (_isInitializing || _viewModel == null)
+                return;
+
             if (TablesCombo.SelectedItem == null)
             {
                 MessageBox.Show("Please select a MetricType", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -510,6 +537,7 @@ namespace DataVisualiser
 
         private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
         {
+            if (subtypeList == null) return;
             var newCombo = _selectorManager.AddSubtypeCombo(subtypeList);
             newCombo.SelectedIndex = 0;
             newCombo.IsEnabled = true;
@@ -527,6 +555,8 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartNormToggle(object sender, RoutedEventArgs e)
         {
+            if (_viewModel == null) return;
+
             _viewModel.ChartState.IsNormalizedVisible = !_viewModel.ChartState.IsNormalizedVisible;
 
             if (_viewModel.ChartState.IsNormalizedVisible)
@@ -554,6 +584,8 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
         {
+            if (_viewModel == null) return;
+
             _viewModel.ChartState.IsWeeklyVisible = !_viewModel.ChartState.IsWeeklyVisible;
 
             if (_viewModel.ChartState.IsWeeklyVisible)
@@ -583,6 +615,8 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartDiffToggle(object sender, RoutedEventArgs e)
         {
+            if (_viewModel == null) return;
+
             _viewModel.ChartState.IsDifferenceVisible = !_viewModel.ChartState.IsDifferenceVisible;
 
             if (_viewModel.ChartState.IsDifferenceVisible)
@@ -609,6 +643,8 @@ namespace DataVisualiser
         /// </summary>
         private async void OnChartRatioToggle(object sender, RoutedEventArgs e)
         {
+            if (_viewModel == null) return;
+
             _viewModel.ChartState.IsRatioVisible = !_viewModel.ChartState.IsRatioVisible;
 
             if (_viewModel.ChartState.IsRatioVisible)
@@ -743,6 +779,14 @@ namespace DataVisualiser
         /// </summary>
         private async void OnNormalizationModeChanged(object sender, RoutedEventArgs e)
         {
+            // Guard against null reference during initialization
+            // This can happen if a radio button has IsChecked="True" in XAML,
+            // which fires the Checked event during InitializeComponent() before _viewModel is initialized
+            if (_isInitializing || _viewModel == null)
+            {
+                return;
+            }
+
             // Radio button names taken from your XAML:
             // NormZeroToOneRadio, NormPercentOfMaxRadio, NormRelativeToMaxRadio
             try

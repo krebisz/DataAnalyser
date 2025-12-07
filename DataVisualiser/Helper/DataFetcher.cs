@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using DataVisualiser.Class;
 using Microsoft.Data.SqlClient;
 using System.Text;
@@ -239,6 +239,17 @@ namespace DataVisualiser.Helper
         /// <param name="tableName">The table name to query (e.g., HealthMetrics, HealthMetricsWeek, etc.)</param>
         public async Task<IEnumerable<HealthMetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype = null, DateTime? from = null, DateTime? to = null, string tableName = "HealthMetrics")
         {
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(baseType))
+                return Enumerable.Empty<HealthMetricData>();
+
+            if (string.IsNullOrWhiteSpace(tableName))
+                tableName = "HealthMetrics";
+
+            // Validate date range if both provided
+            if (from.HasValue && to.HasValue && from.Value > to.Value)
+                return Enumerable.Empty<HealthMetricData>();
+
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
@@ -298,6 +309,13 @@ namespace DataVisualiser.Helper
         /// <param name="tableName">The table name to query (e.g., HealthMetrics, HealthMetricsWeek, etc.)</param>
         public async Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype = null, string tableName = "HealthMetrics")
         {
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(baseType))
+                return null;
+
+            if (string.IsNullOrWhiteSpace(tableName))
+                tableName = "HealthMetrics";
+
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 

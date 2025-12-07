@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Class;
+using DataVisualiser.Class;
 
 namespace DataVisualiser.Helper
 {
@@ -583,13 +583,53 @@ namespace DataVisualiser.Helper
 
         public static List<double>? ReturnValueDifferences(List<double>? valueList1, List<double>? valueList2)
         {
-            var valueDiffernces = valueList1.Zip(valueList2, (a, b) => (double.IsNaN(a) || double.IsNaN(b)) ? double.NaN : (a - b)).ToList();
-            return valueDiffernces;
+            if (valueList1 == null || valueList2 == null)
+                return null;
+
+            // Handle mismatched list lengths
+            int minCount = Math.Min(valueList1.Count, valueList2.Count);
+            var valueDifferences = new List<double>(minCount);
+
+            for (int i = 0; i < minCount; i++)
+            {
+                double a = valueList1[i];
+                double b = valueList2[i];
+                if (double.IsNaN(a) || double.IsNaN(b) || double.IsInfinity(a) || double.IsInfinity(b))
+                {
+                    valueDifferences.Add(double.NaN);
+                }
+                else
+                {
+                    valueDifferences.Add(a - b);
+                }
+            }
+
+            return valueDifferences;
         }
 
-        public static List<double>? ReturnValueRatios(List<double>? valueList1, List<double>? valueLiat2)
+        public static List<double>? ReturnValueRatios(List<double>? valueList1, List<double>? valueList2)
         {
-            var valueRatios = valueList1.Zip(valueLiat2, (a, b) => (double.IsNaN(a) || double.IsNaN(b) || b == 0.0) ? double.NaN : (a / b)).ToList();
+            if (valueList1 == null || valueList2 == null)
+                return null;
+
+            // Handle mismatched list lengths
+            int minCount = Math.Min(valueList1.Count, valueList2.Count);
+            var valueRatios = new List<double>(minCount);
+
+            for (int i = 0; i < minCount; i++)
+            {
+                double a = valueList1[i];
+                double b = valueList2[i];
+                if (double.IsNaN(a) || double.IsNaN(b) || double.IsInfinity(a) || double.IsInfinity(b) || b == 0.0)
+                {
+                    valueRatios.Add(double.NaN);
+                }
+                else
+                {
+                    valueRatios.Add(a / b);
+                }
+            }
+
             return valueRatios;
         }
 
@@ -607,15 +647,30 @@ namespace DataVisualiser.Helper
                 double a = list1[i];
                 double b = list2[i];
 
-                // Maintain NaN semantics
-                if (double.IsNaN(a) || double.IsNaN(b))
+                // Maintain NaN and Infinity semantics
+                if (double.IsNaN(a) || double.IsNaN(b) || double.IsInfinity(a) || double.IsInfinity(b))
                 {
                     result.Add(double.NaN);
                     continue;
                 }
 
-                double value = operation(a, b);
-                result.Add(value);
+                try
+                {
+                    double value = operation(a, b);
+                    // Check if operation resulted in invalid value
+                    if (double.IsNaN(value) || double.IsInfinity(value))
+                    {
+                        result.Add(double.NaN);
+                    }
+                    else
+                    {
+                        result.Add(value);
+                    }
+                }
+                catch
+                {
+                    result.Add(double.NaN);
+                }
             }
 
             return result;
