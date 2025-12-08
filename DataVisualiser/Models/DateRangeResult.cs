@@ -1,4 +1,4 @@
-namespace DataVisualiser.Models
+﻿namespace DataVisualiser.Models
 {
     /// <summary>
     /// Helper class for date range query results
@@ -9,4 +9,3 @@ namespace DataVisualiser.Models
         public DateTime? MaxDate { get; set; }
     }
 }
-

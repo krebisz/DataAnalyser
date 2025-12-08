@@ -1,5 +1,6 @@
-namespace DataVisualiser.Models
+﻿namespace DataVisualiser.Models
 {
+
     /// <summary>
     /// Enum for tick interval types
     /// </summary>
@@ -11,4 +12,3 @@ namespace DataVisualiser.Models
         Hour
     }
 }
-

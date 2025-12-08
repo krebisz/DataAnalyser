@@ -1,5 +1,6 @@
-namespace DataVisualiser.Models
+﻿namespace DataVisualiser.Models
 {
+
     /// <summary>
     /// Helper class for smoothed data points
     /// </summary>
@@ -9,4 +10,3 @@ namespace DataVisualiser.Models
         public double Value { get; set; }
     }
 }
-
