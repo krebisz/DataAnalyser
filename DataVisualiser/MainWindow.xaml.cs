@@ -10,6 +10,7 @@ using DataVisualiser.ViewModels.Events;
 using LiveCharts.Wpf;
 using System.Configuration;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace DataVisualiser
 {
@@ -508,6 +509,7 @@ namespace DataVisualiser
             ChartHelper.ResetZoom(ref ChartNorm);
             ChartHelper.ResetZoom(ref ChartDiff);
             ChartHelper.ResetZoom(ref ChartRatio);
+            ChartHelper.ResetZoom(ref ChartWeekly);
         }
 
         /// <summary>
@@ -748,126 +750,24 @@ namespace DataVisualiser
             var displayName1 = ctx.DisplayName1 ?? string.Empty;
             var displayName2 = ctx.DisplayName2 ?? string.Empty;
 
-            if (data2 != null && data2.Any())
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartMain,
-                    new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(
-                        data1,
-                        data2,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To),
-                    displayName1,
-                    displayName2);
-            }
-            else
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartMain,
-                    new DataVisualiser.Charts.Strategies.SingleMetricStrategy(
-                        data1,
-                        displayName1,
-                        ctx.From,
-                        ctx.To),
-                    displayName1,
-                    minHeight: 400);
+            await RenderChartsFromLastContext();
+        }
 
-                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
-                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
-                return;
-            }
-
-            if (_viewModel.ChartState.IsNormalizedVisible)
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartNorm,
-                    new DataVisualiser.Charts.Strategies.NormalizedStrategy(
-                        data1,
-                        data2!,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To,
-                        _viewModel.ChartState.SelectedNormalizationMode),
-                    $"{displayName1} ~ {displayName2}",
-                    minHeight: 400);
-            }
-            else
-            {
-                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-            }
-
-            if (_viewModel.ChartState.IsWeeklyVisible)
-            {
-                await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
-                    ChartWeekly,
-                    data1,
-                    displayName1,
-                    ctx.From,
-                    ctx.To,
-                    minHeight: 400);
-            }
-            else
-            {
-                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
-            }
-
-            if (_viewModel.ChartState.IsDifferenceVisible)
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartDiff,
-                    new DataVisualiser.Charts.Strategies.DifferenceStrategy(
-                        data1,
-                        data2!,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To),
-                    $"{displayName1} - {displayName2}",
-                    minHeight: 400);
-            }
-            else
-            {
-                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-            }
-
-            if (_viewModel.ChartState.IsRatioVisible)
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartRatio,
-                    new DataVisualiser.Charts.Strategies.RatioStrategy(
-                        data1,
-                        data2!,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To),
-                    $"{displayName1} / {displayName2}",
-                    minHeight: 400);
-            }
-            else
-            {
-                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
-            }
+        /// <summary>
+        /// Updates chart panel visibility and toggle button content.
+        /// </summary>
+        private void UpdateChartVisibility(Panel panel, System.Windows.Controls.Primitives.ButtonBase toggleButton, bool isVisible)
+        {
+            panel.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
+            toggleButton.Content = isVisible ? "Hide" : "Show";
         }
 
         private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
         {
-            ChartNormPanel.Visibility = e.ShowNormalized ? Visibility.Visible : Visibility.Collapsed;
-            ChartNormToggleButton.Content = e.ShowNormalized ? "Hide" : "Show";
-
-            ChartDiffPanel.Visibility = e.ShowDifference ? Visibility.Visible : Visibility.Collapsed;
-            ChartDiffToggleButton.Content = e.ShowDifference ? "Hide" : "Show";
-
-            ChartRatioPanel.Visibility = e.ShowRatio ? Visibility.Visible : Visibility.Collapsed;
-            ChartRatioToggleButton.Content = e.ShowRatio ? "Hide" : "Show";
-
-            ChartWeeklyPanel.Visibility = e.ShowWeekly ? Visibility.Visible : Visibility.Collapsed;
-            ChartWeeklyToggleButton.Content = e.ShowWeekly ? "Hide" : "Show";
+            UpdateChartVisibility(ChartNormPanel, ChartNormToggleButton, e.ShowNormalized);
+            UpdateChartVisibility(ChartDiffPanel, ChartDiffToggleButton, e.ShowDifference);
+            UpdateChartVisibility(ChartRatioPanel, ChartRatioToggleButton, e.ShowRatio);
+            UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
 
             if (e.ShouldRenderCharts)
             {
@@ -875,6 +775,58 @@ namespace DataVisualiser
             }
         }
 
+        /// <summary>
+        /// Renders the main chart based on available data (single or combined).
+        /// </summary>
+        private async Task RenderMainChart(
+            IEnumerable<HealthMetricData> data1,
+            IEnumerable<HealthMetricData>? data2,
+            string displayName1,
+            string displayName2,
+            DateTime from,
+            DateTime to)
+        {
+            if (data2 != null && data2.Any())
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartMain,
+                    new Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to),
+                    displayName1,
+                    displayName2);
+            }
+            else
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    ChartMain,
+                    new Charts.Strategies.SingleMetricStrategy(data1, displayName1, from, to),
+                    displayName1,
+                    minHeight: 400);
+            }
+        }
+
+        /// <summary>
+        /// Renders or clears a chart based on visibility state.
+        /// </summary>
+        private async Task RenderOrClearChart(
+            CartesianChart chart,
+            bool isVisible,
+            Charts.IChartComputationStrategy? strategy,
+            string title,
+            double minHeight = 400)
+        {
+            if (isVisible && strategy != null)
+            {
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chart, strategy, title, minHeight: minHeight);
+            }
+            else
+            {
+                ChartHelper.ClearChart(chart, _viewModel.ChartState.ChartTimestamps);
+            }
+        }
+
+        /// <summary>
+        /// Renders all charts based on the current context and visibility settings.
+        /// </summary>
         private async Task RenderChartsFromLastContext()
         {
             var ctx = _viewModel.ChartState.LastContext;
@@ -885,125 +837,73 @@ namespace DataVisualiser
             var data2 = ctx.Data2;
             var displayName1 = ctx.DisplayName1 ?? string.Empty;
             var displayName2 = ctx.DisplayName2 ?? string.Empty;
+            var hasSecondaryData = data2 != null && data2.Any();
 
-            if (data2 != null && data2.Any())
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartMain,
-                    new DataVisualiser.Charts.Strategies.CombinedMetricStrategy(
-                        data1,
-                        data2,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To),
-                    displayName1,
-                    displayName2);
-            }
-            else
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartMain,
-                    new DataVisualiser.Charts.Strategies.SingleMetricStrategy(
-                        data1,
-                        displayName1,
-                        ctx.From,
-                        ctx.To),
-                    displayName1,
-                    minHeight: 400);
-            }
+            // Render main chart
+            await RenderMainChart(data1, data2, displayName1, displayName2, ctx.From, ctx.To);
 
-            if (_viewModel.ChartState.IsNormalizedVisible)
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartNorm,
-                    new DataVisualiser.Charts.Strategies.NormalizedStrategy(
-                        data1,
-                        data2!,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To,
-                        _viewModel.ChartState.SelectedNormalizationMode),
-                    $"{displayName1} ~ {displayName2}",
-                    minHeight: 400);
-            }
-            else
+            // If no secondary data, clear secondary charts and return
+            if (!hasSecondaryData)
             {
                 ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+                return;
             }
+
+            // Render or clear charts based on visibility
+            await RenderOrClearChart(
+                ChartNorm,
+                _viewModel.ChartState.IsNormalizedVisible,
+                new Charts.Strategies.NormalizedStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode),
+                $"{displayName1} ~ {displayName2}");
 
             if (_viewModel.ChartState.IsWeeklyVisible)
             {
                 await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
-                    ChartWeekly,
-                    data1,
-                    displayName1,
-                    ctx.From,
-                    ctx.To,
-                    minHeight: 400);
+                    ChartWeekly, data1, displayName1, ctx.From, ctx.To, minHeight: 400);
             }
             else
             {
                 ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             }
 
-            if (_viewModel.ChartState.IsDifferenceVisible)
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartDiff,
-                    new DataVisualiser.Charts.Strategies.DifferenceStrategy(
-                        data1,
-                        data2!,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To),
-                    $"{displayName1} - {displayName2}",
-                    minHeight: 400);
-            }
-            else
-            {
-                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-            }
+            await RenderOrClearChart(
+                ChartDiff,
+                _viewModel.ChartState.IsDifferenceVisible,
+                new Charts.Strategies.DifferenceStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To),
+                $"{displayName1} - {displayName2}");
 
-            if (_viewModel.ChartState.IsRatioVisible)
-            {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartRatio,
-                    new DataVisualiser.Charts.Strategies.RatioStrategy(
-                        data1,
-                        data2!,
-                        displayName1,
-                        displayName2,
-                        ctx.From,
-                        ctx.To),
-                    $"{displayName1} / {displayName2}",
-                    minHeight: 400);
-            }
-            else
-            {
-                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
-            }
+            await RenderOrClearChart(
+                ChartRatio,
+                _viewModel.ChartState.IsRatioVisible,
+                new Charts.Strategies.RatioStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To),
+                $"{displayName1} / {displayName2}");
         }
 
 
+        /// <summary>
+        /// Maps chart names to their corresponding panels.
+        /// </summary>
+        private Panel? GetChartPanel(string chartName)
+        {
+            return chartName switch
+            {
+                "Norm" => ChartNormPanel,
+                "Diff" => ChartDiffPanel,
+                "Ratio" => ChartRatioPanel,
+                "Weekly" => ChartWeeklyPanel,
+                _ => null
+            };
+        }
+
         private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
         {
-            switch (e.ChartName)
+            var panel = GetChartPanel(e.ChartName);
+            if (panel != null)
             {
-                case "Norm":
-                    ChartNormPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
-                    break;
-                case "Diff":
-                    ChartDiffPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
-                    break;
-                case "Ratio":
-                    ChartRatioPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
-                    break;
-                case "Weekly":
-                    ChartWeeklyPanel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
-                    break;
+                panel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 

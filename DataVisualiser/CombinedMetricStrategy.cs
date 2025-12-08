@@ -28,44 +28,26 @@ namespace DataVisualiser.Charts.Strategies
 
         public ChartComputationResult? Compute()
         {
-            if (_left == null && _right == null) return null;
+            var prepared = StrategyComputationHelper.PrepareDataForComputation(_left, _right, _from, _to);
+            if (prepared == null) return null;
 
-            var ordered1 = _left?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<HealthMetricData>();
-            var ordered2 = _right?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<HealthMetricData>();
-
-            if (!ordered1.Any() && !ordered2.Any()) return null;
-
-            // Validate date range
-            if (_from > _to) return null;
-
-            var dateRange = _to - _from;
-            if (dateRange.TotalMilliseconds <= 0) return null;
-
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-
-            var combinedTimestamps = ordered1.Select(d => d.NormalizedTimestamp)
-                .Concat(ordered2.Select(d => d.NormalizedTimestamp))
-                .Distinct()
-                .OrderBy(dt => dt)
-                .ToList();
-
+            var (ordered1, ordered2, dateRange, tickInterval) = prepared.Value;
+            var combinedTimestamps = StrategyComputationHelper.CombineTimestamps(ordered1, ordered2);
             if (!combinedTimestamps.Any()) return null;
 
             var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-            var intervalIndices = combinedTimestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
+            var intervalIndices = combinedTimestamps
+                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
+                .ToList();
 
-            var smoothed1 = MathHelper.CreateSmoothedData(ordered1, _from, _to);
-            var smoothed2 = MathHelper.CreateSmoothedData(ordered2, _from, _to);
-            var interpSmoothed1 = MathHelper.InterpolateSmoothedData(smoothed1, combinedTimestamps);
-            var interpSmoothed2 = MathHelper.InterpolateSmoothedData(smoothed2, combinedTimestamps);
+            var (interpSmoothed1, interpSmoothed2) = StrategyComputationHelper.ProcessSmoothedData(
+                ordered1, ordered2, combinedTimestamps, _from, _to);
 
-            var dict1 = ordered1.GroupBy(d => d.NormalizedTimestamp).ToDictionary(g => g.Key, g => (double)g.First().Value!.Value);
-            var dict2 = ordered2.GroupBy(d => d.NormalizedTimestamp).ToDictionary(g => g.Key, g => (double)g.First().Value!.Value);
+            var (dict1, dict2) = StrategyComputationHelper.CreateTimestampValueDictionaries(ordered1, ordered2);
+            var (rawValues1, rawValues2) = StrategyComputationHelper.ExtractAlignedRawValues(
+                combinedTimestamps, dict1, dict2);
 
-            var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).ToList();
-            var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
-
-            Unit = ordered1.FirstOrDefault()?.Unit ?? ordered2.FirstOrDefault()?.Unit;
+            Unit = StrategyComputationHelper.GetUnit(ordered1, ordered2);
 
             return new ChartComputationResult
             {

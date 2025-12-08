@@ -42,33 +42,15 @@ namespace DataVisualiser.Helper
             };
         }
 
+        /// <summary>
+        /// Gets chart titles from combo boxes, using subtype if available, otherwise base metric type.
+        /// </summary>
         public static string[] GetChartTitlesFromCombos(ComboBox TablesCombo, ComboBox SubtypeCombo, ComboBox? SubtypeCombo2)
         {
             var baseMetric = TablesCombo.SelectedItem?.ToString() ?? string.Empty;
-
-            string display1;
-            if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
-            {
-                var s = SubtypeCombo.SelectedItem.ToString();
-                display1 = !string.IsNullOrEmpty(s) && s != "(All)" ? s : baseMetric;
-            }
-            else
-            {
-                display1 = baseMetric;
-            }
-
-            string display2;
-            if (SubtypeCombo2 != null && SubtypeCombo2.IsEnabled && SubtypeCombo2.SelectedItem != null)
-            {
-                var s2 = SubtypeCombo2.SelectedItem.ToString();
-                display2 = !string.IsNullOrEmpty(s2) && s2 != "(All)" ? s2 : baseMetric;
-            }
-            else
-            {
-                display2 = baseMetric;
-            }
-
-            return new string[] { display1, display2 };
+            var display1 = GetDisplayNameFromCombo(SubtypeCombo, baseMetric);
+            var display2 = SubtypeCombo2 != null ? GetDisplayNameFromCombo(SubtypeCombo2, baseMetric) : baseMetric;
+            return new[] { display1, display2 };
         }
 
         public static LineSeries? CreateLineSeries(string title, int pointSize, int lineThickness, Color colour, bool dataLabels = false)
@@ -144,157 +126,146 @@ namespace DataVisualiser.Helper
         }
 
         /// <summary>
+        /// Extracts the base name from a series title, removing "(Raw)" or "(Smoothed)" suffixes.
+        /// </summary>
+        private static (string BaseName, bool IsRaw, bool IsSmoothed) ParseSeriesTitle(string title)
+        {
+            if (title.EndsWith(" (Raw)"))
+                return (title.Substring(0, title.Length - 6), true, false);
+
+            if (title.EndsWith(" (Smoothed)"))
+                return (title.Substring(0, title.Length - 11), false, true);
+
+            return (title, false, false);
+        }
+
+        /// <summary>
+        /// Identifies primary and secondary series names from chart series.
+        /// </summary>
+        private static (string? Primary, string? Secondary) IdentifySeriesNames(CartesianChart chart)
+        {
+            var seenBaseNames = new HashSet<string>();
+            string? primary = null;
+            string? secondary = null;
+
+            foreach (var s in chart.Series)
+            {
+                if (s is LineSeries lineSeries)
+                {
+                    var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
+                    var (baseName, _, _) = ParseSeriesTitle(title);
+
+                    if (!seenBaseNames.Contains(baseName))
+                    {
+                        seenBaseNames.Add(baseName);
+                        if (primary == null)
+                            primary = baseName;
+                        else if (secondary == null && baseName != primary)
+                            secondary = baseName;
+                    }
+                }
+            }
+
+            return (primary, secondary);
+        }
+
+        /// <summary>
+        /// Extracts a formatted value from a line series at the specified index.
+        /// </summary>
+        private static string ExtractFormattedValue(LineSeries lineSeries, int index)
+        {
+            if (lineSeries.Values == null || index < 0 || index >= lineSeries.Values.Count)
+                return "N/A";
+
+            try
+            {
+                var raw = lineSeries.Values[index];
+                if (raw == null)
+                    return "N/A";
+
+                var val = Convert.ToDouble(raw);
+                return MathHelper.FormatToThreeSignificantDigits(val);
+            }
+            catch
+            {
+                return "N/A";
+            }
+        }
+
+        /// <summary>
         /// Returns formatted values in the order: Primary Smoothed, Secondary Smoothed, Primary Raw, Secondary Raw.
         /// Format: "{metric subtype} Smoothed: {value}" or "{metric subtype} Raw: {value}"
         /// </summary>
         public static string GetChartValuesFormattedAtIndex(CartesianChart chart, int index)
         {
-            if (chart == null) return "N/A";
-            if (chart.Series == null || chart.Series.Count == 0) return "No series";
+            if (chart == null || chart.Series == null || chart.Series.Count == 0)
+                return "N/A";
 
-            // Store values by series type
-            string? primarySmoothedValue = null;
-            string? primaryRawValue = null;
-            string? secondarySmoothedValue = null;
-            string? secondaryRawValue = null;
-            string? primarySeriesName = null;
-            string? secondarySeriesName = null;
+            var (primaryName, secondaryName) = IdentifySeriesNames(chart);
+            var values = new Dictionary<string, string>();
 
-            // First pass: identify primary and secondary series names
-            var seenBaseNames = new HashSet<string>();
             foreach (var s in chart.Series)
             {
                 if (s is LineSeries lineSeries)
                 {
                     var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
-                    string baseName = title;
+                    var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(title);
+                    var formattedValue = ExtractFormattedValue(lineSeries, index);
 
-                    if (title.EndsWith(" (Raw)"))
-                    {
-                        baseName = title.Substring(0, title.Length - 6); // Remove " (Raw)"
-                    }
-                    else if (title.EndsWith(" (Smoothed)"))
-                    {
-                        baseName = title.Substring(0, title.Length - 11); // Remove " (Smoothed)"
-                    }
-
-                    if (!seenBaseNames.Contains(baseName))
-                    {
-                        seenBaseNames.Add(baseName);
-                        if (primarySeriesName == null)
-                        {
-                            primarySeriesName = baseName;
-                        }
-                        else if (secondarySeriesName == null && baseName != primarySeriesName)
-                        {
-                            secondarySeriesName = baseName;
-                        }
-                    }
-                }
-            }
-
-            // Second pass: extract values
-            foreach (var s in chart.Series)
-            {
-                if (s is LineSeries lineSeries)
-                {
-                    var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
-
-                    // Extract value
-                    string? value = null;
-                    if (lineSeries.Values != null && index >= 0 && index < lineSeries.Values.Count)
-                    {
-                        try
-                        {
-                            var raw = lineSeries.Values[index];
-                            if (raw == null)
-                            {
-                                value = "N/A";
-                            }
-                            else
-                            {
-                                var val = Convert.ToDouble(raw);
-                                value = MathHelper.FormatToThreeSignificantDigits(val);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            value = "N/A";
-                        }
-                    }
+                    string key;
+                    if (baseName == primaryName)
+                        key = isSmoothed ? "PrimarySmoothed" : "PrimaryRaw";
+                    else if (baseName == secondaryName)
+                        key = isSmoothed ? "SecondarySmoothed" : "SecondaryRaw";
                     else
-                    {
-                        value = "N/A";
-                    }
+                        continue;
 
-                    // Parse title to determine if it's Primary/Secondary and Raw/Smoothed
-                    bool isRaw = false;
-                    bool isSmoothed = false;
-                    string baseName = title;
-
-                    if (title.EndsWith(" (Raw)"))
-                    {
-                        baseName = title.Substring(0, title.Length - 6); // Remove " (Raw)"
-                        isRaw = true;
-                    }
-                    else if (title.EndsWith(" (Smoothed)"))
-                    {
-                        baseName = title.Substring(0, title.Length - 11); // Remove " (Smoothed)"
-                        isSmoothed = true;
-                    }
-
-                    // Determine if this is primary or secondary
-                    bool isPrimary = (baseName == primarySeriesName);
-                    bool isSecondary = (baseName == secondarySeriesName);
-
-                    // Store the value in the appropriate slot
-                    if (isPrimary && isSmoothed)
-                    {
-                        primarySmoothedValue = value;
-                    }
-                    else if (isPrimary && isRaw)
-                    {
-                        primaryRawValue = value;
-                    }
-                    else if (isSecondary && isSmoothed)
-                    {
-                        secondarySmoothedValue = value;
-                    }
-                    else if (isSecondary && isRaw)
-                    {
-                        secondaryRawValue = value;
-                    }
+                    values[key] = formattedValue;
                 }
             }
 
-            // Build the formatted string in the specified order
+            return BuildFormattedString(primaryName, secondaryName, values);
+        }
+
+        /// <summary>
+        /// Builds the formatted string in the specified order.
+        /// </summary>
+        private static string BuildFormattedString(string? primaryName, string? secondaryName, Dictionary<string, string> values)
+        {
             var parts = new List<string>();
 
-            // 1. Primary Smoothed
-            if (primarySeriesName != null && primarySmoothedValue != null)
-            {
-                parts.Add($"{primarySeriesName} Smoothed: {primarySmoothedValue}");
-            }
+            if (primaryName != null && values.TryGetValue("PrimarySmoothed", out var ps))
+                parts.Add($"{primaryName} Smoothed: {ps}");
 
-            // 2. Secondary Smoothed
-            if (secondarySeriesName != null && secondarySmoothedValue != null)
-            {
-                parts.Add($"{secondarySeriesName} Smoothed: {secondarySmoothedValue}");
-            }
+            if (secondaryName != null && values.TryGetValue("SecondarySmoothed", out var ss))
+                parts.Add($"{secondaryName} Smoothed: {ss}");
 
-            // 3. Primary Raw
-            if (primarySeriesName != null && primaryRawValue != null)
-            {
-                parts.Add($"{primarySeriesName} Raw: {primaryRawValue}");
-            }
+            if (primaryName != null && values.TryGetValue("PrimaryRaw", out var pr))
+                parts.Add($"{primaryName} Raw: {pr}");
 
-            // 4. Secondary Raw
-            if (secondarySeriesName != null && secondaryRawValue != null)
-            {
-                parts.Add($"{secondarySeriesName} Raw: {secondaryRawValue}");
-            }
+            if (secondaryName != null && values.TryGetValue("SecondaryRaw", out var sr))
+                parts.Add($"{secondaryName} Raw: {sr}");
 
             return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
+        }
+
+        /// <summary>
+        /// Safely gets the X-axis from a chart, handling potential disposal issues.
+        /// </summary>
+        private static Axis? GetXAxisSafely(CartesianChart? chart)
+        {
+            if (chart == null) return null;
+
+            try
+            {
+                if (chart.AxisX != null && chart.AxisX.Count > 0)
+                    return chart.AxisX[0];
+            }
+            catch
+            {
+                // Axis may have been disposed
+            }
+            return null;
         }
 
         /// <summary>
@@ -302,63 +273,41 @@ namespace DataVisualiser.Helper
         /// </summary>
         public static void UpdateVerticalLineForChart(ref CartesianChart chart, int index, ref AxisSection? sectionField)
         {
-            if (chart == null) return;
-            if (chart.AxisX == null || chart.AxisX.Count == 0) return;
-            if (index < 0) return; // Validate index is non-negative
+            if (chart == null || index < 0) return;
 
-            // Remove existing - get fresh references right before the operation
+            var axis = GetXAxisSafely(chart);
+            if (axis == null) return;
+
+            // Remove existing section
             if (sectionField != null)
             {
-                try
-                {
-                    // Re-fetch axis and Sections from chart to ensure we have valid references
-                    if (chart.AxisX != null && chart.AxisX.Count > 0)
-                    {
-                        var axis = chart.AxisX[0];
-                        if (axis != null && axis.Sections != null)
-                        {
-                            // Try to remove the section - Remove is safe even if item not in collection
-                            // but may throw if sectionField is in an invalid/disposed state
-                            axis.Sections.Remove(sectionField);
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Section or axis may have been disposed/invalidated by LiveCharts internally
-                    // Ignore and continue - we'll create a new one below
-                }
+                var chartRef = chart;
+                RemoveAxisSection(ref chartRef, sectionField);
                 sectionField = null;
             }
 
-            // Create new section
-            var line = new AxisSection
-            {
-                Value = index,
-                SectionWidth = 0,
-                Stroke = new SolidColorBrush(Colors.Black),
-                StrokeThickness = 1,
-                Fill = Brushes.Transparent
-            };
-
-            // Add new section - get fresh references right before the operation
+            // Create and add new section
             try
             {
-                // Re-fetch axis and Sections from chart to ensure we have valid references
-                if (chart.AxisX != null && chart.AxisX.Count > 0)
+                var line = new AxisSection
                 {
-                    var axis = chart.AxisX[0];
-                    if (axis != null && axis.Sections != null)
-                    {
-                        axis.Sections.Add(line);
-                        sectionField = line;
-                    }
+                    Value = index,
+                    SectionWidth = 0,
+                    Stroke = new SolidColorBrush(Colors.Black),
+                    StrokeThickness = 1,
+                    Fill = Brushes.Transparent
+                };
+
+                var axisRef = GetXAxisSafely(chart);
+                if (axisRef?.Sections != null)
+                {
+                    axisRef.Sections.Add(line);
+                    sectionField = line;
                 }
             }
-            catch (Exception)
+            catch
             {
-                // Axis or Sections may have been disposed/invalidated by LiveCharts internally
-                // Ignore and leave sectionField as null
+                // Axis may have been disposed - leave sectionField as null
             }
         }
 
@@ -378,18 +327,9 @@ namespace DataVisualiser.Helper
             return border;
         }
 
-        public static TextBlock SetHoverTimeStampText()
-        {
-            TextBlock _hoverTimestampText = new TextBlock
-            {
-                Foreground = Brushes.White,
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(6, 2, 6, 4)
-            };
-
-            return _hoverTimestampText;
-        }
-
+        /// <summary>
+        /// Creates a text block for hover tooltips with customizable styling.
+        /// </summary>
         public static TextBlock SetHoverText(bool isBold = false)
         {
             TextBlock _hoverTimestampText = new TextBlock
@@ -402,48 +342,53 @@ namespace DataVisualiser.Helper
             return _hoverTimestampText;
         }
 
+        /// <summary>
+        /// Safely removes an axis section from a chart, handling potential disposal issues.
+        /// </summary>
         public static void RemoveAxisSection(ref CartesianChart? chart, AxisSection? axisSection)
         {
-            if (chart?.AxisX != null && chart.AxisX.Count > 0 && axisSection != null)
-            {
-                var axis = chart.AxisX[0];
+            if (axisSection == null) return;
 
-                if (axis?.Sections != null)
-                {
-                    try
-                    {
-                        // Re-check axis and Sections before attempting removal
-                        // as they may have been disposed/invalidated between checks
-                        if (axis != null && axis.Sections != null)
-                        {
-                            // Try to remove the section - Remove is safe even if item not in collection
-                            // but may throw if sectionField is in an invalid/disposed state
-                            axis.Sections.Remove(axisSection);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Section or axis may have been disposed/invalidated by LiveCharts internally
-                        // Ignore and continue
-                    }
-                }
-                axisSection = null;
+            var axis = chart != null ? GetXAxisSafely(chart) : null;
+            if (axis?.Sections == null) return;
+
+            try
+            {
+                axis.Sections.Remove(axisSection);
+            }
+            catch
+            {
+                // Section or axis may have been disposed - ignore
             }
         }
 
+        /// <summary>
+        /// Gets the selected subtype from a ComboBox, filtering out "(All)" option.
+        /// </summary>
         public static string? GetSubMetricType(ComboBox subMetricTypeCombo)
         {
-            string? selectedSubtype = null;
-            if (subMetricTypeCombo.IsEnabled && subMetricTypeCombo.SelectedItem != null)
-            {
-                var subtypeValue = subMetricTypeCombo.SelectedItem.ToString();
-                if (!string.IsNullOrEmpty(subtypeValue) && subtypeValue != "(All)")
-                {
-                    selectedSubtype = subtypeValue;
-                }
-            }
+            if (!subMetricTypeCombo.IsEnabled || subMetricTypeCombo.SelectedItem == null)
+                return null;
 
-            return selectedSubtype;
+            var subtypeValue = subMetricTypeCombo.SelectedItem.ToString();
+            if (string.IsNullOrEmpty(subtypeValue) || subtypeValue == "(All)")
+                return null;
+
+            return subtypeValue;
+        }
+
+        /// <summary>
+        /// Gets the selected subtype from a ComboBox, with optional fallback to base type.
+        /// </summary>
+        public static string GetDisplayNameFromCombo(ComboBox combo, string baseType)
+        {
+            if (combo.IsEnabled && combo.SelectedItem != null)
+            {
+                var selected = combo.SelectedItem.ToString();
+                if (!string.IsNullOrEmpty(selected) && selected != "(All)")
+                    return selected;
+            }
+            return baseType;
         }
 
         public static void ResetZoom(ref CartesianChart chart)
@@ -518,57 +463,49 @@ namespace DataVisualiser.Helper
         }
 
         /// <summary>
-        /// Normalizes Y-axis ticks to show uniform intervals (~10 ticks) with rounded bounds.
+        /// Collects all valid numeric values from raw data and smoothed values.
         /// </summary>
-        public static void NormalizeYAxis(Axis yAxis, List<HealthMetricData> rawData, List<double> smoothedValues)
+        private static List<double> CollectAllValues(List<HealthMetricData> rawData, List<double> smoothedValues)
         {
             var allValues = new List<double>();
 
             foreach (var point in rawData)
             {
                 if (point.Value.HasValue)
-                {
                     allValues.Add((double)point.Value.Value);
-                }
             }
 
             foreach (var value in smoothedValues)
             {
                 if (!double.IsNaN(value) && !double.IsInfinity(value))
-                {
                     allValues.Add(value);
-                }
             }
 
-            if (!allValues.Any())
-            {
-                yAxis.MinValue = double.NaN;
-                yAxis.MaxValue = double.NaN;
-                yAxis.Separator = new LiveCharts.Wpf.Separator();
-                yAxis.ShowLabels = false;
-                return;
-            }
+            return allValues;
+        }
 
-            double dataMin = allValues.Min();
-            double dataMax = allValues.Max();
+        /// <summary>
+        /// Resets Y-axis to invalid state when no valid data is available.
+        /// </summary>
+        private static void ResetYAxisToInvalid(Axis yAxis)
+        {
+            yAxis.MinValue = double.NaN;
+            yAxis.MaxValue = double.NaN;
+            yAxis.Separator = new LiveCharts.Wpf.Separator();
+            yAxis.ShowLabels = false;
+        }
 
-            if (double.IsNaN(dataMin) || double.IsNaN(dataMax) || double.IsInfinity(dataMin) || double.IsInfinity(dataMax))
-            {
-                yAxis.MinValue = double.NaN;
-                yAxis.MaxValue = double.NaN;
-                yAxis.Separator = new LiveCharts.Wpf.Separator();
-                yAxis.ShowLabels = false;
-                return;
-            }
-
+        /// <summary>
+        /// Applies padding to min/max values based on data range.
+        /// </summary>
+        private static (double MinValue, double MaxValue) ApplyPadding(double dataMin, double dataMax, double range)
+        {
             double minValue = dataMin;
             double maxValue = dataMax;
-            double range = maxValue - minValue;
 
             if (range <= double.Epsilon)
             {
                 double padding = Math.Max(Math.Abs(minValue) * 0.1, 1e-3);
-
                 if (Math.Abs(minValue) < 1e-6)
                 {
                     minValue = -padding;
@@ -576,42 +513,32 @@ namespace DataVisualiser.Helper
                 }
                 else
                 {
-                    minValue = minValue - padding;
-                    maxValue = maxValue + padding;
+                    minValue -= padding;
+                    maxValue += padding;
                     if (dataMin >= 0)
-                    {
                         minValue = Math.Max(0, minValue);
-                    }
                 }
-
-                range = maxValue - minValue;
             }
             else
             {
                 double padding = range * 0.05;
                 minValue -= padding;
                 maxValue += padding;
-
                 if (dataMin >= 0)
-                {
                     minValue = Math.Max(0, minValue);
-                }
-
-                range = maxValue - minValue;
             }
 
-            const double targetTicks = 10.0;
+            return (minValue, maxValue);
+        }
+
+        /// <summary>
+        /// Calculates a "nice" tick interval for the given range.
+        /// </summary>
+        private static double CalculateNiceInterval(double range, double targetTicks = 10.0)
+        {
             double rawTickInterval = range / targetTicks;
             if (rawTickInterval <= 0 || double.IsNaN(rawTickInterval) || double.IsInfinity(rawTickInterval))
-            {
-                yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(minValue);
-                yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(maxValue);
-                var fallbackStep = MathHelper.RoundToThreeSignificantDigits((maxValue - minValue) / targetTicks);
-                yAxis.Separator = fallbackStep > 0 ? new LiveCharts.Wpf.Separator { Step = fallbackStep } : new LiveCharts.Wpf.Separator();
-                yAxis.ShowLabels = true;
-                yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
-                return;
-            }
+                return range / targetTicks;
 
             double magnitude;
             try
@@ -634,28 +561,74 @@ namespace DataVisualiser.Helper
             };
 
             niceInterval = MathHelper.RoundToThreeSignificantDigits(niceInterval);
-            if (niceInterval <= 0 || double.IsNaN(niceInterval) || double.IsInfinity(niceInterval))
-                niceInterval = rawTickInterval;
+            return niceInterval <= 0 || double.IsNaN(niceInterval) || double.IsInfinity(niceInterval)
+                ? rawTickInterval
+                : niceInterval;
+        }
 
+        /// <summary>
+        /// Calculates nice min/max values aligned to the tick interval.
+        /// </summary>
+        private static (double NiceMin, double NiceMax) CalculateNiceBounds(double minValue, double maxValue, double niceInterval, double dataMin)
+        {
             var niceMin = Math.Floor(minValue / niceInterval) * niceInterval;
             var niceMax = Math.Ceiling(maxValue / niceInterval) * niceInterval;
 
-            niceMin -= niceInterval * 0.0;
-            niceMax += niceInterval * 0.0;
-
             if (dataMin >= 0 && niceMin < 0)
-            {
                 niceMin = 0;
+
+            return (niceMin, niceMax);
+        }
+
+        /// <summary>
+        /// Normalizes Y-axis ticks to show uniform intervals (~10 ticks) with rounded bounds.
+        /// </summary>
+        public static void NormalizeYAxis(Axis yAxis, List<HealthMetricData> rawData, List<double> smoothedValues)
+        {
+            var allValues = CollectAllValues(rawData, smoothedValues);
+
+            if (!allValues.Any())
+            {
+                ResetYAxisToInvalid(yAxis);
+                return;
             }
+
+            double dataMin = allValues.Min();
+            double dataMax = allValues.Max();
+
+            if (double.IsNaN(dataMin) || double.IsNaN(dataMax) || double.IsInfinity(dataMin) || double.IsInfinity(dataMax))
+            {
+                ResetYAxisToInvalid(yAxis);
+                return;
+            }
+
+            double range = dataMax - dataMin;
+            var (minValue, maxValue) = ApplyPadding(dataMin, dataMax, range);
+            range = maxValue - minValue;
+
+            const double targetTicks = 10.0;
+            double rawTickInterval = range / targetTicks;
+
+            if (rawTickInterval <= 0 || double.IsNaN(rawTickInterval) || double.IsInfinity(rawTickInterval))
+            {
+                yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(minValue);
+                yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(maxValue);
+                var fallbackStep = MathHelper.RoundToThreeSignificantDigits(range / targetTicks);
+                yAxis.Separator = fallbackStep > 0 ? new LiveCharts.Wpf.Separator { Step = fallbackStep } : new LiveCharts.Wpf.Separator();
+                yAxis.ShowLabels = true;
+                yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+                return;
+            }
+
+            double niceInterval = CalculateNiceInterval(range, targetTicks);
+            var (niceMin, niceMax) = CalculateNiceBounds(minValue, maxValue, niceInterval, dataMin);
 
             yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(niceMin);
             yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(niceMax);
 
             double step = MathHelper.RoundToThreeSignificantDigits(niceInterval);
             if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
-            {
                 step = MathHelper.RoundToThreeSignificantDigits((yAxis.MaxValue - yAxis.MinValue) / targetTicks);
-            }
 
             yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
             yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);

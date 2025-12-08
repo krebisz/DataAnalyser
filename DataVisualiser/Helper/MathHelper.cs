@@ -581,56 +581,28 @@ namespace DataVisualiser.Helper
         }
 
 
+        /// <summary>
+        /// Calculates differences between two value lists (valueList1 - valueList2).
+        /// </summary>
         public static List<double>? ReturnValueDifferences(List<double>? valueList1, List<double>? valueList2)
         {
-            if (valueList1 == null || valueList2 == null)
-                return null;
-
-            // Handle mismatched list lengths
-            int minCount = Math.Min(valueList1.Count, valueList2.Count);
-            var valueDifferences = new List<double>(minCount);
-
-            for (int i = 0; i < minCount; i++)
-            {
-                double a = valueList1[i];
-                double b = valueList2[i];
-                if (double.IsNaN(a) || double.IsNaN(b) || double.IsInfinity(a) || double.IsInfinity(b))
-                {
-                    valueDifferences.Add(double.NaN);
-                }
-                else
-                {
-                    valueDifferences.Add(a - b);
-                }
-            }
-
-            return valueDifferences;
+            return ApplyBinaryOperation(valueList1, valueList2, (a, b) => a - b);
         }
 
+        /// <summary>
+        /// Calculates ratios between two value lists (valueList1 / valueList2).
+        /// </summary>
         public static List<double>? ReturnValueRatios(List<double>? valueList1, List<double>? valueList2)
         {
             if (valueList1 == null || valueList2 == null)
                 return null;
 
-            // Handle mismatched list lengths
-            int minCount = Math.Min(valueList1.Count, valueList2.Count);
-            var valueRatios = new List<double>(minCount);
-
-            for (int i = 0; i < minCount; i++)
+            return ApplyBinaryOperation(valueList1, valueList2, (a, b) => 
             {
-                double a = valueList1[i];
-                double b = valueList2[i];
-                if (double.IsNaN(a) || double.IsNaN(b) || double.IsInfinity(a) || double.IsInfinity(b) || b == 0.0)
-                {
-                    valueRatios.Add(double.NaN);
-                }
-                else
-                {
-                    valueRatios.Add(a / b);
-                }
-            }
-
-            return valueRatios;
+                if (b == 0.0)
+                    return double.NaN;
+                return a / b;
+            });
         }
 
         public static List<double> ApplyBinaryOperation(List<double>? list1, List<double>? list2, Func<double, double, double> operation)

@@ -243,8 +243,7 @@ namespace DataVisualiser.Helper
             if (string.IsNullOrWhiteSpace(baseType))
                 return Enumerable.Empty<HealthMetricData>();
 
-            if (string.IsNullOrWhiteSpace(tableName))
-                tableName = "HealthMetrics";
+            tableName = SqlQueryBuilder.NormalizeTableName(tableName);
 
             // Validate date range if both provided
             if (from.HasValue && to.HasValue && from.Value > to.Value)
@@ -253,9 +252,7 @@ namespace DataVisualiser.Helper
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            // Resolution tables don't have Provider column, so use NULL for those
-            var hasProvider = tableName == "HealthMetrics";
-            var providerColumn = hasProvider ? "Provider" : "NULL AS Provider";
+            var providerColumn = SqlQueryBuilder.GetProviderColumn(tableName);
 
             var sql = new StringBuilder($@"
                 SELECT 
@@ -267,31 +264,9 @@ namespace DataVisualiser.Helper
                 WHERE 1=1");
 
             var parameters = new DynamicParameters();
-
-            // Filter by base type - now MetricType contains only the base type, so use exact match
-            sql.Append(" AND MetricType = @BaseType");
-            parameters.Add("BaseType", baseType);
-
-            // Filter by subtype if provided
-            if (!string.IsNullOrEmpty(subtype))
-            {
-                sql.Append(" AND MetricSubtype = @Subtype");
-                parameters.Add("Subtype", subtype);
-            }
-            // If no subtype specified, get all records (with or without subtypes)
-
-            // Filter by date range if provided
-            if (from.HasValue)
-            {
-                sql.Append(" AND NormalizedTimestamp >= @FromDate");
-                parameters.Add("FromDate", from.Value);
-            }
-
-            if (to.HasValue)
-            {
-                sql.Append(" AND NormalizedTimestamp <= @ToDate");
-                parameters.Add("ToDate", to.Value);
-            }
+            SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
+            SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
+            SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
 
             sql.Append(" AND Value IS NOT NULL");
             sql.Append(" ORDER BY NormalizedTimestamp");
@@ -313,8 +288,7 @@ namespace DataVisualiser.Helper
             if (string.IsNullOrWhiteSpace(baseType))
                 return null;
 
-            if (string.IsNullOrWhiteSpace(tableName))
-                tableName = "HealthMetrics";
+            tableName = SqlQueryBuilder.NormalizeTableName(tableName);
 
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
@@ -324,18 +298,11 @@ namespace DataVisualiser.Helper
                     MIN(NormalizedTimestamp) AS MinDate,
                     MAX(NormalizedTimestamp) AS MaxDate
                 FROM [dbo].[{tableName}]
-                WHERE MetricType = @BaseType
-                    AND NormalizedTimestamp IS NOT NULL");
+                WHERE NormalizedTimestamp IS NOT NULL");
 
             var parameters = new DynamicParameters();
-            parameters.Add("BaseType", baseType);
-
-            if (!string.IsNullOrEmpty(subtype))
-            {
-                sql.Append(" AND MetricSubtype = @Subtype");
-                parameters.Add("Subtype", subtype);
-            }
-            // If no subtype specified, get all records (with or without subtypes) for date range calculation
+            SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
+            SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
 
             var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql.ToString(), parameters);
 

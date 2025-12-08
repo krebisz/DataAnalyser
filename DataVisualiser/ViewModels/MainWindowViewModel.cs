@@ -191,58 +191,41 @@ namespace DataVisualiser.ViewModels
 
 
         #region Chart Visibility Toggles
-        public void ToggleNorm()
+        /// <summary>
+        /// Generic method to toggle chart visibility and notify listeners.
+        /// </summary>
+        private void ToggleChartVisibility(string chartName, Func<bool> getVisibility, Action<bool> setVisibility)
         {
-            ChartState.IsNormalizedVisible = !ChartState.IsNormalizedVisible;
+            var newVisibility = !getVisibility();
+            setVisibility(newVisibility);
             OnPropertyChanged(nameof(ChartState));
 
             ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
             {
-                ChartName = "Norm",
-                IsVisible = ChartState.IsNormalizedVisible
+                ChartName = chartName,
+                IsVisible = newVisibility
             });
-
             RequestChartUpdate();
         }
 
+        public void ToggleNorm()
+        {
+            ToggleChartVisibility("Norm", () => ChartState.IsNormalizedVisible, v => ChartState.IsNormalizedVisible = v);
+        }
 
         public void ToggleRatio()
         {
-            ChartState.IsRatioVisible = !ChartState.IsRatioVisible;
-            OnPropertyChanged(nameof(ChartState));
-
-            ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
-            {
-                ChartName = "Ratio",
-                IsVisible = ChartState.IsRatioVisible
-            });
-            RequestChartUpdate();
+            ToggleChartVisibility("Ratio", () => ChartState.IsRatioVisible, v => ChartState.IsRatioVisible = v);
         }
 
         public void ToggleDiff()
         {
-            ChartState.IsDifferenceVisible = !ChartState.IsDifferenceVisible;
-            OnPropertyChanged(nameof(ChartState));
-
-            ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
-            {
-                ChartName = "Diff",
-                IsVisible = ChartState.IsDifferenceVisible
-            });
-            RequestChartUpdate();
+            ToggleChartVisibility("Diff", () => ChartState.IsDifferenceVisible, v => ChartState.IsDifferenceVisible = v);
         }
 
         public void ToggleWeekly()
         {
-            ChartState.IsWeeklyVisible = !ChartState.IsWeeklyVisible;
-            OnPropertyChanged(nameof(ChartState));
-
-            ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
-            {
-                ChartName = "Weekly",
-                IsVisible = ChartState.IsWeeklyVisible
-            });
-            RequestChartUpdate();
+            ToggleChartVisibility("Weekly", () => ChartState.IsWeeklyVisible, v => ChartState.IsWeeklyVisible = v);
         }
         #endregion
 
