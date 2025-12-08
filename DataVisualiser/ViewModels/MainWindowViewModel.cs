@@ -56,10 +56,8 @@ namespace DataVisualiser.ViewModels
             _chartCoordinator = chartCoordinator;
             _weeklyDistService = weeklyDistService;
 
-            // Initialize commands (we wire up real methods later)
             LoadMetricsCommand = new RelayCommand(_ => LoadMetrics());
             LoadSubtypesCommand = new RelayCommand(_ => LoadSubtypes());
-            //LoadDataCommand = new RelayCommand(_ => LoadData());
             LoadDataCommand = new RelayCommand(_ => LoadData(), _ => CanLoadData());
             ToggleNormCommand = new RelayCommand(_ => ToggleNorm());
             ToggleRatioCommand = new RelayCommand(_ => ToggleRatio());
@@ -86,7 +84,7 @@ namespace DataVisualiser.ViewModels
 
                 var metricTypes = await _metricService.LoadMetricTypesAsync(tableName);
 
-                // Raise event — let UI populate the combo box
+                // Raise event ï¿½ let UI populate the combo box
                 MetricTypesLoaded?.Invoke(this, new MetricTypesLoadedEventArgs
                 {
                     MetricTypes = metricTypes
@@ -126,7 +124,7 @@ namespace DataVisualiser.ViewModels
                 // Fetch subtype list
                 var subtypes = await _metricService.LoadSubtypesAsync(metricType, tableName);
 
-                // Raise event — UI updates SubtypeCombo + dynamic controls
+                // Raise event ï¿½ UI updates SubtypeCombo + dynamic controls
                 SubtypesLoaded?.Invoke(this, new SubtypesLoadedEventArgs
                 {
                     Subtypes = subtypes
@@ -171,7 +169,6 @@ namespace DataVisualiser.ViewModels
                     return;
                 }
 
-                // Fire event for the view to actually render charts
                 DataLoaded?.Invoke(this, new DataLoadedEventArgs
                 {
                     DataContext = ChartState.LastContext
@@ -189,11 +186,11 @@ namespace DataVisualiser.ViewModels
 
         private bool CanLoadData()
         {
-            // At minimum, we need a metric type; date range can be validated at execution time.
             return !string.IsNullOrWhiteSpace(MetricState.SelectedMetricType);
         }
 
 
+        #region Chart Visibility Toggles
         public void ToggleNorm()
         {
             ChartState.IsNormalizedVisible = !ChartState.IsNormalizedVisible;
@@ -205,7 +202,6 @@ namespace DataVisualiser.ViewModels
                 IsVisible = ChartState.IsNormalizedVisible
             });
 
-            // NEW
             RequestChartUpdate();
         }
 
@@ -220,11 +216,8 @@ namespace DataVisualiser.ViewModels
                 ChartName = "Ratio",
                 IsVisible = ChartState.IsRatioVisible
             });
-
-            // NEW
             RequestChartUpdate();
         }
-
 
         public void ToggleDiff()
         {
@@ -236,11 +229,8 @@ namespace DataVisualiser.ViewModels
                 ChartName = "Diff",
                 IsVisible = ChartState.IsDifferenceVisible
             });
-
-            // NEW
             RequestChartUpdate();
         }
-
 
         public void ToggleWeekly()
         {
@@ -252,18 +242,17 @@ namespace DataVisualiser.ViewModels
                 ChartName = "Weekly",
                 IsVisible = ChartState.IsWeeklyVisible
             });
-
-            // NEW
             RequestChartUpdate();
         }
+        #endregion
 
-
-        // Notify UI of changes
+        #region Property Change Notification
         public event PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        #endregion
 
-
+        #region State Setters
         public void SetNormalizedVisible(bool value)
         {
             ChartState.IsNormalizedVisible = value;
@@ -287,7 +276,6 @@ namespace DataVisualiser.ViewModels
             ChartState.IsWeeklyVisible = value;
             RequestChartUpdate();
         }
-
 
         public void SetNormalizationMode(NormalizationMode mode)
         {
@@ -324,10 +312,9 @@ namespace DataVisualiser.ViewModels
         {
             UiState.IsLoadingData = isLoading;
         }
+        #endregion
 
-        // ======================
-        // VALIDATION METHODS
-        // ======================
+        #region Validation Methods
 
         /// <summary>
         /// Validates that a metric type is selected.
@@ -376,9 +363,6 @@ namespace DataVisualiser.ViewModels
             return true;
         }
 
-        /// <summary>
-        /// Validates that all required data is available for loading charts.
-        /// </summary>
         public (bool IsValid, string? ErrorMessage) ValidateDataLoadRequirements()
         {
             if (!ValidateMetricTypeSelected())
@@ -404,19 +388,11 @@ namespace DataVisualiser.ViewModels
             message = string.Empty;
             return true;
         }
+        #endregion
 
-        // ======================
-        // ERROR HANDLING
-        // ======================
-
-        /// <summary>
-        /// Event raised when an error occurs that should be displayed to the user.
-        /// </summary>
+        #region Error Handling
         public event EventHandler<string>? ErrorOccurred;
 
-        /// <summary>
-        /// Raises an error event with the specified message.
-        /// </summary>
         public void RaiseError(string errorMessage)
         {
             if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -430,13 +406,6 @@ namespace DataVisualiser.ViewModels
         /// </summary>
         public string FormatDatabaseError(Exception ex)
         {
-            //if (ex is Microsoft.Data.SqlClient.SqlException sqlEx)
-            //{
-            //    return $"Database connection error: {sqlEx.Message}\n\nPlease check:\n1. SQL Server is running\n2. Database 'Health' exists\n3. Connection string in App.config is correct";
-            //}
-            //return $"Error: {ex.Message}";
-
-            // Centralised error formatting if we want to get fancier later
             return $"An error occurred while loading data: {ex.Message}";
         }
 
@@ -457,9 +426,8 @@ namespace DataVisualiser.ViewModels
         public void CompleteInitialization()
         {
             _isInitializing = false;
-            RequestChartUpdate(); // give UI the real initial state
+            RequestChartUpdate();
         }
-
-
+        #endregion
     }
 }

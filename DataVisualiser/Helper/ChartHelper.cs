@@ -75,20 +75,21 @@ namespace DataVisualiser.Helper
         {
             var smoothedSeries = new LineSeries
             {
-
-                Title = title, //$"{metricType} (Smoothed)",
+                Title = title,
                 Values = new ChartValues<double>(),
-                PointGeometrySize = pointSize, // 5,
-                StrokeThickness = lineThickness, //2,
+                PointGeometrySize = pointSize,
+                StrokeThickness = lineThickness,
                 Fill = Brushes.Transparent,
-                Stroke = new SolidColorBrush(colour), //Colors.Red,
+                Stroke = new SolidColorBrush(colour),
                 DataLabels = dataLabels
             };
 
             return smoothedSeries;
         }
 
-        // Returns formatted values for every LineSeries in the chart at the given index.
+        /// <summary>
+        /// Returns formatted values for every LineSeries in the chart at the given index.
+        /// </summary>
         public static string GetChartValuesAtIndex(CartesianChart chart, int index)
         {
             if (chart == null) return "N/A";
@@ -296,7 +297,9 @@ namespace DataVisualiser.Helper
             return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
         }
 
-        // Draw (or move) a thin black vertical line by using an AxisSection with zero width
+        /// <summary>
+        /// Draws (or moves) a thin black vertical line by using an AxisSection with zero width.
+        /// </summary>
         public static void UpdateVerticalLineForChart(ref CartesianChart chart, int index, ref AxisSection? sectionField)
         {
             if (chart == null) return;

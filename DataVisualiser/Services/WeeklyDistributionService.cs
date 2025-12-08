@@ -108,27 +108,7 @@ namespace DataVisualiser.Services
                 targetChart.Series.Add(baselineSeries);
                 targetChart.Series.Add(rangeSeries);
 
-                //// --- ensure categorical alignment for Monday(0)..Sunday(6) ---
-                //if (targetChart.AxisX.Count > 0)
-                //{
-                //    var xAxis = targetChart.AxisX[0];
-
-                //    // enforce labels and ordering (defensive)
-                //    xAxis.Labels = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-
-                //    // lock tick step to 1 so integer ticks align with columns
-                //    xAxis.Separator = new LiveCharts.Wpf.Separator { Step = 1 };
-
-                //    // Give the axis half-unit padding so integer-indexed columns (0..6) are centered on ticks.
-                //    // This ensures stable alignment while zooming/panning.
-                //    xAxis.MinValue = -0.5;
-                //    xAxis.MaxValue = 6.5;
-
-                //    // Optional: keep labels visible and let the chart show them
-                //    xAxis.ShowLabels = true;
-                //}
-
-                // Configure axes: Y axis floor/ceiling from underlying raw data
+                // Configure Y axis based on data range
                 var allValues = new List<double>();
                 for (int i = 0; i < 7; i++)
                 {
@@ -161,8 +141,7 @@ namespace DataVisualiser.Services
                     }
                 }
 
-                // Keep consistent UI patterns (tooltip, timestamps)
-                _chartTimestamps[targetChart] = new List<DateTime>(); // not used for categorical chart
+                _chartTimestamps[targetChart] = new List<DateTime>();
 
                 ChartHelper.InitializeChartTooltip(targetChart);
 
