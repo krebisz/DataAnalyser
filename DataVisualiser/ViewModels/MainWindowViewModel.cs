@@ -1,4 +1,4 @@
-using DataVisualiser.Class;
+using DataVisualiser.Models;
 using DataVisualiser.Services;
 using DataVisualiser.State;
 using DataVisualiser.ViewModels.Commands;

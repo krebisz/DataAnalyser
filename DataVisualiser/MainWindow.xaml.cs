@@ -1,6 +1,11 @@
 using DataVisualiser.Charts;
+using DataVisualiser.Charts.Computation;
+using DataVisualiser.Charts.Helpers;
+using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
+using DataVisualiser.Charts.Rendering;
 using DataVisualiser.Charts.Strategies;
-using DataVisualiser.Class;
+using DataVisualiser.Data.Repositories;
+using DataVisualiser.Models;
 using DataVisualiser.Helper;
 using DataVisualiser.Services;
 using DataVisualiser.State;

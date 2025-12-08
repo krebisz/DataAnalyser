@@ -1,3 +1,5 @@
+using DataVisualiser.Charts.Computation;
+
 namespace DataVisualiser.Charts
 {
     public interface IChartComputationStrategy
@@ -21,3 +23,4 @@ namespace DataVisualiser.Charts
         string? Unit { get; }
     }
 }
+

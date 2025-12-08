@@ -1,6 +1,7 @@
-﻿using System.Windows.Media;
+using DataVisualiser.Models;
+using System.Windows.Media;
 
-namespace DataVisualiser.Charts
+namespace DataVisualiser.Charts.Rendering
 {
     public sealed class ChartRenderModel
     {
@@ -19,3 +20,4 @@ namespace DataVisualiser.Charts
         public TickInterval TickInterval { get; init; }
     }
 }
+

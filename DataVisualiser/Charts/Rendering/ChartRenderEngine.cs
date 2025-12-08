@@ -1,9 +1,11 @@
-﻿using DataVisualiser.Class;
+using DataVisualiser.Charts.Helpers;
+using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
 using DataVisualiser.Helper;
+using DataVisualiser.Models;
 using LiveCharts.Wpf;
 using System.Windows.Media;
 
-namespace DataVisualiser.Charts
+namespace DataVisualiser.Charts.Rendering
 {
     /// <summary>
     /// Responsible for rendering LiveCharts objects from a ChartRenderModel.
@@ -147,3 +149,4 @@ namespace DataVisualiser.Charts
         }
     }
 }
+

@@ -1,4 +1,5 @@
-using DataVisualiser.Class; // for HealthMetricData
+using DataVisualiser.Charts.Computation;
+using DataVisualiser.Models; // for HealthMetricData
 // ensure the namespace matches your strategies namespace
 namespace DataVisualiser.Charts.Strategies
 {

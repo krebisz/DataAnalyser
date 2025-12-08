@@ -1,6 +1,6 @@
-﻿using System.Windows.Media;
+using System.Windows.Media;
 
-namespace DataVisualiser
+namespace DataVisualiser.Charts
 {
     public static class ColourPalette
     {
@@ -41,3 +41,4 @@ namespace DataVisualiser
         }
     }
 }
+

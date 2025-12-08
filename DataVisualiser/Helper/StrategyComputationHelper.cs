@@ -1,4 +1,4 @@
-using DataVisualiser.Class;
+using DataVisualiser.Models;
 
 namespace DataVisualiser.Helper
 {

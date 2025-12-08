@@ -1,13 +1,13 @@
 using System.Diagnostics;
 
-namespace DataVisualiser.Charts
+namespace DataVisualiser.Charts.Computation
 {
     /// <summary>
     /// Pure computation engine — executes strategy Compute() on a background thread and returns the result.
     /// </summary>
     public sealed class ChartComputationEngine
     {
-        public Task<ChartComputationResult?> ComputeAsync(IChartComputationStrategy strategy)
+        public Task<ChartComputationResult?> ComputeAsync(Charts.IChartComputationStrategy strategy)
         {
             if (strategy == null)
             {
@@ -44,3 +44,4 @@ namespace DataVisualiser.Charts
         }
     }
 }
+

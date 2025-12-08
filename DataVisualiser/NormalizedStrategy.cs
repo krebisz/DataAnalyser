@@ -1,6 +1,7 @@
 namespace DataVisualiser.Charts.Strategies
 {
-    using DataVisualiser.Class;
+    using DataVisualiser.Charts.Computation;
+    using DataVisualiser.Models;
     using DataVisualiser.Helper;
 
     public sealed class NormalizedStrategy : IChartComputationStrategy

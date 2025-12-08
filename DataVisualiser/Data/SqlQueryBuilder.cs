@@ -1,7 +1,7 @@
 using Dapper;
 using System.Text;
 
-namespace DataVisualiser.Helper
+namespace DataVisualiser.Data
 {
     /// <summary>
     /// Helper class for building parameterized SQL queries with common patterns.
@@ -64,5 +64,4 @@ namespace DataVisualiser.Helper
         }
     }
 }
-
 

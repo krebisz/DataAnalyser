@@ -1,10 +1,11 @@
 using Dapper;
-using DataVisualiser.Class;
+using DataVisualiser.Data;
+using DataVisualiser.Models;
 using Microsoft.Data.SqlClient;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace DataVisualiser.Helper
+namespace DataVisualiser.Data.Repositories
 {
     public class DataFetcher
     {
@@ -403,3 +404,4 @@ namespace DataVisualiser.Helper
         }
     }
 }
+

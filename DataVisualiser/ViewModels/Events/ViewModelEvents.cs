@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using DataVisualiser.Charts;
+
 namespace DataVisualiser.ViewModels.Events
 {
     public class MetricTypesLoadedEventArgs : EventArgs

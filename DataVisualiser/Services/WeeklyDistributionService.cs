@@ -1,4 +1,6 @@
-﻿using DataVisualiser.Class;
+﻿using DataVisualiser.Charts.Helpers;
+using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
+using DataVisualiser.Models;
 using DataVisualiser.Helper;
 using LiveCharts.Wpf;
 using System.Windows;

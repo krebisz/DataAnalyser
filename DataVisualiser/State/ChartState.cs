@@ -1,4 +1,5 @@
-﻿using DataVisualiser.Class;
+﻿using DataVisualiser.Charts;
+using DataVisualiser.Models;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.State

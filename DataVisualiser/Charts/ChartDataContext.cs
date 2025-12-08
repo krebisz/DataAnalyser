@@ -1,6 +1,6 @@
-﻿using DataVisualiser.Class;
+using DataVisualiser.Models;
 
-namespace DataVisualiser
+namespace DataVisualiser.Charts
 {
     public class ChartDataContext
     {
@@ -12,3 +12,4 @@ namespace DataVisualiser
         public DateTime To { get; set; }
     }
 }
+

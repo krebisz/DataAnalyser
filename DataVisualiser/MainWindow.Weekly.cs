@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using LiveCharts;
 using LiveCharts.Wpf;
-using DataVisualiser.Class;
+using DataVisualiser.Models;
 
 namespace DataVisualiser
 {

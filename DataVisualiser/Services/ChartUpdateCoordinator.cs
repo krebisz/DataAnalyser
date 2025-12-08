@@ -1,5 +1,8 @@
 ﻿using DataVisualiser.Charts;
-using DataVisualiser.Class;
+using DataVisualiser.Charts.Computation;
+using DataVisualiser.Charts.Helpers;
+using DataVisualiser.Charts.Rendering;
+using DataVisualiser.Models;
 using DataVisualiser.Helper;
 using LiveCharts.Wpf;
 using System.Windows;

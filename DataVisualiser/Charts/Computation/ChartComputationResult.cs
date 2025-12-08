@@ -1,4 +1,6 @@
-﻿namespace DataVisualiser.Charts
+using DataVisualiser.Models;
+
+namespace DataVisualiser.Charts.Computation
 {
     public sealed class ChartComputationResult
     {
@@ -14,3 +16,4 @@
         public string? Unit { get; init; }
     }
 }
+

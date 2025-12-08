@@ -1,4 +1,5 @@
-using DataVisualiser.Class;
+using DataVisualiser.Helper;
+using DataVisualiser.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
 using System.Windows;
@@ -6,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
-namespace DataVisualiser.Helper
+namespace DataVisualiser.Charts.Helpers
 {
     public static class ChartHelper
     {
@@ -686,3 +687,4 @@ namespace DataVisualiser.Helper
         }
     }
 }
+
