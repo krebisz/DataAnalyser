@@ -160,6 +160,82 @@ namespace DataVisualiser.ViewModels
             }
         }
 
+        private async Task LoadDateRangeForSelectedMetricAsync()
+        {
+            try
+            {
+                // Basic guard: we must have a selected metric type
+                if (!ValidateMetricTypeSelected())
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = "Please select a Metric Type before loading the date range."
+                    });
+                    return;
+                }
+
+                var metricType = MetricState.SelectedMetricType!;
+                var tableName = MetricState.ResolutionTableName!;
+                if (string.IsNullOrWhiteSpace(tableName))
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = "Resolution table name is missing – cannot load date range."
+                    });
+                    return;
+                }
+
+                // Use the *primary* selected subtype (if any) for the date range.
+                // If the first subtype is "(All)" or empty, we pass null to mean "all subtypes".
+                string? primarySubtype = null;
+                if (MetricState.SelectedSubtypes.Any())
+                {
+                    var first = MetricState.SelectedSubtypes.First();
+                    if (!string.IsNullOrWhiteSpace(first) && first != "(All)")
+                    {
+                        primarySubtype = first;
+                    }
+                }
+
+                var dateRange = await _metricService.LoadDateRangeAsync(
+                    metricType,
+                    primarySubtype,
+                    tableName);
+
+                if (!dateRange.HasValue)
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = "No date range could be determined for the current selection."
+                    });
+                    return;
+                }
+
+                // Update state
+                MetricState.FromDate = dateRange.Value.MinDate;
+                MetricState.ToDate = dateRange.Value.MaxDate;
+
+                // Notify the view so it can update the DatePicker controls
+                DateRangeLoaded?.Invoke(this, new DateRangeLoadedEventArgs
+                {
+                    MinDate = dateRange.Value.MinDate,
+                    MaxDate = dateRange.Value.MaxDate
+                });
+            }
+            catch (Exception ex)
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = FormatDatabaseError(ex)
+                });
+            }
+        }
+
+        public Task RefreshDateRangeForCurrentSelectionAsync()
+        {
+            return LoadDateRangeForSelectedMetricAsync();
+        }
+
         private void LoadData()
         {
             if (UiState.IsLoadingData)

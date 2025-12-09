@@ -74,8 +74,10 @@ namespace DataVisualiser
             _viewModel.ErrorOccured += OnErrorOccured;
             _viewModel.MetricTypesLoaded += OnMetricTypesLoaded;
             _viewModel.SubtypesLoaded += OnSubtypesLoaded;
+            _viewModel.DateRangeLoaded += OnDateRangeLoaded; // NEW
             _viewModel.DataLoaded += OnDataLoaded;
             _viewModel.ChartUpdateRequested += OnChartUpdateRequested;
+
 
             // Initialize date range through viewModel
             var initialFromDate = DateTime.UtcNow.AddDays(-30);
@@ -161,7 +163,7 @@ namespace DataVisualiser
         /// <summary>
         /// Event handler for MetricType selection change - loads subtypes and updates date range.
         /// </summary>
-        private async void OnMetricTypeSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void OnMetricTypeSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             // Guard against null reference during initialization
             if (_isInitializing || _viewModel == null)
@@ -170,11 +172,16 @@ namespace DataVisualiser
             if (_viewModel.UiState.IsLoadingMetricTypes)
                 return;
 
-            await LoadSubtypesForSelectedMetricType();
-            await LoadDateRangeForSelectedMetric();
+            // Push selection into VM
+            _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
 
+            // Ask the VM to load subtypes; when finished, it will raise SubtypesLoaded
+            _viewModel.LoadSubtypesCommand.Execute(null);
+
+            // Titles should respond immediately to combo state
             UpdateChartTitlesFromCombos();
         }
+
 
         /// <summary>
         /// Generalized event handler for any MetricSubtype ComboBox selection change - updates date range to match data availability.
@@ -182,10 +189,13 @@ namespace DataVisualiser
         /// </summary>
         private async void OnAnySubtypeSelectionChanged(object? sender, System.Windows.Controls.SelectionChangedEventArgs? e)
         {
+            // Push all selected subtypes (primary + dynamic) into the VM state
             UpdateSelectedSubtypesInViewModel();
 
+            // Ask the VM to recompute the date range for the current metric + subtype selection
             await LoadDateRangeForSelectedMetrics();
         }
+
 
         private async Task LoadDateRangeForSelectedMetrics()
         {
@@ -196,132 +206,11 @@ namespace DataVisualiser
             if (_viewModel.UiState.IsLoadingSubtypes || _viewModel.UiState.IsLoadingMetricTypes)
                 return;
 
-            await LoadDateRangeForSelectedMetric();
+            // Delegate date-range computation to the ViewModel (Pattern A)
+            await _viewModel.RefreshDateRangeForCurrentSelectionAsync();
 
+            // Titles / labels in the UI stay in sync
             UpdateChartTitlesFromCombos();
-        }
-
-        /// <summary>
-        /// Loads subtypes for the currently selected metric type into the subtype combo boxes.
-        /// </summary>
-        private async Task LoadSubtypesForSelectedMetricType()
-        {
-            if (TablesCombo.SelectedItem == null)
-            {
-                SubtypeCombo.Items.Clear();
-                SubtypeCombo.IsEnabled = false;
-                _selectorManager.ClearDynamic();
-                return;
-            }
-
-            _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
-            if (string.IsNullOrEmpty(_viewModel.MetricState.SelectedMetricType))
-            {
-                SubtypeCombo.Items.Clear();
-                SubtypeCombo.IsEnabled = false;
-                _selectorManager.ClearDynamic();
-                return;
-            }
-
-            var active = _selectorManager.GetActiveCombos();
-
-            try
-            {
-                //_uiState.IsLoadingSubtypes = true;
-                _viewModel.SetLoadingSubtypes(true);
-                var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
-                var dataFetcher = new DataFetcher(_connectionString);
-                var subtypes = await _metricSelectionService.LoadSubtypesAsync(_viewModel.MetricState.SelectedMetricType, tableName);
-
-                SubtypeCombo.Items.Clear();
-                _selectorManager.ClearDynamic();
-                subtypeList = subtypes.ToList();
-
-                if (subtypeList.Count > 0)
-                {
-                    SubtypeCombo.Items.Add("(All)");
-
-                    foreach (var subtype in subtypeList)
-                    {
-                        SubtypeCombo.Items.Add(subtype);
-                    }
-
-                    SubtypeCombo.IsEnabled = true;
-                    SubtypeCombo.SelectedIndex = 0;
-                    UpdateSelectedSubtypesInViewModel();
-                }
-                else
-                {
-                    SubtypeCombo.IsEnabled = false;
-
-                    foreach (var combo in active)
-                    {
-                        combo.IsEnabled = false;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                SubtypeCombo.Items.Clear();
-                SubtypeCombo.IsEnabled = false;
-
-                foreach (var combo in active)
-                {
-                    combo.IsEnabled = false;
-                    combo.Items.Clear();
-                }
-            }
-            finally
-            {
-                _viewModel.SetLoadingSubtypes(false);
-
-            }
-        }
-
-        /// <summary>
-        /// Loads and sets the date range for the currently selected metric type and subtype
-        /// </summary>
-        private async Task LoadDateRangeForSelectedMetric()
-        {
-            if (TablesCombo.SelectedItem == null)
-            {
-                return;
-            }
-
-            _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
-
-            if (string.IsNullOrEmpty(_viewModel.MetricState.SelectedMetricType))
-            {
-                return;
-            }
-
-            string? selectedSubtype = null;
-            if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
-            {
-                var subtypeValue = SubtypeCombo.SelectedItem.ToString();
-                if (!string.IsNullOrEmpty(subtypeValue) && subtypeValue != "(All)")
-                {
-                    selectedSubtype = subtypeValue;
-                }
-            }
-
-            try
-            {
-                var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
-                DataFetcher dataFetcher = new DataFetcher(_connectionString);
-                var dateRange = await _metricSelectionService.LoadDateRangeAsync(_viewModel.MetricState.SelectedMetricType, selectedSubtype, tableName);
-
-
-                if (dateRange.HasValue)
-                {
-                    FromDate.SelectedDate = dateRange.Value.MinDate;
-                    ToDate.SelectedDate = dateRange.Value.MaxDate;
-                }
-            }
-            catch (Exception ex)
-            {
-                // Error handled silently - date range will use default values
-            }
         }
 
         /// <summary>
