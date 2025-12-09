@@ -11,6 +11,10 @@ namespace DataVisualiser.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
+        // ======================
+        // UI → VM Event Surface
+        // ======================
+
         public event EventHandler<MetricTypesLoadedEventArgs>? MetricTypesLoaded;
         public event EventHandler<SubtypesLoadedEventArgs>? SubtypesLoaded;
         public event EventHandler<DateRangeLoadedEventArgs>? DateRangeLoaded;
@@ -19,19 +23,31 @@ namespace DataVisualiser.ViewModels
         public event EventHandler<ErrorEventArgs>? ErrorOccured;
         public event EventHandler<ChartUpdateRequestedEventArgs>? ChartUpdateRequested;
 
+        // Secondary string-based error channel (kept for compatibility)
+        public event EventHandler<string>? ErrorOccurred;
+
+        // ======================
         // STATE OBJECTS
+        // ======================
+
         public ChartState ChartState { get; }
         public MetricState MetricState { get; }
         public UiState UiState { get; }
 
         private bool _isInitializing = true;
 
+        // ======================
         // SERVICES (injected)
+        // ======================
+
         private readonly MetricSelectionService _metricService;
         private readonly ChartUpdateCoordinator _chartCoordinator;
         private readonly WeeklyDistributionService _weeklyDistService;
 
+        // ======================
         // COMMANDS
+        // ======================
+
         public ICommand LoadMetricsCommand { get; }
         public ICommand LoadSubtypesCommand { get; }
         public ICommand LoadDataCommand { get; }
@@ -48,13 +64,13 @@ namespace DataVisualiser.ViewModels
             ChartUpdateCoordinator chartCoordinator,
             WeeklyDistributionService weeklyDistService)
         {
-            ChartState = chartState;
-            MetricState = metricState;
-            UiState = uiState;
+            ChartState = chartState ?? throw new ArgumentNullException(nameof(chartState));
+            MetricState = metricState ?? throw new ArgumentNullException(nameof(metricState));
+            UiState = uiState ?? throw new ArgumentNullException(nameof(uiState));
 
-            _metricService = metricService;
-            _chartCoordinator = chartCoordinator;
-            _weeklyDistService = weeklyDistService;
+            _metricService = metricService ?? throw new ArgumentNullException(nameof(metricService));
+            _chartCoordinator = chartCoordinator ?? throw new ArgumentNullException(nameof(chartCoordinator));
+            _weeklyDistService = weeklyDistService ?? throw new ArgumentNullException(nameof(weeklyDistService));
 
             LoadMetricsCommand = new RelayCommand(_ => LoadMetrics());
             LoadSubtypesCommand = new RelayCommand(_ => LoadSubtypes());
@@ -71,20 +87,23 @@ namespace DataVisualiser.ViewModels
 
         private async void LoadMetrics()
         {
+            if (UiState.IsLoadingMetricTypes)
+                return;
+
             try
             {
                 UiState.IsLoadingMetricTypes = true;
 
-                if (MetricState == null)
-                    return;
-
+                // Resolution table name must be set by the UI before this point.
                 var tableName = MetricState.ResolutionTableName;
-                if (string.IsNullOrEmpty(tableName))
+                if (string.IsNullOrWhiteSpace(tableName))
+                {
+                    RaiseError("Resolution is not selected. Please select a resolution before loading metric types.");
                     return;
+                }
 
                 var metricTypes = await _metricService.LoadMetricTypesAsync(tableName);
 
-                // Raise event � let UI populate the combo box
                 MetricTypesLoaded?.Invoke(this, new MetricTypesLoadedEventArgs
                 {
                     MetricTypes = metricTypes
@@ -92,10 +111,7 @@ namespace DataVisualiser.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorOccured?.Invoke(this, new ErrorEventArgs
-                {
-                    Message = FormatDatabaseError(ex)
-                });
+                RaiseError(FormatDatabaseError(ex));
             }
             finally
             {
@@ -105,26 +121,30 @@ namespace DataVisualiser.ViewModels
 
         private async void LoadSubtypes()
         {
+            if (UiState.IsLoadingSubtypes)
+                return;
+
             try
             {
                 UiState.IsLoadingSubtypes = true;
 
-                if (!ValidateMetricTypeSelected())
+                if (!ValidateMetricTypeSelected(out var metricError))
                 {
-                    ErrorOccured?.Invoke(this, new ErrorEventArgs
-                    {
-                        Message = "Please select a Metric Type before loading subtypes."
-                    });
+                    RaiseError(metricError);
                     return;
                 }
 
                 var metricType = MetricState.SelectedMetricType!;
-                var tableName = MetricState.ResolutionTableName!;
+                var tableName = MetricState.ResolutionTableName;
 
-                // Fetch subtype list
+                if (string.IsNullOrWhiteSpace(tableName))
+                {
+                    RaiseError("Resolution is not selected. Please select a resolution before loading subtypes.");
+                    return;
+                }
+
                 var subtypes = await _metricService.LoadSubtypesAsync(metricType, tableName);
 
-                // Raise event � UI updates SubtypeCombo + dynamic controls
                 SubtypesLoaded?.Invoke(this, new SubtypesLoadedEventArgs
                 {
                     Subtypes = subtypes
@@ -132,10 +152,7 @@ namespace DataVisualiser.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorOccured?.Invoke(this, new ErrorEventArgs
-                {
-                    Message = FormatDatabaseError(ex)
-                });
+                RaiseError(FormatDatabaseError(ex));
             }
             finally
             {
@@ -145,55 +162,56 @@ namespace DataVisualiser.ViewModels
 
         private void LoadData()
         {
+            if (UiState.IsLoadingData)
+                return;
+
             try
             {
-                // Validate high-level state before we attempt rendering
+                UiState.IsLoadingData = true;
+
+                // VM owns validation – UI just forwards the command.
                 if (!ValidateDataLoadRequirements(out var errorMessage))
                 {
-                    ErrorOccured?.Invoke(this, new ErrorEventArgs
-                    {
-                        Message = errorMessage
-                    });
+                    RaiseError(errorMessage);
                     return;
                 }
 
-                // Expect that the view (OnLoadData) has already populated ChartState.LastContext
-                if (ChartState.LastContext == null ||
-                    ChartState.LastContext.Data1 == null ||
-                    !ChartState.LastContext.Data1.Any())
+                // At this point MainWindow should already have populated LastContext.
+                var ctx = ChartState.LastContext;
+                if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
                 {
-                    ErrorOccured?.Invoke(this, new ErrorEventArgs
-                    {
-                        Message = "No data is available to render charts. Please load data first."
-                    });
+                    RaiseError("No data is available to render charts. Please load data first.");
                     return;
                 }
 
                 DataLoaded?.Invoke(this, new DataLoadedEventArgs
                 {
-                    DataContext = ChartState.LastContext
+                    DataContext = ctx
                 });
+
+                // After data is confirmed, request charts to update.
+                RequestChartUpdate();
             }
             catch (Exception ex)
             {
-                ErrorOccured?.Invoke(this, new ErrorEventArgs
-                {
-                    Message = FormatDatabaseError(ex)
-                });
+                RaiseError(FormatDatabaseError(ex));
+            }
+            finally
+            {
+                UiState.IsLoadingData = false;
             }
         }
 
-
         private bool CanLoadData()
         {
-            return !string.IsNullOrWhiteSpace(MetricState.SelectedMetricType);
+            // Minimal guard so the button isn't enabled when obviously invalid.
+            return ValidateMetricTypeSelected() && MetricState.FromDate.HasValue && MetricState.ToDate.HasValue;
         }
 
+        // ======================
+        // CHART VISIBILITY TOGGLES
+        // ======================
 
-        #region Chart Visibility Toggles
-        /// <summary>
-        /// Generic method to toggle chart visibility and notify listeners.
-        /// </summary>
         private void ToggleChartVisibility(string chartName, Func<bool> getVisibility, Action<bool> setVisibility)
         {
             var newVisibility = !getVisibility();
@@ -228,15 +246,20 @@ namespace DataVisualiser.ViewModels
         {
             ToggleChartVisibility("Weekly", () => ChartState.IsWeeklyVisible, v => ChartState.IsWeeklyVisible = v);
         }
-        #endregion
 
-        #region Property Change Notification
+        // ======================
+        // INotifyPropertyChanged
+        // ======================
+
         public event PropertyChangedEventHandler? PropertyChanged;
+
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        #endregion
 
-        #region State Setters
+        // ======================
+        // STATE SETTERS (UI → VM)
+        // ======================
+
         public void SetNormalizedVisible(bool value)
         {
             ChartState.IsNormalizedVisible = value;
@@ -296,20 +319,19 @@ namespace DataVisualiser.ViewModels
         {
             UiState.IsLoadingData = isLoading;
         }
-        #endregion
 
-        #region Validation Methods
+        // ======================
+        // VALIDATION
+        // ======================
 
-        /// <summary>
-        /// Validates that a metric type is selected.
-        /// </summary>
         public bool ValidateMetricTypeSelected()
         {
             return !string.IsNullOrWhiteSpace(MetricState.SelectedMetricType);
         }
+
         private bool ValidateMetricTypeSelected(out string message)
         {
-            if (string.IsNullOrWhiteSpace(MetricState.SelectedMetricType))
+            if (!ValidateMetricTypeSelected())
             {
                 message = "Please select a Metric Type before loading data.";
                 return false;
@@ -319,9 +341,6 @@ namespace DataVisualiser.ViewModels
             return true;
         }
 
-        /// <summary>
-        /// Validates that the date range is valid (from <= to).
-        /// </summary>
         public bool ValidateDateRange()
         {
             if (!MetricState.FromDate.HasValue || !MetricState.ToDate.HasValue)
@@ -329,9 +348,10 @@ namespace DataVisualiser.ViewModels
 
             return MetricState.FromDate.Value <= MetricState.ToDate.Value;
         }
+
         private bool ValidateDateRange(out string message)
         {
-            if (MetricState.FromDate == null || MetricState.ToDate == null)
+            if (!MetricState.FromDate.HasValue || !MetricState.ToDate.HasValue)
             {
                 message = "Please select both From and To dates before loading data.";
                 return false;
@@ -349,18 +369,14 @@ namespace DataVisualiser.ViewModels
 
         public (bool IsValid, string? ErrorMessage) ValidateDataLoadRequirements()
         {
-            if (!ValidateMetricTypeSelected())
+            if (!ValidateDataLoadRequirements(out var message))
             {
-                return (false, "Please select a MetricType");
-            }
-
-            if (!ValidateDateRange())
-            {
-                return (false, "From date must be before To date");
+                return (false, message);
             }
 
             return (true, null);
         }
+
         private bool ValidateDataLoadRequirements(out string message)
         {
             if (!ValidateMetricTypeSelected(out message))
@@ -372,21 +388,28 @@ namespace DataVisualiser.ViewModels
             message = string.Empty;
             return true;
         }
-        #endregion
 
-        #region Error Handling
-        public event EventHandler<string>? ErrorOccurred;
+        // ======================
+        // ERROR HANDLING
+        // ======================
 
         public void RaiseError(string errorMessage)
         {
-            if (!string.IsNullOrWhiteSpace(errorMessage))
+            if (string.IsNullOrWhiteSpace(errorMessage))
+                return;
+
+            // Primary, structured error path
+            ErrorOccured?.Invoke(this, new ErrorEventArgs
             {
-                ErrorOccurred?.Invoke(this, errorMessage);
-            }
+                Message = errorMessage
+            });
+
+            // Secondary, string-only path retained for compatibility
+            ErrorOccurred?.Invoke(this, errorMessage);
         }
 
         /// <summary>
-        /// Handles database exceptions and formats user-friendly error messages.
+        /// Formats a user-friendly error message for database-related failures.
         /// </summary>
         public string FormatDatabaseError(Exception ex)
         {
@@ -407,11 +430,11 @@ namespace DataVisualiser.ViewModels
                 ShouldRenderCharts = ChartState.LastContext != null
             });
         }
+
         public void CompleteInitialization()
         {
             _isInitializing = false;
             RequestChartUpdate();
         }
-        #endregion
     }
 }
