@@ -1,9 +1,11 @@
+using DataVisualiser.Charts;
 using DataVisualiser.Models;
 using DataVisualiser.Services;
 using DataVisualiser.State;
 using DataVisualiser.ViewModels.Commands;
 using DataVisualiser.ViewModels.Events;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -158,6 +160,125 @@ namespace DataVisualiser.ViewModels
             {
                 UiState.IsLoadingSubtypes = false;
             }
+        }
+        /// <summary>
+        /// Phase 6 – Step 2.1
+        /// Centralised data load for the currently selected metric + subtypes + date range.
+        /// Builds ChartState.LastContext from the DB and returns true if charts can be rendered.
+        /// </summary>
+        public async Task<bool> LoadMetricDataAsync()
+        {
+            // Basic validation first
+            if (!ValidateDataLoadRequirements(out var validationError))
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = validationError
+                });
+                return false;
+            }
+
+            if (MetricState.FromDate == null || MetricState.ToDate == null)
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = "Please select a valid date range before loading data."
+                });
+                return false;
+            }
+
+            var metricType = MetricState.SelectedMetricType!;
+            var tableName = MetricState.ResolutionTableName ?? "HealthMetrics";
+
+            // Use first two selected subtypes as primary / secondary for now
+            var primarySubtype = MetricState.SelectedSubtypes.Count > 0
+                ? MetricState.SelectedSubtypes[0]
+                : null;
+
+            var secondarySubtype = MetricState.SelectedSubtypes.Count > 1
+                ? MetricState.SelectedSubtypes[1]
+                : null;
+
+            try
+            {
+                UiState.IsLoadingData = true;
+
+                var (data1, data2) = await _metricService.LoadMetricDataAsync(
+                    metricType,
+                    primarySubtype,
+                    secondarySubtype,
+                    MetricState.FromDate.Value,
+                    MetricState.ToDate.Value,
+                    tableName);
+
+                // Mirror old MainWindow "no data" behaviour, but via ErrorOccured
+                if (data1 == null || !data1.Any())
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = BuildNoDataMessage(metricType, primarySubtype, isSecondary: false)
+                    });
+                    ChartState.LastContext = null;
+                    return false;
+                }
+
+                if (data2 == null || !data2.Any())
+                {
+                    ErrorOccured?.Invoke(this, new ErrorEventArgs
+                    {
+                        Message = BuildNoDataMessage(metricType, secondarySubtype, isSecondary: true)
+                    });
+                    ChartState.LastContext = null;
+                    return false;
+                }
+
+                var displayName1 = !string.IsNullOrEmpty(primarySubtype)
+                    ? $"{metricType} - {primarySubtype}"
+                    : metricType;
+
+                var displayName2 = !string.IsNullOrEmpty(secondarySubtype)
+                    ? $"{metricType} - {secondarySubtype}"
+                    : metricType;
+
+                ChartState.LastContext = new ChartDataContext
+                {
+                    Data1 = data1,
+                    Data2 = data2,
+                    DisplayName1 = displayName1,
+                    DisplayName2 = displayName2,
+                    From = MetricState.FromDate.Value,
+                    To = MetricState.ToDate.Value
+                };
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = FormatDatabaseError(ex)
+                });
+                ChartState.LastContext = null;
+                return false;
+            }
+            finally
+            {
+                UiState.IsLoadingData = false;
+            }
+        }
+
+        /// <summary>
+        /// Builds a user-facing "no data" message consistent with the old MainWindow behaviour.
+        /// </summary>
+        private static string BuildNoDataMessage(string metricType, string? subtype, bool isSecondary)
+        {
+            var subtypeText = !string.IsNullOrEmpty(subtype)
+                ? $" and Subtype '{subtype}'"
+                : string.Empty;
+
+            var suffix = isSecondary ? " (Chart 2)." : ".";
+
+            return $"No data found for MetricType '{metricType}'{subtypeText} in the selected date range{suffix}";
         }
 
         private async Task LoadDateRangeForSelectedMetricAsync()

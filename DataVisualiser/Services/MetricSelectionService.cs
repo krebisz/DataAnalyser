@@ -1,5 +1,6 @@
 ﻿using DataVisualiser.Data.Repositories;
 using DataVisualiser.Helper;
+using DataVisualiser.Models;
 
 namespace DataVisualiser.Services
 {
@@ -10,6 +11,38 @@ namespace DataVisualiser.Services
         public MetricSelectionService(string connectionString)
         {
             _connectionString = connectionString;
+        }
+
+        // ------------------------------------------------------------
+        // LOAD METRIC DATA (PRIMARY + SECONDARY)
+        // ------------------------------------------------------------
+        public async Task<(IEnumerable<HealthMetricData> Primary, IEnumerable<HealthMetricData> Secondary)> LoadMetricDataAsync(
+            string baseType,
+            string? primarySubtype,
+            string? secondarySubtype,
+            DateTime from,
+            DateTime to,
+            string tableName)
+        {
+            var dataFetcher = new DataFetcher(_connectionString);
+
+            var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(
+                baseType,
+                primarySubtype,
+                from,
+                to,
+                tableName);
+
+            var secondaryTask = dataFetcher.GetHealthMetricsDataByBaseType(
+                baseType,
+                secondarySubtype,
+                from,
+                to,
+                tableName);
+
+            await Task.WhenAll(primaryTask, secondaryTask);
+
+            return (primaryTask.Result, secondaryTask.Result);
         }
 
         // ------------------------------------------------------------
