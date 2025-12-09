@@ -3,48 +3,70 @@ using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
 using DataVisualiser.Models;
 using DataVisualiser.Helper;
 using LiveCharts.Wpf;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
 namespace DataVisualiser.Services
 {
+    /// <summary>
+    /// Builds a Monday->Sunday min/max stacked column chart for a single metric.
+    /// Baseline (transparent) = min per day, range column = (max - min) per day.
+    /// </summary>
     public class WeeklyDistributionService
     {
+        private const double DefaultMinHeight = 400.0;
+        private const double YAxisRoundingStep = 5.0;
+        private const double YAxisPaddingPercentage = 0.05;
+        private const double MinYAxisPadding = 5.0;
+        private const double MaxColumnWidth = 40.0;
+
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
 
         public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps)
         {
-            _chartTimestamps = chartTimestamps;
+            _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
         }
 
         /// <summary>
-        /// Builds a Monday->Sunday min-max stacked column visualization:
-        ///  - baseline (transparent) = min per day
-        ///  - range column (blue) = max - min per day (stacked)
+        /// Updates the target chart with a weekly distribution (Mon->Sun) of the specified metric.
         /// </summary>
+        /// <param name="targetChart">The chart to render into.</param>
+        /// <param name="data">Metric data to analyse.</param>
+        /// <param name="displayName">Display name for the metric.</param>
+        /// <param name="from">Inclusive start of the date range.</param>
+        /// <param name="to">Inclusive end of the date range.</param>
+        /// <param name="minHeight">Minimum chart height in pixels.</param>
         public async Task UpdateWeeklyDistributionChartAsync(
             CartesianChart targetChart,
             IEnumerable<HealthMetricData> data,
             string displayName,
             DateTime from,
             DateTime to,
-            double minHeight = 400.0)
+            double minHeight = DefaultMinHeight)
         {
+            if (targetChart == null)
+            {
+                throw new ArgumentNullException(nameof(targetChart));
+            }
+
             if (data == null)
             {
                 ChartHelper.ClearChart(targetChart, _chartTimestamps);
                 return;
             }
 
-            // compute using strategy inside Task.Run to avoid blocking UI (consistent with your pattern)
-            var computeTask = Task.Run(() =>
+            // Compute using the strategy on a background thread (same pattern as other charts).
+            var result = await Task.Run(() =>
             {
-                var strat = new DataVisualiser.Charts.Strategies.WeeklyDistributionStrategy(data, displayName, from, to);
-                var res = strat.Compute();
-                return res;
-            });
+                var strategy = new DataVisualiser.Charts.Strategies.WeeklyDistributionStrategy(
+                    data,
+                    displayName,
+                    from,
+                    to);
 
-            var result = await computeTask;
+                return strategy.Compute();
+            }).ConfigureAwait(true);
 
             if (result == null)
             {
@@ -56,9 +78,6 @@ namespace DataVisualiser.Services
             {
                 // Clear previous series
                 targetChart.Series.Clear();
-
-                // Monday->Sunday names already set in XAML labels, but we'll keep an ordered array if needed
-                var dayLabels = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 
                 // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
                 var mins = result.PrimaryRawValues;
@@ -72,24 +91,24 @@ namespace DataVisualiser.Services
                 }
 
                 // Baseline series: invisible columns used to set the bottom of each stacked column
-                var baselineSeries = new LiveCharts.Wpf.StackedColumnSeries
+                var baselineSeries = new StackedColumnSeries
                 {
                     Title = $"{displayName} baseline",
                     Values = new LiveCharts.ChartValues<double>(),
                     Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
                     StrokeThickness = 0,
-                    MaxColumnWidth = 40
+                    MaxColumnWidth = MaxColumnWidth
                 };
 
-                // Range series: visible blue stacked columns placed on top of baseline
-                var rangeSeries = new LiveCharts.Wpf.StackedColumnSeries
+                // Range series: visible stacked columns placed on top of baseline
+                var rangeSeries = new StackedColumnSeries
                 {
                     Title = $"{displayName} range",
                     Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)), // light blue
+                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)), // visually consistent light blue
                     Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
                     StrokeThickness = 1,
-                    MaxColumnWidth = 40
+                    MaxColumnWidth = MaxColumnWidth
                 };
 
                 // Populate values Monday -> Sunday
@@ -111,50 +130,79 @@ namespace DataVisualiser.Services
                 targetChart.Series.Add(rangeSeries);
 
                 // Configure Y axis based on data range
-                var allValues = new List<double>();
-                for (int i = 0; i < 7; i++)
-                {
-                    if (!double.IsNaN(mins[i])) allValues.Add(mins[i]);
-                    if (!double.IsNaN(mins[i]) && !double.IsNaN(ranges[i])) allValues.Add(mins[i] + ranges[i]);
-                }
+                ConfigureYAxis(targetChart, mins, ranges);
 
-                if (allValues.Count > 0)
-                {
-                    var min = Math.Floor(allValues.Min() / 5.0) * 5.0; // round down to nearest 5
-                    var max = Math.Ceiling(allValues.Max() / 5.0) * 5.0; // round up to nearest 5
-
-                    // small padding
-                    var pad = Math.Max(5, (max - min) * 0.05);
-                    var yMin = Math.Max(0, min - pad);
-                    var yMax = max + pad;
-
-                    if (targetChart.AxisY.Count > 0)
-                    {
-                        var yAxis = targetChart.AxisY[0];
-                        yAxis.MinValue = yMin;
-                        yAxis.MaxValue = yMax;
-
-                        // Set a sensible step
-                        var step = MathHelper.RoundToThreeSignificantDigits((yMax - yMin) / 8.0);
-                        if (step > 0 && !double.IsNaN(step) && !double.IsInfinity(step))
-                            yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
-
-                        yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
-                    }
-                }
-
+                // Weekly chart has no per-point timestamps, but we keep the dictionary consistent
                 _chartTimestamps[targetChart] = new List<DateTime>();
 
+                // Tooltip + height handling consistent with other charts
                 ChartHelper.InitializeChartTooltip(targetChart);
-
                 ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
-                MessageBox.Show($"Error updating weekly distribution chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show(
+                    $"Error updating chart: {ex.Message}\n\nSee debug output for details.",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                // Ensure chart is left in a clean state
+                ChartHelper.ClearChart(targetChart, _chartTimestamps);
             }
         }
 
+        private static void ConfigureYAxis(
+            CartesianChart targetChart,
+            IList<double> mins,
+            IList<double> ranges)
+        {
+            if (targetChart.AxisY.Count == 0)
+            {
+                return;
+            }
+
+            var allValues = new List<double>();
+            for (int i = 0; i < 7; i++)
+            {
+                if (!double.IsNaN(mins[i]))
+                {
+                    allValues.Add(mins[i]);
+                }
+
+                if (!double.IsNaN(mins[i]) && !double.IsNaN(ranges[i]))
+                {
+                    allValues.Add(mins[i] + ranges[i]);
+                }
+            }
+
+            if (allValues.Count == 0)
+            {
+                return;
+            }
+
+            // Round to nearest YAxisRoundingStep and apply padding
+            var min = Math.Floor(allValues.Min() / YAxisRoundingStep) * YAxisRoundingStep;
+            var max = Math.Ceiling(allValues.Max() / YAxisRoundingStep) * YAxisRoundingStep;
+
+            var rawRange = max - min;
+            var pad = Math.Max(MinYAxisPadding, rawRange * YAxisPaddingPercentage);
+            var yMin = Math.Max(0, min - pad);
+            var yMax = max + pad;
+
+            var yAxis = targetChart.AxisY[0];
+            yAxis.MinValue = yMin;
+            yAxis.MaxValue = yMax;
+
+            // Set a sensible step
+            var step = MathHelper.RoundToThreeSignificantDigits((yMax - yMin) / 8.0);
+            if (step > 0 && !double.IsNaN(step) && !double.IsInfinity(step))
+            {
+                yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
+            }
+
+            yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+        }
     }
 }

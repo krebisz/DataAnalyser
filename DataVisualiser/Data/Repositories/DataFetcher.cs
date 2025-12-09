@@ -1,61 +1,83 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 using Dapper;
 using DataVisualiser.Data;
 using DataVisualiser.Models;
 using Microsoft.Data.SqlClient;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace DataVisualiser.Data.Repositories
 {
     public class DataFetcher
     {
         private readonly string _connectionString;
-        public DataFetcher(string connectionString) => _connectionString = connectionString;
+
+        public DataFetcher(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentException("Connection string cannot be null or empty.", nameof(connectionString));
+
+            _connectionString = connectionString;
+        }
 
         public async Task<IEnumerable<dynamic>> GetCombinedData(string[] tables, DateTime from, DateTime to)
         {
+            if (tables == null || tables.Length == 0)
+                throw new ArgumentException("At least one table must be provided.", nameof(tables));
+
+            if (from > to)
+                throw new ArgumentException("'from' date must be earlier than or equal to 'to' date.", nameof(from));
+
             using var conn = new SqlConnection(_connectionString);
 
-            // Build dynamic join
             var baseTable = tables[0];
-            var sql = $"SELECT t0.[datetime]";
+            var sql = $"-- DataFetcher.GetCombinedData{Environment.NewLine}SELECT t0.[datetime]";
 
             for (int i = 0; i < tables.Length; i++)
+            {
                 sql += $", t{i}.Value AS {tables[i]}";
+            }
 
             sql += $" FROM {baseTable} t0 ";
 
             for (int i = 1; i < tables.Length; i++)
+            {
                 sql += $"LEFT JOIN {tables[i]} t{i} ON t0.[datetime] = t{i}.[datetime] ";
+            }
 
             sql += "WHERE t0.[datetime] BETWEEN @from AND @to ORDER BY t0.[datetime]";
 
             return await conn.QueryAsync<dynamic>(sql, new { from, to });
         }
 
-        public async Task<IEnumerable<dynamic>> GetMetricTypes()
+        public async Task<IEnumerable<string>> GetMetricTypes()
         {
             using var conn = new SqlConnection(_connectionString);
-            // Open connection explicitly to catch connection issues early
             await conn.OpenAsync();
 
-            // Get metric types from HealthMetricsCounts table where RecordCount > 0
-            var metricTypes = await conn.QueryAsync<string>(
-                @"SELECT DISTINCT MetricType 
-                      FROM HealthMetricsCounts 
-                      WHERE MetricType IS NOT NULL 
-                        AND RecordCount > 0
-                      ORDER BY MetricType");
+            var sql = @"
+                -- DataFetcher.GetMetricTypes
+                SELECT DISTINCT MetricType 
+                FROM HealthMetricsCounts 
+                WHERE MetricType IS NOT NULL 
+                  AND RecordCount > 0
+                ORDER BY MetricType";
+
+            var metricTypes = await conn.QueryAsync<string>(sql);
             return metricTypes;
         }
 
         public async Task<(DateTime MinDate, DateTime MaxDate)?> GetMetricTypeDateRange(string metricType)
         {
+            if (string.IsNullOrWhiteSpace(metricType))
+                throw new ArgumentException("Metric type cannot be null or empty.", nameof(metricType));
+
             using var conn = new SqlConnection(_connectionString);
-            // Set connection timeout to prevent hanging
             await conn.OpenAsync();
 
             var sql = @"
+                -- DataFetcher.GetMetricTypeDateRange
                 SELECT 
                     MIN(NormalizedTimestamp) AS MinDate,
                     MAX(NormalizedTimestamp) AS MaxDate
@@ -77,15 +99,21 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Retrieves health metrics data from the database filtered by MetricType and date range
+        /// Retrieves health metrics data from the database filtered by MetricType and date range.
         /// </summary>
         public async Task<IEnumerable<HealthMetricData>> GetHealthMetricsData(string metricType, DateTime from, DateTime to)
         {
+            if (string.IsNullOrWhiteSpace(metricType))
+                throw new ArgumentException("Metric type cannot be null or empty.", nameof(metricType));
+
+            if (from > to)
+                throw new ArgumentException("'from' date must be earlier than or equal to 'to' date.", nameof(from));
+
             using var conn = new SqlConnection(_connectionString);
-            // Set connection timeout to prevent hanging
             await conn.OpenAsync();
 
             var sql = @"
+                -- DataFetcher.GetHealthMetricsData
                 SELECT 
                     NormalizedTimestamp,
                     Value,
@@ -109,45 +137,32 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Helper method to parse MetricType and extract base type (first part before any non-alphanumeric character)
+        /// Gets distinct base metric types from the specified table.
         /// </summary>
-        private static string GetBaseType(string metricType)
-        {
-            if (string.IsNullOrWhiteSpace(metricType))
-                return string.Empty;
-
-            var parts = Regex.Split(metricType, @"[^a-zA-Z0-9]+")
-                .Where(part => !string.IsNullOrWhiteSpace(part))
-                .ToList();
-
-            return parts.Count > 0 ? parts[0] : metricType;
-        }
-
-        /// <summary>
-        /// Gets distinct base metric types from the specified table
-        /// </summary>
-        /// <param name="tableName">The table name to query (e.g., HealthMetrics, HealthMetricsWeek, etc.)</param>
         public async Task<IEnumerable<string>> GetBaseMetricTypes(string tableName = "HealthMetrics")
         {
+            tableName = SqlQueryBuilder.NormalizeTableName(tableName);
+
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            // For resolution tables (Hour, Day, Week, Month, Year), query directly from the table
-            // For HealthMetrics, use HealthMetricsCounts for efficiency
             if (tableName == "HealthMetrics")
             {
-                var metricTypes = await conn.QueryAsync<string>(
-                    @"SELECT DISTINCT MetricType 
-                      FROM HealthMetricsCounts 
-                      WHERE MetricType IS NOT NULL 
-                        AND RecordCount > 0
-                      ORDER BY MetricType");
+                var sql = @"
+                    -- DataFetcher.GetBaseMetricTypes (HealthMetrics)
+                    SELECT DISTINCT MetricType 
+                    FROM HealthMetricsCounts 
+                    WHERE MetricType IS NOT NULL 
+                      AND RecordCount > 0
+                    ORDER BY MetricType";
+
+                var metricTypes = await conn.QueryAsync<string>(sql);
                 return metricTypes;
             }
             else
             {
-                // Query directly from the resolution table
                 var sql = $@"
+                    -- DataFetcher.GetBaseMetricTypes ({tableName})
                     SELECT DISTINCT MetricType 
                     FROM [dbo].[{tableName}]
                     WHERE MetricType IS NOT NULL
@@ -159,39 +174,42 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Gets distinct subtypes for a given base metric type from the specified table
+        /// Gets distinct subtypes for a given base metric type from the specified table.
         /// </summary>
-        /// <param name="baseType">The base metric type</param>
-        /// <param name="tableName">The table name to query (e.g., HealthMetrics, HealthMetricsWeek, etc.)</param>
         public async Task<IEnumerable<string>> GetSubtypesForBaseType(string baseType, string tableName = "HealthMetrics")
         {
+            if (string.IsNullOrWhiteSpace(baseType))
+                throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
+
+            tableName = SqlQueryBuilder.NormalizeTableName(tableName);
+
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            // For resolution tables (Hour, Day, Week, Month, Year), query directly from the table
-            // For HealthMetrics, use HealthMetricsCounts for efficiency
             if (tableName == "HealthMetrics")
             {
-                var subtypes = await conn.QueryAsync<string>(
-                    @"SELECT DISTINCT MetricSubtype 
-                      FROM HealthMetricsCounts 
-                      WHERE MetricType = @BaseType
-                        AND MetricSubtype IS NOT NULL
-                        AND MetricSubtype != ''
-                        AND RecordCount > 0
-                      ORDER BY MetricSubtype",
-                    new { BaseType = baseType });
+                var sql = @"
+                    -- DataFetcher.GetSubtypesForBaseType (HealthMetrics)
+                    SELECT DISTINCT MetricSubtype 
+                    FROM HealthMetricsCounts 
+                    WHERE MetricType = @BaseType
+                      AND MetricSubtype IS NOT NULL
+                      AND MetricSubtype != ''
+                      AND RecordCount > 0
+                    ORDER BY MetricSubtype";
+
+                var subtypes = await conn.QueryAsync<string>(sql, new { BaseType = baseType });
                 return subtypes;
             }
             else
             {
-                // Query directly from the resolution table
                 var sql = $@"
+                    -- DataFetcher.GetSubtypesForBaseType ({tableName})
                     SELECT DISTINCT MetricSubtype 
                     FROM [dbo].[{tableName}]
                     WHERE MetricType = @BaseType
-                        AND MetricSubtype IS NOT NULL
-                        AND MetricSubtype != ''
+                      AND MetricSubtype IS NOT NULL
+                      AND MetricSubtype != ''
                     ORDER BY MetricSubtype";
 
                 var subtypes = await conn.QueryAsync<string>(sql, new { BaseType = baseType });
@@ -200,24 +218,25 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Gets all metric types grouped by base type and subtype from HealthMetricsCounts table where RecordCount > 0
-        /// Returns a dictionary where key is base type and value is list of subtypes
+        /// Gets all metric types grouped by base type and subtype from HealthMetricsCounts
+        /// where RecordCount > 0.
         /// </summary>
         public async Task<Dictionary<string, List<string>>> GetMetricTypesByBaseType()
         {
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            // Get MetricType and MetricSubtype pairs from HealthMetricsCounts
-            // Only include records with RecordCount > 0
-            var results = await conn.QueryAsync<(string MetricType, string MetricSubtype)>(
-                @"SELECT MetricType, MetricSubtype
-                      FROM HealthMetricsCounts 
-                      WHERE MetricType IS NOT NULL 
-                        AND RecordCount > 0");
+            var sql = @"
+                -- DataFetcher.GetMetricTypesByBaseType
+                SELECT MetricType, MetricSubtype
+                FROM HealthMetricsCounts 
+                WHERE MetricType IS NOT NULL 
+                  AND RecordCount > 0";
+
+            var results = await conn.QueryAsync<(string MetricType, string MetricSubtype)>(sql);
 
             var grouped = results
-                .GroupBy(r => r.MetricType) // MetricType is already the base type after normalization
+                .GroupBy(r => r.MetricType)
                 .ToDictionary(
                     g => g.Key,
                     g => g.Select(r => r.MetricSubtype)
@@ -231,24 +250,22 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Retrieves health metrics data filtered by base type and optional subtype from the specified table
+        /// Retrieves health metrics data filtered by base type and optional subtype from the specified table.
         /// </summary>
-        /// <param name="baseType">The base metric type</param>
-        /// <param name="subtype">Optional subtype filter</param>
-        /// <param name="from">Optional start date</param>
-        /// <param name="to">Optional end date</param>
-        /// <param name="tableName">The table name to query (e.g., HealthMetrics, HealthMetricsWeek, etc.)</param>
-        public async Task<IEnumerable<HealthMetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype = null, DateTime? from = null, DateTime? to = null, string tableName = "HealthMetrics")
+        public async Task<IEnumerable<HealthMetricData>> GetHealthMetricsDataByBaseType(
+            string baseType,
+            string? subtype = null,
+            DateTime? from = null,
+            DateTime? to = null,
+            string tableName = "HealthMetrics")
         {
-            // Validate inputs
             if (string.IsNullOrWhiteSpace(baseType))
-                return Enumerable.Empty<HealthMetricData>();
+                throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
+
+            if (from.HasValue && to.HasValue && from.Value > to.Value)
+                throw new ArgumentException("'from' date must be earlier than or equal to 'to' date.", nameof(from));
 
             tableName = SqlQueryBuilder.NormalizeTableName(tableName);
-
-            // Validate date range if both provided
-            if (from.HasValue && to.HasValue && from.Value > to.Value)
-                return Enumerable.Empty<HealthMetricData>();
 
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
@@ -256,6 +273,7 @@ namespace DataVisualiser.Data.Repositories
             var providerColumn = SqlQueryBuilder.GetProviderColumn(tableName);
 
             var sql = new StringBuilder($@"
+                -- DataFetcher.GetHealthMetricsDataByBaseType
                 SELECT 
                     NormalizedTimestamp,
                     Value,
@@ -278,16 +296,15 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Gets date range for a base metric type and optional subtype from the specified table
+        /// Gets date range for a base metric type and optional subtype from the specified table.
         /// </summary>
-        /// <param name="baseType">The base metric type</param>
-        /// <param name="subtype">Optional subtype filter</param>
-        /// <param name="tableName">The table name to query (e.g., HealthMetrics, HealthMetricsWeek, etc.)</param>
-        public async Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype = null, string tableName = "HealthMetrics")
+        public async Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(
+            string baseType,
+            string? subtype = null,
+            string tableName = "HealthMetrics")
         {
-            // Validate inputs
             if (string.IsNullOrWhiteSpace(baseType))
-                return null;
+                throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
 
             tableName = SqlQueryBuilder.NormalizeTableName(tableName);
 
@@ -295,6 +312,7 @@ namespace DataVisualiser.Data.Repositories
             await conn.OpenAsync();
 
             var sql = new StringBuilder($@"
+                -- DataFetcher.GetBaseTypeDateRange
                 SELECT 
                     MIN(NormalizedTimestamp) AS MinDate,
                     MAX(NormalizedTimestamp) AS MaxDate
@@ -316,15 +334,19 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Gets the record count for a specific MetricType and optional MetricSubtype from the summary table
-        /// Returns 0 if the combination doesn't exist
+        /// Gets the record count for a specific MetricType and optional MetricSubtype.
+        /// Returns 0 if the combination doesn't exist.
         /// </summary>
         public async Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
         {
+            if (string.IsNullOrWhiteSpace(metricType))
+                throw new ArgumentException("Metric type cannot be null or empty.", nameof(metricType));
+
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
             var sql = @"
+                -- DataFetcher.GetRecordCount
                 SELECT RecordCount
                 FROM HealthMetricsCounts
                 WHERE MetricType = @MetricType
@@ -340,19 +362,20 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Gets all MetricType/Subtype combinations with their record counts from the summary table
-        /// Returns a dictionary where key is (MetricType, MetricSubtype) and value is the count
-        /// Note: Empty strings in MetricSubtype are converted to null for consistency
+        /// Gets all MetricType/Subtype combinations with their record counts.
         /// </summary>
         public async Task<Dictionary<(string MetricType, string? MetricSubtype), long>> GetAllRecordCounts()
         {
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            var results = await conn.QueryAsync<(string MetricType, string MetricSubtype, long RecordCount)>(
-                @"SELECT MetricType, MetricSubtype, RecordCount
-                  FROM HealthMetricsCounts
-                  ORDER BY MetricType, MetricSubtype");
+            var sql = @"
+                -- DataFetcher.GetAllRecordCounts
+                SELECT MetricType, MetricSubtype, RecordCount
+                FROM HealthMetricsCounts
+                ORDER BY MetricType, MetricSubtype";
+
+            var results = await conn.QueryAsync<(string MetricType, string MetricSubtype, long RecordCount)>(sql);
 
             return results.ToDictionary(
                 r => (r.MetricType, string.IsNullOrEmpty(r.MetricSubtype) ? null : r.MetricSubtype),
@@ -361,19 +384,21 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Gets record counts grouped by MetricType (summing all subtypes)
-        /// Returns a dictionary where key is MetricType and value is the total count
+        /// Gets record counts grouped by MetricType (summing all subtypes).
         /// </summary>
         public async Task<Dictionary<string, long>> GetRecordCountsByMetricType()
         {
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
-            var results = await conn.QueryAsync<(string MetricType, long TotalCount)>(
-                @"SELECT MetricType, SUM(RecordCount) AS TotalCount
-                  FROM HealthMetricsCounts
-                  GROUP BY MetricType
-                  ORDER BY MetricType");
+            var sql = @"
+                -- DataFetcher.GetRecordCountsByMetricType
+                SELECT MetricType, SUM(RecordCount) AS TotalCount
+                FROM HealthMetricsCounts
+                GROUP BY MetricType
+                ORDER BY MetricType";
+
+            var results = await conn.QueryAsync<(string MetricType, long TotalCount)>(sql);
 
             return results.ToDictionary(
                 r => r.MetricType,
@@ -382,19 +407,25 @@ namespace DataVisualiser.Data.Repositories
         }
 
         /// <summary>
-        /// Gets record counts for a specific MetricType, grouped by MetricSubtype
-        /// Returns a dictionary where key is MetricSubtype (empty string means no subtype) and value is the count
+        /// Gets record counts for a specific MetricType, grouped by MetricSubtype.
         /// </summary>
         public async Task<Dictionary<string, long>> GetRecordCountsBySubtype(string metricType)
         {
+            if (string.IsNullOrWhiteSpace(metricType))
+                throw new ArgumentException("Metric type cannot be null or empty.", nameof(metricType));
+
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
+            var sql = @"
+                -- DataFetcher.GetRecordCountsBySubtype
+                SELECT MetricSubtype, RecordCount
+                FROM HealthMetricsCounts
+                WHERE MetricType = @MetricType
+                ORDER BY MetricSubtype";
+
             var results = await conn.QueryAsync<(string MetricSubtype, long RecordCount)>(
-                @"SELECT MetricSubtype, RecordCount
-                  FROM HealthMetricsCounts
-                  WHERE MetricType = @MetricType
-                  ORDER BY MetricSubtype",
+                sql,
                 new { MetricType = metricType });
 
             return results.ToDictionary(
@@ -404,4 +435,3 @@ namespace DataVisualiser.Data.Repositories
         }
     }
 }
-

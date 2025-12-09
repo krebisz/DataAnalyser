@@ -205,6 +205,7 @@ namespace DataVisualiser.ViewModels
                 ChartName = chartName,
                 IsVisible = newVisibility
             });
+
             RequestChartUpdate();
         }
 
