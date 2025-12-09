@@ -47,7 +47,12 @@ namespace DataVisualiser.Services
             IChartComputationStrategy strategy,
             string primaryLabel,
             string? secondaryLabel = null,
-            double minHeight = 400.0)
+            double minHeight = 400.0,
+            string? metricType = null,
+            string? primarySubtype = null,
+            string? secondarySubtype = null,
+            string? operationType = null,
+            bool isOperationChart = false)
         {
             if (targetChart == null) throw new ArgumentNullException(nameof(targetChart));
             if (strategy == null) throw new ArgumentNullException(nameof(strategy));
@@ -84,7 +89,14 @@ namespace DataVisualiser.Services
                 TickInterval = result.TickInterval,
 
                 // Pass through the coordinator's global mode
-                SeriesMode = this.SeriesMode
+                SeriesMode = this.SeriesMode,
+
+                // Metric information for label formatting
+                MetricType = metricType,
+                PrimarySubtype = primarySubtype,
+                SecondarySubtype = secondarySubtype,
+                OperationType = operationType,
+                IsOperationChart = isOperationChart
             };
 
             try

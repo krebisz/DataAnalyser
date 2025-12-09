@@ -71,6 +71,10 @@ namespace DataVisualiser.Services
                 DisplayName1 = display1,
                 DisplayName2 = display2,
 
+                MetricType = metricType,
+                PrimarySubtype = primarySubtype,
+                SecondarySubtype = secondarySubtype,
+
                 From = from,
                 To = to
             };

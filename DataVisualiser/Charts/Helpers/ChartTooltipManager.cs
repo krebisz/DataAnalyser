@@ -177,7 +177,7 @@ namespace DataVisualiser.Charts.Helpers
             {
                 if (_chartTextBlocks.TryGetValue(attachedChart, out var textBlock))
                 {
-                    // Use the new formatted method that shows: Primary Smoothed, Secondary Smoothed, Primary Raw, Secondary Raw
+                    // Use the new formatted method that shows: Primary smooth, Secondary smooth, Primary Raw, Secondary Raw
                     string chartValues = ChartHelper.GetChartValuesFormattedAtIndex(attachedChart, index);
                     textBlock.Text = chartValues;
                 }

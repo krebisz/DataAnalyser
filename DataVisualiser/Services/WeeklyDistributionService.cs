@@ -203,6 +203,7 @@ namespace DataVisualiser.Services
             }
 
             yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+            yAxis.ShowLabels = true; // Re-enable labels when rendering data
         }
     }
 }

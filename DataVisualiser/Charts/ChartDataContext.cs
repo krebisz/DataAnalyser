@@ -29,6 +29,11 @@ namespace DataVisualiser.Charts
         public string DisplayName1 { get; init; } = string.Empty;
         public string DisplayName2 { get; init; } = string.Empty;
 
+        // Raw metric information for label formatting
+        public string? MetricType { get; init; }
+        public string? PrimarySubtype { get; init; }
+        public string? SecondarySubtype { get; init; }
+
         public DateTime From { get; init; }
         public DateTime To { get; init; }
     }

@@ -20,8 +20,11 @@ namespace DataVisualiser.Charts.Rendering
             // ============================
             //  PRIMARY SERIES
             // ============================
+            string primarySmoothedLabel = FormatSeriesLabel(model, isPrimary: true, isSmoothed: true);
+            string primaryRawLabel = FormatSeriesLabel(model, isPrimary: true, isSmoothed: false);
+
             var smoothedPrimary = ChartHelper.CreateLineSeries(
-                $"{model.PrimarySeriesName} (Smoothed)",
+                primarySmoothedLabel,
                 5,
                 2,
                 model.PrimaryColor);
@@ -30,7 +33,7 @@ namespace DataVisualiser.Charts.Rendering
                 smoothedPrimary.Values.Add(value);
 
             var rawPrimary = ChartHelper.CreateLineSeries(
-                $"{model.PrimarySeriesName} (Raw)",
+                primaryRawLabel,
                 3,
                 1,
                 Colors.DarkGray);
@@ -46,8 +49,11 @@ namespace DataVisualiser.Charts.Rendering
             // ============================
             if (model.SecondarySmoothed != null && model.SecondaryRaw != null)
             {
+                string secondarySmoothedLabel = FormatSeriesLabel(model, isPrimary: false, isSmoothed: true);
+                string secondaryRawLabel = FormatSeriesLabel(model, isPrimary: false, isSmoothed: false);
+
                 var smoothedSecondary = ChartHelper.CreateLineSeries(
-                    $"{model.SecondarySeriesName} (Smoothed)",
+                    secondarySmoothedLabel,
                     5,
                     2,
                     model.SecondaryColor);
@@ -56,7 +62,7 @@ namespace DataVisualiser.Charts.Rendering
                     smoothedSecondary.Values.Add(value);
 
                 var rawSecondary = ChartHelper.CreateLineSeries(
-                    $"{model.SecondarySeriesName} (Raw)",
+                    secondaryRawLabel,
                     3,
                     1,
                     Colors.DarkGray);
@@ -80,6 +86,7 @@ namespace DataVisualiser.Charts.Rendering
             {
                 var xAxis = targetChart.AxisX[0];
                 xAxis.Title = "Time";
+                xAxis.ShowLabels = true; // Re-enable labels when rendering data
 
                 var timestamps = model.NormalizedIntervals;
                 int total = timestamps.Count;
@@ -116,6 +123,63 @@ namespace DataVisualiser.Charts.Rendering
             }
 
             // Y-axis is already uniform by definition (numeric axis automatically spaces evenly).
+            // Re-enable Y-axis labels when rendering data
+            if (targetChart.AxisY.Count > 0)
+            {
+                targetChart.AxisY[0].ShowLabels = true;
+            }
+        }
+
+        /// <summary>
+        /// Formats series labels according to the new requirements:
+        /// - For operation charts: "MetricType:subtype1 (operation) MetricType:subtype2 (smooth/raw)"
+        /// - For independent charts: "MetricType:subtype (smooth/raw)"
+        /// </summary>
+        private static string FormatSeriesLabel(ChartRenderModel model, bool isPrimary, bool isSmoothed)
+        {
+            string smoothRaw = isSmoothed ? "smooth" : "raw";
+
+            // If we have metric type and subtype information, use the new format
+            if (!string.IsNullOrEmpty(model.MetricType))
+            {
+                if (model.IsOperationChart && !string.IsNullOrEmpty(model.OperationType))
+                {
+                    // Operation chart format: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth)"
+                    string primarySubtype = model.PrimarySubtype ?? string.Empty;
+                    string secondarySubtype = model.SecondarySubtype ?? string.Empty;
+                    string operation = model.OperationType;
+
+                    if (isPrimary)
+                    {
+                        // Primary series shows: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth/raw)"
+                        return $"{model.MetricType}:{primarySubtype} ({operation}) {model.MetricType}:{secondarySubtype} ({smoothRaw})";
+                    }
+                    else
+                    {
+                        // Secondary series (shouldn't happen for operation charts, but handle it)
+                        return $"{model.MetricType}:{secondarySubtype} ({smoothRaw})";
+                    }
+                }
+                else
+                {
+                    // Independent chart format: "Weight:fat_free_mass (smooth/raw)"
+                    string subtype = isPrimary ? (model.PrimarySubtype ?? string.Empty) : (model.SecondarySubtype ?? string.Empty);
+
+                    if (!string.IsNullOrEmpty(subtype))
+                    {
+                        return $"{model.MetricType}:{subtype} ({smoothRaw})";
+                    }
+                    else
+                    {
+                        // Fallback if no subtype
+                        return $"{model.MetricType} ({smoothRaw})";
+                    }
+                }
+            }
+
+            // Fallback to old format if metric type info is not available
+            string seriesName = isPrimary ? model.PrimarySeriesName : model.SecondarySeriesName;
+            return $"{seriesName} ({smoothRaw})";
         }
     }
 }

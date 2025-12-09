@@ -64,9 +64,32 @@ namespace DataVisualiser.UI.SubtypeSelectors
             combo.SelectionChanged += (s, e) =>
                 SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
 
-            // ADD BOTH TO THE PANEL IN ORDER
-            _parentPanel.Children.Add(label);
-            _parentPanel.Children.Add(combo);
+            // Find the "Add Subtype" button to keep it at the end
+            System.Windows.Controls.Button? addButton = null;
+            int buttonIndex = -1;
+            for (int i = _parentPanel.Children.Count - 1; i >= 0; i--)
+            {
+                if (_parentPanel.Children[i] is System.Windows.Controls.Button btn && 
+                    btn.Content?.ToString() == "Add Subtype")
+                {
+                    addButton = btn;
+                    buttonIndex = i;
+                    break;
+                }
+            }
+
+            // If button found, insert before it; otherwise add to end
+            if (addButton != null && buttonIndex >= 0)
+            {
+                _parentPanel.Children.Insert(buttonIndex, label);
+                _parentPanel.Children.Insert(buttonIndex + 1, combo);
+            }
+            else
+            {
+                // ADD BOTH TO THE PANEL IN ORDER
+                _parentPanel.Children.Add(label);
+                _parentPanel.Children.Add(combo);
+            }
 
             _dynamicControls.Add(new SubtypeControlPair(label, combo));
             _dynamicCombos.Add(combo); // Also add to _dynamicCombos for GetSecondarySubtype()

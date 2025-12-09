@@ -127,15 +127,15 @@ namespace DataVisualiser.Charts.Helpers
         }
 
         /// <summary>
-        /// Extracts the base name from a series title, removing "(Raw)" or "(Smoothed)" suffixes.
+        /// Extracts the base name from a series title, removing "(Raw)" or "(smooth)" suffixes.
         /// </summary>
         private static (string BaseName, bool IsRaw, bool IsSmoothed) ParseSeriesTitle(string title)
         {
             if (title.EndsWith(" (Raw)"))
                 return (title.Substring(0, title.Length - 6), true, false);
 
-            if (title.EndsWith(" (Smoothed)"))
-                return (title.Substring(0, title.Length - 11), false, true);
+            if (title.EndsWith(" (smooth)"))
+                return (title.Substring(0, title.Length - 9), false, true);
 
             return (title, false, false);
         }
@@ -194,8 +194,8 @@ namespace DataVisualiser.Charts.Helpers
         }
 
         /// <summary>
-        /// Returns formatted values in the order: Primary Smoothed, Secondary Smoothed, Primary Raw, Secondary Raw.
-        /// Format: "{metric subtype} Smoothed: {value}" or "{metric subtype} Raw: {value}"
+        /// Returns formatted values in the order: Primary smooth, Secondary smooth, Primary Raw, Secondary Raw.
+        /// Format: "{metric subtype} smooth: {value}" or "{metric subtype} Raw: {value}"
         /// </summary>
         public static string GetChartValuesFormattedAtIndex(CartesianChart chart, int index)
         {
@@ -236,10 +236,10 @@ namespace DataVisualiser.Charts.Helpers
             var parts = new List<string>();
 
             if (primaryName != null && values.TryGetValue("PrimarySmoothed", out var ps))
-                parts.Add($"{primaryName} Smoothed: {ps}");
+                parts.Add($"{primaryName} smooth: {ps}");
 
             if (secondaryName != null && values.TryGetValue("SecondarySmoothed", out var ss))
-                parts.Add($"{secondaryName} Smoothed: {ss}");
+                parts.Add($"{secondaryName} smooth: {ss}");
 
             if (primaryName != null && values.TryGetValue("PrimaryRaw", out var pr))
                 parts.Add($"{primaryName} Raw: {pr}");

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         Title="Health Data Viz"
-        Height="1400"
+        SizeToContent="Height"
         Width="1800"
         FontSize="10"
         Background="#FFD4CFCF">

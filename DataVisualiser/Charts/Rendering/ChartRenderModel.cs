@@ -29,5 +29,12 @@ namespace DataVisualiser.Charts.Rendering
         /// Default keeps current behaviour (raw + smoothed).
         /// </summary>
         public ChartSeriesMode SeriesMode { get; init; } = ChartSeriesMode.RawAndSmoothed;
+
+        // New properties for proper label formatting
+        public string? MetricType { get; init; }
+        public string? PrimarySubtype { get; init; }
+        public string? SecondarySubtype { get; init; }
+        public string? OperationType { get; init; } // "-", "/", "~", or null for independent charts
+        public bool IsOperationChart { get; init; } = false; // true for difference, ratio, normalization charts
     }
 }

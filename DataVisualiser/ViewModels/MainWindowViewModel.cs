@@ -287,12 +287,10 @@ namespace DataVisualiser.ViewModels
             try
             {
                 // Basic guard: we must have a selected metric type
+                // But don't show error if we're in a transitional state (e.g., resolution change)
                 if (!ValidateMetricTypeSelected())
                 {
-                    ErrorOccured?.Invoke(this, new ErrorEventArgs
-                    {
-                        Message = "Please select a Metric Type before loading the date range."
-                    });
+                    // Silently return without showing error - this prevents popups during resolution changes
                     return;
                 }
 

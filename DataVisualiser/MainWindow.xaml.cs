@@ -38,11 +38,16 @@ namespace DataVisualiser
         private readonly UiState _uiState = new();
         private readonly MainWindowViewModel _viewModel;
         private bool _isInitializing = true;
+        private bool _isChangingResolution = false;
 
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Pin window to top-left corner
+            this.Left = 0;
+            this.Top = 0;
 
             _connectionString = ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
             _metricSelectionService = new MetricSelectionService(_connectionString);
@@ -112,6 +117,8 @@ namespace DataVisualiser
             ResolutionCombo.Items.Add("Weekly");
             ResolutionCombo.Items.Add("Monthly");
             ResolutionCombo.Items.Add("Yearly");
+
+            // Set initial resolution selection
             ResolutionCombo.SelectedItem = "All";
 
             _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
@@ -123,7 +130,61 @@ namespace DataVisualiser
             ChartHelper.InitializeChartBehavior(ChartDiff);
             ChartHelper.InitializeChartBehavior(ChartRatio);
 
-            UpdateChartTitlesFromCombos();
+            // Clear charts on startup to prevent gibberish tick labels
+            ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+
+            // Disable axis labels when no data
+            if (ChartMain.AxisX.Count > 0)
+            {
+                ChartMain.AxisX[0].ShowLabels = false;
+            }
+            if (ChartMain.AxisY.Count > 0)
+            {
+                ChartMain.AxisY[0].ShowLabels = false;
+            }
+            if (ChartNorm.AxisX.Count > 0)
+            {
+                ChartNorm.AxisX[0].ShowLabels = false;
+            }
+            if (ChartNorm.AxisY.Count > 0)
+            {
+                ChartNorm.AxisY[0].ShowLabels = false;
+            }
+            if (ChartDiff.AxisX.Count > 0)
+            {
+                ChartDiff.AxisX[0].ShowLabels = false;
+            }
+            if (ChartDiff.AxisY.Count > 0)
+            {
+                ChartDiff.AxisY[0].ShowLabels = false;
+            }
+            if (ChartRatio.AxisX.Count > 0)
+            {
+                ChartRatio.AxisX[0].ShowLabels = false;
+            }
+            if (ChartRatio.AxisY.Count > 0)
+            {
+                ChartRatio.AxisY[0].ShowLabels = false;
+            }
+            if (ChartWeekly.AxisX.Count > 0)
+            {
+                ChartWeekly.AxisX[0].ShowLabels = false;
+            }
+            if (ChartWeekly.AxisY.Count > 0)
+            {
+                ChartWeekly.AxisY[0].ShowLabels = false;
+            }
+
+            // Set default chart titles when no data is loaded
+            ChartMainTitle.Text = "Metrics: Total";
+            ChartNormTitle.Text = "Metrics: Normalized";
+            ChartDiffTitle.Text = "Metric Difference";
+            ChartRatioTitle.Text = "Metrics: Ratio";
+
             _viewModel.RequestChartUpdate();
 
 
@@ -151,6 +212,15 @@ namespace DataVisualiser
             if (ResolutionCombo.SelectedItem == null)
                 return;
 
+            // Store the selected resolution to retain it
+            var selectedResolution = ResolutionCombo.SelectedItem.ToString();
+
+            // Set flag to suppress error popups during resolution change
+            _isChangingResolution = true;
+
+            // Prevent error popups during resolution change by temporarily suppressing validation
+            _viewModel.MetricState.SelectedMetricType = null; // Clear to prevent validation errors
+
             TablesCombo.Items.Clear();
 
             _selectorManager.ClearDynamic();
@@ -159,6 +229,12 @@ namespace DataVisualiser
 
             _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
             _viewModel.LoadMetricsCommand.Execute(null);
+
+            // Restore the resolution selection (in case it was changed)
+            if (ResolutionCombo.SelectedItem?.ToString() != selectedResolution)
+            {
+                ResolutionCombo.SelectedItem = selectedResolution;
+            }
         }
 
         /// <summary>
@@ -193,8 +269,12 @@ namespace DataVisualiser
             // Push all selected subtypes (primary + dynamic) into the VM state
             UpdateSelectedSubtypesInViewModel();
 
-            // Ask the VM to recompute the date range for the current metric + subtype selection
-            await LoadDateRangeForSelectedMetrics();
+            // Only load date range if a metric type is selected (prevents error popup)
+            if (!string.IsNullOrWhiteSpace(_viewModel.MetricState.SelectedMetricType))
+            {
+                // Ask the VM to recompute the date range for the current metric + subtype selection
+                await LoadDateRangeForSelectedMetrics();
+            }
         }
 
 
@@ -205,6 +285,10 @@ namespace DataVisualiser
                 return;
 
             if (_viewModel.UiState.IsLoadingSubtypes || _viewModel.UiState.IsLoadingMetricTypes)
+                return;
+
+            // Don't load date range if we're changing resolution (prevents error popups)
+            if (_isChangingResolution)
                 return;
 
             // Delegate date-range computation to the ViewModel (Pattern A)
@@ -276,7 +360,7 @@ namespace DataVisualiser
 
                 if (!loaded)
                 {
-                    // VM already raised ErrorOccured – treat this as "no data"
+                    // VM already raised ErrorOccured ï¿½ treat this as "no data"
                     ClearAllCharts();
                     return;
                 }
@@ -557,7 +641,11 @@ namespace DataVisualiser
                 SubtypeCombo.Items.Clear();
                 SubtypeCombo.IsEnabled = false;
                 _selectorManager.ClearDynamic();
+                // Don't trigger date range load when no metric types found
             }
+
+            // Clear the flag after metric types are loaded
+            _isChangingResolution = false;
         }
 
 
@@ -605,16 +693,20 @@ namespace DataVisualiser
             var data1 = ctx.Data1.ToList();
             var data2 = ctx.Data2?.ToList() ?? new List<HealthMetricData>();
 
-            // TEMP: debug to see what we actually have
-            var msg =
-                $"Data1 count: {data1.Count}\n" +
-                $"Data2 count: {data2.Count}\n" +
-                $"First 3 timestamps (Data1):\n" +
-                string.Join("\n", data1.Take(3).Select(d => d.NormalizedTimestamp)) +
-                "\n\nFirst 3 timestamps (Data2):\n" +
-                string.Join("\n", data2.Take(3).Select(d => d.NormalizedTimestamp));
+            // Check config to see if debug popup should be shown
+            var showDebugPopup = ConfigurationManager.AppSettings["DataVisualiser:ShowDebugPopup"];
+            if (bool.TryParse(showDebugPopup, out bool showDebug) && showDebug)
+            {
+                var msg =
+                    $"Data1 count: {data1.Count}\n" +
+                    $"Data2 count: {data2.Count}\n" +
+                    $"First 3 timestamps (Data1):\n" +
+                    string.Join("\n", data1.Take(3).Select(d => d.NormalizedTimestamp)) +
+                    "\n\nFirst 3 timestamps (Data2):\n" +
+                    string.Join("\n", data2.Take(3).Select(d => d.NormalizedTimestamp));
 
-            MessageBox.Show(msg, "DEBUG – LastContext contents");
+                MessageBox.Show(msg, "DEBUG - LastContext contents");
+            }
 
             await RenderChartsFromLastContext();
         }
@@ -650,7 +742,10 @@ namespace DataVisualiser
             string displayName1,
             string displayName2,
             DateTime from,
-            DateTime to)
+            DateTime to,
+            string? metricType = null,
+            string? primarySubtype = null,
+            string? secondarySubtype = null)
         {
             if (data2 != null && data2.Any())
             {
@@ -658,7 +753,12 @@ namespace DataVisualiser
                     ChartMain,
                     new Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to),
                     displayName1,
-                    displayName2);
+                    displayName2,
+                    minHeight: 400,
+                    metricType: metricType,
+                    primarySubtype: primarySubtype,
+                    secondarySubtype: secondarySubtype,
+                    isOperationChart: false);
             }
             else
             {
@@ -666,7 +766,10 @@ namespace DataVisualiser
                     ChartMain,
                     new Charts.Strategies.SingleMetricStrategy(data1, displayName1, from, to),
                     displayName1,
-                    minHeight: 400);
+                    minHeight: 400,
+                    metricType: metricType,
+                    primarySubtype: primarySubtype,
+                    isOperationChart: false);
             }
         }
 
@@ -678,11 +781,22 @@ namespace DataVisualiser
             bool isVisible,
             Charts.IChartComputationStrategy? strategy,
             string title,
-            double minHeight = 400)
+            double minHeight = 400,
+            string? metricType = null,
+            string? primarySubtype = null,
+            string? secondarySubtype = null,
+            string? operationType = null,
+            bool isOperationChart = false)
         {
             if (isVisible && strategy != null)
             {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chart, strategy, title, minHeight: minHeight);
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                    chart, strategy, title, minHeight: minHeight,
+                    metricType: metricType,
+                    primarySubtype: primarySubtype,
+                    secondarySubtype: secondarySubtype,
+                    operationType: operationType,
+                    isOperationChart: isOperationChart);
             }
             else
             {
@@ -705,8 +819,16 @@ namespace DataVisualiser
             var displayName2 = ctx.DisplayName2 ?? string.Empty;
             var hasSecondaryData = data2 != null && data2.Any();
 
+            // Extract metric information from context
+            var metricType = ctx.MetricType;
+            var primarySubtype = ctx.PrimarySubtype;
+            var secondarySubtype = ctx.SecondarySubtype;
+
             // Render main chart
-            await RenderMainChart(data1, data2, displayName1, displayName2, ctx.From, ctx.To);
+            await RenderMainChart(data1, data2, displayName1, displayName2, ctx.From, ctx.To,
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondarySubtype);
 
             // If no secondary data, clear secondary charts and return
             if (!hasSecondaryData)
@@ -723,7 +845,12 @@ namespace DataVisualiser
                 ChartNorm,
                 _viewModel.ChartState.IsNormalizedVisible,
                 new Charts.Strategies.NormalizedStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode),
-                $"{displayName1} ~ {displayName2}");
+                $"{displayName1} ~ {displayName2}",
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondarySubtype,
+                operationType: "~",
+                isOperationChart: true);
 
             if (_viewModel.ChartState.IsWeeklyVisible)
             {
@@ -739,13 +866,23 @@ namespace DataVisualiser
                 ChartDiff,
                 _viewModel.ChartState.IsDifferenceVisible,
                 new Charts.Strategies.DifferenceStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To),
-                $"{displayName1} - {displayName2}");
+                $"{displayName1} - {displayName2}",
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondarySubtype,
+                operationType: "-",
+                isOperationChart: true);
 
             await RenderOrClearChart(
                 ChartRatio,
                 _viewModel.ChartState.IsRatioVisible,
                 new Charts.Strategies.RatioStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To),
-                $"{displayName1} / {displayName2}");
+                $"{displayName1} / {displayName2}",
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondarySubtype,
+                operationType: "/",
+                isOperationChart: true);
         }
 
 
