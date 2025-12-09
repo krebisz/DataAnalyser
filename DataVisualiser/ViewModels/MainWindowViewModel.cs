@@ -166,6 +166,11 @@ namespace DataVisualiser.ViewModels
         /// Centralised data load for the currently selected metric + subtypes + date range.
         /// Builds ChartState.LastContext from the DB and returns true if charts can be rendered.
         /// </summary>
+        /// <summary>
+        /// Phase 6 – Step 2.1
+        /// Centralised data load for the currently selected metric + subtypes + date range.
+        /// Builds ChartState.LastContext from the DB and returns true if charts can be rendered.
+        /// </summary>
         public async Task<bool> LoadMetricDataAsync()
         {
             // Basic validation first
@@ -232,23 +237,18 @@ namespace DataVisualiser.ViewModels
                     return false;
                 }
 
-                var displayName1 = !string.IsNullOrEmpty(primarySubtype)
-                    ? $"{metricType} - {primarySubtype}"
-                    : metricType;
+                // NEW: delegate context construction to the builder
+                var ctxBuilder = new ChartDataContextBuilder();
 
-                var displayName2 = !string.IsNullOrEmpty(secondarySubtype)
-                    ? $"{metricType} - {secondarySubtype}"
-                    : metricType;
+                ChartState.LastContext = ctxBuilder.Build(
+                    metricType,
+                    primarySubtype,
+                    secondarySubtype,
+                    data1,
+                    data2,
+                    MetricState.FromDate.Value,
+                    MetricState.ToDate.Value);
 
-                ChartState.LastContext = new ChartDataContext
-                {
-                    Data1 = data1,
-                    Data2 = data2,
-                    DisplayName1 = displayName1,
-                    DisplayName2 = displayName2,
-                    From = MetricState.FromDate.Value,
-                    To = MetricState.ToDate.Value
-                };
 
                 return true;
             }
@@ -266,6 +266,7 @@ namespace DataVisualiser.ViewModels
                 UiState.IsLoadingData = false;
             }
         }
+
 
         /// <summary>
         /// Builds a user-facing "no data" message consistent with the old MainWindow behaviour.

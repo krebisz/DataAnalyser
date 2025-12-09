@@ -48,7 +48,7 @@ namespace DataVisualiser
             _metricSelectionService = new MetricSelectionService(_connectionString);
 
             _chartComputationEngine = new ChartComputationEngine();
-            _chartRenderEngine = new ChartRenderEngine(normalizeYAxisDelegate: (axis, rawData, smoothed) => ChartHelper.NormalizeYAxis(axis, rawData, smoothed), adjustHeightDelegate: (chart, minHeight) => ChartHelper.AdjustChartHeightBasedOnYAxis(chart, minHeight));
+            _chartRenderEngine = new ChartRenderEngine();
 
             var chartLabels = new Dictionary<CartesianChart, string>
             {
@@ -66,6 +66,7 @@ namespace DataVisualiser
 
 
             _chartUpdateCoordinator = new ChartUpdateCoordinator(_chartComputationEngine, _chartRenderEngine, _tooltipManager, _chartState.ChartTimestamps);
+            _chartUpdateCoordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
             _weeklyDistributionService = new WeeklyDistributionService(_chartState.ChartTimestamps);
 
             _viewModel = new MainWindowViewModel(_chartState, _metricState, _uiState, _metricSelectionService, _chartUpdateCoordinator, _weeklyDistributionService);
@@ -217,36 +218,40 @@ namespace DataVisualiser
         /// Loads data from HealthMetrics table based on selected MetricType, MetricSubtype(s), and date range.
         /// Updates charts using the selected metric type and subtypes.
         /// </summary>
+        /// <summary>
+        /// UI entry point for loading data.
+        /// Pushes current UI selections into the ViewModel and delegates
+        /// validation + data fetching to the VM. Rendering is driven by
+        /// DataLoaded / ChartUpdateRequested events.
+        /// </summary>
         private async void OnLoadData(object sender, RoutedEventArgs e)
         {
             // Guard against null reference during initialization
             if (_isInitializing || _viewModel == null)
                 return;
 
+            // Ensure a metric type is selected in the UI
             if (TablesCombo.SelectedItem == null)
             {
-                MessageBox.Show("Please select a Metric Type", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please select a Metric Type", "No Selection",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            // 1) Push current UI selections into the VM
             _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
-
-            if (string.IsNullOrEmpty(_viewModel.MetricState.SelectedMetricType))
-            {
-                MessageBox.Show("Please select a valid Metric Type", "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            UpdateSelectedSubtypesInViewModel();
 
             var selectedSubtype = _selectorManager.GetPrimarySubtype();
             var selectedSubtype2 = _selectorManager.GetSecondarySubtype();
 
-            string baseType = _viewModel.MetricState.SelectedMetricType;
+            string baseType = _viewModel.MetricState.SelectedMetricType!;
             string display1 = !string.IsNullOrEmpty(selectedSubtype) && selectedSubtype != "(All)"
                 ? selectedSubtype
                 : baseType;
             string display2 = !string.IsNullOrEmpty(selectedSubtype2)
                 ? selectedSubtype2
-                : "";
+                : string.Empty;
 
             SetChartTitles(display1, display2);
             UpdateChartLabels(selectedSubtype ?? string.Empty, selectedSubtype2 ?? string.Empty);
@@ -255,86 +260,38 @@ namespace DataVisualiser
             var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
             _viewModel.SetDateRange(fromDate, toDate);
 
-            if (_viewModel.MetricState.FromDate > _viewModel.MetricState.ToDate)
+            // 2) Let the ViewModel validate the request
+            var (isValid, errorMessage) = _viewModel.ValidateDataLoadRequirements();
+            if (!isValid)
             {
-                MessageBox.Show("From date must be before To date", "Invalid Date Range", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(errorMessage ?? "The current selection is not valid.",
+                    "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             try
             {
-                var tableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
-                DataFetcher dataFetcher = new DataFetcher(_connectionString);
+                // 3) Ask the VM to load data and build ChartState.LastContext
+                var loaded = await _viewModel.LoadMetricDataAsync();
 
-                var dataTask1 = dataFetcher.GetHealthMetricsDataByBaseType(
-                    _viewModel.MetricState.SelectedMetricType,
-                    selectedSubtype,
-                    _viewModel.MetricState.FromDate,
-                    _viewModel.MetricState.ToDate,
-                    tableName);
-
-                var dataTask2 = dataFetcher.GetHealthMetricsDataByBaseType(
-                    _viewModel.MetricState.SelectedMetricType,
-                    selectedSubtype2,
-                    _viewModel.MetricState.FromDate,
-                    _viewModel.MetricState.ToDate,
-                    tableName);
-
-                await Task.WhenAll(dataTask1, dataTask2);
-
-                var data1 = dataTask1.Result;
-                var data2 = dataTask2.Result;
-
-                // Handle "no data" scenarios here and DO NOT call into the viewmodel for rendering
-                if (data1 == null || !data1.Any())
+                if (!loaded)
                 {
-                    var subtypeText = !string.IsNullOrEmpty(selectedSubtype) ? $" and Subtype '{selectedSubtype}'" : "";
-                    MessageBox.Show(
-                        $"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText} in the selected date range.",
-                        "No Data",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    // VM already raised ErrorOccured – treat this as "no data"
                     ClearAllCharts();
                     return;
                 }
 
-                if (data2 == null || !data2.Any())
-                {
-                    var subtypeText2 = !string.IsNullOrEmpty(selectedSubtype2) ? $" and Subtype '{selectedSubtype2}'" : "";
-                    MessageBox.Show(
-                        $"No data found for MetricType '{_viewModel.MetricState.SelectedMetricType}'{subtypeText2} in the selected date range (Chart 2).",
-                        "No Data",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    ClearAllCharts();
-                    return;
-                }
-
-                var displayName1 = !string.IsNullOrEmpty(selectedSubtype)
-                    ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype}"
-                    : _viewModel.MetricState.SelectedMetricType;
-
-                var displayName2 = !string.IsNullOrEmpty(selectedSubtype2)
-                    ? $"{_viewModel.MetricState.SelectedMetricType} - {selectedSubtype2}"
-                    : _viewModel.MetricState.SelectedMetricType;
-
-                _viewModel.ChartState.LastContext = new ChartDataContext
-                {
-                    Data1 = data1,
-                    Data2 = data2,
-                    DisplayName1 = displayName1,
-                    DisplayName2 = displayName2,
-                    From = (DateTime)_viewModel.MetricState.FromDate,
-                    To = (DateTime)_viewModel.MetricState.ToDate
-                };
-
+                // 4) Let the VM raise DataLoaded + ChartUpdateRequested
                 _viewModel.LoadDataCommand.Execute(null);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading data: {ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearAllCharts();
             }
         }
+
 
 
 
@@ -538,24 +495,30 @@ namespace DataVisualiser
 
             var selectedSubtypes = new List<string?>();
 
-            // Primary (static) subtype combo
+            string? primary = null;
             if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
             {
-                selectedSubtypes.Add(SubtypeCombo.SelectedItem.ToString());
+                primary = SubtypeCombo.SelectedItem.ToString();
+                if (!string.IsNullOrWhiteSpace(primary) && primary != "(All)")
+                    selectedSubtypes.Add(primary);
             }
 
-            // Dynamic subtypes managed by SubtypeSelectorManager
             var activeCombos = _selectorManager.GetActiveCombos();
             foreach (var combo in activeCombos)
             {
-                if (combo.SelectedItem != null)
-                {
-                    selectedSubtypes.Add(combo.SelectedItem.ToString());
-                }
+                if (combo.SelectedItem == null) continue;
+
+                var st = combo.SelectedItem.ToString();
+                if (string.IsNullOrWhiteSpace(st)) continue;
+                if (st == "(All)") continue;
+                if (selectedSubtypes.Contains(st)) continue; // avoid duplicates
+
+                selectedSubtypes.Add(st);
             }
 
             _viewModel.SetSelectedSubtypes(selectedSubtypes);
         }
+
 
         /// <summary>
         /// Keeps ViewModel date range in sync when the From date changes.
@@ -639,10 +602,19 @@ namespace DataVisualiser
             if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
                 return;
 
-            var data1 = ctx.Data1;
-            var data2 = ctx.Data2;
-            var displayName1 = ctx.DisplayName1 ?? string.Empty;
-            var displayName2 = ctx.DisplayName2 ?? string.Empty;
+            var data1 = ctx.Data1.ToList();
+            var data2 = ctx.Data2?.ToList() ?? new List<HealthMetricData>();
+
+            // TEMP: debug to see what we actually have
+            var msg =
+                $"Data1 count: {data1.Count}\n" +
+                $"Data2 count: {data2.Count}\n" +
+                $"First 3 timestamps (Data1):\n" +
+                string.Join("\n", data1.Take(3).Select(d => d.NormalizedTimestamp)) +
+                "\n\nFirst 3 timestamps (Data2):\n" +
+                string.Join("\n", data2.Take(3).Select(d => d.NormalizedTimestamp));
+
+            MessageBox.Show(msg, "DEBUG – LastContext contents");
 
             await RenderChartsFromLastContext();
         }
@@ -803,8 +775,13 @@ namespace DataVisualiser
 
         private void OnErrorOccured(object? sender, ErrorEventArgs e)
         {
-            MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(e.Message, "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+
+            // Any VM-level error tied to data / charts should leave the UI clean.
+            ClearAllCharts();
         }
+
 
         /// <summary>
         /// Clears all charts and resets the chart context.

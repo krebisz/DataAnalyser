@@ -1,9 +1,12 @@
+using DataVisualiser.Charts.Computation;
+using DataVisualiser.Helper;
+using DataVisualiser.Models;
+
 namespace DataVisualiser.Charts.Strategies
 {
-    using DataVisualiser.Charts.Computation;
-    using DataVisualiser.Models;
-    using DataVisualiser.Helper;
-
+    /// <summary>
+    /// Computes left - right on a shared index-aligned timeline.
+    /// </summary>
     public sealed class DifferenceStrategy : IChartComputationStrategy
     {
         private readonly IEnumerable<HealthMetricData> _left;
@@ -13,7 +16,13 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string _labelLeft;
         private readonly string _labelRight;
 
-        public DifferenceStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to)
+        public DifferenceStrategy(
+            IEnumerable<HealthMetricData> left,
+            IEnumerable<HealthMetricData> right,
+            string labelLeft,
+            string labelRight,
+            DateTime from,
+            DateTime to)
         {
             _left = left ?? Array.Empty<HealthMetricData>();
             _right = right ?? Array.Empty<HealthMetricData>();
@@ -29,39 +38,78 @@ namespace DataVisualiser.Charts.Strategies
 
         public ChartComputationResult? Compute()
         {
-            var prepared = StrategyComputationHelper.PrepareDataForComputation(_left, _right, _from, _to);
-            if (prepared == null) return null;
+            var leftOrdered = _left
+                .Where(d => d.Value.HasValue &&
+                            d.NormalizedTimestamp >= _from &&
+                            d.NormalizedTimestamp <= _to)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
 
-            var (ordered1, ordered2, dateRange, tickInterval) = prepared.Value;
-            var combinedTimestamps = StrategyComputationHelper.CombineTimestamps(ordered1, ordered2);
-            if (!combinedTimestamps.Any()) return null;
+            var rightOrdered = _right
+                .Where(d => d.Value.HasValue &&
+                            d.NormalizedTimestamp >= _from &&
+                            d.NormalizedTimestamp <= _to)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
 
+            var count = Math.Min(leftOrdered.Count, rightOrdered.Count);
+            if (count == 0)
+                return null;
+
+            var timestamps = new List<DateTime>(count);
+            var rawDiff = new List<double>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                var l = leftOrdered[i];
+                var r = rightOrdered[i];
+
+                timestamps.Add(l.NormalizedTimestamp);
+
+                if (!l.Value.HasValue || !r.Value.HasValue)
+                {
+                    rawDiff.Add(double.NaN);
+                }
+                else
+                {
+                    rawDiff.Add((double)l.Value.Value - (double)r.Value.Value);
+                }
+            }
+
+            var dateRange = _to - _from;
+            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
             var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-            var intervalIndices = combinedTimestamps
+            var intervalIndices = timestamps
                 .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
                 .ToList();
 
-            var (interpSmoothed1, interpSmoothed2) = StrategyComputationHelper.ProcessSmoothedData(
-                ordered1, ordered2, combinedTimestamps, _from, _to);
+            // Build a synthetic sequence for smoothing (difference points).
+            var diffData = new List<HealthMetricData>();
+            for (int i = 0; i < count; i++)
+            {
+                var value = double.IsNaN(rawDiff[i]) ? (decimal?)null : (decimal?)rawDiff[i];
+                diffData.Add(new HealthMetricData
+                {
+                    NormalizedTimestamp = timestamps[i],
+                    Value = value,
+                    Unit = leftOrdered[i].Unit
+                });
+            }
 
-            var (dict1, dict2) = StrategyComputationHelper.CreateTimestampValueDictionaries(ordered1, ordered2);
-            var (rawValues1, rawValues2) = StrategyComputationHelper.ExtractAlignedRawValues(
-                combinedTimestamps, dict1, dict2);
+            var smoothedPoints = MathHelper.CreateSmoothedData(diffData, _from, _to);
+            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedPoints, timestamps);
 
-            var rawResults = MathHelper.ReturnValueDifferences(rawValues1, rawValues2);
-            var smoothedResults = MathHelper.ReturnValueDifferences(interpSmoothed1, interpSmoothed2);
-
-            if (rawResults == null || smoothedResults == null) return null;
-
-            Unit = StrategyComputationHelper.GetUnit(ordered1, ordered2);
+            var unitLeft = leftOrdered.FirstOrDefault()?.Unit;
+            var unitRight = rightOrdered.FirstOrDefault()?.Unit;
+            Unit = unitLeft == unitRight ? unitLeft : unitLeft ?? unitRight;
 
             return new ChartComputationResult
             {
-                Timestamps = combinedTimestamps,
+                Timestamps = timestamps,
                 IntervalIndices = intervalIndices,
                 NormalizedIntervals = normalizedIntervals,
-                PrimaryRawValues = rawResults,
-                PrimarySmoothed = smoothedResults,
+                PrimaryRawValues = rawDiff,
+                PrimarySmoothed = smoothedValues,
                 TickInterval = tickInterval,
                 DateRange = dateRange,
                 Unit = Unit
