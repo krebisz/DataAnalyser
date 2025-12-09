@@ -195,23 +195,26 @@ namespace DataVisualiser.ViewModels
             var metricType = MetricState.SelectedMetricType!;
             var tableName = MetricState.ResolutionTableName ?? "HealthMetrics";
 
-            // Use first two selected subtypes as primary / secondary for now
+            // IMPORTANT: Ensure consistent ordering - first selected subtype is always primary (data1),
+            // second selected subtype is always secondary (data2). This ordering is maintained
+            // across all charts and strategies.
             var primarySubtype = MetricState.SelectedSubtypes.Count > 0
-                ? MetricState.SelectedSubtypes[0]
+                ? MetricState.SelectedSubtypes[0]  // First selected subtype = primary
                 : null;
 
             var secondarySubtype = MetricState.SelectedSubtypes.Count > 1
-                ? MetricState.SelectedSubtypes[1]
+                ? MetricState.SelectedSubtypes[1]   // Second selected subtype = secondary
                 : null;
 
             try
             {
                 UiState.IsLoadingData = true;
 
+                // Load data: data1 = first selected subtype (primary), data2 = second selected subtype (secondary)
                 var (data1, data2) = await _metricService.LoadMetricDataAsync(
                     metricType,
-                    primarySubtype,
-                    secondarySubtype,
+                    primarySubtype,   // First selected subtype → data1
+                    secondarySubtype, // Second selected subtype → data2
                     MetricState.FromDate.Value,
                     MetricState.ToDate.Value,
                     tableName);

@@ -10,6 +10,13 @@ namespace DataVisualiser.Charts.Rendering
 {
     public sealed class ChartRenderEngine
     {
+        /// <summary>
+        /// Renders chart series based on the provided model.
+        /// IMPORTANT: Ensures consistent data ordering:
+        /// - PrimaryRaw/PrimarySmoothed = first selected metric subtype
+        /// - SecondaryRaw/SecondarySmoothed = second selected metric subtype (when applicable)
+        /// This ordering is maintained across all charts and strategies.
+        /// </summary>
         public void Render(CartesianChart targetChart, ChartRenderModel model, double minHeight = 400.0)
         {
             if (targetChart == null) throw new ArgumentNullException(nameof(targetChart));

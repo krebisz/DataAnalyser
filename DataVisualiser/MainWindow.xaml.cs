@@ -735,20 +735,23 @@ namespace DataVisualiser
 
         /// <summary>
         /// Renders the main chart based on available data (single or combined).
+        /// IMPORTANT: data1 is always the first selected metric subtype (primary),
+        /// data2 is always the second selected metric subtype (secondary).
         /// </summary>
         private async Task RenderMainChart(
-            IEnumerable<HealthMetricData> data1,
-            IEnumerable<HealthMetricData>? data2,
+            IEnumerable<HealthMetricData> data1,  // First selected metric subtype (primary)
+            IEnumerable<HealthMetricData>? data2, // Second selected metric subtype (secondary)
             string displayName1,
             string displayName2,
             DateTime from,
             DateTime to,
             string? metricType = null,
-            string? primarySubtype = null,
-            string? secondarySubtype = null)
+            string? primarySubtype = null,      // First selected subtype
+            string? secondarySubtype = null)    // Second selected subtype
         {
             if (data2 != null && data2.Any())
             {
+                // Combined chart: data1 (first selected) as primary, data2 (second selected) as secondary
                 await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
                     ChartMain,
                     new Charts.Strategies.CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to),
@@ -756,19 +759,20 @@ namespace DataVisualiser
                     displayName2,
                     minHeight: 400,
                     metricType: metricType,
-                    primarySubtype: primarySubtype,
-                    secondarySubtype: secondarySubtype,
+                    primarySubtype: primarySubtype,      // First selected subtype
+                    secondarySubtype: secondarySubtype,  // Second selected subtype
                     isOperationChart: false);
             }
             else
             {
+                // Single metric chart: only data1 (first selected subtype)
                 await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
                     ChartMain,
                     new Charts.Strategies.SingleMetricStrategy(data1, displayName1, from, to),
                     displayName1,
                     minHeight: 400,
                     metricType: metricType,
-                    primarySubtype: primarySubtype,
+                    primarySubtype: primarySubtype,      // First selected subtype
                     isOperationChart: false);
             }
         }
@@ -806,6 +810,10 @@ namespace DataVisualiser
 
         /// <summary>
         /// Renders all charts based on the current context and visibility settings.
+        /// IMPORTANT: Ensures consistent data ordering across all charts:
+        /// - data1 = first selected metric subtype (primary)
+        /// - data2 = second selected metric subtype (secondary)
+        /// This ordering is maintained for all strategies (difference, ratio, normalization, combined).
         /// </summary>
         private async Task RenderChartsFromLastContext()
         {
@@ -813,18 +821,20 @@ namespace DataVisualiser
             if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
                 return;
 
-            var data1 = ctx.Data1;
-            var data2 = ctx.Data2;
+            // IMPORTANT: data1 is always the first selected subtype (primary), data2 is always the second selected subtype (secondary)
+            // This ensures consistency across all charts and strategies
+            var data1 = ctx.Data1;  // First selected metric subtype
+            var data2 = ctx.Data2;  // Second selected metric subtype
             var displayName1 = ctx.DisplayName1 ?? string.Empty;
             var displayName2 = ctx.DisplayName2 ?? string.Empty;
             var hasSecondaryData = data2 != null && data2.Any();
 
             // Extract metric information from context
             var metricType = ctx.MetricType;
-            var primarySubtype = ctx.PrimarySubtype;
-            var secondarySubtype = ctx.SecondarySubtype;
+            var primarySubtype = ctx.PrimarySubtype;      // First selected subtype
+            var secondarySubtype = ctx.SecondarySubtype;  // Second selected subtype
 
-            // Render main chart
+            // Render main chart - data1 (first selected) as primary, data2 (second selected) as secondary
             await RenderMainChart(data1, data2, displayName1, displayName2, ctx.From, ctx.To,
                 metricType: metricType,
                 primarySubtype: primarySubtype,
@@ -841,14 +851,15 @@ namespace DataVisualiser
             }
 
             // Render or clear charts based on visibility
+            // All strategies use: data1 (first selected) as left/primary, data2 (second selected) as right/secondary
             await RenderOrClearChart(
                 ChartNorm,
                 _viewModel.ChartState.IsNormalizedVisible,
                 new Charts.Strategies.NormalizedStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode),
                 $"{displayName1} ~ {displayName2}",
                 metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondarySubtype,
+                primarySubtype: primarySubtype,      // First selected subtype
+                secondarySubtype: secondarySubtype,  // Second selected subtype
                 operationType: "~",
                 isOperationChart: true);
 
@@ -862,25 +873,27 @@ namespace DataVisualiser
                 ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             }
 
+            // Difference chart: data1 (first selected) - data2 (second selected)
             await RenderOrClearChart(
                 ChartDiff,
                 _viewModel.ChartState.IsDifferenceVisible,
                 new Charts.Strategies.DifferenceStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To),
                 $"{displayName1} - {displayName2}",
                 metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondarySubtype,
+                primarySubtype: primarySubtype,      // First selected subtype
+                secondarySubtype: secondarySubtype,  // Second selected subtype
                 operationType: "-",
                 isOperationChart: true);
 
+            // Ratio chart: data1 (first selected) / data2 (second selected)
             await RenderOrClearChart(
                 ChartRatio,
                 _viewModel.ChartState.IsRatioVisible,
                 new Charts.Strategies.RatioStrategy(data1, data2!, displayName1, displayName2, ctx.From, ctx.To),
                 $"{displayName1} / {displayName2}",
                 metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondarySubtype,
+                primarySubtype: primarySubtype,      // First selected subtype
+                secondarySubtype: secondarySubtype,  // Second selected subtype
                 operationType: "/",
                 isOperationChart: true);
         }

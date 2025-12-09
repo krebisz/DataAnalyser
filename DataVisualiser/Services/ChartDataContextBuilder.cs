@@ -16,18 +16,26 @@ namespace DataVisualiser.Services
         // Configurable smoothing radius for moving average
         private const int SmoothWindow = 3;
 
+        /// <summary>
+        /// Builds a ChartDataContext from metric data.
+        /// IMPORTANT: Ensures consistent ordering:
+        /// - data1 = first selected metric subtype (primary)
+        /// - data2 = second selected metric subtype (secondary)
+        /// - primarySubtype = first selected subtype
+        /// - secondarySubtype = second selected subtype
+        /// </summary>
         public ChartDataContext Build(
             string metricType,
-            string? primarySubtype,
-            string? secondarySubtype,
-            IEnumerable<HealthMetricData> data1,
-            IEnumerable<HealthMetricData>? data2,
+            string? primarySubtype,      // First selected subtype
+            string? secondarySubtype,     // Second selected subtype
+            IEnumerable<HealthMetricData> data1,  // First selected subtype data (primary)
+            IEnumerable<HealthMetricData>? data2, // Second selected subtype data (secondary)
             DateTime from,
             DateTime to)
         {
-            // Normalize inputs
-            var list1 = data1?.ToList() ?? new List<HealthMetricData>();
-            var list2 = data2?.ToList() ?? new List<HealthMetricData>();
+            // Normalize inputs - maintain ordering: list1 = first selected, list2 = second selected
+            var list1 = data1?.ToList() ?? new List<HealthMetricData>(); // First selected subtype
+            var list2 = data2?.ToList() ?? new List<HealthMetricData>(); // Second selected subtype
 
             // STEP 1 — Unified timeline
             var timestamps = BuildUnifiedTimeline(list1, list2);
