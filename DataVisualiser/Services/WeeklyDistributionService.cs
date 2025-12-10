@@ -238,7 +238,8 @@ namespace DataVisualiser.Services
             var colorMap = MapFrequenciesToColors(frequenciesPerDay);
 
             // Step 1: Render original baseline + range columns with frequency-based shading
-            // The baseline will be at globalMin (not dayMin) so intervals can be positioned at their actual Y values
+            // We need a global baseline series to start the stacking from globalMin
+            // Each interval will then be positioned independently at its Y value (interval.Min)
             var baselineSeries = new StackedColumnSeries
             {
                 Title = $"{displayName} baseline",
@@ -261,17 +262,12 @@ namespace DataVisualiser.Services
             };
 
             // Populate values Monday -> Sunday
-            // Baseline is at globalMin so intervals can be positioned at their actual Y values
+            // Baseline is at globalMin so intervals can be positioned correctly
             for (int i = 0; i < 7; i++)
             {
-                var minVal = mins[i];
                 var rangeVal = ranges[i];
-
                 // Replace NaN with 0 so columns show nothing for empty days
-                if (double.IsNaN(minVal)) minVal = 0.0;
                 if (double.IsNaN(rangeVal) || rangeVal < 0) rangeVal = 0.0;
-
-                // Baseline is at globalMin, not dayMin, so intervals can be positioned correctly
                 baselineSeries.Values.Add(globalMin);
                 rangeSeries.Values.Add(rangeVal);
             }
@@ -519,27 +515,8 @@ namespace DataVisualiser.Services
                 targetChart.Series.Remove(series);
             }
 
-            // Ensure we have a baseline series - the one from RenderOriginalMinMaxChart should still be there
-            // If not, something went wrong, but we'll continue anyway
-            bool hasBaseline = targetChart.Series.Any(s => s.Title?.Contains("baseline") == true);
-            if (!hasBaseline)
-            {
-                System.Diagnostics.Debug.WriteLine("WeeklyDistribution: Warning - no baseline series found, creating one");
-                var baselineSeries = new StackedColumnSeries
-                {
-                    Title = "baseline",
-                    Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                    StrokeThickness = 0,
-                    MaxColumnWidth = MaxColumnWidth
-                };
-                for (int i = 0; i < 7; i++)
-                {
-                    var minVal = double.IsNaN(mins[i]) ? 0.0 : mins[i];
-                    baselineSeries.Values.Add(minVal);
-                }
-                targetChart.Series.Insert(0, baselineSeries); // Insert at beginning
-            }
+            // We no longer use a global baseline series - each interval positions itself independently
+            // at its Y value (interval.Min). The baseline check is no longer needed.
 
             System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: ApplyFrequencyShading ===");
             System.Diagnostics.Debug.WriteLine($"Intervals count: {intervals.Count}, Frequencies count: {frequenciesPerDay.Count}");
@@ -627,17 +604,25 @@ namespace DataVisualiser.Services
 
             System.Diagnostics.Debug.WriteLine($"Global max frequency for normalization: {globalMaxFreq}");
 
-            // For each interval, create a series that positions the interval at its actual Y value
-            // The baseline series is at globalMin, so we calculate the offset from globalMin to interval.Min
-            // Intervals that don't overlap a day get zero height
+            // Track cumulative stack height per day to position intervals independently
+            // Each interval should be positioned at its absolute Y value (interval.Min), not stacked on previous intervals
+            var cumulativeStackHeight = new double[7];
+            Array.Fill(cumulativeStackHeight, globalMin); // Start at globalMin for all days
+
+            // For each interval, create series that position the interval at its actual Y value
+            // Each interval is rendered independently - it's positioned at interval.Min with height uniformIntervalHeight
+            // Since StackedColumnSeries stacks all series, we need to calculate baselines to account for this
             for (int intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
             {
                 var interval = intervals[intervalIndex];
                 var intervalBaselineValues = new LiveCharts.ChartValues<double>();
-                var intervalHeightValues = new LiveCharts.ChartValues<double>();
+                var intervalHeightValuesWhite = new LiveCharts.ChartValues<double>(); // For zero-frequency days
+                var intervalHeightValuesColored = new LiveCharts.ChartValues<double>(); // For non-zero frequency days
                 var hasData = false;
+                var hasZeroFreqDays = false;
+                var hasNonZeroFreqDays = false;
 
-                // Determine color for this interval based on max frequency across all overlapping days
+                // Track max frequency for non-zero frequency days
                 int maxFreqForInterval = 0;
 
                 for (int dayIndex = 0; dayIndex < 7; dayIndex++)
@@ -645,88 +630,129 @@ namespace DataVisualiser.Services
                     double dayMin = double.IsNaN(mins[dayIndex]) ? 0.0 : mins[dayIndex];
                     double dayMax = dayMin + (double.IsNaN(ranges[dayIndex]) ? 0.0 : ranges[dayIndex]);
 
-                    // Check if this interval overlaps with this day's range
-                    bool overlaps = interval.Min < dayMax && interval.Max > dayMin;
+                    // Only draw intervals that fall WITHIN the day's actual data range (dayMin to dayMax)
+                    // The interval must overlap with the day's range to be drawn
+                    bool intervalOverlapsDayRange = interval.Min < dayMax && interval.Max > dayMin;
 
-                    if (overlaps && ranges[dayIndex] > 0 && !double.IsNaN(ranges[dayIndex]))
+                    // Only draw if the interval overlaps AND the day has data
+                    if (intervalOverlapsDayRange && ranges[dayIndex] > 0 && !double.IsNaN(ranges[dayIndex]))
                     {
-                        hasData = true;
-
-                        // Position interval at its actual Y value (interval.Min)
-                        // Baseline is at globalMin, so offset is interval.Min - globalMin
-                        double intervalBaseline = interval.Min - globalMin;
-
-                        // Ensure baseline is non-negative (should always be true since interval.Min >= globalMin)
-                        if (intervalBaseline < 0)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  WARNING: Interval {intervalIndex} baseline offset {intervalBaseline:F4} < 0, clamping to 0");
-                            intervalBaseline = 0;
-                        }
-
-                        intervalBaselineValues.Add(intervalBaseline);
-                        intervalHeightValues.Add(uniformIntervalHeight);
-
-                        // Get frequency for this day/interval to determine color
+                        // Get frequency for this day/interval
                         int frequency = 0;
                         if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) &&
                             dayFreqs.TryGetValue(intervalIndex, out var freq))
                         {
                             frequency = freq;
-                            if (frequency > maxFreqForInterval)
-                                maxFreqForInterval = frequency;
                         }
 
-                        // Log detailed info for first few intervals on first day
-                        if (intervalIndex < 3 && dayIndex == 0)
+                        // Draw all intervals that overlap with the day's range
+                        // White intervals (frequency = 0) will be drawn if they fall within the day's range
+                        // This ensures no gaps in the visualization within the day's value range
+                        bool shouldDraw = true;
+
+                        if (shouldDraw)
                         {
-                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex} on Day {dayIndex}: Baseline offset={intervalBaseline:F4}, Height={uniformIntervalHeight:F6}, Frequency={frequency}");
+                            hasData = true;
+
+                            // Position interval at its actual Y value (interval.Min)
+                            // Each interval is rendered independently - it should appear at interval.Min with height uniformIntervalHeight
+                            // Since StackedColumnSeries stacks all series, we need to calculate the baseline to position
+                            // this interval at interval.Min, accounting for the cumulative stack height so far
+                            // The baseline is the difference between where we want to be (interval.Min) and where we currently are (cumulativeStackHeight[dayIndex])
+                            double desiredPosition = interval.Min;
+                            double currentStackHeight = cumulativeStackHeight[dayIndex];
+                            double intervalBaseline = desiredPosition - currentStackHeight;
+
+                            // Ensure baseline is non-negative (interval.Min should be >= current stack height)
+                            if (intervalBaseline < 0)
+                            {
+                                // This can happen if the cumulative stack height has advanced beyond this interval's position
+                                // This shouldn't happen if intervals are processed in order, but we handle it gracefully
+                                System.Diagnostics.Debug.WriteLine($"  WARNING: Interval {intervalIndex} baseline offset {intervalBaseline:F4} < 0 for day {dayIndex} (desired={desiredPosition:F4}, current={currentStackHeight:F4}), clamping to 0");
+                                intervalBaseline = 0;
+                                // Don't update cumulative stack height - the interval won't be visible anyway
+                            }
+                            else
+                            {
+                                // Update cumulative stack height for this day after this interval is rendered
+                                // The interval will be positioned at currentStackHeight + intervalBaseline = interval.Min
+                                // And will have height uniformIntervalHeight, so the new cumulative stack height is:
+                                // currentStackHeight + intervalBaseline + uniformIntervalHeight = interval.Min + uniformIntervalHeight
+                                cumulativeStackHeight[dayIndex] = interval.Min + uniformIntervalHeight;
+                            }
+
+                            intervalBaselineValues.Add(intervalBaseline);
+
+                            // Separate zero-frequency intervals (white) from non-zero frequency intervals (colored)
+                            if (frequency == 0)
+                            {
+                                // Zero frequency = white for this day (only if within day's range)
+                                intervalHeightValuesWhite.Add(uniformIntervalHeight);
+                                intervalHeightValuesColored.Add(0.0);
+                                hasZeroFreqDays = true;
+                            }
+                            else
+                            {
+                                // Non-zero frequency = colored for this day
+                                intervalHeightValuesWhite.Add(0.0);
+                                intervalHeightValuesColored.Add(uniformIntervalHeight);
+                                hasNonZeroFreqDays = true;
+                                if (frequency > maxFreqForInterval)
+                                    maxFreqForInterval = frequency;
+                            }
+
+                            // Log detailed info for first few intervals on first day
+                            if (intervalIndex < 3 && dayIndex == 0)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex} on Day {dayIndex}: Baseline offset={intervalBaseline:F4}, Height={uniformIntervalHeight:F6}, Frequency={frequency}, Color={(frequency == 0 ? "White" : "Colored")}");
+                            }
+                        }
+                        else
+                        {
+                            // Interval overlaps but falls outside day's range and has zero frequency - don't draw
+                            intervalBaselineValues.Add(0.0);
+                            intervalHeightValuesWhite.Add(0.0);
+                            intervalHeightValuesColored.Add(0.0);
                         }
                     }
                     else
                     {
-                        // No overlap - add zero height at globalMin baseline
+                        // No overlap or no data - add zero height and zero baseline
+                        // We still need to track that we processed this interval for this day
+                        // so the cumulative stack height stays in sync
                         intervalBaselineValues.Add(0.0);
-                        intervalHeightValues.Add(0.0);
+                        intervalHeightValuesWhite.Add(0.0);
+                        intervalHeightValuesColored.Add(0.0);
+                        // Don't update cumulative stack height - it stays the same when there's no overlap
                     }
                 }
 
                 // Debug output for intervals with data
                 if (hasData)
                 {
-                    System.Diagnostics.Debug.WriteLine($"WeeklyDistribution: Interval {intervalIndex} ({interval.Min:F2} to {interval.Max:F2}) has overlapping data");
+                    // Count how many days have white vs colored for this interval
+                    int whiteDayCount = 0;
+                    int coloredDayCount = 0;
+                    for (int d = 0; d < 7; d++)
+                    {
+                        if (intervalHeightValuesWhite.Count > d && intervalHeightValuesWhite[d] > 0)
+                            whiteDayCount++;
+                        if (intervalHeightValuesColored.Count > d && intervalHeightValuesColored[d] > 0)
+                            coloredDayCount++;
+                    }
+                    System.Diagnostics.Debug.WriteLine($"WeeklyDistribution: Interval {intervalIndex} ({interval.Min:F2} to {interval.Max:F2}) has overlapping data (ZeroFreqDays={hasZeroFreqDays}, NonZeroFreqDays={hasNonZeroFreqDays}, WhiteDays={whiteDayCount}, ColoredDays={coloredDayCount})");
                 }
 
                 // Only create series if there's data
+                // Each interval is rendered independently at its Y value (interval.Min), not stacked
                 if (hasData)
                 {
-                    // Determine color based on frequency
-                    Color finalColor;
-                    if (maxFreqForInterval == 0)
-                    {
-                        // Zero frequency = white (only if within day's range, which we've already checked)
-                        finalColor = Colors.White;
-                        if (intervalIndex < 3)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: Zero frequency -> White");
-                        }
-                    }
-                    else
-                    {
-                        // Use color mapping based on max frequency (light blue to dark blue)
-                        double normalizedFreq = globalMaxFreq > 0 ? (double)maxFreqForInterval / globalMaxFreq : 0.0;
-                        finalColor = WeeklyFrequencyRenderer.MapFrequencyToColor(normalizedFreq);
-                        if (intervalIndex < 3)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: MaxFreq={maxFreqForInterval}, Normalized={normalizedFreq:F4}, Color=RGB({finalColor.R},{finalColor.G},{finalColor.B})");
-                        }
-                    }
-
-                    var fillBrush = new SolidColorBrush(finalColor);
-                    fillBrush.Freeze();
-                    var strokeBrush = new SolidColorBrush(finalColor);
-                    strokeBrush.Freeze();
+                    // For each interval, we create a baseline series that positions it at its absolute Y value
+                    // Then we add the interval height on top. Since StackedColumnSeries stacks, we need to ensure
+                    // each interval is positioned independently by using its absolute baseline position.
 
                     // Create baseline series for this interval (transparent, positions the interval at interval.Min)
+                    // The baseline is the offset from globalMin to interval.Min, positioning this interval independently
                     var intervalBaselineSeries = new StackedColumnSeries
                     {
                         Title = null,
@@ -737,22 +763,79 @@ namespace DataVisualiser.Services
                         DataLabels = false
                     };
 
-                    // Create colored interval series (this will stack on top of the baseline)
-                    var intervalSeries = new StackedColumnSeries
-                    {
-                        Title = null,
-                        Values = intervalHeightValues,
-                        Fill = fillBrush,
-                        Stroke = strokeBrush,
-                        StrokeThickness = 0.5,
-                        MaxColumnWidth = MaxColumnWidth,
-                        DataLabels = false
-                    };
-
-                    // Add both series - baseline first, then interval (for proper stacking)
+                    // Add baseline first - this positions the interval at its Y value
                     targetChart.Series.Add(intervalBaselineSeries);
-                    targetChart.Series.Add(intervalSeries);
-                    seriesCreated++;
+
+                    // Create white series for zero-frequency intervals (if any)
+                    // Each interval is independent - white segments appear at their interval's Y position
+                    if (hasZeroFreqDays)
+                    {
+                        // Use pure white fill with a visible border to ensure white intervals are clearly visible
+                        var whiteBrush = new SolidColorBrush(Colors.White);
+                        whiteBrush.Freeze();
+                        // Use a medium gray border to make white intervals clearly visible against any background
+                        var whiteStrokeBrush = new SolidColorBrush(Color.FromRgb(180, 180, 180));
+                        whiteStrokeBrush.Freeze();
+
+                        var whiteIntervalSeries = new StackedColumnSeries
+                        {
+                            Title = null,
+                            Values = intervalHeightValuesWhite,
+                            Fill = whiteBrush,
+                            Stroke = whiteStrokeBrush,
+                            StrokeThickness = 1.0, // Increased thickness for better visibility
+                            MaxColumnWidth = MaxColumnWidth,
+                            DataLabels = false
+                        };
+
+                        // Add white series - it stacks on the baseline, positioning it at interval.Min
+                        targetChart.Series.Add(whiteIntervalSeries);
+                        seriesCreated++;
+
+                        // Debug: Log white series creation with detailed info
+                        int whiteDayCount = intervalHeightValuesWhite.Count(v => v > 0);
+                        System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: Created WHITE series (WhiteDays={whiteDayCount}, TotalDays={intervalHeightValuesWhite.Count})");
+                        if (intervalIndex < 5 || (hasZeroFreqDays && !hasNonZeroFreqDays))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"    White values: [{string.Join(", ", intervalHeightValuesWhite.Select(v => v.ToString("F4")))}]");
+                            System.Diagnostics.Debug.WriteLine($"    Baseline values: [{string.Join(", ", intervalBaselineValues.Select(v => v.ToString("F4")))}]");
+                            System.Diagnostics.Debug.WriteLine($"    Interval Y position: {interval.Min:F4} to {interval.Max:F4}");
+                        }
+                    }
+
+                    // Create colored series for non-zero frequency intervals (if any)
+                    // Each interval is independent - colored segments appear at their interval's Y position
+                    if (hasNonZeroFreqDays)
+                    {
+                        // Use color mapping based on max frequency (light blue to dark blue)
+                        double normalizedFreq = globalMaxFreq > 0 ? (double)maxFreqForInterval / globalMaxFreq : 0.0;
+                        Color finalColor = WeeklyFrequencyRenderer.MapFrequencyToColor(normalizedFreq);
+
+                        if (intervalIndex < 3)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: MaxFreq={maxFreqForInterval}, Normalized={normalizedFreq:F4}, Color=RGB({finalColor.R},{finalColor.G},{finalColor.B})");
+                        }
+
+                        var fillBrush = new SolidColorBrush(finalColor);
+                        fillBrush.Freeze();
+                        var strokeBrush = new SolidColorBrush(finalColor);
+                        strokeBrush.Freeze();
+
+                        var coloredIntervalSeries = new StackedColumnSeries
+                        {
+                            Title = null,
+                            Values = intervalHeightValuesColored,
+                            Fill = fillBrush,
+                            Stroke = strokeBrush,
+                            StrokeThickness = 0.5,
+                            MaxColumnWidth = MaxColumnWidth,
+                            DataLabels = false
+                        };
+
+                        // Add colored series - it stacks on the baseline, positioning it at interval.Min
+                        targetChart.Series.Add(coloredIntervalSeries);
+                        seriesCreated++;
+                    }
                 }
             }
 
