@@ -148,6 +148,25 @@
                         <TextBlock x:Name="ChartWeeklyTitle" Text="Weekly Distribution" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
                         <Button x:Name="ChartWeeklyToggleButton" Content="Show" Margin="10,0,0,0" Padding="10,3" Click="OnChartWeeklyToggle" />
                     </StackPanel>
+
+                    <!-- Frequency shading toggle -->
+                    <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                        <TextBlock Text="Display Mode:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                        <RadioButton x:Name="WeeklyFrequencyShadingRadio"
+                                     Content="Frequency Shading"
+                                     Margin="5,0"
+                                     GroupName="WeeklyDisplayModes"
+                                     IsChecked="True"
+                                     Checked="OnWeeklyDisplayModeChanged"/>
+
+                        <RadioButton x:Name="WeeklySimpleRangeRadio"
+                                     Content="Simple Range"
+                                     Margin="5,0"
+                                     GroupName="WeeklyDisplayModes"
+                                     Checked="OnWeeklyDisplayModeChanged"/>
+                    </StackPanel>
+
                     <StackPanel x:Name="ChartWeeklyPanel" Orientation="Vertical">
                         <lvc:CartesianChart x:Name="ChartWeekly"
                             LegendLocation="Right"

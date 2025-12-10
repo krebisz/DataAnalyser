@@ -15,6 +15,9 @@ namespace DataVisualiser.State
         // Normalization mode
         public NormalizationMode SelectedNormalizationMode { get; set; }
 
+        // Weekly distribution chart options
+        public bool UseFrequencyShading { get; set; } = true; // Default to frequency shading enabled
+
         // Chart data from last load
         public ChartDataContext? LastContext { get; set; }
 

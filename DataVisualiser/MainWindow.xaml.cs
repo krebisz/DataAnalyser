@@ -570,6 +570,53 @@ namespace DataVisualiser
 
         #endregion
 
+        #region Weekly distribution display mode UI handling
+
+        /// <summary>
+        /// Handler for the weekly distribution display mode radio buttons (wired in XAML).
+        /// Refreshes the weekly chart if visible and data exists.
+        /// </summary>
+        private async void OnWeeklyDisplayModeChanged(object sender, RoutedEventArgs e)
+        {
+            // Guard against null reference during initialization
+            if (_isInitializing || _viewModel == null)
+            {
+                return;
+            }
+
+            try
+            {
+                bool newValue = WeeklyFrequencyShadingRadio.IsChecked == true;
+                System.Diagnostics.Debug.WriteLine($"OnWeeklyDisplayModeChanged: Setting UseFrequencyShading to {newValue}");
+                
+                if (WeeklyFrequencyShadingRadio.IsChecked == true)
+                    _viewModel.SetWeeklyFrequencyShading(true);
+                else if (WeeklySimpleRangeRadio.IsChecked == true)
+                    _viewModel.SetWeeklyFrequencyShading(false);
+
+                System.Diagnostics.Debug.WriteLine($"OnWeeklyDisplayModeChanged: ChartState.UseFrequencyShading = {_viewModel.ChartState.UseFrequencyShading}");
+
+                if (_viewModel.ChartState.IsWeeklyVisible && _viewModel.ChartState.LastContext != null && _viewModel.ChartState.LastContext.Data1 != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"OnWeeklyDisplayModeChanged: Refreshing chart with useFrequencyShading={_viewModel.ChartState.UseFrequencyShading}");
+                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
+                        ChartWeekly, 
+                        _viewModel.ChartState.LastContext.Data1, 
+                        _viewModel.ChartState.LastContext.DisplayName1, 
+                        _viewModel.ChartState.LastContext.From, 
+                        _viewModel.ChartState.LastContext.To, 
+                        minHeight: 400,
+                        useFrequencyShading: _viewModel.ChartState.UseFrequencyShading);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OnWeeklyDisplayModeChanged error: {ex.Message}");
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Reads all selected subtypes (primary + dynamic) and pushes them into the ViewModel.
         /// </summary>
@@ -866,7 +913,9 @@ namespace DataVisualiser
             if (_viewModel.ChartState.IsWeeklyVisible)
             {
                 await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
-                    ChartWeekly, data1, displayName1, ctx.From, ctx.To, minHeight: 400);
+                    ChartWeekly, data1, displayName1, ctx.From, ctx.To, 
+                    minHeight: 400, 
+                    useFrequencyShading: _viewModel.ChartState.UseFrequencyShading);
             }
             else
             {

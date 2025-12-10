@@ -39,13 +39,15 @@ namespace DataVisualiser.Services
         /// <param name="from">Inclusive start of the date range.</param>
         /// <param name="to">Inclusive end of the date range.</param>
         /// <param name="minHeight">Minimum chart height in pixels.</param>
+        /// <param name="useFrequencyShading">If true, applies frequency-based shading. If false, shows simple min/max range chart.</param>
         public async Task UpdateWeeklyDistributionChartAsync(
             CartesianChart targetChart,
             IEnumerable<HealthMetricData> data,
             string displayName,
             DateTime from,
             DateTime to,
-            double minHeight = DefaultMinHeight)
+            double minHeight = DefaultMinHeight,
+            bool useFrequencyShading = true)
         {
             if (targetChart == null)
             {
@@ -86,7 +88,7 @@ namespace DataVisualiser.Services
 
                 // Step 1: Render the original min/max range visualization (baseline + range columns)
                 // This was the working implementation before
-                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, extendedResult);
+                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, extendedResult, useFrequencyShading);
 
                 // Weekly chart has no per-point timestamps, but we keep the dictionary consistent
                 _chartTimestamps[targetChart] = new List<DateTime>();
@@ -180,7 +182,8 @@ namespace DataVisualiser.Services
             ChartComputationResult result,
             string displayName,
             double minHeight,
-            WeeklyDistributionResult? frequencyData)
+            WeeklyDistributionResult? frequencyData,
+            bool useFrequencyShading = true)
         {
             // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
             var mins = result.PrimaryRawValues;
@@ -228,14 +231,22 @@ namespace DataVisualiser.Services
                 }
             }
 
-            // Step 2: Create uniform intervals (20-30 partitions)
-            var intervals = CreateUniformIntervals(globalMin, globalMax, 25);
+            // Step 2-4: Only compute intervals, frequencies, and color maps if frequency shading is enabled
+            List<(double Min, double Max)> intervals = new();
+            Dictionary<int, Dictionary<int, int>> frequenciesPerDay = new();
+            Dictionary<int, Dictionary<int, Color>> colorMap = new();
 
-            // Step 3: Count frequencies per interval per day
-            var frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
+            if (useFrequencyShading)
+            {
+                // Step 2: Create uniform intervals (20-30 partitions)
+                intervals = CreateUniformIntervals(globalMin, globalMax, 25);
 
-            // Step 4: Map frequencies to color shades
-            var colorMap = MapFrequenciesToColors(frequenciesPerDay);
+                // Step 3: Count frequencies per interval per day
+                frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
+
+                // Step 4: Map frequencies to color shades
+                colorMap = MapFrequenciesToColors(frequenciesPerDay);
+            }
 
             // Step 1: Render original baseline + range columns with frequency-based shading
             // We need a global baseline series to start the stacking from globalMin
@@ -262,13 +273,26 @@ namespace DataVisualiser.Services
             };
 
             // Populate values Monday -> Sunday
-            // Baseline is at globalMin so intervals can be positioned correctly
+            // For simple range chart: baseline is at each day's min, range is (max - min)
+            // For frequency shading: baseline is at globalMin (will be replaced by interval baselines)
             for (int i = 0; i < 7; i++)
             {
                 var rangeVal = ranges[i];
                 // Replace NaN with 0 so columns show nothing for empty days
                 if (double.IsNaN(rangeVal) || rangeVal < 0) rangeVal = 0.0;
-                baselineSeries.Values.Add(globalMin);
+
+                if (useFrequencyShading)
+                {
+                    // For frequency shading, baseline is at globalMin (intervals will position themselves)
+                    baselineSeries.Values.Add(globalMin);
+                }
+                else
+                {
+                    // For simple range chart, baseline is at each day's min value
+                    var dayMin = double.IsNaN(mins[i]) ? 0.0 : mins[i];
+                    baselineSeries.Values.Add(dayMin);
+                }
+
                 rangeSeries.Values.Add(rangeVal);
             }
 
@@ -276,10 +300,24 @@ namespace DataVisualiser.Services
             targetChart.Series.Add(baselineSeries);
             targetChart.Series.Add(rangeSeries);
 
-            // Step 5: Apply frequency-based shading to the range columns
+            // Step 5: Apply frequency-based shading to the range columns (if enabled)
             // This replaces the simple range series with frequency-shaded interval segments
             // Each interval has uniform height, and zero-frequency intervals are shaded white
-            ApplyFrequencyShading(targetChart, mins, ranges, intervals, frequenciesPerDay, colorMap, globalMin, globalMax);
+            System.Diagnostics.Debug.WriteLine($"WeeklyDistribution: useFrequencyShading={useFrequencyShading}, Series count before ApplyFrequencyShading: {targetChart.Series.Count}");
+
+            if (useFrequencyShading)
+            {
+                System.Diagnostics.Debug.WriteLine("WeeklyDistribution: Applying frequency shading...");
+                ApplyFrequencyShading(targetChart, mins, ranges, intervals, frequenciesPerDay, colorMap, globalMin, globalMax);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("WeeklyDistribution: Frequency shading disabled - keeping simple range series");
+                // Ensure the range series is visible and not removed
+                // The baseline and range series should already be added above
+            }
+
+            System.Diagnostics.Debug.WriteLine($"WeeklyDistribution: Final series count: {targetChart.Series.Count}");
 
             // Configure Y axis based on data range
             ConfigureYAxis(targetChart, mins, ranges);

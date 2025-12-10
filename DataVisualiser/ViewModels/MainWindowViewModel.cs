@@ -488,6 +488,11 @@ namespace DataVisualiser.ViewModels
             ChartState.SelectedNormalizationMode = mode;
         }
 
+        public void SetWeeklyFrequencyShading(bool useFrequencyShading)
+        {
+            ChartState.UseFrequencyShading = useFrequencyShading;
+        }
+
         public void SetSelectedMetricType(string? metric)
         {
             MetricState.SelectedMetricType = metric;
