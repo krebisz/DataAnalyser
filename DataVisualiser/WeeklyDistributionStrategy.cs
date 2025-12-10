@@ -1,10 +1,15 @@
 using DataVisualiser.Charts.Computation;
-using DataVisualiser.Models; // for HealthMetricData
-// ensure the namespace matches your strategies namespace
+using DataVisualiser.Models;
+using DataVisualiser.Helper;
+using DataVisualiser.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace DataVisualiser.Charts.Strategies
 {
     /// <summary>
-    /// Computes per-day-of-week min, max and counts for a single metric series.
+    /// Computes per-day-of-week min, max, counts, and frequency bins for a single metric series.
     /// Monday -> Sunday ordering.
     /// </summary>
     public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
@@ -26,6 +31,11 @@ namespace DataVisualiser.Charts.Strategies
         public string PrimaryLabel => _label;
         public string SecondaryLabel => string.Empty;
         public string? Unit { get; private set; }
+
+        /// <summary>
+        /// Extended result containing frequency binning data.
+        /// </summary>
+        public WeeklyDistributionResult? ExtendedResult { get; private set; }
 
         /// <summary>
         /// Result contains arrays for mins, maxes and counts in Monday->Sunday order.
@@ -94,6 +104,47 @@ namespace DataVisualiser.Charts.Strategies
             // Set Unit from first non-empty item if possible
             Unit = ordered.FirstOrDefault()?.Unit;
 
+            // ============================================================
+            // FREQUENCY BINNING (NEW) - Using separated concerns
+            // ============================================================
+            // Only create bins if we have valid min/max values
+            List<(double Min, double Max)> bins = new();
+            double binSize = 1.0;
+            Dictionary<int, Dictionary<int, int>> frequenciesPerDay = new();
+            Dictionary<int, Dictionary<int, double>> normalizedFrequenciesPerDay = new();
+
+            // Convert buckets to dictionary format (used for both binning and storing)
+            var dayValuesDict = new Dictionary<int, List<double>>();
+            for (int i = 0; i < 7; i++)
+            {
+                dayValuesDict[i] = buckets[i];
+            }
+
+            if (!double.IsNaN(globalMin) && !double.IsNaN(globalMax) && globalMax > globalMin)
+            {
+                // Use separated renderer to prepare bins and frequencies
+                (bins, binSize, frequenciesPerDay, normalizedFrequenciesPerDay) =
+                    WeeklyFrequencyRenderer.PrepareBinsAndFrequencies(dayValuesDict, globalMin, globalMax);
+            }
+
+            // Create extended result with frequency data
+            ExtendedResult = new WeeklyDistributionResult
+            {
+                Mins = mins,
+                Maxs = maxs,
+                Ranges = ranges,
+                Counts = counts,
+                DayValues = dayValuesDict, // Store raw values per day
+                GlobalMin = double.IsNaN(globalMin) ? 0.0 : globalMin,
+                GlobalMax = double.IsNaN(globalMax) ? 1.0 : globalMax,
+                BinSize = binSize,
+                Bins = bins,
+                FrequenciesPerDay = frequenciesPerDay,
+                NormalizedFrequenciesPerDay = normalizedFrequenciesPerDay,
+                Unit = Unit
+            };
+
+            // Return standard result for compatibility
             var result = new ChartComputationResult
             {
                 // For integration with your rendering pipeline:

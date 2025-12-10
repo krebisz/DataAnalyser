@@ -2,10 +2,12 @@
 using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
 using DataVisualiser.Models;
 using DataVisualiser.Helper;
+using DataVisualiser.Charts.Computation;
 using LiveCharts.Wpf;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
+using System.Linq;
 
 namespace DataVisualiser.Services
 {
@@ -57,6 +59,7 @@ namespace DataVisualiser.Services
             }
 
             // Compute using the strategy on a background thread (same pattern as other charts).
+            WeeklyDistributionResult? extendedResult = null;
             var result = await Task.Run(() =>
             {
                 var strategy = new DataVisualiser.Charts.Strategies.WeeklyDistributionStrategy(
@@ -65,10 +68,12 @@ namespace DataVisualiser.Services
                     from,
                     to);
 
-                return strategy.Compute();
+                var computeResult = strategy.Compute();
+                extendedResult = strategy.ExtendedResult;
+                return computeResult;
             }).ConfigureAwait(true);
 
-            if (result == null)
+            if (result == null || extendedResult == null)
             {
                 ChartHelper.ClearChart(targetChart, _chartTimestamps);
                 return;
@@ -79,64 +84,17 @@ namespace DataVisualiser.Services
                 // Clear previous series
                 targetChart.Series.Clear();
 
-                // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
-                var mins = result.PrimaryRawValues;
-                var ranges = result.PrimarySmoothed;
-
-                // If mins or ranges are missing or lengths differ, bail gracefully
-                if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
-                {
-                    ChartHelper.ClearChart(targetChart, _chartTimestamps);
-                    return;
-                }
-
-                // Baseline series: invisible columns used to set the bottom of each stacked column
-                var baselineSeries = new StackedColumnSeries
-                {
-                    Title = $"{displayName} baseline",
-                    Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                    StrokeThickness = 0,
-                    MaxColumnWidth = MaxColumnWidth
-                };
-
-                // Range series: visible stacked columns placed on top of baseline
-                var rangeSeries = new StackedColumnSeries
-                {
-                    Title = $"{displayName} range",
-                    Values = new LiveCharts.ChartValues<double>(),
-                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)), // visually consistent light blue
-                    Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
-                    StrokeThickness = 1,
-                    MaxColumnWidth = MaxColumnWidth
-                };
-
-                // Populate values Monday -> Sunday
-                for (int i = 0; i < 7; i++)
-                {
-                    var minVal = mins[i];
-                    var rangeVal = ranges[i];
-
-                    // Replace NaN with 0 so columns show nothing for empty days
-                    if (double.IsNaN(minVal)) minVal = 0.0;
-                    if (double.IsNaN(rangeVal) || rangeVal < 0) rangeVal = 0.0;
-
-                    baselineSeries.Values.Add(minVal);
-                    rangeSeries.Values.Add(rangeVal);
-                }
-
-                // Add baseline first, then range (stacked)
-                targetChart.Series.Add(baselineSeries);
-                targetChart.Series.Add(rangeSeries);
-
-                // Configure Y axis based on data range
-                ConfigureYAxis(targetChart, mins, ranges);
+                // Step 1: Render the original min/max range visualization (baseline + range columns)
+                // This was the working implementation before
+                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, extendedResult);
 
                 // Weekly chart has no per-point timestamps, but we keep the dictionary consistent
                 _chartTimestamps[targetChart] = new List<DateTime>();
 
-                // Tooltip + height handling consistent with other charts
-                ChartHelper.InitializeChartTooltip(targetChart);
+                // Disable tooltip for weekly chart - height/size info is not needed since intervals are uniform
+                targetChart.DataTooltip = null;
+
+                // Height handling consistent with other charts
                 ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
             }
             catch (Exception ex)
@@ -158,9 +116,10 @@ namespace DataVisualiser.Services
             IList<double> mins,
             IList<double> ranges)
         {
+            // Ensure Y-axis exists
             if (targetChart.AxisY.Count == 0)
             {
-                return;
+                targetChart.AxisY.Add(new LiveCharts.Wpf.Axis());
             }
 
             var allValues = new List<double>();
@@ -179,6 +138,11 @@ namespace DataVisualiser.Services
 
             if (allValues.Count == 0)
             {
+                // Set default range if no values
+                var defaultYAxis = targetChart.AxisY[0];
+                defaultYAxis.MinValue = 0;
+                defaultYAxis.MaxValue = 100;
+                defaultYAxis.ShowLabels = true;
                 return;
             }
 
@@ -204,6 +168,652 @@ namespace DataVisualiser.Services
 
             yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
             yAxis.ShowLabels = true; // Re-enable labels when rendering data
+            yAxis.Title = "Value"; // Ensure title is set
+        }
+
+        /// <summary>
+        /// Step 1: Render the original working min/max range chart.
+        /// This shows baseline (min) + range (max-min) as stacked columns per day.
+        /// </summary>
+        private void RenderOriginalMinMaxChart(
+            CartesianChart targetChart,
+            ChartComputationResult result,
+            string displayName,
+            double minHeight,
+            WeeklyDistributionResult? frequencyData)
+        {
+            // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
+            var mins = result.PrimaryRawValues;
+            var ranges = result.PrimarySmoothed;
+
+            // If mins or ranges are missing or lengths differ, bail gracefully
+            if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
+            {
+                ChartHelper.ClearChart(targetChart, _chartTimestamps);
+                return;
+            }
+
+            // Get the actual data values per day from the strategy for frequency counting
+            // We need the raw values, not just min/max
+            var dayValues = GetDayValuesFromStrategy(frequencyData);
+
+            // Step 2: Create uniform partitions/intervals for the y-axis (20-30 intervals)
+            double globalMin = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0).Min();
+            double globalMax = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r)
+                                  .Where(v => !double.IsNaN(v)).DefaultIfEmpty(1).Max();
+
+            if (globalMax <= globalMin)
+            {
+                globalMax = globalMin + 1;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: Data Summary ===");
+            System.Diagnostics.Debug.WriteLine($"Global Min: {globalMin:F4}, Global Max: {globalMax:F4}, Range: {globalMax - globalMin:F4}");
+            System.Diagnostics.Debug.WriteLine($"Day Min/Max values:");
+            for (int i = 0; i < 7; i++)
+            {
+                double dayMin = double.IsNaN(mins[i]) ? 0.0 : mins[i];
+                double dayMax = dayMin + (double.IsNaN(ranges[i]) ? 0.0 : ranges[i]);
+                System.Diagnostics.Debug.WriteLine($"  Day {i}: Min={dayMin:F4}, Max={dayMax:F4}, Range={ranges[i]:F4}");
+            }
+
+            // Log sample raw values for first day with data
+            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+            {
+                if (dayValues.TryGetValue(dayIndex, out var values) && values.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Day {dayIndex} raw values (first 10): {string.Join(", ", values.Take(10).Select(v => v.ToString("F4")))}");
+                    System.Diagnostics.Debug.WriteLine($"Day {dayIndex} total value count: {values.Count}");
+                    break; // Only log first day with data
+                }
+            }
+
+            // Step 2: Create uniform intervals (20-30 partitions)
+            var intervals = CreateUniformIntervals(globalMin, globalMax, 25);
+
+            // Step 3: Count frequencies per interval per day
+            var frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
+
+            // Step 4: Map frequencies to color shades
+            var colorMap = MapFrequenciesToColors(frequenciesPerDay);
+
+            // Step 1: Render original baseline + range columns with frequency-based shading
+            // The baseline will be at globalMin (not dayMin) so intervals can be positioned at their actual Y values
+            var baselineSeries = new StackedColumnSeries
+            {
+                Title = $"{displayName} baseline",
+                Values = new LiveCharts.ChartValues<double>(),
+                Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+                StrokeThickness = 0,
+                MaxColumnWidth = MaxColumnWidth
+            };
+
+            // Range series: will be replaced by frequency-shaded intervals
+            // We keep it temporarily for fallback, but it will be removed in ApplyFrequencyShading
+            var rangeSeries = new StackedColumnSeries
+            {
+                Title = $"{displayName} range",
+                Values = new LiveCharts.ChartValues<double>(),
+                Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)), // Default light blue
+                Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                StrokeThickness = 1,
+                MaxColumnWidth = MaxColumnWidth
+            };
+
+            // Populate values Monday -> Sunday
+            // Baseline is at globalMin so intervals can be positioned at their actual Y values
+            for (int i = 0; i < 7; i++)
+            {
+                var minVal = mins[i];
+                var rangeVal = ranges[i];
+
+                // Replace NaN with 0 so columns show nothing for empty days
+                if (double.IsNaN(minVal)) minVal = 0.0;
+                if (double.IsNaN(rangeVal) || rangeVal < 0) rangeVal = 0.0;
+
+                // Baseline is at globalMin, not dayMin, so intervals can be positioned correctly
+                baselineSeries.Values.Add(globalMin);
+                rangeSeries.Values.Add(rangeVal);
+            }
+
+            // Add baseline first, then range (stacked)
+            targetChart.Series.Add(baselineSeries);
+            targetChart.Series.Add(rangeSeries);
+
+            // Step 5: Apply frequency-based shading to the range columns
+            // This replaces the simple range series with frequency-shaded interval segments
+            // Each interval has uniform height, and zero-frequency intervals are shaded white
+            ApplyFrequencyShading(targetChart, mins, ranges, intervals, frequenciesPerDay, colorMap, globalMin, globalMax);
+
+            // Configure Y axis based on data range
+            ConfigureYAxis(targetChart, mins, ranges);
+
+            // Configure X axis (days of week) - ensure labels are set
+            if (targetChart.AxisX.Count == 0)
+            {
+                targetChart.AxisX.Add(new LiveCharts.Wpf.Axis());
+            }
+
+            var xAxis = targetChart.AxisX[0];
+            xAxis.Labels = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+            xAxis.Title = "Day of Week";
+            xAxis.ShowLabels = true;
+            xAxis.Separator = new LiveCharts.Wpf.Separator { Step = 1, IsEnabled = false };
+
+            // Hide legend (user doesn't want keys/legend to the right)
+            targetChart.LegendLocation = LiveCharts.LegendLocation.None;
+        }
+
+        /// <summary>
+        /// Gets day values from frequency data. Returns empty lists if not available.
+        /// </summary>
+        private Dictionary<int, List<double>> GetDayValuesFromStrategy(WeeklyDistributionResult? frequencyData)
+        {
+            var dayValues = new Dictionary<int, List<double>>();
+            for (int i = 0; i < 7; i++)
+            {
+                dayValues[i] = frequencyData?.DayValues?.TryGetValue(i, out var values) == true
+                    ? values
+                    : new List<double>();
+            }
+            return dayValues;
+        }
+
+        /// <summary>
+        /// Step 2: Create uniform partitions/intervals for the y-axis (20-30 intervals).
+        /// These intervals are shared across all days and represent the stratification of the y-axis.
+        /// </summary>
+        private List<(double Min, double Max)> CreateUniformIntervals(double globalMin, double globalMax, int intervalCount)
+        {
+            var intervals = new List<(double Min, double Max)>();
+
+            if (globalMax <= globalMin || intervalCount <= 0)
+            {
+                // Return a single interval if invalid input
+                intervals.Add((globalMin, globalMax));
+                return intervals;
+            }
+
+            double intervalSize = (globalMax - globalMin) / intervalCount;
+
+            System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: Creating Intervals ===");
+            System.Diagnostics.Debug.WriteLine($"Interval Count: {intervalCount}, Interval Size: {intervalSize:F6}");
+
+            for (int i = 0; i < intervalCount; i++)
+            {
+                double min = globalMin + i * intervalSize;
+                // Last interval includes the max value to ensure we cover the full range
+                double max = (i == intervalCount - 1) ? globalMax : min + intervalSize;
+                intervals.Add((min, max));
+
+                // Log first 3, last 3, and every 5th interval
+                if (i < 3 || i >= intervalCount - 3 || i % 5 == 0)
+                {
+                    string intervalType = i == intervalCount - 1 ? "[inclusive]" : "[half-open)";
+                    System.Diagnostics.Debug.WriteLine($"  Interval {i}: [{min:F6}, {max:F6}{intervalType}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Total intervals created: {intervals.Count}");
+
+            return intervals;
+        }
+
+        /// <summary>
+        /// Step 3: Count the number of values that fall in each interval, for each separate day.
+        /// </summary>
+        private Dictionary<int, Dictionary<int, int>> CountFrequenciesPerInterval(
+            Dictionary<int, List<double>> dayValues,
+            List<(double Min, double Max)> intervals)
+        {
+            var frequenciesPerDay = new Dictionary<int, Dictionary<int, int>>();
+
+            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+            {
+                var frequencies = new Dictionary<int, int>();
+
+                // Initialize all intervals to 0
+                for (int i = 0; i < intervals.Count; i++)
+                {
+                    frequencies[i] = 0;
+                }
+
+                // Count values in each interval
+                if (dayValues.TryGetValue(dayIndex, out var values))
+                {
+                    foreach (var value in values)
+                    {
+                        if (double.IsNaN(value) || double.IsInfinity(value))
+                            continue;
+
+                        // Find which interval this value belongs to
+                        for (int i = 0; i < intervals.Count; i++)
+                        {
+                            var interval = intervals[i];
+                            // Check if value is in [Min, Max) for all intervals except the last, which is [Min, Max]
+                            if (i < intervals.Count - 1)
+                            {
+                                if (value >= interval.Min && value < interval.Max)
+                                {
+                                    frequencies[i]++;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                // Last interval is inclusive on both ends
+                                if (value >= interval.Min && value <= interval.Max)
+                                {
+                                    frequencies[i]++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                frequenciesPerDay[dayIndex] = frequencies;
+
+                // Log frequency summary for each day
+                int totalValues = frequencies.Values.Sum();
+                int nonZeroIntervals = frequencies.Values.Count(f => f > 0);
+                int maxFreq = frequencies.Values.DefaultIfEmpty(0).Max();
+                System.Diagnostics.Debug.WriteLine($"Day {dayIndex} frequencies: Total values={totalValues}, Non-zero intervals={nonZeroIntervals}, Max frequency={maxFreq}");
+
+                // Log frequencies for first few and last few intervals
+                if (frequencies.Count > 0)
+                {
+                    var sortedIntervals = frequencies.OrderBy(kvp => kvp.Key).ToList();
+                    var firstFew = sortedIntervals.Take(3).Select(kvp => $"I{kvp.Key}={kvp.Value}").ToList();
+                    var lastFew = sortedIntervals.Skip(Math.Max(0, sortedIntervals.Count - 3)).Select(kvp => $"I{kvp.Key}={kvp.Value}").ToList();
+                    System.Diagnostics.Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
+                    System.Diagnostics.Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");
+                }
+            }
+
+            return frequenciesPerDay;
+        }
+
+        /// <summary>
+        /// Step 4: Map frequencies to color shades.
+        /// Non-zero frequencies map to light blue (low) to dark blue/near-black (high).
+        /// Zero frequencies are handled separately in ApplyFrequencyShading (white only if within day's range).
+        /// </summary>
+        private Dictionary<int, Dictionary<int, Color>> MapFrequenciesToColors(
+            Dictionary<int, Dictionary<int, int>> frequenciesPerDay)
+        {
+            // Find global maximum frequency across all days and intervals
+            int maxFreq = 0;
+            foreach (var dayFreqs in frequenciesPerDay.Values)
+            {
+                foreach (var freq in dayFreqs.Values)
+                {
+                    if (freq > maxFreq)
+                        maxFreq = freq;
+                }
+            }
+
+            if (maxFreq == 0)
+                maxFreq = 1; // Avoid division by zero
+
+            System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: Color Mapping ===");
+            System.Diagnostics.Debug.WriteLine($"Global max frequency: {maxFreq}");
+
+            // Map each non-zero frequency to a color (light blue to dark blue/near-black)
+            var colorMap = new Dictionary<int, Dictionary<int, Color>>();
+
+            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+            {
+                var dayColorMap = new Dictionary<int, Color>();
+
+                if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs))
+                {
+                    foreach (var kvp in dayFreqs)
+                    {
+                        int intervalIndex = kvp.Key;
+                        int frequency = kvp.Value;
+
+                        // Only map non-zero frequencies to colors
+                        // Zero frequencies will be handled in ApplyFrequencyShading (white if within day's range)
+                        if (frequency > 0)
+                        {
+                            // Normalize frequency to [0.0, 1.0]
+                            double normalizedFreq = (double)frequency / maxFreq;
+
+                            // Map to color (light blue = low frequency, dark blue/near-black = high frequency)
+                            Color color = WeeklyFrequencyRenderer.MapFrequencyToColor(normalizedFreq);
+                            dayColorMap[intervalIndex] = color;
+                        }
+                        // Note: frequency = 0 is not added to dayColorMap here
+                        // It will be handled in ApplyFrequencyShading based on whether interval overlaps day's range
+                    }
+                }
+
+                colorMap[dayIndex] = dayColorMap;
+            }
+
+            return colorMap;
+        }
+
+        /// <summary>
+        /// Step 5: Apply frequency-based shading to the existing range columns.
+        /// Breaks down each day's range into intervals and shades each interval according to frequency.
+        /// </summary>
+        private void ApplyFrequencyShading(
+            CartesianChart targetChart,
+            List<double> mins,
+            List<double> ranges,
+            List<(double Min, double Max)> intervals,
+            Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
+            Dictionary<int, Dictionary<int, Color>> colorMap,
+            double globalMin,
+            double globalMax)
+        {
+            // Remove the original range series and replace with frequency-shaded segments
+            // We'll create stacked column segments for each interval that overlaps with each day's range
+            // Note: We keep the baseline series that was added in RenderOriginalMinMaxChart
+
+            var seriesToRemove = targetChart.Series.Where(s => s.Title?.Contains("range") == true).ToList();
+            foreach (var series in seriesToRemove)
+            {
+                targetChart.Series.Remove(series);
+            }
+
+            // Ensure we have a baseline series - the one from RenderOriginalMinMaxChart should still be there
+            // If not, something went wrong, but we'll continue anyway
+            bool hasBaseline = targetChart.Series.Any(s => s.Title?.Contains("baseline") == true);
+            if (!hasBaseline)
+            {
+                System.Diagnostics.Debug.WriteLine("WeeklyDistribution: Warning - no baseline series found, creating one");
+                var baselineSeries = new StackedColumnSeries
+                {
+                    Title = "baseline",
+                    Values = new LiveCharts.ChartValues<double>(),
+                    Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+                    StrokeThickness = 0,
+                    MaxColumnWidth = MaxColumnWidth
+                };
+                for (int i = 0; i < 7; i++)
+                {
+                    var minVal = double.IsNaN(mins[i]) ? 0.0 : mins[i];
+                    baselineSeries.Values.Add(minVal);
+                }
+                targetChart.Series.Insert(0, baselineSeries); // Insert at beginning
+            }
+
+            System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: ApplyFrequencyShading ===");
+            System.Diagnostics.Debug.WriteLine($"Intervals count: {intervals.Count}, Frequencies count: {frequenciesPerDay.Count}");
+
+            // If no intervals or frequencies, restore a simple range series to ensure something is visible
+            if (intervals.Count == 0 || frequenciesPerDay.Count == 0)
+            {
+                // Restore simple range series if frequency shading can't be applied
+                var simpleRangeSeries = new StackedColumnSeries
+                {
+                    Title = "range",
+                    Values = new LiveCharts.ChartValues<double>(),
+                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
+                    Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                    StrokeThickness = 1,
+                    MaxColumnWidth = MaxColumnWidth
+                };
+
+                for (int i = 0; i < 7; i++)
+                {
+                    var rangeVal = double.IsNaN(ranges[i]) || ranges[i] < 0 ? 0.0 : ranges[i];
+                    simpleRangeSeries.Values.Add(rangeVal);
+                }
+
+                targetChart.Series.Add(simpleRangeSeries);
+                return;
+            }
+
+            // Debug: Check if we have any overlapping intervals
+            bool hasAnyOverlaps = false;
+            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+            {
+                double dayMin = double.IsNaN(mins[dayIndex]) ? 0.0 : mins[dayIndex];
+                double dayMax = dayMin + (double.IsNaN(ranges[dayIndex]) ? 0.0 : ranges[dayIndex]);
+
+                for (int intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
+                {
+                    var interval = intervals[intervalIndex];
+                    if (interval.Min < dayMax && interval.Max > dayMin && ranges[dayIndex] > 0)
+                    {
+                        hasAnyOverlaps = true;
+                        break;
+                    }
+                }
+                if (hasAnyOverlaps) break;
+            }
+
+            // If no overlaps at all, restore simple range series
+            if (!hasAnyOverlaps)
+            {
+                var simpleRangeSeries = new StackedColumnSeries
+                {
+                    Title = "range",
+                    Values = new LiveCharts.ChartValues<double>(),
+                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
+                    Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                    StrokeThickness = 1,
+                    MaxColumnWidth = MaxColumnWidth
+                };
+
+                for (int i = 0; i < 7; i++)
+                {
+                    var rangeVal = double.IsNaN(ranges[i]) || ranges[i] < 0 ? 0.0 : ranges[i];
+                    simpleRangeSeries.Values.Add(rangeVal);
+                }
+
+                targetChart.Series.Add(simpleRangeSeries);
+                return;
+            }
+
+            // Track total series created to ensure we have something visible
+            int seriesCreated = 0;
+
+            // Calculate uniform interval height - this is the same for ALL intervals across ALL days
+            double uniformIntervalHeight = intervals.Count > 0 ? (globalMax - globalMin) / intervals.Count : 1.0;
+
+            System.Diagnostics.Debug.WriteLine($"Uniform interval height: {uniformIntervalHeight:F6}");
+            System.Diagnostics.Debug.WriteLine($"Global range: {globalMin:F4} to {globalMax:F4}");
+
+            // Find global max frequency for normalization
+            int globalMaxFreq = frequenciesPerDay.Values
+                .SelectMany(d => d.Values)
+                .DefaultIfEmpty(1)
+                .Max();
+
+            System.Diagnostics.Debug.WriteLine($"Global max frequency for normalization: {globalMaxFreq}");
+
+            // For each interval, create a series that positions the interval at its actual Y value
+            // The baseline series is at globalMin, so we calculate the offset from globalMin to interval.Min
+            // Intervals that don't overlap a day get zero height
+            for (int intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
+            {
+                var interval = intervals[intervalIndex];
+                var intervalBaselineValues = new LiveCharts.ChartValues<double>();
+                var intervalHeightValues = new LiveCharts.ChartValues<double>();
+                var hasData = false;
+
+                // Determine color for this interval based on max frequency across all overlapping days
+                int maxFreqForInterval = 0;
+
+                for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+                {
+                    double dayMin = double.IsNaN(mins[dayIndex]) ? 0.0 : mins[dayIndex];
+                    double dayMax = dayMin + (double.IsNaN(ranges[dayIndex]) ? 0.0 : ranges[dayIndex]);
+
+                    // Check if this interval overlaps with this day's range
+                    bool overlaps = interval.Min < dayMax && interval.Max > dayMin;
+
+                    if (overlaps && ranges[dayIndex] > 0 && !double.IsNaN(ranges[dayIndex]))
+                    {
+                        hasData = true;
+
+                        // Position interval at its actual Y value (interval.Min)
+                        // Baseline is at globalMin, so offset is interval.Min - globalMin
+                        double intervalBaseline = interval.Min - globalMin;
+
+                        // Ensure baseline is non-negative (should always be true since interval.Min >= globalMin)
+                        if (intervalBaseline < 0)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  WARNING: Interval {intervalIndex} baseline offset {intervalBaseline:F4} < 0, clamping to 0");
+                            intervalBaseline = 0;
+                        }
+
+                        intervalBaselineValues.Add(intervalBaseline);
+                        intervalHeightValues.Add(uniformIntervalHeight);
+
+                        // Get frequency for this day/interval to determine color
+                        int frequency = 0;
+                        if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) &&
+                            dayFreqs.TryGetValue(intervalIndex, out var freq))
+                        {
+                            frequency = freq;
+                            if (frequency > maxFreqForInterval)
+                                maxFreqForInterval = frequency;
+                        }
+
+                        // Log detailed info for first few intervals on first day
+                        if (intervalIndex < 3 && dayIndex == 0)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex} on Day {dayIndex}: Baseline offset={intervalBaseline:F4}, Height={uniformIntervalHeight:F6}, Frequency={frequency}");
+                        }
+                    }
+                    else
+                    {
+                        // No overlap - add zero height at globalMin baseline
+                        intervalBaselineValues.Add(0.0);
+                        intervalHeightValues.Add(0.0);
+                    }
+                }
+
+                // Debug output for intervals with data
+                if (hasData)
+                {
+                    System.Diagnostics.Debug.WriteLine($"WeeklyDistribution: Interval {intervalIndex} ({interval.Min:F2} to {interval.Max:F2}) has overlapping data");
+                }
+
+                // Only create series if there's data
+                if (hasData)
+                {
+                    // Determine color based on frequency
+                    Color finalColor;
+                    if (maxFreqForInterval == 0)
+                    {
+                        // Zero frequency = white (only if within day's range, which we've already checked)
+                        finalColor = Colors.White;
+                        if (intervalIndex < 3)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: Zero frequency -> White");
+                        }
+                    }
+                    else
+                    {
+                        // Use color mapping based on max frequency (light blue to dark blue)
+                        double normalizedFreq = globalMaxFreq > 0 ? (double)maxFreqForInterval / globalMaxFreq : 0.0;
+                        finalColor = WeeklyFrequencyRenderer.MapFrequencyToColor(normalizedFreq);
+                        if (intervalIndex < 3)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: MaxFreq={maxFreqForInterval}, Normalized={normalizedFreq:F4}, Color=RGB({finalColor.R},{finalColor.G},{finalColor.B})");
+                        }
+                    }
+
+                    var fillBrush = new SolidColorBrush(finalColor);
+                    fillBrush.Freeze();
+                    var strokeBrush = new SolidColorBrush(finalColor);
+                    strokeBrush.Freeze();
+
+                    // Create baseline series for this interval (transparent, positions the interval at interval.Min)
+                    var intervalBaselineSeries = new StackedColumnSeries
+                    {
+                        Title = null,
+                        Values = intervalBaselineValues,
+                        Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+                        StrokeThickness = 0,
+                        MaxColumnWidth = MaxColumnWidth,
+                        DataLabels = false
+                    };
+
+                    // Create colored interval series (this will stack on top of the baseline)
+                    var intervalSeries = new StackedColumnSeries
+                    {
+                        Title = null,
+                        Values = intervalHeightValues,
+                        Fill = fillBrush,
+                        Stroke = strokeBrush,
+                        StrokeThickness = 0.5,
+                        MaxColumnWidth = MaxColumnWidth,
+                        DataLabels = false
+                    };
+
+                    // Add both series - baseline first, then interval (for proper stacking)
+                    targetChart.Series.Add(intervalBaselineSeries);
+                    targetChart.Series.Add(intervalSeries);
+                    seriesCreated++;
+                }
+            }
+
+            // Safety check: If no interval series were created, restore simple range series
+            if (seriesCreated == 0)
+            {
+                // Restore simple range series if frequency shading failed
+                var simpleRangeSeries = new StackedColumnSeries
+                {
+                    Title = "range",
+                    Values = new LiveCharts.ChartValues<double>(),
+                    Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
+                    Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                    StrokeThickness = 1,
+                    MaxColumnWidth = MaxColumnWidth
+                };
+
+                for (int i = 0; i < 7; i++)
+                {
+                    var rangeVal = double.IsNaN(ranges[i]) || ranges[i] < 0 ? 0.0 : ranges[i];
+                    simpleRangeSeries.Values.Add(rangeVal);
+                }
+
+                targetChart.Series.Add(simpleRangeSeries);
+                System.Diagnostics.Debug.WriteLine("WeeklyDistribution: No interval series created, using fallback simple range series");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: Rendering Complete ===");
+            System.Diagnostics.Debug.WriteLine($"Total interval series created: {seriesCreated}");
+            System.Diagnostics.Debug.WriteLine($"Total series in chart: {targetChart.Series.Count}");
+
+            // Log series summary
+            var seriesTypes = targetChart.Series.GroupBy(s => s.GetType().Name).Select(g => $"{g.Key}:{g.Count()}").ToList();
+            System.Diagnostics.Debug.WriteLine($"Series breakdown: {string.Join(", ", seriesTypes)}");
+        }
+
+        /// <summary>
+        /// Creates a brush with intensity based on normalized frequency.
+        /// Higher frequency = darker color (closer to black).
+        /// Uses a blue color ramp from light blue to near-black.
+        /// </summary>
+        private SolidColorBrush CreateFrequencyBrush(double normalizedFrequency)
+        {
+            // Clamp to [0.0, 1.0]
+            normalizedFrequency = Math.Max(0.0, Math.Min(1.0, normalizedFrequency));
+
+            // Start color: light blue (when frequency = 0)
+            byte r0 = 173, g0 = 216, b0 = 230;
+
+            // End color: near-black/dark blue (when frequency = 1.0)
+            byte r1 = 8, g1 = 10, b1 = 25;
+
+            // Interpolate based on normalized frequency
+            byte r = (byte)Math.Round(r0 + (r1 - r0) * normalizedFrequency);
+            byte g = (byte)Math.Round(g0 + (g1 - g0) * normalizedFrequency);
+            byte b = (byte)Math.Round(b0 + (b1 - b0) * normalizedFrequency);
+
+            var brush = new SolidColorBrush(Color.FromRgb(r, g, b));
+            brush.Freeze();
+            return brush;
         }
     }
 }
