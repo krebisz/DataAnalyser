@@ -32,15 +32,40 @@ namespace DataVisualiser.Services
         }
 
         /// <summary>
-        /// Updates the target chart with a weekly distribution (Mon->Sun) of the specified metric.
+        /// Calculates the optimal number of intervals based on the value range size of the loaded data.
+        /// This method is a placeholder for dynamic interval calculation.
+        /// TODO: Implement the calculation logic based on value range size criteria.
         /// </summary>
-        /// <param name="targetChart">The chart to render into.</param>
-        /// <param name="data">Metric data to analyse.</param>
-        /// <param name="displayName">Display name for the metric.</param>
-        /// <param name="from">Inclusive start of the date range.</param>
-        /// <param name="to">Inclusive end of the date range.</param>
-        /// <param name="minHeight">Minimum chart height in pixels.</param>
-        /// <param name="useFrequencyShading">If true, applies frequency-based shading. If false, shows simple min/max range chart.</param>
+        /// <param name="globalMin">The minimum value across all data</param>
+        /// <param name="globalMax">The maximum value across all data</param>
+        /// <param name="dataCount">Total number of data points</param>
+        /// <returns>The calculated number of intervals. Currently returns default of 25.</returns>
+        private static int CalculateOptimalIntervalCount(double globalMin, double globalMax, int dataCount)
+        {
+            // TODO: Implement dynamic calculation based on value range size
+            // Example considerations:
+            // - Range size: globalMax - globalMin
+            // - Data density: dataCount / range
+            // - Minimum intervals: e.g., 10
+            // - Maximum intervals: e.g., 50
+            // - Optimal granularity based on range size
+
+            // For now, return the default value
+            return 25;
+        }
+
+        /// <summary>
+        /// Updates the weekly distribution chart with the provided data.
+        /// </summary>
+        /// <param name="targetChart">The chart to update</param>
+        /// <param name="data">The health metric data to visualize</param>
+        /// <param name="displayName">Display name for the chart</param>
+        /// <param name="from">Start date for the data range</param>
+        /// <param name="to">End date for the data range</param>
+        /// <param name="minHeight">Minimum height for the chart</param>
+        /// <param name="useFrequencyShading">Whether to use frequency shading or simple range view</param>
+        /// <param name="intervalCount">Number of intervals to divide the value range into. Default is 25. 
+        /// TODO: Calculate dynamically based on value range size of loaded data.</param>
         public async Task UpdateWeeklyDistributionChartAsync(
             CartesianChart targetChart,
             IEnumerable<HealthMetricData> data,
@@ -48,7 +73,8 @@ namespace DataVisualiser.Services
             DateTime from,
             DateTime to,
             double minHeight = DefaultMinHeight,
-            bool useFrequencyShading = true)
+            bool useFrequencyShading = true,
+            int intervalCount = 25)
         {
             if (targetChart == null)
             {
@@ -82,6 +108,13 @@ namespace DataVisualiser.Services
                 return;
             }
 
+            // TODO: Calculate intervalCount dynamically based on value range size
+            // Example: Calculate global min/max from data, then call CalculateOptimalIntervalCount
+            // var dataList = data.ToList();
+            // var globalMin = dataList.Min(d => d.Value);
+            // var globalMax = dataList.Max(d => d.Value);
+            // intervalCount = CalculateOptimalIntervalCount(globalMin, globalMax, dataList.Count);
+
             try
             {
                 // Clear previous series
@@ -89,7 +122,7 @@ namespace DataVisualiser.Services
 
                 // Step 1: Render the original min/max range visualization (baseline + range columns)
                 // This was the working implementation before
-                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, extendedResult, useFrequencyShading);
+                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, extendedResult, useFrequencyShading, intervalCount);
 
                 // Weekly chart has no per-point timestamps, but we keep the dictionary consistent
                 _chartTimestamps[targetChart] = new List<DateTime>();
@@ -102,7 +135,7 @@ namespace DataVisualiser.Services
                 if (useFrequencyShading)
                 {
                     // Calculate interval data with percentages for tooltip
-                    var tooltipData = CalculateTooltipData(result, extendedResult);
+                    var tooltipData = CalculateTooltipData(result, extendedResult, intervalCount);
                     if (tooltipData != null && tooltipData.Count > 0)
                     {
                         // Create tooltip manager (it will attach itself to the chart via events)
@@ -215,7 +248,8 @@ namespace DataVisualiser.Services
             string displayName,
             double minHeight,
             WeeklyDistributionResult? frequencyData,
-            bool useFrequencyShading = true)
+            bool useFrequencyShading = true,
+            int intervalCount = 25)
         {
             // PrimaryRawValues = mins; PrimarySmoothed = ranges (max - min)
             var mins = result.PrimaryRawValues;
@@ -270,8 +304,8 @@ namespace DataVisualiser.Services
 
             if (useFrequencyShading)
             {
-                // Step 2: Create uniform intervals (20-30 partitions)
-                intervals = CreateUniformIntervals(globalMin, globalMax, 25);
+                // Step 2: Create uniform intervals based on parameterized interval count
+                intervals = CreateUniformIntervals(globalMin, globalMax, intervalCount);
 
                 // Step 3: Count frequencies per interval per day
                 frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
@@ -966,7 +1000,8 @@ namespace DataVisualiser.Services
         /// </summary>
         private Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> CalculateTooltipData(
             ChartComputationResult result,
-            WeeklyDistributionResult? frequencyData)
+            WeeklyDistributionResult? frequencyData,
+            int intervalCount = 25)
         {
             var tooltipData = new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
 
@@ -991,7 +1026,7 @@ namespace DataVisualiser.Services
                 globalMax = globalMin + 1;
 
             // Create intervals (same as in RenderOriginalMinMaxChart)
-            var intervals = CreateUniformIntervals(globalMin, globalMax, 25);
+            var intervals = CreateUniformIntervals(globalMin, globalMax, intervalCount);
 
             // Count frequencies per interval per day
             var frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
