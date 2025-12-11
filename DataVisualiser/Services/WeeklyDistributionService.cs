@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace DataVisualiser.Services
 {
@@ -93,8 +94,39 @@ namespace DataVisualiser.Services
                 // Weekly chart has no per-point timestamps, but we keep the dictionary consistent
                 _chartTimestamps[targetChart] = new List<DateTime>();
 
-                // Disable tooltip for weekly chart - height/size info is not needed since intervals are uniform
+                // Explicitly disable default LiveCharts tooltip for weekly chart
+                // We use our custom tooltip instead
                 targetChart.DataTooltip = null;
+
+                // Set up tooltip based on frequency shading mode
+                if (useFrequencyShading)
+                {
+                    // Calculate interval data with percentages for tooltip
+                    var tooltipData = CalculateTooltipData(result, extendedResult);
+                    if (tooltipData != null && tooltipData.Count > 0)
+                    {
+                        // Create tooltip manager (it will attach itself to the chart via events)
+                        // Store it in chart's Tag for potential cleanup later
+                        var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
+                        oldTooltip?.Dispose();
+
+                        var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData);
+                        targetChart.Tag = tooltip;
+                    }
+                    else
+                    {
+                        var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
+                        oldTooltip?.Dispose();
+                        targetChart.Tag = null;
+                    }
+                }
+                else
+                {
+                    // Disable tooltip for simple range chart
+                    var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
+                    oldTooltip?.Dispose();
+                    targetChart.Tag = null;
+                }
 
                 // Height handling consistent with other charts
                 ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
@@ -909,6 +941,88 @@ namespace DataVisualiser.Services
             // Log series summary
             var seriesTypes = targetChart.Series.GroupBy(s => s.GetType().Name).Select(g => $"{g.Key}:{g.Count()}").ToList();
             System.Diagnostics.Debug.WriteLine($"Series breakdown: {string.Join(", ", seriesTypes)}");
+        }
+
+        /// <summary>
+        /// Calculates tooltip data with interval breakdown, percentages, and counts for each day.
+        /// </summary>
+        private Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> CalculateTooltipData(
+            ChartComputationResult result,
+            WeeklyDistributionResult? frequencyData)
+        {
+            var tooltipData = new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
+
+            if (result == null || frequencyData == null)
+                return tooltipData;
+
+            var mins = result.PrimaryRawValues;
+            var ranges = result.PrimarySmoothed;
+
+            if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
+                return tooltipData;
+
+            // Get day values
+            var dayValues = GetDayValuesFromStrategy(frequencyData);
+
+            // Calculate global min/max
+            double globalMin = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0).Min();
+            double globalMax = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r)
+                                  .Where(v => !double.IsNaN(v)).DefaultIfEmpty(1).Max();
+
+            if (globalMax <= globalMin)
+                globalMax = globalMin + 1;
+
+            // Create intervals (same as in RenderOriginalMinMaxChart)
+            var intervals = CreateUniformIntervals(globalMin, globalMax, 25);
+
+            // Count frequencies per interval per day
+            var frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
+
+            // Calculate percentages for each day
+            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+            {
+                var dayIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
+
+                // Get total count for this day
+                int totalCount = 0;
+                if (dayValues.TryGetValue(dayIndex, out var values))
+                {
+                    totalCount = values.Count;
+                }
+
+                // Calculate day min/max to determine which intervals are within the day's range
+                double dayMin = double.IsNaN(mins[dayIndex]) ? 0.0 : mins[dayIndex];
+                double dayMax = dayMin + (double.IsNaN(ranges[dayIndex]) ? 0.0 : ranges[dayIndex]);
+
+                // For each interval, calculate count and percentage
+                for (int intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
+                {
+                    var interval = intervals[intervalIndex];
+
+                    // Check if interval overlaps with day's range
+                    bool intervalOverlapsDayRange = interval.Min < dayMax && interval.Max > dayMin;
+
+                    if (intervalOverlapsDayRange && ranges[dayIndex] > 0 && !double.IsNaN(ranges[dayIndex]))
+                    {
+                        // Get frequency for this interval
+                        int count = 0;
+                        if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) &&
+                            dayFreqs.TryGetValue(intervalIndex, out var freq))
+                        {
+                            count = freq;
+                        }
+
+                        // Calculate percentage (percentage of total values for this day)
+                        double percentage = totalCount > 0 ? (double)count / totalCount * 100.0 : 0.0;
+
+                        dayIntervals.Add((interval.Min, interval.Max, count, percentage));
+                    }
+                }
+
+                tooltipData[dayIndex] = dayIntervals;
+            }
+
+            return tooltipData;
         }
 
         /// <summary>
