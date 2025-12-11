@@ -1,135 +1,132 @@
-PROJECT BIBLE (Markdown)
+📙 UPDATED PROJECT BIBLE (2025-12-11)
 
-(Recommended filename: Project-Bible.md)
+A rigorous, architectural, forward-accurate document intended for:
+— onboarding,
+— refactoring governance,
+— architectural consistency,
+— future evolution.
 
 Project Bible — DataFileReaderRedux Solution
+1. Purpose
 
-A technical, architectural guide to the unified analytical system.
+This document defines the governing architectural rules for the entire analytical system.
+It describes:
 
-1. Purpose of This Document
+How the system works today
 
-This Bible defines the current architecture, design principles, and future direction of the entire DataFileReaderRedux solution. It serves as the authoritative reference for:
+How subsystems must evolve
 
-Understanding how the system works
+What constraints future code must obey
 
-Extending or modifying components
+What conceptual principles underpin the architecture
 
-Maintaining architectural integrity during future evolution
-
-Onboarding new development workspaces or collaborators
-
-It combines current state (as of the latest uploaded solution) with the intended architectural trajectory.
+Every refactor, extension, or computation addition must respect this Bible.
 
 2. System Identity
 2.1 Core Identity
 
-The system is a General Analytical Engine, composed of two coordinated subsystems:
+The system is a general analytical engine built from two coordinated subsystems:
 
-Subsystem A — Data Ingestion & Unification (DataFileReader project)
+Subsystem A — DataFileReader
+Ingestion + Normalization + Unification
 
-A modular, extensible system for:
+Subsystem B — DataVisualiser
+Computation + Rendering + Interaction
 
-Reading structured/semi-structured data
+Together, they form a pipeline from raw data → structured model → analytical insight → interactive visualization.
 
-Normalizing heterogeneous sources into unified, comparable internal models
+2.2 Architectural Values
 
-Interpreting domain-specific semantics (health metrics today; arbitrary domains tomorrow)
+Generalization over specialization
 
-Subsystem B — Visualization & Computation (DataVisualiser project)
+Progressive modularization
 
-A flexible analytical front-end capable of:
+Extensibility at every boundary
 
-Parameterized computations
+Predictable state separated from computation
 
-Visual transformations
+Rendering completely independent of analytics
 
-Dynamic analytical comparisons
-
-Strategy-driven data interpretation
-
-Multi-dimensional data exploration
-
-The architecture emphasizes domain-agnostic capability, even if the current active use case centers on health metrics.
+Emergence-inspired layering and composability
 
 3. Architectural Philosophy
 
-This solution is built intentionally around principles derived from modular, emergent, and adaptive system design:
+The system respects design principles that deliberately echo your long-term research themes:
 
-3.1 Generalization Over Specificity
+3.1 Unified Representation of Heterogeneous Inputs
 
-Whenever practical, components transition from domain-specific to generalized, reusable abstractions, reducing:
+Anything ingestible should resolve into:
 
-Complexity
+a known structure,
 
-Duplication
+comparable metric sequences,
 
-Bloat
+metadata that links relationships,
 
-Fragmentation
+hierarchical or temporal context.
 
-3.2 Progressive Modularization
+3.2 Hierarchical Layering
 
-Subsystems evolve by identifying common conceptual cores and extracting them into:
+Every layer only sees the abstractions below it:
 
-Strategies
+Parsers ↔ Normalizers
 
-Helpers
+Strategies ↔ Computation Engine
 
-Engines
+Computation ↔ Rendering
 
-Computation pipelines
+Rendering ↔ UI
 
-3.3 Extensibility by Construction
+UI ↔ ViewModel State
 
-Every component should be replaceable or extendable without restructuring the rest of the system.
+3.3 Abstractions Before Implementations
 
-3.4 Separation of Concerns
+Interfaces define every interaction point—especially:
 
-Clear delineation exists between:
+IHealthFileParser → ingestion
 
-Data ingestion
+IChartComputationStrategy → computation
 
-Data normalization
+Renderer interfaces → visualization
 
-Computation
+State models → UI control
 
-Rendering
+This constraint ensures the system remains evolvable.
 
-UI orchestration
+3.4 Emergence-Inspired Mechanics (Phase 6+)
 
-Domain-specific logic (constrained to thin layers)
+Future system evolution will adopt:
 
-3.5 Emergence-Inspired Architecture
+metadata-driven selection of strategies
 
-The system is not an intelligent agent, but it embraces:
+dynamic evaluation of metric topologies
 
-hierarchical layering
+algorithmic clustering of metric groups
 
-composability
+self-organizing analytical workflows
 
-abstract representations
+reflective computation graph design
 
-uniform treatment of objects (data or conceptual)
+These concepts must be considered in any architecture change from here forward.
 
-future potential for emergent analytical behaviors
+4. Subsystem A — DataFileReader (Ingestion Layer)
+4.1 Responsibilities
 
-4. Subsystem A — DataFileReader (Ingestion & Unification Layer)
+File parsing (CSV/JSON/mixed formats)
 
-This subsystem transforms heterogeneous input data into normalized, structured internal forms.
+Schema detection and interpretation
 
-4.1 Key Responsibilities
+Time normalization
 
-Parse raw files (CSV, JSON, Samsung formats, etc.)
+Value normalization
 
-Normalize metric values
+Metadata extraction
 
-Build consistent representations across time and sources
+Hierarchical structuring of dataset components
 
-Provide generalized data structures usable by any domain
+Output construction for DataVisualiser
 
-Offer an extensible parser architecture
-
-4.2 Core Components
+4.2 Major Components
 4.2.1 Parsers
 
 SamsungCsvParser
@@ -138,38 +135,35 @@ SamsungJsonParser
 
 LegacyJsonParser
 
-IHealthFileParser (interface)
+SamsungHealthCsvParser
 
-These share a conceptual interface but will eventually generalize into domain-agnostic parsing pipelines.
+SamsungHealthParser
+
+IHealthFileParser (contract boundary)
 
 4.2.2 JSON Abstraction Layer
 
-(JsonArray, JsonObject, JsonValue, IJson)
-A minimal structural abstraction over JSON, enabling:
+JsonObject
 
-Dynamic introspection
+JsonArray
 
-Consistent object modeling
+JsonValue
 
-Robust handling of unknown schemas
+IJson
 
-4.2.3 Metadata & Hierarchy Models
+Tiny but powerful layer enabling introspection of arbitrary schemas.
 
-MetaData, MetaDataList, HierarchyObject, HierarchyObjectList
+4.2.3 Hierarchy + Metadata Models
 
-Provide:
+HierarchyObject / HierarchyObjectList
 
-Contextual descriptions of data
+MetaData / MetaDataList
 
-Internal organization
+MetaDataComparer
 
-Mapping between hierarchical datasets
+These maintain relationships between metrics, timestamps, and sources.
 
-Comparers for normalization
-
-4.2.4 Normalization Pipeline
-
-Helpers include:
+4.2.4 Normalization Helpers
 
 DataNormalization
 
@@ -179,44 +173,24 @@ MetricTypeParser
 
 AggregationPeriod
 
-These convert diverse time-series or categorical datasets into consistent, comparable sequences.
+These enforce internal consistency.
 
-4.2.5 Services Layer
-
-Key services include:
+4.2.5 Services
 
 FileProcessingService
 
 MetricAggregator
 
-They orchestrate parsing + normalization + output construction.
+These combine all other components into unified outputs.
 
 5. Subsystem B — DataVisualiser (Computation & Visualization Layer)
+5.1 Roles
 
-This is the user-facing analysis platform integrating computation strategies, rendering, reactive UI state, and comparative analytics.
+This subsystem transforms normalized datasets into analytical/visual models.
 
-5.1 Architectural Summary
+5.2 Computation Strategies
 
-This subsystem turns normalized data into:
-
-Computed analytical representations
-
-Visual charts
-
-Comparative metric views
-
-Weekly distribution analyses
-
-Multi-series charts
-
-Dynamic, strategy-driven transformations
-
-It separates computation from visualization and visualization from UI orchestration.
-
-5.2 Major Architectural Areas
-5.2.1 Strategies Layer
-
-Core computational strategies:
+Every analytical behavior is a strategy:
 
 SingleMetricStrategy
 
@@ -230,130 +204,136 @@ CombinedMetricStrategy
 
 WeeklyDistributionStrategy
 
-All implement or extend:
+All strategies implement or extend IChartComputationStrategy.
 
-IChartComputationStrategy
+Strategies define what to compute—not how it will be displayed.
 
-Strategies output abstract computation models independent of UI representation.
+5.3 Computation Engine
 
-5.2.2 Computation Engine
+ChartComputationEngine:
 
-ChartComputationEngine orchestrates:
+delegates to strategies
 
-Delegating to strategies
+orchestrates multi-metric logic
 
-Producing ChartComputationResult
+constructs ChartComputationResult
 
-Managing multi-series computations
+manages smoothing, scaling, and pipeline consistency
 
-Handling edge cases and data smoothing
+5.4 Rendering Engine
 
-5.2.3 Rendering Engine
+ChartRenderEngine translates computation models into LiveCharts objects:
 
-ChartRenderEngine translates computation results into:
+series generation
 
-LiveCharts series
+axis construction
 
-Axis models
+colors / palettes
 
-Color palettes
+tooltip orchestration
 
-Tooltip integration (ChartTooltipManager, etc.)
+shading overlays
 
-This allows complete decoupling between “what is computed” vs. “how it is visualized”.
+The rendering engine is strictly presentation-focused.
 
-5.2.4 Data Access
+5.5 State Layer
 
-DataFetcher retrieves query results via:
+The system uses isolated state representations:
 
-SQL reading
+UiState — what the user is doing
 
-Domain-agnostic data queries
+MetricState — what metrics exist and are selected
 
-General metric acquisition
+ChartState — what the chart is currently configured to show
 
-5.2.5 State Layer
+This separation prevents UI logic from leaking into computation or rendering.
 
-UiState, MetricState, ChartState represent:
+5.6 ViewModels
 
-Current metric selections
-
-Chart type / mode
-
-User interactions
-
-Selections, filters, and ranges
-
-These unify interactions across the entire UI.
-
-5.2.6 ViewModels
-
-The key orchestrator is:
+The central orchestrator:
 
 MainWindowViewModel
 
-This binds UI actions to:
+Responsibilities:
 
-state changes
+binding UI interactions to state changes
 
-strategy changes
+selecting strategies
 
-data refresh
+triggering data fetch + compute + render cycles
 
-chart rendering
-
-5.2.7 Front-End (XAML)
-
-MainWindow.xaml defines:
-
-Chart areas
-
-Metric selectors
-
-Strategy dropdowns
-
-Computation mode selectors
-
-Powerful but straightforward, and fully supported via ViewModel binding.
+maintaining consistency across subsystems
 
 6. Cross-System Architecture
-6.1 Data Flow
-Raw File → Parser → Normalizer → Unified Data Model → Strategy → Computation Engine → Render Engine → UI
+6.1 Pipeline
+Raw Data
+ → Parser
+ → Normalizer
+ → Unified Model
+ → Strategy
+ → Computation Engine
+ → Render Engine
+ → UI
+
+
+Each arrow is a replaceable boundary.
 
 6.2 Extension Points
 
-Add new parsers
+Developers may add:
 
-Add new strategies
+new file formats
 
-Add new computation modes
+new normalizers
 
-Add new rendering styles
+new metric models
 
-Add new data domains
+new computation strategies
 
-7. Long-Term Architectural Direction
+new visualization modes
 
-Fully domain-agnostic ingestion
+new metadata-driven behaviors (Phase 6+)
 
-Generalized computation graph
+new shading or annotation modules
 
-Pluggable data sources (not just files)
+new data sources (SQL/API/local)
 
-Incremental reflection toward emergent analytical capability
+7. Evolutionary Direction
 
-Reuse of DataVisualiser patterns in larger intelligent architectures
+This portion governs future growth.
 
-8. Versioning & Workspace Workflow Alignment
+7.1 Short Term
 
-This Bible is designed to remain stable across:
+complete generalization of ingestion
 
-Workspace refreshes
+unify computation engines
 
-Context rebuilding
+modular multi-metric graphing
 
-Future code evolution
+rendering expansion (histograms, heatmaps)
 
-It contains everything needed for ChatGPT or a developer to reorient themselves to the project.
+7.2 Medium Term
 
-END OF PROJECT BIBLE
+metadata-driven analytical selection
+
+heuristic visualization recommendations
+
+reflective computation graphs
+
+dynamic reshaping of analytical pipelines
+
+7.3 Long Term
+
+The system becomes a self-organizing analytical topology that reflects your long-term research themes:
+
+hierarchical remapping
+
+manifold-like restructuring of metric networks
+
+emergent grouping and re-grouping
+
+autonomous selection of analytical pathways
+
+adaptive “purposeful” workflows
+
+End of Updated Project Bible

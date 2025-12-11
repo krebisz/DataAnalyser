@@ -1,105 +1,117 @@
-Project Overview — DataFileReaderRedux
+📘 UPDATED PROJECT OVERVIEW (2025-12-11)
 
-A concise, user-facing guide to the system’s purpose, structure, and usage.
+(Developer-oriented, concise, accurate, forward-looking)
 
 1. What This System Is
 
-A general analytical platform for turning diverse datasets into:
+DataFileReaderRedux is a dual-subsystem analytical platform designed to:
 
-Unified models
+ingest, normalize, and unify structured/semi-structured datasets,
 
-Computed analytical insights
+compute analytical transformations, and
 
-Interactive visual charts
+visualize multi-dimensional results interactively.
 
-The system has two cooperating components:
+The system is intentionally domain-agnostic.
+Health data is simply the initial exemplar.
 
-2. The Two Subsystems
-2.1 DataFileReader — Data Ingestion + Unification
+2. Subsystem Summary
+2.1 DataFileReader — Ingestion + Normalization Layer
 
-Handles:
+Responsibilities:
 
-Reading different file formats
+Reading multiple file formats (CSV, JSON, Samsung formats, legacy formats).
 
-Normalizing and structuring data
+Providing a unified internal structure for downstream computation.
 
-Producing domain-agnostic internal metric models
+Normalizing timestamps, values, metadata.
 
-Current example domain: health data, but the architecture is general.
+Constructing internal models and hierarchies.
 
-2.2 DataVisualiser — Computation + Visualization Platform
+Offering extensible parser contracts.
 
-Provides:
+Output of this subsystem: clean, consistent, comparable metric data.
 
-Analytical strategies (comparison, normalization, ratios, weekly distributions, etc.)
+2.2 DataVisualiser — Computation + Visualization Layer
 
-Computation pipelines
+Responsibilities:
 
-Rendering engines built on LiveCharts
+Selecting computation strategies.
 
-A dynamic UI for exploring data
+Transforming ingested data into analytical models.
 
-This is where most interactive work happens.
+Rendering charts using LiveCharts.
 
-3. How Data Flows
+Orchestrating UI state and user workflow.
 
-User provides or selects a dataset
+Supporting week-level, difference, ratio, smoothing, normalized, and multi-metric strategies.
 
-DataFileReader parses and normalizes it
+Output of this subsystem: interactive visual analytics.
 
-The visualization layer retrieves the data
+3. Data Flow Summary
+File → Parser → Normalizer → Unified Metric Model
+      → Strategy → Computation Engine → Render Engine → UI
 
-A computation strategy transforms the dataset
 
-The render engine builds chart models
-
-The UI displays them interactively
+Each step is modular, replaceable, well-bounded.
 
 4. Architectural Highlights
-Modularity
 
-Parsers, strategies, renderers, and state are independent.
+Strict separation of concerns across ingestion, computation, rendering.
 
-Extensibility
+Strategy-driven computation layer (Difference, Ratio, Weekly Distribution, etc.).
 
-New data types or new computation strategies can be added with minimal changes.
+Rendering engine independent from computation engine.
 
-Domain-Agnostic Design
+State-driven UI (MetricState, UiState, ChartState).
 
-Health data is just the starting point.
+Composable helpers & engines (computation, shading, frequency binning, etc.).
 
-Forward-Looking Philosophy
-
-The system borrows from emergent, hierarchical, and intelligent-system ideas without trying to become them.
+Domain-agnostic conceptual core—the system generalizes naturally.
 
 5. Current Capabilities
 
-Single metric and multi-metric visualizations
+Multi-series charts
 
-Weekly distribution analysis
+Smoothing + normalization modes
 
-Normalization modes
+Difference and ratio views
 
-Ratio and difference comparisons
+Week-based distributions
 
-Smoothed data computations
+SQL-based metric fetching
 
-SQL-backed data reading
+Dynamic strategy selection
 
-Flexible UI with chart interaction
+Smart color palette + shading
 
-6. Intended Direction
+Tooltip orchestration
 
-The platform will:
+Robust metric selection workflow
 
-Support more domains
+6. Intended Near-Term Direction
 
-Grow additional computation models
+According to the Roadmap:
 
-Refine ingestion pipelines
+Generalize ingestion beyond health metrics
 
-Move toward generalized analytical workflows
+Standardize metadata models
 
-Preserve simplicity and practicality
+Unify computation pipelines (multi-metric first-class support)
 
-END OF PROJECT OVERVIEW
+Expand chart types
+
+Introduce reflective / adaptive behaviors (Phase 6)
+
+Gradually merge your emergent-architecture research into analytical workflows
+
+The platform is evolving toward a self-organizing analytical engine.
+
+End of Updated Overview
+📙 UPDATED PROJECT BIBLE (2025-12-11)
+
+A rigorous, architectural, forward-accurate document intended for:
+— onboarding,
+— refactoring governance,
+— architectural consistency,
+— future evolution.
