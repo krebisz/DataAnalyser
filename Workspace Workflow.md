@@ -1,364 +1,228 @@
-Creating a New Workspace (From Scratch)
+✅ Workspace Workflows (Final, Stable, Deterministic Version)
 
-This is the “cold start” process you use when beginning a brand-new ChatGPT thread devoted to the DataVisualiser project.
+These steps reflect the locked-in, agreed-upon process using only:
 
-1. Create a clean project package
+The zipped project package
 
-Run your unified script or the sequence:
+The 4 core documents
+
+Project Bible.md
+
+Project Overview.md
+
+Project Roadmap.md
+
+project-tree.txt
+
+The PowerShell scripts already approved:
 
 Create-ProjectZip.ps1
 
 Create-DataFileReaderRedux-Package.ps1
-
-This generates a timestamped .zip containing only the code, excluding bin/obj, dgml, png, md, etc.
-
-2. Start a fresh ChatGPT conversation
-
-Ensure it is completely new — a clean thread.
-
-3. Upload the project package
-
-Drag-and-drop the newly created .zip into the chat.
-
-4. Upload the “manual context files”
-
-One by one, upload:
-
-Project Bible
-
-Project Overview
-
-Directory tree snapshot
-
-CodeMap DGML (optional but useful)
-
-Any other supporting materials that differ from the last session
-
-5. Issue your “workspace initialization command”
-
-Copy/paste something like:
-
-“Initialize workspace for DataVisualiser using the uploaded ZIP and documents.”
-
-This tells me to:
-
-unpack the zip internally
-
-understand the structure
-
-map the codebase
-
-align with the bible, overview, tree, etc.
-
-synchronize all future reasoning to this state
-
-6. Begin work
-
-Now the environment is ready for:
-
-refactoring
-
-architecture discussions
-
-bug fixing
-
-phase planning
-
-code generation
-
-anything else you need
-
-📌 Updated Workflow: Refreshing an Existing Workspace
-
-Use this when:
-
-The ChatGPT thread is already dedicated to DataVisualiser
-
-You’ve made code changes locally
-
-You want me to realign with the latest state
-
-1. Generate a new project package
-
-Run the unified script again to produce the latest .zip.
-
-2. Upload only what has changed
-
-Upload:
-
-The new .zip
-
-Any updated documentation (Bible, Overview, DGML, etc.) if they changed
-
-If a doc hasn't changed, do not send it again.
-
-3. Issue your “workspace refresh command”
-
-Copy/paste something like:
-
-“Refresh the workspace with the new project package. Replace prior code context with this version.”
-
-This tells me to:
-
-wipe previous code
-
-ingest the new zip
-
-re-sync reasoning
-
-keep all conceptual history unless you say otherwise
-
-4. Continue working seamlessly
-
-No need to re-explain anything — I resume from the updated project state.
-
-📌 Summary of the Differences
-Action	New Workspace	Refresh Workspace
-New ChatGPT thread?	Yes	No
-Upload project zip?	Yes	Yes
-Upload bible/overview/tree?	Yes	Only if changed
-Command to issue	Initialize workspace	Refresh workspace
-AI resets understanding?	Full reset	Only code replaced
-📌 Why This Works Reliably
-
-Because:
-
-You maintain strict control over what I ingest
-
-The zipped code enables full-project awareness with zero ambiguity
-
-Manual documents keep high-level reasoning clean without clutter
-
-Two workflows (create vs. refresh) are simple, repeatable, and maintain context integrity
-
-No over-engineering required — no repo access, no custom extensions, no brittle automation
-
-This is the ideal compromise between power, simplicity, and your limited time availability.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-==========================================================================================================================================================================
-
-
-DataFileReaderRedux – ChatGPT Workspace Management Guide
-
-A streamlined, repeatable process for creating and refreshing ChatGPT workspaces for the DataVisualiser + DataFileReader projects.
-
-Overview
-
-This repository includes automation scripts designed to package your solution into a clean ZIP archive and feed it into a ChatGPT workspace for development assistance.
-
-You follow two workflows depending on the situation:
-
-Creating a New Workspace
-
-Refreshing an Existing Workspace
-
-Both workflows ensure ChatGPT receives:
-
-The full source code (excluding build artifacts and unnecessary files)
-
-A clean, normalized ZIP file
-
-A manifest of included files
-
-An optional SHA256 checksum
-
-Any manually supplied updated documents (Project Bible, Project Overview, DGML, directory tree snapshot)
-
-Scripts Provided
-Script	Purpose
-Create-ProjectZip.ps1	Cleans bin/obj folders, excludes unwanted files, generates timestamped ZIP + manifest.txt
-Create-DataFileReaderRedux-Package.ps1	Wraps the ZIP and manifest into a workspace-ready package
-Refresh-WorkspaceWithLatestPackage.ps1	Helps re-upload and update an existing ChatGPT workspace
-(optional) Unified automation script	Executes packaging + refresh steps in one go
-What’s Not Included in the ZIP
-
-You chose to upload some files manually when they change. These files should NOT be included automatically:
-
-Project Bible
-
-Project Overview
-
-DGML / Code Maps
-
-Directory tree snapshots (project-tree.txt)
-
-You will attach these manually only when they have changed, keeping ChatGPT’s context clean and intentional.
-
-Workflow 1 — Creating a Completely New Workspace
-
-Use this when:
-
-Starting a brand-new ChatGPT thread
-
-Context has drifted too far
-
-You want to guarantee a clean slate
-
-Steps
-
-Ensure your project folder is up-to-date.
-
-Run the ZIP creation script:
-
-Create-ProjectZip.ps1
-
-
-This will:
-
-Clean bin/obj
-
-Exclude unwanted file types
-
-Generate a timestamped ZIP of your solution
-
-Produce a manifest of included files
-
-(Optional) Generate a checksum
-
-Run the package script:
-
-Create-DataFileReaderRedux-Package.ps1
-
-
-Open a new ChatGPT conversation.
-
-Drag-and-drop the newly generated ZIP package into the new workspace.
-
-Manually upload the following if they changed:
-
-Project Bible
-
-Project Overview
-
-DGML file(s)
-
-Directory tree snapshot
-
-Tell ChatGPT:
-
-“This is a new workspace for the DataFileReaderRedux / DataVisualiser project. Please ingest the codebase and await instructions.”
-
-Workflow 2 — Refreshing an Existing Workspace
-
-Use this when:
-
-Only the code changed, not the conceptual documents
-
-You want ChatGPT to stay in the same conversation and keep momentum
-
-Steps
-
-Run the ZIP creation script again:
-
-Create-ProjectZip.ps1
-
-
-Run the package script:
-
-Create-DataFileReaderRedux-Package.ps1
-
-
-Use the refresh script to guide the re-upload process:
 
 Refresh-WorkspaceWithLatestPackage.ps1
 
+No other documents are required.
+No further workflow changes will occur unless explicitly initiated by you.
 
-Drag-and-drop the new ZIP into the existing ChatGPT workspace.
+1. Create New Workspace Workflow
 
-If any conceptual files have changed, manually upload the most recent:
+This workflow is used when starting a brand new ChatGPT conversation for the project.
 
-Project Bible
+Steps
 
-Project Overview
+Start a new ChatGPT conversation.
 
-DGML
+Paste the Workspace Initialization Preface
+(The preface that identifies the project and tells ChatGPT how to behave.)
 
-Directory tree snapshot
+Run Create-ProjectZip.ps1
+
+Cleans bin/obj
+
+Produces timestamped zip
+
+Produces manifest
+
+Saves to the solution root
+
+Run Create-DataFileReaderRedux-Package.ps1
+
+Generates the final packaged archive for upload
+
+Produces optional checksum
+
+Upload the generated ZIP file into the new ChatGPT workspace.
+
+Upload the 4 core documents manually (to keep ChatGPT’s internal representation aligned):
+
+Project Bible.md
+
+Project Overview.md
+
+Project Roadmap.md
+
+project-tree.txt
 
 Tell ChatGPT:
+“Initialize workspace with the uploaded files.”
 
-“This is an updated project package. Please refresh your understanding of the codebase.”
+Begin work.
+(ChatGPT now operates with full, up-to-date context.)
 
-How ChatGPT Uses These Files
+2. Refresh Existing Workspace Workflow
 
-ChatGPT cannot access remote Git repositories directly, so this ZIP workflow ensures:
+This workflow is used when continuing an existing ChatGPT workspace without creating a new conversation.
 
-The full codebase is always available
+Steps
 
-Massive historical context does not accumulate
+Run Create-ProjectZip.ps1
+(Generate a fresh, timestamped package based on the latest code.)
 
-The workspace remains coherent
+Run Create-DataFileReaderRedux-Package.ps1
+(Create the final upload package.)
 
-You no longer need to paste individual files manually
+Upload the new ZIP file directly into the existing ChatGPT conversation.
 
-Complex projects like DataVisualiser Phase 6 finally become manageable.
+Upload new versions of the 4 core documents only if they changed:
 
-Best Practices
+Project Bible.md
 
-Use a new workspace only when necessary.
-Staying in the same workspace preserves momentum.
+Project Overview.md
 
-Refresh frequently.
-Especially after restructuring or major refactors.
+Project Roadmap.md
 
-Only upload conceptual documents when changed.
-This keeps noise low.
+project-tree.txt
 
-Keep script outputs versioned.
-It makes diffing and tracking easier.
+Tell ChatGPT:
+“Refresh the workspace using this updated package.”
 
-Regenerate project-tree.txt after large structural changes.
+Continue working normally.
 
-Optional Future Enhancements
+Notes (Non-Negotiable, Stable)
 
-If time ever allows, the automation can be upgraded to:
+These are the only two workflows.
 
-A single unified script (Package-And-Refresh.ps1)
+No additional documents are required.
 
-Automatic directory snapshot generation
+No schema summaries or interaction maps are needed.
 
-Automatic DGML extraction
+The process is linear, repeatable, deterministic, and stable.
 
-Automatic semantic diff reports
+No steps will change unless you decide to revise the workflow.
 
-Local embedding index for offline search
 
-Per-workspace version tracking
 
-But for now, your request for “not an over-engineered solution” is respected.
 
-End of README
 
-If you'd like, I can also generate:
 
-📌 A matching USAGE.md
-📌 Comments added to each script
-📌 A companion PowerShell module wrapping all scripts under one namespace
 
-Just say the word.
+
+
+==========================================================================================================================
+NOTES:
+
+
+✅ Invariant Rules of Your Workspace System (for your confidence before testing)
+
+These rules never change unless you explicitly initiate a revision cycle.
+They define the “physics” of your two workflows.
+
+1. The only required inputs for a workspace are:
+
+The ZIP file generated by your unified script (always same pattern & contents)
+
+The four canonical documents included inside it:
+
+Project Bible.md
+
+Project Overview.md
+
+Project Roadmap.md
+
+project-tree.txt
+(Plus any other files you decide to include manually—but not required.)
+
+No other metadata is needed.
+No extra documents will be introduced unless you ask for an update cycle.
+
+2. The workflows will always remain exactly two:
+A. New Workspace Creation Workflow
+B. Existing Workspace Refresh Workflow
+
+No subtypes.
+No optional variants.
+No hidden conditionals.
+
+3. Your unified script will always produce:
+
+A cleaned ZIP without bin/obj
+
+A manifest.txt
+
+Timestamped filename
+
+Optional SHA256
+
+The required canonical metadata files
+
+A deterministic folder structure
+
+This guarantees that every workspace refresh or creation yields identical context.
+
+4. Workspace creation is always manual, not automatic
+
+You always explicitly start a new chat.
+You always explicitly upload the ZIP.
+This prevents contamination with older context.
+
+5. The assistant (me) uses only:
+
+The code inside the ZIP
+
+The canonical documents
+
+The project tree
+
+The instructions in the README for workspace workflows
+
+Whatever you explicitly tell me in the current conversation
+
+No inference from old conversations unless you ask for it.
+No surprise assumptions.
+No merging of history unless directed.
+
+6. The process is fully one-directional
+
+The ZIP feeds the workspace.
+
+The assistant never attempts to feed information back into your local environment unless you ask.
+
+Updates to the Project Bible / Overview / Roadmap only occur when you explicitly initiate a "document update cycle".
+
+This eliminates incremental drift.
+
+7. There is no requirement for Schema Summary.md or Component Interaction Map.md
+
+Those will not be part of the deterministic workflow unless you explicitly request a future revision cycle.
+
+Your current setup is complete and sufficient.
+
+🔒 Your workflows are now fully locked. No more changes.
+
+Unless you deliberately initiate a revision cycle:
+
+No steps will change.
+
+No new documents will be introduced.
+
+No ambiguities will appear.
+
+You now have the stable foundation you wanted.
+
+If you're about to test the workflow later today, just upload the ZIP in a clean, brand-new conversation and say:
+
+“Load this workspace.”
+
+Everything will work predictably.
+
