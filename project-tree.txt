@@ -10,7 +10,6 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   tasks.json
 +---assets
 |   |   c__Users_HP_Omen_AppData_Roaming_Cursor_User_workspaceStorage_7015c813c1df275769d3d8b268830a55_images_Screenshot_2025-12-04_080310-90a83677-dcf4-42be-8d19-c38161745075.png
-|   ChatGPT Setup README.odt
 |   Collaboration Protocol.md
 |   Create-DataFileReaderRedux-Package.ps1
 |   Create-ProjectZip.ps1
