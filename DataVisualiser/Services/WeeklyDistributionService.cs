@@ -3,6 +3,7 @@ using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
 using DataVisualiser.Models;
 using DataVisualiser.Helper;
 using DataVisualiser.Charts.Computation;
+using DataVisualiser.Services.Shading;
 using LiveCharts.Wpf;
 using System.Diagnostics;
 using System.Windows;
@@ -25,10 +26,20 @@ namespace DataVisualiser.Services
         private const double MaxColumnWidth = 40.0;
 
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
+        private IIntervalShadingStrategy _shadingStrategy;
 
-        public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps)
+        public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IIntervalShadingStrategy? shadingStrategy = null)
         {
             _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
+            _shadingStrategy = shadingStrategy ?? new FrequencyBasedShadingStrategy();
+        }
+
+        /// <summary>
+        /// Sets the shading strategy to use for interval coloring.
+        /// </summary>
+        public void SetShadingStrategy(IIntervalShadingStrategy strategy)
+        {
+            _shadingStrategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
         }
 
         /// <summary>
@@ -74,7 +85,7 @@ namespace DataVisualiser.Services
             DateTime to,
             double minHeight = DefaultMinHeight,
             bool useFrequencyShading = true,
-            int intervalCount = 25)
+            int intervalCount = 10)
         {
             if (targetChart == null)
             {
@@ -310,8 +321,16 @@ namespace DataVisualiser.Services
                 // Step 3: Count frequencies per interval per day
                 frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
 
-                // Step 4: Map frequencies to color shades
-                colorMap = MapFrequenciesToColors(frequenciesPerDay);
+                // Step 4: Map frequencies to color shades using the shading strategy
+                var shadingContext = new IntervalShadingContext
+                {
+                    Intervals = intervals,
+                    FrequenciesPerDay = frequenciesPerDay,
+                    DayValues = dayValues,
+                    GlobalMin = globalMin,
+                    GlobalMax = globalMax
+                };
+                colorMap = _shadingStrategy.CalculateColorMap(shadingContext);
             }
 
             // Step 1: Render original baseline + range columns with frequency-based shading
@@ -374,7 +393,16 @@ namespace DataVisualiser.Services
             if (useFrequencyShading)
             {
                 System.Diagnostics.Debug.WriteLine("WeeklyDistribution: Applying frequency shading...");
-                ApplyFrequencyShading(targetChart, mins, ranges, intervals, frequenciesPerDay, colorMap, globalMin, globalMax);
+                // Create shading context if not already created (should be created above, but handle edge case)
+                var shadingContext = new IntervalShadingContext
+                {
+                    Intervals = intervals,
+                    FrequenciesPerDay = frequenciesPerDay,
+                    DayValues = dayValues,
+                    GlobalMin = globalMin,
+                    GlobalMax = globalMax
+                };
+                ApplyFrequencyShading(targetChart, mins, ranges, intervals, frequenciesPerDay, colorMap, globalMin, globalMax, shadingContext);
             }
             else
             {
@@ -534,66 +562,6 @@ namespace DataVisualiser.Services
             return frequenciesPerDay;
         }
 
-        /// <summary>
-        /// Step 4: Map frequencies to color shades.
-        /// Non-zero frequencies map to light blue (low) to dark blue/near-black (high).
-        /// Zero frequencies are handled separately in ApplyFrequencyShading (white only if within day's range).
-        /// </summary>
-        private Dictionary<int, Dictionary<int, Color>> MapFrequenciesToColors(
-            Dictionary<int, Dictionary<int, int>> frequenciesPerDay)
-        {
-            // Find global maximum frequency across all days and intervals
-            int maxFreq = 0;
-            foreach (var dayFreqs in frequenciesPerDay.Values)
-            {
-                foreach (var freq in dayFreqs.Values)
-                {
-                    if (freq > maxFreq)
-                        maxFreq = freq;
-                }
-            }
-
-            if (maxFreq == 0)
-                maxFreq = 1; // Avoid division by zero
-
-            System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: Color Mapping ===");
-            System.Diagnostics.Debug.WriteLine($"Global max frequency: {maxFreq}");
-
-            // Map each non-zero frequency to a color (light blue to dark blue/near-black)
-            var colorMap = new Dictionary<int, Dictionary<int, Color>>();
-
-            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
-            {
-                var dayColorMap = new Dictionary<int, Color>();
-
-                if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs))
-                {
-                    foreach (var kvp in dayFreqs)
-                    {
-                        int intervalIndex = kvp.Key;
-                        int frequency = kvp.Value;
-
-                        // Only map non-zero frequencies to colors
-                        // Zero frequencies will be handled in ApplyFrequencyShading (white if within day's range)
-                        if (frequency > 0)
-                        {
-                            // Normalize frequency to [0.0, 1.0]
-                            double normalizedFreq = (double)frequency / maxFreq;
-
-                            // Map to color (light blue = low frequency, dark blue/near-black = high frequency)
-                            Color color = WeeklyFrequencyRenderer.MapFrequencyToColor(normalizedFreq);
-                            dayColorMap[intervalIndex] = color;
-                        }
-                        // Note: frequency = 0 is not added to dayColorMap here
-                        // It will be handled in ApplyFrequencyShading based on whether interval overlaps day's range
-                    }
-                }
-
-                colorMap[dayIndex] = dayColorMap;
-            }
-
-            return colorMap;
-        }
 
         /// <summary>
         /// Step 5: Apply frequency-based shading to the existing range columns.
@@ -607,7 +575,8 @@ namespace DataVisualiser.Services
             Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
             Dictionary<int, Dictionary<int, Color>> colorMap,
             double globalMin,
-            double globalMax)
+            double globalMax,
+            IntervalShadingContext shadingContext)
         {
             // Remove the original range series and replace with frequency-shaded segments
             // We'll create stacked column segments for each interval that overlaps with each day's range
@@ -923,13 +892,35 @@ namespace DataVisualiser.Services
                     // Each interval is independent - colored segments appear at their interval's Y position
                     if (hasNonZeroFreqDays)
                     {
-                        // Use color mapping based on max frequency (light blue to dark blue)
-                        double normalizedFreq = globalMaxFreq > 0 ? (double)maxFreqForInterval / globalMaxFreq : 0.0;
-                        Color finalColor = WeeklyFrequencyRenderer.MapFrequencyToColor(normalizedFreq);
+                        // Use the precomputed colorMap which has correct global normalization
+                        // Since we create one series per interval (shared across all days), we use the color
+                        // from the day with the highest frequency for this interval (which will be the darkest/most representative)
+                        Color finalColor = Color.FromRgb(173, 216, 230); // Default light blue fallback
+
+                        // Find the day with the highest frequency for this interval to get the most representative color
+                        int maxFreqDay = -1;
+                        int maxFreq = 0;
+                        for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+                        {
+                            if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) &&
+                                dayFreqs.TryGetValue(intervalIndex, out var freq) &&
+                                freq > maxFreq)
+                            {
+                                maxFreq = freq;
+                                maxFreqDay = dayIndex;
+                            }
+                        }
+
+                        // Get color from colorMap for the day with highest frequency
+                        if (maxFreqDay >= 0 && colorMap.TryGetValue(maxFreqDay, out var dayColorMap) &&
+                            dayColorMap.TryGetValue(intervalIndex, out var mapColor))
+                        {
+                            finalColor = mapColor;
+                        }
 
                         if (intervalIndex < 3)
                         {
-                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: MaxFreq={maxFreqForInterval}, Normalized={normalizedFreq:F4}, Color=RGB({finalColor.R},{finalColor.G},{finalColor.B})");
+                            System.Diagnostics.Debug.WriteLine($"  Interval {intervalIndex}: MaxFreq={maxFreqForInterval}, GlobalMaxFreq={globalMaxFreq}, Color=RGB({finalColor.R},{finalColor.G},{finalColor.B})");
                         }
 
                         var fillBrush = new SolidColorBrush(finalColor);
