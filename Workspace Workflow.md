@@ -1,12 +1,13 @@
-> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+📘 Workspace Workflow.md
 
-📘 Workspace Workflow.md (Updated — Automation Wired In, Strict Mode–Compliant)
+(Updated — Automation Wired In, Strict Mode–Compliant)
 
-(Fully integrated with MASTER_OPERATING_PROTOCOL.md)
+⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
 
 Workspace Initialization & Rehydration Protocol (Authoritative)
 
 This document defines the exact artifacts and step-by-step process required to initialize or refresh a ChatGPT workspace for the DataFileReaderRedux solution.
+
 It ensures architectural consistency, prevents context drift, and allows deterministic rehydration across sessions.
 
 🔒 SECTION 0 — SACRED WORKSPACE WORKFLOWS (IMMUTABLE)
@@ -56,17 +57,29 @@ SYSTEM_MAP.md (if present)
 
 Start a new ChatGPT conversation.
 
+(Optional but Recommended) Declare a workspace label.
+
+At the start of the conversation, the user may declare a workspace identifier in the form:
+
+Workspace: <Project> — <Context> — <Qualifier>
+
+
+This label defines the identity and scope of the workspace for the duration of the conversation and is treated as the canonical workspace reference.
+
 Upload ALL files from the Rehydration Bundle.
 
 Enter the initialization command:
-“Initialize workspace with the uploaded files.”
 
-Do NOT proceed with any development tasks until ChatGPT confirms:
-“Workspace successfully initialized.”
+Initialize workspace with the uploaded files.
+
+
+Do NOT proceed with any development tasks until ChatGPT explicitly confirms:
+
+Workspace successfully initialized.
 
 ⛔ Sacred Workflow B — Refresh an Existing Workspace (Authoritative Sequence)
 
-Follow these steps exactly when updating a workspace:
+Follow these steps exactly when updating an existing workspace:
 
 Re-run required generators:
 
@@ -99,10 +112,14 @@ Any updated documentation
 Upload the Refresh Bundle to the existing ChatGPT workspace.
 
 Enter the refresh command:
-“Refresh workspace with the updated files.”
+
+Refresh workspace with the updated files.
+
 
 Wait for explicit confirmation:
-“Workspace successfully refreshed.”
+
+Workspace successfully refreshed.
+
 
 Proceed with development only after confirmation.
 
@@ -116,11 +133,9 @@ These workflows MUST NOT be altered without explicit agreement.
 
 These workflows override all other procedural descriptions.
 
--------------------------------------------
 1. Required Rehydration Bundle
--------------------------------------------
 
-Before starting a new ChatGPT workspace, prepare and upload the following files:
+Before starting a new ChatGPT workspace, prepare and upload the following files.
 
 A. Mandatory Files
 
@@ -153,9 +168,8 @@ B. Optional but Recommended
 Solution ZIP / Package
 For deep reference only (ChatGPT cannot extract contents automatically).
 
--------------------------------------------
 2. When to Regenerate Each File
--------------------------------------------
+
 Regenerate project-tree.txt when:
 
 Files or folders change
@@ -180,39 +194,35 @@ New execution paths are introduced
 
 New extension mechanisms are added
 
--------------------------------------------
 3. New Workspace Checklist
--------------------------------------------
 
-Run all required generators.
+Run all required generators
 
-Verify architectural documents.
+Verify architectural documents
 
-Start a new ChatGPT conversation.
+Start a new ChatGPT conversation
 
-Upload the full Rehydration Bundle.
+(Optional) Declare workspace label
 
-Issue: “Initialize workspace with the uploaded files.”
+Upload the full Rehydration Bundle
 
-Wait for confirmation.
+Issue: Initialize workspace with the uploaded files.
 
--------------------------------------------
+Wait for confirmation
+
 4. Workspace Refresh Checklist
--------------------------------------------
 
-Re-run applicable generators.
+Re-run applicable generators
 
-Update documentation only if required.
+Update documentation only if required
 
-Upload updated artifacts.
+Upload updated artifacts
 
-Issue: “Refresh workspace with the updated files.”
+Issue: Refresh workspace with the updated files.
 
-Wait for confirmation.
+Wait for confirmation
 
--------------------------------------------
 5. Document Authority Hierarchy
--------------------------------------------
 
 When reconstructing the workspace, ChatGPT interprets documents strictly in this order:
 
