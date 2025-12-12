@@ -1,3 +1,5 @@
+> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+
 📘 Project Philosophy
 
 A concise articulation of the guiding principles of the entire solution
@@ -103,3 +105,7 @@ Becoming a reusable platform for future personal or professional projects
 This file ensures the project’s identity and purpose remain stable as new workspaces, contexts, or assistants come into play.
 
 It acts as the project’s north star.
+
+This project embraces experimentation, long-term thinking, and the pursuit of systems that can adapt, reorganize, and grow in complexity over time. Failure, iteration, and reconsideration are treated as necessary components of meaningful progress rather than setbacks to be avoided.
+
+Disciplined collaboration, including the explicit identification and correction of deviations from agreed protocols, is treated as an enabling condition for creative exploration and emergent system evolution, not a constraint upon it.

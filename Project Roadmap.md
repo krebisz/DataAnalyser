@@ -1,3 +1,5 @@
+> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+
 PROJECT ROADMAP (Markdown)
 
 (Recommended filename: Project-Roadmap.md)

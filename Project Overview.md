@@ -1,3 +1,5 @@
+> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+
 📘 UPDATED PROJECT OVERVIEW (2025-12-11)
 
 (Developer-oriented, concise, accurate, forward-looking)

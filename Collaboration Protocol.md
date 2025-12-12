@@ -1,162 +1,175 @@
-📙 Collaboration Protocol
+> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
 
-A durable guide for ChatGPT ↔ Developer workflows across sessions and workspaces
+🤝 Collaboration Protocol
+Purpose
 
-1. Purpose
+This document defines the principles, expectations, and enforcement rules governing collaboration between the user and ChatGPT.
 
-This document ensures:
+It does not define technical workflows, file-handling mechanics, or workspace initialization steps.
+Those are authoritatively defined elsewhere.
 
-Continuity across new ChatGPT workspaces
+This protocol exists to ensure:
 
-Repeatable onboarding
+clarity
 
-Stable expectations for code analysis
+discipline
 
-Minimal management overhead for you
+mutual correction
 
-It standardizes how YOU and ChatGPT interact with the solution.
+long-term coherence in complex work
 
-2. The Single Source of Truth
+Authority & Scope
 
-The following files represent canonical knowledge and must always be included in every ZIP upload:
+This document is principles-only.
 
-Project Bible.md — detailed technical architecture
+The following documents are authoritative for execution and enforcement:
 
-Project Overview.md — high-level orientation
+MASTER_OPERATING_PROTOCOL.md — ChatGPT behavior and constraints
 
-Project Roadmap.md — sequenced future trajectory
+Workspace Workflow.md — workspace initialization and refresh procedures
 
-Project Philosophy.md (this file)
+In the event of any conflict, those documents take precedence.
 
-Collaboration Protocol.md (this file)
+Collaboration Mode
 
-These collectively act as the "workspace bootstrap kit."
+All collaboration is conducted under Strict Mode.
 
-3. Workspace Initialization (New Workspace)
+This implies:
 
-Every new workspace should start with:
+no assumptions
 
-Upload the latest zipped DataFileReaderRedux package
+no inferred context
 
-Provide the full set of project documents listed above
+no speculative code or reasoning
 
-Instruct ChatGPT:
-“Use these documents as the canonical reference for all future context.”
+explicit acknowledgment of missing or unreadable inputs
 
-When needed, also provide a clarifying statement:
+deterministic, auditable steps
 
-"If any ambiguity exists, defer to the code first, documents second."
+This discipline exists to support clarity, creativity, and emergent understanding in complex work, not to suppress exploration or constrain legitimate experimentation.
 
-4. Workspace Refresh Workflow (Existing Workspace)
+Strict Mode is not optional and is not relaxed implicitly.
 
-When revisiting an ongoing workspace:
+Generated Artifacts as Shared Ground Truth
 
-Upload a new ZIP containing the updated codebase
+Collaboration relies on auto-generated artifacts for structural understanding, including:
 
-Upload only documents that have changed since the last session
+project-tree.txt
 
-Tell ChatGPT:
-“Refresh your internal model using this updated package.”
+codebase-index.md
 
-This refreshes context while avoiding drift.
+dependency-summary.md
 
-5. Rules for Document & Code Evolution
-5.1 Document Integrity Rules
+These artifacts are:
 
-Project Bible and Overview should evolve deliberately, not reactively
+authoritative for structure and coupling
 
-The Roadmap should remain flexible but structured
+preferred over exploratory or speculative requests
 
-Philosophy should rarely change (only major shifts)
+regenerated rather than manually edited
 
-Collaboration Protocol should change only when workflows break
+Human-authored documents provide intent and meaning, not inventories.
 
-5.2 Code Interpretation Rules
+Mutual Responsibility & Correction (IMPORTANT)
 
-ChatGPT always applies the following priority:
+Both parties are responsible for maintaining adherence to the established protocols.
 
-Current Code
+Protocol Deviation Handling
 
-Project Bible
+If, at any point, the user appears to be acting in conflict with the established protocols, ChatGPT must:
 
-Roadmap
+Explicitly flag the deviation
 
-Project Overview
+State which protocol or rule is being violated
 
-Project Philosophy
+Pause forward progress
 
-This prevents hallucinations and misalignment.
+The user will then:
 
-6. Request-Oriented Behavior Expectations
+attempt to correct the approach, or
 
-When you request something from ChatGPT, the assistant should:
+engage in an explicit, ad-hoc resolution to adjust the protocol if needed
 
-Re-check the Bible, Overview, Roadmap
+Proceeding silently in the presence of a protocol violation is not permitted.
 
-Infer context, relationships, and architecture from code
+This rule applies equally to:
 
-Ask only essential clarifying questions
+workflow steps
 
-Produce coherent, integrated output consistent with the overall architecture
+file-provision rules
 
-Avoid fragmentary or “guessy” interpretations
+Strict Mode constraints
 
-Maintain stability of naming, structure, and intent
+artifact usage
 
-7. Your Role (Developer Responsibilities)
+collaboration boundaries
 
-You only need to:
+Expectations of ChatGPT
 
-Supply updated ZIPs
+ChatGPT must:
 
-Keep essential documents aligned
+Follow MASTER_OPERATING_PROTOCOL.md without exception
 
-Decide when major architectural shifts occur
+Use provided artifacts and documents as primary inputs
 
-Validate that output remains aligned with your intent
+Request missing context explicitly and early
 
-Everything else is handled within the workspace.
+Avoid overreach, assumption, or invention
 
-8. Boundaries and Expectations
+Challenge ambiguity rather than smoothing it over
 
-ChatGPT will not:
+Flag protocol violations as defined above
 
-Create features inconsistent with the architecture
+Expectations of the User
 
-Drift away from the project philosophy
+The user commits to:
 
-Make unilateral design decisions
+Following the Workspace Workflow
 
-Replace existing patterns without a rational improvement trajectory
+Providing required artifacts and files
 
-You will not need to:
+Respecting Strict Mode constraints
 
-Re-explain previous phases
+Accepting protocol flags in good faith
 
-Manage context manually
+Correcting deviations or resolving them explicitly
 
-Address internal inconsistencies caused by assistant drift
+The protocol exists to support progress, not to obstruct it.
 
-9. Roadmap-Driven Collaboration
+Relationship to Other Documents
 
-All future work should tie back to:
+This document works in concert with:
 
-the Roadmap phase you are in
+MASTER_OPERATING_PROTOCOL.md — enforcement and AI-side rules
 
-or to an explicitly chosen deviation
+Workspace Workflow.md — procedural steps
 
-No new feature should ever appear in isolation.
+Project Bible.md — architectural law
 
-10. Long-Term Compatibility
+SYSTEM_MAP.md — semantic intent
 
-This protocol is designed so that:
+Generated artifacts — structural truth
 
-future versions of ChatGPT
+No single document stands alone.
 
-future features such as persistent workspaces
+Update Policy
 
-or alternative assistants
+This document should change rarely.
 
-can all “plug in” using the same initialization process.
+Update only when:
 
-This ensures the project never becomes dependent on one session or model.
+collaboration rules change
+
+enforcement expectations evolve
+
+the Strict Mode contract is amended
+
+Do not update for:
+
+tooling changes
+
+workflow refinements
+
+feature development
+
+End of Collaboration Protocol

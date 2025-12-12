@@ -1,4 +1,6 @@
-📘 Workspace Workflow.md (Updated, Strict Mode–Compliant)
+> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+
+📘 Workspace Workflow.md (Updated — Automation Wired In, Strict Mode–Compliant)
 
 (Fully integrated with MASTER_OPERATING_PROTOCOL.md)
 
@@ -12,8 +14,13 @@ It ensures architectural consistency, prevents context drift, and allows determi
 
 Follow these steps exactly when starting a new ChatGPT workspace:
 
-Run Generate-ProjectTree.ps1
-→ Produces the latest project-tree.txt.
+Run structural generators:
+
+Generate-ProjectTree.ps1 → produces project-tree.txt
+
+Generate-CodebaseIndex.ps1 → produces codebase-index.md
+
+Generate-DependencySummary.ps1 → produces dependency-summary.md
 
 Verify the following documents are current:
 
@@ -25,9 +32,15 @@ Project Overview.md
 
 Project Roadmap.md
 
+SYSTEM_MAP.md (if present)
+
 Prepare the Rehydration Bundle:
 
 project-tree.txt
+
+codebase-index.md
+
+dependency-summary.md
 
 MASTER_OPERATING_PROTOCOL.md
 
@@ -36,6 +49,8 @@ Project Bible.md
 Project Overview.md
 
 Project Roadmap.md
+
+SYSTEM_MAP.md (if present)
 
 (Optional) Latest solution ZIP or package
 
@@ -53,24 +68,31 @@ Do NOT proceed with any development tasks until ChatGPT confirms:
 
 Follow these steps exactly when updating a workspace:
 
-Run Generate-ProjectTree.ps1
-→ Creates an updated project-tree.txt.
+Re-run required generators:
+
+Always run Generate-ProjectTree.ps1
+
+Run Generate-CodebaseIndex.ps1 if code structure changed
+
+Run Generate-DependencySummary.ps1 if dependencies may have changed
 
 Identify which documents require updating:
 
-Update Bible only if architecture changed.
+Update MASTER_OPERATING_PROTOCOL.md only if collaboration rules change
 
-Update Overview only if system capabilities changed.
+Update Project Bible.md only if architecture changes
 
-Update Roadmap only if the phase or trajectory changed.
+Update Project Overview.md only if system capabilities change
 
-Update Master Protocol only if collaboration rules change.
+Update Project Roadmap.md only if phase or trajectory changes
+
+Update SYSTEM_MAP.md only if structural intent changes
 
 Prepare the Refresh Bundle:
 
-Updated project-tree.txt
+Updated generated artifacts (project-tree.txt, codebase-index.md, dependency-summary.md)
 
-Any updated documentation (MASTER_OPERATING_PROTOCOL.md, Bible, Overview, Roadmap)
+Any updated documentation
 
 (Optional) Updated solution ZIP
 
@@ -86,11 +108,13 @@ Proceed with development only after confirmation.
 
 ⚠️ Notes (Immutable)
 
+Generated artifacts are authoritative for structure, but not for intent.
+
+Generated files must never be edited by hand.
+
 These workflows MUST NOT be altered without explicit agreement.
 
 These workflows override all other procedural descriptions.
-
-Any deviation must be formally documented and merged into this section.
 
 -------------------------------------------
 1. Required Rehydration Bundle
@@ -99,166 +123,115 @@ Any deviation must be formally documented and merged into this section.
 Before starting a new ChatGPT workspace, prepare and upload the following files:
 
 A. Mandatory Files
-1. project-tree.txt
 
-Generated using Generate-ProjectTree.ps1.
-Must reflect current and complete solution structure.
+project-tree.txt
+Structural listing of the repository.
 
-2. MASTER_OPERATING_PROTOCOL.md
+codebase-index.md
+Auto-generated index of namespaces, public symbols, and file roles.
 
-Defines strict behavioral constraints for ChatGPT.
-Must be included in every workspace initialization.
+dependency-summary.md
+Auto-generated structural dependency overview.
 
-3. Project Bible.md
+MASTER_OPERATING_PROTOCOL.md
+Defines strict operational constraints for ChatGPT.
 
-The authoritative architecture and subsystem definition.
-Updated only when architectural boundaries change.
+Project Bible.md
+Architectural authority.
 
-4. Project Overview.md
+Project Overview.md
+High-level system summary.
 
-High-level system-purpose and data flow summary.
+Project Roadmap.md
+Phase and evolution guide.
 
-5. Project Roadmap.md
-
-Defines planned phase evolution.
+SYSTEM_MAP.md (if present)
+Human-authored semantic map bridging intent and structure.
 
 B. Optional but Recommended
-Solution ZIP / Package
 
-Created via Create-ProjectZip.ps1 or Create-DataFileReaderRedux-Package.ps1.
-Useful for deep structural review (though ChatGPT cannot extract file contents automatically).
+Solution ZIP / Package
+For deep reference only (ChatGPT cannot extract contents automatically).
 
 -------------------------------------------
 2. When to Regenerate Each File
 -------------------------------------------
-A. Regenerate project-tree.txt when:
+Regenerate project-tree.txt when:
 
-Any file is added, deleted, renamed, or moved
+Files or folders change
 
-Folder structure changes
+Regenerate codebase-index.md when:
 
-A refactor touches multiple directories
+Public classes, interfaces, or namespaces change
 
-(Most frequently updated artifact.)
+Files are added, removed, or renamed
 
-B. Update MASTER_OPERATING_PROTOCOL.md when:
+Regenerate dependency-summary.md when:
 
-ChatGPT operational rules change
+New dependencies are introduced
 
-A new workflow mode is introduced
+Layering or coupling may have shifted
 
-File-ingestion or modification rules evolve
+Update SYSTEM_MAP.md when:
 
-C. Update Project Bible.md when:
+Subsystem boundaries change
 
-Architectural boundaries change
+New execution paths are introduced
 
-New engines, strategies, or subsystems are added
-
-Core abstractions evolve
-
-D. Update Project Overview.md when:
-
-The system gains new visible capabilities
-
-Data flow or subsystem roles shift
-
-E. Update Project Roadmap.md when:
-
-A new phase begins
-
-A phase definition changes
-
-Long-term direction changes
+New extension mechanisms are added
 
 -------------------------------------------
 3. New Workspace Checklist
 -------------------------------------------
 
-Use this exact sequence when starting a new workspace:
+Run all required generators.
 
-Run Generate-ProjectTree.ps1 → produce fresh project-tree.txt.
-
-Ensure the four architectural documents are current:
-
-MASTER_OPERATING_PROTOCOL.md
-
-Project Bible.md
-
-Project Overview.md
-
-Project Roadmap.md
-
-(Optional) Generate or locate the current ZIP package.
+Verify architectural documents.
 
 Start a new ChatGPT conversation.
 
-Upload all files.
+Upload the full Rehydration Bundle.
 
-Issue the command:
-“Initialize workspace with the uploaded files.”
+Issue: “Initialize workspace with the uploaded files.”
 
-ChatGPT will reconstruct:
-
-subsystem architecture
-
-ingestion pipeline
-
-computation & rendering boundaries
-
-strategy layer mechanics
-
-UI/state structure
-
-naming conventions
-
-long-term development phase alignment
-
-The workspace is now fully rehydrated.
+Wait for confirmation.
 
 -------------------------------------------
 4. Workspace Refresh Checklist
 -------------------------------------------
 
-Use this when continuing development after making changes:
+Re-run applicable generators.
 
-Regenerate project-tree.txt.
+Update documentation only if required.
 
-Update:
+Upload updated artifacts.
 
-MASTER_OPERATING_PROTOCOL.md (if rules changed)
+Issue: “Refresh workspace with the updated files.”
 
-Bible (if architecture changed)
-
-Overview (if visible capabilities changed)
-
-Roadmap (if phase evolved)
-
-Upload the changed files.
-
-Instruct ChatGPT:
-“Refresh workspace with the updated files.”
-
-Proceed only after confirmation.
+Wait for confirmation.
 
 -------------------------------------------
 5. Document Authority Hierarchy
 -------------------------------------------
 
-When reconstructing the workspace, ChatGPT interprets documents strictly in the following order:
+When reconstructing the workspace, ChatGPT interprets documents strictly in this order:
 
 MASTER_OPERATING_PROTOCOL.md (operational truth)
 
 Project Bible.md (architectural truth)
 
-Project Overview.md (high-level system truth)
+SYSTEM_MAP.md (semantic intent)
 
-Project Roadmap.md (evolutionary truth)
+Project Overview.md (system summary)
 
-project-tree.txt (structural truth)
+Project Roadmap.md (evolutionary intent)
 
-Solution ZIP (implementation truth)
+codebase-index.md (symbolic structure)
 
-This hierarchy ensures deterministic, conflict-free behavior.
+dependency-summary.md (structural coupling)
+
+project-tree.txt (raw structure)
+
+Solution ZIP (reference only)
 
 End of Workspace Workflow.md

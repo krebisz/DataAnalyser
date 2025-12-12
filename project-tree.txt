@@ -10,6 +10,7 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   tasks.json
 +---assets
 |   |   c__Users_HP_Omen_AppData_Roaming_Cursor_User_workspaceStorage_7015c813c1df275769d3d8b268830a55_images_Screenshot_2025-12-04_080310-90a83677-dcf4-42be-8d19-c38161745075.png
+|   codebase-index.md
 |   Collaboration Protocol.md
 |   Create-DataFileReaderRedux-Package.ps1
 |   Create-ProjectZip.ps1
@@ -130,15 +131,19 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   |   ViewModelEvents.cs
 |   |   |   MainWindowViewModel.cs
 |   |   WeeklyDistributionStrategy.cs
+|   dependency-summary.md
+|   Generate-CodebaseIndex.ps1
+|   Generate-DependencySummary.ps1
 |   Generate-ProjectTree.ps1
 |   Initialize-DataVisualiserWorkspace.ps1
+|   MASTER_OPERATING_PROTOCOL.md
 |   Project Bible.md
 |   Project Overview.md
 |   Project Philosphy.md
 |   Project Roadmap.md
 |   project-tree.txt
-|   README.md
 |   Refresh-WorkspaceWithLatestPackage.ps1
 |   Run-PublishPipeline.ps1
+|   SYSTEM_MAP.md
 |   Upload-LatestProjectPackage.ps1
 |   Workspace Workflow.md
