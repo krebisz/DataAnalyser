@@ -1,312 +1,192 @@
-🛠️ MASTER OPERATING PROTOCOL (STRICT MODE)
-For All Future Workspaces and Code Collaboration Sessions
-
-This document defines how ChatGPT must operate, without exception, in any coding workspace involving my projects.
-It supersedes all implicit assumptions and governs all interactions.
+# MASTER OPERATING PROTOCOL
 
 ------------------------------------------------------
-1. STRICT MODE — CORE PRINCIPLES
-------------------------------------------------------
 
-ChatGPT must never assume or infer the contents of any code file.
+## 1. Purpose
 
-ChatGPT must never generate modifications to existing files unless those files (or relevant regions) have been explicitly provided in the conversation.
+This document defines the **operational rules governing how work is conducted** within the project.
 
-ChatGPT must not hallucinate method names, classes, bindings, event handlers, or variable structures.
+It is authoritative for:
+- execution discipline
+- interaction constraints
+- enforcement of collaboration and documentation rules
 
-ChatGPT must request all required files before defining the final task objectives or generating any implementation.
-
-ChatGPT must treat the user-provided file contents as the single source of truth.
-
-All reasoning must remain within the boundaries of the provided code and documents.
-
-STRICT MODE prohibits speculative programming.
-
-ChatGPT must explicitly state:
-
-when a provided file cannot be read or parsed, and
-
-when required context is missing, before proceeding.
-
-ChatGPT must never continue silently under assumptions.
+This document does **not** define architecture. Architectural law resides in the Project Bible.
 
 ------------------------------------------------------
-2. WORKFLOW: ORDER OF OPERATIONS
-------------------------------------------------------
 
-Every task proceeds in the following mandatory sequence:
+## 2. Authority & Precedence
 
-STEP 1 — The user declares a new task.
-ChatGPT must not implement anything yet.
+In descending order of authority:
 
-STEP 2 — ChatGPT determines the files required to safely perform the task.
+1. Project Bible.md — architectural law
+2. SYSTEM_MAP.md — conceptual structure and boundaries
+3. MASTER_OPERATING_PROTOCOL.md — execution and governance rules
+4. Collaboration Protocol.md — relationship-specific collaboration rules
+5. Project Roadmap.md — sequencing and planning
 
-This includes:
-
-All source files to be modified
-
-All source files referenced or relied upon
-
-All XAML layouts touched by the task
-
-Any ViewModels, Services, Strategies, Helpers, Models involved
-
-The Project Bible / Overview / Roadmap if architectural reasoning is needed
-
-ChatGPT must explicitly list all required files and wait for confirmation.
-
-STEP 3 — The user provides the files in the required format.
-(ChatGPT does not proceed until all files are available.)
-
-STEP 4 — ChatGPT restates the task objectives using the provided files only.
-
-This prevents misinterpretation and ensures alignment.
-
-STEP 5 — ChatGPT generates the implementation.
-
-Implementation must:
-
-Use full-file replacements when necessary
-
-Use surgically isolated diff-blocks when safe
-
-Maintain formatting and namespace integrity
-
-Avoid breaking architectural constraints
-
-Follow previously defined output style rules (explicit paths, discrete units, diff-ready blocks)
-
-STEP 6 — The user applies the patch locally and re-provides updated file(s) if further modification is needed.
-
-STRICT MODE requires that ChatGPT never continues modifying a file without seeing the updated state.
+In the event of conflict, higher-authority documents prevail.
 
 ------------------------------------------------------
-3. RULES FOR PROVIDING FILES
-------------------------------------------------------
 
-Files must be provided with explicit boundaries.
+## 3. Scope of This Protocol
 
-3.1 Full File Submission Format
---- START FILE: <relative/path/to/file.ext> ---
-<entire file contents here>
---- END FILE: <relative/path/to/file.ext> ---
+This protocol governs:
+- how changes are proposed
+- how documents are evolved
+- how alignment is maintained
+- how ambiguity is resolved
 
-3.2 Partial File Submission Format
-
-Use only for large files or isolated regions.
-
---- START PARTIAL FILE: <relative/path/to/file.ext> ---
-<partial content here>
---- END PARTIAL FILE: <relative/path/to/file.ext> ---
-
-
-Partial submissions are allowed only when ChatGPT explicitly states that partial content is safe.
-
-3.3 Multi-file Submission
-
-Multiple files must be stacked using the same markers.
-
-3.4 Large Files
-
-If a file exceeds message limits:
-
-It may be uploaded as a standalone file (not zipped), OR
-
-Split into sequentially numbered parts using:
-
---- FILE PART 1/3: <path> ---
-...
---- FILE PART 2/3: <path> ---
-...
+It does not:
+- prescribe implementation details
+- override architectural constraints
 
 ------------------------------------------------------
-4. ARTIFACT UTILIZATION RULES (GENERATED CONTEXT)
-------------------------------------------------------
 
-When the following generated artifacts are provided:
+## 4. Explicitness Requirement
 
-project-tree.txt
+All significant decisions, assumptions, or changes must be made explicit.
 
-codebase-index.md
-
-dependency-summary.md
-
-SYSTEM_MAP.md
-
-ChatGPT must:
-
-Use these artifacts as the primary source of structural understanding.
-
-Prefer them over speculative reasoning or exploratory file requests.
-
-Derive initial file requests from these artifacts before asking for additional code.
-
-Explicitly state when a required file is not represented or inferable from the artifacts.
-
-Avoid requesting broad file sets when the artifacts indicate narrower scope.
-
-ChatGPT must not ignore provided generated artifacts when forming task plans, file requests, or architectural reasoning.
+Implicit behavior, silent assumptions, or inferred intent are not acceptable.
 
 ------------------------------------------------------
-5. RULES FOR MODIFYING FILES
-------------------------------------------------------
-5.1 ChatGPT must never modify a file it has not seen.
-5.2 Each modification must be self-contained.
 
-Either:
+## 5. Drift Prevention
 
-(A) Full File Replacement
+When conceptual, architectural, or procedural drift is detected:
+- forward progress must pause
+- the drift must be identified explicitly
+- resolution must occur before continuation
 
-Used when:
-
-Structural changes are significant
-
-Namespace or using directives may shift
-
-Format:
-
---- REPLACEMENT FILE: <path/to/file.cs> ---
-<full corrected file>
---- END REPLACEMENT FILE ---
-
-
-(B) Targeted Block Replacement
-
-Used for method-level or region-level edits.
-
-Format:
-
---- REPLACE IN FILE: <path/to/file.cs> ---
-<full old block to be replaced>
-
---- WITH ---
-<new block>
-
---- END REPLACE ---
-
-
-(C) New File Creation
-
-Format:
-
---- NEW FILE: <path/to/newfile.cs> ---
-<contents>
---- END NEW FILE ---
+Proceeding in the presence of known drift is a protocol violation.
 
 ------------------------------------------------------
-6. STATE & CONTEXT RULES
-------------------------------------------------------
-6.1 ChatGPT does not retain file contents across conversations.
 
-Every new workspace must include:
+## 6. Change Proposal Discipline
 
-This Master Operating Protocol
+All non-trivial changes must be:
+- proposed explicitly
+- scoped clearly
+- justified briefly
 
-The Project Bible
-
-The Project Overview
-
-Any files relevant to the upcoming tasks
-
-6.2 Runtime behavior cannot be observed by ChatGPT.
-
-The user must provide:
-
-error logs
-
-stack traces
-
-screenshots
-
-observed behavior descriptions
-
-6.3 If a conversation becomes misaligned, ChatGPT must request rehydration.
-
-Meaning:
-ChatGPT must ask for the authoritative versions of any files involved.
+Approval must be deliberate. Silence does not imply consent.
 
 ------------------------------------------------------
-7. ABSOLUTE PROHIBITIONS
-------------------------------------------------------
 
-ChatGPT must never:
+## 7. Use of Foundational Documents
 
-❌ Assume a method exists
-❌ Invent class names
-❌ Guess XAML bindings
-❌ Modify unseen parts of files
-❌ Proceed with incomplete file sets
-❌ Rely on ZIP contents
-❌ Autocomplete missing architectures
-❌ Generate speculative patches
+Foundational documents encode long-term intent and constraints.
 
-These are protocol violations.
+They must be treated with:
+- conservatism
+- respect for historical context
+- preference for additive evolution
 
 ------------------------------------------------------
-8. STRICT MODE EXCEPTION POLICY
-------------------------------------------------------
 
-There are no exceptions in Strict Mode.
+## 8. Correction & Challenge
 
-If required files are missing:
+Either party may:
+- challenge assumptions
+- request clarification
+- halt progress due to misalignment
 
-ChatGPT must stop
-
-Request the missing files
-
-Wait for user input
-
-Not generate placeholder or hypothetical code
+Challenge is cooperative, not adversarial.
 
 ------------------------------------------------------
-9. WORKSPACE INITIALIZATION TEMPLATE
+
+## 9. Document Evolution Rules
+
+Changes to documents must respect their role and authority.
+
+Higher-authority documents require higher discipline.
+
 ------------------------------------------------------
 
-Every new workspace must begin with:
+## 9A. Foundational Document Evolution Rule (Additive)
 
---- START: MASTER OPERATING PROTOCOL ---
-<paste this entire document>
---- END: MASTER OPERATING PROTOCOL ---
+### 9A.0 Definition
 
---- START: PROJECT BIBLE ---
-<paste document>
---- END: PROJECT BIBLE ---
-
---- START: PROJECT OVERVIEW ---
-<paste document>
---- END: PROJECT OVERVIEW ---
-
---- START: PROJECT ROADMAP ---
-<paste document>
---- END: PROJECT ROADMAP ---
-
-
-ChatGPT reads these before doing any work.
-
-## Documentation Freeze Declaration
-
-The current core documentation set is declared **frozen**.
-
-These documents are considered authoritative and stable:
+Foundational documents include (but are not limited to):
 - MASTER_OPERATING_PROTOCOL.md
-- Workspace Workflow.md
-- Collaboration Protocol.md
 - Project Bible.md
-- Project Philosophy.md
-- Project Overview.md
-- Project Roadmap.md
 - SYSTEM_MAP.md
+- Project Overview.md
+- Project Philosophy.md
 
-No changes may be made to these documents during normal feature development.
+These documents encode architectural law, semantic boundaries, and long-term intent.
 
-Modifications are permitted **only** when:
-- a protocol change is explicitly proposed,
-- the rationale for change is stated,
-- and the change is agreed and applied deliberately.
+---
 
-All deviations must be surfaced and resolved explicitly.
+### 9A.1 Non-Destructive Default
+
+When proposing changes to any foundational document, the assistant must:
+- treat the existing document as authoritative
+- preserve all existing sections verbatim by default
+- apply changes only as **additive extensions** unless explicitly instructed otherwise
+
+Removal, condensation, reinterpretation, or restructuring of existing content is **prohibited by default**.
+
+---
+
+### 9A.2 Refactor-by-Proposal Requirement
+
+If the assistant determines that refactoring a foundational document would improve clarity, coherence, or long-term maintainability, it must follow this mandatory sequence:
+
+1. **First**, provide a newly **extended (additive)** version of the document, preserving all original content.
+2. **Second**, separately propose a **refactored version** of the document.
+3. Provide a **brief justification** for each proposed refactor.
+
+No refactored version may be treated as authoritative unless explicitly approved.
+
+---
+
+### 9A.3 Information Preservation Guarantee
+
+If any refactor proposal would remove or collapse information that is:
+- relevant to system understanding, and
+- not already present in another workspace-initializing document
+
+The assistant must:
+- explicitly identify that information
+- propose where it must be re-homed (and added) **before** removal
+
+Loss of relevant information without re-homing is a protocol violation.
+
+---
+
+### 9A.4 Explicit Agreement Requirement
+
+Destructive or restructuring changes to foundational documents may occur **only** when:
+- the changes are explicitly proposed
+- the impact is clearly stated
+- and the user gives deliberate, explicit approval
+
+Absent such approval, additive evolution is the only permitted mode.
 
 ------------------------------------------------------
-10. END OF MASTER OPERATING PROTOCOL
+
+## 10. Enforcement
+
+Violation of this protocol invalidates the affected work and requires correction before continuation.
+
 ------------------------------------------------------
+
+## 11. End of MASTER OPERATING PROTOCOL
+
+------------------------------------------------------
+
+
+---
+
+## Addendum: Foundational Document Governance Reference
+
+This collaboration operates under the **Foundational Document Evolution Rule** defined in `MASTER_OPERATING_PROTOCOL.md` (Section 9A).
+
+Accordingly:
+- Foundational documents (e.g., Project Bible, SYSTEM_MAP, MASTER_OPERATING_PROTOCOL) must evolve **additively by default**.
+- Any proposal to refactor, condense, or remove content must follow the explicit **refactor-by-proposal** process.
+- No destructive or restructuring changes are considered authoritative without **explicit approval**.
+
+This addendum does not supersede the MASTER OPERATING PROTOCOL; it exists solely to ensure alignment during collaboration.
 

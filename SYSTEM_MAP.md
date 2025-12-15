@@ -1,339 +1,174 @@
-# 📘 SYSTEM_MAP.md
+# SYSTEM MAP
 
-(Canonical System Orientation — NOW + INTENT)
+## 1. Purpose
 
----
+This document defines the **conceptual structure of the system**, its major layers, and the relationships between them.
 
-## 0. Purpose & Scope
+It is authoritative for:
+- semantic boundaries
+- responsibility separation
+- present and future system shape
 
-This document captures:
-
-- What the system is **right now (NOW)**
-- What it is intentionally evolving toward **(INTENT)**
-
-It does **not** enumerate files or symbols.
-Generated artifacts are authoritative for structure and dependencies.
-
-Use this document to answer:
-
-> “Where should changes go, and what should remain stable?”
+It is **not** an implementation guide.
 
 ---
 
-## 1. System Identity (NOW)
+## 2. High-Level System Overview
 
-### System Role
+The system is designed to ingest heterogeneous data sources, normalize them into a canonical, deterministic metric space, and support computation, visualization, and future analytical extensions.
 
-DataFileReaderRedux is a data ingestion, normalization, computation, and visualization system designed to explore, transform, and surface structured insights from heterogeneous data sources.
-
-### Core Characteristics
-
-- Strong separation between ingestion, computation, and visualization
-- Explicit strategy-based extensibility
-- UI-driven exploratory analysis
-- Emphasis on correctness, traceability, and inspectability over automation magic
+The architecture is deliberately layered to ensure:
+- lossless ingestion
+- explicit semantic authority
+- reversible evolution
 
 ---
 
-## 2. Core Subsystems (NOW)
-
-### 2.1 Ingestion & Normalization
-
-#### 2.1.1 Canonical Ingestion Pipeline
-
-The system enforces a **strict, multi-stage ingestion pipeline** whose purpose is to isolate *structural parsing* from *semantic interpretation*.
-
-The canonical pipeline is:
+## 3. Core Data Flow (Authoritative)
 
 ```
-Source
- → Parser (structure only)
- → Raw Record (lossless, neutral)
- → Normalization Pipeline (semantic authority)
- → Canonical Metric Series
+External Sources
+    ↓
+Ingestion (Raw)
+    ↓
+Normalization (Semantic)
+    ↓
+Canonical Metric Series (CMS)
+    ↓
+Computation / Aggregation
+    ↓
+Presentation / Visualization
 ```
 
-Each stage has **explicit responsibilities and prohibitions**.
-Violations of these boundaries are considered architectural defects.
+Each stage has exclusive responsibility for its concern.
 
 ---
 
-#### 2.1.2 Parser Boundary — Structural Responsibility Only
+## 4. Ingestion Layer
 
-**Parsers are responsible solely for structural extraction.**
+### 4.1 Raw Record
 
-Parsers MAY:
-- read files, databases, or APIs
-- traverse schemas or record layouts
-- extract raw fields and values
-- preserve source metadata and references
-- emit raw, lossless records
+- Represents lossless, uninterpreted observations
+- Captures raw fields, timestamps, and source metadata
+- Makes no semantic claims
 
-Parsers MUST NOT:
-- assign metric meaning or identity
-- normalize units or values
-- interpret timestamps or timezones
-- apply aggregation logic
-- embed domain semantics
-
-Parsers answer only the question:
-
-> “What data exists here, and where did it come from?”
-
-All semantic interpretation is explicitly forbidden at this layer.
+RawRecords are immutable and traceable.
 
 ---
 
-#### 2.1.3 Raw Record Boundary — Semantic Quarantine
+## 5. Normalization Layer
 
-Raw records represent **uninterpreted data** extracted from sources.
+### 5.1 Purpose
+
+The normalization layer is the sole authority for assigning semantic meaning to raw observations.
+
+It is deterministic, explicit, and rule-driven.
+
+---
+
+### 5.2 Normalization Stages
+
+Normalization is composed of ordered stages, including but not limited to:
+
+1. Metric Identity Resolution
+2. Unit Normalization (future)
+3. Time Normalization (future)
+4. Dimensional Qualification (future)
+
+Each stage:
+- has a single responsibility
+- must not override earlier stages
+
+---
+
+### 5.3 Metric Identity Resolution
+
+Metric Identity Resolution:
+- determines what a metric *is*
+- assigns canonical metric identity
+- does not infer meaning from values
+
+This stage is declarative, stable, and explainable.
+
+---
+
+## 6. Canonical Metric Series (CMS)
+
+CMS represents trusted, semantically-resolved metrics.
 
 Properties:
-- lossless
-- domain-neutral
-- unnormalized
-- fully traceable to the source
+- identity is canonical and opaque
+- time semantics are explicit
+- suitable for computation and aggregation
 
-Raw records are a **transitional abstraction**, used to decouple parsing from meaning assignment.
-
-They exist to preserve ambiguity until interpretation is performed deliberately and centrally.
+CMS is the only valid input for downstream computation.
 
 ---
 
-#### 2.1.4 Normalization Pipeline — Semantic Authority
+## 7. Computation & Presentation
 
-All **semantic meaning** is assigned within the normalization pipeline.
-
-This pipeline is the **single authoritative location** for:
-
-- metric identity resolution
-- timestamp and interval normalization
-- timezone handling
-- unit normalization and conversion
-- value coercion
-- dimensional context assignment
-- data quality annotation
-
-Semantic interpretation MUST NOT occur:
-- in parsers
-- in helpers
-- in computation strategies
-- in rendering logic
-- in UI or ViewModels
-
-Normalization is deterministic, inspectable, and order-explicit.
+Downstream layers:
+- assume semantic correctness
+- do not reinterpret meaning
+- operate exclusively on CMS
 
 ---
 
-#### 2.1.5 Metric Identity Resolution — Single Point of Truth
+## 8. Structural / Manifold Analysis Layer (Additive · Future / Exploratory)
 
-Metric identity is resolved **exactly once** during normalization.
+> **Additive Section — No existing sections are modified by this addition.**
 
-After normalization:
-- every metric has a canonical identity
-- identity does not change downstream
-- no component may reinterpret or infer identity
+### 8.1 Intent
 
-Metric identity resolution may use:
-- raw field names
-- source metadata
-- domain configuration
-- explicit mapping rules
+The Structural / Manifold Analysis Layer is an optional, future-facing analytical extension intended to:
+- explore structural similarity, equivalence, or hierarchy across metrics or datasets
+- support discovery, clustering, and comparative analysis
+- enable higher-order reasoning beyond deterministic metric computation
 
-It must not rely on:
-- string heuristics embedded in downstream layers
-- duplicated logic across components
+This layer exists to provide **insight**, not authority.
 
 ---
 
-#### 2.1.6 Time Normalization — Canonical Time Guarantee
+### 8.2 Relationship to Core Pipeline
 
-All timestamps and intervals are normalized within the ingestion pipeline.
+This layer:
+- operates orthogonally to the ingestion and normalization pipeline
+- consumes normalized or canonical data as input
+- does not modify RawRecords, normalization outputs, or CMS
 
-After normalization:
-- downstream layers assume time is canonical
-- no strategy or renderer performs time correction
-- aggregation boundaries are explicit and consistent
-
-Time normalization includes:
-- instant vs interval resolution
-- timezone normalization
-- temporal resolution
-- aggregation semantics
-
-Incorrect or ambiguous time handling is treated as an ingestion-layer defect.
+It must not participate in ingestion, normalization, or computation.
 
 ---
 
-#### 2.1.7 Canonical Metric Series — Downstream Contract
+### 8.3 Non-Authority Constraint (Binding)
 
-The output of ingestion is a **canonical metric series**.
-
-This representation guarantees:
-- resolved metric identity
-- canonical time axis
-- normalized values and units
-- explicit dimensions and context
-- preserved provenance
-
-All downstream components operate exclusively on this representation.
-
-Once data crosses this boundary:
-- computation trusts ingestion
-- rendering ignores origin
-- UI treats metrics as abstract analytical signals
+Structural / Manifold Analysis MUST NOT:
+- assign or alter canonical metric identity
+- modify normalization outcomes
+- influence computation or rendering implicitly
 
 ---
 
-#### 2.1.8 Stability Expectations
+### 8.4 Promotion Boundary
 
-**NOW**
-- Parsers may currently violate some boundaries (legacy tolerance)
-- Normalization logic may be partially distributed
+Insights produced by structural or manifold analysis may be promoted only via:
+- explicit, declarative rule changes
+- reviewable and reversible mechanisms
 
-**INTENT**
-- Enforce boundaries strictly
-- Centralize all semantic logic
-- Enable domain-agnostic ingestion
-- Support future reflective and emergent behaviors without parser intelligence
+No automatic or implicit back-propagation into canonical semantics is permitted.
 
 ---
 
-### 2.2 Computation & Analytics
+## 9. Evolutionary Direction
 
-**Responsibility:**
-- Transform normalized data into metrics, aggregates, and derived values
-- Encapsulate analytical logic
+Future evolution must:
+- preserve ingestion boundaries
+- centralize semantic authority
+- keep analytical creativity isolated from canonical truth
 
-**Stability Expectation:**
-- Medium stability
-- Strategies are expected to grow
-
-**INTENT:**
-- Encourage composable strategies
-- Allow multiple analytical “views” over the same data
+Deferred layers may be declared here without implementation commitment.
 
 ---
 
-### 2.3 Visualization & UI
-
-**Responsibility:**
-- Render computed results
-- Enable interactive exploration
-- Coordinate user intent → computation → rendering
-
-**Stability Expectation:**
-- Lower stability
-- Iterative refinement expected
-
-**INTENT:**
-- Richer metadata surfacing
-- More consistent interaction semantics across charts
-- Gradual convergence toward reusable visualization primitives
-
----
-
-## 3. Execution Paths That Matter (NOW)
-
-Only the important ones are listed.
-
-### 3.1 Data Load → Visualization
-
-High-level flow:
-
-```
-User Input
- → Ingestion
-   → Normalization
-     → Computation Strategy
-       → Visualization Render
-```
-
-**INTENT:**
-This path must remain inspectable at each stage.
-Hidden or implicit transitions are considered architectural smells.
-
----
-
-## 4. Extension Points (NOW)
-
-### Accepted Extension Mechanisms
-
-- Strategy-based computation
-- Pluggable ingestion logic
-- UI composition via ViewModels
-
-### Discouraged Extension Patterns
-
-- Ad-hoc logic inside UI layers
-- Cross-subsystem shortcuts
-- Implicit coupling via shared state
-
-**INTENT:**
-New functionality should preferentially appear as:
-- new strategies
-- new adapters
-- new ViewModel-level coordination
-
-—not as deep modifications to existing engines.
-
----
-
-## 5. Fragility & Care Zones (NOW)
-
-The following areas require caution:
-
-- UI ↔ computation boundaries
-- Cross-strategy coordination
-- State propagation across ViewModels
-
-These areas are not forbidden, but changes should be:
-- narrow in scope
-- explicitly justified
-- validated via inspection
-
-**INTENT:**
-Over time, reduce fragility by clarifying contracts, not by centralizing logic.
-
----
-
-## 6. Terminology (Canonical Meanings)
-
-| Term | Meaning in this System |
-|-----|------------------------|
-| Ingestion | Raw data acquisition |
-| Normalization | Deterministic transformation into internal form |
-| Strategy | Replaceable computation logic |
-| Metric | Computed analytical output |
-| State | UI-visible, user-relevant system condition |
-
----
-
-## 7. Relationship to Generated Artifacts
-
-Authoritative factual sources:
-
-- project-tree.txt — repository structure
-- codebase-index.md — symbols, namespaces, roles
-- dependency-summary.md — structural coupling
-
-This document provides interpretation, not inventory.
-
----
-
-## 8. Update Policy (Important)
-
-Update this document only when:
-- subsystem responsibilities change
-- a new core execution path is introduced
-- architectural intent shifts
-
-Do not update for:
-- refactors
-- renames
-- implementation details
-
----
-
-**End of SYSTEM_MAP.md**
+**End of SYSTEM MAP**
 

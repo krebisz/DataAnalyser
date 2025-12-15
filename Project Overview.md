@@ -1,119 +1,68 @@
-> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+# PROJECT OVERVIEW
 
-📘 UPDATED PROJECT OVERVIEW (2025-12-11)
+## 1. Purpose
 
-(Developer-oriented, concise, accurate, forward-looking)
+This document provides a high-level description of the project, its goals, and its intended direction.
 
-1. What This System Is
+It is descriptive, not binding.
 
-DataFileReaderRedux is a dual-subsystem analytical platform designed to:
+---
 
-ingest, normalize, and unify structured/semi-structured datasets,
+## 2. Project Intent
 
-compute analytical transformations, and
+The project aims to ingest heterogeneous personal and health-related data sources, normalize them into a deterministic and trustworthy metric space, and enable both computation and advanced analytical exploration.
 
-visualize multi-dimensional results interactively.
+---
 
-The system is intentionally domain-agnostic.
-Health data is simply the initial exemplar.
+## 3. Current Direction
 
-2. Subsystem Summary
-2.1 DataFileReader — Ingestion + Normalization Layer
+The current architecture emphasizes:
+- explicit semantic authority
+- deterministic normalization
+- canonical metric identity
+- strict separation between truth and exploration
 
-Responsibilities:
+This direction prioritizes correctness and long-term maintainability over convenience.
 
-Reading multiple file formats (CSV, JSON, Samsung formats, legacy formats).
+---
 
-Providing a unified internal structure for downstream computation.
+## 4. Historical Evolution & Direction (Additive)
 
-Normalizing timestamps, values, metadata.
+> **Additive Section — Contextual and explanatory only.**
 
-Constructing internal models and hierarchies.
+### 4.1 Early Structural & Hierarchical Approach
 
-Offering extensible parser contracts.
+Earlier designs explored generalized structural equivalence mechanisms, where data structures were analyzed hierarchically and assigned computed identifiers based on shape and relationships. This enabled powerful comparison across heterogeneous formats, particularly JSON-based inputs.
 
-Output of this subsystem: clean, consistent, comparable metric data.
+### 4.2 Limitations Encountered
 
-2.2 DataVisualiser — Computation + Visualization Layer
+While effective for discovery, the approach revealed several limitations when used as a foundation for metric computation:
+- structurally similar data could represent fundamentally different semantics
+- inferred equivalence led to ambiguity and drift
+- reproducibility and auditability suffered over time
 
-Responsibilities:
+### 4.3 Transition to Metric-First Determinism
 
-Selecting computation strategies.
+To address these issues, the system transitioned to a metric-first model:
+- time (or interval) as the primary axis
+- scalar values as the fundamental payload
+- meaning resolved explicitly through declarative normalization stages
 
-Transforming ingested data into analytical models.
+This ensured stability and trust while still allowing exploration elsewhere.
 
-Rendering charts using LiveCharts.
+### 4.4 Future Analytical Extensions
 
-Orchestrating UI state and user workflow.
+The earlier structural insights were not discarded, but deliberately deferred. They now inform the planned Structural / Manifold Analysis Layer, which operates orthogonally to canonical semantics and does not alter truth without explicit promotion.
 
-Supporting week-level, difference, ratio, smoothing, normalized, and multi-metric strategies.
+---
 
-Output of this subsystem: interactive visual analytics.
+## 5. Relationship to Other Documents
 
-3. Data Flow Summary
-File → Parser → Normalizer → Unified Metric Model
-      → Strategy → Computation Engine → Render Engine → UI
+- Binding rules reside in the Project Bible
+- Conceptual layering is defined in SYSTEM_MAP
+- Governance rules reside in MASTER_OPERATING_PROTOCOL
 
+---
 
-Each step is modular, replaceable, well-bounded.
+**End of Project Overview**
 
-4. Architectural Highlights
-
-Strict separation of concerns across ingestion, computation, rendering.
-
-Strategy-driven computation layer (Difference, Ratio, Weekly Distribution, etc.).
-
-Rendering engine independent from computation engine.
-
-State-driven UI (MetricState, UiState, ChartState).
-
-Composable helpers & engines (computation, shading, frequency binning, etc.).
-
-Domain-agnostic conceptual core—the system generalizes naturally.
-
-5. Current Capabilities
-
-Multi-series charts
-
-Smoothing + normalization modes
-
-Difference and ratio views
-
-Week-based distributions
-
-SQL-based metric fetching
-
-Dynamic strategy selection
-
-Smart color palette + shading
-
-Tooltip orchestration
-
-Robust metric selection workflow
-
-6. Intended Near-Term Direction
-
-According to the Roadmap:
-
-Generalize ingestion beyond health metrics
-
-Standardize metadata models
-
-Unify computation pipelines (multi-metric first-class support)
-
-Expand chart types
-
-Introduce reflective / adaptive behaviors (Phase 6)
-
-Gradually merge your emergent-architecture research into analytical workflows
-
-The platform is evolving toward a self-organizing analytical engine.
-
-End of Updated Overview
-📙 UPDATED PROJECT BIBLE (2025-12-11)
-
-A rigorous, architectural, forward-accurate document intended for:
-— onboarding,
-— refactoring governance,
-— architectural consistency,
-— future evolution.

@@ -1,297 +1,137 @@
-# 📙 PROJECT BIBLE — DataFileReaderRedux
-
-(Architectural Law — Authoritative, Normative, Binding)
-
----
+# PROJECT BIBLE
 
 ## 1. Purpose
 
-This document defines the **non-negotiable architectural laws** governing the DataFileReaderRedux system.
+The Project Bible defines binding architectural law for the system.
 
-All refactors, extensions, features, and experiments **must comply** with this Bible.
+It establishes:
+- non-negotiable principles
+- semantic authority boundaries
+- long-term invariants
 
-This document:
-- defines *what must be true*
-- constrains *where logic may live*
-- prevents architectural drift
-
-It does **not** describe implementation details or workflows.
+If a decision conflicts with this document, the decision is invalid.
 
 ---
 
-## 2. System Identity
+## 2. Core Principles (Binding)
 
-### 2.1 Core Identity
-
-The system is a **general analytical engine**, composed of two coordinated subsystems:
-
-- **Subsystem A — DataFileReader**
-  - Ingestion
-  - Normalization
-  - Unification
-
-- **Subsystem B — DataVisualiser**
-  - Computation
-  - Rendering
-  - Interaction
-
-Together, these subsystems form a pipeline:
-
-```
-Raw Data
- → Ingestion
- → Normalization
- → Canonical Metric Series
- → Computation Strategy
- → Rendering
- → UI
-```
+1. Lossless Ingestion — raw data must never be destroyed or silently altered
+2. Explicit Semantics — meaning is assigned declaratively, not inferred
+3. Single Semantic Authority — normalization is the sole arbiter of meaning
+4. Determinism — identical inputs produce identical outputs
+5. Reversibility — evolution must allow rollback
 
 ---
 
-## 3. Architectural Values (Binding)
+## 3. Semantic Authority
 
-The system is governed by the following values:
+Metric meaning:
+- is defined once
+- is stable
+- is opaque to consumers
 
-1. **Generalization over specialization**
-2. **Explicit boundaries over convenience**
-3. **Centralized meaning over distributed inference**
-4. **Inspectability over automation magic**
-5. **Determinism over implicit behavior**
-6. **Evolution via extension, not mutation**
-
-Any change violating these values is architecturally invalid.
+No downstream layer may reinterpret or override semantic decisions.
 
 ---
 
-## 4. Canonical Ingestion Law (Phase 2 Binding)
+## 4. Identity Law
 
-### 4.1 Single Canonical Ingestion Pipeline
+Metric identity:
+- must be canonical
+- must be globally unique
+- must not encode source-specific information
 
-All data entering the system **must** pass through the following canonical pipeline:
-
-```
-Source
- → Parser
- → Raw Record
- → Normalization Pipeline
- → Canonical Metric Series
-```
-
-No alternative ingestion paths are permitted.
+Identity resolution is declarative and explainable.
 
 ---
 
-### 4.2 Parser Law — Structural Extraction Only
+## 5. Normalization Law
 
-Parsers **MUST**:
-- read external sources (files, databases, APIs)
-- traverse schemas and record layouts
-- extract raw values without modification
-- preserve source metadata and provenance
+Normalization:
+- is staged
+- is ordered
+- is explicit
 
-Parsers **MUST NOT**:
-- assign metric identity
-- normalize values or units
-- interpret timestamps or timezones
-- apply aggregation or smoothing
-- embed domain semantics
-
-Any semantic logic in a parser is a violation.
+Each stage:
+- has a single responsibility
+- must not inspect concerns outside its scope
 
 ---
 
-### 4.3 Raw Record Law — Lossless Neutrality
+## 6. Canonical Metric Series Law
 
-Raw records **MUST**:
-- be lossless representations of source data
-- remain domain-neutral
-- remain unnormalized
-- retain full provenance
-
-Raw records **MUST NOT**:
-- encode meaning
-- collapse ambiguity
-- perform interpretation
-
-Raw records exist solely to decouple parsing from meaning.
+CMS:
+- is the only trusted analytical input
+- is required for computation
+- is assumed correct by consumers
 
 ---
 
-### 4.4 Normalization Law — Centralized Semantic Authority
+## 7. Prohibited Behaviors
 
-All semantic interpretation **MUST** occur in the normalization pipeline.
-
-Normalization **MUST** be the sole authority for:
-- metric identity resolution
-- time normalization
-- timezone handling
-- unit normalization and conversion
-- value coercion
-- dimensional context assignment
-- data quality annotation
-
-Semantic logic **MUST NOT** exist:
-- in parsers
-- in helpers
-- in computation strategies
-- in rendering code
-- in UI or ViewModels
+The system must never:
+- infer semantic meaning implicitly
+- conflate structure with meaning
+- allow heuristic logic to alter identity
+- permit silent semantic drift
 
 ---
 
-### 4.5 Metric Identity Law — Single Resolution Point
+## 8. Evolution Constraints
 
-Metric identity **MUST**:
-- be resolved exactly once
-- occur during normalization
-- result in a canonical metric key
+Future changes must:
+- preserve declared boundaries
+- maintain semantic authority
+- avoid architectural shortcuts
 
-After normalization:
-- metric identity is immutable
-- downstream components may not reinterpret identity
-- no string heuristics are permitted outside normalization
-
-Metric identity resolution **MAY** use:
-- raw field names
-- source metadata
-- explicit domain mappings
-
-Metric identity resolution **MUST NOT** rely on:
-- duplicated logic
-- implicit conventions
-- downstream inference
+Convenience must not override correctness.
 
 ---
 
-### 4.6 Time Normalization Law — Canonical Time Guarantee
+## 9. Structural / Manifold Analysis Constraint (Additive · Binding)
 
-All time handling **MUST** occur during normalization.
+> **Additive Section — No existing sections are modified by this addition.**
 
-Normalization **MUST** resolve:
-- instant vs interval semantics
-- timezone normalization
-- temporal resolution
-- aggregation boundaries
+The system MAY introduce future analytical subsystems that:
+- analyze structural similarity, equivalence, or hierarchy
+- operate on normalized or canonical representations
+- support exploratory or comparative analysis
 
-After normalization:
-- downstream components assume time is canonical
-- no strategy or renderer may correct time
+Such subsystems MUST NOT:
+- assign or alter canonical metric identity
+- modify normalization outcomes
+- influence computation or rendering implicitly
 
-Incorrect time handling is an ingestion defect.
+Any promotion of insights into canonical semantics MUST:
+- be explicit
+- be declarative
+- be reviewable
+- be reversible
 
----
-
-### 4.7 Canonical Metric Series Law — Downstream Contract
-
-The output of ingestion **MUST** be a canonical metric series.
-
-A canonical metric series **MUST** guarantee:
-- resolved metric identity
-- canonical time axis
-- normalized values and units
-- explicit dimensions and context
-- preserved provenance
-
-All downstream components **MUST** operate exclusively on this representation.
+No automatic or implicit back-propagation is permitted.
 
 ---
 
-## 5. Computation Law
+## Appendix A. Architectural Rationale (Non-Binding)
 
-### 5.1 Strategy Isolation
+> **This appendix is explanatory only. It does not introduce binding rules.**
 
-All analytical behavior **MUST** be expressed as computation strategies.
+### A.1 Rationale for Explicit Semantics
 
-Strategies **MUST**:
-- consume canonical metric series
-- produce computation results
-- remain free of ingestion concerns
+Earlier iterations of the system relied on inferred meaning derived from structure, naming, or statistical behavior. While powerful for exploration, this led to ambiguity and irreproducible results. Declarative semantics were introduced to ensure stability, auditability, and long-term trust.
 
-Strategies **MUST NOT**:
-- parse raw data
-- infer metric meaning
-- normalize values or time
+### A.2 Rationale for Canonical Identity
 
----
+Allowing multiple representations or implicit equivalence classes for metrics caused semantic drift over time. Canonical identity enforces a single source of truth while still allowing exploratory analysis elsewhere.
 
-### 5.2 Computation Engine Law
+### A.3 Common Failure Modes Observed Historically
 
-The computation engine **MUST**:
-- orchestrate strategies
-- manage multi-metric coordination
-- remain independent of rendering
+- Structural similarity incorrectly assumed to imply semantic equivalence
+- Heuristic logic leaking into normalization
+- Silent reinterpretation of metrics by downstream consumers
 
-The computation engine **MUST NOT**:
-- embed visualization logic
-- perform ingestion or normalization
-
----
-
-## 6. Rendering Law
-
-Rendering components **MUST**:
-- consume computation results only
-- remain ignorant of data origin
-- remain ignorant of ingestion semantics
-
-Rendering components **MUST NOT**:
-- compute analytical values
-- reinterpret metrics
-- depend on parser-specific details
-
----
-
-## 7. State Law
-
-State models **MUST**:
-- represent user-visible system condition
-- remain separate from computation and ingestion
-
-State models **MUST NOT**:
-- embed analytical logic
-- perform normalization
-- infer semantic meaning
-
----
-
-## 8. Extension Law
-
-New functionality **MUST** be introduced via:
-- new parsers (structure-only)
-- new normalization mappings
-- new computation strategies
-- new rendering adapters
-
-New functionality **MUST NOT**:
-- modify core ingestion semantics
-- introduce cross-layer shortcuts
-- bypass canonical pipelines
-
----
-
-## 9. Evolutionary Direction (Binding Constraints)
-
-Future phases **MUST**:
-- preserve ingestion boundaries
-- centralize semantic authority
-- favor composition over mutation
-
-Reflective, adaptive, or emergent behavior **MUST**:
-- operate on canonical metric series
-- remain external to ingestion logic
-
----
-
-## 10. Enforcement
-
-Any change that violates this Bible:
-- is architecturally invalid
-- must be revised or reverted
-
-Silently proceeding under violation is prohibited.
+These failures motivated the strict separation of law (this document) from exploration and analysis.
 
 ---
 
 **End of Project Bible**
-
