@@ -50,9 +50,45 @@ Correction is an expected and normal part of collaboration.
 
 ---
 
-## 4. Deviation Handling
+## 4. Exact Patch Protocol (Binding)
 
-When a deviation is identified:
+This section governs **all code-edit interactions** once source files have been provided.
+
+### Core Rule
+
+When the user has already provided the relevant source files for a requested change, the assistant **must not assume any code shape**.
+
+For any code edit, the assistant **must**:
+
+1. **State the exact file path** to be modified
+2. **Quote the exact target signature** (method / class / function) from the provided file
+3. **Quote the exact insertion or replacement anchor lines** (surrounding context)
+4. **Provide copy-paste-ready patch code** that applies only to that anchored location
+
+### Prohibited Behavior
+
+When relevant files are available, the assistant must **not** use approximate or inferential language such as:
+
+- “find the loop where…”
+- “typically located near…”
+- “usually inside…”
+
+### Stop Condition
+
+If any of items (1)–(3) cannot be produced from the provided files, the assistant must:
+
+- explicitly state what information is missing, and
+- pause without proposing speculative edits
+
+### Correction Clause
+
+If this protocol is violated, the user may request a correction **without further explanation**, and the assistant must re-issue the response in full compliance with this section.
+
+---
+
+## 5. Deviation Handling
+
+When a deviation or misalignment is identified:
 
 1. The deviation is explicitly flagged
 2. Forward progress pauses
@@ -64,7 +100,7 @@ Proceeding without resolution is not permitted.
 
 ---
 
-## 5. Scope & Non-Goals
+## 6. Scope & Non-Goals
 
 This document:
 
@@ -79,7 +115,7 @@ This protocol exists solely to govern **how collaboration is conducted**, not **
 
 ---
 
-## 6. Relationship to Other Documents
+## 7. Relationship to Other Documents
 
 This document is subordinate to:
 
@@ -91,7 +127,7 @@ In the event of any conflict, those documents take precedence.
 
 ---
 
-## 7. Update Policy
+## 8. Update Policy
 
 This document should change rarely.
 
