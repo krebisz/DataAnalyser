@@ -18,6 +18,11 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   +---App
 |   |   |   HealthDataApp.cs
 |   |   App.config
+|   +---Canonical
+|   |   |   CanonicalMetricIdentityResolver.cs
+|   |   |   CanonicalMetricSeries.cs
+|   |   |   HealthMetricToCmsMapper.cs
+|   |   |   MetricIdentityResolutionResult.cs
 |   +---Class
 |   |   |   AggregationPeriod.cs
 |   |   |   HierarchyObject.cs
@@ -43,6 +48,23 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   SamsungHealthParser.cs
 |   |   |   SQLHelper.cs
 |   |   |   TimeNormalizationHelper.cs
+|   +---Ingestion
+|   |   |   RawRecord.cs
+|   |   |   RawRecordFactory.cs
+|   +---Normalization
+|   |   +---Canonical
+|   |   |   |   CanonicalMetricSeries.cs
+|   |   |   |   DimensionSet.cs
+|   |   |   |   MetricIdentity.cs
+|   |   |   |   TimeAxis.cs
+|   |   |   DefaultNormalizationPipeline.cs
+|   |   |   INormalizationPipeline.cs
+|   |   |   INormalizationStage.cs
+|   |   |   NormalizationBootstrap.cs
+|   |   |   NormalizationContext.cs
+|   |   |   NormalizationDiagnostics.cs
+|   |   +---Stages
+|   |   |   |   MetricIdentityResolutionStage.cs
 |   +---Parsers
 |   |   |   IHealthFileParser.cs
 |   |   |   LegacyJsonParser.cs
@@ -56,6 +78,7 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   +---Services
 |   |   |   FileProcessingService.cs
 |   |   |   MetricAggregator.cs
+|   |   ShadowValidate_SamsungHealthCsv.cs
 |   DataFileReader .sln
 +---DataVisualiser
 |   |   App.config
@@ -136,6 +159,7 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   Generate-DependencySummary.ps1
 |   Generate-ProjectTree.ps1
 |   Initialize-DataVisualiserWorkspace.ps1
+|   manifest.txt
 |   MASTER_OPERATING_PROTOCOL.md
 |   Project Bible.md
 |   Project Overview.md

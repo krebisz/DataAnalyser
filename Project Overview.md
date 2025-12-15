@@ -66,3 +66,41 @@ The earlier structural insights were not discarded, but deliberately deferred. T
 
 **End of Project Overview**
 
+
+---
+
+## Appendix B. Derived & Dynamic Metric Identity (Non-Binding)
+
+> **Additive Appendix — does not modify any binding law above.**
+
+Derived or dynamic metrics are first-class semantic entities created through **explicit composition, aggregation, or transformation** of existing canonical metrics.
+
+Key constraints:
+- Derived metrics MUST have their own canonical identity.
+- Derived metrics MUST declare dimension, unit, and provenance.
+- Source identities are never altered or overridden.
+- No derived metric may be instantiated implicitly or heuristically.
+
+Derived identities may be ephemeral (session- or query-scoped) or persistent. In all cases, identity creation must be **explicit, reviewable, and reversible**.
+
+Analytical or structural systems may suggest derived identities but MUST NOT promote them without explicit declaration.
+
+
+---
+
+## Structural / Derived Metric Layer (Explicit Extension)
+
+This layer formalizes **derived and dynamic metrics** created through explicit aggregation or transformation of canonical metrics.
+
+Characteristics:
+- Operates strictly on Canonical Metric Series (CMS)
+- Produces new metric identities without altering source identities
+- Supports both ephemeral (session-scoped) and persistent derived metrics
+
+Constraints:
+- No implicit promotion of derived metrics into canonical space
+- All derived identities must be explicitly declared and versioned
+- Structural or manifold analysis systems may suggest derivations but may not instantiate them autonomously
+
+This layer exists above normalization and canonical identity resolution and below visualization.
+

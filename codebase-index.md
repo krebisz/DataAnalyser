@@ -12,6 +12,28 @@ _Auto-generated. Do not edit by hand._
 **Classes:**
 - public class HealthDataApp
 
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricIdentityResolvercs
+**Namespace:** DataFileReader.Canonical
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricSeriescs
+**Namespace:** DataFileReader.Canonical
+**Interfaces:**
+- ICanonicalMetricSeries
+**Enums:**
+- TimeRepresentation
+- MetricDimension
+- DataCompleteness
+- ValidationStatus
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\HealthMetricToCmsMappercs
+**Namespace:** DataFileReader.Canonical
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricIdentityResolutionResultcs
+**Namespace:** DataFileReader.Canonical
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\JSON\IJsoncs
 **Interfaces:**
 - IJson
@@ -107,6 +129,66 @@ _No public symbols detected._
 **Namespace:** DataFileReader.Helper
 _No public symbols detected._
 
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Ingestion\RawRecordcs
+**Namespace:** DataFileReader.Ingestion
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Ingestion\RawRecordFactorycs
+**Namespace:** DataFileReader.Ingestion
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\CanonicalMetricSeriescs
+**Namespace:** DataFileReader.Normalization.Canonical
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\DimensionSetcs
+**Namespace:** DataFileReader.Normalization.Canonical
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\MetricIdentitycs
+**Namespace:** DataFileReader.Normalization.Canonical
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\TimeAxiscs
+**Namespace:** DataFileReader.Normalization.Canonical
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\MetricIdentityResolutionStagecs
+**Namespace:** DataFileReader.Normalization.Stages
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\DefaultNormalizationPipelinecs
+**Namespace:** DataFileReader.Normalization
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\INormalizationPipelinecs
+**Namespace:** DataFileReader.Normalization
+**Interfaces:**
+- INormalizationPipeline
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\INormalizationStagecs
+**Namespace:** DataFileReader.Normalization
+**Interfaces:**
+- INormalizationStage
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationBootstrapcs
+**Namespace:** DataFileReader.Normalization
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationContextcs
+**Namespace:** DataFileReader.Normalization
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationDiagnosticscs
+**Namespace:** DataFileReader.Normalization
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\NETCoreApp,Version=v90AssemblyAttributescs
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderGlobalUsingsgcs
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Parsers\IHealthFileParsercs
 **Namespace:** DataFileReader.Parsers;
 **Interfaces:**
@@ -138,6 +220,9 @@ _No public symbols detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Programcs
 **Entry Points:**
 - Main()
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\ShadowValidate_SamsungHealthCsvcs
+_No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Computation\ChartComputationEnginecs
 **Namespace:** DataVisualiser.Charts.Computation
@@ -263,6 +348,24 @@ _No public symbols detected._
 **Namespace:** DataVisualiser.Models
 **Classes:**
 - public class WeeklyDistributionResult
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\NETCoreApp,Version=v90AssemblyAttributescs
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgics
+**Namespace:** DataVisualiser {
+**Entry Points:**
+- Main()
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserGlobalUsingsgcs
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgics
+**Namespace:** DataVisualiser {
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\unoreloadcookiegcs
+_No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\Shading\FrequencyBasedShadingStrategycs
 **Namespace:** DataVisualiser.Services.Shading

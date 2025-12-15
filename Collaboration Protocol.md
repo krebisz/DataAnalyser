@@ -1,145 +1,160 @@
-# 🤝 COLLABORATION PROTOCOL
+COLLABORATION PROTOCOL
+1. Purpose
 
-(Lean, Relationship-Specific, Non-Redundant)
-
----
-
-## 1. Purpose
-
-This document defines the **collaboration expectations unique to the working relationship** between the user and ChatGPT.
+This document defines the interaction and collaboration rules governing how work is conducted between the user and the assistant.
 
 It exists to:
-- preserve clarity in long-running, complex work
-- support disciplined, corrective collaboration
-- prevent silent drift in reasoning, assumptions, or intent
 
-This document is **not** architectural law and **not** an execution protocol.
+reduce ambiguity
 
----
+prevent drift
 
-## 2. Collaboration Philosophy
+enforce precision
 
-Collaboration is conducted under the following principles:
+optimize collaboration efficiency
 
-- **Explicit over implicit** — ambiguity is surfaced, not smoothed over
-- **Correction over politeness** — accuracy takes precedence over deference
-- **Discipline over convenience** — shortcuts that erode clarity are rejected
-- **Challenge as collaboration** — questioning is a cooperative act
+This document does not define architecture or governance authority.
 
-Reasoning is expected to be:
-- transparent
-- inspectable
-- grounded in provided context
+2. Relationship to Other Documents
 
-Agreement is not assumed. Alignment is established deliberately.
+Authority order (highest to lowest):
 
----
+Project Bible.md
 
-## 3. Mutual Responsibility & Correction
+SYSTEM_MAP.md
 
-Both parties share responsibility for maintaining coherence, correctness, and alignment.
+MASTER_OPERATING_PROTOCOL.md
 
-### Shared Expectations
+Collaboration Protocol.md
 
-- Either party may identify ambiguity, drift, or misalignment
-- Such issues are raised explicitly
-- Silence in the presence of known deviation is unacceptable
+This document must defer to higher-authority documents in all cases.
 
-Correction is not adversarial.
-Correction is an expected and normal part of collaboration.
+3. Explicitness & Precision
 
----
+Assumptions must be stated explicitly
 
-## 4. Exact Patch Protocol (Binding)
+File names, methods, and signatures must be exact
 
-This section governs **all code-edit interactions** once source files have been provided.
+No inferred intent unless explicitly stated
 
-### Core Rule
+If required context is missing, the assistant must ask before proceeding.
 
-When the user has already provided the relevant source files for a requested change, the assistant **must not assume any code shape**.
+4. File-First Collaboration
 
-For any code edit, the assistant **must**:
+Code changes must reference exact files and locations
 
-1. **State the exact file path** to be modified
-2. **Quote the exact target signature** (method / class / function) from the provided file
-3. **Quote the exact insertion or replacement anchor lines** (surrounding context)
-4. **Provide copy-paste-ready patch code** that applies only to that anchored location
+The user provides authoritative files
 
-### Prohibited Behavior
+The assistant must not assume file structure, method signatures, or return types
 
-When relevant files are available, the assistant must **not** use approximate or inferential language such as:
+If a file is required, it must be explicitly requested.
 
-- “find the loop where…”
-- “typically located near…”
-- “usually inside…”
+5. Alignment & Correction
 
-### Stop Condition
+Either party may:
 
-If any of items (1)–(3) cannot be produced from the provided files, the assistant must:
+pause execution
 
-- explicitly state what information is missing, and
-- pause without proposing speculative edits
+request clarification
 
-### Correction Clause
+correct assumptions
 
-If this protocol is violated, the user may request a correction **without further explanation**, and the assistant must re-issue the response in full compliance with this section.
+Correction is cooperative, not adversarial.
 
----
+6. Scope Discipline
 
-## 5. Deviation Handling
+Tasks should remain within the explicitly stated scope
 
-When a deviation or misalignment is identified:
+Scope expansion must be proposed, not assumed
 
-1. The deviation is explicitly flagged
-2. Forward progress pauses
-3. One of the following occurs:
-   - the deviation is corrected, or
-   - an explicit, ad-hoc agreement is reached to adjust expectations or constraints
+Non-essential exploration should be deferred unless requested
 
-Proceeding without resolution is not permitted.
+7. Verbosity Control
 
----
+Responses should be:
 
-## 6. Scope & Non-Goals
+precise
 
-This document:
+relevant
 
-- **does not** define architectural rules
-- **does not** define workflows or execution steps
-- **does not** specify file formats or submission mechanics
-- **does not** override the MASTER_OPERATING_PROTOCOL
+proportional to task complexity
 
-Authoritative sources for those concerns are defined elsewhere.
+Over-explanation is discouraged unless explicitly requested.
 
-This protocol exists solely to govern **how collaboration is conducted**, not **what is built** or **how it is built**.
+8. Decision Locking
 
----
+Once a decision is:
 
-## 7. Relationship to Other Documents
+explicitly stated
 
-This document is subordinate to:
+agreed upon
 
-- **MASTER_OPERATING_PROTOCOL.md** — execution rules and enforcement
-- **Project Bible.md** — architectural law
-- **SYSTEM_MAP.md** — semantic intent and subsystem boundaries
+anchored in a document or code
 
-In the event of any conflict, those documents take precedence.
+It is considered locked and must not be revisited unless explicitly reopened.
 
----
+9. Delta-Based Interaction (Additive)
 
-## 8. Update Policy
+Additive Section — interaction rule.
 
-This document should change rarely.
+Once a decision, rule, or architectural choice is anchored in a foundational document:
 
-Updates are appropriate only when:
-- collaboration expectations evolve
-- corrective discipline needs adjustment
+The assistant must reference the document, not restate the reasoning
 
-This document should **not** be updated for:
-- tooling changes
-- architectural refactors
-- workflow refinements
+Conversational recap is opt-in only
 
----
+Responses should focus on deltas, changes, or execution
 
-**End of Collaboration Protocol**
+Re-derivation of established decisions is discouraged unless explicitly requested.
+
+10. No-Recap-by-Default Rule (Additive)
+
+Additive Section — verbosity optimization rule.
+
+By default, the assistant must not:
+
+recap previously agreed decisions
+
+re-explain established rationale
+
+summarize prior phases
+
+unless the user explicitly asks for:
+
+a recap
+
+a summary
+
+a refresher
+
+This rule exists to:
+
+reduce conversational footprint
+
+minimize token usage
+
+support execution-focused workflows
+
+11. Conflict Resolution
+
+If a conflict arises between:
+
+conversational instruction
+
+documented rules
+
+code artifacts
+
+The assistant must:
+
+stop
+
+identify the conflict explicitly
+
+request resolution before proceeding
+
+12. Enforcement
+
+Violation of this protocol invalidates the affected response and requires correction before continuation.
+
+End of Collaboration Protocol

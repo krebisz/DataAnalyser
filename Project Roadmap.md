@@ -1,136 +1,186 @@
-> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+PROJECT ROADMAP
+1. Purpose
 
-PROJECT ROADMAP (Markdown)
+This document outlines the planned evolution of the project, describing major phases, their goals, and the order in which capabilities are introduced.
 
-(Recommended filename: Project-Roadmap.md)
+It is directional, not binding.
+Binding rules reside in the Project Bible.
 
-Project Roadmap — DataFileReaderRedux
+2. Guiding Principles
 
-A flexible, guided roadmap describing how the system will evolve through structured, sequential phases.
+Roadmap execution adheres to the following constraints:
 
-Phase 1 — Stabilization & Consolidation (Current)
-Goals:
+Semantic correctness over convenience
 
-Ensure both subsystems remain consistent after recent refactors
+Explicit contracts before implementation
 
-Remove dead code and legacy logic
+Non-destructive, additive evolution
 
-Improve naming consistency
+Clear separation between truth and exploration
 
-Document computation strategies more clearly
+Execution proceeds only after foundations are locked
 
-Tasks:
+3. Phase Overview
+Phase 1 — Ingestion & Persistence (Completed)
 
-Clean outdated helpers and consolidations
+Goal:
+Establish reliable ingestion of heterogeneous data sources and persist raw / lightly normalized records.
 
-Improve DataFetcher error handling
+Key outcomes:
 
-Ensure strategy layer has consistent interfaces
+Multiple parsers (CSV / JSON)
 
-Update Bible + Overview + Roadmap (done)
+Unified storage via HealthMetric
 
-Phase 2 — Generalization Foundation
-Goals:
+Lossless data capture
 
-Shift from health-centric to domain-agnostic ingestion
+Provider-agnostic ingestion
 
-Standardize normalized data models
+Status: ✅ Complete
 
-Prepare ingestion pipeline for broader data types
+Phase 2 — Canonical Semantics & Normalization Foundations (Completed)
 
-Tasks:
+Goal:
+Formalize semantic authority and remove ambiguity from metric meaning.
 
-Create generalized metric model
+Key outcomes:
 
-Abstract domain-specific parsers behind a unified interface
+Canonical Metric Series (CMS) contract
 
-Create validation and metadata inspectors
+Explicit canonical metric identity rules
 
-Introduce new folder structure for custom domains
+Identity resolution scaffolding
 
-Phase 3 — Computation Layer Enhancements
-Goals:
+HealthMetric → CMS mapping contract
 
-Unify computation pipelines
+Derived / dynamic metric identity framework
 
-Improve consistency across strategies
+Structural / manifold analysis explicitly constrained
 
-Add multi-metric support as a first-class feature
+Contracts anchored in Project Bible and SYSTEM_MAP
 
-Tasks:
+Status: ✅ Complete
 
-Create computation graph abstraction
+This phase establishes the semantic “truth layer” of the system.
 
-Extend smoothing and scaling modules
+Phase 3 — Execution: Canonical Identity & CMS Integration (Current)
 
-Add time-alignment utilities
+Goal:
+Introduce real behavior while preserving existing ingestion and storage.
 
-Build testbed for strategy validation
+Scope:
 
-Phase 4 — Visualization Capabilities Expansion
-Goals:
+Implement concrete identity resolution (metric family by metric family)
 
-Add more chart types
+Begin with Weight metric family
 
-Improve rendering customization and performance
+Implement CMS mapping in shadow mode
 
-Enable modular chart styles
+No destructive changes to existing flows
 
-Tasks:
+No changes to DataVisualiser yet
 
-Add histogram and heatmap modes
+Deliverables:
 
-Expand tooltip and annotation system
+Deterministic identity resolution
 
-Introduce export features (images, CSV, JSON)
+CMS emitted alongside existing outputs
 
-Phase 5 — Integration & Reusability
-Goals:
+Diagnostics for identity and mapping failures
 
-Prepare subsystem components for reuse in other projects
+Status: ▶ In Progress
 
-Strengthen architectural purity
+Phase 4 — Consumer Adoption & Visualization Integration (Planned)
 
-Support more data sources (API, SQL, local files)
+Goal:
+Allow downstream systems (DataVisualiser) to consume CMS safely.
 
-Tasks:
+Scope:
 
-Encapsulate ingestion as a standalone library
+Define minimal CMS dependency for DataVisualiser
 
-Prepare strategy engine for external composition
+Parallel support for legacy HealthMetric paths
 
-Add plugin model for parsers and strategies
+Explicit opt-in to CMS-based workflows
 
-Phase 6 — Toward Emergent Analytical Architectures
-Goals:
+No forced migration
 
-Explore reflective or self-organizing components
+Outcome:
 
-Allow analysis pipelines to reorganize based on data
+Safer aggregation
 
-Introduce foundational ideas from your intelligent-system work
+Explicit composition
 
-Tasks:
+Reduced semantic ambiguity in UI
 
-Create metadata-driven strategy selection
+Phase 5 — Derived Metrics & Analytical Composition (Planned)
 
-Add heuristics-driven visualization recommendations
+Goal:
+Enable explicit creation of new metrics through composition and aggregation.
 
-Evaluate hierarchical structuring of metric groups
+Scope:
 
-Research dynamic topology for analytical workflows
+Dynamic / derived metric identity instantiation
 
-Phase 7 — Optional Future Expansion (Long-Term Path)
-Potential directions:
+Explicit aggregation and transformation pipelines
 
-Large-scale data ingestion
+Support for ephemeral and persistent derived metrics
 
-Interactive dashboards
+No implicit promotion to canonical truth
 
-AI-assisted data exploration
+Outcome:
 
-Adaptive computation engines
+Advanced analysis without semantic erosion
 
-These remain optional trajectories depending on available time and future project goals.
+User-driven metric synthesis
 
-END OF PROJECT ROADMAP
+Phase 6 — Structural / Manifold Analysis (Future)
+
+Goal:
+Reintroduce advanced structural analysis capabilities without compromising semantic authority.
+
+Scope:
+
+Structural similarity detection
+
+Equivalence class exploration
+
+Analytical suggestion systems
+
+Constraints:
+
+Non-authoritative
+
+No automatic promotion
+
+Explicit declaration required for semantic impact
+
+4. Out of Scope (Explicit)
+
+The roadmap does not include:
+
+Heuristic identity inference
+
+Silent aggregation
+
+Implicit semantic promotion
+
+Forced migrations
+
+Architectural shortcuts
+
+5. Evolution Policy
+
+Phases may overlap only when explicitly declared
+
+Earlier phases must not be weakened by later work
+
+Any deviation from this roadmap requires:
+
+explicit justification
+
+document updates
+
+agreement
+
+End of Project Roadmap

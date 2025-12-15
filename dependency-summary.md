@@ -11,6 +11,22 @@ _Auto-generated. Heuristic, structural only. Do not edit by hand._
 - DataFileReader.Services
 - Microsoft.Extensions.Logging
 
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricIdentityResolvercs
+_No namespace dependencies detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricSeriescs
+**Uses Namespaces:**
+- System (common)
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\HealthMetricToCmsMappercs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Helper
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricIdentityResolutionResultcs
+**Uses Namespaces:**
+- System (common)
+
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\AggregationPeriodcs
 _No namespace dependencies detected._
 
@@ -86,6 +102,7 @@ _No namespace dependencies detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\SamsungHealthCsvParsercs
 **Uses Namespaces:**
 - System (common)
+- DataFileReader.Ingestion
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\SamsungHealthParsercs
 **Uses Namespaces:**
@@ -103,9 +120,63 @@ _No namespace dependencies detected._
 **Uses Namespaces:**
 - Newtonsoft.Json.Linq
 
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderAssemblyInfocs
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Ingestion\RawRecordcs
 **Uses Namespaces:**
 - System (common)
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Ingestion\RawRecordFactorycs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Normalization
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\CanonicalMetricSeriescs
+**Uses Namespaces:**
+- System (common)
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\DimensionSetcs
+**Uses Namespaces:**
+- System (common)
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\MetricIdentitycs
+_No namespace dependencies detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\TimeAxiscs
+_No namespace dependencies detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\DefaultNormalizationPipelinecs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Ingestion
+- DataFileReader.Normalization.Canonical
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\INormalizationPipelinecs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Ingestion
+- DataFileReader.Normalization.Canonical
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\INormalizationStagecs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Ingestion
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationBootstrapcs
+**Uses Namespaces:**
+- System (common)
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationContextcs
+**Uses Namespaces:**
+- System (common)
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationDiagnosticscs
+**Uses Namespaces:**
+- DataFileReader.Ingestion
+- DataFileReader.Normalization.Canonical
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\MetricIdentityResolutionStagecs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Ingestion
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderGlobalUsingsgcs
 _No namespace dependencies detected._
@@ -153,6 +224,12 @@ _No namespace dependencies detected._
 **Uses Namespaces:**
 - DataFileReader.Class
 - DataFileReader.Helper
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\ShadowValidate_SamsungHealthCsvcs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Helper
+- DataFileReader.Ingestion
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Appxamlcs
 **Uses Namespaces:**
@@ -321,25 +398,12 @@ _No namespace dependencies detected._
 - DataVisualiser.Helper
 - DataVisualiser.Models
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgcs
-**Uses Namespaces:**
-- System (common)
-
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgics
-**Uses Namespaces:**
-- System (common)
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserAssemblyInfocs
 **Uses Namespaces:**
 - System (common)
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserGlobalUsingsgcs
 _No namespace dependencies detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgcs
-**Uses Namespaces:**
-- System (common)
-- LiveCharts.Wpf
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgics
 **Uses Namespaces:**
@@ -468,22 +532,24 @@ _No namespace dependencies detected._
 _Namespaces referenced by multiple files. Indicates potential coupling or fragility._
 
 - DataVisualiser.Models (used by 23 files)
-- LiveCharts.Wpf (used by 12 files)
+- LiveCharts.Wpf (used by 11 files)
 - DataVisualiser.Helper (used by 11 files)
 - DataVisualiser.Charts.Computation (used by 10 files)
+- DataFileReader.Helper (used by 9 files)
 - DataFileReader.Class (used by 7 files)
-- DataFileReader.Helper (used by 7 files)
+- DataFileReader.Ingestion (used by 7 files)
 - Newtonsoft.Json.Linq (used by 6 files)
 - DataVisualiser.Charts (used by 6 files)
-- DataVisualiser.Charts.Helpers (used by 5 files)
 - DataFileReader.Parsers (used by 5 files)
+- DataVisualiser.Charts.Helpers (used by 5 files)
 - DataVisualiser.Services (used by 3 files)
-- DataVisualiser.ViewModels.Events (used by 2 files)
-- ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper (used by 2 files)
+- DataFileReader.Normalization.Canonical (used by 3 files)
 - DataVisualiser.Charts.Rendering (used by 2 files)
-- Newtonsoft.Json (used by 2 files)
-- Microsoft.Extensions.Logging (used by 2 files)
-- DataFileReader.Services (used by 2 files)
 - DataVisualiser.Data.Repositories (used by 2 files)
+- DataVisualiser.ViewModels.Events (used by 2 files)
+- Newtonsoft.Json (used by 2 files)
+- DataFileReader.Services (used by 2 files)
 - DataVisualiser.State (used by 2 files)
+- ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper (used by 2 files)
+- Microsoft.Extensions.Logging (used by 2 files)
 
