@@ -1,341 +1,297 @@
-> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+# 📙 PROJECT BIBLE — DataFileReaderRedux
 
-📙 UPDATED PROJECT BIBLE (2025-12-11)
+(Architectural Law — Authoritative, Normative, Binding)
 
-A rigorous, architectural, forward-accurate document intended for:
-— onboarding,
-— refactoring governance,
-— architectural consistency,
-— future evolution.
+---
 
-Project Bible — DataFileReaderRedux Solution
-1. Purpose
+## 1. Purpose
 
-This document defines the governing architectural rules for the entire analytical system.
-It describes:
+This document defines the **non-negotiable architectural laws** governing the DataFileReaderRedux system.
 
-How the system works today
+All refactors, extensions, features, and experiments **must comply** with this Bible.
 
-How subsystems must evolve
+This document:
+- defines *what must be true*
+- constrains *where logic may live*
+- prevents architectural drift
 
-What constraints future code must obey
+It does **not** describe implementation details or workflows.
 
-What conceptual principles underpin the architecture
+---
 
-Every refactor, extension, or computation addition must respect this Bible.
+## 2. System Identity
 
-2. System Identity
-2.1 Core Identity
+### 2.1 Core Identity
 
-The system is a general analytical engine built from two coordinated subsystems:
+The system is a **general analytical engine**, composed of two coordinated subsystems:
 
-Subsystem A — DataFileReader
-Ingestion + Normalization + Unification
+- **Subsystem A — DataFileReader**
+  - Ingestion
+  - Normalization
+  - Unification
 
-Subsystem B — DataVisualiser
-Computation + Rendering + Interaction
+- **Subsystem B — DataVisualiser**
+  - Computation
+  - Rendering
+  - Interaction
 
-Together, they form a pipeline from raw data → structured model → analytical insight → interactive visualization.
+Together, these subsystems form a pipeline:
 
-2.2 Architectural Values
-
-Generalization over specialization
-
-Progressive modularization
-
-Extensibility at every boundary
-
-Predictable state separated from computation
-
-Rendering completely independent of analytics
-
-Emergence-inspired layering and composability
-
-3. Architectural Philosophy
-
-The system respects design principles that deliberately echo your long-term research themes:
-
-3.1 Unified Representation of Heterogeneous Inputs
-
-Anything ingestible should resolve into:
-
-a known structure,
-
-comparable metric sequences,
-
-metadata that links relationships,
-
-hierarchical or temporal context.
-
-3.2 Hierarchical Layering
-
-Every layer only sees the abstractions below it:
-
-Parsers ↔ Normalizers
-
-Strategies ↔ Computation Engine
-
-Computation ↔ Rendering
-
-Rendering ↔ UI
-
-UI ↔ ViewModel State
-
-3.3 Abstractions Before Implementations
-
-Interfaces define every interaction point—especially:
-
-IHealthFileParser → ingestion
-
-IChartComputationStrategy → computation
-
-Renderer interfaces → visualization
-
-State models → UI control
-
-This constraint ensures the system remains evolvable.
-
-3.4 Emergence-Inspired Mechanics (Phase 6+)
-
-Future system evolution will adopt:
-
-metadata-driven selection of strategies
-
-dynamic evaluation of metric topologies
-
-algorithmic clustering of metric groups
-
-self-organizing analytical workflows
-
-reflective computation graph design
-
-These concepts must be considered in any architecture change from here forward.
-
-4. Subsystem A — DataFileReader (Ingestion Layer)
-4.1 Responsibilities
-
-File parsing (CSV/JSON/mixed formats)
-
-Schema detection and interpretation
-
-Time normalization
-
-Value normalization
-
-Metadata extraction
-
-Hierarchical structuring of dataset components
-
-Output construction for DataVisualiser
-
-4.2 Major Components
-4.2.1 Parsers
-
-SamsungCsvParser
-
-SamsungJsonParser
-
-LegacyJsonParser
-
-SamsungHealthCsvParser
-
-SamsungHealthParser
-
-IHealthFileParser (contract boundary)
-
-4.2.2 JSON Abstraction Layer
-
-JsonObject
-
-JsonArray
-
-JsonValue
-
-IJson
-
-Tiny but powerful layer enabling introspection of arbitrary schemas.
-
-4.2.3 Hierarchy + Metadata Models
-
-HierarchyObject / HierarchyObjectList
-
-MetaData / MetaDataList
-
-MetaDataComparer
-
-These maintain relationships between metrics, timestamps, and sources.
-
-4.2.4 Normalization Helpers
-
-DataNormalization
-
-TimeNormalizationHelper
-
-MetricTypeParser
-
-AggregationPeriod
-
-These enforce internal consistency.
-
-4.2.5 Services
-
-FileProcessingService
-
-MetricAggregator
-
-These combine all other components into unified outputs.
-
-5. Subsystem B — DataVisualiser (Computation & Visualization Layer)
-5.1 Roles
-
-This subsystem transforms normalized datasets into analytical/visual models.
-
-5.2 Computation Strategies
-
-Every analytical behavior is a strategy:
-
-SingleMetricStrategy
-
-NormalizedStrategy
-
-DifferenceStrategy
-
-RatioStrategy
-
-CombinedMetricStrategy
-
-WeeklyDistributionStrategy
-
-All strategies implement or extend IChartComputationStrategy.
-
-Strategies define what to compute—not how it will be displayed.
-
-5.3 Computation Engine
-
-ChartComputationEngine:
-
-delegates to strategies
-
-orchestrates multi-metric logic
-
-constructs ChartComputationResult
-
-manages smoothing, scaling, and pipeline consistency
-
-5.4 Rendering Engine
-
-ChartRenderEngine translates computation models into LiveCharts objects:
-
-series generation
-
-axis construction
-
-colors / palettes
-
-tooltip orchestration
-
-shading overlays
-
-The rendering engine is strictly presentation-focused.
-
-5.5 State Layer
-
-The system uses isolated state representations:
-
-UiState — what the user is doing
-
-MetricState — what metrics exist and are selected
-
-ChartState — what the chart is currently configured to show
-
-This separation prevents UI logic from leaking into computation or rendering.
-
-5.6 ViewModels
-
-The central orchestrator:
-
-MainWindowViewModel
-
-Responsibilities:
-
-binding UI interactions to state changes
-
-selecting strategies
-
-triggering data fetch + compute + render cycles
-
-maintaining consistency across subsystems
-
-6. Cross-System Architecture
-6.1 Pipeline
+```
 Raw Data
- → Parser
- → Normalizer
- → Unified Model
- → Strategy
- → Computation Engine
- → Render Engine
+ → Ingestion
+ → Normalization
+ → Canonical Metric Series
+ → Computation Strategy
+ → Rendering
  → UI
+```
 
+---
 
-Each arrow is a replaceable boundary.
+## 3. Architectural Values (Binding)
 
-6.2 Extension Points
+The system is governed by the following values:
 
-Developers may add:
+1. **Generalization over specialization**
+2. **Explicit boundaries over convenience**
+3. **Centralized meaning over distributed inference**
+4. **Inspectability over automation magic**
+5. **Determinism over implicit behavior**
+6. **Evolution via extension, not mutation**
 
-new file formats
+Any change violating these values is architecturally invalid.
 
-new normalizers
+---
 
-new metric models
+## 4. Canonical Ingestion Law (Phase 2 Binding)
 
-new computation strategies
+### 4.1 Single Canonical Ingestion Pipeline
 
-new visualization modes
+All data entering the system **must** pass through the following canonical pipeline:
 
-new metadata-driven behaviors (Phase 6+)
+```
+Source
+ → Parser
+ → Raw Record
+ → Normalization Pipeline
+ → Canonical Metric Series
+```
 
-new shading or annotation modules
+No alternative ingestion paths are permitted.
 
-new data sources (SQL/API/local)
+---
 
-7. Evolutionary Direction
+### 4.2 Parser Law — Structural Extraction Only
 
-This portion governs future growth.
+Parsers **MUST**:
+- read external sources (files, databases, APIs)
+- traverse schemas and record layouts
+- extract raw values without modification
+- preserve source metadata and provenance
 
-7.1 Short Term
+Parsers **MUST NOT**:
+- assign metric identity
+- normalize values or units
+- interpret timestamps or timezones
+- apply aggregation or smoothing
+- embed domain semantics
 
-complete generalization of ingestion
+Any semantic logic in a parser is a violation.
 
-unify computation engines
+---
 
-modular multi-metric graphing
+### 4.3 Raw Record Law — Lossless Neutrality
 
-rendering expansion (histograms, heatmaps)
+Raw records **MUST**:
+- be lossless representations of source data
+- remain domain-neutral
+- remain unnormalized
+- retain full provenance
 
-7.2 Medium Term
+Raw records **MUST NOT**:
+- encode meaning
+- collapse ambiguity
+- perform interpretation
 
-metadata-driven analytical selection
+Raw records exist solely to decouple parsing from meaning.
 
-heuristic visualization recommendations
+---
 
-reflective computation graphs
+### 4.4 Normalization Law — Centralized Semantic Authority
 
-dynamic reshaping of analytical pipelines
+All semantic interpretation **MUST** occur in the normalization pipeline.
 
-7.3 Long Term
+Normalization **MUST** be the sole authority for:
+- metric identity resolution
+- time normalization
+- timezone handling
+- unit normalization and conversion
+- value coercion
+- dimensional context assignment
+- data quality annotation
 
-The system becomes a self-organizing analytical topology that reflects your long-term research themes:
+Semantic logic **MUST NOT** exist:
+- in parsers
+- in helpers
+- in computation strategies
+- in rendering code
+- in UI or ViewModels
 
-hierarchical remapping
+---
 
-manifold-like restructuring of metric networks
+### 4.5 Metric Identity Law — Single Resolution Point
 
-emergent grouping and re-grouping
+Metric identity **MUST**:
+- be resolved exactly once
+- occur during normalization
+- result in a canonical metric key
 
-autonomous selection of analytical pathways
+After normalization:
+- metric identity is immutable
+- downstream components may not reinterpret identity
+- no string heuristics are permitted outside normalization
 
-adaptive “purposeful” workflows
+Metric identity resolution **MAY** use:
+- raw field names
+- source metadata
+- explicit domain mappings
 
-End of Updated Project Bible
+Metric identity resolution **MUST NOT** rely on:
+- duplicated logic
+- implicit conventions
+- downstream inference
+
+---
+
+### 4.6 Time Normalization Law — Canonical Time Guarantee
+
+All time handling **MUST** occur during normalization.
+
+Normalization **MUST** resolve:
+- instant vs interval semantics
+- timezone normalization
+- temporal resolution
+- aggregation boundaries
+
+After normalization:
+- downstream components assume time is canonical
+- no strategy or renderer may correct time
+
+Incorrect time handling is an ingestion defect.
+
+---
+
+### 4.7 Canonical Metric Series Law — Downstream Contract
+
+The output of ingestion **MUST** be a canonical metric series.
+
+A canonical metric series **MUST** guarantee:
+- resolved metric identity
+- canonical time axis
+- normalized values and units
+- explicit dimensions and context
+- preserved provenance
+
+All downstream components **MUST** operate exclusively on this representation.
+
+---
+
+## 5. Computation Law
+
+### 5.1 Strategy Isolation
+
+All analytical behavior **MUST** be expressed as computation strategies.
+
+Strategies **MUST**:
+- consume canonical metric series
+- produce computation results
+- remain free of ingestion concerns
+
+Strategies **MUST NOT**:
+- parse raw data
+- infer metric meaning
+- normalize values or time
+
+---
+
+### 5.2 Computation Engine Law
+
+The computation engine **MUST**:
+- orchestrate strategies
+- manage multi-metric coordination
+- remain independent of rendering
+
+The computation engine **MUST NOT**:
+- embed visualization logic
+- perform ingestion or normalization
+
+---
+
+## 6. Rendering Law
+
+Rendering components **MUST**:
+- consume computation results only
+- remain ignorant of data origin
+- remain ignorant of ingestion semantics
+
+Rendering components **MUST NOT**:
+- compute analytical values
+- reinterpret metrics
+- depend on parser-specific details
+
+---
+
+## 7. State Law
+
+State models **MUST**:
+- represent user-visible system condition
+- remain separate from computation and ingestion
+
+State models **MUST NOT**:
+- embed analytical logic
+- perform normalization
+- infer semantic meaning
+
+---
+
+## 8. Extension Law
+
+New functionality **MUST** be introduced via:
+- new parsers (structure-only)
+- new normalization mappings
+- new computation strategies
+- new rendering adapters
+
+New functionality **MUST NOT**:
+- modify core ingestion semantics
+- introduce cross-layer shortcuts
+- bypass canonical pipelines
+
+---
+
+## 9. Evolutionary Direction (Binding Constraints)
+
+Future phases **MUST**:
+- preserve ingestion boundaries
+- centralize semantic authority
+- favor composition over mutation
+
+Reflective, adaptive, or emergent behavior **MUST**:
+- operate on canonical metric series
+- remain external to ingestion logic
+
+---
+
+## 10. Enforcement
+
+Any change that violates this Bible:
+- is architecturally invalid
+- must be revised or reverted
+
+Silently proceeding under violation is prohibited.
+
+---
+
+**End of Project Bible**
+

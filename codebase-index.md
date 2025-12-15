@@ -107,15 +107,6 @@ _No public symbols detected._
 **Namespace:** DataFileReader.Helper
 _No public symbols detected._
 
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\NETCoreApp,Version=v90AssemblyAttributescs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderAssemblyInfocs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderGlobalUsingsgcs
-_No public symbols detected._
-
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Parsers\IHealthFileParsercs
 **Namespace:** DataFileReader.Parsers;
 **Interfaces:**
@@ -237,11 +228,13 @@ _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\DateRangeResultcs
 **Namespace:** DataVisualiser.Models
+**Tags:** DataCarrier (heuristic)
 **Classes:**
 - public class DateRangeResult
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\HealthMetricDatacs
 **Namespace:** DataVisualiser.Models
+**Tags:** DataCarrier (heuristic)
 **Classes:**
 - public class HealthMetricData
 
@@ -257,6 +250,7 @@ _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\SmoothedDataPointcs
 **Namespace:** DataVisualiser.Models
+**Tags:** DataCarrier (heuristic)
 **Classes:**
 - public class SmoothedDataPoint
 
@@ -269,36 +263,6 @@ _No public symbols detected._
 **Namespace:** DataVisualiser.Models
 **Classes:**
 - public class WeeklyDistributionResult
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\NETCoreApp,Version=v90AssemblyAttributescs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgcs
-**Namespace:** DataVisualiser {
-**Entry Points:**
-- Main()
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgics
-**Namespace:** DataVisualiser {
-**Entry Points:**
-- Main()
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserAssemblyInfocs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserGlobalUsingsgcs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgcs
-**Namespace:** DataVisualiser {
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgics
-**Namespace:** DataVisualiser {
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\unoreloadcookiegcs
-_No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\Shading\FrequencyBasedShadingStrategycs
 **Namespace:** DataVisualiser.Services.Shading
@@ -352,6 +316,7 @@ _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\UiStatecs
 **Namespace:** DataVisualiser.State
+**Tags:** DataCarrier (heuristic)
 **Classes:**
 - public class UiState
 

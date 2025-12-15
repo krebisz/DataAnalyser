@@ -1,175 +1,109 @@
-> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+# 🤝 COLLABORATION PROTOCOL
 
-🤝 Collaboration Protocol
-Purpose
+(Lean, Relationship-Specific, Non-Redundant)
 
-This document defines the principles, expectations, and enforcement rules governing collaboration between the user and ChatGPT.
+---
 
-It does not define technical workflows, file-handling mechanics, or workspace initialization steps.
-Those are authoritatively defined elsewhere.
+## 1. Purpose
 
-This protocol exists to ensure:
+This document defines the **collaboration expectations unique to the working relationship** between the user and ChatGPT.
 
-clarity
+It exists to:
+- preserve clarity in long-running, complex work
+- support disciplined, corrective collaboration
+- prevent silent drift in reasoning, assumptions, or intent
 
-discipline
+This document is **not** architectural law and **not** an execution protocol.
 
-mutual correction
+---
 
-long-term coherence in complex work
+## 2. Collaboration Philosophy
 
-Authority & Scope
+Collaboration is conducted under the following principles:
 
-This document is principles-only.
+- **Explicit over implicit** — ambiguity is surfaced, not smoothed over
+- **Correction over politeness** — accuracy takes precedence over deference
+- **Discipline over convenience** — shortcuts that erode clarity are rejected
+- **Challenge as collaboration** — questioning is a cooperative act
 
-The following documents are authoritative for execution and enforcement:
+Reasoning is expected to be:
+- transparent
+- inspectable
+- grounded in provided context
 
-MASTER_OPERATING_PROTOCOL.md — ChatGPT behavior and constraints
+Agreement is not assumed. Alignment is established deliberately.
 
-Workspace Workflow.md — workspace initialization and refresh procedures
+---
+
+## 3. Mutual Responsibility & Correction
+
+Both parties share responsibility for maintaining coherence, correctness, and alignment.
+
+### Shared Expectations
+
+- Either party may identify ambiguity, drift, or misalignment
+- Such issues are raised explicitly
+- Silence in the presence of known deviation is unacceptable
+
+Correction is not adversarial.
+Correction is an expected and normal part of collaboration.
+
+---
+
+## 4. Deviation Handling
+
+When a deviation is identified:
+
+1. The deviation is explicitly flagged
+2. Forward progress pauses
+3. One of the following occurs:
+   - the deviation is corrected, or
+   - an explicit, ad-hoc agreement is reached to adjust expectations or constraints
+
+Proceeding without resolution is not permitted.
+
+---
+
+## 5. Scope & Non-Goals
+
+This document:
+
+- **does not** define architectural rules
+- **does not** define workflows or execution steps
+- **does not** specify file formats or submission mechanics
+- **does not** override the MASTER_OPERATING_PROTOCOL
+
+Authoritative sources for those concerns are defined elsewhere.
+
+This protocol exists solely to govern **how collaboration is conducted**, not **what is built** or **how it is built**.
+
+---
+
+## 6. Relationship to Other Documents
+
+This document is subordinate to:
+
+- **MASTER_OPERATING_PROTOCOL.md** — execution rules and enforcement
+- **Project Bible.md** — architectural law
+- **SYSTEM_MAP.md** — semantic intent and subsystem boundaries
 
 In the event of any conflict, those documents take precedence.
 
-Collaboration Mode
+---
 
-All collaboration is conducted under Strict Mode.
-
-This implies:
-
-no assumptions
-
-no inferred context
-
-no speculative code or reasoning
-
-explicit acknowledgment of missing or unreadable inputs
-
-deterministic, auditable steps
-
-This discipline exists to support clarity, creativity, and emergent understanding in complex work, not to suppress exploration or constrain legitimate experimentation.
-
-Strict Mode is not optional and is not relaxed implicitly.
-
-Generated Artifacts as Shared Ground Truth
-
-Collaboration relies on auto-generated artifacts for structural understanding, including:
-
-project-tree.txt
-
-codebase-index.md
-
-dependency-summary.md
-
-These artifacts are:
-
-authoritative for structure and coupling
-
-preferred over exploratory or speculative requests
-
-regenerated rather than manually edited
-
-Human-authored documents provide intent and meaning, not inventories.
-
-Mutual Responsibility & Correction (IMPORTANT)
-
-Both parties are responsible for maintaining adherence to the established protocols.
-
-Protocol Deviation Handling
-
-If, at any point, the user appears to be acting in conflict with the established protocols, ChatGPT must:
-
-Explicitly flag the deviation
-
-State which protocol or rule is being violated
-
-Pause forward progress
-
-The user will then:
-
-attempt to correct the approach, or
-
-engage in an explicit, ad-hoc resolution to adjust the protocol if needed
-
-Proceeding silently in the presence of a protocol violation is not permitted.
-
-This rule applies equally to:
-
-workflow steps
-
-file-provision rules
-
-Strict Mode constraints
-
-artifact usage
-
-collaboration boundaries
-
-Expectations of ChatGPT
-
-ChatGPT must:
-
-Follow MASTER_OPERATING_PROTOCOL.md without exception
-
-Use provided artifacts and documents as primary inputs
-
-Request missing context explicitly and early
-
-Avoid overreach, assumption, or invention
-
-Challenge ambiguity rather than smoothing it over
-
-Flag protocol violations as defined above
-
-Expectations of the User
-
-The user commits to:
-
-Following the Workspace Workflow
-
-Providing required artifacts and files
-
-Respecting Strict Mode constraints
-
-Accepting protocol flags in good faith
-
-Correcting deviations or resolving them explicitly
-
-The protocol exists to support progress, not to obstruct it.
-
-Relationship to Other Documents
-
-This document works in concert with:
-
-MASTER_OPERATING_PROTOCOL.md — enforcement and AI-side rules
-
-Workspace Workflow.md — procedural steps
-
-Project Bible.md — architectural law
-
-SYSTEM_MAP.md — semantic intent
-
-Generated artifacts — structural truth
-
-No single document stands alone.
-
-Update Policy
+## 7. Update Policy
 
 This document should change rarely.
 
-Update only when:
+Updates are appropriate only when:
+- collaboration expectations evolve
+- corrective discipline needs adjustment
 
-collaboration rules change
+This document should **not** be updated for:
+- tooling changes
+- architectural refactors
+- workflow refinements
 
-enforcement expectations evolve
+---
 
-the Strict Mode contract is amended
-
-Do not update for:
-
-tooling changes
-
-workflow refinements
-
-feature development
-
-End of Collaboration Protocol
+**End of Collaboration Protocol**

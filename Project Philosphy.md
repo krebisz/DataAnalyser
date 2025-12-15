@@ -1,111 +1,180 @@
-> ⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+# 🧭 PROJECT PHILOSOPHY
 
-📘 Project Philosophy
+(Non-Binding Orientation — Guiding Context, Not Law)
 
-A concise articulation of the guiding principles of the entire solution
+---
 
-1. Core Identity of the System
+## 1. Purpose of This Document
 
-The system represents a generalized analytical platform, composed of two interlocking pillars:
+This document articulates the **philosophical intent** of the project.
 
-A domain-agnostic ingestion + unification engine
-(the DataFileReader project)
+It exists to provide *context*, not constraints.
+It explains *why* the system exists and *what kind of evolution is acceptable*, without defining *how* that evolution is implemented.
 
-A flexible visualization + computation platform
-(the DataVisualiser project)
+This document is:
+- **Non-binding**
+- **Non-authoritative**
+- **Subordinate** to architectural and operational documents
 
-It is intentionally designed to evolve, absorb new structures, and progressively generalize.
+In the event of any conflict:
+- The **Project Bible** governs architecture
+- The **SYSTEM_MAP** governs boundaries and intent
+- The **MASTER_OPERATING_PROTOCOL** governs behavior and execution
 
-2. Driving Principles
-2.1 Abstraction Over Specificity
+---
 
-Wherever a concrete feature appears, the system should search for the commonality beneath it and promote that idea up the architecture.
-Goal: fewer brittle implementations, more conceptual unification.
+## 2. Core Identity of the System
 
-2.2 Modularity Through Decomposition
+The system is a **general analytical platform** composed of two interlocking capabilities:
 
-Every subsystem should be modular, replaceable, and testable in isolation.
-Subsystems become plug-in components, not tangled clusters.
+1. A **domain-agnostic ingestion and unification engine**
+2. A **flexible computation and visualization environment**
 
-2.3 Generality First, Without Over-Engineering
+It is intentionally designed to:
+- absorb new data structures
+- generalize without loss of clarity
+- evolve incrementally rather than through rewrites
 
-While the system aspires to generality, it must not collapse under its own abstraction.
-The rule:
+The system is not built around a single domain.
+Health data is an initial exemplar, not a defining characteristic.
 
-Only generalize when doing so reduces conceptual or technical complexity.
+---
 
-2.4 Emergence Is Allowed, Not Forced
+## 3. Guiding Principles
 
-The system can drift toward more intelligent or self-organizing properties.
-This is permitted, but never required.
-Evolution is a bonus, not a mandate.
+### 3.1 Abstraction in Service of Clarity
 
-2.5 Data-Agnostic Analytical Capability
+Abstraction is pursued **only when it reduces conceptual or technical complexity**.
 
-The engine should accept any structured dataset once normalized.
-Health data is merely the current example.
+The goal is not maximal generality, but:
+- fewer brittle implementations
+- clearer semantic boundaries
+- reusable analytical concepts
 
-2.6 Two-Speed Development Philosophy
+---
 
-Practical velocity (Option B) — near-term utility
+### 3.2 Centralized Meaning, Distributed Capability
 
-Architectural future-readiness (Option C) — the skeleton of a larger system
+Interpretation and meaning are assigned deliberately and centrally.
 
-The architecture supports both paths naturally.
+Capabilities (parsing, computation, visualization) are distributed, modular, and replaceable.
 
-3. Purpose of the System
+This separation enables:
+- correctness
+- inspectability
+- controlled evolution
 
-To create a powerful, extensible analytical toolchain that:
+---
 
-Accepts arbitrary data sources
+### 3.3 Modularity Through Decomposition
 
-Normalizes and contextualizes data
+Subsystems should:
+- have clear responsibilities
+- be independently testable
+- evolve without cascading change
 
-Computes aggregated, comparative, algorithmic results
+Growth occurs through **extension**, not mutation.
 
-Visualizes patterns across multiple dimensions
+---
 
-Enables new insights without code changes
+### 3.4 Generality Without Over-Engineering
 
-It is a personal exploratory platform first, with possible expansion toward a more formal intelligent system.
+The system prefers:
+- simple solutions now
+- structural readiness for later expansion
 
-4. Boundaries of the System
-Hard Boundaries (for now)
+Generalization is postponed when it would:
+- obscure intent
+- increase cognitive load
+- introduce speculative complexity
 
-No explicit machine learning inference layer
+---
 
-No distributed compute
+### 3.5 Emergence Is Allowed, Not Required
 
-No self-modifying code
+The system may evolve toward:
+- adaptive strategies
+- reflective analytical behavior
+- higher-order organization of metrics and computations
 
-No intent to simulate cognition directly
+Such evolution is:
+- **permitted**, not mandated
+- **exploratory**, not prescriptive
+- **incremental**, not revolutionary
 
-Soft Boundaries
+---
 
-Adaptive strategies may develop
+## 4. Explicit Boundaries
 
-Domain-specific extensions are allowed when necessary
+### 4.1 Hard Boundaries (Current)
 
-New algorithmic strategies may emerge organically as patterns become clearer
+The system does **not** include:
+- explicit machine-learning inference layers
+- distributed or cluster computation
+- self-modifying code
+- direct simulation of cognition or agency
 
-5. Long-Term Vision
+These exclusions preserve focus and correctness.
 
-A system capable of:
+---
 
-Understanding the shape of data
+### 4.2 Soft Boundaries (Future-Tolerant)
 
-Allowing interchangeable computation/visualization strategies
+The system may later include:
+- adaptive selection of strategies
+- richer metadata-driven behavior
+- domain-specific extensions layered atop the core
 
-Serving as a conceptual bridge toward a more ambitious adaptive system
+Such additions must not compromise existing boundaries or clarity.
 
-Becoming a reusable platform for future personal or professional projects
+---
 
-6. Role of This Document
+## 5. Purpose and Use
 
-This file ensures the project’s identity and purpose remain stable as new workspaces, contexts, or assistants come into play.
+The system exists to:
+- ingest heterogeneous structured data
+- normalize and contextualize that data
+- compute analytical transformations
+- visualize multi-dimensional patterns
 
-It acts as the project’s north star.
+It is a **personal exploratory platform first**, with potential to become:
+- a reusable analytical foundation
+- a bridge toward more ambitious adaptive systems
 
-This project embraces experimentation, long-term thinking, and the pursuit of systems that can adapt, reorganize, and grow in complexity over time. Failure, iteration, and reconsideration are treated as necessary components of meaningful progress rather than setbacks to be avoided.
+---
 
-Disciplined collaboration, including the explicit identification and correction of deviations from agreed protocols, is treated as an enabling condition for creative exploration and emergent system evolution, not a constraint upon it.
+## 6. Role of This Document in Collaboration
+
+This document exists to:
+- orient new workspaces
+- prevent misinterpretation of architectural restraint as lack of ambition
+- discourage premature optimization or over-constraining assistance
+
+It should be used as:
+- a *lens* for interpretation
+- a *guardrail* against misaligned suggestions
+
+It must **not** be used to:
+- justify architectural violations
+- override explicit constraints
+- resolve disputes
+
+---
+
+## 7. Stability Expectations
+
+This document should change **rarely**.
+
+Updates are appropriate only when:
+- the project’s long-term intent shifts
+- fundamental philosophical assumptions change
+
+It should not be updated for:
+- refactors
+- phase transitions
+- new features
+- implementation discoveries
+
+---
+
+**End of Project Philosophy**

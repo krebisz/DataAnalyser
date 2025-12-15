@@ -51,6 +51,21 @@ foreach ($file in $csFiles) {
     $entryPoints = $content |
         Select-String 'static\s+void\s+Main\s*\('
 
+    # ----------------------------
+    # Heuristic: DataCarrier detection
+    # ----------------------------
+    $propertyMatches = $content |
+        Select-String 'public\s+.+\{\s*get;\s*set;\s*\}'
+
+    $methodMatches = $content |
+        Select-String 'public\s+.+\(' |
+        Where-Object { $_ -notmatch 'class|interface|enum' }
+
+    $isDataCarrier =
+        ($classMatches.Count -gt 0) -and
+        ($propertyMatches.Count -gt 0) -and
+        ($methodMatches.Count -eq 0)
+
     $tags = @()
 
     if ($file.Name -like '*ViewModel.cs' -or
@@ -61,6 +76,10 @@ foreach ($file in $csFiles) {
     if ($file.Name -like '*Strategy.cs') { $tags += "Strategy" }
     if ($file.Name -like '*Engine.cs')   { $tags += "Engine" }
     if ($file.Name -like '*Service.cs')  { $tags += "Service" }
+
+    if ($isDataCarrier) {
+        $tags += "DataCarrier (heuristic)"
+    }
 
     $lines += "### $relative"
 
@@ -75,8 +94,7 @@ foreach ($file in $csFiles) {
     if ($classMatches) {
         $lines += "**Classes:**"
         foreach ($match in $classMatches) {
-            $declaration = $match.Line.Trim()
-            $lines += "- $declaration"
+            $lines += "- $($match.Line.Trim())"
         }
     }
 
