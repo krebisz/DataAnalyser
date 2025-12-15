@@ -1,4 +1,5 @@
 using System.Globalization;
+using DataFileReader.Ingestion;
 
 namespace DataFileReader.Helper
 {
@@ -325,6 +326,32 @@ namespace DataFileReader.Helper
                         }
                     }
 
+                    RawRecordFactory.Create(
+                        sourceId: "SamsungHealthCsv",
+                        fields: (IDictionary<string, object?>)new Dictionary<string, object?>
+                        {
+                            ["Provider"] = metric.Provider,
+                            ["MetricType"] = metric.MetricType,
+                            ["MetricSubtype"] = metric.MetricSubtype,
+                            ["SourceFile"] = metric.SourceFile,
+                            ["RawTimestamp"] = metric.RawTimestamp,
+                            ["NormalizedTimestamp"] = metric.NormalizedTimestamp,
+                            ["Value"] = metric.Value,
+                            ["Unit"] = metric.Unit
+                        },
+                        rawTimestamp: metric.NormalizedTimestamp.HasValue
+                            ? new DateTimeOffset(metric.NormalizedTimestamp.Value)
+                            : (DateTimeOffset?)null,
+                        sourceGroup: System.IO.Path.GetFileName(filePath),
+                        metadata: (IDictionary<string, string>)new Dictionary<string, string>
+                        {
+                            ["MetricIdentifierForFields"] = metricIdentifierForFields
+                        }
+                    );
+
+
+
+
                     metrics.Add(metric);
                 }
             }
@@ -346,6 +373,29 @@ namespace DataFileReader.Helper
                 {
                     metric.AdditionalFields[field.Key] = field.Value ?? "";
                 }
+
+                RawRecordFactory.Create(
+                    sourceId: "SamsungHealthCsv",
+                    fields: (IDictionary<string, object?>)new Dictionary<string, object?>
+                    {
+                        ["Provider"] = metric.Provider,
+                        ["MetricType"] = metric.MetricType,
+                        ["SourceFile"] = metric.SourceFile,
+                        ["RawTimestamp"] = metric.RawTimestamp,
+                        ["NormalizedTimestamp"] = metric.NormalizedTimestamp
+                    },
+                    rawTimestamp: metric.NormalizedTimestamp.HasValue
+                        ? new DateTimeOffset(metric.NormalizedTimestamp.Value)
+                        : (DateTimeOffset?)null,
+                    sourceGroup: System.IO.Path.GetFileName(filePath),
+                    metadata: (IDictionary<string, string>)new Dictionary<string, string>
+                    {
+                        ["Branch"] = "FallbackNoNumericFields",
+                        ["MetricIdentifierForFields"] = metricIdentifierForFields
+                    }
+                );
+
+
 
                 metrics.Add(metric);
             }

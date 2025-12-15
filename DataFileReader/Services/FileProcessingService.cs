@@ -34,6 +34,8 @@ public class FileProcessingService
                 var content = File.ReadAllText(file);
                 var metrics = parser.Parse(file, content);
 
+                ShadowValidate_SamsungHealthCsv.Run(file, content);
+
                 if (metrics.Count > 0)
                 {
                     SQLHelper.InsertHealthMetrics(metrics);
