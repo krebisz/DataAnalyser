@@ -1,37 +1,74 @@
-﻿using System;
+﻿using DataFileReader.Normalization.Canonical;
 
 namespace DataFileReader.Canonical
 {
     /// <summary>
-    /// Stub resolver for Canonical Metric Identity.
+    /// Canonical Metric Identity Resolver.
     ///
-    /// This type defines the seam where declarative identity
-    /// resolution rules will be applied.
-    ///
-    /// IMPORTANT:
-    /// - No inference
-    /// - No defaults
-    /// - No fallback logic
-    /// - No rules implemented yet
+    /// Declarative, deterministic, non-heuristic.
     /// </summary>
     internal sealed class CanonicalMetricIdentityResolver
     {
         /// <summary>
         /// Resolves a canonical metric identity from descriptive metadata.
-        ///
-        /// This method is intentionally unimplemented.
-        /// It exists only to anchor the identity resolution boundary.
         /// </summary>
-        /// <exception cref="NotImplementedException">
-        /// Always thrown in this stub.
-        /// </exception>
-        public CanonicalMetricId Resolve(
+        public MetricIdentityResolutionResult Resolve(
             string provider,
             string metricType,
             string metricSubtype)
         {
-            throw new NotImplementedException(
-                "Canonical metric identity resolution is not yet implemented.");
+            // ----------------------------
+            // Validation (explicit)
+            // ----------------------------
+
+            if (string.IsNullOrWhiteSpace(provider) ||
+                string.IsNullOrWhiteSpace(metricType))
+            {
+                return MetricIdentityResolutionResult.Failed(
+                    IdentityResolutionFailureReason.MissingRequiredMetadata,
+                    new[]
+                    {
+                        $"Provider='{provider ?? "<null>"}'",
+                        $"MetricType='{metricType ?? "<null>"}'"
+                    });
+            }
+
+            // Normalize comparison inputs (not inference)
+            var normalizedProvider = provider.Trim();
+            var normalizedMetricType = metricType.Trim();
+
+            // ----------------------------
+            // Canonical Weight Rule
+            // ----------------------------
+
+            if (normalizedProvider.Equals("Samsung", StringComparison.OrdinalIgnoreCase) &&
+                normalizedMetricType.Equals("weight", StringComparison.OrdinalIgnoreCase))
+            {
+                return MetricIdentityResolutionResult.Succeeded(
+                    new CanonicalMetricId(MetricIdentity.BodyWeight.Id));
+            }
+
+            // ----------------------------
+            // Canonical Sleep Rule
+            // ----------------------------
+            if (normalizedProvider.Equals("Samsung", StringComparison.OrdinalIgnoreCase) &&
+                normalizedMetricType.Equals("com.samsung.shealth.sleep", StringComparison.OrdinalIgnoreCase))
+            {
+                return MetricIdentityResolutionResult.Succeeded(
+                    new CanonicalMetricId(MetricIdentity.Sleep.Id));
+            }
+            // ----------------------------
+            // Explicit non-match
+            // ----------------------------
+
+            return MetricIdentityResolutionResult.Failed(
+                IdentityResolutionFailureReason.NoMatchingRule,
+                new[]
+                {
+                    $"Provider='{provider}'",
+                    $"MetricType='{metricType}'",
+                    $"MetricSubtype='{metricSubtype ?? "<null>"}'"
+                });
         }
     }
 }

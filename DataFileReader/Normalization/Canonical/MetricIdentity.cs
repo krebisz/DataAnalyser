@@ -1,11 +1,5 @@
-﻿using System;
-
-namespace DataFileReader.Normalization.Canonical
+﻿namespace DataFileReader.Normalization.Canonical
 {
-    /// <summary>
-    /// Opaque identifier representing a single canonical metric.
-    /// Semantic meaning is resolved during normalization and immutable thereafter.
-    /// </summary>
     public sealed class MetricIdentity
     {
         public string Id { get; }
@@ -19,5 +13,23 @@ namespace DataFileReader.Normalization.Canonical
         }
 
         public override string ToString() => Id;
+
+        // ---------------------------------
+        // Canonical Metric Identities
+        // ---------------------------------
+
+        /// <summary>
+        /// Canonical identity for body weight.
+        /// Dimension: Mass
+        /// </summary>
+        public static readonly MetricIdentity BodyWeight =
+            new MetricIdentity("metric.body_weight");
+
+        /// <summary>
+        /// Canonical identity for sleep.
+        /// Dimension: Duration
+        /// </summary>
+        public static readonly MetricIdentity Sleep =
+            new MetricIdentity("metric.sleep");
     }
 }
