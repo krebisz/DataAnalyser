@@ -920,6 +920,21 @@ namespace DataVisualiser
                 if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
                     continue;
 
+                bool isEnabled = dayIndex switch
+                {
+                    0 => _viewModel.ChartState.ShowMonday,
+                    1 => _viewModel.ChartState.ShowTuesday,
+                    2 => _viewModel.ChartState.ShowWednesday,
+                    3 => _viewModel.ChartState.ShowThursday,
+                    4 => _viewModel.ChartState.ShowFriday,
+                    5 => _viewModel.ChartState.ShowSaturday,
+                    6 => _viewModel.ChartState.ShowSunday,
+                    _ => false
+                };
+
+                if (!isEnabled)
+                    continue;
+
                 var values = new ChartValues<ObservablePoint>();
                 foreach (var point in series.Points)
                 {
@@ -1063,6 +1078,42 @@ namespace DataVisualiser
                 _ => null
             };
         }
+
+        private void OnWeeklyTrendMondayToggled(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SetWeeklyTrendMondayVisible(((CheckBox)sender).IsChecked == true);
+        }
+
+        private void OnWeeklyTrendTuesdayToggled(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SetWeeklyTrendTuesdayVisible(((CheckBox)sender).IsChecked == true);
+        }
+
+        private void OnWeeklyTrendWednesdayToggled(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SetWeeklyTrendWednesdayVisible(((CheckBox)sender).IsChecked == true);
+        }
+
+        private void OnWeeklyTrendThursdayToggled(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SetWeeklyTrendThursdayVisible(((CheckBox)sender).IsChecked == true);
+        }
+
+        private void OnWeeklyTrendFridayToggled(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SetWeeklyTrendFridayVisible(((CheckBox)sender).IsChecked == true);
+        }
+
+        private void OnWeeklyTrendSaturdayToggled(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SetWeeklyTrendSaturdayVisible(((CheckBox)sender).IsChecked == true);
+        }
+
+        private void OnWeeklyTrendSundayToggled(object sender, RoutedEventArgs e)
+        {
+            _viewModel.SetWeeklyTrendSundayVisible(((CheckBox)sender).IsChecked == true);
+        }
+
 
         private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
         {

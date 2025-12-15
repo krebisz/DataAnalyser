@@ -487,6 +487,48 @@ namespace DataVisualiser.ViewModels
             RequestChartUpdate();
         }
 
+        public void SetWeeklyTrendMondayVisible(bool value)
+        {
+            ChartState.ShowMonday = value;
+            RequestChartUpdate();
+        }
+
+        public void SetWeeklyTrendTuesdayVisible(bool value)
+        {
+            ChartState.ShowTuesday = value;
+            RequestChartUpdate();
+        }
+
+        public void SetWeeklyTrendWednesdayVisible(bool value)
+        {
+            ChartState.ShowWednesday = value;
+            RequestChartUpdate();
+        }
+
+        public void SetWeeklyTrendThursdayVisible(bool value)
+        {
+            ChartState.ShowThursday = value;
+            RequestChartUpdate();
+        }
+
+        public void SetWeeklyTrendFridayVisible(bool value)
+        {
+            ChartState.ShowFriday = value;
+            RequestChartUpdate();
+        }
+
+        public void SetWeeklyTrendSaturdayVisible(bool value)
+        {
+            ChartState.ShowSaturday = value;
+            RequestChartUpdate();
+        }
+
+        public void SetWeeklyTrendSundayVisible(bool value)
+        {
+            ChartState.ShowSunday = value;
+            RequestChartUpdate();
+        }
+
         public void SetNormalizationMode(NormalizationMode mode)
         {
             ChartState.SelectedNormalizationMode = mode;

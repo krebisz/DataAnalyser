@@ -13,6 +13,16 @@ namespace DataVisualiser.State
         public bool IsWeeklyVisible { get; set; }
         public bool IsWeeklyTrendVisible { get; set; }
 
+        // Weekly Trend (weekday series toggles)
+        public bool ShowMonday { get; set; } = true;
+        public bool ShowTuesday { get; set; } = true;
+        public bool ShowWednesday { get; set; } = true;
+        public bool ShowThursday { get; set; } = true;
+        public bool ShowFriday { get; set; } = true;
+        public bool ShowSaturday { get; set; } = true;
+        public bool ShowSunday { get; set; } = true;
+
+
         // Normalization mode
         public NormalizationMode SelectedNormalizationMode { get; set; }
 

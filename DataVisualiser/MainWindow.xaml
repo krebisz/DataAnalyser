@@ -207,6 +207,7 @@
 
 
                     <!-- ========== CHART WEEKDAY TREND ========== -->
+                    <!-- ========== CHART WEEKDAY TREND ========== -->
                     <StackPanel Orientation="Vertical" Margin="0,0,0,10">
 
                         <!-- Title + toggle -->
@@ -222,6 +223,26 @@
                 Margin="10,0,0,0"
                 Padding="10,3"
                 Click="OnChartWeekdayTrendToggle"/>
+                        </StackPanel>
+
+                        <!-- Weekday selection -->
+                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                            <TextBlock Text="Days:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                            <CheckBox Content="Mon" IsChecked="True" Margin="5,0"
+                  Click="OnWeeklyTrendMondayToggled"/>
+                            <CheckBox Content="Tue" IsChecked="True" Margin="5,0"
+                  Click="OnWeeklyTrendTuesdayToggled"/>
+                            <CheckBox Content="Wed" IsChecked="True" Margin="5,0"
+                  Click="OnWeeklyTrendWednesdayToggled"/>
+                            <CheckBox Content="Thu" IsChecked="True" Margin="5,0"
+                  Click="OnWeeklyTrendThursdayToggled"/>
+                            <CheckBox Content="Fri" IsChecked="True" Margin="5,0"
+                  Click="OnWeeklyTrendFridayToggled"/>
+                            <CheckBox Content="Sat" IsChecked="True" Margin="5,0"
+                  Click="OnWeeklyTrendSaturdayToggled"/>
+                            <CheckBox Content="Sun" IsChecked="True" Margin="5,0"
+                  Click="OnWeeklyTrendSundayToggled"/>
                         </StackPanel>
 
                         <!-- Chart container -->
@@ -249,6 +270,7 @@
                         </StackPanel>
 
                     </StackPanel>
+
 
 
 
