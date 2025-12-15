@@ -11,6 +11,7 @@ namespace DataVisualiser.State
         public bool IsDifferenceVisible { get; set; }
         public bool IsRatioVisible { get; set; }
         public bool IsWeeklyVisible { get; set; }
+        public bool IsWeeklyTrendVisible { get; set; }
 
         // Normalization mode
         public NormalizationMode SelectedNormalizationMode { get; set; }

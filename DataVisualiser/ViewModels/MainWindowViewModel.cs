@@ -445,6 +445,10 @@ namespace DataVisualiser.ViewModels
         {
             ToggleChartVisibility("Weekly", () => ChartState.IsWeeklyVisible, v => ChartState.IsWeeklyVisible = v);
         }
+        public void ToggleWeeklyTrend()
+        {
+            ToggleChartVisibility("WeeklyTrend", () => ChartState.IsWeeklyTrendVisible, v => ChartState.IsWeeklyTrendVisible = v);
+        }
 
         // ======================
         // INotifyPropertyChanged
@@ -631,6 +635,7 @@ namespace DataVisualiser.ViewModels
                 ShowDifference = ChartState.IsDifferenceVisible,
                 ShowRatio = ChartState.IsRatioVisible,
                 ShowWeekly = ChartState.IsWeeklyVisible,
+                ShowWeeklyTrend = ChartState.IsWeeklyTrendVisible,
                 ShouldRenderCharts = ChartState.LastContext != null
             });
         }

@@ -19,11 +19,11 @@ This document does **not** define architecture. Architectural law resides in the
 
 In descending order of authority:
 
-1. Project Bible.md — architectural law
-2. SYSTEM_MAP.md — conceptual structure and boundaries
-3. MASTER_OPERATING_PROTOCOL.md — execution and governance rules
-4. Collaboration Protocol.md — relationship-specific collaboration rules
-5. Project Roadmap.md — sequencing and planning
+1. Project Bible.md — architectural law  
+2. SYSTEM_MAP.md — conceptual structure and boundaries  
+3. MASTER_OPERATING_PROTOCOL.md — execution and governance rules  
+4. Collaboration Protocol.md — relationship-specific collaboration rules  
+5. Project Roadmap.md — sequencing and planning  
 
 In the event of conflict, higher-authority documents prevail.
 
@@ -166,6 +166,61 @@ Absent such approval, additive evolution is the only permitted mode.
 
 ------------------------------------------------------
 
+## 9B. Mandatory Grounding & Assumption Prohibition Rule (Additive)
+
+### 9B.1 Grounding Requirement
+
+Before proposing any of the following:
+- architectural changes
+- refactors
+- new components
+- new workflows
+- new abstractions
+
+the assistant must explicitly restate:
+- the **current system state**
+- the **relevant existing artifacts** (files, classes, or documents)
+- the **frozen vs evolvable boundaries** involved
+
+This grounding must precede the proposal.
+
+---
+
+### 9B.2 Assumption Prohibition
+
+If required information is not explicitly present in:
+- the current workspace
+- or the referenced foundational documents
+
+it must be treated as **UNKNOWN**.
+
+The assistant is prohibited from:
+- inferring intent
+- assuming absence
+- extrapolating architecture
+- relying on pattern-based expectations
+
+Proceeding on unstated assumptions is a protocol violation.
+
+---
+
+### 9B.3 Grounding Failure Stop Condition
+
+If grounding is missing, incorrect, or challenged:
+- all forward progress must stop
+- the grounding error must be identified and corrected
+- no new proposals may be introduced until resolution
+
+Correction precedes continuation.
+
+---
+
+### 9B.4 Enforcement
+
+Violation of this section invalidates the affected work under Section 10.
+
+------------------------------------------------------
+
 ## 10. Enforcement
 
 Violation of this protocol invalidates the affected work and requires correction before continuation.
@@ -175,18 +230,3 @@ Violation of this protocol invalidates the affected work and requires correction
 ## 11. End of MASTER OPERATING PROTOCOL
 
 ------------------------------------------------------
-
-
----
-
-## Addendum: Foundational Document Governance Reference
-
-This collaboration operates under the **Foundational Document Evolution Rule** defined in `MASTER_OPERATING_PROTOCOL.md` (Section 9A).
-
-Accordingly:
-- Foundational documents (e.g., Project Bible, SYSTEM_MAP, MASTER_OPERATING_PROTOCOL) must evolve **additively by default**.
-- Any proposal to refactor, condense, or remove content must follow the explicit **refactor-by-proposal** process.
-- No destructive or restructuring changes are considered authoritative without **explicit approval**.
-
-This addendum does not supersede the MASTER OPERATING PROTOCOL; it exists solely to ensure alignment during collaboration.
-

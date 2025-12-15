@@ -1,21 +1,31 @@
 using DataVisualiser.Charts;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Helpers;
-using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
 using DataVisualiser.Charts.Rendering;
 using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Data.Repositories;
-using DataVisualiser.Models;
 using DataVisualiser.Helper;
+using DataVisualiser.Models;
+using DataVisualiser.Models;
 using DataVisualiser.Services;
 using DataVisualiser.State;
 using DataVisualiser.UI.SubtypeSelectors;
 using DataVisualiser.ViewModels;
 using DataVisualiser.ViewModels.Events;
+using LiveCharts;
+using LiveCharts;
+using LiveCharts.Configurations;
+using LiveCharts.Defaults;
 using LiveCharts.Wpf;
+using LiveCharts.Wpf;
+using System;
 using System.Configuration;
+using System.Globalization;
+using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
 
 namespace DataVisualiser
 {
@@ -414,6 +424,15 @@ namespace DataVisualiser
         }
 
         /// <summary>
+        /// Toggles Weekly Distribution chart visibility and reloads data if available.
+        /// </summary>
+        private void OnChartWeekdayTrendToggle(object sender, RoutedEventArgs e)
+        {
+            _viewModel.ToggleWeeklyTrend();
+            _viewModel.RequestChartUpdate();
+        }
+
+        /// <summary>
         /// Toggles ChartDiff visibility and reloads data if available.
         /// </summary>
         private void OnChartDiffToggle(object sender, RoutedEventArgs e)
@@ -773,12 +792,14 @@ namespace DataVisualiser
             UpdateChartVisibility(ChartDiffPanel, ChartDiffToggleButton, e.ShowDifference);
             UpdateChartVisibility(ChartRatioPanel, ChartRatioToggleButton, e.ShowRatio);
             UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
+            UpdateChartVisibility(ChartWeekdayTrendPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
 
             if (e.ShouldRenderCharts)
             {
                 await RenderChartsFromLastContext();
             }
         }
+
 
         /// <summary>
         /// Renders the main chart based on available data (single or combined).
@@ -855,6 +876,60 @@ namespace DataVisualiser
             }
         }
 
+        private void RenderWeekdayTrendChart(WeekdayTrendResult result)
+        {
+            ChartWeekdayTrend.Series.Clear();
+            ChartWeekdayTrend.AxisX.Clear();
+            ChartWeekdayTrend.AxisY.Clear();
+
+            if (result == null || result.SeriesByDay.Count == 0)
+                return;
+
+            // ---------- X AXIS (uniform time range) ----------
+            ChartWeekdayTrend.AxisX.Add(new Axis
+            {
+                Title = "Time",
+                MinValue = result.From.Ticks,
+                MaxValue = result.To.Ticks,
+                LabelFormatter = v =>
+                    new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+            });
+
+            // ---------- Y AXIS (uniform scale) ----------
+            ChartWeekdayTrend.AxisY.Add(new Axis
+            {
+                Title = result.Unit ?? "Value",
+                MinValue = result.GlobalMin,
+                MaxValue = result.GlobalMax
+            });
+
+            // ---------- SERIES (Monday → Sunday) ----------
+            for (int dayIndex = 0; dayIndex <= 6; dayIndex++)
+            {
+                if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
+                    continue;
+
+                var values = new ChartValues<ObservablePoint>();
+                foreach (var point in series.Points)
+                {
+                    values.Add(new ObservablePoint(point.Date.Ticks, point.Value));
+                }
+
+                ChartWeekdayTrend.Series.Add(new LineSeries
+                {
+                    Title = series.Day.ToString(),
+                    Values = values,
+                    PointGeometry = null,
+                    LineSmoothness = 0.3,
+                    Fill = System.Windows.Media.Brushes.Transparent,
+                    StrokeThickness = 2
+                });
+            }
+        }
+
+
+
+
         /// <summary>
         /// Renders all charts based on the current context and visibility settings.
         /// IMPORTANT: Ensures consistent data ordering across all charts:
@@ -922,6 +997,19 @@ namespace DataVisualiser
                 ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             }
 
+            if (_viewModel.ChartState.IsWeeklyTrendVisible)
+            {
+                var result = new WeekdayTrendStrategy().Compute(data1, ctx.From, ctx.To);
+                RenderWeekdayTrendChart(result);
+            }
+            else
+            {
+                ChartHelper.ClearChart(ChartWeekdayTrend, _viewModel.ChartState.ChartTimestamps);
+            }
+
+
+
+
             // Difference chart: data1 (first selected) - data2 (second selected)
             await RenderOrClearChart(
                 ChartDiff,
@@ -959,6 +1047,7 @@ namespace DataVisualiser
                 "Diff" => ChartDiffPanel,
                 "Ratio" => ChartRatioPanel,
                 "Weekly" => ChartWeeklyPanel,
+                "WeeklyTrend" => ChartWeekdayTrendPanel,
                 _ => null
             };
         }
