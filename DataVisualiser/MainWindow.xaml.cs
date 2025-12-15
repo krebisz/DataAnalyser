@@ -878,6 +878,17 @@ namespace DataVisualiser
 
         private void RenderWeekdayTrendChart(WeekdayTrendResult result)
         {
+            var weekdayStrokes = new[]
+            {
+                System.Windows.Media.Brushes.SteelBlue,   // Monday
+                System.Windows.Media.Brushes.CadetBlue,   // Tuesday
+                System.Windows.Media.Brushes.SeaGreen,    // Wednesday
+                System.Windows.Media.Brushes.OliveDrab,   // Thursday
+                System.Windows.Media.Brushes.Goldenrod,   // Friday
+                System.Windows.Media.Brushes.OrangeRed,   // Saturday
+                System.Windows.Media.Brushes.IndianRed    // Sunday
+            };
+
             ChartWeekdayTrend.Series.Clear();
             ChartWeekdayTrend.AxisX.Clear();
             ChartWeekdayTrend.AxisY.Clear();
@@ -922,7 +933,8 @@ namespace DataVisualiser
                     PointGeometry = null,
                     LineSmoothness = 0.3,
                     Fill = System.Windows.Media.Brushes.Transparent,
-                    StrokeThickness = 2
+                    StrokeThickness = 2,
+                    Stroke = weekdayStrokes[dayIndex]
                 });
             }
         }
