@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace DataFileReader.Canonical
@@ -33,25 +33,25 @@ namespace DataFileReader.Canonical
         MetricQuality Quality { get; }
     }
 
-    namespace DataFileReader.Canonical
+    /// <summary>
+    /// Internal implementation of ICanonicalMetricSeries.
+    /// </summary>
+    internal sealed record CanonicalMetricSeries : ICanonicalMetricSeries
     {
-        internal sealed record CanonicalMetricSeries : ICanonicalMetricSeries
-        {
-            public CanonicalMetricId MetricId { get; init; } = default!;
+        public CanonicalMetricId MetricId { get; init; } = default!;
 
-            public TimeSemantics Time { get; init; } = default!;
+        public TimeSemantics Time { get; init; } = default!;
 
-            public IReadOnlyList<MetricSample> Samples { get; init; } = Array.Empty<MetricSample>();
+        public IReadOnlyList<MetricSample> Samples { get; init; } = Array.Empty<MetricSample>();
 
-            public MetricUnit Unit { get; init; } = default!;
+        public MetricUnit Unit { get; init; } = default!;
 
-            public MetricDimension Dimension { get; init; } = MetricDimension.Unknown;
+        public MetricDimension Dimension { get; init; } = MetricDimension.Unknown;
 
-            public MetricProvenance Provenance { get; init; } = default!;
+        public MetricProvenance Provenance { get; init; } = default!;
 
-            public MetricQuality Quality { get; init; } =
-                new MetricQuality(DataCompleteness.Unknown, ValidationStatus.Unknown);
-        }
+        public MetricQuality Quality { get; init; } =
+            new MetricQuality(DataCompleteness.Unknown, ValidationStatus.Unknown);
     }
 
     // -------------------------

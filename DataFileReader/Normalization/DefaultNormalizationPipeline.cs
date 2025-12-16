@@ -1,22 +1,21 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DataFileReader.Ingestion;
 using DataFileReader.Normalization.Canonical;
+using DataFileReader.Normalization.Stages;
 
 namespace DataFileReader.Normalization
 {
     /// <summary>
-    /// Minimal normalization pipeline implementation.
+    /// Normalization pipeline implementation.
     /// Executes configured stages and produces canonical metric series.
-    ///
-    /// This implementation performs NO semantic normalization.
-    /// It exists only to structure control flow.
     /// </summary>
     public sealed class DefaultNormalizationPipeline : INormalizationPipeline
     {
         private readonly IReadOnlyList<INormalizationStage> _stages;
         private readonly NormalizationContext _context;
+        private readonly CmsProductionStage _cmsProductionStage;
 
         public DefaultNormalizationPipeline(
             IReadOnlyList<INormalizationStage> stages,
@@ -24,6 +23,7 @@ namespace DataFileReader.Normalization
         {
             _stages = stages ?? throw new ArgumentNullException(nameof(stages));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _cmsProductionStage = new CmsProductionStage();
         }
 
         public IReadOnlyList<CanonicalMetricSeries<object>> Normalize(
@@ -34,14 +34,17 @@ namespace DataFileReader.Normalization
 
             IReadOnlyCollection<RawRecord> current = rawRecords;
 
+            // Execute all configured stages
             foreach (var stage in _stages)
             {
                 current = stage.Process(current, _context);
             }
 
-            // No CMS production yet.
-            // This is intentional: semantic normalization is not implemented.
-            return Array.Empty<CanonicalMetricSeries<object>>();
+            // Run CMS production stage to convert processed RawRecords to CMS
+            _cmsProductionStage.Process(current, _context);
+
+            // Return the produced CMS
+            return _cmsProductionStage.ProducedCms;
         }
     }
 }

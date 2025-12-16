@@ -1,4 +1,4 @@
-﻿using DataFileReader.Normalization.Canonical;
+using DataFileReader.Normalization.Canonical;
 
 namespace DataFileReader.Canonical
 {
@@ -6,8 +6,9 @@ namespace DataFileReader.Canonical
     /// Canonical Metric Identity Resolver.
     ///
     /// Declarative, deterministic, non-heuristic.
+    /// Phase 4: Made public for DataVisualiser integration.
     /// </summary>
-    internal sealed class CanonicalMetricIdentityResolver
+    public sealed class CanonicalMetricIdentityResolver
     {
         /// <summary>
         /// Resolves a canonical metric identity from descriptive metadata.

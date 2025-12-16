@@ -23,11 +23,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
-using System.Collections.Generic;
-using System.Linq;
-using DataVisualiser.Charts;
-using DataVisualiser.Charts.Strategies;
-using DataVisualiser.Models;
 
 namespace DataVisualiser
 {

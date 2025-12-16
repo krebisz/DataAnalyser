@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace DataFileReader.Canonical
 {
     /// <summary>
     /// Represents the outcome of canonical metric identity resolution.
     /// This type exists to make failure explicit and diagnosable.
+    /// Phase 4: Made public for DataVisualiser integration.
     /// </summary>
-    internal sealed record MetricIdentityResolutionResult
+    public sealed record MetricIdentityResolutionResult
     {
         public bool Success { get; init; }
 
@@ -39,7 +40,11 @@ namespace DataFileReader.Canonical
         }
     }
 
-    internal enum IdentityResolutionFailureReason
+    /// <summary>
+    /// Reasons for identity resolution failure.
+    /// Phase 4: Made public for DataVisualiser integration.
+    /// </summary>
+    public enum IdentityResolutionFailureReason
     {
         Unknown,
         NoMatchingRule,
