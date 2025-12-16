@@ -317,35 +317,36 @@ namespace DataVisualiser
             UpdateChartTitlesFromCombos();
         }
 
-        /// <summary>
-        /// UI entry point for loading data.
-        /// Pushes current UI selections into the ViewModel and delegates
-        /// validation + data fetching to the VM. Rendering is driven by
-        /// DataLoaded / ChartUpdateRequested events.
-        /// </summary>
         private async void OnLoadData(object sender, RoutedEventArgs e)
         {
             if (_isInitializing)
                 return;
 
-            if (TablesCombo.SelectedItem == null)
+            await LoadDataAndValidate();
+            await LoadMetricData();
+        }
+
+        private async Task LoadDataAndValidate()
+        {
+            var selectedMetricType = TablesCombo.SelectedItem?.ToString();
+            if (selectedMetricType == null)
             {
                 MessageBox.Show("Please select a Metric Type", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
+            _viewModel.SetSelectedMetricType(selectedMetricType);
             UpdateSelectedSubtypesInViewModel();
 
-            var selectedSubtype = _selectorManager.GetPrimarySubtype();
-            var selectedSubtype2 = _selectorManager.GetSecondarySubtype();
+            var primarySubtype = _selectorManager.GetPrimarySubtype();
+            var secondarySubtype = _selectorManager.GetSecondarySubtype();
 
             string baseType = _viewModel.MetricState.SelectedMetricType!;
-            string display1 = !string.IsNullOrEmpty(selectedSubtype) && selectedSubtype != "(All)" ? selectedSubtype : baseType;
-            string display2 = !string.IsNullOrEmpty(selectedSubtype2) ? selectedSubtype2 : string.Empty;
+            string display1 = primarySubtype != null && primarySubtype != "(All)" ? primarySubtype : baseType;
+            string display2 = secondarySubtype ?? string.Empty;
 
             SetChartTitles(display1, display2);
-            UpdateChartLabels(selectedSubtype ?? string.Empty, selectedSubtype2 ?? string.Empty);
+            UpdateChartLabels(primarySubtype ?? string.Empty, secondarySubtype ?? string.Empty);
 
             var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
             var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
@@ -358,11 +359,14 @@ namespace DataVisualiser
                     "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+        }
 
+        private async Task LoadMetricData()
+        {
             try
             {
-                var loaded = await _viewModel.LoadMetricDataAsync();
-                if (!loaded)
+                var dataLoaded = await _viewModel.LoadMetricDataAsync();
+                if (!dataLoaded)
                 {
                     ClearAllCharts();
                     return;
