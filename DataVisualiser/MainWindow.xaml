@@ -14,297 +14,362 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
             <Label Content="Resolution:" VerticalAlignment="Center" Margin="5,0"/>
             <ComboBox x:Name="ResolutionCombo" Width="120" Margin="5"
-                      IsEditable="False" SelectionChanged="OnResolutionSelectionChanged"/>
+                      IsEditable="False"
+                      SelectionChanged="OnResolutionSelectionChanged"/>
 
             <Label Content="Metric Type:" VerticalAlignment="Center" Margin="5,0"/>
             <ComboBox x:Name="TablesCombo" Width="300" Margin="5"
-                      IsEditable="False" SelectionChanged="OnMetricTypeSelectionChanged"/>
+                      IsEditable="False"
+                      SelectionChanged="OnMetricTypeSelectionChanged"/>
 
             <Label Content="From:" VerticalAlignment="Center" Margin="5,0"/>
-            <DatePicker x:Name="FromDate" SelectedDateChanged="OnFromDateChanged" Width="150" Margin="5"/>
+            <DatePicker x:Name="FromDate"
+                        SelectedDateChanged="OnFromDateChanged"
+                        Width="150"
+                        Margin="5"/>
 
             <Label Content="To:" VerticalAlignment="Center" Margin="5,0"/>
-            <DatePicker x:Name="ToDate" SelectedDateChanged="OnToDateChanged" Width="150" Margin="5"/>
+            <DatePicker x:Name="ToDate"
+                        SelectedDateChanged="OnToDateChanged"
+                        Width="150"
+                        Margin="5"/>
 
-            <Button Content="Load Data" Click="OnLoadData" Margin="5" Padding="10,5"/>
+            <Button Content="Load Data"
+                    Click="OnLoadData"
+                    Margin="5"
+                    Padding="10,5"/>
+
             <Separator Margin="10,0"/>
-            <Button Content="Reset Zoom" Click="OnResetZoom" Margin="5" Padding="10,5"/>
+
+            <Button Content="Reset Zoom"
+                    Click="OnResetZoom"
+                    Margin="5"
+                    Padding="10,5"/>
         </StackPanel>
 
         <!-- ====== SUBTYPE PANEL ====== -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5" Name="MetricSubtypePanel">
-            <Label Content="Metric Subtype 1:" VerticalAlignment="Center" Margin="5,0"/>
+        <StackPanel DockPanel.Dock="Top"
+                    Orientation="Horizontal"
+                    Margin="5"
+                    Name="MetricSubtypePanel">
+
+            <Label Content="Metric Subtype 1:"
+                   VerticalAlignment="Center"
+                   Margin="5,0"/>
+
             <ComboBox x:Name="SubtypeCombo"
-                Width="250" Margin="5"
-                IsEditable="False"
-                IsEnabled="False"/>
-            <Button Content="Add Subtype" Click="AddSubtypeComboBox" Margin="5" Padding="10,5"/>
+                      Width="250"
+                      Margin="5"
+                      IsEditable="False"
+                      IsEnabled="False"/>
+
+            <Button Content="Add Subtype"
+                    Click="AddSubtypeComboBox"
+                    Margin="5"
+                    Padding="10,5"/>
         </StackPanel>
 
-        <!-- ====== SCROLL VIEWER HOLDING ALL CHARTS ====== -->
+        <!-- ====== SCROLL VIEWER ====== -->
         <ScrollViewer Margin="5"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
 
-            <StackPanel Orientation="Vertical">
+            <!-- ========= STACKPANEL MAIN ========= -->
+            <StackPanel x:Name="StackPanelMain"
+                        Orientation="Vertical">
 
                 <!-- ========== CHART MAIN ========== -->
-                <Border BorderBrush="#FF444444" BorderThickness="1" Margin="0,0,0,10">
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
                     <StackPanel Orientation="Vertical" Margin="0,0,0,10">
-                        <TextBlock x:Name="ChartMainTitle"
-                               Text="ChartMain"
-                               FontWeight="Bold"
-                               FontSize="14"
-                               Margin="20,5,10,0"/>
 
-                        <lvc:CartesianChart x:Name="ChartMain"
-                                        LegendLocation="Right"
-                                        Zoom="X"
-                                        Pan="X"
-                                        Hoverable="True"
-                                        Margin="20,5,10,20"
-                                        MinHeight="500">
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
 
-                            <lvc:CartesianChart.AxisX>
-                                <lvc:Axis Title="Time"/>
-                            </lvc:CartesianChart.AxisX>
+                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                                <TextBlock x:Name="ChartMainTitle"
+                                           Text="ChartMain"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
 
-                            <lvc:CartesianChart.AxisY>
-                                <lvc:Axis Title="Value" ShowLabels="True"/>
-                            </lvc:CartesianChart.AxisY>
+                        <StackPanel x:Name="ChartMainPanel" Orientation="Vertical">
+                            <lvc:CartesianChart x:Name="ChartMain"
+                                                LegendLocation="Right"
+                                                Zoom="X"
+                                                Pan="X"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="500">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Title="Time"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Value"
+                                              ShowLabels="True"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </StackPanel>
 
-                        </lvc:CartesianChart>
                     </StackPanel>
                 </Border>
 
                 <!-- ========== CHART NORMALIZED ========== -->
-                <Border BorderBrush="#FF444444" BorderThickness="1" Margin="0,0,0,10">
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
                     <StackPanel Orientation="Vertical" Margin="0,0,0,10">
 
-                        <!-- Title + toggle -->
-                        <Border Background="#BB131313" BorderBrush="#FF444444" BorderThickness="1" Padding="10,5">
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
+
                             <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartNormTitle"
-                                   Text="ChartNorm"
-                                   FontWeight="Bold"
-                                   FontSize="14"
-                                   VerticalAlignment="Center"/>
+                                           Text="ChartNorm"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"/>
 
                                 <Button x:Name="ChartNormToggleButton"
-                                Content="Show"
-                                Margin="10,0,0,0"
-                                Padding="10,3"
-                                Click="OnChartNormToggle"/>
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnChartNormToggle"/>
                             </StackPanel>
                         </Border>
-                        
-                        <!-- *** NEW: Normalization radio buttons *** -->
+
                         <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
-                            <TextBlock Text="Normalization:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Normalization:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,10,0"/>
 
                             <RadioButton x:Name="NormZeroToOneRadio"
-                                     Content="Zero–One"
-                                     Margin="5,0"
-                                     GroupName="NormModes"
-                                     Checked="OnNormalizationModeChanged"/>
+                                         Content="Zero–One"
+                                         Margin="5,0"
+                                         GroupName="NormModes"
+                                         Checked="OnNormalizationModeChanged"/>
 
                             <RadioButton x:Name="NormPercentOfMaxRadio"
-                                     Content="% of Max"
-                                     Margin="5,0"
-                                     GroupName="NormModes"
-                                     IsChecked="True"
-                                     Checked="OnNormalizationModeChanged"/>
+                                         Content="% of Max"
+                                         Margin="5,0"
+                                         GroupName="NormModes"
+                                         IsChecked="True"
+                                         Checked="OnNormalizationModeChanged"/>
 
                             <RadioButton x:Name="NormRelativeToMaxRadio"
-                                     Content="Relative to Max"
-                                     Margin="5,0"
-                                     GroupName="NormModes"
-                                     Checked="OnNormalizationModeChanged"/>
+                                         Content="Relative to Max"
+                                         Margin="5,0"
+                                         GroupName="NormModes"
+                                         Checked="OnNormalizationModeChanged"/>
                         </StackPanel>
 
-                        <!-- ChartNorm container -->
                         <StackPanel x:Name="ChartNormPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartNorm"
-                                            LegendLocation="Right"
-                                            Zoom="X"
-                                            Pan="X"
-                                            Hoverable="True"
-                                            Margin="20,5,10,20"
-                                            MinHeight="400">
-
+                                                LegendLocation="Right"
+                                                Zoom="X"
+                                                Pan="X"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="400">
                                 <lvc:CartesianChart.AxisX>
                                     <lvc:Axis Title="Time"/>
                                 </lvc:CartesianChart.AxisX>
-
                                 <lvc:CartesianChart.AxisY>
-                                    <lvc:Axis Title="Relative" ShowLabels="True"/>
+                                    <lvc:Axis Title="Relative"
+                                              ShowLabels="True"/>
                                 </lvc:CartesianChart.AxisY>
-
                             </lvc:CartesianChart>
                         </StackPanel>
 
                     </StackPanel>
                 </Border>
 
-                <!-- Weekly Distribution (Min-Max Range by DayOfWeek) -->
-                <Border BorderBrush="#FF444444" BorderThickness="1" Margin="0,0,0,10">
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
-                        <Border Background="#BB131313" BorderBrush="#FF444444" BorderThickness="1" Padding="10,5">
-                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
-                                <TextBlock x:Name="ChartWeeklyTitle" Text="Weekly Distribution" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" />
-                                <Button x:Name="ChartWeeklyToggleButton" Content="Show" Margin="10,0,0,0" Padding="10,3" Click="OnChartWeeklyToggle" />
-                            </StackPanel>
-                        </Border>
-                        <!-- Frequency shading toggle -->
-                        <Border Background="#BB131313" BorderBrush="#FF444444" BorderThickness="1" Padding="10,5">
-                            <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
-                                <TextBlock Text="Display Mode:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-
-                                <RadioButton x:Name="WeeklyFrequencyShadingRadio"
-                                     Content="Frequency Shading"
-                                     Margin="5,0"
-                                     GroupName="WeeklyDisplayModes"
-                                     IsChecked="True"
-                                     Checked="OnWeeklyDisplayModeChanged"/>
-
-                                <RadioButton x:Name="WeeklySimpleRangeRadio"
-                                     Content="Simple Range"
-                                     Margin="5,0"
-                                     GroupName="WeeklyDisplayModes"
-                                     Checked="OnWeeklyDisplayModeChanged"/>
-                            </StackPanel>
-                        </Border>
-                        
-                        <StackPanel x:Name="ChartWeeklyPanel" Orientation="Vertical">
-                            <lvc:CartesianChart x:Name="ChartWeekly"
-                            LegendLocation="Right"
-                            Zoom="X"
-                            Pan="X"
-                            Hoverable="True"
-                            Margin="20,5,10,20"
-                            VerticalAlignment="Top"
-                            MinHeight="400">
-                                <lvc:CartesianChart.AxisX>
-                                    <lvc:Axis Title="Day of Week" Labels="Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday" />
-                                </lvc:CartesianChart.AxisX>
-                                <lvc:CartesianChart.AxisY>
-                                    <lvc:Axis Title="Value" ShowLabels="True" />
-                                </lvc:CartesianChart.AxisY>
-                            </lvc:CartesianChart>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-                
                 <!-- ========== CHART DIFFERENCE ========== -->
-                <Border BorderBrush="#FF444444" BorderThickness="1" Margin="0,0,0,10">
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
                     <StackPanel Orientation="Vertical" Margin="0,0,0,10">
 
-                        <Border Background="#BB131313" BorderBrush="#FF444444" BorderThickness="1" Padding="10,5">
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
+
                             <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartDiffTitle"
-                                   Text="ChartDiff"
-                                   FontWeight="Bold"
-                                   FontSize="14"
-                                   VerticalAlignment="Center"/>
+                                           Text="ChartDiff"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"/>
 
                                 <Button x:Name="ChartDiffToggleButton"
-                                Content="Show"
-                                Margin="10,0,0,0"
-                                Padding="10,3"
-                                Click="OnChartDiffToggle"/>
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnChartDiffToggle"/>
                             </StackPanel>
                         </Border>
-
-
-
-                        <!-- ========== CHART WEEKDAY TREND ========== -->
-                        <!-- ========== CHART WEEKDAY TREND ========== -->
-                        <StackPanel Orientation="Vertical" Margin="0,0,0,10">
-
-                            <!-- Title + toggle -->
-                            <Border Background="#BB131313" BorderBrush="#FF444444" BorderThickness="1" Padding="10,5">
-                                <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
-                                    <TextBlock x:Name="ChartWeekdayTrendTitle"
-                                       Text="Weekday Trends"
-                                       FontWeight="Bold"
-                                       FontSize="14"
-                                       VerticalAlignment="Center"/>
-
-                                  <Button x:Name="ChartWeekdayTrendToggleButton"
-                                    Content="Show"
-                                    Margin="10,0,0,0"
-                                    Padding="10,3"
-                                    Click="OnChartWeekdayTrendToggle"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="#BB131313" BorderBrush="#FF444444" BorderThickness="1" Padding="10,5">
-                                <!-- Weekday selection -->
-                                <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
-                                    <TextBlock Text="Days:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-
-                                    <CheckBox Content="Mon" IsChecked="True" Margin="5,0"
-                                  Click="OnWeeklyTrendMondayToggled"/>
-                                    <CheckBox Content="Tue" IsChecked="True" Margin="5,0"
-                                  Click="OnWeeklyTrendTuesdayToggled"/>
-                                    <CheckBox Content="Wed" IsChecked="True" Margin="5,0"
-                                  Click="OnWeeklyTrendWednesdayToggled"/>
-                                    <CheckBox Content="Thu" IsChecked="True" Margin="5,0"
-                                  Click="OnWeeklyTrendThursdayToggled"/>
-                                    <CheckBox Content="Fri" IsChecked="True" Margin="5,0"
-                                  Click="OnWeeklyTrendFridayToggled"/>
-                                    <CheckBox Content="Sat" IsChecked="True" Margin="5,0"
-                                  Click="OnWeeklyTrendSaturdayToggled"/>
-                                    <CheckBox Content="Sun" IsChecked="True" Margin="5,0"
-                                  Click="OnWeeklyTrendSundayToggled"/>
-                                </StackPanel>
-                            </Border>
-                            
-                            <!-- Chart container -->
-                            <StackPanel x:Name="ChartWeekdayTrendPanel" Orientation="Vertical">
-
-                                <lvc:CartesianChart x:Name="ChartWeekdayTrend"
-                            LegendLocation="Right"
-                            Zoom="X"
-                            Pan="X"
-                            Hoverable="True"
-                            Margin="20,5,10,20"
-                            MinHeight="400">
-
-                                    <lvc:CartesianChart.AxisX>
-                                        <lvc:Axis Title="Time"/>
-                                    </lvc:CartesianChart.AxisX>
-
-                                    <lvc:CartesianChart.AxisY>
-                                        <lvc:Axis Title="Value" ShowLabels="True"/>
-                                    </lvc:CartesianChart.AxisY>
-
-                                </lvc:CartesianChart>
-
-                            </StackPanel>
-
-                        </StackPanel>
-
-
-
 
                         <StackPanel x:Name="ChartDiffPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartDiff"
-                                            LegendLocation="Right"
-                                            Zoom="X"
-                                            Pan="X"
-                                            Hoverable="True"
-                                            Margin="20,5,10,20"
-                                            MinHeight="400">
-
+                                                LegendLocation="Right"
+                                                Zoom="X"
+                                                Pan="X"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="400">
                                 <lvc:CartesianChart.AxisX>
                                     <lvc:Axis Title="Time"/>
                                 </lvc:CartesianChart.AxisX>
-
                                 <lvc:CartesianChart.AxisY>
-                                    <lvc:Axis Title="Difference" ShowLabels="True"/>
+                                    <lvc:Axis Title="Difference"
+                                              ShowLabels="True"/>
                                 </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </StackPanel>
 
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== CHART WEEKDAY TREND ========== -->
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
+
+                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                                <TextBlock x:Name="ChartWeekdayTrendTitle"
+                                           Text="Weekday Trends"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"/>
+
+                                <Button x:Name="ChartWeekdayTrendToggleButton"
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnChartWeekdayTrendToggle"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                            <TextBlock Text="Days:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,10,0"/>
+
+                            <CheckBox Content="Mon" IsChecked="True" Margin="5,0"
+                                      Click="OnWeeklyTrendMondayToggled"/>
+                            <CheckBox Content="Tue" IsChecked="True" Margin="5,0"
+                                      Click="OnWeeklyTrendTuesdayToggled"/>
+                            <CheckBox Content="Wed" IsChecked="True" Margin="5,0"
+                                      Click="OnWeeklyTrendWednesdayToggled"/>
+                            <CheckBox Content="Thu" IsChecked="True" Margin="5,0"
+                                      Click="OnWeeklyTrendThursdayToggled"/>
+                            <CheckBox Content="Fri" IsChecked="True" Margin="5,0"
+                                      Click="OnWeeklyTrendFridayToggled"/>
+                            <CheckBox Content="Sat" IsChecked="True" Margin="5,0"
+                                      Click="OnWeeklyTrendSaturdayToggled"/>
+                            <CheckBox Content="Sun" IsChecked="True" Margin="5,0"
+                                      Click="OnWeeklyTrendSundayToggled"/>
+                        </StackPanel>
+
+                        <StackPanel x:Name="ChartWeekdayTrendPanel" Orientation="Vertical">
+                            <lvc:CartesianChart x:Name="ChartWeekdayTrend"
+                                                LegendLocation="Right"
+                                                Zoom="X"
+                                                Pan="X"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="400">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Title="Time"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Value"
+                                              ShowLabels="True"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== CHART WEEKLY DISTRIBUTION ========== -->
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
+
+                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                                <TextBlock x:Name="ChartWeeklyTitle"
+                                           Text="Weekly Distribution"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"/>
+
+                                <Button x:Name="ChartWeeklyToggleButton"
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnChartWeeklyToggle"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                            <TextBlock Text="Display Mode:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,10,0"/>
+
+                            <RadioButton x:Name="WeeklyFrequencyShadingRadio"
+                                         Content="Frequency Shading"
+                                         GroupName="WeeklyDisplayModes"
+                                         IsChecked="True"
+                                         Checked="OnWeeklyDisplayModeChanged"/>
+
+                            <RadioButton x:Name="WeeklySimpleRangeRadio"
+                                         Content="Simple Range"
+                                         GroupName="WeeklyDisplayModes"
+                                         Checked="OnWeeklyDisplayModeChanged"/>
+                        </StackPanel>
+
+                        <StackPanel x:Name="ChartWeeklyPanel" Orientation="Vertical">
+                            <lvc:CartesianChart x:Name="ChartWeekly"
+                                                LegendLocation="Right"
+                                                Zoom="X"
+                                                Pan="X"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="400">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Title="Day of Week"
+                                              Labels="Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Value"
+                                              ShowLabels="True"/>
+                                </lvc:CartesianChart.AxisY>
                             </lvc:CartesianChart>
                         </StackPanel>
 
@@ -312,47 +377,53 @@
                 </Border>
 
                 <!-- ========== CHART RATIO ========== -->
-                <Border BorderBrush="#FF444444" BorderThickness="1" Margin="0,0,0,10">
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
                     <StackPanel Orientation="Vertical" Margin="0,0,0,10">
 
-                        <Border Background="#BB131313" BorderBrush="#FF444444" BorderThickness="1" Padding="10,5">
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
+
                             <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartRatioTitle"
-                                   Text="ChartRatio"
-                                   FontWeight="Bold"
-                                   FontSize="14"
-                                   VerticalAlignment="Center"/>
+                                           Text="ChartRatio"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"/>
 
                                 <Button x:Name="ChartRatioToggleButton"
-                                Content="Show"
-                                Margin="10,0,0,0"
-                                Padding="10,3"
-                                Click="OnChartRatioToggle"/>
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnChartRatioToggle"/>
                             </StackPanel>
                         </Border>
-                        
+
                         <StackPanel x:Name="ChartRatioPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartRatio"
-                                            LegendLocation="Right"
-                                            Zoom="X"
-                                            Pan="X"
-                                            Hoverable="True"
-                                            Margin="20,5,10,20"
-                                            MinHeight="400">
-
+                                                LegendLocation="Right"
+                                                Zoom="X"
+                                                Pan="X"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="400">
                                 <lvc:CartesianChart.AxisX>
                                     <lvc:Axis Title="Time"/>
                                 </lvc:CartesianChart.AxisX>
-
                                 <lvc:CartesianChart.AxisY>
-                                    <lvc:Axis Title="Ratio" ShowLabels="True"/>
+                                    <lvc:Axis Title="Ratio"
+                                              ShowLabels="True"/>
                                 </lvc:CartesianChart.AxisY>
-
                             </lvc:CartesianChart>
                         </StackPanel>
 
                     </StackPanel>
                 </Border>
+
             </StackPanel>
         </ScrollViewer>
 
