@@ -86,23 +86,10 @@ namespace DataVisualiser.Data.Repositories
             var cmsList = await GetCmsByCanonicalIdAsync(canonicalMetricId, from, to);
 
             // Convert CMS back to HealthMetricData for compatibility
-            var result = new List<HealthMetricData>();
-
-            foreach (var cms in cmsList)
-            {
-                foreach (var sample in cms.Samples)
-                {
-                    result.Add(new HealthMetricData
-                    {
-                        NormalizedTimestamp = sample.Timestamp.DateTime,
-                        Value = sample.Value,
-                        Unit = cms.Unit.Symbol,
-                        Provider = cms.Provenance.SourceProvider
-                    });
-                }
-            }
-
-            return result.OrderBy(d => d.NormalizedTimestamp);
+            return DataVisualiser.Helper.CmsConversionHelper.ConvertMultipleCmsToHealthMetricData(
+                cmsList,
+                from,
+                to);
         }
 
         /// <summary>

@@ -89,16 +89,10 @@ namespace DataVisualiser.Charts.Strategies
                 return null;
 
             // Convert CMS samples to HealthMetricData for compatibility with existing smoothing logic
-            var healthMetricData = _cmsData.Samples
-                .Where(s => s.Value.HasValue && s.Timestamp.DateTime >= _from && s.Timestamp.DateTime <= _to)
-                .Select(s => new HealthMetricData
-                {
-                    NormalizedTimestamp = s.Timestamp.DateTime,
-                    Value = s.Value,
-                    Unit = _cmsData.Unit.Symbol,
-                    Provider = _cmsData.Provenance.SourceProvider
-                })
-                .OrderBy(d => d.NormalizedTimestamp)
+            var healthMetricData = CmsConversionHelper.ConvertSamplesToHealthMetricData(
+                _cmsData,
+                _from,
+                _to)
                 .ToList();
 
             if (!healthMetricData.Any())
