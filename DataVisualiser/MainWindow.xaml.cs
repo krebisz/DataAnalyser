@@ -326,13 +326,13 @@ namespace DataVisualiser
             await LoadMetricData();
         }
 
-        private async Task LoadDataAndValidate()
+        private Task LoadDataAndValidate()
         {
             var selectedMetricType = TablesCombo.SelectedItem?.ToString();
             if (selectedMetricType == null)
             {
                 MessageBox.Show("Please select a Metric Type", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                return Task.CompletedTask;
             }
 
             _viewModel.SetSelectedMetricType(selectedMetricType);
@@ -357,8 +357,10 @@ namespace DataVisualiser
             {
                 MessageBox.Show(errorMessage ?? "The current selection is not valid.",
                     "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                return Task.CompletedTask;
             }
+
+            return Task.CompletedTask;
         }
 
         private async Task LoadMetricData()
