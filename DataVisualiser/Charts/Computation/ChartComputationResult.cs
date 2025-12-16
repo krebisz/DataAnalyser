@@ -14,6 +14,18 @@ namespace DataVisualiser.Charts.Computation
         public TickInterval TickInterval { get; init; }
         public TimeSpan DateRange { get; init; }
         public string? Unit { get; init; }
+
+        // NEW: Multi-series support for Main Chart (additive; existing fields remain authoritative for 1–2 series paths)
+        public List<SeriesResult>? Series { get; init; }
+    }
+
+    public sealed class SeriesResult
+    {
+        public string SeriesId { get; init; } = string.Empty;
+        public string DisplayName { get; init; } = string.Empty;
+
+        public List<DateTime> Timestamps { get; init; } = new();
+        public List<double> RawValues { get; init; } = new();
+        public List<double>? Smoothed { get; init; }
     }
 }
-
