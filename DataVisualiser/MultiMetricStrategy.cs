@@ -2,6 +2,7 @@ using DataVisualiser.Charts;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Models;
 using DataVisualiser.Helper;
+using DataFileReader.Canonical;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,9 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _to;
         private readonly string? _unit;
 
+        /// <summary>
+        /// Legacy constructor using HealthMetricData collections.
+        /// </summary>
         public MultiMetricStrategy(
             IReadOnlyList<IEnumerable<HealthMetricData>> series,
             IReadOnlyList<string> labels,
@@ -37,6 +41,51 @@ namespace DataVisualiser.Charts.Strategies
             _from = from;
             _to = to;
             _unit = unit;
+        }
+
+        /// <summary>
+        /// Phase 4: Constructor using Canonical Metric Series.
+        /// Validates metric compatibility and converts CMS to HealthMetricData for processing.
+        /// </summary>
+        public MultiMetricStrategy(
+            IReadOnlyList<ICanonicalMetricSeries> cmsSeries,
+            IReadOnlyList<string> labels,
+            DateTime from,
+            DateTime to)
+        {
+            if (cmsSeries == null || cmsSeries.Count == 0)
+                throw new ArgumentException("At least one metric series is required.", nameof(cmsSeries));
+            if (labels == null || labels.Count != cmsSeries.Count)
+                throw new ArgumentException("Labels count must match series count.", nameof(labels));
+
+            // Validate compatibility before processing
+            var canonicalIds = cmsSeries
+                .Where(cms => cms != null && cms.MetricId != null)
+                .Select(cms => cms.MetricId.Value)
+                .ToList();
+
+            if (canonicalIds.Count != cmsSeries.Count)
+                throw new ArgumentException("All CMS series must have valid metric identities.", nameof(cmsSeries));
+
+            if (!MetricCompatibilityHelper.ValidateCompatibility(canonicalIds))
+            {
+                var reason = MetricCompatibilityHelper.GetIncompatibilityReason(canonicalIds);
+                throw new ArgumentException(
+                    $"Cannot combine incompatible metrics: {reason}",
+                    nameof(cmsSeries));
+            }
+
+            // Convert each CMS to HealthMetricData using helper
+            var series = cmsSeries.Select(cms =>
+                CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to)
+                    .ToList())
+                .ToList();
+
+            _series = series;
+            _labels = labels;
+            _from = from;
+            _to = to;
+            _unit = cmsSeries.FirstOrDefault()?.Unit.Symbol;
         }
 
         public string PrimaryLabel => _labels.Count > 0 ? _labels[0] : "Multi-Metric";
