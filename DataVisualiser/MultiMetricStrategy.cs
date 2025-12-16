@@ -102,56 +102,101 @@ namespace DataVisualiser.Charts.Strategies
                 var seriesData = _series[i];
                 var label = _labels[i];
 
-                // Filter, order, and process like SingleMetricStrategy
-                var orderedData = seriesData
-                    .Where(d => d.Value.HasValue &&
-                               d.NormalizedTimestamp >= _from &&
-                               d.NormalizedTimestamp <= _to)
-                    .OrderBy(d => d.NormalizedTimestamp)
-                    .ToList();
-
-                if (!orderedData.Any())
-                    continue; // Skip empty series
-
-                var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
-                var rawValues = orderedData
-                    .Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN)
-                    .ToList();
-
-                // Apply smoothing (same as SingleMetricStrategy)
-                var smoothedData = MathHelper.CreateSmoothedData(orderedData, _from, _to);
-                var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, rawTimestamps);
-
-                // Capture unit from first non-null series
-                if (Unit == null)
+                var processedSeries = ProcessSingleSeries(seriesData, i, label);
+                if (processedSeries != null)
                 {
-                    Unit = orderedData.FirstOrDefault()?.Unit;
+                    seriesResults.Add(processedSeries);
                 }
-
-                seriesResults.Add(new SeriesResult
-                {
-                    SeriesId = $"series_{i}",
-                    DisplayName = label,
-                    Timestamps = rawTimestamps,
-                    RawValues = rawValues,
-                    Smoothed = smoothedValues
-                });
             }
 
             if (seriesResults.Count == 0)
                 return null;
 
+            return BuildComputationResult(seriesResults);
+        }
+
+        /// <summary>
+        /// Processes a single series: filters, orders, applies smoothing, and builds a SeriesResult.
+        /// Returns null if the series is empty.
+        /// </summary>
+        private SeriesResult? ProcessSingleSeries(
+            IEnumerable<HealthMetricData> seriesData,
+            int seriesIndex,
+            string label)
+        {
+            // Filter, order, and process like SingleMetricStrategy
+            var orderedData = seriesData
+                .Where(d => d.Value.HasValue &&
+                           d.NormalizedTimestamp >= _from &&
+                           d.NormalizedTimestamp <= _to)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
+
+            if (!orderedData.Any())
+                return null; // Skip empty series
+
+            var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
+            var rawValues = orderedData
+                .Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN)
+                .ToList();
+
+            // Apply smoothing (same as SingleMetricStrategy)
+            var smoothedData = MathHelper.CreateSmoothedData(orderedData, _from, _to);
+            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, rawTimestamps);
+
+            // Capture unit from first non-null series
+            if (Unit == null)
+            {
+                Unit = orderedData.FirstOrDefault()?.Unit;
+            }
+
+            return BuildSeriesResult(seriesIndex, label, rawTimestamps, rawValues, smoothedValues);
+        }
+
+        /// <summary>
+        /// Builds a SeriesResult from processed series data.
+        /// </summary>
+        private SeriesResult BuildSeriesResult(
+            int seriesIndex,
+            string label,
+            List<DateTime> rawTimestamps,
+            List<double> rawValues,
+            List<double> smoothedValues)
+        {
+            return new SeriesResult
+            {
+                SeriesId = $"series_{seriesIndex}",
+                DisplayName = label,
+                Timestamps = rawTimestamps,
+                RawValues = rawValues,
+                Smoothed = smoothedValues
+            };
+        }
+
+        /// <summary>
+        /// Collects all unique timestamps across all series for the main timeline.
+        /// </summary>
+        private List<DateTime> CollectAllTimestamps(List<SeriesResult> seriesResults)
+        {
+            return seriesResults
+                .SelectMany(s => s.Timestamps)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Builds the final ChartComputationResult from processed series results.
+        /// </summary>
+        private ChartComputationResult BuildComputationResult(List<SeriesResult> seriesResults)
+        {
             // Determine common metadata from all series
             var dateRange = _to - _from;
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);
             var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
 
             // Collect all unique timestamps across all series for the main timeline
-            var allTimestamps = seriesResults
-                .SelectMany(s => s.Timestamps)
-                .Distinct()
-                .OrderBy(t => t)
-                .ToList();
+            var allTimestamps = CollectAllTimestamps(seriesResults);
 
             var intervalIndices = allTimestamps
                 .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))

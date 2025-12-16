@@ -772,7 +772,35 @@ namespace DataVisualiser
             string? primarySubtype = null,
             string? secondarySubtype = null)
         {
-            // Build series list for multi-metric routing
+            // Build initial series list for multi-metric routing
+            var (series, labels) = BuildInitialSeriesList(data1, data2, displayName1, displayName2);
+
+            // Load additional subtypes if more than 2 are selected
+            await LoadAdditionalSubtypesAsync(series, labels, metricType, from, to);
+
+            var (strategy, secondaryLabel) = SelectComputationStrategy(series, labels, from, to);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                ChartMain,
+                strategy,
+                labels[0],
+                secondaryLabel,
+                minHeight: 400,
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondaryLabel != null ? secondarySubtype : null,
+                isOperationChart: false);
+        }
+
+        /// <summary>
+        /// Builds the initial series list and labels from primary and secondary data.
+        /// </summary>
+        private (List<IEnumerable<HealthMetricData>> series, List<string> labels) BuildInitialSeriesList(
+            IEnumerable<HealthMetricData> data1,
+            IEnumerable<HealthMetricData>? data2,
+            string displayName1,
+            string displayName2)
+        {
             var series = new List<IEnumerable<HealthMetricData>> { data1 };
             var labels = new List<string> { displayName1 };
 
@@ -782,44 +810,67 @@ namespace DataVisualiser
                 labels.Add(displayName2);
             }
 
-            // Load additional subtypes if more than 2 are selected
+            return (series, labels);
+        }
+
+        /// <summary>
+        /// Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
+        /// </summary>
+        private async Task LoadAdditionalSubtypesAsync(
+            List<IEnumerable<HealthMetricData>> series,
+            List<string> labels,
+            string? metricType,
+            DateTime from,
+            DateTime to)
+        {
             var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
-            if (selectedSubtypes.Count > 2 && !string.IsNullOrEmpty(metricType))
+            if (selectedSubtypes.Count <= 2 || string.IsNullOrEmpty(metricType))
+                return;
+
+            var dataFetcher = new DataFetcher(_connectionString);
+            var tableName = _viewModel.MetricState.ResolutionTableName ?? "HealthMetrics";
+
+            // Load data for subtypes 3, 4, etc.
+            for (int i = 2; i < selectedSubtypes.Count; i++)
             {
-                var dataFetcher = new DataFetcher(_connectionString);
-                var tableName = _viewModel.MetricState.ResolutionTableName ?? "HealthMetrics";
+                var subtype = selectedSubtypes[i];
+                if (string.IsNullOrWhiteSpace(subtype))
+                    continue;
 
-                // Load data for subtypes 3, 4, etc.
-                for (int i = 2; i < selectedSubtypes.Count; i++)
+                try
                 {
-                    var subtype = selectedSubtypes[i];
-                    if (string.IsNullOrWhiteSpace(subtype))
-                        continue;
+                    var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(
+                        metricType,
+                        subtype,
+                        from,
+                        to,
+                        tableName);
 
-                    try
+                    if (additionalData != null && additionalData.Any())
                     {
-                        var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(
-                            metricType,
-                            subtype,
-                            from,
-                            to,
-                            tableName);
-
-                        if (additionalData != null && additionalData.Any())
-                        {
-                            series.Add(additionalData);
-                            labels.Add($"{metricType}:{subtype}");
-                        }
-                    }
-                    catch
-                    {
-                        // Skip if loading fails
+                        series.Add(additionalData);
+                        labels.Add($"{metricType}:{subtype}");
                     }
                 }
+                catch
+                {
+                    // Skip if loading fails
+                }
             }
+        }
 
-            IChartComputationStrategy strategy;
+        /// <summary>
+        /// Selects the appropriate computation strategy based on the number of series.
+        /// Returns the strategy and secondary label (if applicable).
+        /// </summary>
+        private (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(
+            List<IEnumerable<HealthMetricData>> series,
+            List<string> labels,
+            DateTime from,
+            DateTime to)
+        {
             string? secondaryLabel = null;
+            IChartComputationStrategy strategy;
 
             if (series.Count > 2)
             {
@@ -852,18 +903,8 @@ namespace DataVisualiser
                     to);
             }
 
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                ChartMain,
-                strategy,
-                labels[0],
-                secondaryLabel,
-                minHeight: 400,
-                metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondaryLabel != null ? secondarySubtype : null,
-                isOperationChart: false);
+            return (strategy, secondaryLabel);
         }
-
 
         private async Task RenderOrClearChart(
             CartesianChart chart,
