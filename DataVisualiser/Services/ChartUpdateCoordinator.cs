@@ -66,7 +66,63 @@ namespace DataVisualiser.Services
             }
 
             // Build render model from computation result
-            var model = new ChartRenderModel
+            var model = BuildChartRenderModel(
+                strategy,
+                result,
+                targetChart,
+                primaryLabel,
+                secondaryLabel,
+                metricType,
+                primarySubtype,
+                secondarySubtype,
+                operationType,
+                isOperationChart);
+
+            try
+            {
+                // Render series
+                _chartRenderEngine.Render(targetChart, model, minHeight);
+
+                // Track timestamps for tooltips / hover sync
+                _chartTimestamps[targetChart] = model.Timestamps;
+
+                // Keep tooltip manager in sync
+                _tooltipManager?.UpdateChartTimestamps(targetChart, model.Timestamps);
+
+                // Normalise Y-axis and adjust chart height based on all data we actually rendered
+                if (targetChart.AxisY.Count > 0)
+                {
+                    NormalizeYAxisForChart(targetChart, model, minHeight);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error rendering chart: {ex.Message}",
+                    "Chart Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                ChartHelper.ClearChart(targetChart, _chartTimestamps);
+            }
+        }
+
+        /// <summary>
+        /// Builds a ChartRenderModel from a computation result and strategy metadata.
+        /// </summary>
+        private ChartRenderModel BuildChartRenderModel(
+            IChartComputationStrategy strategy,
+            ChartComputationResult result,
+            CartesianChart targetChart,
+            string primaryLabel,
+            string? secondaryLabel,
+            string? metricType,
+            string? primarySubtype,
+            string? secondarySubtype,
+            string? operationType,
+            bool isOperationChart)
+        {
+            return new ChartRenderModel
             {
                 PrimarySeriesName = strategy.PrimaryLabel ?? primaryLabel,
                 SecondarySeriesName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
@@ -101,106 +157,108 @@ namespace DataVisualiser.Services
                 // NEW: Multi-series support - when Series is present, it takes precedence
                 Series = result.Series
             };
+        }
 
-            try
+        /// <summary>
+        /// Builds synthetic HealthMetricData from the render model for Y-axis normalization.
+        /// Handles both multi-series mode and legacy primary/secondary mode.
+        /// </summary>
+        private List<HealthMetricData> BuildSyntheticRawData(ChartRenderModel model)
+        {
+            var syntheticRawData = new List<HealthMetricData>();
+            var timestamps = model.Timestamps;
+
+            // If Series array is present (multi-series mode), use all series for Y-axis normalization
+            if (model.Series != null && model.Series.Count > 0)
             {
-                // Render series
-                _chartRenderEngine.Render(targetChart, model, minHeight);
-
-                // Track timestamps for tooltips / hover sync
-                _chartTimestamps[targetChart] = model.Timestamps;
-
-                // Keep tooltip manager in sync
-                _tooltipManager?.UpdateChartTimestamps(targetChart, model.Timestamps);
-
-                // Normalise Y-axis and adjust chart height based on all data we actually rendered
-                if (targetChart.AxisY.Count > 0)
+                foreach (var series in model.Series)
                 {
-                    var yAxis = targetChart.AxisY[0];
-
-                    var syntheticRawData = new List<HealthMetricData>();
-                    var timestamps = model.Timestamps;
-
-                    // If Series array is present (multi-series mode), use all series for Y-axis normalization
-                    if (model.Series != null && model.Series.Count > 0)
+                    for (int i = 0; i < series.Timestamps.Count && i < series.RawValues.Count; i++)
                     {
-                        foreach (var series in model.Series)
+                        var val = series.RawValues[i];
+                        syntheticRawData.Add(new HealthMetricData
                         {
-                            for (int i = 0; i < series.Timestamps.Count && i < series.RawValues.Count; i++)
-                            {
-                                var val = series.RawValues[i];
-                                syntheticRawData.Add(new HealthMetricData
-                                {
-                                    NormalizedTimestamp = series.Timestamps[i],
-                                    Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
-                                    Unit = model.Unit
-                                });
-                            }
-                        }
+                            NormalizedTimestamp = series.Timestamps[i],
+                            Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
+                            Unit = model.Unit
+                        });
                     }
-                    else
-                    {
-                        // Fallback to primary/secondary for backward compatibility
-                        var primaryRaw = model.PrimaryRaw ?? new List<double>();
-                        var secondaryRaw = model.SecondaryRaw;
-
-                        for (int i = 0; i < timestamps.Count && i < primaryRaw.Count; i++)
-                        {
-                            var val = primaryRaw[i];
-                            syntheticRawData.Add(new HealthMetricData
-                            {
-                                NormalizedTimestamp = timestamps[i],
-                                Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
-                                Unit = model.Unit
-                            });
-
-                            if (secondaryRaw != null && i < secondaryRaw.Count)
-                            {
-                                var secVal = secondaryRaw[i];
-                                syntheticRawData.Add(new HealthMetricData
-                                {
-                                    NormalizedTimestamp = timestamps[i],
-                                    Value = double.IsNaN(secVal) ? (decimal?)null : (decimal?)secVal,
-                                    Unit = model.Unit
-                                });
-                            }
-                        }
-                    }
-
-                    var smoothedList = new List<double>();
-                    if (model.Series != null && model.Series.Count > 0)
-                    {
-                        // Collect smoothed values from all series
-                        foreach (var series in model.Series)
-                        {
-                            if (series.Smoothed != null)
-                                smoothedList.AddRange(series.Smoothed);
-                        }
-                    }
-                    else
-                    {
-                        // Fallback to primary/secondary for backward compatibility
-                        if (model.PrimarySmoothed != null)
-                            smoothedList.AddRange(model.PrimarySmoothed);
-                        if (model.SecondarySmoothed != null)
-                            smoothedList.AddRange(model.SecondarySmoothed);
-                    }
-
-                    ChartHelper.NormalizeYAxis(yAxis, syntheticRawData, smoothedList);
-                    ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
-                    ChartHelper.InitializeChartTooltip(targetChart);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show(
-                    $"Error rendering chart: {ex.Message}",
-                    "Chart Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                // Fallback to primary/secondary for backward compatibility
+                var primaryRaw = model.PrimaryRaw ?? new List<double>();
+                var secondaryRaw = model.SecondaryRaw;
 
-                ChartHelper.ClearChart(targetChart, _chartTimestamps);
+                for (int i = 0; i < timestamps.Count && i < primaryRaw.Count; i++)
+                {
+                    var val = primaryRaw[i];
+                    syntheticRawData.Add(new HealthMetricData
+                    {
+                        NormalizedTimestamp = timestamps[i],
+                        Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
+                        Unit = model.Unit
+                    });
+
+                    if (secondaryRaw != null && i < secondaryRaw.Count)
+                    {
+                        var secVal = secondaryRaw[i];
+                        syntheticRawData.Add(new HealthMetricData
+                        {
+                            NormalizedTimestamp = timestamps[i],
+                            Value = double.IsNaN(secVal) ? (decimal?)null : (decimal?)secVal,
+                            Unit = model.Unit
+                        });
+                    }
+                }
             }
+
+            return syntheticRawData;
+        }
+
+        /// <summary>
+        /// Collects all smoothed values from the render model for Y-axis normalization.
+        /// Handles both multi-series mode and legacy primary/secondary mode.
+        /// </summary>
+        private List<double> CollectSmoothedValues(ChartRenderModel model)
+        {
+            var smoothedList = new List<double>();
+
+            if (model.Series != null && model.Series.Count > 0)
+            {
+                // Collect smoothed values from all series
+                foreach (var series in model.Series)
+                {
+                    if (series.Smoothed != null)
+                        smoothedList.AddRange(series.Smoothed);
+                }
+            }
+            else
+            {
+                // Fallback to primary/secondary for backward compatibility
+                if (model.PrimarySmoothed != null)
+                    smoothedList.AddRange(model.PrimarySmoothed);
+                if (model.SecondarySmoothed != null)
+                    smoothedList.AddRange(model.SecondarySmoothed);
+            }
+
+            return smoothedList;
+        }
+
+        /// <summary>
+        /// Normalizes the Y-axis and adjusts chart height based on all rendered data.
+        /// Handles both multi-series mode and legacy primary/secondary mode.
+        /// </summary>
+        private void NormalizeYAxisForChart(CartesianChart targetChart, ChartRenderModel model, double minHeight)
+        {
+            var yAxis = targetChart.AxisY[0];
+            var syntheticRawData = BuildSyntheticRawData(model);
+            var smoothedList = CollectSmoothedValues(model);
+
+            ChartHelper.NormalizeYAxis(yAxis, syntheticRawData, smoothedList);
+            ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
+            ChartHelper.InitializeChartTooltip(targetChart);
         }
     }
 }
