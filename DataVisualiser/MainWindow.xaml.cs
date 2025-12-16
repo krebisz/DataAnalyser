@@ -23,6 +23,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
+using System.Collections.Generic;
+using System.Linq;
+using DataVisualiser.Charts;
+using DataVisualiser.Charts.Strategies;
+using DataVisualiser.Models;
 
 namespace DataVisualiser
 {
@@ -707,6 +712,51 @@ namespace DataVisualiser
             }
         }
 
+        private ChartComputationResult? ComputeMainChart(
+            IReadOnlyList<IEnumerable<HealthMetricData>> selectedMetricSeries,
+            IReadOnlyList<string> selectedMetricLabels,
+            string? unit,
+            DateTime from,
+            DateTime to)
+        {
+            IChartComputationStrategy strategy;
+
+            if (selectedMetricSeries.Count > 2)
+            {
+                var combinedLabel = $"Combined ({selectedMetricSeries.Count} metrics)";
+
+                strategy = new MultiMetricStrategy(
+                    selectedMetricSeries,
+                    combinedLabel,
+                    unit);
+            }
+            else if (selectedMetricSeries.Count == 2)
+            {
+                strategy = new CombinedMetricStrategy(
+                    selectedMetricSeries[0],
+                    selectedMetricSeries[1],
+                    selectedMetricLabels[0],
+                    selectedMetricLabels[1],
+                    from,
+                    to);
+            }
+            else if (selectedMetricSeries.Count == 1)
+            {
+                strategy = new SingleMetricStrategy(
+                    selectedMetricSeries[0],
+                    selectedMetricLabels[0],
+                    from,
+                    to);
+            }
+            else
+            {
+                return null;
+            }
+
+            return strategy.Compute();
+        }
+
+
         private async Task RenderMainChart(
             IEnumerable<HealthMetricData> data1,
             IEnumerable<HealthMetricData>? data2,
@@ -718,31 +768,62 @@ namespace DataVisualiser
             string? primarySubtype = null,
             string? secondarySubtype = null)
         {
+            IChartComputationStrategy strategy;
+            string? secondaryLabel = null;
+
+            // Build series list for multi-metric routing
+            var series = new List<IEnumerable<HealthMetricData>> { data1 };
+            var labels = new List<string> { displayName1 };
+
             if (data2 != null && data2.Any())
             {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartMain,
-                    new CombinedMetricStrategy(data1, data2, displayName1, displayName2, from, to),
-                    displayName1,
-                    displayName2,
-                    minHeight: 400,
-                    metricType: metricType,
-                    primarySubtype: primarySubtype,
-                    secondarySubtype: secondarySubtype,
-                    isOperationChart: false);
+                series.Add(data2);
+                labels.Add(displayName2);
+            }
+
+            if (series.Count > 2)
+            {
+                // N metrics → aggregated main chart
+                var combinedLabel = $"Combined ({series.Count} metrics)";
+
+                strategy = new MultiMetricStrategy(
+                    series,
+                    combinedLabel,
+                    unit: null);
+            }
+            else if (series.Count == 2)
+            {
+                strategy = new CombinedMetricStrategy(
+                    series[0],
+                    series[1],
+                    labels[0],
+                    labels[1],
+                    from,
+                    to);
+
+                secondaryLabel = labels[1];
             }
             else
             {
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                    ChartMain,
-                    new SingleMetricStrategy(data1, displayName1, from, to),
-                    displayName1,
-                    minHeight: 400,
-                    metricType: metricType,
-                    primarySubtype: primarySubtype,
-                    isOperationChart: false);
+                strategy = new SingleMetricStrategy(
+                    series[0],
+                    labels[0],
+                    from,
+                    to);
             }
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                ChartMain,
+                strategy,
+                labels[0],
+                secondaryLabel,
+                minHeight: 400,
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondaryLabel != null ? secondarySubtype : null,
+                isOperationChart: false);
         }
+
 
         private async Task RenderOrClearChart(
             CartesianChart chart,
