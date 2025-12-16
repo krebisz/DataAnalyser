@@ -54,30 +54,17 @@ namespace DataVisualiser.Charts.Strategies
 
             if (_data == null) return null;
 
-            var orderedData = _data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-            if (!orderedData.Any()) return null; // engine will treat null as no-data
+            var orderedData = _data
+                .Where(d => d.Value.HasValue)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
 
-            var dateRange = _to - _from;
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-            var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-            var intervalIndices = rawTimestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
-            var smoothedData = MathHelper.CreateSmoothedData(orderedData, _from, _to);
-            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, rawTimestamps);
+            if (!orderedData.Any())
+                return null; // engine will treat null as no-data
 
-            Unit = orderedData.FirstOrDefault()?.Unit;
-
-            return new ChartComputationResult
-            {
-                Timestamps = rawTimestamps,
-                IntervalIndices = intervalIndices,
-                NormalizedIntervals = normalizedIntervals,
-                PrimaryRawValues = orderedData.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).ToList(),
-                PrimarySmoothed = smoothedValues,
-                TickInterval = tickInterval,
-                DateRange = dateRange,
-                Unit = Unit
-            };
+            // Use unit from first data point (legacy behavior)
+            var unitFromData = orderedData.FirstOrDefault()?.Unit;
+            return ComputeFromHealthMetricData(orderedData, unitFromData);
         }
 
         /// <summary>
@@ -98,23 +85,53 @@ namespace DataVisualiser.Charts.Strategies
             if (!healthMetricData.Any())
                 return null;
 
-            var orderedData = healthMetricData.Where(d => d.Value.HasValue).ToList();
+            var orderedData = healthMetricData
+                .Where(d => d.Value.HasValue)
+                .ToList();
+
+            // Use unit from CMS (more authoritative than individual data points)
+            var unitFromCms = _cmsData.Unit.Symbol;
+            return ComputeFromHealthMetricData(orderedData, unitFromCms);
+        }
+
+        /// <summary>
+        /// Common computation logic for both legacy and CMS data paths.
+        /// Performs smoothing, interpolation, and chart result construction.
+        /// </summary>
+        /// <param name="orderedData">Filtered and ordered health metric data</param>
+        /// <param name="unit">Optional unit override (if null, uses first data point's unit)</param>
+        /// <returns>Chart computation result or null if no data</returns>
+        private ChartComputationResult? ComputeFromHealthMetricData(
+            IReadOnlyList<HealthMetricData> orderedData,
+            string? unit = null)
+        {
+            if (orderedData == null || orderedData.Count == 0)
+                return null;
+
+            // Convert to List for MathHelper methods that require List<T>
+            var dataList = orderedData.ToList();
+
             var dateRange = _to - _from;
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-            var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
+            var rawTimestamps = dataList.Select(d => d.NormalizedTimestamp).ToList();
             var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-            var intervalIndices = rawTimestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
-            var smoothedData = MathHelper.CreateSmoothedData(orderedData, _from, _to);
+            var intervalIndices = rawTimestamps
+                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
+                .ToList();
+            var smoothedData = MathHelper.CreateSmoothedData(dataList, _from, _to);
             var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, rawTimestamps);
 
-            Unit = _cmsData.Unit.Symbol;
+            // Use provided unit or fall back to first data point's unit
+            Unit = unit ?? dataList.FirstOrDefault()?.Unit;
 
             return new ChartComputationResult
             {
                 Timestamps = rawTimestamps,
                 IntervalIndices = intervalIndices,
                 NormalizedIntervals = normalizedIntervals,
-                PrimaryRawValues = orderedData.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).ToList(),
+                PrimaryRawValues = dataList
+                    .Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN)
+                    .ToList(),
                 PrimarySmoothed = smoothedValues,
                 TickInterval = tickInterval,
                 DateRange = dateRange,
