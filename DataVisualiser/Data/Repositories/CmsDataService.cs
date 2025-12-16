@@ -47,7 +47,7 @@ namespace DataVisualiser.Data.Repositories
             // In future phases, CMS may be stored directly
 
             // Determine which metric type/subtype to query based on canonical ID
-            var (metricType, subtype) = MapCanonicalIdToLegacyFields(canonicalMetricId);
+            var (metricType, subtype) = CanonicalMetricMapping.ToLegacyFields(canonicalMetricId);
             if (metricType == null)
                 return Array.Empty<ICanonicalMetricSeries>();
 
@@ -97,27 +97,13 @@ namespace DataVisualiser.Data.Repositories
         /// </summary>
         public async Task<bool> IsCmsAvailableAsync(string canonicalMetricId)
         {
-            var (metricType, _) = MapCanonicalIdToLegacyFields(canonicalMetricId);
+            var (metricType, _) = CanonicalMetricMapping.ToLegacyFields(canonicalMetricId);
             if (metricType == null)
                 return false;
 
             // Check if data exists in legacy table
             var count = await _legacyFetcher.GetRecordCount(metricType, null);
             return count > 0;
-        }
-
-        /// <summary>
-        /// Maps canonical metric ID to legacy MetricType/MetricSubtype for database queries.
-        /// Phase 4: This is a temporary mapping. In future, CMS will be stored directly.
-        /// </summary>
-        private static (string? MetricType, string? Subtype) MapCanonicalIdToLegacyFields(string canonicalMetricId)
-        {
-            return canonicalMetricId switch
-            {
-                "metric.body_weight" => ("weight", null),
-                "metric.sleep" => ("com.samsung.shealth.sleep", null),
-                _ => (null, null)
-            };
         }
     }
 }
