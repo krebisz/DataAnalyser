@@ -1014,36 +1014,63 @@ namespace DataVisualiser
         private async Task RenderChartsFromLastContext()
         {
             var ctx = _viewModel.ChartState.LastContext;
-            if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
+            if (!ShouldRenderCharts(ctx))
                 return;
 
-            var data1 = ctx.Data1;
-            var data2 = ctx.Data2;
-            var displayName1 = ctx.DisplayName1 ?? string.Empty;
-            var displayName2 = ctx.DisplayName2 ?? string.Empty;
+            var hasSecondaryData = HasSecondaryData(ctx);
 
-            var hasSecondaryData = data2 != null && data2.Any();
-
-            var metricType = ctx.MetricType;
-            var primarySubtype = ctx.PrimarySubtype;
-            var secondarySubtype = ctx.SecondarySubtype;
-
-            await RenderMainChart(
-                data1,
-                data2,
-                displayName1,
-                displayName2,
-                ctx.From,
-                ctx.To,
-                metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondarySubtype);
+            await RenderPrimaryChart(ctx);
 
             if (!hasSecondaryData)
             {
                 ClearSecondaryChartsAndReturn();
                 return;
             }
+
+            await RenderSecondaryCharts(ctx);
+        }
+
+        /// <summary>
+        /// Validates that the chart context is valid and has data to render.
+        /// </summary>
+        private static bool ShouldRenderCharts(ChartDataContext? ctx)
+        {
+            return ctx != null && ctx.Data1 != null && ctx.Data1.Any();
+        }
+
+        /// <summary>
+        /// Determines if secondary data is available for rendering secondary charts.
+        /// </summary>
+        private static bool HasSecondaryData(ChartDataContext ctx)
+        {
+            return ctx.Data2 != null && ctx.Data2.Any();
+        }
+
+        /// <summary>
+        /// Renders the primary (main) chart from the context.
+        /// </summary>
+        private async Task RenderPrimaryChart(ChartDataContext ctx)
+        {
+            await RenderMainChart(
+                ctx.Data1!,
+                ctx.Data2,
+                ctx.DisplayName1 ?? string.Empty,
+                ctx.DisplayName2 ?? string.Empty,
+                ctx.From,
+                ctx.To,
+                metricType: ctx.MetricType,
+                primarySubtype: ctx.PrimarySubtype,
+                secondarySubtype: ctx.SecondarySubtype);
+        }
+
+        /// <summary>
+        /// Renders all secondary charts (normalized, weekly distribution, weekday trend, difference, ratio).
+        /// </summary>
+        private async Task RenderSecondaryCharts(ChartDataContext ctx)
+        {
+            var metricType = ctx.MetricType;
+            var primarySubtype = ctx.PrimarySubtype;
+            var secondarySubtype = ctx.SecondarySubtype;
 
             await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
             await RenderWeeklyDistribution(ctx);

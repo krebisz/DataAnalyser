@@ -174,21 +174,8 @@ namespace DataVisualiser.ViewModels
         public async Task<bool> LoadMetricDataAsync()
         {
             // Basic validation first
-            if (!ValidateDataLoadRequirements(out var validationError))
+            if (!ValidateDataLoadPrerequisites(out var validationError))
             {
-                ErrorOccured?.Invoke(this, new ErrorEventArgs
-                {
-                    Message = validationError
-                });
-                return false;
-            }
-
-            if (MetricState.FromDate == null || MetricState.ToDate == null)
-            {
-                ErrorOccured?.Invoke(this, new ErrorEventArgs
-                {
-                    Message = "Please select a valid date range before loading data."
-                });
                 return false;
             }
 
@@ -198,60 +185,22 @@ namespace DataVisualiser.ViewModels
             // IMPORTANT: Ensure consistent ordering - first selected subtype is always primary (data1),
             // second selected subtype is always secondary (data2). This ordering is maintained
             // across all charts and strategies.
-            var primarySubtype = MetricState.SelectedSubtypes.Count > 0
-                ? MetricState.SelectedSubtypes[0]  // First selected subtype = primary
-                : null;
-
-            var secondarySubtype = MetricState.SelectedSubtypes.Count > 1
-                ? MetricState.SelectedSubtypes[1]   // Second selected subtype = secondary
-                : null;
+            var (primarySubtype, secondarySubtype) = ExtractPrimaryAndSecondarySubtypes();
 
             try
             {
                 UiState.IsLoadingData = true;
 
-                // Load data: data1 = first selected subtype (primary), data2 = second selected subtype (secondary)
-                var (data1, data2) = await _metricService.LoadMetricDataAsync(
-                    metricType,
-                    primarySubtype,   // First selected subtype → data1
-                    secondarySubtype, // Second selected subtype → data2
-                    MetricState.FromDate.Value,
-                    MetricState.ToDate.Value,
-                    tableName);
-
-                // Mirror old MainWindow "no data" behaviour, but via ErrorOccured
-                if (data1 == null || !data1.Any())
-                {
-                    ErrorOccured?.Invoke(this, new ErrorEventArgs
-                    {
-                        Message = BuildNoDataMessage(metricType, primarySubtype, isSecondary: false)
-                    });
-                    ChartState.LastContext = null;
-                    return false;
-                }
-
-                if (data2 == null || !data2.Any())
-                {
-                    ErrorOccured?.Invoke(this, new ErrorEventArgs
-                    {
-                        Message = BuildNoDataMessage(metricType, secondarySubtype, isSecondary: true)
-                    });
-                    ChartState.LastContext = null;
-                    return false;
-                }
-
-                // NEW: delegate context construction to the builder
-                var ctxBuilder = new ChartDataContextBuilder();
-
-                ChartState.LastContext = ctxBuilder.Build(
+                var dataLoaded = await LoadAndValidateMetricDataAsync(
                     metricType,
                     primarySubtype,
                     secondarySubtype,
-                    data1,
-                    data2,
-                    MetricState.FromDate.Value,
-                    MetricState.ToDate.Value);
+                    tableName);
 
+                if (!dataLoaded)
+                {
+                    return false;
+                }
 
                 return true;
             }
@@ -283,6 +232,109 @@ namespace DataVisualiser.ViewModels
             var suffix = isSecondary ? " (Chart 2)." : ".";
 
             return $"No data found for MetricType '{metricType}'{subtypeText} in the selected date range{suffix}";
+        }
+
+        /// <summary>
+        /// Validates all prerequisites for loading metric data.
+        /// Returns false and raises error event if validation fails.
+        /// </summary>
+        private bool ValidateDataLoadPrerequisites(out string? validationError)
+        {
+            validationError = null;
+
+            if (!ValidateDataLoadRequirements(out validationError))
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = validationError
+                });
+                return false;
+            }
+
+            if (MetricState.FromDate == null || MetricState.ToDate == null)
+            {
+                validationError = "Please select a valid date range before loading data.";
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = validationError
+                });
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Extracts primary and secondary subtypes from the selected subtypes list.
+        /// IMPORTANT: First selected subtype is always primary (data1),
+        /// second selected subtype is always secondary (data2).
+        /// </summary>
+        private (string? primarySubtype, string? secondarySubtype) ExtractPrimaryAndSecondarySubtypes()
+        {
+            var primarySubtype = MetricState.SelectedSubtypes.Count > 0
+                ? MetricState.SelectedSubtypes[0]  // First selected subtype = primary
+                : null;
+
+            var secondarySubtype = MetricState.SelectedSubtypes.Count > 1
+                ? MetricState.SelectedSubtypes[1]   // Second selected subtype = secondary
+                : null;
+
+            return (primarySubtype, secondarySubtype);
+        }
+
+        /// <summary>
+        /// Loads and validates metric data, then builds the chart data context.
+        /// Returns false if data loading or validation fails.
+        /// </summary>
+        private async Task<bool> LoadAndValidateMetricDataAsync(
+            string metricType,
+            string? primarySubtype,
+            string? secondarySubtype,
+            string tableName)
+        {
+            // Load data: data1 = first selected subtype (primary), data2 = second selected subtype (secondary)
+            var (data1, data2) = await _metricService.LoadMetricDataAsync(
+                metricType,
+                primarySubtype,   // First selected subtype → data1
+                secondarySubtype, // Second selected subtype → data2
+                MetricState.FromDate!.Value,
+                MetricState.ToDate!.Value,
+                tableName);
+
+            // Mirror old MainWindow "no data" behaviour, but via ErrorOccured
+            if (data1 == null || !data1.Any())
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = BuildNoDataMessage(metricType, primarySubtype, isSecondary: false)
+                });
+                ChartState.LastContext = null;
+                return false;
+            }
+
+            if (data2 == null || !data2.Any())
+            {
+                ErrorOccured?.Invoke(this, new ErrorEventArgs
+                {
+                    Message = BuildNoDataMessage(metricType, secondarySubtype, isSecondary: true)
+                });
+                ChartState.LastContext = null;
+                return false;
+            }
+
+            // NEW: delegate context construction to the builder
+            var ctxBuilder = new ChartDataContextBuilder();
+
+            ChartState.LastContext = ctxBuilder.Build(
+                metricType,
+                primarySubtype,
+                secondarySubtype,
+                data1,
+                data2,
+                MetricState.FromDate.Value,
+                MetricState.ToDate.Value);
+
+            return true;
         }
 
         private async Task LoadDateRangeForSelectedMetricAsync()
