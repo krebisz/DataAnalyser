@@ -25,60 +25,129 @@ namespace DataVisualiser.Charts.Rendering
             targetChart.Series.Clear();
 
             // ============================
-            //  PRIMARY SERIES
+            //  MULTI-SERIES MODE (when Series array is present)
             // ============================
-            string primarySmoothedLabel = FormatSeriesLabel(model, isPrimary: true, isSmoothed: true);
-            string primaryRawLabel = FormatSeriesLabel(model, isPrimary: true, isSmoothed: false);
-
-            var smoothedPrimary = ChartHelper.CreateLineSeries(
-                primarySmoothedLabel,
-                5,
-                2,
-                model.PrimaryColor);
-
-            foreach (var value in model.PrimarySmoothed)
-                smoothedPrimary.Values.Add(value);
-
-            var rawPrimary = ChartHelper.CreateLineSeries(
-                primaryRawLabel,
-                3,
-                1,
-                Colors.DarkGray);
-
-            foreach (var value in model.PrimaryRaw)
-                rawPrimary.Values.Add(value);
-
-            targetChart.Series.Add(smoothedPrimary);
-            targetChart.Series.Add(rawPrimary);
-
-            // ============================
-            //  SECONDARY SERIES (IF ANY)
-            // ============================
-            if (model.SecondarySmoothed != null && model.SecondaryRaw != null)
+            if (model.Series != null && model.Series.Count > 0)
             {
-                string secondarySmoothedLabel = FormatSeriesLabel(model, isPrimary: false, isSmoothed: true);
-                string secondaryRawLabel = FormatSeriesLabel(model, isPrimary: false, isSmoothed: false);
+                // Reset color palette for this chart to ensure consistent color assignment
+                ColourPalette.Reset(targetChart);
 
-                var smoothedSecondary = ChartHelper.CreateLineSeries(
-                    secondarySmoothedLabel,
+                // Main timeline for alignment (from model.Timestamps)
+                var mainTimeline = model.Timestamps;
+                if (mainTimeline == null || mainTimeline.Count == 0)
+                {
+                    // Fallback: use union of all series timestamps
+                    mainTimeline = model.Series
+                        .SelectMany(s => s.Timestamps)
+                        .Distinct()
+                        .OrderBy(t => t)
+                        .ToList();
+                }
+
+                foreach (var seriesResult in model.Series)
+                {
+                    var seriesColor = ColourPalette.Next(targetChart);
+
+                    // Align series values to main timeline
+                    var alignedRaw = AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
+                    var alignedSmoothed = seriesResult.Smoothed != null
+                        ? AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline)
+                        : null;
+
+                    // Render smoothed series if available and enabled
+                    if (model.SeriesMode == ChartSeriesMode.RawAndSmoothed || 
+                        model.SeriesMode == ChartSeriesMode.SmoothedOnly)
+                    {
+                        if (alignedSmoothed != null && alignedSmoothed.Count > 0)
+                        {
+                            var smoothedSeries = ChartHelper.CreateLineSeries(
+                                $"{seriesResult.DisplayName} (smooth)",
+                                5,
+                                2,
+                                seriesColor);
+
+                            foreach (var value in alignedSmoothed)
+                                smoothedSeries.Values.Add(value);
+
+                            targetChart.Series.Add(smoothedSeries);
+                        }
+                    }
+
+                    // Render raw series if enabled
+                    if (model.SeriesMode == ChartSeriesMode.RawAndSmoothed || 
+                        model.SeriesMode == ChartSeriesMode.RawOnly)
+                    {
+                        var rawSeries = ChartHelper.CreateLineSeries(
+                            $"{seriesResult.DisplayName} (raw)",
+                            3,
+                            1,
+                            Colors.DarkGray);
+
+                        foreach (var value in alignedRaw)
+                            rawSeries.Values.Add(value);
+
+                        targetChart.Series.Add(rawSeries);
+                    }
+                }
+            }
+            else
+            {
+                // ============================
+                //  LEGACY MODE: PRIMARY/SECONDARY SERIES
+                // ============================
+                string primarySmoothedLabel = FormatSeriesLabel(model, isPrimary: true, isSmoothed: true);
+                string primaryRawLabel = FormatSeriesLabel(model, isPrimary: true, isSmoothed: false);
+
+                var smoothedPrimary = ChartHelper.CreateLineSeries(
+                    primarySmoothedLabel,
                     5,
                     2,
-                    model.SecondaryColor);
+                    model.PrimaryColor);
 
-                foreach (var value in model.SecondarySmoothed)
-                    smoothedSecondary.Values.Add(value);
+                foreach (var value in model.PrimarySmoothed)
+                    smoothedPrimary.Values.Add(value);
 
-                var rawSecondary = ChartHelper.CreateLineSeries(
-                    secondaryRawLabel,
+                var rawPrimary = ChartHelper.CreateLineSeries(
+                    primaryRawLabel,
                     3,
                     1,
                     Colors.DarkGray);
 
-                foreach (var value in model.SecondaryRaw)
-                    rawSecondary.Values.Add(value);
+                foreach (var value in model.PrimaryRaw)
+                    rawPrimary.Values.Add(value);
 
-                targetChart.Series.Add(smoothedSecondary);
-                targetChart.Series.Add(rawSecondary);
+                targetChart.Series.Add(smoothedPrimary);
+                targetChart.Series.Add(rawPrimary);
+
+                // ============================
+                //  SECONDARY SERIES (IF ANY)
+                // ============================
+                if (model.SecondarySmoothed != null && model.SecondaryRaw != null)
+                {
+                    string secondarySmoothedLabel = FormatSeriesLabel(model, isPrimary: false, isSmoothed: true);
+                    string secondaryRawLabel = FormatSeriesLabel(model, isPrimary: false, isSmoothed: false);
+
+                    var smoothedSecondary = ChartHelper.CreateLineSeries(
+                        secondarySmoothedLabel,
+                        5,
+                        2,
+                        model.SecondaryColor);
+
+                    foreach (var value in model.SecondarySmoothed)
+                        smoothedSecondary.Values.Add(value);
+
+                    var rawSecondary = ChartHelper.CreateLineSeries(
+                        secondaryRawLabel,
+                        3,
+                        1,
+                        Colors.DarkGray);
+
+                    foreach (var value in model.SecondaryRaw)
+                        rawSecondary.Values.Add(value);
+
+                    targetChart.Series.Add(smoothedSecondary);
+                    targetChart.Series.Add(rawSecondary);
+                }
             }
 
             // ============================
@@ -187,6 +256,69 @@ namespace DataVisualiser.Charts.Rendering
             // Fallback to old format if metric type info is not available
             string seriesName = isPrimary ? model.PrimarySeriesName : model.SecondarySeriesName;
             return $"{seriesName} ({smoothRaw})";
+        }
+
+        /// <summary>
+        /// Aligns a series' values to the main timeline by interpolating/mapping values.
+        /// Uses forward-fill for missing values (carries last known value forward).
+        /// </summary>
+        private static List<double> AlignSeriesToTimeline(
+            List<DateTime> seriesTimestamps,
+            List<double> seriesValues,
+            List<DateTime> mainTimeline)
+        {
+            if (seriesTimestamps.Count == 0 || seriesValues.Count == 0)
+                return mainTimeline.Select(_ => double.NaN).ToList();
+
+            if (seriesTimestamps.Count != seriesValues.Count)
+                return mainTimeline.Select(_ => double.NaN).ToList();
+
+            // Create a dictionary for quick lookup
+            var valueMap = new Dictionary<DateTime, double>();
+            for (int i = 0; i < seriesTimestamps.Count; i++)
+            {
+                var ts = seriesTimestamps[i];
+                var val = seriesValues[i];
+                // Use the latest value if there are duplicate timestamps
+                valueMap[ts] = val;
+            }
+
+            var aligned = new List<double>(mainTimeline.Count);
+            double lastValue = double.NaN;
+
+            foreach (var timestamp in mainTimeline)
+            {
+                // Try exact match first
+                if (valueMap.TryGetValue(timestamp, out var exactValue))
+                {
+                    aligned.Add(exactValue);
+                    lastValue = exactValue;
+                }
+                else
+                {
+                    // Try to find nearest timestamp (within same day for simplicity)
+                    var day = timestamp.Date;
+                    var dayMatch = valueMap.Keys.FirstOrDefault(ts => ts.Date == day);
+                    
+                    if (dayMatch != default(DateTime) && valueMap.TryGetValue(dayMatch, out var dayValue))
+                    {
+                        aligned.Add(dayValue);
+                        lastValue = dayValue;
+                    }
+                    else if (!double.IsNaN(lastValue))
+                    {
+                        // Forward fill: use last known value
+                        aligned.Add(lastValue);
+                    }
+                    else
+                    {
+                        // No value available
+                        aligned.Add(double.NaN);
+                    }
+                }
+            }
+
+            return aligned;
         }
     }
 }

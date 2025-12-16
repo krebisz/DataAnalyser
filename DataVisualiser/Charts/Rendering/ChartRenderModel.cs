@@ -1,3 +1,4 @@
+using DataVisualiser.Charts.Computation;
 using DataVisualiser.Models;
 using System.Windows.Media;
 
@@ -36,5 +37,8 @@ namespace DataVisualiser.Charts.Rendering
         public string? SecondarySubtype { get; init; }
         public string? OperationType { get; init; } // "-", "/", "~", or null for independent charts
         public bool IsOperationChart { get; init; } = false; // true for difference, ratio, normalization charts
+
+        // NEW: Multi-series support for Main Chart (when Series is present, it takes precedence over Primary/Secondary)
+        public List<SeriesResult>? Series { get; init; }
     }
 }

@@ -723,11 +723,11 @@ namespace DataVisualiser
 
             if (selectedMetricSeries.Count > 2)
             {
-                var combinedLabel = $"Combined ({selectedMetricSeries.Count} metrics)";
-
                 strategy = new MultiMetricStrategy(
                     selectedMetricSeries,
-                    combinedLabel,
+                    selectedMetricLabels,
+                    from,
+                    to,
                     unit);
             }
             else if (selectedMetricSeries.Count == 2)
@@ -768,9 +768,6 @@ namespace DataVisualiser
             string? primarySubtype = null,
             string? secondarySubtype = null)
         {
-            IChartComputationStrategy strategy;
-            string? secondaryLabel = null;
-
             // Build series list for multi-metric routing
             var series = new List<IEnumerable<HealthMetricData>> { data1 };
             var labels = new List<string> { displayName1 };
@@ -781,14 +778,53 @@ namespace DataVisualiser
                 labels.Add(displayName2);
             }
 
+            // Load additional subtypes if more than 2 are selected
+            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
+            if (selectedSubtypes.Count > 2 && !string.IsNullOrEmpty(metricType))
+            {
+                var dataFetcher = new DataFetcher(_connectionString);
+                var tableName = _viewModel.MetricState.ResolutionTableName ?? "HealthMetrics";
+
+                // Load data for subtypes 3, 4, etc.
+                for (int i = 2; i < selectedSubtypes.Count; i++)
+                {
+                    var subtype = selectedSubtypes[i];
+                    if (string.IsNullOrWhiteSpace(subtype))
+                        continue;
+
+                    try
+                    {
+                        var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(
+                            metricType,
+                            subtype,
+                            from,
+                            to,
+                            tableName);
+
+                        if (additionalData != null && additionalData.Any())
+                        {
+                            series.Add(additionalData);
+                            labels.Add($"{metricType}:{subtype}");
+                        }
+                    }
+                    catch
+                    {
+                        // Skip if loading fails
+                    }
+                }
+            }
+
+            IChartComputationStrategy strategy;
+            string? secondaryLabel = null;
+
             if (series.Count > 2)
             {
-                // N metrics → aggregated main chart
-                var combinedLabel = $"Combined ({series.Count} metrics)";
-
+                // N metrics → multi-series main chart (one line per metric)
                 strategy = new MultiMetricStrategy(
                     series,
-                    combinedLabel,
+                    labels,
+                    from,
+                    to,
                     unit: null);
             }
             else if (series.Count == 2)

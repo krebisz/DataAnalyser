@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Charts;
+using DataVisualiser.Charts;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Helpers;
 using DataVisualiser.Charts.Rendering;
@@ -96,7 +96,10 @@ namespace DataVisualiser.Services
                 PrimarySubtype = primarySubtype,
                 SecondarySubtype = secondarySubtype,
                 OperationType = operationType,
-                IsOperationChart = isOperationChart
+                IsOperationChart = isOperationChart,
+
+                // NEW: Multi-series support - when Series is present, it takes precedence
+                Series = result.Series
             };
 
             try
@@ -118,38 +121,70 @@ namespace DataVisualiser.Services
                     var syntheticRawData = new List<HealthMetricData>();
                     var timestamps = model.Timestamps;
 
-                    // Use both primary and secondary raw values (if present) so the Y-axis
-                    // reflects the full visible range across all series.
-                    var primaryRaw = model.PrimaryRaw ?? new List<double>();
-                    var secondaryRaw = model.SecondaryRaw;
-
-                    for (int i = 0; i < timestamps.Count && i < primaryRaw.Count; i++)
+                    // If Series array is present (multi-series mode), use all series for Y-axis normalization
+                    if (model.Series != null && model.Series.Count > 0)
                     {
-                        var val = primaryRaw[i];
-                        syntheticRawData.Add(new HealthMetricData
+                        foreach (var series in model.Series)
                         {
-                            NormalizedTimestamp = timestamps[i],
-                            Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
-                            Unit = model.Unit
-                        });
+                            for (int i = 0; i < series.Timestamps.Count && i < series.RawValues.Count; i++)
+                            {
+                                var val = series.RawValues[i];
+                                syntheticRawData.Add(new HealthMetricData
+                                {
+                                    NormalizedTimestamp = series.Timestamps[i],
+                                    Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
+                                    Unit = model.Unit
+                                });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to primary/secondary for backward compatibility
+                        var primaryRaw = model.PrimaryRaw ?? new List<double>();
+                        var secondaryRaw = model.SecondaryRaw;
 
-                        if (secondaryRaw != null && i < secondaryRaw.Count)
+                        for (int i = 0; i < timestamps.Count && i < primaryRaw.Count; i++)
                         {
-                            var secVal = secondaryRaw[i];
+                            var val = primaryRaw[i];
                             syntheticRawData.Add(new HealthMetricData
                             {
                                 NormalizedTimestamp = timestamps[i],
-                                Value = double.IsNaN(secVal) ? (decimal?)null : (decimal?)secVal,
+                                Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
                                 Unit = model.Unit
                             });
+
+                            if (secondaryRaw != null && i < secondaryRaw.Count)
+                            {
+                                var secVal = secondaryRaw[i];
+                                syntheticRawData.Add(new HealthMetricData
+                                {
+                                    NormalizedTimestamp = timestamps[i],
+                                    Value = double.IsNaN(secVal) ? (decimal?)null : (decimal?)secVal,
+                                    Unit = model.Unit
+                                });
+                            }
                         }
                     }
 
                     var smoothedList = new List<double>();
-                    if (model.PrimarySmoothed != null)
-                        smoothedList.AddRange(model.PrimarySmoothed);
-                    if (model.SecondarySmoothed != null)
-                        smoothedList.AddRange(model.SecondarySmoothed);
+                    if (model.Series != null && model.Series.Count > 0)
+                    {
+                        // Collect smoothed values from all series
+                        foreach (var series in model.Series)
+                        {
+                            if (series.Smoothed != null)
+                                smoothedList.AddRange(series.Smoothed);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to primary/secondary for backward compatibility
+                        if (model.PrimarySmoothed != null)
+                            smoothedList.AddRange(model.PrimarySmoothed);
+                        if (model.SecondarySmoothed != null)
+                            smoothedList.AddRange(model.SecondarySmoothed);
+                    }
 
                     ChartHelper.NormalizeYAxis(yAxis, syntheticRawData, smoothedList);
                     ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
