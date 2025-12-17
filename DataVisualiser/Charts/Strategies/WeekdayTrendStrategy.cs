@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DataVisualiser.Helper;
 using DataVisualiser.Models;
 
 namespace DataVisualiser.Charts.Strategies
@@ -45,10 +46,7 @@ namespace DataVisualiser.Charts.Strategies
 
         private static List<HealthMetricData> FilterData(IEnumerable<HealthMetricData> data, DateTime from, DateTime to)
         {
-            return data
-                .Where(d => d != null && d.Value.HasValue)
-                .Where(d => d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to)
-                .ToList();
+            return StrategyComputationHelper.FilterAndOrderByRange(data, from, to);
         }
 
         private (Dictionary<int, WeekdayTrendSeries> SeriesByDay, double GlobalMin, double GlobalMax)

@@ -84,12 +84,7 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to)
         {
-            return data
-                .Where(d => d.Value.HasValue)
-                .Where(d =>
-                    d.NormalizedTimestamp >= from &&
-                    d.NormalizedTimestamp <= to)
-                .ToList();
+            return StrategyComputationHelper.FilterAndOrderByRange(data, from, to);
         }
 
         private static List<List<double>> BucketByWeekday(

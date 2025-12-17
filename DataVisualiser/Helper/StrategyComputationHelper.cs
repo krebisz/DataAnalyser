@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using DataVisualiser.Models;
 
 namespace DataVisualiser.Helper
@@ -8,9 +11,32 @@ namespace DataVisualiser.Helper
     public static class StrategyComputationHelper
     {
         /// <summary>
+        /// Filters out null or missing values and restricts data to the [from, to] range,
+        /// ordered by NormalizedTimestamp.
+        /// </summary>
+        public static List<HealthMetricData> FilterAndOrderByRange(
+            IEnumerable<HealthMetricData>? source,
+            DateTime from,
+            DateTime to)
+        {
+            if (source == null)
+            {
+                return new List<HealthMetricData>();
+            }
+
+            return source
+                .Where(d => d != null
+                            && d.Value.HasValue
+                            && d.NormalizedTimestamp >= from
+                            && d.NormalizedTimestamp <= to)
+                .OrderBy(d => d!.NormalizedTimestamp)
+                .ToList();
+        }
+
+        /// <summary>
         /// Validates and prepares data for strategy computation.
         /// </summary>
-        public static (List<HealthMetricData> Ordered1, List<HealthMetricData> Ordered2, TimeSpan DateRange, TickInterval TickInterval)? 
+        public static (List<HealthMetricData> Ordered1, List<HealthMetricData> Ordered2, TimeSpan DateRange, TickInterval TickInterval)?
             PrepareDataForComputation(
                 IEnumerable<HealthMetricData>? left,
                 IEnumerable<HealthMetricData>? right,
@@ -50,7 +76,7 @@ namespace DataVisualiser.Helper
         /// <summary>
         /// Creates dictionaries mapping timestamps to values for efficient lookup.
         /// </summary>
-        public static (Dictionary<DateTime, double> Dict1, Dictionary<DateTime, double> Dict2) 
+        public static (Dictionary<DateTime, double> Dict1, Dictionary<DateTime, double> Dict2)
             CreateTimestampValueDictionaries(
                 List<HealthMetricData> ordered1,
                 List<HealthMetricData> ordered2)

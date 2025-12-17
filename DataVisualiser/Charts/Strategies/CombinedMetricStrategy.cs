@@ -91,13 +91,7 @@ namespace DataVisualiser.Charts.Strategies
 
         private List<HealthMetricData> FilterAndOrder(IEnumerable<HealthMetricData> source)
         {
-            return source
-                .Where(d =>
-                    d.Value.HasValue &&
-                    d.NormalizedTimestamp >= _from &&
-                    d.NormalizedTimestamp <= _to)
-                .OrderBy(d => d.NormalizedTimestamp)
-                .ToList();
+            return StrategyComputationHelper.FilterAndOrderByRange(source, _from, _to);
         }
 
         private static (List<DateTime> Timestamps, List<double> Primary, List<double> Secondary)
