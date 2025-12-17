@@ -44,31 +44,89 @@ namespace DataVisualiser.Charts.Strategies
         /// </summary>
         public ChartComputationResult? Compute()
         {
-            if (_data == null) return null;
+            if (_data == null)
+                return null;
 
-            // Validate date range
-            if (_from > _to) return null;
+            if (_from > _to)
+                return null;
 
-            // Prepare 7 buckets Monday (1) -> Sunday (7)
-            var buckets = Enumerable.Range(0, 7)
-                .Select(i => new List<double>())
+            var ordered = FilterData(_data, _from, _to);
+            if (ordered.Count == 0)
+                return null;
+
+            var buckets = BucketByWeekday(ordered);
+
+            var stats = ComputeDailyStatistics(buckets);
+
+            Unit = ordered.FirstOrDefault()?.Unit;
+
+            var frequencyData =
+                ComputeFrequencyDistributions(
+                    buckets,
+                    stats.GlobalMin,
+                    stats.GlobalMax);
+
+            ExtendedResult = BuildExtendedResult(
+                stats,
+                buckets,
+                frequencyData,
+                Unit);
+
+            return BuildCompatibilityResult(
+                stats,
+                Unit,
+                _from,
+                _to);
+        }
+
+        private static List<HealthMetricData> FilterData(
+            IEnumerable<HealthMetricData> data,
+            DateTime from,
+            DateTime to)
+        {
+            return data
+                .Where(d => d.Value.HasValue)
+                .Where(d =>
+                    d.NormalizedTimestamp >= from &&
+                    d.NormalizedTimestamp <= to)
                 .ToList();
+        }
 
-            var ordered = _data.Where(d => d.Value.HasValue)
-                               .Where(d => d.NormalizedTimestamp >= _from && d.NormalizedTimestamp <= _to)
-                               .ToList();
-
-            if (!ordered.Any()) return null;
+        private static List<List<double>> BucketByWeekday(
+            IEnumerable<HealthMetricData> ordered)
+        {
+            var buckets = Enumerable.Range(0, 7)
+                .Select(_ => new List<double>())
+                .ToList();
 
             foreach (var d in ordered)
             {
                 var dow = d.NormalizedTimestamp.DayOfWeek;
-                // Map DayOfWeek to Monday=0..Sunday=6
-                int idx = dow == DayOfWeek.Sunday ? 6 : ((int)dow - 1);
-                if (idx < 0 || idx > 6) idx = 0; // fallback
+
+                // Monday = 0 … Sunday = 6
+                int idx = dow == DayOfWeek.Sunday
+                    ? 6
+                    : ((int)dow - 1);
+
+                if (idx < 0 || idx > 6)
+                    idx = 0;
+
                 buckets[idx].Add((double)d.Value!.Value);
             }
 
+            return buckets;
+        }
+
+        private static (
+            List<double> Mins,
+            List<double> Maxs,
+            List<double> Ranges,
+            List<int> Counts,
+            double GlobalMin,
+            double GlobalMax)
+        ComputeDailyStatistics(
+            List<List<double>> buckets)
+        {
             var mins = new List<double>();
             var maxs = new List<double>();
             var ranges = new List<double>();
@@ -80,89 +138,139 @@ namespace DataVisualiser.Charts.Strategies
             for (int i = 0; i < 7; i++)
             {
                 var items = buckets[i];
+
                 if (items.Count == 0)
                 {
                     mins.Add(double.NaN);
                     maxs.Add(double.NaN);
                     ranges.Add(double.NaN);
                     counts.Add(0);
+                    continue;
                 }
-                else
-                {
-                    double min = items.Min();
-                    double max = items.Max();
-                    mins.Add(min);
-                    maxs.Add(max);
-                    ranges.Add(max - min);
-                    counts.Add(items.Count);
 
-                    if (double.IsNaN(globalMin) || min < globalMin) globalMin = min;
-                    if (double.IsNaN(globalMax) || max > globalMax) globalMax = max;
-                }
+                var min = items.Min();
+                var max = items.Max();
+
+                mins.Add(min);
+                maxs.Add(max);
+                ranges.Add(max - min);
+                counts.Add(items.Count);
+
+                if (double.IsNaN(globalMin) || min < globalMin)
+                    globalMin = min;
+
+                if (double.IsNaN(globalMax) || max > globalMax)
+                    globalMax = max;
             }
 
-            // Set Unit from first non-empty item if possible
-            Unit = ordered.FirstOrDefault()?.Unit;
+            return (mins, maxs, ranges, counts, globalMin, globalMax);
+        }
 
-            // ============================================================
-            // FREQUENCY BINNING (NEW) - Using separated concerns
-            // ============================================================
-            // Only create bins if we have valid min/max values
-            List<(double Min, double Max)> bins = new();
+        private static (
+            List<(double Min, double Max)> Bins,
+            double BinSize,
+            Dictionary<int, Dictionary<int, int>> Frequencies,
+            Dictionary<int, Dictionary<int, double>> NormalizedFrequencies)
+        ComputeFrequencyDistributions(
+            List<List<double>> buckets,
+            double globalMin,
+            double globalMax)
+        {
+            var bins = new List<(double Min, double Max)>();
             double binSize = 1.0;
-            Dictionary<int, Dictionary<int, int>> frequenciesPerDay = new();
-            Dictionary<int, Dictionary<int, double>> normalizedFrequenciesPerDay = new();
 
-            // Convert buckets to dictionary format (used for both binning and storing)
+            var frequencies = new Dictionary<int, Dictionary<int, int>>();
+            var normalized = new Dictionary<int, Dictionary<int, double>>();
+
             var dayValuesDict = new Dictionary<int, List<double>>();
             for (int i = 0; i < 7; i++)
             {
                 dayValuesDict[i] = buckets[i];
             }
 
-            if (!double.IsNaN(globalMin) && !double.IsNaN(globalMax) && globalMax > globalMin)
+            if (!double.IsNaN(globalMin) &&
+                !double.IsNaN(globalMax) &&
+                globalMax > globalMin)
             {
-                // Use separated renderer to prepare bins and frequencies
-                (bins, binSize, frequenciesPerDay, normalizedFrequenciesPerDay) =
-                    WeeklyFrequencyRenderer.PrepareBinsAndFrequencies(dayValuesDict, globalMin, globalMax);
+                (bins, binSize, frequencies, normalized) =
+                    WeeklyFrequencyRenderer
+                        .PrepareBinsAndFrequencies(
+                            dayValuesDict,
+                            globalMin,
+                            globalMax);
             }
 
-            // Create extended result with frequency data
-            ExtendedResult = new WeeklyDistributionResult
-            {
-                Mins = mins,
-                Maxs = maxs,
-                Ranges = ranges,
-                Counts = counts,
-                DayValues = dayValuesDict, // Store raw values per day
-                GlobalMin = double.IsNaN(globalMin) ? 0.0 : globalMin,
-                GlobalMax = double.IsNaN(globalMax) ? 1.0 : globalMax,
-                BinSize = binSize,
-                Bins = bins,
-                FrequenciesPerDay = frequenciesPerDay,
-                NormalizedFrequenciesPerDay = normalizedFrequenciesPerDay,
-                Unit = Unit
-            };
+            return (bins, binSize, frequencies, normalized);
+        }
 
-            // Return standard result for compatibility
-            var result = new ChartComputationResult
+        private static WeeklyDistributionResult BuildExtendedResult(
+            (
+                List<double> Mins,
+                List<double> Maxs,
+                List<double> Ranges,
+                List<int> Counts,
+                double GlobalMin,
+                double GlobalMax
+            ) stats,
+            List<List<double>> buckets,
+            (
+                List<(double Min, double Max)> Bins,
+                double BinSize,
+                Dictionary<int, Dictionary<int, int>> Frequencies,
+                Dictionary<int, Dictionary<int, double>> NormalizedFrequencies
+            ) frequencyData,
+            string? unit)
+        {
+            var dayValuesDict = new Dictionary<int, List<double>>();
+            for (int i = 0; i < 7; i++)
             {
-                // For integration with your rendering pipeline:
-                // PrimaryRawValues => mins (baseline)
-                // PrimarySmoothed   => ranges (max - min) (we will stack this on top of baseline)
-                PrimaryRawValues = mins,
-                PrimarySmoothed = ranges,
+                dayValuesDict[i] = buckets[i];
+            }
+
+            return new WeeklyDistributionResult
+            {
+                Mins = stats.Mins,
+                Maxs = stats.Maxs,
+                Ranges = stats.Ranges,
+                Counts = stats.Counts,
+                DayValues = dayValuesDict,
+                GlobalMin = double.IsNaN(stats.GlobalMin) ? 0.0 : stats.GlobalMin,
+                GlobalMax = double.IsNaN(stats.GlobalMax) ? 1.0 : stats.GlobalMax,
+                BinSize = frequencyData.BinSize,
+                Bins = frequencyData.Bins,
+                FrequenciesPerDay = frequencyData.Frequencies,
+                NormalizedFrequenciesPerDay = frequencyData.NormalizedFrequencies,
+                Unit = unit
+            };
+        }
+
+        private static ChartComputationResult BuildCompatibilityResult(
+            (
+                List<double> Mins,
+                List<double> Maxs,
+                List<double> Ranges,
+                List<int> Counts,
+                double GlobalMin,
+                double GlobalMax
+            ) stats,
+            string? unit,
+            DateTime from,
+            DateTime to)
+        {
+            return new ChartComputationResult
+            {
+                PrimaryRawValues = stats.Mins,
+                PrimarySmoothed = stats.Ranges,
                 SecondaryRawValues = null,
                 SecondarySmoothed = null,
-                Timestamps = new List<DateTime>(), // not used for categorical chart
+                Timestamps = new List<DateTime>(),
                 IntervalIndices = new List<int>(),
                 NormalizedIntervals = new List<DateTime>(),
                 TickInterval = TickInterval.Day,
-                DateRange = _to - _from,
-                Unit = Unit
+                DateRange = to - from,
+                Unit = unit
             };
-
-            return result;
         }
+
     }
 }

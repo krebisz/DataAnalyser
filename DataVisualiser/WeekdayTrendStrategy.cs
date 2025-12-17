@@ -15,11 +15,7 @@ namespace DataVisualiser.Charts.Strategies
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
-            // Filter to date range + ensure Value exists
-            var filtered = data
-                .Where(d => d != null && d.Value.HasValue)
-                .Where(d => d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to)
-                .ToList();
+            var filtered = FilterData(data, from, to);
 
             var result = new WeekdayTrendResult
             {
@@ -30,15 +26,39 @@ namespace DataVisualiser.Charts.Strategies
 
             if (filtered.Count == 0)
             {
-                result.GlobalMin = 0;
-                result.GlobalMax = 0;
+                SetDegenerateRange(result);
                 return result;
             }
+
+            var (seriesByDay, globalMin, globalMax) =
+                BuildWeekdaySeries(filtered);
+
+            foreach (var kvp in seriesByDay)
+            {
+                result.SeriesByDay[kvp.Key] = kvp.Value;
+            }
+
+            NormalizeGlobalRange(result, globalMin, globalMax);
+
+            return result;
+        }
+
+        private static List<HealthMetricData> FilterData(IEnumerable<HealthMetricData> data, DateTime from, DateTime to)
+        {
+            return data
+                .Where(d => d != null && d.Value.HasValue)
+                .Where(d => d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to)
+                .ToList();
+        }
+
+        private (Dictionary<int, WeekdayTrendSeries> SeriesByDay, double GlobalMin, double GlobalMax)
+        BuildWeekdaySeries(List<HealthMetricData> filtered)
+        {
+            var seriesByDay = new Dictionary<int, WeekdayTrendSeries>();
 
             double globalMin = double.PositiveInfinity;
             double globalMax = double.NegativeInfinity;
 
-            // Group by weekday index (Monday=0 … Sunday=6)
             var byWeekday = filtered.GroupBy(d => GetWeekdayIndex(d.NormalizedTimestamp));
 
             foreach (var weekdayGroup in byWeekday)
@@ -46,7 +66,6 @@ namespace DataVisualiser.Charts.Strategies
                 var dayIndex = weekdayGroup.Key;
                 var dayOfWeek = IndexToDayOfWeek(dayIndex);
 
-                // Group by calendar date, aggregate (avg)
                 var points = weekdayGroup
                     .GroupBy(d => d.NormalizedTimestamp.Date)
                     .OrderBy(g => g.Key)
@@ -54,8 +73,8 @@ namespace DataVisualiser.Charts.Strategies
                     {
                         var avg = g.Average(x => (double)x.Value!.Value);
 
-                        if (avg < globalMin) globalMin = avg;
-                        if (avg > globalMax) globalMax = avg;
+                        globalMin = Math.Min(globalMin, avg);
+                        globalMax = Math.Max(globalMax, avg);
 
                         return new WeekdayTrendPoint
                         {
@@ -66,28 +85,38 @@ namespace DataVisualiser.Charts.Strategies
                     })
                     .ToList();
 
-                result.SeriesByDay[dayIndex] = new WeekdayTrendSeries
+                seriesByDay[dayIndex] = new WeekdayTrendSeries
                 {
                     Day = dayOfWeek,
                     Points = points
                 };
             }
 
-            // Avoid degenerate range
-            if (double.IsInfinity(globalMin) || double.IsInfinity(globalMax))
+            return (seriesByDay, globalMin, globalMax);
+        }
+
+        private static void NormalizeGlobalRange(WeekdayTrendResult result, double globalMin, double globalMax)
+        {
+            if (double.IsInfinity(globalMin) ||
+                double.IsInfinity(globalMax))
             {
-                globalMin = 0;
-                globalMax = 0;
+                SetDegenerateRange(result);
+                return;
             }
-            else if (globalMax == globalMin)
+
+            if (globalMax == globalMin)
             {
                 globalMax = globalMin + 1;
             }
 
             result.GlobalMin = globalMin;
             result.GlobalMax = globalMax;
+        }
 
-            return result;
+        private static void SetDegenerateRange(WeekdayTrendResult result)
+        {
+            result.GlobalMin = 0;
+            result.GlobalMax = 0;
         }
 
         // 0 = Monday … 6 = Sunday

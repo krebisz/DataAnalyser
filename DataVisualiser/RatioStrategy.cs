@@ -38,72 +38,33 @@ namespace DataVisualiser.Charts.Strategies
 
         public ChartComputationResult? Compute()
         {
-            var leftOrdered = _left
-                .Where(d => d.Value.HasValue &&
-                            d.NormalizedTimestamp >= _from &&
-                            d.NormalizedTimestamp <= _to)
-                .OrderBy(d => d.NormalizedTimestamp)
-                .ToList();
-
-            var rightOrdered = _right
-                .Where(d => d.Value.HasValue &&
-                            d.NormalizedTimestamp >= _from &&
-                            d.NormalizedTimestamp <= _to)
-                .OrderBy(d => d.NormalizedTimestamp)
-                .ToList();
+            var leftOrdered = FilterAndOrder(_left);
+            var rightOrdered = FilterAndOrder(_right);
 
             var count = Math.Min(leftOrdered.Count, rightOrdered.Count);
             if (count == 0)
                 return null;
 
-            var timestamps = new List<DateTime>(count);
-            var rawRatio = new List<double>(count);
-
-            for (int i = 0; i < count; i++)
-            {
-                var l = leftOrdered[i];
-                var r = rightOrdered[i];
-
-                timestamps.Add(l.NormalizedTimestamp);
-
-                if (!l.Value.HasValue || !r.Value.HasValue || r.Value.Value == 0m)
-                {
-                    rawRatio.Add(double.NaN);
-                }
-                else
-                {
-                    rawRatio.Add((double)l.Value.Value / (double)r.Value.Value);
-                }
-            }
+            var (timestamps, rawRatio) =
+                ComputeIndexAlignedRatios(leftOrdered, rightOrdered, count);
 
             var dateRange = _to - _from;
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
+            var normalizedIntervals =
+                MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
+
             var intervalIndices = timestamps
-                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
+                .Select(ts =>
+                    MathHelper.MapTimestampToIntervalIndex(
+                        ts,
+                        normalizedIntervals,
+                        tickInterval))
                 .ToList();
 
-            // Synthetic data for smoothing.
-            var ratioData = new List<HealthMetricData>();
-            for (int i = 0; i < count; i++)
-            {
-                var value = double.IsNaN(rawRatio[i]) ? (decimal?)null : (decimal?)rawRatio[i];
-                ratioData.Add(new HealthMetricData
-                {
-                    NormalizedTimestamp = timestamps[i],
-                    Value = value,
-                    Unit = null
-                });
-            }
+            var smoothedValues =
+                CreateSmoothedRatioSeries(timestamps, rawRatio);
 
-            var smoothedPoints = MathHelper.CreateSmoothedData(ratioData, _from, _to);
-            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedPoints, timestamps);
-
-            var unitLeft = leftOrdered.FirstOrDefault()?.Unit;
-            var unitRight = rightOrdered.FirstOrDefault()?.Unit;
-            Unit = (!string.IsNullOrEmpty(unitLeft) && !string.IsNullOrEmpty(unitRight))
-                ? $"{unitLeft}/{unitRight}"
-                : null;
+            Unit = ResolveRatioUnit(leftOrdered, rightOrdered);
 
             return new ChartComputationResult
             {
@@ -116,6 +77,72 @@ namespace DataVisualiser.Charts.Strategies
                 DateRange = dateRange,
                 Unit = Unit
             };
+        }
+
+        private List<HealthMetricData> FilterAndOrder(IEnumerable<HealthMetricData> source)
+        {
+            return source
+                .Where(d =>
+                    d.Value.HasValue &&
+                    d.NormalizedTimestamp >= _from &&
+                    d.NormalizedTimestamp <= _to)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
+        }
+
+        private static (List<DateTime> Timestamps, List<double> RawRatios)
+        ComputeIndexAlignedRatios(IReadOnlyList<HealthMetricData> left,IReadOnlyList<HealthMetricData> right, int count)
+        {
+            var timestamps = new List<DateTime>(count);
+            var ratios = new List<double>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                var l = left[i];
+                var r = right[i];
+
+                timestamps.Add(l.NormalizedTimestamp);
+
+                if (!l.Value.HasValue || !r.Value.HasValue || r.Value.Value == 0m)
+                {
+                    ratios.Add(double.NaN);
+                }
+                else
+                {
+                    ratios.Add((double)l.Value.Value / (double)r.Value.Value);
+                }
+            }
+
+            return (timestamps, ratios);
+        }
+
+        private List<double> CreateSmoothedRatioSeries(IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawRatios)
+        {
+            var ratioData = new List<HealthMetricData>(timestamps.Count);
+
+            for (int i = 0; i < timestamps.Count; i++)
+            {
+                ratioData.Add(new HealthMetricData
+                {
+                    NormalizedTimestamp = timestamps[i],
+                    Value = double.IsNaN(rawRatios[i])
+                        ? (decimal?)null
+                        : (decimal)rawRatios[i],
+                    Unit = null
+                });
+            }
+
+            var smoothedPoints = MathHelper.CreateSmoothedData(ratioData, _from, _to);
+
+            return MathHelper.InterpolateSmoothedData(smoothedPoints, timestamps.ToList());
+        }
+
+        private static string? ResolveRatioUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)
+        {
+            var unitLeft = left.FirstOrDefault()?.Unit;
+            var unitRight = right.FirstOrDefault()?.Unit;
+
+            return (!string.IsNullOrEmpty(unitLeft) && !string.IsNullOrEmpty(unitRight)) ? $"{unitLeft}/{unitRight}" : null;
         }
     }
 }

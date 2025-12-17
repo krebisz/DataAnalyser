@@ -165,56 +165,59 @@ namespace DataVisualiser.Services
         /// </summary>
         private List<HealthMetricData> BuildSyntheticRawData(ChartRenderModel model)
         {
-            var syntheticRawData = new List<HealthMetricData>();
-            var timestamps = model.Timestamps;
+            return EnumerateRawPoints(model)
+                .Select(p => CreateMetric(p.Timestamp, p.Value, model.Unit))
+                .ToList();
+        }
 
-            // If Series array is present (multi-series mode), use all series for Y-axis normalization
+        private static HealthMetricData CreateMetric(
+            DateTime timestamp,
+            double value,
+            string unit)
+        {
+            return new HealthMetricData
+            {
+                NormalizedTimestamp = timestamp,
+                Value = double.IsNaN(value) ? (decimal?)null : (decimal)value,
+                Unit = unit
+            };
+        }
+
+        private IEnumerable<(DateTime Timestamp, double Value)> EnumerateRawPoints(
+            ChartRenderModel model)
+        {
+            // Multi-series mode
             if (model.Series != null && model.Series.Count > 0)
             {
                 foreach (var series in model.Series)
                 {
-                    for (int i = 0; i < series.Timestamps.Count && i < series.RawValues.Count; i++)
+                    var count = Math.Min(series.Timestamps.Count, series.RawValues.Count);
+
+                    for (int i = 0; i < count; i++)
                     {
-                        var val = series.RawValues[i];
-                        syntheticRawData.Add(new HealthMetricData
-                        {
-                            NormalizedTimestamp = series.Timestamps[i],
-                            Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
-                            Unit = model.Unit
-                        });
+                        yield return (series.Timestamps[i], series.RawValues[i]);
                     }
                 }
+
+                yield break;
             }
-            else
+
+            // Legacy primary/secondary mode
+            var timestamps = model.Timestamps;
+            var primaryRaw = model.PrimaryRaw ?? new List<double>();
+            var secondaryRaw = model.SecondaryRaw;
+
+            var primaryCount = Math.Min(timestamps.Count, primaryRaw.Count);
+
+            for (int i = 0; i < primaryCount; i++)
             {
-                // Fallback to primary/secondary for backward compatibility
-                var primaryRaw = model.PrimaryRaw ?? new List<double>();
-                var secondaryRaw = model.SecondaryRaw;
+                yield return (timestamps[i], primaryRaw[i]);
 
-                for (int i = 0; i < timestamps.Count && i < primaryRaw.Count; i++)
+                if (secondaryRaw != null && i < secondaryRaw.Count)
                 {
-                    var val = primaryRaw[i];
-                    syntheticRawData.Add(new HealthMetricData
-                    {
-                        NormalizedTimestamp = timestamps[i],
-                        Value = double.IsNaN(val) ? (decimal?)null : (decimal?)val,
-                        Unit = model.Unit
-                    });
-
-                    if (secondaryRaw != null && i < secondaryRaw.Count)
-                    {
-                        var secVal = secondaryRaw[i];
-                        syntheticRawData.Add(new HealthMetricData
-                        {
-                            NormalizedTimestamp = timestamps[i],
-                            Value = double.IsNaN(secVal) ? (decimal?)null : (decimal?)secVal,
-                            Unit = model.Unit
-                        });
-                    }
+                    yield return (timestamps[i], secondaryRaw[i]);
                 }
             }
-
-            return syntheticRawData;
         }
 
         /// <summary>

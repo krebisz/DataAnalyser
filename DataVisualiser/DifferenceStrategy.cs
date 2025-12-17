@@ -38,70 +38,36 @@ namespace DataVisualiser.Charts.Strategies
 
         public ChartComputationResult? Compute()
         {
-            var leftOrdered = _left
-                .Where(d => d.Value.HasValue &&
-                            d.NormalizedTimestamp >= _from &&
-                            d.NormalizedTimestamp <= _to)
-                .OrderBy(d => d.NormalizedTimestamp)
-                .ToList();
-
-            var rightOrdered = _right
-                .Where(d => d.Value.HasValue &&
-                            d.NormalizedTimestamp >= _from &&
-                            d.NormalizedTimestamp <= _to)
-                .OrderBy(d => d.NormalizedTimestamp)
-                .ToList();
+            var leftOrdered = FilterAndOrder(_left);
+            var rightOrdered = FilterAndOrder(_right);
 
             var count = Math.Min(leftOrdered.Count, rightOrdered.Count);
             if (count == 0)
                 return null;
 
-            var timestamps = new List<DateTime>(count);
-            var rawDiff = new List<double>(count);
-
-            for (int i = 0; i < count; i++)
-            {
-                var l = leftOrdered[i];
-                var r = rightOrdered[i];
-
-                timestamps.Add(l.NormalizedTimestamp);
-
-                if (!l.Value.HasValue || !r.Value.HasValue)
-                {
-                    rawDiff.Add(double.NaN);
-                }
-                else
-                {
-                    rawDiff.Add((double)l.Value.Value - (double)r.Value.Value);
-                }
-            }
+            var (timestamps, rawDiff) =
+                ComputeIndexAlignedDifferences(leftOrdered, rightOrdered, count);
 
             var dateRange = _to - _from;
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
+            var normalizedIntervals =
+                MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
+
             var intervalIndices = timestamps
-                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
+                .Select(ts =>
+                    MathHelper.MapTimestampToIntervalIndex(
+                        ts,
+                        normalizedIntervals,
+                        tickInterval))
                 .ToList();
 
-            // Build a synthetic sequence for smoothing (difference points).
-            var diffData = new List<HealthMetricData>();
-            for (int i = 0; i < count; i++)
-            {
-                var value = double.IsNaN(rawDiff[i]) ? (decimal?)null : (decimal?)rawDiff[i];
-                diffData.Add(new HealthMetricData
-                {
-                    NormalizedTimestamp = timestamps[i],
-                    Value = value,
-                    Unit = leftOrdered[i].Unit
-                });
-            }
+            var smoothedValues =
+                CreateSmoothedDifferenceSeries(
+                    timestamps,
+                    rawDiff,
+                    leftOrdered);
 
-            var smoothedPoints = MathHelper.CreateSmoothedData(diffData, _from, _to);
-            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedPoints, timestamps);
-
-            var unitLeft = leftOrdered.FirstOrDefault()?.Unit;
-            var unitRight = rightOrdered.FirstOrDefault()?.Unit;
-            Unit = unitLeft == unitRight ? unitLeft : unitLeft ?? unitRight;
+            Unit = ResolveUnit(leftOrdered, rightOrdered);
 
             return new ChartComputationResult
             {
@@ -115,5 +81,80 @@ namespace DataVisualiser.Charts.Strategies
                 Unit = Unit
             };
         }
+
+        private List<HealthMetricData> FilterAndOrder(
+    IEnumerable<HealthMetricData> source)
+        {
+            return source
+                .Where(d =>
+                    d.Value.HasValue &&
+                    d.NormalizedTimestamp >= _from &&
+                    d.NormalizedTimestamp <= _to)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
+        }
+
+        private static (List<DateTime> Timestamps, List<double> RawDifferences)
+        ComputeIndexAlignedDifferences(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right, int count)
+        {
+            var timestamps = new List<DateTime>(count);
+            var diffs = new List<double>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                var l = left[i];
+                var r = right[i];
+
+                timestamps.Add(l.NormalizedTimestamp);
+
+                if (!l.Value.HasValue || !r.Value.HasValue)
+                {
+                    diffs.Add(double.NaN);
+                }
+                else
+                {
+                    diffs.Add(
+                        (double)l.Value.Value -
+                        (double)r.Value.Value);
+                }
+            }
+
+            return (timestamps, diffs);
+        }
+
+        private List<double> CreateSmoothedDifferenceSeries(IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawDiff, IReadOnlyList<HealthMetricData> leftOrdered)
+        {
+            var diffData = new List<HealthMetricData>(timestamps.Count);
+
+            for (int i = 0; i < timestamps.Count; i++)
+            {
+                diffData.Add(new HealthMetricData
+                {
+                    NormalizedTimestamp = timestamps[i],
+                    Value = double.IsNaN(rawDiff[i])
+                        ? (decimal?)null
+                        : (decimal)rawDiff[i],
+                    Unit = leftOrdered[i].Unit
+                });
+            }
+
+            var smoothedPoints =
+                MathHelper.CreateSmoothedData(diffData, _from, _to);
+
+            return MathHelper.InterpolateSmoothedData(
+                smoothedPoints,
+                timestamps.ToList());
+        }
+
+        private static string? ResolveUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)
+        {
+            var leftUnit = left.FirstOrDefault()?.Unit;
+            var rightUnit = right.FirstOrDefault()?.Unit;
+
+            return leftUnit == rightUnit
+                ? leftUnit
+                : leftUnit ?? rightUnit;
+        }
+
     }
 }
