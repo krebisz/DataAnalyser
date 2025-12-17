@@ -119,29 +119,5 @@ namespace DataVisualiser.Charts.Strategies
 
             return (rawNorm.FirstNormalized, rawNorm.SecondNormalized, smoothNorm.FirstNormalized, smoothNorm.SecondNormalized);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

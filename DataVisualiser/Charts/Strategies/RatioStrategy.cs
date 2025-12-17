@@ -91,7 +91,7 @@ namespace DataVisualiser.Charts.Strategies
         }
 
         private static (List<DateTime> Timestamps, List<double> RawRatios)
-        ComputeIndexAlignedRatios(IReadOnlyList<HealthMetricData> left,IReadOnlyList<HealthMetricData> right, int count)
+        ComputeIndexAlignedRatios(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right, int count)
         {
             var timestamps = new List<DateTime>(count);
             var ratios = new List<double>(count);

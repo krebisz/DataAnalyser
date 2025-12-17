@@ -174,7 +174,7 @@ namespace DataVisualiser.Charts.Strategies
         }
 
         /// <summary>
-        /// Collects all unique timestamps across all series for the main timeline.
+        /// Collects all unique.timestamps across all series for the main timeline.
         /// </summary>
         private List<DateTime> CollectAllTimestamps(List<SeriesResult> seriesResults)
         {

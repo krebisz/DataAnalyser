@@ -54,10 +54,7 @@ namespace DataVisualiser.Charts.Strategies
 
             if (_data == null) return null;
 
-            var orderedData = _data
-                .Where(d => d.Value.HasValue)
-                .OrderBy(d => d.NormalizedTimestamp)
-                .ToList();
+            var orderedData = PrepareOrderedData(_data);
 
             if (!orderedData.Any())
                 return null; // engine will treat null as no-data
@@ -85,13 +82,23 @@ namespace DataVisualiser.Charts.Strategies
             if (!healthMetricData.Any())
                 return null;
 
-            var orderedData = healthMetricData
-                .Where(d => d.Value.HasValue)
-                .ToList();
+            var orderedData = PrepareOrderedData(healthMetricData);
 
             // Use unit from CMS (more authoritative than individual data points)
             var unitFromCms = _cmsData.Unit.Symbol;
             return ComputeFromHealthMetricData(orderedData, unitFromCms);
+        }
+
+        /// <summary>
+        /// Filters out null-valued points and orders data by timestamp.
+        /// Shared between legacy and CMS paths to ensure consistent behavior.
+        /// </summary>
+        private static List<HealthMetricData> PrepareOrderedData(IEnumerable<HealthMetricData> source)
+        {
+            return source
+                .Where(d => d.Value.HasValue)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
         }
 
         /// <summary>

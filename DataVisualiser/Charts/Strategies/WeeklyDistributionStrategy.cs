@@ -103,7 +103,7 @@ namespace DataVisualiser.Charts.Strategies
             {
                 var dow = d.NormalizedTimestamp.DayOfWeek;
 
-                // Monday = 0 … Sunday = 6
+                // Monday = 0 â€¦ Sunday = 6
                 int idx = dow == DayOfWeek.Sunday
                     ? 6
                     : ((int)dow - 1);
@@ -271,6 +271,5 @@ namespace DataVisualiser.Charts.Strategies
                 Unit = unit
             };
         }
-
     }
 }
