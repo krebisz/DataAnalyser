@@ -1,4 +1,5 @@
 PROJECT ROADMAP
+
 1. Purpose
 
 This document outlines the planned evolution of the project, describing major phases, their goals, and the order in which capabilities are introduced.
@@ -21,7 +22,7 @@ Clear separation between truth and exploration
 Execution proceeds only after foundations are locked
 
 3. Phase Overview
-Phase 1 — Ingestion & Persistence (Completed)
+   Phase 1 — Ingestion & Persistence (Completed)
 
 Goal:
 Establish reliable ingestion of heterogeneous data sources and persist raw / lightly normalized records.
@@ -63,7 +64,7 @@ Status: ✅ Complete
 
 This phase establishes the semantic “truth layer” of the system.
 
-Phase 3 — Execution: Canonical Identity & CMS Integration (Current)
+Phase 3 — Execution: Canonical Identity & CMS Integration (Completed)
 
 Goal:
 Introduce real behavior while preserving existing ingestion and storage.
@@ -88,9 +89,9 @@ CMS emitted alongside existing outputs
 
 Diagnostics for identity and mapping failures
 
-Status: ▶ In Progress
+Status: ✅ Complete (core goals achieved; additional metric families may be added incrementally).
 
-Phase 4 — Consumer Adoption & Visualization Integration (Planned)
+Phase 4 — Consumer Adoption & Visualization Integration (In Progress)
 
 Goal:
 Allow downstream systems (DataVisualiser) to consume CMS safely.
@@ -112,6 +113,10 @@ Safer aggregation
 Explicit composition
 
 Reduced semantic ambiguity in UI
+Generalized cyclic distribution visualizations (e.g., weekly, hourly, or N-bucket cycles)
+Foundation for user-defined metric transformations with preview tables feeding the charting pipeline
+
+Status: ▶ In Progress (~55% complete; CMS infrastructure and two strategies migrated, UI integration and remaining strategy migration ongoing)
 
 Phase 5 — Derived Metrics & Analytical Composition (Planned)
 
@@ -182,5 +187,14 @@ explicit justification
 document updates
 
 agreement
+
+6. Intermediate Goals (Descriptive, Non-Binding)
+
+The following goals are **descriptive**, not binding; they clarify expected evolution within the existing phases:
+
+- **Generalized cyclic distribution charts**
+  - Extend current weekly distribution visualizations into a generic cyclic distribution engine (e.g., weekly, hourly, or N-bucket cycles) without altering underlying semantic contracts.
+- **User-defined metric transformations with preview**
+  - Allow users to define explicit transformations over canonical metric series (e.g., `A + B - C`, `sqrt(A)`), preview representative “before/after” values in a small grid, and feed the resulting derived series into the existing charting pipeline as ephemeral, non-canonical metrics.
 
 End of Project Roadmap
