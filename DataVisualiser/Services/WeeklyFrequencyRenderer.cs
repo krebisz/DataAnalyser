@@ -83,99 +83,71 @@ namespace DataVisualiser.Services
             WeeklyDistributionResult result,
             double minHeight)
         {
-            if (result.Bins == null || result.Bins.Count == 0)
+            if (result?.Bins == null || result.Bins.Count == 0)
                 return;
 
             var seriesCollection = new SeriesCollection();
 
-            // Track cumulative baseline for each day (Monday=0, Tuesday=1, ..., Sunday=6)
+            // Track cumulative baseline per day (Mon=0 .. Sun=6)
             var cumulativeBaseline = new double[7];
             Array.Fill(cumulativeBaseline, 0.0);
 
-            // Step 4 & 5: For each bin, create stacked column segments
-            // Each bin gets: baseline series (transparent) + colored series (frequency-based)
+            // For each bin (interval on Y axis)
             for (int binIndex = 0; binIndex < result.Bins.Count; binIndex++)
             {
                 var bin = result.Bins[binIndex];
                 double binHeight = bin.Max - bin.Min;
 
-                // Create values for all 7 days
-                var baselineValues = new ChartValues<double>();
-                var binHeights = new ChartValues<double>();
-                var binColors = new List<Color>();
-
-                // For each day, calculate baseline, height, and color
+                // For each day, compute baseline, height, and color
                 for (int dayIndex = 0; dayIndex < 7; dayIndex++)
                 {
-                    baselineValues.Add(cumulativeBaseline[dayIndex]);
-
-                    // Get normalized frequency for this day/bin
+                    // Lookup normalized frequency
                     double normalizedFreq = 0.0;
                     if (result.NormalizedFrequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs))
                     {
                         dayFreqs.TryGetValue(binIndex, out normalizedFreq);
                     }
 
-                    // Step 4: Assign color based on frequency
-                    Color binColor = MapFrequencyToColor(normalizedFreq);
-                    binColors.Add(binColor);
-
-                    // Only add height if there's data
-                    if (normalizedFreq > 0.0)
-                    {
-                        binHeights.Add(binHeight);
-                        cumulativeBaseline[dayIndex] += binHeight;
-                    }
-                    else
-                    {
-                        binHeights.Add(0.0);
-                    }
-                }
-
-                // Step 5: Create series for this bin
-                // Since LiveCharts doesn't support per-point colors in a single series,
-                // we need separate series for each day to achieve per-day shading
-                for (int dayIndex = 0; dayIndex < 7; dayIndex++)
-                {
-                    // Only create series if there's data for this day/bin
-                    if (binHeights[dayIndex] <= 0.0)
+                    // Skip empty segments
+                    if (normalizedFreq <= 0.0)
                         continue;
 
-                    // Create baseline values: baseline only for current day, 0 for others
-                    var dayBaselineValues = new ChartValues<double>();
-                    for (int d = 0; d < 7; d++)
-                    {
-                        dayBaselineValues.Add(d == dayIndex ? baselineValues[dayIndex] : 0.0);
-                    }
+                    // Determine color for this bin/day
+                    Color binColor = MapFrequencyToColor(normalizedFreq);
 
-                    // Create bin height values: binHeight only for current day, 0 for others
-                    var dayBinHeights = new ChartValues<double>();
+                    double baselineValue = cumulativeBaseline[dayIndex];
+
+                    // Build baseline values (only active day has baseline)
+                    var baselineValues = new ChartValues<double>();
+                    var heightValues = new ChartValues<double>();
                     for (int d = 0; d < 7; d++)
                     {
-                        dayBinHeights.Add(d == dayIndex ? binHeights[dayIndex] : 0.0);
+                        baselineValues.Add(d == dayIndex ? baselineValue : 0.0);
+                        heightValues.Add(d == dayIndex ? binHeight : 0.0);
                     }
 
                     // Transparent baseline series
                     var baselineSeries = new StackedColumnSeries
                     {
                         Title = null,
-                        Values = dayBaselineValues,
+                        Values = baselineValues,
                         Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
                         StrokeThickness = 0,
                         MaxColumnWidth = MaxColumnWidth,
                         DataLabels = false
                     };
 
-                    // Colored bin series with per-day frequency-based intensity
-                    var fillBrush = new SolidColorBrush(binColors[dayIndex]);
+                    // Colored bin segment
+                    var fillBrush = new SolidColorBrush(binColor);
                     fillBrush.Freeze();
-                    var strokeBrush = new SolidColorBrush(binColors[dayIndex]);
+
+                    var strokeBrush = new SolidColorBrush(binColor);
                     strokeBrush.Freeze();
 
                     var binSeries = new StackedColumnSeries
                     {
                         Title = null,
-                        Values = dayBinHeights,
+                        Values = heightValues,
                         Fill = fillBrush,
                         Stroke = strokeBrush,
                         StrokeThickness = 0.5,
@@ -185,13 +157,17 @@ namespace DataVisualiser.Services
 
                     seriesCollection.Add(baselineSeries);
                     seriesCollection.Add(binSeries);
+
+                    // Advance baseline for this day
+                    cumulativeBaseline[dayIndex] += binHeight;
                 }
             }
 
             // Apply to chart
             targetChart.Series = seriesCollection;
-            targetChart.LegendLocation = LiveCharts.LegendLocation.None; // Hide legend
+            targetChart.LegendLocation = LiveCharts.LegendLocation.None;
         }
+
     }
 }
 

@@ -49,24 +49,70 @@ namespace DataVisualiser.Charts.Helpers
         /// <summary>
         /// Attaches a chart to this tooltip manager. The chart will display tooltips and vertical lines on hover.
         /// </summary>
-        /// <param name="chart">The chart to attach.</param>
-        /// <param name="label">Optional label for this chart (e.g., "Main", "Norm"). If not provided, uses the chart's name or a default.</param>
         public void AttachChart(CartesianChart chart, string? label = null)
         {
-            if (chart == null) return;
-            if (_chartTextBlocks.ContainsKey(chart)) return; // Already attached
+            if (!CanAttach(chart))
+                return;
 
-            // Create a TextBlock for this chart's values
+            var textBlock = CreateAndRegisterTextBlock(chart);
+            AddTextBlockToPopup(textBlock);
+            RegisterChartLabel(chart, label);
+            InitializeVerticalLineTracking(chart);
+            SubscribeChartEvents(chart);
+        }
+
+        /// <summary>
+        /// Detaches a chart from this tooltip manager, removing event handlers and cleaning up resources.
+        /// </summary>
+        public void DetachChart(CartesianChart chart)
+        {
+            if (!CanDetach(chart))
+                return;
+
+            UnsubscribeChartEvents(chart);
+            RemoveVerticalLine(chart);
+            RemoveTextBlockFromPopup(chart);
+            CleanupChartState(chart);
+        }
+
+        private bool CanAttach(CartesianChart? chart)
+        {
+            return chart != null && !_chartTextBlocks.ContainsKey(chart);
+        }
+
+        private bool CanDetach(CartesianChart? chart)
+        {
+            return chart != null && _chartTextBlocks.ContainsKey(chart);
+        }
+
+        private TextBlock CreateAndRegisterTextBlock(CartesianChart chart)
+        {
             var textBlock = ChartHelper.SetHoverText();
             _chartTextBlocks[chart] = textBlock;
+            return textBlock;
+        }
 
-            // Add the TextBlock to the popup's StackPanel
-            if (_hoverPopup.Child is Border border && border.Child is StackPanel stackPanel)
+        private void AddTextBlockToPopup(TextBlock textBlock)
+        {
+            if (_hoverPopup.Child is Border border &&
+                border.Child is StackPanel stackPanel)
             {
                 stackPanel.Children.Add(textBlock);
             }
+        }
 
-            // Store the label
+        private void RemoveTextBlockFromPopup(CartesianChart chart)
+        {
+            if (_hoverPopup.Child is Border border &&
+                border.Child is StackPanel stackPanel &&
+                _chartTextBlocks.TryGetValue(chart, out var textBlock))
+            {
+                stackPanel.Children.Remove(textBlock);
+            }
+        }
+
+        private void RegisterChartLabel(CartesianChart chart, string? label)
+        {
             if (!string.IsNullOrEmpty(label))
             {
                 _chartLabels[chart] = label;
@@ -75,49 +121,42 @@ namespace DataVisualiser.Charts.Helpers
             {
                 _chartLabels[chart] = chart.Name ?? "Chart";
             }
+        }
 
-            // Initialize vertical line tracking
+        private void InitializeVerticalLineTracking(CartesianChart chart)
+        {
             _chartVerticalLines[chart] = null;
+        }
 
-            // Subscribe to events
+        private void RemoveVerticalLine(CartesianChart chart)
+        {
+            if (_chartVerticalLines.TryGetValue(chart, out var verticalLine) &&
+                verticalLine != null)
+            {
+                ChartHelper.RemoveAxisSection(ref chart, verticalLine);
+            }
+        }
+
+        private void SubscribeChartEvents(CartesianChart chart)
+        {
             chart.DataHover += OnChartDataHover;
             chart.MouseLeave += OnChartMouseLeave;
         }
 
-        /// <summary>
-        /// Detaches a chart from this tooltip manager, removing event handlers and cleaning up resources.
-        /// </summary>
-        /// <param name="chart">The chart to detach.</param>
-        public void DetachChart(CartesianChart chart)
+        private void UnsubscribeChartEvents(CartesianChart chart)
         {
-            if (chart == null) return;
-            if (!_chartTextBlocks.ContainsKey(chart)) return; // Not attached
-
-            // Unsubscribe from events
             chart.DataHover -= OnChartDataHover;
             chart.MouseLeave -= OnChartMouseLeave;
+        }
 
-            // Remove vertical line if it exists
-            if (_chartVerticalLines.TryGetValue(chart, out var verticalLine) && verticalLine != null)
-            {
-                ChartHelper.RemoveAxisSection(ref chart, verticalLine);
-            }
-
-            // Remove TextBlock from popup
-            if (_hoverPopup.Child is Border border && border.Child is StackPanel stackPanel)
-            {
-                if (_chartTextBlocks.TryGetValue(chart, out var textBlock))
-                {
-                    stackPanel.Children.Remove(textBlock);
-                }
-            }
-
-            // Clean up dictionaries
+        private void CleanupChartState(CartesianChart chart)
+        {
             _chartTextBlocks.Remove(chart);
             _chartVerticalLines.Remove(chart);
             _chartTimestamps.Remove(chart);
             _chartLabels.Remove(chart);
         }
+
 
         /// <summary>
         /// Updates the timestamp data for a chart. This should be called whenever chart data is updated.
