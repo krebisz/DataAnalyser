@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DataVisualiser.Models
+﻿namespace DataVisualiser.Models
 {
     public sealed class WeekdayTrendPoint
     {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DataVisualiser.Charts;
+﻿using DataVisualiser.Charts;
 using DataVisualiser.Models;
 
 namespace DataVisualiser.Services

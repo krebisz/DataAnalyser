@@ -1,5 +1,5 @@
-using System.Globalization;
 using DataFileReader.Ingestion;
+using System.Globalization;
 
 namespace DataFileReader.Helper
 {

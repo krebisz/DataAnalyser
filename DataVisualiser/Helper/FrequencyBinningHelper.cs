@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace DataVisualiser.Helper
 {
     /// <summary>
@@ -17,7 +13,7 @@ namespace DataVisualiser.Helper
         public static double CalculateBinSize(double minValue, double maxValue)
         {
             double range = maxValue - minValue;
-            
+
             if (range <= 0 || double.IsNaN(range) || double.IsInfinity(range))
                 return 1.0;
 
@@ -27,7 +23,7 @@ namespace DataVisualiser.Helper
 
             // Find the order of magnitude
             double magnitude = Math.Pow(10, Math.Floor(Math.Log10(Math.Abs(rawBinSize))));
-            
+
             // Normalize to 1-10 range
             double normalized = rawBinSize / magnitude;
 
@@ -43,7 +39,7 @@ namespace DataVisualiser.Helper
                 niceMultiplier = 10.0;
 
             double binSize = niceMultiplier * magnitude;
-            
+
             // Ensure we have at least 5 bins and at most 50 bins
             int actualBinCount = (int)Math.Ceiling(range / binSize);
             if (actualBinCount < 5)
@@ -65,10 +61,10 @@ namespace DataVisualiser.Helper
         public static List<(double Min, double Max)> CreateBins(double minValue, double maxValue, double binSize)
         {
             var bins = new List<(double Min, double Max)>();
-            
+
             // Start from the floor of minValue rounded down to nearest bin boundary
             double startBin = Math.Floor(minValue / binSize) * binSize;
-            
+
             double current = startBin;
             while (current < maxValue)
             {
@@ -100,7 +96,7 @@ namespace DataVisualiser.Helper
             List<(double Min, double Max)> bins)
         {
             var frequencies = new Dictionary<int, int>();
-            
+
             // Initialize all bins to 0
             for (int i = 0; i < bins.Count; i++)
             {
@@ -148,14 +144,14 @@ namespace DataVisualiser.Helper
                         return i;
                 }
             }
-            
+
             // If value is slightly outside due to floating point precision, try to find nearest bin
             // This handles edge cases where value might be just outside due to rounding
             if (value < bins[0].Min && value >= bins[0].Min - 0.0001)
                 return 0;
             if (value > bins[bins.Count - 1].Max && value <= bins[bins.Count - 1].Max + 0.0001)
                 return bins.Count - 1;
-            
+
             return -1;
         }
 

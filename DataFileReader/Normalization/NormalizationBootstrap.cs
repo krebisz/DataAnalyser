@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace DataFileReader.Normalization
+﻿namespace DataFileReader.Normalization
 {
     /// <summary>
     /// Provides a canonical way to construct a normalization pipeline.

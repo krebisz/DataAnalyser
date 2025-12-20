@@ -214,207 +214,348 @@ namespace DataVisualiser.Helper
         }
 
         /// <summary>
-        /// Creates smoothed/averaged data by binning points into intervals with max 10 points per bin
+        /// Creates smoothed/averaged data by binning points into intervals
+        /// with a maximum of 10 points per bin.
         /// </summary>
-        public static List<SmoothedDataPoint> CreateSmoothedData(List<HealthMetricData> data, DateTime fromDate, DateTime toDate)
+        public static List<SmoothedDataPoint> CreateSmoothedData(
+            List<HealthMetricData> data,
+            DateTime fromDate,
+            DateTime toDate)
         {
-            var smoothedPoints = new List<SmoothedDataPoint>();
-
-            if (!data.Any())
+            if (data == null || data.Count == 0)
             {
-                return smoothedPoints;
+                return new List<SmoothedDataPoint>();
             }
 
-            // Calculate bin size to ensure max 10 points per bin
-            var totalPoints = data.Count;
-            var numberOfBins = Math.Max(1, (int)Math.Ceiling(totalPoints / 10.0));
-            var dateRange = toDate - fromDate;
+            var numberOfBins = CalculateNumberOfBins(data.Count);
 
-            // Use double for tick calculations to avoid overflow
-            // Handle very large date ranges by using a simpler approach
-            double dateRangeTicks;
-            double binSizeTicks;
-
-            try
+            if (!TryCalculateBinSize(fromDate, toDate, numberOfBins, out var binSizeTicks))
             {
-                dateRangeTicks = dateRange.Ticks;
-                binSizeTicks = dateRangeTicks / numberOfBins;
-
-                // Safety check: if bin size calculation fails, use a simpler approach
-                if (binSizeTicks <= 0 || double.IsInfinity(binSizeTicks) || double.IsNaN(binSizeTicks))
-                {
-                    // Fallback: use equal distribution of points instead of time-based bins
-                    return CreateSmoothedDataByPointCount(data, numberOfBins);
-                }
-            }
-            catch (OverflowException)
-            {
-                // If overflow occurs, use point-count based binning instead
                 return CreateSmoothedDataByPointCount(data, numberOfBins);
             }
 
-            var binSize = TimeSpan.FromTicks((long)binSizeTicks);
+            var bins = BinDataByTime(data, fromDate, numberOfBins, binSizeTicks);
+            var smoothedPoints = CreateAveragedPointsFromBins(bins);
 
-            // Group data points into bins
+            return smoothedPoints
+                .OrderBy(p => p.Timestamp)
+                .ToList();
+        }
+
+        #region Bin Calculation
+
+        private static int CalculateNumberOfBins(int totalPoints)
+        {
+            return Math.Max(1, (int)Math.Ceiling(totalPoints / 10.0));
+        }
+
+        private static bool TryCalculateBinSize(
+            DateTime fromDate,
+            DateTime toDate,
+            int numberOfBins,
+            out double binSizeTicks)
+        {
+            binSizeTicks = 0;
+
+            try
+            {
+                var dateRangeTicks = (double)(toDate - fromDate).Ticks;
+
+                if (dateRangeTicks <= 0)
+                {
+                    return false;
+                }
+
+                binSizeTicks = dateRangeTicks / numberOfBins;
+
+                return binSizeTicks > 0 &&
+                       !double.IsInfinity(binSizeTicks) &&
+                       !double.IsNaN(binSizeTicks);
+            }
+            catch (OverflowException)
+            {
+                return false;
+            }
+        }
+
+        #endregion
+
+        #region Binning Logic
+
+        private static Dictionary<int, List<HealthMetricData>> BinDataByTime(
+            List<HealthMetricData> data,
+            DateTime fromDate,
+            int numberOfBins,
+            double binSizeTicks)
+        {
             var bins = new Dictionary<int, List<HealthMetricData>>();
 
             foreach (var point in data)
             {
-                if (!point.Value.HasValue) continue;
-
-                // Calculate which bin this point belongs to
-                var timeOffset = point.NormalizedTimestamp - fromDate;
-                var timeOffsetTicks = (double)timeOffset.Ticks;
-
-                // Avoid division by zero
-                if (binSizeTicks <= 0)
+                if (!point.Value.HasValue)
                 {
                     continue;
                 }
 
-                var binIndex = (int)(timeOffsetTicks / binSizeTicks);
+                var binIndex = CalculateBinIndex(
+                    point.NormalizedTimestamp,
+                    fromDate,
+                    numberOfBins,
+                    binSizeTicks);
 
-                // Ensure binIndex is within valid range
-                binIndex = Math.Max(0, Math.Min(binIndex, numberOfBins - 1));
-
-                if (!bins.ContainsKey(binIndex))
+                if (!bins.TryGetValue(binIndex, out var bin))
                 {
-                    bins[binIndex] = new List<HealthMetricData>();
+                    bin = new List<HealthMetricData>();
+                    bins[binIndex] = bin;
                 }
-                bins[binIndex].Add(point);
+
+                bin.Add(point);
             }
 
-            // Calculate average for each bin
+            return bins;
+        }
+
+        private static int CalculateBinIndex(
+            DateTime timestamp,
+            DateTime fromDate,
+            int numberOfBins,
+            double binSizeTicks)
+        {
+            if (binSizeTicks <= 0)
+            {
+                return 0;
+            }
+
+            var offsetTicks = (double)(timestamp - fromDate).Ticks;
+            var rawIndex = (int)(offsetTicks / binSizeTicks);
+
+            return Math.Clamp(rawIndex, 0, numberOfBins - 1);
+        }
+
+        #endregion
+
+        #region Aggregation
+
+        private static List<SmoothedDataPoint> CreateAveragedPointsFromBins(
+            Dictionary<int, List<HealthMetricData>> bins)
+        {
+            var result = new List<SmoothedDataPoint>();
+
             foreach (var bin in bins.OrderBy(b => b.Key))
             {
-                var pointsInBin = bin.Value;
-                if (pointsInBin.Any())
+                var averagedPoint = TryCreateAveragedPoint(bin.Value);
+                if (averagedPoint != null)
                 {
-                    // Calculate average value
-                    var avgValue = pointsInBin.Where(p => p.Value.HasValue).Select(p => (double)p.Value!.Value).Average();
-
-                    // Calculate average timestamp using double to avoid overflow
-                    var avgTimestampTicks = pointsInBin.Average(p => (double)p.NormalizedTimestamp.Ticks);
-
-                    // Safety check for timestamp
-                    if (double.IsInfinity(avgTimestampTicks) || double.IsNaN(avgTimestampTicks))
-                    {
-                        continue; // Skip this bin if timestamp calculation failed
-                    }
-
-                    var timestamp = new DateTime((long)avgTimestampTicks);
-
-                    smoothedPoints.Add(new SmoothedDataPoint
-                    {
-                        Timestamp = timestamp,
-                        Value = avgValue
-                    });
+                    result.Add(averagedPoint);
                 }
             }
 
-            return smoothedPoints.OrderBy(p => p.Timestamp).ToList();
+            return result;
         }
+
+        private static SmoothedDataPoint? TryCreateAveragedPoint(
+            List<HealthMetricData> points)
+        {
+            if (points == null || points.Count == 0)
+            {
+                return null;
+            }
+
+            var validValues = points
+                .Where(p => p.Value.HasValue)
+                .ToList();
+
+            if (validValues.Count == 0)
+            {
+                return null;
+            }
+
+            var averageValue = validValues
+                .Average(p => (double)p.Value!.Value);
+
+            var averageTimestampTicks = validValues
+                .Average(p => (double)p.NormalizedTimestamp.Ticks);
+
+            if (double.IsNaN(averageTimestampTicks) ||
+                double.IsInfinity(averageTimestampTicks))
+            {
+                return null;
+            }
+
+            return new SmoothedDataPoint
+            {
+                Timestamp = new DateTime((long)averageTimestampTicks),
+                Value = averageValue
+            };
+        }
+
+        #endregion
 
         /// <summary>
         /// Interpolates smoothed data points to match raw data timestamp positions
         /// </summary>
-        public static List<double> InterpolateSmoothedData(List<SmoothedDataPoint> smoothedData, List<DateTime> rawTimestamps)
+        public static List<double> InterpolateSmoothedData(
+            List<SmoothedDataPoint> smoothedData,
+            List<DateTime> rawTimestamps)
         {
-            var interpolatedValues = new List<double>();
-
-            if (!smoothedData.Any() || !rawTimestamps.Any())
+            if (smoothedData == null || smoothedData.Count == 0)
             {
-                return interpolatedValues;
+                return CreateNaNResults(rawTimestamps);
             }
 
-            // Sort smoothed data by timestamp (only once)
-            var sortedSmoothed = smoothedData.OrderBy(p => p.Timestamp).ToList();
-
-            if (!sortedSmoothed.Any())
+            if (rawTimestamps == null || rawTimestamps.Count == 0)
             {
-                // No smoothed data - return all NaNs
-                return rawTimestamps.Select(_ => double.NaN).ToList();
+                return new List<double>();
             }
 
-            // Optimize: use binary search approach for better performance with large datasets
+            var sortedSmoothed = SortSmoothedData(smoothedData);
+
+            if (sortedSmoothed.Count == 0)
+            {
+                return CreateNaNResults(rawTimestamps);
+            }
+
+            var results = new List<double>(rawTimestamps.Count);
+
             foreach (var rawTimestamp in rawTimestamps)
             {
-                // Find the two smoothed points that bracket this raw timestamp using binary search
-                SmoothedDataPoint? lowerPoint = null;
-                SmoothedDataPoint? upperPoint = null;
+                var value = InterpolateValueAtTimestamp(sortedSmoothed, rawTimestamp);
+                results.Add(value);
+            }
 
-                // Binary search for the insertion point
-                int left = 0;
-                int right = sortedSmoothed.Count - 1;
-                int insertIndex = sortedSmoothed.Count;
+            return results;
+        }
 
-                while (left <= right)
-                {
-                    int mid = (left + right) / 2;
-                    if (sortedSmoothed[mid].Timestamp <= rawTimestamp)
-                    {
-                        lowerPoint = sortedSmoothed[mid];
-                        left = mid + 1;
-                    }
-                    else
-                    {
-                        upperPoint = sortedSmoothed[mid];
-                        insertIndex = mid;
-                        right = mid - 1;
-                    }
-                }
+        #region Preparation
 
-                // If we found a lower point but no upper point, the next point is the upper
-                if (lowerPoint != null && upperPoint == null && insertIndex < sortedSmoothed.Count)
-                {
-                    upperPoint = sortedSmoothed[insertIndex];
-                }
+        private static List<SmoothedDataPoint> SortSmoothedData(
+            List<SmoothedDataPoint> smoothedData)
+        {
+            return smoothedData
+                .OrderBy(p => p.Timestamp)
+                .ToList();
+        }
 
-                // If we found an upper point but no lower point, the previous point is the lower
-                if (upperPoint != null && lowerPoint == null && insertIndex > 0)
-                {
-                    lowerPoint = sortedSmoothed[insertIndex - 1];
-                }
+        private static List<double> CreateNaNResults(List<DateTime> timestamps)
+        {
+            return timestamps == null
+                ? new List<double>()
+                : timestamps.Select(_ => double.NaN).ToList();
+        }
 
-                double interpolatedValue;
+        #endregion
 
-                if (lowerPoint == null && upperPoint != null)
+        #region Interpolation Core
+
+        private static double InterpolateValueAtTimestamp(
+            List<SmoothedDataPoint> sortedSmoothed,
+            DateTime targetTimestamp)
+        {
+            var (lower, upper) = FindBoundingPoints(sortedSmoothed, targetTimestamp);
+
+            return CalculateInterpolatedValue(lower, upper, targetTimestamp);
+        }
+
+        #endregion
+
+        #region Binary Search
+
+        private static (SmoothedDataPoint? Lower, SmoothedDataPoint? Upper) FindBoundingPoints(
+            List<SmoothedDataPoint> sortedSmoothed,
+            DateTime targetTimestamp)
+        {
+            SmoothedDataPoint? lower = null;
+            SmoothedDataPoint? upper = null;
+
+            int left = 0;
+            int right = sortedSmoothed.Count - 1;
+            int insertIndex = sortedSmoothed.Count;
+
+            while (left <= right)
+            {
+                int mid = (left + right) / 2;
+
+                if (sortedSmoothed[mid].Timestamp <= targetTimestamp)
                 {
-                    // Before first smoothed point - use first value
-                    interpolatedValue = upperPoint.Value;
-                }
-                else if (lowerPoint != null && upperPoint == null)
-                {
-                    // After last smoothed point - use last value
-                    interpolatedValue = lowerPoint.Value;
-                }
-                else if (lowerPoint != null && upperPoint != null)
-                {
-                    if (lowerPoint.Timestamp == upperPoint.Timestamp)
-                    {
-                        // Exact match
-                        interpolatedValue = lowerPoint.Value;
-                    }
-                    else
-                    {
-                        // Linear interpolation
-                        var timeDiff = (rawTimestamp - lowerPoint.Timestamp).TotalMilliseconds;
-                        var totalDiff = (upperPoint.Timestamp - lowerPoint.Timestamp).TotalMilliseconds;
-                        var ratio = totalDiff > 0 ? timeDiff / totalDiff : 0;
-                        interpolatedValue = lowerPoint.Value + (upperPoint.Value - lowerPoint.Value) * ratio;
-                    }
+                    lower = sortedSmoothed[mid];
+                    left = mid + 1;
                 }
                 else
                 {
-                    // No smoothed data available - use NaN
-                    interpolatedValue = double.NaN;
+                    upper = sortedSmoothed[mid];
+                    insertIndex = mid;
+                    right = mid - 1;
                 }
-
-                interpolatedValues.Add(interpolatedValue);
             }
 
-            return interpolatedValues;
+            // Resolve missing neighbor using insertion index
+            if (lower != null && upper == null && insertIndex < sortedSmoothed.Count)
+            {
+                upper = sortedSmoothed[insertIndex];
+            }
+
+            if (upper != null && lower == null && insertIndex > 0)
+            {
+                lower = sortedSmoothed[insertIndex - 1];
+            }
+
+            return (lower, upper);
         }
+
+        #endregion
+
+        #region Value Calculation
+
+        private static double CalculateInterpolatedValue(
+            SmoothedDataPoint? lower,
+            SmoothedDataPoint? upper,
+            DateTime targetTimestamp)
+        {
+            if (lower == null && upper == null)
+            {
+                return double.NaN;
+            }
+
+            if (lower == null)
+            {
+                // Before first smoothed point
+                return upper!.Value;
+            }
+
+            if (upper == null)
+            {
+                // After last smoothed point
+                return lower.Value;
+            }
+
+            if (lower.Timestamp == upper.Timestamp)
+            {
+                // Exact match or degenerate case
+                return lower.Value;
+            }
+
+            return LinearlyInterpolate(lower, upper, targetTimestamp);
+        }
+
+        private static double LinearlyInterpolate(
+            SmoothedDataPoint lower,
+            SmoothedDataPoint upper,
+            DateTime targetTimestamp)
+        {
+            var elapsedMs = (targetTimestamp - lower.Timestamp).TotalMilliseconds;
+            var totalMs = (upper.Timestamp - lower.Timestamp).TotalMilliseconds;
+
+            if (totalMs <= 0)
+            {
+                return lower.Value;
+            }
+
+            var ratio = elapsedMs / totalMs;
+            return lower.Value + (upper.Value - lower.Value) * ratio;
+        }
+
+        #endregion
+
 
         /// <summary>
         /// Formats a number to 3 significant digits for display.
@@ -597,7 +738,7 @@ namespace DataVisualiser.Helper
             if (valueList1 == null || valueList2 == null)
                 return null;
 
-            return ApplyBinaryOperation(valueList1, valueList2, (a, b) => 
+            return ApplyBinaryOperation(valueList1, valueList2, (a, b) =>
             {
                 if (b == 0.0)
                     return double.NaN;

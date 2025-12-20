@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace DataVisualiser.Models
+﻿namespace DataVisualiser.Models
 {
     public sealed class WeekdayTrendSeries
     {

@@ -1,11 +1,7 @@
-using DataVisualiser.Charts;
-using DataVisualiser.Charts.Computation;
-using DataVisualiser.Models;
-using DataVisualiser.Helper;
 using DataFileReader.Canonical;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using DataVisualiser.Charts.Computation;
+using DataVisualiser.Helper;
+using DataVisualiser.Models;
 
 namespace DataVisualiser.Charts.Strategies
 {

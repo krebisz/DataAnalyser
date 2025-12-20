@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace DataFileReader.Normalization
+﻿namespace DataFileReader.Normalization
 {
     /// <summary>
     /// Shared, immutable context for normalization execution.

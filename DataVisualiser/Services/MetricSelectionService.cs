@@ -1,5 +1,4 @@
 ﻿using DataVisualiser.Data.Repositories;
-using DataVisualiser.Helper;
 using DataVisualiser.Models;
 
 namespace DataVisualiser.Services

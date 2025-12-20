@@ -1,7 +1,6 @@
 ﻿using DataFileReader.Canonical;
 using DataFileReader.Ingestion;
 using DataFileReader.Normalization.Canonical;
-using System;
 
 namespace DataFileReader.Normalization
 {

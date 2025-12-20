@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace DataFileReader.Normalization.Canonical
+﻿namespace DataFileReader.Normalization.Canonical
 {
     /// <summary>
     /// CanonicalMetricSeries is the normalized, trusted analytical representation

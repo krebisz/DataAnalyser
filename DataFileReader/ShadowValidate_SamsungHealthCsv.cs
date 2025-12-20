@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using DataFileReader.Helper;
+﻿using DataFileReader.Helper;
 using DataFileReader.Ingestion;
+using System.Diagnostics;
 
 public static class ShadowValidate_SamsungHealthCsv
 {

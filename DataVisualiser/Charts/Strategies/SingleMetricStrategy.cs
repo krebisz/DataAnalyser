@@ -1,9 +1,9 @@
 namespace DataVisualiser.Charts.Strategies
 {
-    using DataVisualiser.Charts.Computation;
-    using DataVisualiser.Models;
-    using DataVisualiser.Helper;
     using DataFileReader.Canonical;
+    using DataVisualiser.Charts.Computation;
+    using DataVisualiser.Helper;
+    using DataVisualiser.Models;
     using System.Linq;
 
     public sealed class SingleMetricStrategy : IChartComputationStrategy

@@ -1,6 +1,8 @@
 Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 
 +---.cursor
+|   +---plans
+|   |   |   project_state_assessment_18355c54.plan.md
 |   .gitattributes
 +---.github
 |   +---workflows
@@ -11,7 +13,6 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 +---assets
 |   |   c__Users_HP_Omen_AppData_Roaming_Cursor_User_workspaceStorage_7015c813c1df275769d3d8b268830a55_images_Screenshot_2025-12-04_080310-90a83677-dcf4-42be-8d19-c38161745075.png
 |   codebase-index.md
-|   Collaboration Protocol.md
 |   Create-DataFileReaderRedux-Package.ps1
 |   Create-ProjectZip.ps1
 +---DataFileReader
@@ -20,8 +21,11 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   App.config
 |   +---Canonical
 |   |   |   CanonicalMetricIdentityResolver.cs
+|   |   |   CanonicalMetricMapping.cs
 |   |   |   CanonicalMetricSeries.cs
+|   |   |   CmsTypeConverter.cs
 |   |   |   HealthMetricToCmsMapper.cs
+|   |   |   MetricCompatibilityHelper.cs
 |   |   |   MetricIdentityResolutionResult.cs
 |   +---Class
 |   |   |   AggregationPeriod.cs
@@ -64,6 +68,7 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   NormalizationContext.cs
 |   |   |   NormalizationDiagnostics.cs
 |   |   +---Stages
+|   |   |   |   CmsProductionStage.cs
 |   |   |   |   MetricIdentityResolutionStage.cs
 |   +---Parsers
 |   |   |   IHealthFileParser.cs
@@ -101,17 +106,25 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   |   ChartRenderModel.cs
 |   |   |   |   ChartSeriesMode.cs
 |   |   +---Strategies
-|   |   CombinedMetricStrategy.cs
+|   |   |   |   CombinedMetricStrategy.cs
+|   |   |   |   DifferenceStrategy.cs
+|   |   |   |   MultiMetricStrategy.cs
+|   |   |   |   NormalizedStrategy.cs
+|   |   |   |   RatioStrategy.cs
+|   |   |   |   SingleMetricStrategy.cs
+|   |   |   |   WeekdayTrendStrategy.cs
+|   |   |   |   WeeklyDistributionStrategy.cs
 |   +---Converters
 |   |   |   NormalizationModeConverter.cs
 |   +---Data
 |   |   +---Repositories
+|   |   |   |   CmsDataService.cs
 |   |   |   |   DataFetcher.cs
 |   |   |   SqlQueryBuilder.cs
 |   |   DataVisualiser.csproj
 |   |   DataVisualiser.csproj.user
-|   |   DifferenceStrategy.cs
 |   +---Helper
+|   |   |   CmsConversionHelper.cs
 |   |   |   FrequencyBinningHelper.cs
 |   |   |   MathHelper.cs
 |   |   |   StrategyComputationHelper.cs
@@ -127,9 +140,10 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   RecordToDayRatio.cs
 |   |   |   SmoothedDataPoint.cs
 |   |   |   TickInterval.cs
+|   |   |   WeekdayTrendPoint.cs
+|   |   |   WeekdayTrendResult.cs
+|   |   |   WeekdayTrendSeries.cs
 |   |   |   WeeklyDistributionResult.cs
-|   |   NormalizedStrategy.cs
-|   |   RatioStrategy.cs
 |   +---Services
 |   |   |   ChartDataContextBuilder.cs
 |   |   |   ChartUpdateCoordinator.cs
@@ -139,9 +153,9 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   |   IIntervalShadingStrategy.cs
 |   |   |   WeeklyDistributionService.cs
 |   |   |   WeeklyFrequencyRenderer.cs
-|   |   SingleMetricStrategy.cs
 |   +---State
 |   |   |   ChartState.cs
+|   |   |   CmsConfiguration.cs
 |   |   |   MetricState.cs
 |   |   |   UiState.cs
 |   +---UI
@@ -153,21 +167,31 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   +---Events
 |   |   |   |   ViewModelEvents.cs
 |   |   |   MainWindowViewModel.cs
-|   |   WeeklyDistributionStrategy.cs
 |   dependency-summary.md
++---documents
+|   |   Collaboration Protocol.md
+|   |   Current plan.odt
+|   |   IMPLEMENTATION_COMPARISON.md
+|   |   MASTER_OPERATING_PROTOCOL.md
+|   |   METRIC_COMPATIBILITY_INTEGRATION.md
+|   |   PHASE4_INTEGRATION_GUIDE.md
+|   |   PRIORITY_TASKS_COMPLETION_STATUS.md
+|   |   Project Bible.md
+|   |   Project Overview.md
+|   |   Project Philosphy.md
+|   |   Project Roadmap.md
+|   |   REFACTORING_OPPORTUNITIES.md
+|   |   RUNTIME_ISSUE_ANALYSIS.md
+|   |   SYSTEM_MAP.md
+|   |   Workspace Workflow.md
 |   Generate-CodebaseIndex.ps1
 |   Generate-DependencySummary.ps1
 |   Generate-ProjectTree.ps1
+|   Generate-Repo-FileLinks.cmd
+|   Generate-Repo-FileLinks.ps1
 |   Initialize-DataVisualiserWorkspace.ps1
-|   manifest.txt
-|   MASTER_OPERATING_PROTOCOL.md
-|   Project Bible.md
-|   Project Overview.md
-|   Project Philosphy.md
-|   Project Roadmap.md
+|   links.txt
 |   project-tree.txt
 |   Refresh-WorkspaceWithLatestPackage.ps1
 |   Run-PublishPipeline.ps1
-|   SYSTEM_MAP.md
 |   Upload-LatestProjectPackage.ps1
-|   Workspace Workflow.md

@@ -16,6 +16,10 @@ _Auto-generated. Do not edit by hand._
 **Namespace:** DataFileReader.Canonical
 _No public symbols detected._
 
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricMappingcs
+**Namespace:** DataFileReader.Canonical
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricSeriescs
 **Namespace:** DataFileReader.Canonical
 **Interfaces:**
@@ -26,13 +30,22 @@ _No public symbols detected._
 - DataCompleteness
 - ValidationStatus
 
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CmsTypeConvertercs
+**Namespace:** DataFileReader.Canonical
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\HealthMetricToCmsMappercs
+**Namespace:** DataFileReader.Canonical
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricCompatibilityHelpercs
 **Namespace:** DataFileReader.Canonical
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricIdentityResolutionResultcs
 **Namespace:** DataFileReader.Canonical
-_No public symbols detected._
+**Enums:**
+- IdentityResolutionFailureReason
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\JSON\IJsoncs
 **Interfaces:**
@@ -153,6 +166,10 @@ _No public symbols detected._
 **Namespace:** DataFileReader.Normalization.Canonical
 _No public symbols detected._
 
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\CmsProductionStagecs
+**Namespace:** DataFileReader.Normalization.Stages
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\MetricIdentityResolutionStagecs
 **Namespace:** DataFileReader.Normalization.Stages
 _No public symbols detected._
@@ -184,6 +201,9 @@ _No public symbols detected._
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\NETCoreApp,Version=v90AssemblyAttributescs
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderAssemblyInfocs
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderGlobalUsingsgcs
@@ -261,6 +281,46 @@ _No public symbols detected._
 **Enums:**
 - ChartSeriesMode
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\CombinedMetricStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\DifferenceStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\MultiMetricStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\NormalizedStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\RatioStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\SingleMetricStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\WeekdayTrendStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\WeeklyDistributionStrategycs
+**Namespace:** DataVisualiser.Charts.Strategies
+**Tags:** Strategy
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\ChartDataContextcs
 **Namespace:** DataVisualiser.Charts
 **Classes:**
@@ -281,6 +341,12 @@ _No public symbols detected._
 **Classes:**
 - public class NormalizationModeConverter : IValueConverter
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\Repositories\CmsDataServicecs
+**Namespace:** DataVisualiser.Data.Repositories
+**Tags:** Service
+**Classes:**
+- public class CmsDataService
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\Repositories\DataFetchercs
 **Namespace:** DataVisualiser.Data.Repositories
 **Classes:**
@@ -288,6 +354,10 @@ _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\SqlQueryBuildercs
 **Namespace:** DataVisualiser.Data
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\CmsConversionHelpercs
+**Namespace:** DataVisualiser.Helper
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\FrequencyBinningHelpercs
@@ -344,6 +414,18 @@ _No public symbols detected._
 **Enums:**
 - TickInterval
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendPointcs
+**Namespace:** DataVisualiser.Models
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendResultcs
+**Namespace:** DataVisualiser.Models
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendSeriescs
+**Namespace:** DataVisualiser.Models
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeeklyDistributionResultcs
 **Namespace:** DataVisualiser.Models
 **Classes:**
@@ -352,12 +434,24 @@ _No public symbols detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\NETCoreApp,Version=v90AssemblyAttributescs
 _No public symbols detected._
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgcs
+**Namespace:** DataVisualiser {
+**Entry Points:**
+- Main()
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgics
 **Namespace:** DataVisualiser {
 **Entry Points:**
 - Main()
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserAssemblyInfocs
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserGlobalUsingsgcs
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgcs
+**Namespace:** DataVisualiser {
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgics
@@ -412,6 +506,10 @@ _No public symbols detected._
 **Classes:**
 - public class ChartState
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\CmsConfigurationcs
+**Namespace:** DataVisualiser.State
+_No public symbols detected._
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\MetricStatecs
 **Namespace:** DataVisualiser.State
 **Classes:**
@@ -458,42 +556,12 @@ _No public symbols detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\AssemblyInfocs
 _No public symbols detected._
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\CombinedMetricStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\DifferenceStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\MainWindowWeeklycs
 **Namespace:** DataVisualiser
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\MainWindowxamlcs
 **Namespace:** DataVisualiser
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\NormalizedStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\RatioStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\SingleMetricStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\WeeklyDistributionStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
 _No public symbols detected._
 
 ## XAML Files

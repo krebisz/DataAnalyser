@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using Dapper;
-using DataVisualiser.Data;
 using DataVisualiser.Models;
 using Microsoft.Data.SqlClient;
+using System.Text;
 
 namespace DataVisualiser.Data.Repositories
 {

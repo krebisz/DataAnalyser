@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace DataVisualiser.Models
 {
     /// <summary>
@@ -23,12 +20,12 @@ namespace DataVisualiser.Models
         public double GlobalMax { get; init; }
         public double BinSize { get; init; }
         public List<(double Min, double Max)> Bins { get; init; } = new();
-        
+
         // Frequency counts per day per bin: [dayIndex][binIndex] = frequency
         // dayIndex: 0=Monday, 1=Tuesday, ..., 6=Sunday
         // binIndex: index into Bins list
         public Dictionary<int, Dictionary<int, int>> FrequenciesPerDay { get; init; } = new();
-        
+
         // Normalized frequencies: [dayIndex][binIndex] = normalized frequency [0.0, 1.0]
         public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerDay { get; init; } = new();
 

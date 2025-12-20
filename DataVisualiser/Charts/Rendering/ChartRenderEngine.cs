@@ -1,12 +1,7 @@
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Helpers;
 using DataVisualiser.Helper;
-using DataVisualiser.Models;
-using LiveCharts;
 using LiveCharts.Wpf;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Media;
 
 namespace DataVisualiser.Charts.Rendering

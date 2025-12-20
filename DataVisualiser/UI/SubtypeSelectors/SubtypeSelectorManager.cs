@@ -69,7 +69,7 @@ namespace DataVisualiser.UI.SubtypeSelectors
             int buttonIndex = -1;
             for (int i = _parentPanel.Children.Count - 1; i >= 0; i--)
             {
-                if (_parentPanel.Children[i] is System.Windows.Controls.Button btn && 
+                if (_parentPanel.Children[i] is System.Windows.Controls.Button btn &&
                     btn.Content?.ToString() == "Add Subtype")
                 {
                     addButton = btn;

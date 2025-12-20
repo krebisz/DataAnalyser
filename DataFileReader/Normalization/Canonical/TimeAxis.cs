@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DataFileReader.Normalization.Canonical
+﻿namespace DataFileReader.Normalization.Canonical
 {
     /// <summary>
     /// Defines the canonical temporal model for a metric series.

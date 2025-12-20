@@ -12,16 +12,29 @@ _Auto-generated. Heuristic, structural only. Do not edit by hand._
 - Microsoft.Extensions.Logging
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricIdentityResolvercs
+**Uses Namespaces:**
+- DataFileReader.Normalization.Canonical
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricMappingcs
 _No namespace dependencies detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricSeriescs
 **Uses Namespaces:**
 - System (common)
 
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CmsTypeConvertercs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Normalization.Canonical
+
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\HealthMetricToCmsMappercs
 **Uses Namespaces:**
 - System (common)
 - DataFileReader.Helper
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricCompatibilityHelpercs
+**Uses Namespaces:**
+- System (common)
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricIdentityResolutionResultcs
 **Uses Namespaces:**
@@ -148,6 +161,7 @@ _No namespace dependencies detected._
 - System (common)
 - DataFileReader.Ingestion
 - DataFileReader.Normalization.Canonical
+- DataFileReader.Normalization.Stages
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\INormalizationPipelinecs
 **Uses Namespaces:**
@@ -170,13 +184,26 @@ _No namespace dependencies detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationDiagnosticscs
 **Uses Namespaces:**
+- DataFileReader.Canonical
+- DataFileReader.Ingestion
+- DataFileReader.Normalization.Canonical
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\CmsProductionStagecs
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Canonical
 - DataFileReader.Ingestion
 - DataFileReader.Normalization.Canonical
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\MetricIdentityResolutionStagecs
 **Uses Namespaces:**
 - System (common)
+- DataFileReader.Canonical
 - DataFileReader.Ingestion
+
+### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderAssemblyInfocs
+**Uses Namespaces:**
+- System (common)
 
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderGlobalUsingsgcs
 _No namespace dependencies detected._
@@ -283,6 +310,7 @@ _No namespace dependencies detected._
 **Tags:** Engine
 **Uses Namespaces:**
 - System (common)
+- DataVisualiser.Charts.Computation
 - DataVisualiser.Charts.Helpers
 - DataVisualiser.Helper
 - DataVisualiser.Models
@@ -291,22 +319,87 @@ _No namespace dependencies detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\ChartRenderModelcs
 **Uses Namespaces:**
 - System (common)
+- DataVisualiser.Charts.Computation
 - DataVisualiser.Models
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\ChartSeriesModecs
 _No namespace dependencies detected._
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\CombinedMetricStrategycs
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\CombinedMetricStrategycs
 **Tags:** Strategy
 **Uses Namespaces:**
 - DataVisualiser.Charts.Computation
 - DataVisualiser.Helper
 - DataVisualiser.Models
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\DifferenceStrategycs
+**Tags:** Strategy
+**Uses Namespaces:**
+- DataVisualiser.Charts.Computation
+- DataVisualiser.Helper
+- DataVisualiser.Models
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\MultiMetricStrategycs
+**Tags:** Strategy
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Canonical
+- DataVisualiser.Charts
+- DataVisualiser.Charts.Computation
+- DataVisualiser.Helper
+- DataVisualiser.Models
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\NormalizedStrategycs
+**Tags:** Strategy
+**Uses Namespaces:**
+- DataVisualiser.Charts.Computation
+- DataVisualiser.Helper
+- DataVisualiser.Models
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\RatioStrategycs
+**Tags:** Strategy
+**Uses Namespaces:**
+- DataVisualiser.Charts.Computation
+- DataVisualiser.Helper
+- DataVisualiser.Models
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\SingleMetricStrategycs
+**Tags:** Strategy
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Canonical
+- DataVisualiser.Charts.Computation
+- DataVisualiser.Helper
+- DataVisualiser.Models
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\WeekdayTrendStrategycs
+**Tags:** Strategy
+**Uses Namespaces:**
+- System (common)
+- DataVisualiser.Helper
+- DataVisualiser.Models
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\WeeklyDistributionStrategycs
+**Tags:** Strategy
+**Uses Namespaces:**
+- System (common)
+- DataVisualiser.Charts.Computation
+- DataVisualiser.Helper
+- DataVisualiser.Models
+- DataVisualiser.Services
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Converters\NormalizationModeConvertercs
 **Uses Namespaces:**
 - System (common)
 - DataVisualiser.Models; // where NormalizationMode is defined
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\Repositories\CmsDataServicecs
+**Tags:** Service
+**Uses Namespaces:**
+- System (common)
+- DataFileReader.Canonical
+- DataFileReader.Helper
+- DataVisualiser.Models
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\Repositories\DataFetchercs
 **Uses Namespaces:**
@@ -319,11 +412,10 @@ _No namespace dependencies detected._
 **Uses Namespaces:**
 - System (common)
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\DifferenceStrategycs
-**Tags:** Strategy
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\CmsConversionHelpercs
 **Uses Namespaces:**
-- DataVisualiser.Charts.Computation
-- DataVisualiser.Helper
+- System (common)
+- DataFileReader.Canonical
 - DataVisualiser.Models
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\FrequencyBinningHelpercs
@@ -336,6 +428,7 @@ _No namespace dependencies detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\StrategyComputationHelpercs
 **Uses Namespaces:**
+- System (common)
 - DataVisualiser.Models
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\MainWindowWeeklycs
@@ -361,6 +454,7 @@ _No namespace dependencies detected._
 - DataVisualiser.UI.SubtypeSelectors
 - DataVisualiser.ViewModels
 - DataVisualiser.ViewModels.Events
+- LiveCharts.Defaults
 - LiveCharts.Wpf
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\BinaryOperatorRegistrycs
@@ -387,23 +481,40 @@ _No namespace dependencies detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\TickIntervalcs
 _No namespace dependencies detected._
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendPointcs
+_No namespace dependencies detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendResultcs
+**Uses Namespaces:**
+- System (common)
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendSeriescs
+**Uses Namespaces:**
+- System (common)
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeeklyDistributionResultcs
 **Uses Namespaces:**
 - System (common)
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\NormalizedStrategycs
-**Tags:** Strategy
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgcs
 **Uses Namespaces:**
-- DataVisualiser.Charts.Computation
-- DataVisualiser.Helper
-- DataVisualiser.Models
+- System (common)
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgics
 **Uses Namespaces:**
 - System (common)
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserAssemblyInfocs
+**Uses Namespaces:**
+- System (common)
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserGlobalUsingsgcs
 _No namespace dependencies detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgcs
+**Uses Namespaces:**
+- System (common)
+- LiveCharts.Wpf
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgics
 **Uses Namespaces:**
@@ -416,13 +527,6 @@ _No namespace dependencies detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\unoreloadcookiegcs
 _No namespace dependencies detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\RatioStrategycs
-**Tags:** Strategy
-**Uses Namespaces:**
-- DataVisualiser.Charts.Computation
-- DataVisualiser.Helper
-- DataVisualiser.Models
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\ChartDataContextBuildercs
 **Uses Namespaces:**
@@ -475,18 +579,14 @@ _No namespace dependencies detected._
 - DataVisualiser.Models
 - LiveCharts.Wpf
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\SingleMetricStrategycs
-**Tags:** Strategy
-**Uses Namespaces:**
-- DataVisualiser.Charts.Computation
-- DataVisualiser.Helper
-- DataVisualiser.Models
-
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\ChartStatecs
 **Uses Namespaces:**
 - DataVisualiser.Charts
 - DataVisualiser.Models
 - LiveCharts.Wpf
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\CmsConfigurationcs
+_No namespace dependencies detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\MetricStatecs
 _No namespace dependencies detected._
@@ -518,32 +618,24 @@ _No namespace dependencies detected._
 - DataVisualiser.ViewModels.Commands
 - DataVisualiser.ViewModels.Events
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\WeeklyDistributionStrategycs
-**Tags:** Strategy
-**Uses Namespaces:**
-- System (common)
-- DataVisualiser.Charts.Computation
-- DataVisualiser.Helper
-- DataVisualiser.Models
-- DataVisualiser.Services
-
 ## Aggregated Dependency Views
 ## High Fan-In Dependencies
 _Namespaces referenced by multiple files. Indicates potential coupling or fragility._
 
-- DataVisualiser.Models (used by 23 files)
-- LiveCharts.Wpf (used by 11 files)
-- DataVisualiser.Helper (used by 11 files)
-- DataVisualiser.Charts.Computation (used by 10 files)
-- DataFileReader.Helper (used by 9 files)
+- DataVisualiser.Models (used by 27 files)
+- DataVisualiser.Helper (used by 13 files)
+- DataVisualiser.Charts.Computation (used by 13 files)
+- LiveCharts.Wpf (used by 12 files)
+- DataFileReader.Helper (used by 10 files)
+- DataFileReader.Ingestion (used by 8 files)
 - DataFileReader.Class (used by 7 files)
-- DataFileReader.Ingestion (used by 7 files)
+- DataVisualiser.Charts (used by 7 files)
+- DataFileReader.Canonical (used by 7 files)
 - Newtonsoft.Json.Linq (used by 6 files)
-- DataVisualiser.Charts (used by 6 files)
+- DataFileReader.Normalization.Canonical (used by 6 files)
 - DataFileReader.Parsers (used by 5 files)
 - DataVisualiser.Charts.Helpers (used by 5 files)
 - DataVisualiser.Services (used by 3 files)
-- DataFileReader.Normalization.Canonical (used by 3 files)
 - DataVisualiser.Charts.Rendering (used by 2 files)
 - DataVisualiser.Data.Repositories (used by 2 files)
 - DataVisualiser.ViewModels.Events (used by 2 files)

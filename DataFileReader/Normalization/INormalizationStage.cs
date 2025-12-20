@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using DataFileReader.Ingestion;
+﻿using DataFileReader.Ingestion;
 
 namespace DataFileReader.Normalization
 {

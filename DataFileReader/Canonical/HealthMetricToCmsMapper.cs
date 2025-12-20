@@ -1,6 +1,4 @@
 using DataFileReader.Helper;
-using System;
-using System.Collections.Generic;
 
 namespace DataFileReader.Canonical
 {

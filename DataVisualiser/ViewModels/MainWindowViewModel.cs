@@ -1,11 +1,9 @@
-using DataVisualiser.Charts;
 using DataVisualiser.Models;
 using DataVisualiser.Services;
 using DataVisualiser.State;
 using DataVisualiser.ViewModels.Commands;
 using DataVisualiser.ViewModels.Events;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace DataFileReader.Ingestion
+﻿namespace DataFileReader.Ingestion
 {
     /// <summary>
     /// RawRecord represents a single, lossless, uninterpreted data observation

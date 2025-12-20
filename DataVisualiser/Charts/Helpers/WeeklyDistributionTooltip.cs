@@ -1,8 +1,5 @@
 using LiveCharts;
 using LiveCharts.Wpf;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -62,7 +59,7 @@ namespace DataVisualiser.Charts.Helpers
             // Also handle popup mouse leave - but don't hide immediately
             // Allow mouse to move to popup without hiding
             _tooltipPopup.MouseEnter += OnPopupMouseEnter;
-            
+
             // Start timer to periodically check if we're still hovering over valid data
             _hoverCheckTimer = new System.Windows.Threading.DispatcherTimer
             {
@@ -70,30 +67,30 @@ namespace DataVisualiser.Charts.Helpers
             };
             _hoverCheckTimer.Tick += OnHoverCheckTimerTick;
             _hoverCheckTimer.Start();
-            
+
             _lastValidHoverTime = DateTime.MinValue;
         }
-        
+
         private void OnHoverCheckTimerTick(object? sender, EventArgs e)
         {
             if (_tooltipPopup == null || !_tooltipPopup.IsOpen || _chart == null)
             {
                 return;
             }
-            
+
             // Check if mouse is still over the chart
             var mousePos = Mouse.GetPosition(_chart);
             var isOverChart = mousePos.X >= 0 && mousePos.Y >= 0 &&
                               mousePos.X <= _chart.ActualWidth &&
                               mousePos.Y <= _chart.ActualHeight;
-            
+
             if (!isOverChart)
             {
                 // Mouse has left the chart - hide immediately
                 HideTooltip();
                 return;
             }
-            
+
             // Mouse is still over chart - check if we've received a valid hover recently
             // DataHover doesn't fire continuously, so we only hide if:
             // 1. No valid hover for a while AND
@@ -349,7 +346,7 @@ namespace DataVisualiser.Charts.Helpers
                 _hoverCheckTimer.Tick -= OnHoverCheckTimerTick;
                 _hoverCheckTimer = null;
             }
-            
+
             if (_chart != null)
             {
                 _chart.DataHover -= OnChartDataHover;

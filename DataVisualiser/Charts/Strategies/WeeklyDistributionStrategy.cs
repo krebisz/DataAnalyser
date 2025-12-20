@@ -1,10 +1,7 @@
 using DataVisualiser.Charts.Computation;
-using DataVisualiser.Models;
 using DataVisualiser.Helper;
+using DataVisualiser.Models;
 using DataVisualiser.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DataVisualiser.Charts.Strategies
 {

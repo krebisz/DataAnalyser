@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DataFileReader.Canonical;
 using DataFileReader.Ingestion;
-using DataFileReader.Canonical;
 
 namespace DataFileReader.Normalization.Stages
 {

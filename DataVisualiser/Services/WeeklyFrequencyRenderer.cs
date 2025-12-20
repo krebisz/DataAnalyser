@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Media;
 using DataVisualiser.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
+using System.Windows.Media;
 
 namespace DataVisualiser.Services
 {
@@ -24,10 +21,10 @@ namespace DataVisualiser.Services
         /// Step 1 & 2: Normalize y-values and create bins with frequency counts per day.
         /// Returns a tuple with bins and frequency data.
         /// </summary>
-        public static (List<(double Min, double Max)> Bins, 
+        public static (List<(double Min, double Max)> Bins,
                       double BinSize,
                       Dictionary<int, Dictionary<int, int>> FrequenciesPerDay,
-                      Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerDay) 
+                      Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerDay)
             PrepareBinsAndFrequencies(
             Dictionary<int, List<double>> dayValues, // dayIndex -> values for that day
             double globalMin,
@@ -35,10 +32,10 @@ namespace DataVisualiser.Services
         {
             // Step 1: Calculate bin size based on range
             double binSize = DataVisualiser.Helper.FrequencyBinningHelper.CalculateBinSize(globalMin, globalMax);
-            
+
             // Step 2: Create bins
             var bins = DataVisualiser.Helper.FrequencyBinningHelper.CreateBins(globalMin, globalMax, binSize);
-            
+
             // Step 2: Bin values and count frequencies for each day
             var frequenciesPerDay = new Dictionary<int, Dictionary<int, int>>();
             for (int dayIndex = 0; dayIndex < 7; dayIndex++)
@@ -47,7 +44,7 @@ namespace DataVisualiser.Services
                 var dayFrequencies = DataVisualiser.Helper.FrequencyBinningHelper.BinValuesAndCountFrequencies(values, bins);
                 frequenciesPerDay[dayIndex] = dayFrequencies;
             }
-            
+
             // Step 3: Normalize frequencies across all days
             var normalizedFrequenciesPerDay = DataVisualiser.Helper.FrequencyBinningHelper.NormalizeFrequencies(frequenciesPerDay);
 
@@ -65,7 +62,7 @@ namespace DataVisualiser.Services
 
             // Start color: light blue (when frequency = 0)
             byte r0 = 173, g0 = 216, b0 = 230;
-            
+
             // End color: near-black/dark blue (when frequency = 1.0)
             byte r1 = 8, g1 = 10, b1 = 25;
 
@@ -90,7 +87,7 @@ namespace DataVisualiser.Services
                 return;
 
             var seriesCollection = new SeriesCollection();
-            
+
             // Track cumulative baseline for each day (Monday=0, Tuesday=1, ..., Sunday=6)
             var cumulativeBaseline = new double[7];
             Array.Fill(cumulativeBaseline, 0.0);
@@ -174,7 +171,7 @@ namespace DataVisualiser.Services
                     fillBrush.Freeze();
                     var strokeBrush = new SolidColorBrush(binColors[dayIndex]);
                     strokeBrush.Freeze();
-                    
+
                     var binSeries = new StackedColumnSeries
                     {
                         Title = null,
