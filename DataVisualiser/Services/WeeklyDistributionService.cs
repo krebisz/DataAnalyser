@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Charts.Computation;
+using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Helpers;
 using DataVisualiser.Charts.Rendering;
 using DataVisualiser.Helper;
@@ -45,29 +45,6 @@ namespace DataVisualiser.Services
         }
 
         /// <summary>
-        /// Calculates the optimal number of intervals based on the value range size of the loaded data.
-        /// This method is a placeholder for dynamic interval calculation.
-        /// TODO: Implement the calculation logic based on value range size criteria.
-        /// </summary>
-        /// <param name="globalMin">The minimum value across all data</param>
-        /// <param name="globalMax">The maximum value across all data</param>
-        /// <param name="dataCount">Total number of data points</param>
-        /// <returns>The calculated number of intervals. Currently returns default of 25.</returns>
-        private static int CalculateOptimalIntervalCount(double globalMin, double globalMax, int dataCount)
-        {
-            // TODO: Implement dynamic calculation based on value range size
-            // Example considerations:
-            // - Range size: globalMax - globalMin
-            // - Data density: dataCount / range
-            // - Minimum intervals: e.g., 10
-            // - Maximum intervals: e.g., 50
-            // - Optimal granularity based on range size
-
-            // For now, return the default value
-            return 25;
-        }
-
-        /// <summary>
         /// Updates the weekly distribution chart with the provided data.
         /// </summary>
         /// <param name="targetChart">The chart to update</param>
@@ -77,8 +54,7 @@ namespace DataVisualiser.Services
         /// <param name="to">End date for the data range</param>
         /// <param name="minHeight">Minimum height for the chart</param>
         /// <param name="useFrequencyShading">Whether to use frequency shading or simple range view</param>
-        /// <param name="intervalCount">Number of intervals to divide the value range into. Default is 25. 
-        /// TODO: Calculate dynamically based on value range size of loaded data.</param>
+        /// <param name="intervalCount">Number of intervals to divide the value range into. Default is 10.</param>
         public async Task UpdateWeeklyDistributionChartAsync(
             CartesianChart targetChart,
             IEnumerable<HealthMetricData> data,
@@ -121,13 +97,6 @@ namespace DataVisualiser.Services
                 return;
             }
 
-            // TODO: Calculate intervalCount dynamically based on value range size
-            // Example: Calculate global min/max from data, then call CalculateOptimalIntervalCount
-            // var dataList = data.ToList();
-            // var globalMin = dataList.Min(d => d.Value);
-            // var globalMax = dataList.Max(d => d.Value);
-            // intervalCount = CalculateOptimalIntervalCount(globalMin, globalMax, dataList.Count);
-
             try
             {
                 // Clear previous series
@@ -145,30 +114,30 @@ namespace DataVisualiser.Services
                 targetChart.DataTooltip = null;
 
                 // Set up tooltip based on frequency shading mode
+                Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> tooltipData;
                 if (useFrequencyShading)
                 {
                     // Calculate interval data with percentages for tooltip
-                    var tooltipData = CalculateTooltipData(result, extendedResult, intervalCount);
-                    if (tooltipData != null && tooltipData.Count > 0)
-                    {
-                        // Create tooltip manager (it will attach itself to the chart via events)
-                        // Store it in chart's Tag for potential cleanup later
-                        var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
-                        oldTooltip?.Dispose();
-
-                        var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData);
-                        targetChart.Tag = tooltip;
-                    }
-                    else
-                    {
-                        var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
-                        oldTooltip?.Dispose();
-                        targetChart.Tag = null;
-                    }
+                    tooltipData = CalculateTooltipData(result, extendedResult, intervalCount);
                 }
                 else
                 {
-                    // Disable tooltip for simple range chart
+                    // Calculate simple range tooltip data (min, max, range, count per day)
+                    tooltipData = CalculateSimpleRangeTooltipData(result, extendedResult);
+                }
+
+                if (tooltipData != null && tooltipData.Count > 0)
+                {
+                    // Create tooltip manager (it will attach itself to the chart via events)
+                    // Store it in chart's Tag for potential cleanup later
+                    var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
+                    oldTooltip?.Dispose();
+
+                    var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData);
+                    targetChart.Tag = tooltip;
+                }
+                else
+                {
                     var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
                     oldTooltip?.Dispose();
                     targetChart.Tag = null;
@@ -1069,6 +1038,64 @@ namespace DataVisualiser.Services
         }
 
         #endregion
+
+        /// <summary>
+        /// Calculates simple tooltip data for Simple Range mode (min, max, range, count per day).
+        /// </summary>
+        private Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> CalculateSimpleRangeTooltipData(
+            ChartComputationResult result,
+            WeeklyDistributionResult? extendedResult)
+        {
+            var tooltipData = new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
+
+            if (result == null || extendedResult == null)
+                return tooltipData;
+
+            var mins = result.PrimaryRawValues;
+            var ranges = result.PrimarySmoothed;
+
+            if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
+                return tooltipData;
+
+            // For each day, create a single "interval" representing the entire day's range
+            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+            {
+                var dayIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
+
+                // Check if we have valid min value (not NaN)
+                if (double.IsNaN(mins[dayIndex]))
+                {
+                    continue; // Skip days with invalid min values
+                }
+
+                double dayMin = mins[dayIndex];
+                double dayRange = double.IsNaN(ranges[dayIndex]) ? 0.0 : ranges[dayIndex];
+                double dayMax = dayMin + dayRange;
+
+                // Get count for this day
+                int count = 0;
+                if (dayIndex < extendedResult.Counts.Count)
+                {
+                    count = extendedResult.Counts[dayIndex];
+                }
+
+                // Add interval if there's valid data (count > 0 and valid min)
+                // Note: dayRange can be 0 (all values for the day are the same), which is valid
+                if (count > 0)
+                {
+                    // Single interval representing the entire day's range
+                    // Percentage is 100% since this is the only interval for the day
+                    dayIntervals.Add((dayMin, dayMax, count, 100.0));
+                }
+
+                if (dayIntervals.Count > 0)
+                {
+                    tooltipData[dayIndex] = dayIntervals;
+                }
+            }
+
+            return tooltipData;
+        }
 
         /// <summary>
         /// Calculates tooltip data with interval breakdown, percentages, and counts for each day.

@@ -4,9 +4,13 @@
 
 This document identifies refactoring opportunities that provide maximum value with minimal risk and effort, bringing the project closer to its intended implementation.
 
+**Status**: Some opportunities have been completed. See `PRIORITY_TASKS_COMPLETION_STATUS.md` for details.
+
 ---
 
-## Priority 1: Extract CMS-to-HealthMetricData Conversion Helper
+## ✅ Priority 1: Extract CMS-to-HealthMetricData Conversion Helper
+
+**Status**: ✅ **COMPLETE** (See PRIORITY_TASKS_COMPLETION_STATUS.md)
 
 **Impact**: ⭐⭐⭐ High - Eliminates duplication, improves maintainability  
 **Risk**: ⭐ Very Low - Pure extraction, no behavior change  
@@ -56,7 +60,9 @@ public static class CmsConversionHelper
 
 ---
 
-## Priority 2: Centralize Canonical ID Mapping
+## ✅ Priority 2: Centralize Canonical ID Mapping
+
+**Status**: ✅ **COMPLETE** (See PRIORITY_TASKS_COMPLETION_STATUS.md)
 
 **Impact**: ⭐⭐⭐ High - Enables reuse, reduces duplication risk  
 **Risk**: ⭐ Very Low - Static utility, no side effects  
@@ -113,7 +119,9 @@ public static class CanonicalMetricMapping
 
 ---
 
-## Priority 3: Extract Common Computation Logic in SingleMetricStrategy
+## ✅ Priority 3: Extract Common Computation Logic in SingleMetricStrategy
+
+**Status**: ✅ **COMPLETE** (See PRIORITY_TASKS_COMPLETION_STATUS.md)
 
 **Impact**: ⭐⭐ Medium - Reduces duplication, improves maintainability  
 **Risk**: ⭐ Very Low - Internal refactor, same behavior  
@@ -174,7 +182,9 @@ private ChartComputationResult? ComputeFromHealthMetricData(
 
 ---
 
-## Priority 4: Add CMS Support to MultiMetricStrategy
+## ✅ Priority 4: Add CMS Support to MultiMetricStrategy
+
+**Status**: ✅ **COMPLETE** (See PRIORITY_TASKS_COMPLETION_STATUS.md)
 
 **Impact**: ⭐⭐⭐ High - Advances Phase 4, demonstrates pattern  
 **Risk**: ⭐⭐ Low - Follows proven SingleMetricStrategy pattern  
@@ -219,7 +229,9 @@ public MultiMetricStrategy(
 
 ---
 
-## Priority 5: Add Semantic Compatibility Check Helper
+## ✅ Priority 5: Add Semantic Compatibility Check Helper
+
+**Status**: ✅ **COMPLETE** (See PRIORITY_TASKS_COMPLETION_STATUS.md)
 
 **Impact**: ⭐⭐ Medium - Prevents invalid metric combinations  
 **Risk**: ⭐ Very Low - Additive only, no breaking changes  
@@ -316,6 +328,22 @@ public static class MetricCompatibilityHelper
 - Priority 3 is independent
 - Priority 4 depends on Priority 1
 - Priority 5 is independent
+
+---
+
+## ✅ Completed: Functional Decomposition - Shared Filtering Logic
+
+**Status**: ✅ **COMPLETE** (See PRIORITY_TASKS_COMPLETION_STATUS.md and REFACTORING_IMPACT_ASSESSMENT.md)
+
+**Summary**: Extracted `FilterAndOrderByRange()` method into `StrategyComputationHelper` and updated 5 strategies to use it. Eliminated ~50 lines of duplication and improved maintainability.
+
+**Strategies Updated**:
+
+- CombinedMetricStrategy
+- DifferenceStrategy
+- RatioStrategy
+- WeekdayTrendStrategy
+- WeeklyDistributionStrategy
 
 ### Testing Strategy
 

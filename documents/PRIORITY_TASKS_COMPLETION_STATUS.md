@@ -4,9 +4,11 @@
 
 This document tracks the completion of prioritized refactoring tasks and their impact on project phases.
 
+**Last Updated**: Current session - Functional decomposition refactoring and tooltip fixes
+
 ---
 
-## Completed Tasks (This Session)
+## Completed Tasks (Recent Sessions)
 
 ### ✅ Priority 1: Extract CMS-to-HealthMetricData Conversion Helper
 
@@ -100,6 +102,55 @@ This document tracks the completion of prioritized refactoring tasks and their i
 
 ---
 
+### ✅ Priority 6: Functional Decomposition - Shared Filtering Logic
+
+**Status**: ✅ **COMPLETE**
+
+**File Modified**: `DataVisualiser/Helper/StrategyComputationHelper.cs`
+
+**Changes**:
+
+- Added `FilterAndOrderByRange()` method to centralize date-range filtering and ordering
+- Updated 5 strategies to use shared helper:
+  - `CombinedMetricStrategy`
+  - `DifferenceStrategy`
+  - `RatioStrategy`
+  - `WeekdayTrendStrategy`
+  - `WeeklyDistributionStrategy`
+
+**Impact**:
+
+- **Eliminated ~50 lines of duplication** across strategies
+- **Single source of truth** for filtering logic (Value.HasValue + date range + ordering)
+- **Improved maintainability** - future changes require updates in one place
+- **Consistent semantics** across all strategies prevents bugs from divergent implementations
+
+**Phase Impact**: Phase 4 - Enables faster strategy migrations, Phase 5 - Foundation for transformation pipelines
+
+---
+
+### ✅ Priority 7: Fix Weekly Distribution Tooltip for Simple Range Mode
+
+**Status**: ✅ **COMPLETE**
+
+**File Modified**: `DataVisualiser/Services/WeeklyDistributionService.cs`
+
+**Changes**:
+
+- Fixed `CalculateSimpleRangeTooltipData()` method to properly handle edge cases
+- Removed overly strict conditions that prevented tooltip display
+- Now correctly handles days with zero range (all values identical)
+
+**Impact**:
+
+- Tooltip now displays correctly for Simple Range mode
+- Handles edge cases (NaN values, zero ranges) properly
+- Consistent tooltip behavior across both Frequency Shading and Simple Range modes
+
+**Phase Impact**: Phase 4 - Improved user experience for weekly distribution visualization
+
+---
+
 ## Phase Completion Status Comparison
 
 ### Phase 3: Execution - Canonical Identity & CMS Integration
@@ -150,11 +201,16 @@ This document tracks the completion of prioritized refactoring tasks and their i
 2. ✅ **CanonicalMetricMapping** - Centralized canonical ID mapping
 3. ✅ **MetricCompatibilityHelper** - Semantic compatibility validation
 
+### Enhanced Helper Classes
+
+1. ✅ **StrategyComputationHelper** - Added `FilterAndOrderByRange()` method for shared filtering logic
+
 ### Integration Points
 
 1. ✅ **MultiMetricStrategy** - Now validates compatibility before processing
 2. ✅ **CmsDataService** - Uses centralized mapping
 3. ✅ **SingleMetricStrategy** - Uses centralized conversion (via refactor)
+4. ✅ **5 Chart Strategies** - Now use shared `FilterAndOrderByRange()` helper (CombinedMetric, Difference, Ratio, WeekdayTrend, WeeklyDistribution)
 
 ---
 
@@ -185,10 +241,12 @@ This document tracks the completion of prioritized refactoring tasks and their i
 
 ### Code Quality Improvements
 
-- **Duplication Eliminated**: ~40 lines across 3 locations
-- **Centralized Logic**: 3 new helper classes
-- **Strategies Migrated**: +1 (33% of total)
+- **Duplication Eliminated**: ~90 lines across 8 locations (CMS conversion, ID mapping, filtering logic)
+- **Centralized Logic**: 3 new helper classes + 1 enhanced helper class
+- **Strategies Migrated**: +1 (33% of total for CMS support)
+- **Strategies Refactored**: +5 (using shared filtering helper)
 - **Validation Capability**: New (MetricCompatibilityHelper)
+- **Functional Decomposition**: Multiple large methods broken into focused helpers
 
 ### Phase Progress
 
@@ -209,11 +267,18 @@ This document tracks the completion of prioritized refactoring tasks and their i
 5. `RUNTIME_ISSUE_ANALYSIS.md` - Runtime safety analysis
 6. `PRIORITY_TASKS_COMPLETION_STATUS.md` - This document
 
-### Modified Files (This Session)
+### Modified Files (Recent Sessions)
 
 1. `DataVisualiser/MultiMetricStrategy.cs` - Added CMS constructor with validation
 2. `DataVisualiser/SingleMetricStrategy.cs` - Extracted common logic (Priority 3)
 3. `DataVisualiser/Data/Repositories/CmsDataService.cs` - Uses centralized mapping
+4. `DataVisualiser/Helper/StrategyComputationHelper.cs` - Added `FilterAndOrderByRange()` method
+5. `DataVisualiser/Charts/Strategies/CombinedMetricStrategy.cs` - Uses shared filtering helper
+6. `DataVisualiser/Charts/Strategies/DifferenceStrategy.cs` - Uses shared filtering helper
+7. `DataVisualiser/Charts/Strategies/RatioStrategy.cs` - Uses shared filtering helper
+8. `DataVisualiser/Charts/Strategies/WeekdayTrendStrategy.cs` - Uses shared filtering helper
+9. `DataVisualiser/Charts/Strategies/WeeklyDistributionStrategy.cs` - Uses shared filtering helper
+10. `DataVisualiser/Services/WeeklyDistributionService.cs` - Fixed tooltip for Simple Range mode
 
 ---
 
@@ -221,16 +286,19 @@ This document tracks the completion of prioritized refactoring tasks and their i
 
 **Significant Progress Made**:
 
-1. ✅ **All 5 prioritized refactoring tasks completed**
+1. ✅ **All 7 prioritized refactoring tasks completed** (5 original + 2 new)
 2. ✅ **Phase 4 progress: 40% → 55%** (+15%)
-3. ✅ **Strategy migration: 1 → 2 strategies** (+1, 33% complete)
-4. ✅ **Infrastructure: 3 new helper classes** (conversion, mapping, validation)
-5. ✅ **Code quality: Eliminated duplication, improved maintainability**
+3. ✅ **Strategy migration: 1 → 2 strategies** (+1, 33% complete for CMS support)
+4. ✅ **Strategy refactoring: 5 strategies** now use shared filtering helper
+5. ✅ **Infrastructure: 3 new helper classes + 1 enhanced** (conversion, mapping, validation, filtering)
+6. ✅ **Code quality: Eliminated ~90 lines of duplication, improved maintainability**
+7. ✅ **Bug fixes: Weekly Distribution tooltip fixed for Simple Range mode**
 
 **Next Steps**:
 
-- Continue migrating remaining strategies (CombinedMetric, Difference, Ratio, Normalized)
+- Continue migrating remaining strategies to CMS (CombinedMetric, Difference, Ratio, Normalized)
 - Add UI-level validation using MetricCompatibilityHelper
 - Enable CMS workflows via configuration flags
+- Continue functional decomposition of remaining complex methods
 
-The project is now **~60% complete** overall, with Phase 4 infrastructure solidly in place and demonstrating clear progress toward full CMS adoption.
+The project is now **~60% complete** overall, with Phase 4 infrastructure solidly in place, improved code quality through functional decomposition, and clear progress toward full CMS adoption.
