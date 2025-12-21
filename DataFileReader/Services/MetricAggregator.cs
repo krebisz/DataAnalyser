@@ -1,4 +1,4 @@
-﻿using DataFileReader.Class;
+using DataFileReader.Class;
 using DataFileReader.Helper;
 
 namespace DataFileReader.Services;
@@ -7,26 +7,20 @@ public class MetricAggregator
 {
     public void Aggregate(string metricType, AggregationPeriod period)
     {
-        var metricSubtypes = new List<string?>
+        // Dynamically get all subtypes for this metric type from the database
+        var metricSubtypes = SQLHelper.GetSubtypesForMetricType(metricType);
+
+        if (metricSubtypes.Count == 0)
         {
-            string.Empty,
-            "basal_metabolic_rate",
-            "body_fat",
-            "body_fat_mass",
-            "fat_free",
-            "fat_free_mass",
-            "height",
-            "skeletal_muscle",
-            "skeletal_muscle_mass",
-            "total_body_water",
-            "weight"
-        };
+            Console.WriteLine($"No subtypes found for metric type {metricType}, skipping...");
+            return;
+        }
 
         var action = GetAggregationAction(period);
 
         foreach (var subtype in metricSubtypes)
         {
-            var normalized = string.IsNullOrEmpty(subtype) ? null : subtype;
+            var normalized = subtype; // Already normalized by SQLHelper (null for empty)
             var label = normalized ?? "(no subtype)";
 
             try

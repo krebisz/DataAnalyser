@@ -1,4 +1,4 @@
-﻿using DataFileReader.Helper;
+using DataFileReader.Helper;
 using DataFileReader.Parsers;
 using Microsoft.Extensions.Logging;
 
@@ -23,7 +23,8 @@ public class FileProcessingService
         {
             try
             {
-                var parser = _parsers.FirstOrDefault(p => p.CanParse(new FileInfo(file)));
+                var fileInfo = new FileInfo(file);
+                var parser = _parsers.FirstOrDefault(p => p.CanParse(fileInfo));
 
                 if (parser == null)
                 {
@@ -34,13 +35,23 @@ public class FileProcessingService
                 var content = File.ReadAllText(file);
                 var metrics = parser.Parse(file, content);
 
-                ShadowValidate_SamsungHealthCsv.Run(file, content);
+                // Only run shadow validation for CSV files
+                if (fileInfo.Extension.Equals(".csv", StringComparison.OrdinalIgnoreCase))
+                {
+                    ShadowValidate_SamsungHealthCsv.Run(file, content);
+                }
 
                 if (metrics.Count > 0)
                 {
                     SQLHelper.InsertHealthMetrics(metrics);
                     metricsInserted += metrics.Count;
                     Console.WriteLine($"Inserted {metrics.Count} metrics from {FileHelper.GetFileName(file)}");
+                }
+                else
+                {
+                    // Mark empty files as processed to avoid reprocessing them
+                    SQLHelper.MarkFileAsProcessed(file);
+                    Console.WriteLine($"No metrics found in {FileHelper.GetFileName(file)} - marked as processed");
                 }
 
                 processed++;

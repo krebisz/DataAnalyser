@@ -1,4 +1,4 @@
-﻿using DataFileReader.Class;
+using DataFileReader.Class;
 using Newtonsoft.Json;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -119,7 +119,8 @@ public static class SQLHelper
                         [MetricSubtype] NVARCHAR(200) NULL,
                         [NormalizedTimestamp] DATETIME2 NULL,
                         [Value] DECIMAL(18,4) NULL,
-                        [Unit] NVARCHAR(50) NULL
+                        [Unit] NVARCHAR(50) NULL,
+                        [CreatedDate] DATETIME2 DEFAULT GETDATE()
                     );
 
                     -- Useful index for MetricType + timestamp queries
@@ -132,6 +133,37 @@ public static class SQLHelper
                     CREATE NONCLUSTERED INDEX IX_{table}_Timestamp
                         ON [dbo].[{table}](NormalizedTimestamp)
                         WHERE NormalizedTimestamp IS NOT NULL;
+
+                    -- Add computed column for normalized MetricSubtype (NULL -> empty string)
+                    -- This allows us to create a unique constraint that treats NULL and empty string as the same
+                    ALTER TABLE [dbo].[{table}] ADD MetricSubtypeNormalized AS ISNULL(MetricSubtype, '') PERSISTED;
+
+                    -- Unique constraint to prevent duplicate aggregations
+                    -- This ensures one record per (MetricType, MetricSubtype, NormalizedTimestamp) combination
+                    CREATE UNIQUE NONCLUSTERED INDEX UQ_{table}_MetricType_Subtype_Timestamp
+                        ON [dbo].[{table}](MetricType, MetricSubtypeNormalized, NormalizedTimestamp)
+                        WHERE NormalizedTimestamp IS NOT NULL;
+                END
+                ELSE
+                BEGIN
+                    -- For existing tables, add CreatedDate column if it doesn't exist
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE name = 'CreatedDate' AND object_id = OBJECT_ID(N'[dbo].[{table}]'))
+                    BEGIN
+                        ALTER TABLE [dbo].[{table}] ADD [CreatedDate] DATETIME2 DEFAULT GETDATE();
+                    END
+
+                    -- For existing tables, add computed column and unique constraint if they don't exist
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE name = 'MetricSubtypeNormalized' AND object_id = OBJECT_ID(N'[dbo].[{table}]'))
+                    BEGIN
+                        ALTER TABLE [dbo].[{table}] ADD MetricSubtypeNormalized AS ISNULL(MetricSubtype, '') PERSISTED;
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'UQ_{table}_MetricType_Subtype_Timestamp' AND object_id = OBJECT_ID(N'[dbo].[{table}]'))
+                    BEGIN
+                        CREATE UNIQUE NONCLUSTERED INDEX UQ_{table}_MetricType_Subtype_Timestamp
+                            ON [dbo].[{table}](MetricType, MetricSubtypeNormalized, NormalizedTimestamp)
+                            WHERE NormalizedTimestamp IS NOT NULL;
+                    END
                 END
             ");
         }
@@ -268,6 +300,7 @@ public static class SQLHelper
                             [MostRecentDateTime] DATETIME2 NULL,
                             [DaysBetween] AS CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,2)) PERSISTED,
                             [DaysPerRecord] AS CAST(CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,5)) / NULLIF([RecordCount], 0) AS DECIMAL(18,5)) PERSISTED,
+                            [CreatedDate] DATETIME2 DEFAULT GETDATE(),
                             [LastUpdated] DATETIME2 NOT NULL DEFAULT GETDATE(),
                             CONSTRAINT PK_HealthMetricsCounts PRIMARY KEY CLUSTERED (MetricType, MetricSubtype)
                         )
@@ -279,6 +312,12 @@ public static class SQLHelper
                     ELSE
                     BEGIN
                         -- Add new columns if they don't exist (migration for existing tables)
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'CreatedDate')
+                        BEGIN
+                            ALTER TABLE [dbo].[HealthMetricsCounts]
+                            ADD [CreatedDate] DATETIME2 DEFAULT GETDATE();
+                        END
+                        
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'EarliestDateTime')
                         BEGIN
                             ALTER TABLE [dbo].[HealthMetricsCounts]
@@ -345,6 +384,7 @@ public static class SQLHelper
                             [MostRecentDateTime] DATETIME2 NULL,
                             [DaysBetween] AS CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,2)) PERSISTED,
                             [DaysPerRecord] AS CAST(CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,5)) / NULLIF([RecordCount], 0) AS DECIMAL(18,5)) PERSISTED,
+                            [CreatedDate] DATETIME2 DEFAULT GETDATE(),
                             [LastUpdated] DATETIME2 NOT NULL DEFAULT GETDATE(),
                             CONSTRAINT PK_HealthMetricsCounts PRIMARY KEY CLUSTERED (MetricType, MetricSubtype)
                         )
@@ -387,13 +427,14 @@ public static class SQLHelper
                     -- Insert counts grouped by MetricType and MetricSubtype
                     -- Only count records with valid timestamps (NormalizedTimestamp is not null, OR RawTimestamp is not null and not empty)
                     -- Also calculate min and max timestamps for each combination
-                    INSERT INTO [dbo].[HealthMetricsCounts] (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, LastUpdated)
+                    INSERT INTO [dbo].[HealthMetricsCounts] (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
                     SELECT 
                         ISNULL(MetricType, '') AS MetricType,
                         ISNULL(MetricSubtype, '') AS MetricSubtype,
                         COUNT(*) AS RecordCount,
                         MIN(NormalizedTimestamp) AS EarliestDateTime,
                         MAX(NormalizedTimestamp) AS MostRecentDateTime,
+                        GETDATE() AS CreatedDate,
                         GETDATE() AS LastUpdated
                     FROM [dbo].[HealthMetrics]
                     WHERE MetricType IS NOT NULL
@@ -783,8 +824,8 @@ public static class SQLHelper
                         END,
                         LastUpdated = GETDATE()
                 WHEN NOT MATCHED THEN
-                    INSERT (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, LastUpdated)
-                    VALUES (source.MetricType, source.MetricSubtype, source.IncrementCount, source.MinTimestamp, source.MaxTimestamp, GETDATE());";
+                    INSERT (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
+                    VALUES (source.MetricType, source.MetricSubtype, source.IncrementCount, source.MinTimestamp, source.MaxTimestamp, GETDATE(), GETDATE());";
 
             // Build the VALUES clause for all combinations
             var valuesList = new List<string>();
@@ -835,17 +876,18 @@ public static class SQLHelper
             var createTableQuery = @"
                 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND type in (N'U'))
                 BEGIN
-                    CREATE TABLE [dbo].[HealthMetricsCounts](
-                        [MetricType] NVARCHAR(100) NOT NULL,
-                        [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
-                        [RecordCount] BIGINT NOT NULL DEFAULT 0,
-                        [EarliestDateTime] DATETIME2 NULL,
-                        [MostRecentDateTime] DATETIME2 NULL,
-                        [DaysBetween] AS CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,2)) PERSISTED,
-                        [DaysPerRecord] AS CAST(CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,5)) / NULLIF([RecordCount], 0) AS DECIMAL(18,5)) PERSISTED,
-                        [LastUpdated] DATETIME2 NOT NULL DEFAULT GETDATE(),
-                        CONSTRAINT PK_HealthMetricsCounts PRIMARY KEY CLUSTERED (MetricType, MetricSubtype)
-                    )
+                        CREATE TABLE [dbo].[HealthMetricsCounts](
+                            [MetricType] NVARCHAR(100) NOT NULL,
+                            [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
+                            [RecordCount] BIGINT NOT NULL DEFAULT 0,
+                            [EarliestDateTime] DATETIME2 NULL,
+                            [MostRecentDateTime] DATETIME2 NULL,
+                            [DaysBetween] AS CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,2)) PERSISTED,
+                            [DaysPerRecord] AS CAST(CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,5)) / NULLIF([RecordCount], 0) AS DECIMAL(18,5)) PERSISTED,
+                            [CreatedDate] DATETIME2 DEFAULT GETDATE(),
+                            [LastUpdated] DATETIME2 NOT NULL DEFAULT GETDATE(),
+                            CONSTRAINT PK_HealthMetricsCounts PRIMARY KEY CLUSTERED (MetricType, MetricSubtype)
+                        )
                     
                     -- Index for fast lookups
                     CREATE NONCLUSTERED INDEX IX_HealthMetricsCounts_RecordCount 
@@ -898,7 +940,7 @@ public static class SQLHelper
 
         DeleteSQLTable(tableName);
 
-        var createTableQuery = $"CREATE TABLE [{tableName}]({string.Join(", ", metaData.Fields.Keys.Select(field => $"[{field}] VARCHAR(MAX) NULL"))})";
+        var createTableQuery = $"CREATE TABLE [{tableName}]({string.Join(", ", metaData.Fields.Keys.Select(field => $"[{field}] VARCHAR(MAX) NULL"))}, [CreatedDate] DATETIME2 DEFAULT GETDATE())";
 
         using (var sqlConnection = new SqlConnection(connectionString))
         {
@@ -1118,36 +1160,8 @@ public static class SQLHelper
             sqlConnection.Open();
 
             // -------------------------------------------------------
-            // 1. Build INSERT Query
-            // -------------------------------------------------------
-
-            var sql = new StringBuilder($@"
-            INSERT INTO {targetTable}
-            (MetricType, MetricSubtype, NormalizedTimestamp, Value, Unit)
-            SELECT 
-                MetricType,
-                ISNULL(MetricSubtype, '') AS MetricSubtype,
-                {timeGroupingExpression} AS {timestampColumnAlias},
-                AVG(Value) AS AvgValue,
-                MAX(Unit) AS Unit
-            FROM [dbo].[HealthMetrics]
-            WHERE NormalizedTimestamp IS NOT NULL
-              AND Value IS NOT NULL");
-
-            var parameters = new List<SqlParameter>();
-
-            AppendOptionalFilter(sql, parameters, "MetricType", metricType, "MetricType");
-            AppendOptionalFilter(sql, parameters, "ISNULL(MetricSubtype, '')", metricSubtype, "MetricSubtype");
-            AppendOptionalDateRange(sql, parameters, fromDate, toDate);
-
-            sql.Append($@"
-            GROUP BY 
-                MetricType,
-                ISNULL(MetricSubtype, ''),
-                {timeGroupingExpression}");
-
-            // -------------------------------------------------------
-            // 2. Delete existing records if required
+            // 1. Delete existing records if overwriteExisting is true
+            //    (for explicit recalculation of specific ranges)
             // -------------------------------------------------------
             if (overwriteExisting)
             {
@@ -1163,18 +1177,64 @@ public static class SQLHelper
 
                 using var deleteCmd = new SqlCommand(deleteSql.ToString(), sqlConnection);
                 deleteCmd.Parameters.AddRange(deleteParams.ToArray());
-                deleteCmd.ExecuteNonQuery();
+                var deletedRows = deleteCmd.ExecuteNonQuery();
+                if (deletedRows > 0)
+                {
+                    Console.WriteLine($"Deleted {deletedRows} existing records from {targetTable} (overwrite mode).");
+                }
             }
 
             // -------------------------------------------------------
-            // 3. Execute INSERT
+            // 2. Build MERGE Query (handles duplicates gracefully)
+            //    MERGE will INSERT new records or UPDATE existing ones
+            //    based on the unique constraint (MetricType, MetricSubtype, NormalizedTimestamp)
             // -------------------------------------------------------
-            using var insertCmd = new SqlCommand(sql.ToString(), sqlConnection);
-            insertCmd.Parameters.AddRange(parameters.ToArray());
-            insertCmd.CommandTimeout = 300;
 
-            var rows = insertCmd.ExecuteNonQuery();
-            Console.WriteLine($"Inserted {rows} aggregated records into {targetTable}.");
+            var sql = new StringBuilder($@"
+            MERGE {targetTable} AS target
+            USING (
+                SELECT 
+                    MetricType,
+                    ISNULL(MetricSubtype, '') AS MetricSubtype,
+                    {timeGroupingExpression} AS {timestampColumnAlias},
+                    AVG(Value) AS AvgValue,
+                    MAX(Unit) AS Unit
+                FROM [dbo].[HealthMetrics]
+                WHERE NormalizedTimestamp IS NOT NULL
+                  AND Value IS NOT NULL");
+
+            var parameters = new List<SqlParameter>();
+
+            AppendOptionalFilter(sql, parameters, "MetricType", metricType, "MetricType");
+            AppendOptionalFilter(sql, parameters, "ISNULL(MetricSubtype, '')", metricSubtype, "MetricSubtype");
+            AppendOptionalDateRange(sql, parameters, fromDate, toDate);
+
+            sql.Append($@"
+                GROUP BY 
+                    MetricType,
+                    ISNULL(MetricSubtype, ''),
+                    {timeGroupingExpression}
+            ) AS source
+            ON target.MetricType = source.MetricType
+               AND ISNULL(target.MetricSubtype, '') = source.MetricSubtype
+               AND target.NormalizedTimestamp = source.{timestampColumnAlias}
+            WHEN MATCHED THEN
+                UPDATE SET 
+                    Value = source.AvgValue,
+                    Unit = source.Unit
+            WHEN NOT MATCHED THEN
+                INSERT (MetricType, MetricSubtype, NormalizedTimestamp, Value, Unit, CreatedDate)
+                VALUES (source.MetricType, NULLIF(source.MetricSubtype, ''), source.{timestampColumnAlias}, source.AvgValue, source.Unit, GETDATE());");
+
+            // -------------------------------------------------------
+            // 3. Execute MERGE
+            // -------------------------------------------------------
+            using var mergeCmd = new SqlCommand(sql.ToString(), sqlConnection);
+            mergeCmd.Parameters.AddRange(parameters.ToArray());
+            mergeCmd.CommandTimeout = 300;
+
+            var rows = mergeCmd.ExecuteNonQuery();
+            Console.WriteLine($"Merged {rows} aggregated records into {targetTable} (inserted new or updated existing).");
         }
         catch (Exception ex)
         {
@@ -1286,5 +1346,99 @@ public static class SQLHelper
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Gets all distinct metric types from the HealthMetrics table.
+    /// </summary>
+    public static List<string> GetAllMetricTypes()
+    {
+        var connectionString = ConfigurationManager.AppSettings["HealthDB"];
+        var metricTypes = new List<string>();
+
+        try
+        {
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                sqlConnection.Open();
+
+                var sql = @"
+                    SELECT DISTINCT MetricType 
+                    FROM [dbo].[HealthMetrics]
+                    WHERE MetricType IS NOT NULL
+                    ORDER BY MetricType";
+
+                using (var sqlCommand = new SqlCommand(sql, sqlConnection))
+                {
+                    using (var reader = sqlCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var metricType = reader["MetricType"]?.ToString();
+                            if (!string.IsNullOrEmpty(metricType))
+                            {
+                                metricTypes.Add(metricType);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting all metric types: {ex.Message}");
+            throw;
+        }
+
+        return metricTypes;
+    }
+
+    /// <summary>
+    /// Gets all distinct subtypes for a given metric type from the HealthMetrics table.
+    /// Returns a list that includes null/empty for metrics without subtypes.
+    /// </summary>
+    public static List<string?> GetSubtypesForMetricType(string metricType)
+    {
+        var connectionString = ConfigurationManager.AppSettings["HealthDB"];
+        var subtypes = new List<string?>();
+
+        try
+        {
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                sqlConnection.Open();
+
+                var sql = @"
+                    SELECT DISTINCT MetricSubtype,
+                        CASE WHEN MetricSubtype IS NULL OR MetricSubtype = '' THEN 0 ELSE 1 END AS SortOrder
+                    FROM [dbo].[HealthMetrics]
+                    WHERE MetricType = @MetricType
+                    ORDER BY 
+                        SortOrder,
+                        MetricSubtype";
+
+                using (var sqlCommand = new SqlCommand(sql, sqlConnection))
+                {
+                    sqlCommand.Parameters.Add(new SqlParameter("@MetricType", metricType));
+
+                    using (var reader = sqlCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var subtype = reader["MetricSubtype"]?.ToString();
+                            // Normalize empty strings to null for consistency
+                            subtypes.Add(string.IsNullOrEmpty(subtype) ? null : subtype);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting subtypes for metric type {metricType}: {ex.Message}");
+            throw;
+        }
+
+        return subtypes;
     }
 }

@@ -1,4 +1,4 @@
-﻿using DataFileReader.Class;
+using DataFileReader.Class;
 using DataFileReader.Helper;
 using DataFileReader.Services;
 using Microsoft.Extensions.Logging;
@@ -27,16 +27,52 @@ public class HealthDataApp
 
         EnsureDatabaseTables();
 
-        if (AskUserYesNo("Aggregate Weight metrics by week and month?"))
+        if (AskUserYesNo("Aggregate all metrics by week and month?"))
         {
-            _aggregator.Aggregate("Weight", AggregationPeriod.Week);
-            _aggregator.Aggregate("Weight", AggregationPeriod.Month);
+            var allMetricTypes = SQLHelper.GetAllMetricTypes();
+
+            if (allMetricTypes.Count == 0)
+            {
+                Console.WriteLine("No metric types found in database. Skipping aggregation.");
+            }
+            else
+            {
+                Console.WriteLine($"Found {allMetricTypes.Count} metric type(s) to aggregate:");
+                foreach (var metricType in allMetricTypes)
+                {
+                    Console.WriteLine($"  - {metricType}");
+                }
+                Console.WriteLine();
+
+                foreach (var metricType in allMetricTypes)
+                {
+                    Console.WriteLine($"\n=== Aggregating {metricType} ===");
+                    _aggregator.Aggregate(metricType, AggregationPeriod.Week);
+                    _aggregator.Aggregate(metricType, AggregationPeriod.Month);
+                }
+
+                Console.WriteLine("\n=== Aggregation Complete ===");
+            }
         }
 
         var rootDirectory = ConfigurationManager.AppSettings["RootDirectory"];
-        var files = FileHelper.GetFileList(rootDirectory);
+        var allFiles = FileHelper.GetFileList(rootDirectory);
 
-        var result = _fileProcessor.ProcessFiles(files);
+        // Get list of already processed files to avoid duplicates
+        var processedFiles = SQLHelper.GetProcessedFiles();
+        var newFiles = allFiles.Where(file => !processedFiles.Contains(file)).ToList();
+
+        var totalFiles = allFiles.Count;
+        var skippedFiles = totalFiles - newFiles.Count;
+
+        if (skippedFiles > 0)
+        {
+            Console.WriteLine($"Skipping {skippedFiles} already processed file(s)");
+        }
+
+        Console.WriteLine($"Processing {newFiles.Count} new file(s)...");
+
+        var result = _fileProcessor.ProcessFiles(newFiles);
 
         Console.WriteLine("\n================================");
         Console.WriteLine("Processing complete!");

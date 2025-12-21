@@ -101,10 +101,14 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   |   ChartTooltipManager.cs
 |   |   |   |   WeeklyDistributionTooltip.cs
 |   |   |   IChartComputationStrategy.cs
+|   |   +---Parity
+|   |   |   |   IStrategyParityHarness.cs
 |   |   +---Rendering
 |   |   |   |   ChartRenderEngine.cs
 |   |   |   |   ChartRenderModel.cs
 |   |   |   |   ChartSeriesMode.cs
+|   |   |   |   FrequencyShadingRenderer.cs
+|   |   |   |   IFrequencyShadingRenderer.cs
 |   |   +---Strategies
 |   |   |   |   CombinedMetricStrategy.cs
 |   |   |   |   DifferenceStrategy.cs
@@ -128,7 +132,6 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   |   FrequencyBinningHelper.cs
 |   |   |   MathHelper.cs
 |   |   |   StrategyComputationHelper.cs
-|   |   MainWindow.Weekly.cs
 |   |   MainWindow.xaml
 |   |   MainWindow.xaml.cs
 |   +---Models
@@ -180,8 +183,8 @@ Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
 |   |   Project Overview.md
 |   |   Project Philosphy.md
 |   |   Project Roadmap.md
+|   |   REFACTORING_IMPACT_ASSESSMENT.md
 |   |   REFACTORING_OPPORTUNITIES.md
-|   |   RUNTIME_ISSUE_ANALYSIS.md
 |   |   SYSTEM_MAP.md
 |   |   Workspace Workflow.md
 |   Generate-CodebaseIndex.ps1

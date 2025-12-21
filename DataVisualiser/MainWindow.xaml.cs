@@ -741,7 +741,8 @@ namespace DataVisualiser
             }
             else if (selectedMetricSeries.Count == 1)
             {
-                strategy = new SingleMetricStrategy(
+                // Phase 4: legacy path explicitly preserved
+                strategy = new SingleMetricLegacyStrategy(
                     selectedMetricSeries[0],
                     selectedMetricLabels[0],
                     from,
@@ -891,7 +892,8 @@ namespace DataVisualiser
             }
             else
             {
-                strategy = new SingleMetricStrategy(
+                // Phase 4: legacy single-metric path (CMS selection handled upstream)
+                strategy = new SingleMetricLegacyStrategy(
                     series[0],
                     labels[0],
                     from,

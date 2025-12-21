@@ -203,9 +203,6 @@ _No public symbols detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\NETCoreApp,Version=v90AssemblyAttributescs
 _No public symbols detected._
 
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderAssemblyInfocs
-_No public symbols detected._
-
 ### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderGlobalUsingsgcs
 _No public symbols detected._
 
@@ -267,6 +264,14 @@ _No public symbols detected._
 **Classes:**
 - public class WeeklyDistributionTooltip : IDisposable
 
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Parity\IStrategyParityHarnesscs
+**Namespace:** DataVisualiser.Charts.Parity
+**Interfaces:**
+- IStrategyParityHarness
+**Enums:**
+- ParityMode
+- ParityLayer
+
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\ChartRenderEnginecs
 **Namespace:** DataVisualiser.Charts.Rendering
 **Tags:** Engine
@@ -280,6 +285,15 @@ _No public symbols detected._
 **Namespace:** DataVisualiser.Charts.Rendering
 **Enums:**
 - ChartSeriesMode
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\FrequencyShadingRenderercs
+**Namespace:** DataVisualiser.Charts.Rendering
+_No public symbols detected._
+
+### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\IFrequencyShadingRenderercs
+**Namespace:** DataVisualiser.Charts.Rendering
+**Interfaces:**
+- IFrequencyShadingRenderer
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\CombinedMetricStrategycs
 **Namespace:** DataVisualiser.Charts.Strategies
@@ -434,24 +448,12 @@ _No public symbols detected._
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\NETCoreApp,Version=v90AssemblyAttributescs
 _No public symbols detected._
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgcs
-**Namespace:** DataVisualiser {
-**Entry Points:**
-- Main()
-
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgics
 **Namespace:** DataVisualiser {
 **Entry Points:**
 - Main()
 
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserAssemblyInfocs
-_No public symbols detected._
-
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserGlobalUsingsgcs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgcs
-**Namespace:** DataVisualiser {
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgics
@@ -554,10 +556,6 @@ _No public symbols detected._
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\AssemblyInfocs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\MainWindowWeeklycs
-**Namespace:** DataVisualiser
 _No public symbols detected._
 
 ### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\MainWindowxamlcs
