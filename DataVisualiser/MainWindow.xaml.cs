@@ -115,6 +115,9 @@ namespace DataVisualiser
 
             // Mark initialization as complete - event handlers can now safely use _viewModel
             _isInitializing = false;
+
+            // Initialize button states based on current subtype selection
+            UpdateSecondaryDataRequiredButtonStates(_viewModel.MetricState.SelectedSubtypes.Count);
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -266,6 +269,9 @@ namespace DataVisualiser
             {
                 ResolutionCombo.SelectedItem = selectedResolution;
             }
+
+            // Update button states since subtypes are cleared when resolution changes
+            UpdateSecondaryDataRequiredButtonStates(0);
         }
 
         /// <summary>
@@ -283,6 +289,9 @@ namespace DataVisualiser
             _viewModel.LoadSubtypesCommand.Execute(null);
 
             UpdateChartTitlesFromCombos();
+
+            // Update button states since subtypes will be cleared when metric type changes
+            UpdateSecondaryDataRequiredButtonStates(0);
         }
 
         /// <summary>
@@ -600,6 +609,57 @@ namespace DataVisualiser
             }
 
             _viewModel.SetSelectedSubtypes(selectedSubtypes);
+
+            // Update button states based on selected subtype count
+            UpdateSecondaryDataRequiredButtonStates(selectedSubtypes.Count);
+        }
+
+        /// <summary>
+        /// Updates the enabled state of buttons for charts that require secondary data.
+        /// These buttons are disabled when fewer than 2 subtypes are selected.
+        /// If charts are currently visible when secondary data becomes unavailable, they are cleared and hidden
+        /// by leveraging the existing rendering pipeline through state updates.
+        /// 
+        /// Pipeline flow:
+        /// 1. ViewModel.SetXxxVisible(false) -> Sets ChartState.IsXxxVisible = false
+        /// 2. RequestChartUpdate() -> Fires ChartUpdateRequested event with updated visibility states
+        /// 3. OnChartUpdateRequested() -> Calls UpdateChartVisibility() for each chart
+        /// 4. UpdateChartVisibility() -> Updates panel visibility and button text ("Show"/"Hide")
+        /// 5. RenderChartsFromLastContext() -> Checks visibility states and clears/renders charts accordingly
+        ///    - Uses RenderOrClearChart() which respects visibility state
+        ///    - Or directly clears when no secondary data exists
+        /// </summary>
+        private void UpdateSecondaryDataRequiredButtonStates(int selectedSubtypeCount)
+        {
+            bool hasSecondaryData = selectedSubtypeCount >= 2;
+
+            // If secondary data is no longer available, use the ViewModel state setters to trigger
+            // the full rendering pipeline. This ensures all state updates, UI updates, and chart
+            // clearing happen through the established pipeline with proper strategy adoption.
+            if (!hasSecondaryData)
+            {
+                // Update state through ViewModel - this triggers the full pipeline:
+                // ViewModel -> RequestChartUpdate -> OnChartUpdateRequested -> UpdateChartVisibility -> RenderChartsFromLastContext
+                if (_viewModel.ChartState.IsNormalizedVisible)
+                {
+                    _viewModel.SetNormalizedVisible(false);
+                }
+
+                if (_viewModel.ChartState.IsDifferenceVisible)
+                {
+                    _viewModel.SetDifferenceVisible(false);
+                }
+
+                if (_viewModel.ChartState.IsRatioVisible)
+                {
+                    _viewModel.SetRatioVisible(false);
+                }
+            }
+
+            // Update button enabled states (this is UI-only, not part of the rendering pipeline)
+            ChartNormToggleButton.IsEnabled = hasSecondaryData;
+            ChartDiffToggleButton.IsEnabled = hasSecondaryData;
+            ChartRatioToggleButton.IsEnabled = hasSecondaryData;
         }
 
         private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -873,16 +933,17 @@ namespace DataVisualiser
             IChartComputationStrategy strategy;
 
             var ctx = _viewModel.ChartState.LastContext!;
-            var semanticCount = ctx.SemanticMetricCount;
+            // Use actual series count instead of SemanticMetricCount which is hardcoded to max 2
+            var actualSeriesCount = series.Count;
 
             System.Diagnostics.Debug.WriteLine(
-                $"[STRATEGY] SemanticMetricCount={semanticCount}, " +
+                $"[STRATEGY] ActualSeriesCount={actualSeriesCount}, SemanticMetricCount={ctx.SemanticMetricCount}, " +
                 $"PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, " +
                 $"SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}"
             );
 
             // ---------- MULTI METRIC ----------
-            if (semanticCount > 2)
+            if (actualSeriesCount > 2)
             {
                 strategy = new MultiMetricStrategy(
                     series,
@@ -892,7 +953,7 @@ namespace DataVisualiser
                     unit: null);
             }
             // ---------- COMBINED METRIC ----------
-            else if (semanticCount == 2)
+            else if (actualSeriesCount == 2)
             {
                 secondaryLabel = labels[1];
 
@@ -1005,7 +1066,7 @@ namespace DataVisualiser
             }
 
             System.Diagnostics.Debug.WriteLine(
-                $"[StrategySelection] semanticCount={semanticCount}, " +
+                $"[StrategySelection] actualSeriesCount={actualSeriesCount}, " +
                 $"series.Count={series.Count}, " +
                 $"strategy={strategy.GetType().Name}");
 
@@ -1151,13 +1212,29 @@ namespace DataVisualiser
 
             await RenderPrimaryChart(ctx);
 
-            if (!hasSecondaryData)
+            // Render charts based on individual visibility states
+            var metricType = ctx.MetricType;
+            var primarySubtype = ctx.PrimarySubtype;
+            var secondarySubtype = ctx.SecondarySubtype;
+
+            // Charts that require secondary data - only render if secondary data exists
+            if (hasSecondaryData)
             {
-                ClearSecondaryChartsAndReturn();
-                return;
+                await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
+                await RenderDifference(ctx, metricType, primarySubtype, secondarySubtype);
+                await RenderRatio(ctx, metricType, primarySubtype, secondarySubtype);
+            }
+            else
+            {
+                // Clear charts that require secondary data when no secondary data exists
+                ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
             }
 
-            await RenderSecondaryCharts(ctx);
+            // Charts that don't require secondary data - always render based on visibility
+            await RenderWeeklyDistribution(ctx);
+            RenderWeeklyTrend(ctx);
         }
 
         /// <summary>

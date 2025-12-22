@@ -5,6 +5,7 @@ using DataVisualiser.ViewModels.Commands;
 using DataVisualiser.ViewModels.Events;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -301,6 +302,13 @@ namespace DataVisualiser.ViewModels
                     MetricState.ToDate!.Value,
                     tableName);
 
+            // When only one subtype is selected, ensure data2 is empty to prevent mixing with all subtypes
+            // GetHealthMetricsDataByBaseType with null subtype returns ALL subtypes, which corrupts the chart
+            if (secondarySubtype == null)
+            {
+                data2 = Enumerable.Empty<HealthMetricData>();
+            }
+
             // Mirror old MainWindow "no data" behaviour, but via ErrorOccured
             if (primaryCms == null && (data1 == null || !data1.Any()))
             {
@@ -312,7 +320,9 @@ namespace DataVisualiser.ViewModels
                 return false;
             }
 
-            if (secondaryCms == null && (data2 == null || !data2.Any()))
+            // Only validate secondary data if a secondary subtype is actually selected
+            // When only one subtype is selected, secondarySubtype is null and data2 should be empty/null
+            if (secondarySubtype != null && secondaryCms == null && (data2 == null || !data2.Any()))
             {
                 ErrorOccured?.Invoke(this, new ErrorEventArgs
                 {
