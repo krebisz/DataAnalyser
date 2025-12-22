@@ -77,19 +77,7 @@ namespace DataVisualiser.Services
             }
 
             // Compute using the strategy on a background thread (same pattern as other charts).
-            WeeklyDistributionResult? extendedResult = null;
-            var result = await Task.Run(() =>
-            {
-                var strategy = new DataVisualiser.Charts.Strategies.WeeklyDistributionStrategy(
-                    data,
-                    displayName,
-                    from,
-                    to);
-
-                var computeResult = strategy.Compute();
-                extendedResult = strategy.ExtendedResult;
-                return computeResult;
-            }).ConfigureAwait(true);
+            var (result, extendedResult) = await ComputeWeeklyDistributionAsync(data, displayName, from, to);
 
             if (result == null || extendedResult == null)
             {
@@ -104,7 +92,7 @@ namespace DataVisualiser.Services
 
                 // Step 1: Render the original min/max range visualization (baseline + range columns)
                 // This was the working implementation before
-                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, extendedResult, useFrequencyShading, intervalCount);
+                RenderOriginalMinMaxChart(targetChart, result!, displayName, minHeight, extendedResult, useFrequencyShading, intervalCount);
 
                 // Weekly chart has no per-point timestamps, but we keep the dictionary consistent
                 _chartTimestamps[targetChart] = new List<DateTime>();
@@ -113,35 +101,8 @@ namespace DataVisualiser.Services
                 // We use our custom tooltip instead
                 targetChart.DataTooltip = null;
 
-                // Set up tooltip based on frequency shading mode
-                Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> tooltipData;
-                if (useFrequencyShading)
-                {
-                    // Calculate interval data with percentages for tooltip
-                    tooltipData = CalculateTooltipData(result, extendedResult, intervalCount);
-                }
-                else
-                {
-                    // Calculate simple range tooltip data (min, max, range, count per day)
-                    tooltipData = CalculateSimpleRangeTooltipData(result, extendedResult);
-                }
-
-                if (tooltipData != null && tooltipData.Count > 0)
-                {
-                    // Create tooltip manager (it will attach itself to the chart via events)
-                    // Store it in chart's Tag for potential cleanup later
-                    var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
-                    oldTooltip?.Dispose();
-
-                    var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData);
-                    targetChart.Tag = tooltip;
-                }
-                else
-                {
-                    var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
-                    oldTooltip?.Dispose();
-                    targetChart.Tag = null;
-                }
+                // Set up tooltip
+                SetupWeeklyTooltip(targetChart, result!, extendedResult, useFrequencyShading, intervalCount);
 
                 // Height handling consistent with other charts
                 ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
@@ -1042,6 +1003,69 @@ namespace DataVisualiser.Services
         /// <summary>
         /// Calculates simple tooltip data for Simple Range mode (min, max, range, count per day).
         /// </summary>
+        /// <summary>
+        /// Computes weekly distribution on a background thread.
+        /// </summary>
+        private async Task<(Charts.Computation.ChartComputationResult? Result, Models.WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(
+            IEnumerable<HealthMetricData> data,
+            string displayName,
+            DateTime from,
+            DateTime to)
+        {
+            Models.WeeklyDistributionResult? extendedResult = null;
+            Charts.Computation.ChartComputationResult? result = null;
+
+            await Task.Run(() =>
+            {
+                var strategy = new Charts.Strategies.WeeklyDistributionStrategy(
+                    data,
+                    displayName,
+                    from,
+                    to);
+
+                result = strategy.Compute();
+                extendedResult = strategy.ExtendedResult;
+            }).ConfigureAwait(true);
+
+            return (result, extendedResult);
+        }
+
+        /// <summary>
+        /// Sets up tooltip for weekly distribution chart.
+        /// </summary>
+        private void SetupWeeklyTooltip(
+            CartesianChart targetChart,
+            Charts.Computation.ChartComputationResult result,
+            Models.WeeklyDistributionResult extendedResult,
+            bool useFrequencyShading,
+            int intervalCount)
+        {
+            Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> tooltipData;
+            if (useFrequencyShading)
+            {
+                tooltipData = CalculateTooltipData(result, extendedResult, intervalCount);
+            }
+            else
+            {
+                tooltipData = CalculateSimpleRangeTooltipData(result, extendedResult);
+            }
+
+            if (tooltipData != null && tooltipData.Count > 0)
+            {
+                var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
+                oldTooltip?.Dispose();
+
+                var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData);
+                targetChart.Tag = tooltip;
+            }
+            else
+            {
+                var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
+                oldTooltip?.Dispose();
+                targetChart.Tag = null;
+            }
+        }
+
         private Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> CalculateSimpleRangeTooltipData(
             ChartComputationResult result,
             WeeklyDistributionResult? extendedResult)

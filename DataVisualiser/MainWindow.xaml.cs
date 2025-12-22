@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
+using ParityValidationService = DataVisualiser.Services.ParityValidationService;
 
 namespace DataVisualiser
 {
@@ -252,6 +253,9 @@ namespace DataVisualiser
             // Set flag to suppress error popups during resolution change
             _isChangingResolution = true;
 
+            // Clear all charts when resolution changes
+            ClearAllCharts();
+
             // Prevent error popups during resolution change by temporarily suppressing validation
             _viewModel.MetricState.SelectedMetricType = null; // Clear to prevent validation errors
 
@@ -284,6 +288,9 @@ namespace DataVisualiser
 
             if (_viewModel.UiState.IsLoadingMetricTypes)
                 return;
+
+            // Clear all charts when metric type changes
+            ClearAllCharts();
 
             _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
             _viewModel.LoadSubtypesCommand.Execute(null);
@@ -963,96 +970,17 @@ namespace DataVisualiser
                 // 🔒 HARD GATE — parity OFF by default
                 const bool ENABLE_COMBINED_METRIC_PARITY = false;
 
-                if (ENABLE_COMBINED_METRIC_PARITY && leftCms != null && rightCms != null)
-                {
-                    var legacyStrategy = new CombinedMetricStrategy(
-                        series[0],
-                        series[1],
-                        labels[0],
-                        labels[1],
-                        from,
-                        to);
-
-                    var cmsStrategy = new CombinedMetricCmsStrategy(
-                        leftCms,
-                        rightCms,
-                        labels[0],
-                        labels[1],
-                        from,
-                        to);
-
-                    // --- Parity execution (diagnostic, non-throwing) ---
-                    var harness = new DataVisualiser.Charts.Parity.CombinedMetricParityHarness();
-
-                    var parityResult = harness.Validate(
-                        new DataVisualiser.Charts.Parity.StrategyParityContext
-                        {
-                            StrategyName = "CombinedMetric",
-                            MetricIdentity = $"{labels[0]}|{labels[1]}",
-                            Mode = DataVisualiser.Charts.Parity.ParityMode.Diagnostic
-                        },
-                        legacyExecution: () =>
-                        {
-                            var r = legacyStrategy.Compute();
-                            return new DataVisualiser.Charts.Parity.LegacyExecutionResult
-                            {
-                                Series = r?.Series?
-                                    .Select(s => new DataVisualiser.Charts.Parity.ParitySeries
-                                    {
-                                        SeriesKey = s.SeriesId,
-                                        Points = s.Timestamps
-                                            .Zip(s.RawValues, (t, v) =>
-                                                new DataVisualiser.Charts.Parity.ParityPoint
-                                                {
-                                                    Time = t,
-                                                    Value = v
-                                                })
-                                            .ToList()
-                                    })
-                                    .ToList()
-                                    ?? new List<DataVisualiser.Charts.Parity.ParitySeries>()
-                            };
-                        },
-                        cmsExecution: () =>
-                        {
-                            var r = cmsStrategy.Compute();
-                            return new DataVisualiser.Charts.Parity.CmsExecutionResult
-                            {
-                                Series = r?.Series?
-                                    .Select(s => new DataVisualiser.Charts.Parity.ParitySeries
-                                    {
-                                        SeriesKey = s.SeriesId,
-                                        Points = s.Timestamps
-                                            .Zip(s.RawValues, (t, v) =>
-                                                new DataVisualiser.Charts.Parity.ParityPoint
-                                                {
-                                                    Time = t,
-                                                    Value = v
-                                                })
-                                            .ToList()
-                                    })
-                                    .ToList()
-                                    ?? new List<DataVisualiser.Charts.Parity.ParitySeries>()
-                            };
-                        });
-
-                    System.Diagnostics.Debug.WriteLine(
-                        parityResult.Passed
-                            ? "[PARITY] CombinedMetric PASSED"
-                            : "[PARITY] CombinedMetric FAILED");
-
-                    strategy = cmsStrategy;
-                }
-                else
-                {
-                    strategy = new CombinedMetricStrategy(
-                        series[0],
-                        series[1],
-                        labels[0],
-                        labels[1],
-                        from,
-                        to);
-                }
+                var parityService = new ParityValidationService();
+                strategy = parityService.ExecuteCombinedMetricParityIfEnabled(
+                    leftCms,
+                    rightCms,
+                    series[0],
+                    series[1],
+                    labels[0],
+                    labels[1],
+                    from,
+                    to,
+                    ENABLE_COMBINED_METRIC_PARITY);
             }
             // ---------- SINGLE METRIC ----------
             else
@@ -1076,24 +1004,6 @@ namespace DataVisualiser
 
 
 
-        private static IReadOnlyList<DataVisualiser.Charts.Parity.ParitySeries>
-    AdaptToParitySeries(List<DataVisualiser.Charts.Computation.SeriesResult>? series)
-        {
-            if (series == null || series.Count == 0)
-                return Array.Empty<DataVisualiser.Charts.Parity.ParitySeries>();
-
-            return series.Select(s => new DataVisualiser.Charts.Parity.ParitySeries
-            {
-                SeriesKey = s.SeriesId,
-                Points = s.Timestamps.Zip(
-                    s.RawValues,
-                    (t, v) => new DataVisualiser.Charts.Parity.ParityPoint
-                    {
-                        Time = t,
-                        Value = v
-                    }).ToList()
-            }).ToList();
-        }
 
 
 
@@ -1472,6 +1382,7 @@ namespace DataVisualiser
             ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartWeekdayTrend, _viewModel.ChartState.ChartTimestamps);
             _viewModel.ChartState.LastContext = null;
         }
     }

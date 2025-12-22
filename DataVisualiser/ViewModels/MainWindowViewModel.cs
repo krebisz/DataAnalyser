@@ -220,19 +220,6 @@ namespace DataVisualiser.ViewModels
         }
 
 
-        /// <summary>
-        /// Builds a user-facing "no data" message consistent with the old MainWindow behaviour.
-        /// </summary>
-        private static string BuildNoDataMessage(string metricType, string? subtype, bool isSecondary)
-        {
-            var subtypeText = !string.IsNullOrEmpty(subtype)
-                ? $" and Subtype '{subtype}'"
-                : string.Empty;
-
-            var suffix = isSecondary ? " (Chart 2)." : ".";
-
-            return $"No data found for MetricType '{metricType}'{subtypeText} in the selected date range{suffix}";
-        }
 
         /// <summary>
         /// Validates all prerequisites for loading metric data.
@@ -309,25 +296,16 @@ namespace DataVisualiser.ViewModels
                 data2 = Enumerable.Empty<HealthMetricData>();
             }
 
-            // Mirror old MainWindow "no data" behaviour, but via ErrorOccured
-            if (primaryCms == null && (data1 == null || !data1.Any()))
+            // Validate primary data
+            if (!MetricDataValidationHelper.ValidatePrimaryData(metricType, primarySubtype, primaryCms, data1, ErrorOccured))
             {
-                ErrorOccured?.Invoke(this, new ErrorEventArgs
-                {
-                    Message = BuildNoDataMessage(metricType, primarySubtype, isSecondary: false)
-                });
                 ChartState.LastContext = null;
                 return false;
             }
 
-            // Only validate secondary data if a secondary subtype is actually selected
-            // When only one subtype is selected, secondarySubtype is null and data2 should be empty/null
-            if (secondarySubtype != null && secondaryCms == null && (data2 == null || !data2.Any()))
+            // Validate secondary data (only if secondary subtype is selected)
+            if (!MetricDataValidationHelper.ValidateSecondaryData(metricType, secondarySubtype, secondaryCms, data2, ErrorOccured))
             {
-                ErrorOccured?.Invoke(this, new ErrorEventArgs
-                {
-                    Message = BuildNoDataMessage(metricType, secondarySubtype, isSecondary: true)
-                });
                 ChartState.LastContext = null;
                 return false;
             }
