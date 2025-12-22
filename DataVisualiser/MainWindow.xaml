@@ -10,64 +10,67 @@
 
     <DockPanel>
 
-        <!-- ====== TOP CONTROL BAR ====== -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
-            <Label Content="Resolution:" VerticalAlignment="Center" Margin="5,0"/>
-            <ComboBox x:Name="ResolutionCombo" Width="120" Margin="5"
-                      IsEditable="False"
-                      SelectionChanged="OnResolutionSelectionChanged"/>
+        <!-- ====== TOP CONTROL AREA (Two Rows) ====== -->
+        <Border DockPanel.Dock="Top" Background="#FF747171" Padding="5">
+            <StackPanel Orientation="Vertical">
+                <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                    <Label Content="Resolution:" VerticalAlignment="Center" Margin="5,0"/>
+                    <ComboBox x:Name="ResolutionCombo" Width="120" Margin="5"
+                              IsEditable="False"
+                              SelectionChanged="OnResolutionSelectionChanged"/>
 
-            <Label Content="Metric Type:" VerticalAlignment="Center" Margin="5,0"/>
-            <ComboBox x:Name="TablesCombo" Width="300" Margin="5"
-                      IsEditable="False"
-                      SelectionChanged="OnMetricTypeSelectionChanged"/>
+                    <Label Content="Metric Type:" VerticalAlignment="Center" Margin="5,0"/>
+                    <ComboBox x:Name="TablesCombo" Width="300" Margin="5"
+                              IsEditable="False"
+                              SelectionChanged="OnMetricTypeSelectionChanged"/>
 
-            <Label Content="From:" VerticalAlignment="Center" Margin="5,0"/>
-            <DatePicker x:Name="FromDate"
-                        SelectedDateChanged="OnFromDateChanged"
-                        Width="150"
-                        Margin="5"/>
+                    <Label Content="From:" VerticalAlignment="Center" Margin="5,0"/>
+                    <DatePicker x:Name="FromDate"
+                                SelectedDateChanged="OnFromDateChanged"
+                                Width="150"
+                                Margin="5"/>
 
-            <Label Content="To:" VerticalAlignment="Center" Margin="5,0"/>
-            <DatePicker x:Name="ToDate"
-                        SelectedDateChanged="OnToDateChanged"
-                        Width="150"
-                        Margin="5"/>
+                    <Label Content="To:" VerticalAlignment="Center" Margin="5,0"/>
+                    <DatePicker x:Name="ToDate"
+                                SelectedDateChanged="OnToDateChanged"
+                                Width="150"
+                                Margin="5"/>
 
-            <Button Content="Load Data"
-                    Click="OnLoadData"
-                    Margin="5"
-                    Padding="10,5"/>
+                    <Button Content="Load Data"
+                            Click="OnLoadData"
+                            Margin="5"
+                            Padding="10,5"/>
 
-            <Separator Margin="10,0"/>
+                    <Separator Margin="10,0"/>
 
-            <Button Content="Reset Zoom"
-                    Click="OnResetZoom"
-                    Margin="5"
-                    Padding="10,5"/>
-        </StackPanel>
+                    <Button Content="Reset Zoom"
+                            Click="OnResetZoom"
+                            Margin="5"
+                            Padding="10,5"/>
+                </StackPanel>
 
-        <!-- ====== SUBTYPE PANEL ====== -->
-        <StackPanel DockPanel.Dock="Top"
-                    Orientation="Horizontal"
-                    Margin="5"
-                    Name="MetricSubtypePanel">
+                <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
+                <StackPanel Orientation="Horizontal"
+                            Name="MetricSubtypePanel">
 
-            <Label Content="Metric Subtype 1:"
-                   VerticalAlignment="Center"
-                   Margin="5,0"/>
+                    <Label Content="Metric Subtype 1:"
+                           VerticalAlignment="Center"
+                           Margin="5,0"/>
 
-            <ComboBox x:Name="SubtypeCombo"
-                      Width="250"
-                      Margin="5"
-                      IsEditable="False"
-                      IsEnabled="False"/>
+                    <ComboBox x:Name="SubtypeCombo"
+                              Width="250"
+                              Margin="5"
+                              IsEditable="False"
+                              IsEnabled="False"/>
 
-            <Button Content="Add Subtype"
-                    Click="AddSubtypeComboBox"
-                    Margin="5"
-                    Padding="10,5"/>
-        </StackPanel>
+                    <Button Content="Add Subtype"
+                            Click="AddSubtypeComboBox"
+                            Margin="5"
+                            Padding="10,5"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
 
         <!-- ====== SCROLL VIEWER ====== -->
         <ScrollViewer Margin="5"
