@@ -104,9 +104,9 @@ Allow downstream systems (DataVisualiser) to consume CMS safely.
 - Generalized cyclic distribution visualizations (e.g., weekly, hourly, or N-bucket cycles)
 - Foundation for user-defined metric transformations with preview tables feeding the charting pipeline
 
-**Status**: ▶ In Progress (~60% complete)
+**Status**: ▶ In Progress (~65% complete)
 
-CMS infrastructure is in place; multiple strategies are migrated or in progress; UI integration and remaining strategy migrations continue. User-defined metric transformations with preview are implemented.
+CMS infrastructure is in place; multiple strategies are migrated or in progress; UI integration and remaining strategy migrations continue. User-defined metric transformations with preview are implemented. Transform infrastructure is provisioned for future expansion (N-metrics, chained operations). Performance optimizations (SQL limiting, redundant call elimination) are in place.
 
 ---
 
@@ -211,8 +211,16 @@ The following goals clarify expected evolution **within existing phases**:
   - Extend weekly distribution visualizations into a generic cyclic engine (weekly, hourly, or N-bucket) without altering semantic contracts.
 
 - **User-defined metric transformations with preview** ✅ **Complete**
+
   - Allow explicit transformations over CMS (e.g. `A + B - C`, `sqrt(A)`), preview before/after values in a grid, and feed results into the charting pipeline as ephemeral, non-canonical metrics.
   - **Status**: Implemented. Transform panel supports unary operations (Logarithm, Square Root) and binary operations (Add, Subtract) on metric data. Results are explicitly marked as ephemeral/non-canonical and displayed in preview grids before charting. Transform results are never promoted to canonical truth.
+  - **Infrastructure**: Transform expression tree architecture (`TransformExpression`, `TransformOperation`, `TransformOperationRegistry`) is provisioned for future expansion to N-metrics and chained operations. Evaluation and label generation use centralized helpers (`TransformExpressionEvaluator`, `TransformExpressionBuilder`, `TransformDataHelper`).
+
+- **Performance optimizations (Phase 1 quick wins)** ✅ **Complete**
+  - SQL result limiting (configurable via App.config)
+  - Eliminated redundant `ToList()` calls in strategies
+  - Skip computation for hidden charts
+  - **Status**: Implemented and configurable. SQL limiting defaults to enabled but can be disabled via configuration.
 
 ---
 

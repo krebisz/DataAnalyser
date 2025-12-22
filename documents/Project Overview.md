@@ -95,7 +95,7 @@ This reflects **actual implementation state**, not aspiration:
   Complete. CMS is produced deterministically alongside legacy outputs.
 
 - **Phase 4 — Consumer Adoption & Visualization Integration**  
-  In progress (~60% complete).  
+  In progress (~65% complete).  
   DataVisualiser now:
 
   - consumes CMS through an explicit dependency surface
@@ -106,6 +106,12 @@ This reflects **actual implementation state**, not aspiration:
     - Transform results are explicitly ephemeral and non-canonical
     - Operations include unary (Logarithm, Square Root) and binary (Add, Subtract)
     - Results are never promoted to canonical truth
+    - Transform infrastructure uses expression tree architecture (`TransformExpression`, `TransformOperation`, `TransformOperationRegistry`) provisioned for future expansion
+    - Evaluation and data processing centralized in helper classes (`TransformExpressionEvaluator`, `TransformExpressionBuilder`, `TransformDataHelper`)
+  - includes **performance optimizations**:
+    - Configurable SQL result limiting (default enabled)
+    - Eliminated redundant `ToList()` calls
+    - Skip computation for hidden charts
 
   Parity is treated as a **phase obligation**, not an implementation detail.
 
@@ -140,6 +146,23 @@ The system currently supports **ephemeral transform operations** (Phase 4):
 - Operations include unary (Logarithm, Square Root) and binary (Add, Subtract)
 - Results are displayed in preview grids and charted, but **never promoted to canonical truth**
 - Transform operations track provenance (source metrics, operation type) but do not create authoritative identities
+
+**Infrastructure Architecture**:
+
+- **Expression Tree Model**: `TransformExpression`, `TransformOperand`, `TransformOperation` provide a flexible structure for representing operations
+- **Operation Registry**: `TransformOperationRegistry` centralizes available operations and supports registration of new operations
+- **Evaluation Engine**: `TransformExpressionEvaluator` handles expression evaluation, label generation, and metric alignment
+- **Builder Pattern**: `TransformExpressionBuilder` bridges simple operation strings to expression trees
+- **Data Processing**: `TransformDataHelper` provides utilities for result data formatting
+- **Strategy Integration**: `TransformResultStrategy` integrates transform results into the charting pipeline
+
+**Future Expansion Readiness**:
+
+The infrastructure is provisioned to support:
+
+- N-metrics (not just 1 or 2)
+- Chained operations (e.g., `log(A + B)`, `sqrt(A - B + C)`)
+- Complex expression trees
 
 This implementation aligns with Phase 4 intermediate goals and provides a foundation for Phase 5 derived metrics, while maintaining strict separation from canonical semantic authority.
 

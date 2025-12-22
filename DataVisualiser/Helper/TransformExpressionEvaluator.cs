@@ -1,5 +1,6 @@
 namespace DataVisualiser.Helper
 {
+    using DataVisualiser.Charts;
     using DataVisualiser.Models;
     using System.Linq;
 
@@ -165,6 +166,102 @@ namespace DataVisualiser.Helper
                 "Subtract" => "-",
                 _ => operationId
             };
+        }
+
+        /// <summary>
+        /// Generates a label for transform operations using new infrastructure or fallback.
+        /// </summary>
+        /// <param name="operation">Operation identifier (e.g., "Log", "Sqrt", "Add", "Subtract").</param>
+        /// <param name="metrics">List of metric data series.</param>
+        /// <param name="ctx">Chart data context for metric labels.</param>
+        /// <returns>Generated label string.</returns>
+        public static string GenerateTransformLabel(
+            string operation,
+            IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics,
+            ChartDataContext? ctx)
+        {
+            var metricIndices = metrics.Count > 0 ? Enumerable.Range(0, metrics.Count).ToArray() : new[] { 0 };
+            var expression = TransformExpressionBuilder.BuildFromOperation(operation, metricIndices);
+
+            if (expression != null && metrics.Count > 0)
+            {
+                var metricLabels = BuildMetricLabelsFromContext(ctx, metrics.Count);
+                var label = GenerateLabel(expression, metricLabels);
+                System.Diagnostics.Debug.WriteLine($"[Transform] LABEL - Using NEW infrastructure label generation: '{label}'");
+                return label;
+            }
+
+            // Fallback to simple label generation
+            var legacyLabel = GenerateLegacyLabel(operation);
+            System.Diagnostics.Debug.WriteLine($"[Transform] LABEL - Using LEGACY label generation: '{legacyLabel}'");
+            return legacyLabel;
+        }
+
+        /// <summary>
+        /// Builds metric labels from chart context, with fallback to generic labels.
+        /// </summary>
+        public static List<string> BuildMetricLabelsFromContext(ChartDataContext? ctx, int requiredCount)
+        {
+            var metricLabels = new List<string>();
+
+            if (ctx != null)
+            {
+                if (!string.IsNullOrEmpty(ctx.PrimarySubtype))
+                    metricLabels.Add($"{ctx.MetricType}:{ctx.PrimarySubtype}");
+                else if (!string.IsNullOrEmpty(ctx.MetricType))
+                    metricLabels.Add(ctx.MetricType);
+
+                if (requiredCount > 1 && !string.IsNullOrEmpty(ctx.SecondarySubtype))
+                    metricLabels.Add($"{ctx.MetricType}:{ctx.SecondarySubtype}");
+            }
+
+            // Fallback to generic labels if context not available
+            while (metricLabels.Count < requiredCount)
+            {
+                metricLabels.Add($"Metric{metricLabels.Count}");
+            }
+
+            return metricLabels;
+        }
+
+        /// <summary>
+        /// Generates a legacy label for an operation (fallback when expression building fails).
+        /// </summary>
+        private static string GenerateLegacyLabel(string operationTag)
+        {
+            return operationTag switch
+            {
+                "Log" => "Log(Result)",
+                "Sqrt" => "√(Result)",
+                "Add" => "Result (Sum)",
+                "Subtract" => "Result (Difference)",
+                _ => "Transform Result"
+            };
+        }
+
+        /// <summary>
+        /// Aligns two metric series by timestamp, keeping only points that exist in both.
+        /// Required for transform expression evaluation which expects aligned data.
+        /// </summary>
+        public static (List<HealthMetricData>, List<HealthMetricData>) AlignMetricsByTimestamp(
+            List<HealthMetricData> data1,
+            List<HealthMetricData> data2)
+        {
+            var aligned1 = new List<HealthMetricData>();
+            var aligned2 = new List<HealthMetricData>();
+
+            var data2Lookup = data2.ToDictionary(d => d.NormalizedTimestamp, d => d);
+
+            foreach (var point1 in data1)
+            {
+                if (data2Lookup.TryGetValue(point1.NormalizedTimestamp, out var point2))
+                {
+                    aligned1.Add(point1);
+                    aligned2.Add(point2);
+                }
+            }
+
+            return (aligned1, aligned2);
         }
     }
 }

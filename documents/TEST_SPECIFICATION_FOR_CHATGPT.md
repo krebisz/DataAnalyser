@@ -24,7 +24,13 @@ DataVisualiser.Tests/
 │   ├── RatioStrategyTests.cs
 │   ├── NormalizedStrategyTests.cs
 │   ├── WeeklyDistributionStrategyTests.cs
-│   └── WeekdayTrendStrategyTests.cs
+│   ├── WeekdayTrendStrategyTests.cs
+│   └── TransformResultStrategyTests.cs (Phase 4)
+├── Transforms/          (Priority 2 - Phase 4)
+│   ├── TransformExpressionEvaluatorTests.cs
+│   ├── TransformExpressionBuilderTests.cs
+│   ├── TransformDataHelperTests.cs
+│   └── TransformOperationRegistryTests.cs
 ├── Services/            (Priority 3)
 │   ├── MetricSelectionServiceTests.cs
 │   ├── ChartUpdateCoordinatorTests.cs
@@ -504,9 +510,175 @@ mockDataFetcher.Setup(x => x.GetHealthMetricsDataByBaseType(...))
 
 ---
 
-## Module 6: Helper Tests
+## Module 6: Transform Tests (Phase 4)
 
-### 6.1 ChartHelperTests
+### 6.1 TransformExpressionEvaluatorTests
+
+**File**: `DataVisualiser.Tests/Transforms/TransformExpressionEvaluatorTests.cs`  
+**Status**: ❌ TODO
+
+**Required Tests**:
+
+```csharp
+[Fact] public void Evaluate_ShouldThrow_WhenExpressionNull()
+[Fact] public void Evaluate_ShouldThrow_WhenMetricsEmpty()
+[Fact] public void Evaluate_ShouldThrow_WhenMetricsNotAligned()
+[Fact] public void Evaluate_ShouldEvaluateUnaryOperation_Correctly()
+[Fact] public void Evaluate_ShouldEvaluateBinaryOperation_Correctly()
+[Fact] public void Evaluate_ShouldHandleNullValues()
+[Fact] public void Evaluate_ShouldHandleChainedOperations()
+[Fact] public void GenerateLabel_ShouldReturnMetricLabel_ForLeafNode()
+[Fact] public void GenerateLabel_ShouldReturnOperationLabel_ForOperationNode()
+[Fact] public void GenerateLabel_ShouldHandleChainedExpressions()
+[Fact] public void GenerateTransformLabel_ShouldUseNewInfrastructure_WhenExpressionValid()
+[Fact] public void GenerateTransformLabel_ShouldUseLegacyFallback_WhenExpressionNull()
+[Fact] public void BuildMetricLabelsFromContext_ShouldBuildFromContext()
+[Fact] public void BuildMetricLabelsFromContext_ShouldUseFallback_WhenContextNull()
+[Fact] public void AlignMetricsByTimestamp_ShouldAlignByTimestamp()
+[Fact] public void AlignMetricsByTimestamp_ShouldReturnEmpty_WhenNoMatchingTimestamps()
+```
+
+**Key Files to Reference**:
+
+- `DataVisualiser/Helper/TransformExpressionEvaluator.cs`
+- `DataVisualiser/Models/TransformExpression.cs`
+- `DataVisualiser/Charts/ChartDataContext.cs`
+
+**Test Data**:
+
+- Use `TestDataBuilders.HealthMetricData().BuildSeries()` for aligned metrics
+- Test with unary operations (Log, Sqrt)
+- Test with binary operations (Add, Subtract)
+- Test with chained operations (future expansion)
+
+---
+
+### 6.2 TransformExpressionBuilderTests
+
+**File**: `DataVisualiser.Tests/Transforms/TransformExpressionBuilderTests.cs`  
+**Status**: ❌ TODO
+
+**Required Tests**:
+
+```csharp
+[Fact] public void BuildFromOperation_ShouldReturnNull_WhenOperationNotFound()
+[Fact] public void BuildFromOperation_ShouldReturnNull_WhenArityMismatch()
+[Fact] public void BuildFromOperation_ShouldBuildUnaryExpression()
+[Fact] public void BuildFromOperation_ShouldBuildBinaryExpression()
+[Fact] public void BuildFromOperation_ShouldBuildNaryExpression()
+[Fact] public void BuildChained_ShouldBuildChainedExpression()
+[Fact] public void BuildNary_ShouldBuildNaryExpression()
+```
+
+**Key Files to Reference**:
+
+- `DataVisualiser/Helper/TransformExpressionBuilder.cs`
+- `DataVisualiser/Models/TransformOperationRegistry.cs`
+- `DataVisualiser/Models/TransformExpression.cs`
+
+**Test Scenarios**:
+
+- Valid operations: "Log", "Sqrt", "Add", "Subtract"
+- Invalid operations: "InvalidOp", null, empty string
+- Arity validation: unary needs 1 metric, binary needs 2 metrics
+
+---
+
+### 6.3 TransformDataHelperTests
+
+**File**: `DataVisualiser.Tests/Transforms/TransformDataHelperTests.cs`  
+**Status**: ❌ TODO
+
+**Required Tests**:
+
+```csharp
+[Fact] public void CreateTransformResultData_ShouldCreateData_WithValidInputs()
+[Fact] public void CreateTransformResultData_ShouldHandleNaN_Values()
+[Fact] public void CreateTransformResultData_ShouldFormatTimestamps_Correctly()
+[Fact] public void CreateTransformResultData_ShouldFormatValues_WithFourDecimals()
+```
+
+**Key Files to Reference**:
+
+- `DataVisualiser/Helper/TransformDataHelper.cs`
+- `DataVisualiser/Models/HealthMetricData.cs`
+
+**Test Data**:
+
+- Use `TestDataBuilders.HealthMetricData()` for input data
+- Test with NaN values in results
+- Test with various timestamp formats
+
+---
+
+### 6.4 TransformOperationRegistryTests
+
+**File**: `DataVisualiser.Tests/Transforms/TransformOperationRegistryTests.cs`  
+**Status**: ❌ TODO
+
+**Required Tests**:
+
+```csharp
+[Fact] public void GetOperation_ShouldReturnOperation_WhenRegistered()
+[Fact] public void GetOperation_ShouldReturnNull_WhenNotRegistered()
+[Fact] public void Register_ShouldRegisterOperation()
+[Fact] public void Register_ShouldThrow_WhenOperationNull()
+[Fact] public void Register_ShouldThrow_WhenIdEmpty()
+[Fact] public void GetAllOperations_ShouldReturnAllRegistered()
+[Fact] public void GetUnaryOperations_ShouldReturnOnlyUnary()
+[Fact] public void GetBinaryOperations_ShouldReturnOnlyBinary()
+[Fact] public void GetNaryOperations_ShouldReturnOnlyNary()
+```
+
+**Key Files to Reference**:
+
+- `DataVisualiser/Models/TransformOperationRegistry.cs`
+- `DataVisualiser/Models/TransformOperation.cs`
+- `DataVisualiser/Models/UnaryOperators.cs`
+- `DataVisualiser/Models/BinaryOperators.cs`
+
+**Test Scenarios**:
+
+- Default registered operations: "Log", "Sqrt", "Add", "Subtract"
+- Custom operation registration
+- Operation retrieval by ID
+
+---
+
+### 6.5 TransformResultStrategyTests
+
+**File**: `DataVisualiser.Tests/Strategies/TransformResultStrategyTests.cs`  
+**Status**: ❌ TODO
+
+**Required Tests**:
+
+```csharp
+[Fact] public void Compute_ShouldReturnNull_WhenDataEmpty()
+[Fact] public void Compute_ShouldReturnNull_WhenResultsEmpty()
+[Fact] public void Compute_ShouldGenerateSmoothedData()
+[Fact] public void Compute_ShouldSetUnit_FromData()
+[Fact] public void Compute_ShouldFilterByDateRange()
+[Fact] public void Compute_ShouldHandleNaN_Values()
+[Fact] public void Compute_ShouldCreateNormalizedIntervals()
+```
+
+**Key Files to Reference**:
+
+- `DataVisualiser/Charts/Strategies/TransformResultStrategy.cs`
+- `DataVisualiser/Charts/Computation/ChartComputationResult.cs`
+- `DataVisualiser/Helper/MathHelper.cs`
+
+**Test Data**:
+
+- Use `TestDataBuilders.HealthMetricData()` for input data
+- Test with computed transform results
+- Test with various date ranges
+
+---
+
+## Module 7: Helper Tests
+
+### 7.1 ChartHelperTests
 
 **File**: `DataVisualiser.Tests/Helpers/ChartHelperTests.cs`  
 **Status**: ❌ TODO
@@ -524,7 +696,7 @@ mockDataFetcher.Setup(x => x.GetHealthMetricsDataByBaseType(...))
 
 ---
 
-### 6.2 MathHelperTests
+### 7.2 MathHelperTests
 
 **File**: `DataVisualiser.Tests/Helpers/MathHelperTests.cs`  
 **Status**: ❌ TODO
@@ -535,6 +707,9 @@ mockDataFetcher.Setup(x => x.GetHealthMetricsDataByBaseType(...))
 [Fact] public void DetermineTickInterval_ShouldReturnCorrectInterval()
 [Fact] public void CreateSmoothedData_ShouldSmoothCorrectly()
 [Fact] public void InterpolateSmoothedData_ShouldInterpolateCorrectly()
+[Fact] public void ApplyUnaryOperation_ShouldApplyOperation_Correctly()
+[Fact] public void ApplyBinaryOperation_ShouldApplyOperation_Correctly()
+[Fact] public void CalculateOptimalMaxRecords_ShouldCalculate_Correctly()
 ```
 
 **Key Files to Reference**:
@@ -543,7 +718,7 @@ mockDataFetcher.Setup(x => x.GetHealthMetricsDataByBaseType(...))
 
 ---
 
-### 6.3 CmsConversionHelperTests
+### 7.3 CmsConversionHelperTests
 
 **File**: `DataVisualiser.Tests/Helpers/CmsConversionHelperTests.cs`  
 **Status**: ❌ TODO
@@ -561,9 +736,9 @@ mockDataFetcher.Setup(x => x.GetHealthMetricsDataByBaseType(...))
 
 ---
 
-## Module 7: State Tests
+## Module 8: State Tests
 
-### 7.1 ChartStateTests
+### 8.1 ChartStateTests
 
 **File**: `DataVisualiser.Tests/State/ChartStateTests.cs`  
 **Status**: ❌ TODO
@@ -581,7 +756,7 @@ mockDataFetcher.Setup(x => x.GetHealthMetricsDataByBaseType(...))
 
 ---
 
-### 7.2 MetricStateTests
+### 8.2 MetricStateTests
 
 **File**: `DataVisualiser.Tests/State/MetricStateTests.cs`  
 **Status**: ❌ TODO
@@ -599,7 +774,7 @@ mockDataFetcher.Setup(x => x.GetHealthMetricsDataByBaseType(...))
 
 ---
 
-### 7.3 CmsConfigurationTests
+### 8.3 CmsConfigurationTests
 
 **File**: `DataVisualiser.Tests/State/CmsConfigurationTests.cs`  
 **Status**: ❌ TODO
@@ -691,12 +866,13 @@ var cmsResult = strategy.Compute()?.ToCmsExecutionResult();
 ## Priority Order
 
 1. **Parity Tests** (Phase 4A requirement) - ✅ 2/3 complete
-2. **Strategy Tests** (Core functionality)
-3. **Service Tests** (Integration points)
-4. **Repository Tests** (Data access - consider integration tests)
-5. **ViewModel Tests** (UI logic)
-6. **Helper Tests** (Utility functions)
-7. **State Tests** (State management)
+2. **Transform Tests** (Phase 4 - New infrastructure) - ❌ 0/4 complete
+3. **Strategy Tests** (Core functionality) - Includes TransformResultStrategy
+4. **Service Tests** (Integration points)
+5. **Repository Tests** (Data access - consider integration tests)
+6. **ViewModel Tests** (UI logic)
+7. **Helper Tests** (Utility functions)
+8. **State Tests** (State management)
 
 ---
 
@@ -710,4 +886,15 @@ var cmsResult = strategy.Compute()?.ToCmsExecutionResult();
 ---
 
 **Last Updated**: 2025-01-XX  
-**Status**: Minimal parity tests complete. Remaining tests can be generated incrementally using this specification.
+**Status**:
+
+- Parity tests: 2/3 complete (CombinedMetric, SingleMetric done; MultiMetric pending)
+- Transform tests (Phase 4): 0/4 complete - NEW infrastructure added
+- Strategy tests: 0/9 complete (includes new TransformResultStrategy)
+- Remaining tests can be generated incrementally using this specification.
+
+**Phase 4 Updates**:
+
+- Added Transform module with 4 new test files for transform infrastructure
+- Added TransformResultStrategy to Strategy tests
+- Transform infrastructure is provisioned for future expansion (N-metrics, chained operations)

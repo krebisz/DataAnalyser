@@ -180,7 +180,25 @@ The system supports user-defined transformations over canonical metrics:
 - **Binary operations**: Add, Subtract
 - Operations are applied to metric values, not identities
 
-### 7C.2 Transform Results Are Ephemeral
+### 7C.2 Transform Infrastructure
+
+Transform operations are implemented using an expression tree architecture:
+
+- **TransformExpression**: Represents operations as expression trees, supporting nested/chained operations
+- **TransformOperation**: Encapsulates operation logic (unary, binary, n-ary)
+- **TransformOperationRegistry**: Centralized registry of available operations
+- **TransformExpressionEvaluator**: Evaluates expressions over aligned metric data, generates labels, aligns metrics by timestamp
+- **TransformExpressionBuilder**: Builds expressions from simple operation strings
+- **TransformDataHelper**: Utilities for formatting transform result data
+- **TransformResultStrategy**: Integrates transform results into charting pipeline
+
+The infrastructure is provisioned for future expansion to:
+
+- N-metrics (not just 1 or 2)
+- Chained operations (e.g., `log(A + B)`, `sqrt(A - B + C)`)
+- Complex expression trees
+
+### 7C.3 Transform Results Are Ephemeral
 
 Transform results:
 
@@ -189,19 +207,21 @@ Transform results:
 - are **never promoted to canonical truth**
 - exist only for visualization and exploratory analysis
 
-### 7C.3 Transform Pipeline
+### 7C.4 Transform Pipeline
 
 Transform operations:
 
 1. Accept canonical metric data as input
-2. Apply mathematical operations to values
-3. Produce ephemeral results with:
+2. Build expression trees from operation specifications
+3. Evaluate expressions over aligned metric data
+4. Apply mathematical operations to values
+5. Produce ephemeral results with:
    - derived units (preserved from sources where applicable)
    - operation provenance (tracked but not authoritative)
    - preview grids before charting
-4. Feed results into charting pipeline as non-authoritative series
+6. Feed results into charting pipeline as non-authoritative series via `TransformResultStrategy`
 
-### 7C.4 Boundaries
+### 7C.5 Boundaries
 
 Transform layer:
 
@@ -210,6 +230,7 @@ Transform layer:
 - **does not** persist results as authoritative metrics
 - **does** provide explicit operation tracking
 - **does** maintain separation from canonical truth
+- **does** use expression tree architecture for extensibility
 
 This boundary ensures transforms remain **exploratory tools**, not semantic mutations.
 
