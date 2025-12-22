@@ -469,7 +469,12 @@ namespace DataVisualiser.ViewModels
                 IsVisible = newVisibility
             });
 
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: true, toggledChartName: chartName);
+        }
+
+        public void ToggleMain()
+        {
+            ToggleChartVisibility("Main", () => ChartState.IsMainVisible, v => ChartState.IsMainVisible = v);
         }
 
         public void ToggleNorm()
@@ -509,6 +514,12 @@ namespace DataVisualiser.ViewModels
         // STATE SETTERS (UI → VM)
         // ======================
 
+        public void SetMainVisible(bool value)
+        {
+            ChartState.IsMainVisible = value;
+            RequestChartUpdate();
+        }
+
         public void SetNormalizedVisible(bool value)
         {
             ChartState.IsNormalizedVisible = value;
@@ -536,43 +547,43 @@ namespace DataVisualiser.ViewModels
         public void SetWeeklyTrendMondayVisible(bool value)
         {
             ChartState.ShowMonday = value;
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: false, toggledChartName: "WeeklyTrend");
         }
 
         public void SetWeeklyTrendTuesdayVisible(bool value)
         {
             ChartState.ShowTuesday = value;
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: false, toggledChartName: "WeeklyTrend");
         }
 
         public void SetWeeklyTrendWednesdayVisible(bool value)
         {
             ChartState.ShowWednesday = value;
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: false, toggledChartName: "WeeklyTrend");
         }
 
         public void SetWeeklyTrendThursdayVisible(bool value)
         {
             ChartState.ShowThursday = value;
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: false, toggledChartName: "WeeklyTrend");
         }
 
         public void SetWeeklyTrendFridayVisible(bool value)
         {
             ChartState.ShowFriday = value;
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: false, toggledChartName: "WeeklyTrend");
         }
 
         public void SetWeeklyTrendSaturdayVisible(bool value)
         {
             ChartState.ShowSaturday = value;
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: false, toggledChartName: "WeeklyTrend");
         }
 
         public void SetWeeklyTrendSundayVisible(bool value)
         {
             ChartState.ShowSunday = value;
-            RequestChartUpdate();
+            RequestChartUpdate(isVisibilityOnlyToggle: false, toggledChartName: "WeeklyTrend");
         }
 
         public void SetNormalizationMode(NormalizationMode mode)
@@ -717,19 +728,22 @@ namespace DataVisualiser.ViewModels
             return $"An error occurred while loading data: {ex.Message}";
         }
 
-        public void RequestChartUpdate()
+        public void RequestChartUpdate(bool isVisibilityOnlyToggle = false, string? toggledChartName = null)
         {
             if (_isInitializing)
                 return;
 
             ChartUpdateRequested?.Invoke(this, new ChartUpdateRequestedEventArgs
             {
+                ShowMain = ChartState.IsMainVisible,
                 ShowNormalized = ChartState.IsNormalizedVisible,
                 ShowDifference = ChartState.IsDifferenceVisible,
                 ShowRatio = ChartState.IsRatioVisible,
                 ShowWeekly = ChartState.IsWeeklyVisible,
                 ShowWeeklyTrend = ChartState.IsWeeklyTrendVisible,
-                ShouldRenderCharts = ChartState.LastContext != null
+                ShouldRenderCharts = ChartState.LastContext != null,
+                IsVisibilityOnlyToggle = isVisibilityOnlyToggle,
+                ToggledChartName = toggledChartName
             });
         }
 

@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Charts;
+using DataVisualiser.Charts;
 
 namespace DataVisualiser.ViewModels.Events
 {
@@ -36,6 +36,7 @@ namespace DataVisualiser.ViewModels.Events
 
     public class ChartUpdateRequestedEventArgs : EventArgs
     {
+        public bool ShowMain { get; set; }
         public bool ShowNormalized { get; set; }
         public bool ShowDifference { get; set; }
         public bool ShowRatio { get; set; }
@@ -44,6 +45,12 @@ namespace DataVisualiser.ViewModels.Events
 
         // NEW: whether charts should be rendered
         public bool ShouldRenderCharts { get; set; }
+
+        // NEW: indicates if this is just a visibility toggle (no data reload needed)
+        public bool IsVisibilityOnlyToggle { get; set; }
+
+        // NEW: which chart was toggled (null if not a single-chart toggle)
+        public string? ToggledChartName { get; set; }
     }
 
 

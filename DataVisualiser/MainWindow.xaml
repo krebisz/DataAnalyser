@@ -96,6 +96,12 @@
                                            FontWeight="Bold"
                                            FontSize="14"
                                            VerticalAlignment="Center"/>
+
+                                <Button x:Name="ChartMainToggleButton"
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnChartMainToggle"/>
                             </StackPanel>
                         </Border>
 

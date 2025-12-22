@@ -119,6 +119,9 @@ namespace DataVisualiser
 
             // Initialize button states based on current subtype selection
             UpdateSecondaryDataRequiredButtonStates(_viewModel.MetricState.SelectedSubtypes.Count);
+
+            // Sync main chart button text with initial state (visible = true, so button should show "Hide")
+            UpdateChartVisibility(ChartMainPanel, ChartMainToggleButton, _viewModel.ChartState.IsMainVisible);
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -162,6 +165,7 @@ namespace DataVisualiser
         {
             _viewModel.SetLoadingMetricTypes(false);
             _viewModel.SetLoadingSubtypes(false);
+            _viewModel.SetMainVisible(true); // Default to visible (Show on startup)
             _viewModel.SetNormalizedVisible(false);
             _viewModel.SetDifferenceVisible(false);
             _viewModel.SetRatioVisible(false);
@@ -416,34 +420,34 @@ namespace DataVisualiser
 
         #region Chart Visibility Toggle Handlers
 
+        private void OnChartMainToggle(object sender, RoutedEventArgs e)
+        {
+            _viewModel.ToggleMain();
+        }
+
         private void OnChartNormToggle(object sender, RoutedEventArgs e)
         {
             _viewModel.ToggleNorm();
-            _viewModel.RequestChartUpdate();
         }
 
         private void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
         {
             _viewModel.ToggleWeekly();
-            _viewModel.RequestChartUpdate();
         }
 
         private void OnChartWeekdayTrendToggle(object sender, RoutedEventArgs e)
         {
             _viewModel.ToggleWeeklyTrend();
-            _viewModel.RequestChartUpdate();
         }
 
         private void OnChartDiffToggle(object sender, RoutedEventArgs e)
         {
             _viewModel.ToggleDiff();
-            _viewModel.RequestChartUpdate();
         }
 
         private void OnChartRatioToggle(object sender, RoutedEventArgs e)
         {
             _viewModel.ToggleRatio();
-            _viewModel.RequestChartUpdate();
         }
 
         #endregion
@@ -804,13 +808,25 @@ namespace DataVisualiser
 
         private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
         {
+            // Update visibility for all charts (just UI state, doesn't clear data)
+            UpdateChartVisibility(ChartMainPanel, ChartMainToggleButton, e.ShowMain);
             UpdateChartVisibility(ChartNormPanel, ChartNormToggleButton, e.ShowNormalized);
             UpdateChartVisibility(ChartDiffPanel, ChartDiffToggleButton, e.ShowDifference);
             UpdateChartVisibility(ChartRatioPanel, ChartRatioToggleButton, e.ShowRatio);
             UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
             UpdateChartVisibility(ChartWeekdayTrendPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
 
-            if (e.ShouldRenderCharts)
+            // If a specific chart was identified (visibility toggle or chart-specific config change), only render that chart
+            if (!string.IsNullOrEmpty(e.ToggledChartName))
+            {
+                var ctx = _viewModel.ChartState.LastContext;
+                if (ctx != null && ShouldRenderCharts(ctx))
+                {
+                    await RenderSingleChart(e.ToggledChartName, ctx);
+                }
+            }
+            // Otherwise, render all charts (data change scenario)
+            else if (e.ShouldRenderCharts)
             {
                 await RenderChartsFromLastContext();
             }
@@ -1067,10 +1083,8 @@ namespace DataVisualiser
                     operationType: operationType,
                     isOperationChart: isOperationChart);
             }
-            else
-            {
-                ChartHelper.ClearChart(chart, _viewModel.ChartState.ChartTimestamps);
-            }
+            // Note: We don't clear the chart when hiding - just hide the panel to preserve data
+            // Charts are only cleared when data changes (e.g., new selection, resolution change, etc.)
         }
 
         private void RenderWeekdayTrendChart(WeekdayTrendResult result)
@@ -1203,16 +1217,85 @@ namespace DataVisualiser
         /// </summary>
         private async Task RenderPrimaryChart(ChartDataContext ctx)
         {
-            await RenderMainChart(
-                ctx.Data1!,
-                ctx.Data2,
-                ctx.DisplayName1 ?? string.Empty,
-                ctx.DisplayName2 ?? string.Empty,
-                ctx.From,
-                ctx.To,
-                metricType: ctx.MetricType,
-                primarySubtype: ctx.PrimarySubtype,
-                secondarySubtype: ctx.SecondarySubtype);
+            if (_viewModel.ChartState.IsMainVisible)
+            {
+                await RenderMainChart(
+                    ctx.Data1!,
+                    ctx.Data2,
+                    ctx.DisplayName1 ?? string.Empty,
+                    ctx.DisplayName2 ?? string.Empty,
+                    ctx.From,
+                    ctx.To,
+                    metricType: ctx.MetricType,
+                    primarySubtype: ctx.PrimarySubtype,
+                    secondarySubtype: ctx.SecondarySubtype);
+            }
+            // Note: We don't clear the chart when hiding - just hide the panel to preserve data
+        }
+
+        /// <summary>
+        /// Renders only a specific chart (used for visibility-only toggles to avoid re-rendering all charts).
+        /// </summary>
+        private async Task RenderSingleChart(string chartName, ChartDataContext ctx)
+        {
+            var hasSecondaryData = HasSecondaryData(ctx);
+            var metricType = ctx.MetricType;
+            var primarySubtype = ctx.PrimarySubtype;
+            var secondarySubtype = ctx.SecondarySubtype;
+
+            switch (chartName)
+            {
+                case "Main":
+                    if (_viewModel.ChartState.IsMainVisible)
+                    {
+                        await RenderMainChart(
+                            ctx.Data1!,
+                            ctx.Data2,
+                            ctx.DisplayName1 ?? string.Empty,
+                            ctx.DisplayName2 ?? string.Empty,
+                            ctx.From,
+                            ctx.To,
+                            metricType: metricType,
+                            primarySubtype: primarySubtype,
+                            secondarySubtype: secondarySubtype);
+                    }
+                    break;
+
+                case "Norm":
+                    if (_viewModel.ChartState.IsNormalizedVisible && hasSecondaryData)
+                    {
+                        await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
+                    }
+                    break;
+
+                case "Diff":
+                    if (_viewModel.ChartState.IsDifferenceVisible && hasSecondaryData)
+                    {
+                        await RenderDifference(ctx, metricType, primarySubtype, secondarySubtype);
+                    }
+                    break;
+
+                case "Ratio":
+                    if (_viewModel.ChartState.IsRatioVisible && hasSecondaryData)
+                    {
+                        await RenderRatio(ctx, metricType, primarySubtype, secondarySubtype);
+                    }
+                    break;
+
+                case "Weekly":
+                    if (_viewModel.ChartState.IsWeeklyVisible)
+                    {
+                        await RenderWeeklyDistribution(ctx);
+                    }
+                    break;
+
+                case "WeeklyTrend":
+                    if (_viewModel.ChartState.IsWeeklyTrendVisible)
+                    {
+                        RenderWeeklyTrend(ctx);
+                    }
+                    break;
+            }
         }
 
         /// <summary>
@@ -1268,10 +1351,7 @@ namespace DataVisualiser
                     useFrequencyShading: _viewModel.ChartState.UseFrequencyShading,
                     intervalCount: _viewModel.ChartState.WeeklyIntervalCount);
             }
-            else
-            {
-                ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
-            }
+            // Note: We don't clear the chart when hiding - just hide the panel to preserve data
         }
 
         private void RenderWeeklyTrend(ChartDataContext ctx)
@@ -1281,10 +1361,7 @@ namespace DataVisualiser
                 var result = new WeekdayTrendStrategy().Compute(ctx.Data1!, ctx.From, ctx.To);
                 RenderWeekdayTrendChart(result);
             }
-            else
-            {
-                ChartHelper.ClearChart(ChartWeekdayTrend, _viewModel.ChartState.ChartTimestamps);
-            }
+            // Note: We don't clear the chart when hiding - just hide the panel to preserve data
         }
 
         private Task RenderDifference(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)

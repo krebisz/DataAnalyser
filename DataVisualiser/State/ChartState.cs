@@ -7,6 +7,7 @@ namespace DataVisualiser.State
     public class ChartState
     {
         // Track which charts are visible
+        public bool IsMainVisible { get; set; } = true; // Default to visible (Show on startup)
         public bool IsNormalizedVisible { get; set; }
         public bool IsDifferenceVisible { get; set; }
         public bool IsRatioVisible { get; set; }
