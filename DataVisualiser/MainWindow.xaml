@@ -1,4 +1,4 @@
-﻿<Window x:Class="DataVisualiser.MainWindow"
+<Window x:Class="DataVisualiser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
@@ -352,6 +352,22 @@
                                          Content="Simple Range"
                                          GroupName="WeeklyDisplayModes"
                                          Checked="OnWeeklyDisplayModeChanged"/>
+
+                            <TextBlock Text="Interval Count:"
+                                       VerticalAlignment="Center"
+                                       Margin="20,0,10,0"/>
+
+                            <ComboBox x:Name="WeeklyIntervalCountCombo"
+                                      Width="80"
+                                      VerticalAlignment="Center"
+                                      SelectionChanged="OnWeeklyIntervalCountChanged">
+                                <ComboBoxItem Content="3" Tag="3"/>
+                                <ComboBoxItem Content="5" Tag="5"/>
+                                <ComboBoxItem Content="10" Tag="10"/>
+                                <ComboBoxItem Content="25" Tag="25" IsSelected="True"/>
+                                <ComboBoxItem Content="50" Tag="50"/>
+                                <ComboBoxItem Content="100" Tag="100"/>
+                            </ComboBox>
                         </StackPanel>
 
                         <StackPanel x:Name="ChartWeeklyPanel" Orientation="Vertical">

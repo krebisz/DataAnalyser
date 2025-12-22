@@ -585,6 +585,11 @@ namespace DataVisualiser.ViewModels
             ChartState.UseFrequencyShading = useFrequencyShading;
         }
 
+        public void SetWeeklyIntervalCount(int intervalCount)
+        {
+            ChartState.WeeklyIntervalCount = intervalCount;
+        }
+
         public void SetSelectedMetricType(string? metric)
         {
             MetricState.SelectedMetricType = metric;

@@ -579,12 +579,47 @@ namespace DataVisualiser
                         ctx.From,
                         ctx.To,
                         minHeight: 400,
-                        useFrequencyShading: _viewModel.ChartState.UseFrequencyShading);
+                        useFrequencyShading: _viewModel.ChartState.UseFrequencyShading,
+                        intervalCount: _viewModel.ChartState.WeeklyIntervalCount);
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"OnWeeklyDisplayModeChanged error: {ex.Message}");
+            }
+        }
+
+        private async void OnWeeklyIntervalCountChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializing)
+                return;
+
+            try
+            {
+                if (WeeklyIntervalCountCombo.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem &&
+                    selectedItem.Tag is string tagValue &&
+                    int.TryParse(tagValue, out int intervalCount))
+                {
+                    _viewModel.SetWeeklyIntervalCount(intervalCount);
+
+                    if (_viewModel.ChartState.IsWeeklyVisible && _viewModel.ChartState.LastContext?.Data1 != null)
+                    {
+                        var ctx = _viewModel.ChartState.LastContext;
+                        await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
+                            ChartWeekly,
+                            ctx.Data1,
+                            ctx.DisplayName1,
+                            ctx.From,
+                            ctx.To,
+                            minHeight: 400,
+                            useFrequencyShading: _viewModel.ChartState.UseFrequencyShading,
+                            intervalCount: _viewModel.ChartState.WeeklyIntervalCount);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"OnWeeklyIntervalCountChanged error: {ex.Message}");
             }
         }
 
@@ -1230,7 +1265,8 @@ namespace DataVisualiser
                     ctx.From,
                     ctx.To,
                     minHeight: 400,
-                    useFrequencyShading: _viewModel.ChartState.UseFrequencyShading);
+                    useFrequencyShading: _viewModel.ChartState.UseFrequencyShading,
+                    intervalCount: _viewModel.ChartState.WeeklyIntervalCount);
             }
             else
             {
