@@ -13,11 +13,11 @@ Binding rules reside in the **Project Bible**.
 
 Roadmap execution adheres to the following constraints:
 
-- Semantic correctness over convenience  
-- Explicit contracts before implementation  
-- Non-destructive, additive evolution  
-- Clear separation between truth and exploration  
-- Execution proceeds only after foundations are locked  
+- Semantic correctness over convenience
+- Explicit contracts before implementation
+- Non-destructive, additive evolution
+- Clear separation between truth and exploration
+- Execution proceeds only after foundations are locked
 
 ---
 
@@ -104,14 +104,15 @@ Allow downstream systems (DataVisualiser) to consume CMS safely.
 - Generalized cyclic distribution visualizations (e.g., weekly, hourly, or N-bucket cycles)
 - Foundation for user-defined metric transformations with preview tables feeding the charting pipeline
 
-**Status**: ▶ In Progress (~55% complete)
+**Status**: ▶ In Progress (~60% complete)
 
-CMS infrastructure is in place; multiple strategies are migrated or in progress; UI integration and remaining strategy migrations continue.
+CMS infrastructure is in place; multiple strategies are migrated or in progress; UI integration and remaining strategy migrations continue. User-defined metric transformations with preview are implemented.
 
 ---
 
-### Phase 4A — Workspace Realignment & Parity Closure  
-*(Additive · Non-Destructive)*
+### Phase 4A — Workspace Realignment & Parity Closure
+
+_(Additive · Non-Destructive)_
 
 **Goal**  
 Allow controlled workspace reset and consolidation **without loss of semantic, architectural, or executional continuity**.
@@ -206,10 +207,12 @@ Any deviation from this roadmap requires:
 The following goals clarify expected evolution **within existing phases**:
 
 - **Generalized cyclic distribution charts**
+
   - Extend weekly distribution visualizations into a generic cyclic engine (weekly, hourly, or N-bucket) without altering semantic contracts.
 
-- **User-defined metric transformations with preview**
+- **User-defined metric transformations with preview** ✅ **Complete**
   - Allow explicit transformations over CMS (e.g. `A + B - C`, `sqrt(A)`), preview before/after values in a grid, and feed results into the charting pipeline as ephemeral, non-canonical metrics.
+  - **Status**: Implemented. Transform panel supports unary operations (Logarithm, Square Root) and binary operations (Add, Subtract) on metric data. Results are explicitly marked as ephemeral/non-canonical and displayed in preview grids before charting. Transform results are never promoted to canonical truth.
 
 ---
 

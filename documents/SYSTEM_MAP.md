@@ -5,6 +5,7 @@
 This document defines the **conceptual structure of the system**, its major layers, and the relationships between them.
 
 It is authoritative for:
+
 - semantic boundaries
 - responsibility separation
 - present and future system shape
@@ -18,6 +19,7 @@ It is **not** an implementation guide.
 The system is designed to ingest heterogeneous data sources, normalize them into a canonical, deterministic metric space, and support computation, visualization, and future analytical extensions.
 
 The architecture is deliberately layered to ensure:
+
 - lossless ingestion
 - explicit semantic authority
 - reversible evolution
@@ -39,8 +41,6 @@ Computation / Aggregation
     ↓
 Presentation / Visualization
 ```
-
-
 
 Each stage has exclusive responsibility for its concern.
 
@@ -65,6 +65,7 @@ RawRecords are immutable and traceable.
 The normalization layer is the **sole authority** for assigning semantic meaning to raw observations.
 
 It is:
+
 - deterministic
 - explicit
 - rule-driven
@@ -75,12 +76,13 @@ It is:
 
 Normalization is composed of ordered stages, including but not limited to:
 
-1. Metric Identity Resolution  
-2. Unit Normalization (future)  
-3. Time Normalization (future)  
-4. Dimensional Qualification (future)  
+1. Metric Identity Resolution
+2. Unit Normalization (future)
+3. Time Normalization (future)
+4. Dimensional Qualification (future)
 
 Each stage:
+
 - has a single responsibility
 - must not override earlier stages
 
@@ -89,7 +91,8 @@ Each stage:
 ### 5.3 Metric Identity Resolution
 
 Metric Identity Resolution:
-- determines what a metric *is*
+
+- determines what a metric _is_
 - assigns canonical metric identity
 - does not infer meaning from values
 
@@ -102,6 +105,7 @@ This stage is declarative, stable, and explainable.
 CMS represents trusted, semantically-resolved metrics.
 
 Properties:
+
 - identity is canonical and opaque
 - time semantics are explicit
 - suitable for computation and aggregation
@@ -135,6 +139,7 @@ This representation is the **semantic authority**.
 - Enables parallel legacy + CMS adoption without leakage
 
 Conversion between internal CMS and consumer CMS is:
+
 - explicit
 - one-way
 - non-authoritative
@@ -148,6 +153,7 @@ This boundary is mandatory.
 ## 7. Computation & Presentation Layer
 
 Downstream layers:
+
 - assume semantic correctness
 - do not reinterpret meaning
 - operate on:
@@ -155,9 +161,57 @@ Downstream layers:
   - legacy-compatible projections (during migration)
 
 No downstream layer may:
+
 - assign identity
 - reinterpret semantics
 - influence normalization outcomes
+
+---
+
+## 7C. Ephemeral Transformations & Derived Metrics (Additive Clarification)
+
+> **Additive clarification — Phase 4 implementation.**
+
+### 7C.1 Transform Operations
+
+The system supports user-defined transformations over canonical metrics:
+
+- **Unary operations**: Logarithm, Square Root
+- **Binary operations**: Add, Subtract
+- Operations are applied to metric values, not identities
+
+### 7C.2 Transform Results Are Ephemeral
+
+Transform results:
+
+- are **explicitly non-canonical**
+- have **no semantic authority**
+- are **never promoted to canonical truth**
+- exist only for visualization and exploratory analysis
+
+### 7C.3 Transform Pipeline
+
+Transform operations:
+
+1. Accept canonical metric data as input
+2. Apply mathematical operations to values
+3. Produce ephemeral results with:
+   - derived units (preserved from sources where applicable)
+   - operation provenance (tracked but not authoritative)
+   - preview grids before charting
+4. Feed results into charting pipeline as non-authoritative series
+
+### 7C.4 Boundaries
+
+Transform layer:
+
+- **does not** create canonical metric identities
+- **does not** influence normalization
+- **does not** persist results as authoritative metrics
+- **does** provide explicit operation tracking
+- **does** maintain separation from canonical truth
+
+This boundary ensures transforms remain **exploratory tools**, not semantic mutations.
 
 ---
 
@@ -174,6 +228,7 @@ During Phase 4:
 No computation layer may silently switch semantic inputs.
 
 Parallelism exists to:
+
 - validate equivalence
 - protect correctness
 - prevent forced migration
@@ -191,6 +246,7 @@ Parity validation is a **boundary artifact**, not an implementation detail.
 - They exist solely to validate equivalence of outcomes
 
 Parity:
+
 - is strategy-scoped
 - is explicitly activated
 - must not alter computation paths
@@ -206,6 +262,7 @@ A strategy is not considered migrated until parity is proven.
 ### 8.1 Intent
 
 An optional analytical layer intended to:
+
 - explore structural similarity, equivalence, or hierarchy
 - support discovery and comparison
 - enable higher-order reasoning
@@ -217,6 +274,7 @@ This layer provides **insight**, not authority.
 ### 8.2 Relationship to Core Pipeline
 
 This layer:
+
 - operates orthogonally to ingestion and normalization
 - consumes normalized or canonical data as input
 - does not modify RawRecords, normalization outputs, or CMS
@@ -228,6 +286,7 @@ It must not participate in ingestion, normalization, or computation.
 ### 8.3 Non-Authority Constraint (Binding)
 
 Structural / Manifold Analysis MUST NOT:
+
 - assign or alter canonical metric identity
 - modify normalization outcomes
 - influence computation or rendering implicitly
@@ -237,6 +296,7 @@ Structural / Manifold Analysis MUST NOT:
 ### 8.4 Promotion Boundary
 
 Insights may be promoted only via:
+
 - explicit, declarative rule changes
 - reviewable mechanisms
 - reversible processes
@@ -263,6 +323,7 @@ Silent boundary erosion is prohibited.
 ## 10. Evolutionary Direction
 
 Future evolution must:
+
 - preserve ingestion boundaries
 - centralize semantic authority
 - isolate analytical creativity from canonical truth

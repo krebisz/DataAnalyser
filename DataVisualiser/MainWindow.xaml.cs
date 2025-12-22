@@ -4,6 +4,7 @@ using DataVisualiser.Charts.Helpers;
 using DataVisualiser.Charts.Rendering;
 using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Data.Repositories;
+using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services;
 using DataVisualiser.State;
@@ -515,18 +516,50 @@ namespace DataVisualiser
 
             if (allDataList.Count == 0) return;
 
-            Func<double, double> op = operation switch
+            // Phase 4: Use new transform expression infrastructure
+            var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0);
+            List<double> computedResults;
+            List<IReadOnlyList<HealthMetricData>> metricsList;
+
+            if (expression == null)
             {
-                "Log" => DataVisualiser.Models.UnaryOperators.Logarithm,
-                "Sqrt" => DataVisualiser.Models.UnaryOperators.SquareRoot,
-                _ => x => x
-            };
+                // Fallback to legacy approach if operation not found in registry
+                System.Diagnostics.Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
+                Func<double, double> op = operation switch
+                {
+                    "Log" => DataVisualiser.Models.UnaryOperators.Logarithm,
+                    "Sqrt" => DataVisualiser.Models.UnaryOperators.SquareRoot,
+                    _ => x => x
+                };
+                var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
+                computedResults = DataVisualiser.Helper.MathHelper.ApplyUnaryOperation(allValues, op);
+                metricsList = new List<IReadOnlyList<HealthMetricData>> { allDataList };
+            }
+            else
+            {
+                // Evaluate using new infrastructure
+                System.Diagnostics.Debug.WriteLine($"[Transform] UNARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
+                metricsList = new List<IReadOnlyList<HealthMetricData>> { allDataList };
+                computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
+                System.Diagnostics.Debug.WriteLine($"[Transform] UNARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
+            }
 
-            var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
-            var allResults = DataVisualiser.Helper.MathHelper.ApplyUnaryOperation(allValues, op);
+            // Continue with grid and chart rendering
+            await RenderTransformResults(allDataList, computedResults, operation, metricsList);
 
+        }
+
+        /// <summary>
+        /// Phase 4: Shared method to render transform results (grid and chart) using new infrastructure.
+        /// </summary>
+        private async Task RenderTransformResults(
+            List<HealthMetricData> dataList,
+            List<double> results,
+            string operation,
+            List<IReadOnlyList<HealthMetricData>> metrics)
+        {
             // Use all data for grid display (DataGrid has scrolling enabled)
-            var resultData = allDataList.Zip(allResults, (d, r) => new
+            var resultData = dataList.Zip(results, (d, r) => new
             {
                 Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
                 Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
@@ -602,8 +635,8 @@ namespace DataVisualiser
                 // Debug: Check chart dimensions before rendering
                 System.Diagnostics.Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartPanel.Visibility}");
 
-                // Use ALL data for chart rendering
-                await RenderTransformChart(allDataList, allResults);
+                // Use ALL data for chart rendering with new infrastructure label generation
+                await RenderTransformChart(dataList, results, operation, metrics);
 
                 // Force chart update after rendering - multiple approaches for maximum compatibility
                 ChartTransformResult.Update(true, true);
@@ -620,7 +653,14 @@ namespace DataVisualiser
             }
         }
 
-        private async Task RenderTransformChart(List<HealthMetricData> dataList, List<double> results)
+        /// <summary>
+        /// Phase 4: Renders transform chart using new infrastructure for label generation.
+        /// </summary>
+        private async Task RenderTransformChart(
+            List<HealthMetricData> dataList,
+            List<double> results,
+            string operation,
+            List<IReadOnlyList<HealthMetricData>> metrics)
         {
             if (dataList.Count == 0 || results.Count == 0)
                 return;
@@ -630,25 +670,60 @@ namespace DataVisualiser
             var from = ctx?.From ?? dataList.Min(d => d.NormalizedTimestamp);
             var to = ctx?.To ?? dataList.Max(d => d.NormalizedTimestamp);
 
-            // Determine label based on operation
-            var operationTag = TransformOperationCombo.SelectedItem is System.Windows.Controls.ComboBoxItem item
-                ? item.Tag?.ToString() ?? "Transform"
-                : "Transform";
-
-            var label = operationTag switch
+            // Phase 4: Generate label using new infrastructure
+            string label;
+            var metricIndices = metrics.Count > 0 ? Enumerable.Range(0, metrics.Count).ToArray() : new[] { 0 };
+            var expression = TransformExpressionBuilder.BuildFromOperation(operation, metricIndices);
+            if (expression != null && metrics.Count > 0)
             {
-                "Log" => "Log(Result)",
-                "Sqrt" => "√(Result)",
-                "Add" => "Result (Sum)",
-                "Subtract" => "Result (Difference)",
-                _ => "Transform Result"
-            };
+                // Get metric labels from context
+                var metricLabels = new List<string>();
+                if (ctx != null)
+                {
+                    if (!string.IsNullOrEmpty(ctx.PrimarySubtype))
+                        metricLabels.Add($"{ctx.MetricType}:{ctx.PrimarySubtype}");
+                    else if (!string.IsNullOrEmpty(ctx.MetricType))
+                        metricLabels.Add(ctx.MetricType);
+
+                    if (metrics.Count > 1 && !string.IsNullOrEmpty(ctx.SecondarySubtype))
+                        metricLabels.Add($"{ctx.MetricType}:{ctx.SecondarySubtype}");
+                }
+
+                // Fallback to generic labels if context not available
+                while (metricLabels.Count < metrics.Count)
+                {
+                    metricLabels.Add($"Metric{metricLabels.Count}");
+                }
+
+                label = TransformExpressionEvaluator.GenerateLabel(expression, metricLabels);
+                System.Diagnostics.Debug.WriteLine($"[Transform] LABEL - Using NEW infrastructure label generation: '{label}'");
+            }
+            else
+            {
+                // Fallback to simple label generation
+                var fallbackOperationTag = TransformOperationCombo.SelectedItem is System.Windows.Controls.ComboBoxItem fallbackItem
+                    ? fallbackItem.Tag?.ToString() ?? "Transform"
+                    : "Transform";
+
+                label = fallbackOperationTag switch
+                {
+                    "Log" => "Log(Result)",
+                    "Sqrt" => "√(Result)",
+                    "Add" => "Result (Sum)",
+                    "Subtract" => "Result (Difference)",
+                    _ => "Transform Result"
+                };
+                System.Diagnostics.Debug.WriteLine($"[Transform] LABEL - Using LEGACY label generation: '{label}'");
+            }
 
             // Create strategy using existing pipeline
             var strategy = new TransformResultStrategy(dataList, results, label, from, to);
 
             // Use existing chart rendering pipeline
             // Pass metric type and subtype info for proper label formatting
+            var operationTag = TransformOperationCombo.SelectedItem is System.Windows.Controls.ComboBoxItem item
+                ? item.Tag?.ToString() ?? "Transform"
+                : "Transform";
             string? operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : null;
             bool isOperationChart = operationTag == "Subtract" || operationTag == "Add";
 
@@ -665,6 +740,31 @@ namespace DataVisualiser
                 isOperationChart: isOperationChart);
         }
 
+        /// <summary>
+        /// Phase 4: Aligns two metric series by timestamp, keeping only points that exist in both.
+        /// Required for transform expression evaluation which expects aligned data.
+        /// </summary>
+        private (List<HealthMetricData>, List<HealthMetricData>) AlignMetricsByTimestamp(
+            List<HealthMetricData> data1,
+            List<HealthMetricData> data2)
+        {
+            var aligned1 = new List<HealthMetricData>();
+            var aligned2 = new List<HealthMetricData>();
+
+            var data2Lookup = data2.ToDictionary(d => d.NormalizedTimestamp, d => d);
+
+            foreach (var point1 in data1)
+            {
+                if (data2Lookup.TryGetValue(point1.NormalizedTimestamp, out var point2))
+                {
+                    aligned1.Add(point1);
+                    aligned2.Add(point2);
+                }
+            }
+
+            return (aligned1, aligned2);
+        }
+
         private async Task ComputeBinaryTransform(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string operation)
         {
             // Use ALL data for chart computation (proper normalization)
@@ -678,117 +778,45 @@ namespace DataVisualiser
 
             if (allData1List.Count == 0 || allData2List.Count == 0) return;
 
-            Func<double, double, double> op = operation switch
-            {
-                "Add" => DataVisualiser.Models.BinaryOperators.Sum,
-                "Subtract" => DataVisualiser.Models.BinaryOperators.Difference,
-                _ => (a, b) => a
-            };
+            // Phase 4: Align data by timestamp (required for expression evaluator)
+            var alignedData = AlignMetricsByTimestamp(allData1List, allData2List);
+            if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
+                return;
 
-            // Compute on all data
-            var allValues1 = allData1List.Select(d => (double)d.Value!.Value).ToList();
-            var allValues2 = allData2List.Select(d => (double)d.Value!.Value).ToList();
-            var allResults = DataVisualiser.Helper.MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
+            // Phase 4: Use new transform expression infrastructure
+            var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
+            List<double> binaryComputedResults;
+            List<IReadOnlyList<HealthMetricData>> binaryMetricsList;
 
-            // Use all data for grid display (DataGrid has scrolling enabled)
-            var minCount = Math.Min(Math.Min(allData1List.Count, allData2List.Count), allResults.Count);
-            var resultData = new List<object>();
-            for (int i = 0; i < minCount; i++)
+            if (expression == null)
             {
-                resultData.Add(new
+                // Fallback to legacy approach if operation not found in registry
+                System.Diagnostics.Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
+                Func<double, double, double> op = operation switch
                 {
-                    Timestamp = allData1List[i].NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                    Value = double.IsNaN(allResults[i]) ? "NaN" : allResults[i].ToString("F4")
-                });
+                    "Add" => DataVisualiser.Models.BinaryOperators.Sum,
+                    "Subtract" => DataVisualiser.Models.BinaryOperators.Difference,
+                    _ => (a, b) => a
+                };
+
+                var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
+                var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
+                binaryComputedResults = DataVisualiser.Helper.MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
+                binaryMetricsList = new List<IReadOnlyList<HealthMetricData>> { alignedData.Item1, alignedData.Item2 };
+                System.Diagnostics.Debug.WriteLine($"[Transform] BINARY - Legacy computation completed: {binaryComputedResults.Count} results");
+            }
+            else
+            {
+                // Evaluate using new infrastructure
+                System.Diagnostics.Debug.WriteLine($"[Transform] BINARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
+                binaryMetricsList = new List<IReadOnlyList<HealthMetricData>> { alignedData.Item1, alignedData.Item2 };
+                binaryComputedResults = TransformExpressionEvaluator.Evaluate(expression, binaryMetricsList);
+                System.Diagnostics.Debug.WriteLine($"[Transform] BINARY - Evaluated {binaryComputedResults.Count} results using TransformExpressionEvaluator");
             }
 
-            TransformGrid3.ItemsSource = resultData;
-            if (TransformGrid3.Columns.Count >= 2)
-            {
-                TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-                TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            }
+            // Continue with grid and chart rendering
+            await RenderTransformResults(alignedData.Item1, binaryComputedResults, operation, binaryMetricsList);
 
-            // Show result grid and chart only if we have results
-            if (resultData.Count > 0)
-            {
-                TransformGrid3Panel.Visibility = Visibility.Visible;
-                TransformChartPanel.Visibility = Visibility.Visible;
-
-                // Force layout update and wait for it to complete (LiveCharts needs chart to be measured)
-                TransformChartPanel.UpdateLayout();
-
-                // Wait for layout pass to complete - ensures chart has actual dimensions
-                await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
-
-                // Calculate and set chart container width to fill remaining space
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    if (TransformChartContainer != null)
-                    {
-                        // Get the parent horizontal StackPanel
-                        var parentStackPanel = TransformChartContainer.Parent as FrameworkElement;
-                        if (parentStackPanel != null && parentStackPanel.Parent is FrameworkElement parentContainer)
-                        {
-                            double usedWidth = 0;
-                            // Sum widths of visible grids (use MinWidth if ActualWidth not available yet)
-                            // Grid 1 is always visible, find it by traversing the visual tree
-                            var grid1StackPanel = TransformGrid1.Parent as FrameworkElement;
-                            if (grid1StackPanel != null)
-                            {
-                                var grid1Width = grid1StackPanel.ActualWidth > 0 ? grid1StackPanel.ActualWidth : 250;
-                                usedWidth += grid1Width;
-                            }
-                            else
-                            {
-                                usedWidth += 250; // Fallback
-                            }
-
-                            if (TransformGrid2Panel.IsVisible)
-                            {
-                                var grid2Width = TransformGrid2Panel.ActualWidth > 0 ? TransformGrid2Panel.ActualWidth : 250;
-                                usedWidth += grid2Width;
-                            }
-
-                            if (TransformGrid3Panel.IsVisible)
-                            {
-                                var grid3Width = TransformGrid3Panel.ActualWidth > 0 ? TransformGrid3Panel.ActualWidth : 250;
-                                usedWidth += grid3Width;
-                            }
-
-                            // Add margins: 20px left margin, 10px between each grid, 10px before chart
-                            usedWidth += 20 + 10 + 10; // Left margin + spacing
-
-                            // Set Grid width to fill remaining space (minimum 400px)
-                            var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
-                            var chartWidth = Math.Max(400, availableWidth - usedWidth - 40); // 40px for window padding
-                            TransformChartContainer.Width = chartWidth;
-
-                            System.Diagnostics.Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
-                        }
-                    }
-                }, System.Windows.Threading.DispatcherPriority.Render);
-
-                // Debug: Check chart dimensions before rendering
-                System.Diagnostics.Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartPanel.Visibility}");
-
-                // Use ALL data for chart rendering (using data1 timestamps aligned with results)
-                // Need to align allData1List with allResults (they should already be aligned)
-                await RenderTransformChart(allData1List, allResults);
-
-                // Force chart update after rendering - multiple approaches for maximum compatibility
-                ChartTransformResult.Update(true, true);
-
-                // Force another layout pass and visual update
-                TransformChartPanel.UpdateLayout();
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    ChartTransformResult.InvalidateVisual();
-                    ChartTransformResult.Update(true, true);
-                }, System.Windows.Threading.DispatcherPriority.Render);
-
-                System.Diagnostics.Debug.WriteLine($"[TransformChart] After render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, SeriesCount={ChartTransformResult.Series?.Count ?? 0}");
-            }
         }
 
         #endregion

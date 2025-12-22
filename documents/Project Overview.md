@@ -72,10 +72,10 @@ It is now treated as a **future, non-authoritative analytical layer**, explicitl
 
 ## 5. Relationship to Foundational Documents
 
-- **Project Bible.md** — architectural law and invariants  
-- **SYSTEM_MAP.md** — conceptual layering and boundaries  
-- **MASTER_OPERATING_PROTOCOL.md** — execution and collaboration discipline  
-- **Project Roadmap.md** — phase sequencing and intent  
+- **Project Bible.md** — architectural law and invariants
+- **SYSTEM_MAP.md** — conceptual layering and boundaries
+- **MASTER_OPERATING_PROTOCOL.md** — execution and collaboration discipline
+- **Project Roadmap.md** — phase sequencing and intent
 
 In case of conflict, higher-authority documents prevail.
 
@@ -95,12 +95,17 @@ This reflects **actual implementation state**, not aspiration:
   Complete. CMS is produced deterministically alongside legacy outputs.
 
 - **Phase 4 — Consumer Adoption & Visualization Integration**  
-  In progress.  
+  In progress (~60% complete).  
   DataVisualiser now:
+
   - consumes CMS through an explicit dependency surface
   - supports **parallel CMS and legacy execution paths**
   - migrates strategies incrementally
   - uses parity harnesses to validate equivalence without forcing migration
+  - provides **user-defined metric transformations** with preview grids and charting pipeline integration
+    - Transform results are explicitly ephemeral and non-canonical
+    - Operations include unary (Logarithm, Square Root) and binary (Add, Subtract)
+    - Results are never promoted to canonical truth
 
   Parity is treated as a **phase obligation**, not an implementation detail.
 
@@ -124,6 +129,19 @@ Constraints:
 - Promotion to canonical truth is never implicit
 
 Derived metrics may be ephemeral or persistent, but are always **intentional and reversible**.
+
+---
+
+## 7A. Transform Operations (Phase 4 Implementation)
+
+The system currently supports **ephemeral transform operations** (Phase 4):
+
+- Transform results are **explicitly non-canonical** and **ephemeral**
+- Operations include unary (Logarithm, Square Root) and binary (Add, Subtract)
+- Results are displayed in preview grids and charted, but **never promoted to canonical truth**
+- Transform operations track provenance (source metrics, operation type) but do not create authoritative identities
+
+This implementation aligns with Phase 4 intermediate goals and provides a foundation for Phase 5 derived metrics, while maintaining strict separation from canonical semantic authority.
 
 ---
 
