@@ -248,12 +248,14 @@ namespace DataVisualiser.Data.Repositories
         /// <summary>
         /// Retrieves health metrics data filtered by base type and optional subtype from the specified table.
         /// </summary>
+        /// <param name="maxRecords">Maximum number of records to return. If null, returns all records. Used for performance optimization with large datasets.</param>
         public async Task<IEnumerable<HealthMetricData>> GetHealthMetricsDataByBaseType(
             string baseType,
             string? subtype = null,
             DateTime? from = null,
             DateTime? to = null,
-            string tableName = "HealthMetrics")
+            string tableName = "HealthMetrics",
+            int? maxRecords = null)
         {
             if (string.IsNullOrWhiteSpace(baseType))
                 throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
@@ -268,7 +270,24 @@ namespace DataVisualiser.Data.Repositories
 
             var providerColumn = SqlQueryBuilder.GetProviderColumn(tableName);
 
-            var sql = new StringBuilder($@"
+            var sql = new StringBuilder();
+
+            // Apply result limiting for performance optimization
+            if (maxRecords.HasValue && maxRecords.Value > 0)
+            {
+                sql.Append($@"
+                -- DataFetcher.GetHealthMetricsDataByBaseType (Limited to {maxRecords.Value} records)
+                SELECT TOP {maxRecords.Value}
+                    NormalizedTimestamp,
+                    Value,
+                    Unit,
+                    {providerColumn}
+                FROM [dbo].[{tableName}]
+                WHERE 1=1");
+            }
+            else
+            {
+                sql.Append($@"
                 -- DataFetcher.GetHealthMetricsDataByBaseType
                 SELECT 
                     NormalizedTimestamp,
@@ -277,6 +296,7 @@ namespace DataVisualiser.Data.Repositories
                     {providerColumn}
                 FROM [dbo].[{tableName}]
                 WHERE 1=1");
+            }
 
             var parameters = new DynamicParameters();
             SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);

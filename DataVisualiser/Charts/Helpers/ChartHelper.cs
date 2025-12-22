@@ -588,8 +588,11 @@ namespace DataVisualiser.Charts.Helpers
         {
             var allValues = CollectAllValues(rawData, smoothedValues);
 
+            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: rawData={rawData?.Count ?? 0}, smoothedValues={smoothedValues?.Count ?? 0}, allValues={allValues.Count}");
+
             if (!allValues.Any())
             {
+                System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: No values, resetting Y-axis");
                 ResetYAxisToInvalid(yAxis);
                 return;
             }
@@ -597,8 +600,11 @@ namespace DataVisualiser.Charts.Helpers
             double dataMin = allValues.Min();
             double dataMax = allValues.Max();
 
+            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: dataMin={dataMin}, dataMax={dataMax}");
+
             if (double.IsNaN(dataMin) || double.IsNaN(dataMax) || double.IsInfinity(dataMin) || double.IsInfinity(dataMax))
             {
+                System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: Invalid min/max, resetting Y-axis");
                 ResetYAxisToInvalid(yAxis);
                 return;
             }
@@ -607,6 +613,8 @@ namespace DataVisualiser.Charts.Helpers
             var (minValue, maxValue) = ApplyPadding(dataMin, dataMax, range);
             range = maxValue - minValue;
 
+            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: After padding - minValue={minValue}, maxValue={maxValue}, range={range}");
+
             const double targetTicks = 10.0;
             double rawTickInterval = range / targetTicks;
 
@@ -614,6 +622,7 @@ namespace DataVisualiser.Charts.Helpers
             {
                 yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(minValue);
                 yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(maxValue);
+                System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: Using fallback - YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}");
                 var fallbackStep = MathHelper.RoundToThreeSignificantDigits(range / targetTicks);
                 yAxis.Separator = fallbackStep > 0 ? new LiveCharts.Wpf.Separator { Step = fallbackStep } : new LiveCharts.Wpf.Separator();
                 yAxis.ShowLabels = true;
@@ -634,6 +643,8 @@ namespace DataVisualiser.Charts.Helpers
             yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
             yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
             yAxis.ShowLabels = true;
+
+            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: Final - YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}, Step={step}, ShowLabels={yAxis.ShowLabels}");
             yAxis.Labels = null;
         }
 

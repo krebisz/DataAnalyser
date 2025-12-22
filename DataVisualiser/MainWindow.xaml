@@ -15,60 +15,61 @@
             <StackPanel Orientation="Vertical">
                 <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                    <Label Content="Resolution:" VerticalAlignment="Center" Margin="5,0"/>
-                    <ComboBox x:Name="ResolutionCombo" Width="120" Margin="5"
-                              IsEditable="False"
-                              SelectionChanged="OnResolutionSelectionChanged"/>
+            <Label Content="Resolution:" VerticalAlignment="Center" Margin="5,0"/>
+            <ComboBox x:Name="ResolutionCombo" Width="120" Margin="5"
+                      IsEditable="False"
+                      SelectionChanged="OnResolutionSelectionChanged"/>
 
-                    <Label Content="Metric Type:" VerticalAlignment="Center" Margin="5,0"/>
-                    <ComboBox x:Name="TablesCombo" Width="300" Margin="5"
-                              IsEditable="False"
-                              SelectionChanged="OnMetricTypeSelectionChanged"/>
+            <Label Content="Metric Type:" VerticalAlignment="Center" Margin="5,0"/>
+            <ComboBox x:Name="TablesCombo" Width="300" Margin="5"
+                      IsEditable="False"
+                      SelectionChanged="OnMetricTypeSelectionChanged"/>
 
-                    <Label Content="From:" VerticalAlignment="Center" Margin="5,0"/>
-                    <DatePicker x:Name="FromDate"
-                                SelectedDateChanged="OnFromDateChanged"
-                                Width="150"
-                                Margin="5"/>
+            <Label Content="From:" VerticalAlignment="Center" Margin="5,0"/>
+            <DatePicker x:Name="FromDate"
+                        SelectedDateChanged="OnFromDateChanged"
+                        Width="150"
+                        Margin="5"/>
 
-                    <Label Content="To:" VerticalAlignment="Center" Margin="5,0"/>
-                    <DatePicker x:Name="ToDate"
-                                SelectedDateChanged="OnToDateChanged"
-                                Width="150"
-                                Margin="5"/>
+            <Label Content="To:" VerticalAlignment="Center" Margin="5,0"/>
+            <DatePicker x:Name="ToDate"
+                        SelectedDateChanged="OnToDateChanged"
+                        Width="150"
+                        Margin="5"/>
 
-                    <Button Content="Load Data"
-                            Click="OnLoadData"
-                            Margin="5"
-                            Padding="10,5"/>
+            <Button Content="Load Data"
+                    Click="OnLoadData"
+                    Margin="5"
+                    Padding="10,5"/>
 
-                    <Separator Margin="10,0"/>
+            <Separator Margin="10,0"/>
 
-                    <Button Content="Reset Zoom"
-                            Click="OnResetZoom"
-                            Margin="5"
-                            Padding="10,5"/>
-                </StackPanel>
+            <Button Content="Reset Zoom"
+                    Click="OnResetZoom"
+                    Margin="5"
+                    Padding="10,5"/>
+        </StackPanel>
 
                 <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
                 <StackPanel Orientation="Horizontal"
-                            Name="MetricSubtypePanel">
+                            Name="MetricSubtypePanel"
+                            Margin="5">
 
-                    <Label Content="Metric Subtype 1:"
-                           VerticalAlignment="Center"
-                           Margin="5,0"/>
+            <Label Content="Metric Subtype 1:"
+                   VerticalAlignment="Center"
+                   Margin="5,0"/>
 
-                    <ComboBox x:Name="SubtypeCombo"
-                              Width="250"
-                              Margin="5"
-                              IsEditable="False"
-                              IsEnabled="False"/>
+            <ComboBox x:Name="SubtypeCombo"
+                      Width="250"
+                      Margin="5"
+                      IsEditable="False"
+                      IsEnabled="False"/>
 
-                    <Button Content="Add Subtype"
-                            Click="AddSubtypeComboBox"
-                            Margin="5"
-                            Padding="10,5"/>
-                </StackPanel>
+            <Button Content="Add Subtype"
+                    Click="AddSubtypeComboBox"
+                    Margin="5"
+                    Padding="10,5"/>
+        </StackPanel>
             </StackPanel>
         </Border>
 
@@ -444,6 +445,159 @@
                                               ShowLabels="True"/>
                                 </lvc:CartesianChart.AxisY>
                             </lvc:CartesianChart>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
+
+                <!-- ========== TRANSFORM DATA PANEL ========== -->
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
+
+                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                                <TextBlock x:Name="TransformPanelTitle"
+                                           Text="Data Transform"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center"/>
+
+                                <Button x:Name="TransformPanelToggleButton"
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnTransformPanelToggle"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel x:Name="TransformPanel" Orientation="Vertical" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal" Margin="20,10">
+                                <!-- Operation Selection -->
+                                <StackPanel Orientation="Vertical" Margin="0,0,20,0" MinWidth="150">
+                                    <TextBlock Text="Operation:" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <ComboBox x:Name="TransformOperationCombo" 
+                                              SelectionChanged="OnTransformOperationChanged"
+                                              MinWidth="120">
+                                        <ComboBoxItem Content="Logarithm" Tag="Log"/>
+                                        <ComboBoxItem Content="Square Root" Tag="Sqrt"/>
+                                        <ComboBoxItem Content="Add (+)" Tag="Add"/>
+                                        <ComboBoxItem Content="Subtract (-)" Tag="Subtract"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Compute Button -->
+                                <Button x:Name="TransformComputeButton"
+                                        Content="="
+                                        FontSize="20"
+                                        FontWeight="Bold"
+                                        Padding="15,5"
+                                        Margin="10,20,0,0"
+                                        Click="OnTransformCompute"
+                                        IsEnabled="False"/>
+                            </StackPanel>
+
+                            <!-- Data Grids -->
+                            <StackPanel Orientation="Horizontal" Margin="20,10">
+                                <!-- Grid 1: Primary Data -->
+                                <StackPanel Orientation="Vertical" Margin="0,0,10,0" MinWidth="250">
+                                    <TextBlock x:Name="TransformGrid1Title" 
+                                               Text="Primary Data" 
+                                               FontWeight="Bold" 
+                                               Margin="0,0,0,5"/>
+                                    <DataGrid x:Name="TransformGrid1"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              HeadersVisibility="Column"
+                                              MaxHeight="400"
+                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                              CanUserResizeColumns="True"
+                                              CanUserReorderColumns="False">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="Auto" MinWidth="150"/>
+                                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto" MinWidth="100"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+
+                                <!-- Grid 2: Secondary Data (if applicable) -->
+                                <StackPanel x:Name="TransformGrid2Panel" 
+                                            Orientation="Vertical" 
+                                            Margin="0,0,10,0" 
+                                            MinWidth="250"
+                                            Visibility="Collapsed">
+                                    <TextBlock x:Name="TransformGrid2Title" 
+                                               Text="Secondary Data" 
+                                               FontWeight="Bold" 
+                                               Margin="0,0,0,5"/>
+                                    <DataGrid x:Name="TransformGrid2"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              HeadersVisibility="Column"
+                                              MaxHeight="400"
+                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                              CanUserResizeColumns="True"
+                                              CanUserReorderColumns="False">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="Auto" MinWidth="150"/>
+                                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto" MinWidth="100"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+
+                                <!-- Grid 3: Result -->
+                                <StackPanel x:Name="TransformGrid3Panel" 
+                                            Orientation="Vertical" 
+                                            MinWidth="250"
+                                            Visibility="Collapsed">
+                                    <TextBlock x:Name="TransformGrid3Title" 
+                                               Text="Result" 
+                                               FontWeight="Bold" 
+                                               Margin="0,0,0,5"/>
+                                    <DataGrid x:Name="TransformGrid3"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              HeadersVisibility="Column"
+                                              MaxHeight="400"
+                                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                              CanUserResizeColumns="True"
+                                              CanUserReorderColumns="False">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="Auto" MinWidth="150"/>
+                                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto" MinWidth="100"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+
+                                <!-- Chart: Transform Result -->
+                                <Grid x:Name="TransformChartContainer" Margin="10,0,0,0" HorizontalAlignment="Stretch" MinWidth="400">
+                                    <StackPanel x:Name="TransformChartPanel" 
+                                                Orientation="Vertical" 
+                                                Visibility="Collapsed">
+                                        <lvc:CartesianChart x:Name="ChartTransformResult"
+                                                            LegendLocation="Right"
+                                                            Zoom="X"
+                                                            Pan="X"
+                                                            Hoverable="True"
+                                                            Margin="20,5,10,20"
+                                                            MinHeight="400">
+                                            <lvc:CartesianChart.AxisX>
+                                                <lvc:Axis Title="Time"/>
+                                            </lvc:CartesianChart.AxisX>
+                                            <lvc:CartesianChart.AxisY>
+                                                <lvc:Axis Title="Value"
+                                                          ShowLabels="True"/>
+                                            </lvc:CartesianChart.AxisY>
+                                        </lvc:CartesianChart>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
                         </StackPanel>
 
                     </StackPanel>

@@ -122,6 +122,7 @@ namespace DataVisualiser
 
             // Sync main chart button text with initial state (visible = true, so button should show "Hide")
             UpdateChartVisibility(ChartMainPanel, ChartMainToggleButton, _viewModel.ChartState.IsMainVisible);
+            UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
         }
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -140,7 +141,8 @@ namespace DataVisualiser
                 { ChartMain, "Main" },
                 { ChartNorm, "Norm" },
                 { ChartDiff, "Diff" },
-                { ChartRatio, "Ratio" }
+                { ChartRatio, "Ratio" },
+                { ChartTransformResult, "Transform" }
             };
 
             _tooltipManager = new ChartTooltipManager(this, chartLabels);
@@ -148,6 +150,7 @@ namespace DataVisualiser
             _tooltipManager.AttachChart(ChartNorm, "Norm");
             _tooltipManager.AttachChart(ChartDiff, "Diff");
             _tooltipManager.AttachChart(ChartRatio, "Ratio");
+            _tooltipManager.AttachChart(ChartTransformResult, "Transform");
         }
 
         private void WireViewModelEvents()
@@ -448,6 +451,344 @@ namespace DataVisualiser
         private void OnChartRatioToggle(object sender, RoutedEventArgs e)
         {
             _viewModel.ToggleRatio();
+        }
+
+        private void OnTransformPanelToggle(object sender, RoutedEventArgs e)
+        {
+            _viewModel.ToggleTransformPanel();
+        }
+
+        private void OnTransformOperationChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (TransformOperationCombo.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem &&
+                selectedItem.Tag is string operationTag)
+            {
+                var ctx = _viewModel.ChartState.LastContext;
+                if (ctx == null)
+                {
+                    TransformComputeButton.IsEnabled = false;
+                    return;
+                }
+
+                var hasSecondary = HasSecondaryData(ctx);
+                var hasSecondSubtype = !string.IsNullOrEmpty(ctx.SecondarySubtype);
+                var isUnary = operationTag == "Log" || operationTag == "Sqrt";
+                var isBinary = operationTag == "Add" || operationTag == "Subtract";
+
+                // Enable compute button if operation matches data availability
+                // For binary operations, require both secondary data AND a second subtype selected
+                TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) ||
+                                                     (isBinary && hasSecondary && hasSecondSubtype);
+            }
+        }
+
+        private async void OnTransformCompute(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.ChartState.LastContext == null) return;
+
+            var ctx = _viewModel.ChartState.LastContext;
+            if (TransformOperationCombo.SelectedItem is not System.Windows.Controls.ComboBoxItem selectedItem ||
+                selectedItem.Tag is not string operationTag)
+                return;
+
+            var hasSecondary = HasSecondaryData(ctx);
+            var hasSecondSubtype = !string.IsNullOrEmpty(ctx.SecondarySubtype);
+            var isUnary = operationTag == "Log" || operationTag == "Sqrt";
+            var isBinary = operationTag == "Add" || operationTag == "Subtract";
+
+            if (isUnary && ctx.Data1 != null)
+            {
+                await ComputeUnaryTransform(ctx.Data1, operationTag);
+            }
+            else if (isBinary && hasSecondary && hasSecondSubtype && ctx.Data1 != null && ctx.Data2 != null)
+            {
+                await ComputeBinaryTransform(ctx.Data1, ctx.Data2, operationTag);
+            }
+        }
+
+        private async Task ComputeUnaryTransform(IEnumerable<HealthMetricData> data, string operation)
+        {
+            // Use ALL data for chart computation (proper normalization)
+            var allDataList = data.Where(d => d.Value.HasValue)
+                                  .OrderBy(d => d.NormalizedTimestamp)
+                                  .ToList();
+
+            if (allDataList.Count == 0) return;
+
+            Func<double, double> op = operation switch
+            {
+                "Log" => DataVisualiser.Models.UnaryOperators.Logarithm,
+                "Sqrt" => DataVisualiser.Models.UnaryOperators.SquareRoot,
+                _ => x => x
+            };
+
+            var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
+            var allResults = DataVisualiser.Helper.MathHelper.ApplyUnaryOperation(allValues, op);
+
+            // Use all data for grid display (DataGrid has scrolling enabled)
+            var resultData = allDataList.Zip(allResults, (d, r) => new
+            {
+                Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
+            }).ToList();
+
+            TransformGrid3.ItemsSource = resultData;
+            if (TransformGrid3.Columns.Count >= 2)
+            {
+                TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+                TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            }
+
+            // Show result grid and chart only if we have results
+            if (resultData.Count > 0)
+            {
+                TransformGrid3Panel.Visibility = Visibility.Visible;
+                TransformChartPanel.Visibility = Visibility.Visible;
+
+                // Force layout update and wait for it to complete (LiveCharts needs chart to be measured)
+                TransformChartPanel.UpdateLayout();
+
+                // Wait for layout pass to complete - ensures chart has actual dimensions
+                await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                // Calculate and set chart container width to fill remaining space
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (TransformChartContainer != null)
+                    {
+                        // Get the parent horizontal StackPanel
+                        var parentStackPanel = TransformChartContainer.Parent as FrameworkElement;
+                        if (parentStackPanel != null && parentStackPanel.Parent is FrameworkElement parentContainer)
+                        {
+                            double usedWidth = 0;
+                            // Sum widths of visible grids (use MinWidth if ActualWidth not available yet)
+                            // Grid 1 is always visible, find it by traversing the visual tree
+                            var grid1StackPanel = TransformGrid1.Parent as FrameworkElement;
+                            if (grid1StackPanel != null)
+                            {
+                                var grid1Width = grid1StackPanel.ActualWidth > 0 ? grid1StackPanel.ActualWidth : 250;
+                                usedWidth += grid1Width;
+                            }
+                            else
+                            {
+                                usedWidth += 250; // Fallback
+                            }
+
+                            if (TransformGrid2Panel.IsVisible)
+                            {
+                                var grid2Width = TransformGrid2Panel.ActualWidth > 0 ? TransformGrid2Panel.ActualWidth : 250;
+                                usedWidth += grid2Width;
+                            }
+
+                            if (TransformGrid3Panel.IsVisible)
+                            {
+                                var grid3Width = TransformGrid3Panel.ActualWidth > 0 ? TransformGrid3Panel.ActualWidth : 250;
+                                usedWidth += grid3Width;
+                            }
+
+                            // Add margins: 20px left margin, 10px between each grid, 10px before chart
+                            usedWidth += 20 + 10 + 10; // Left margin + spacing
+
+                            // Set Grid width to fill remaining space (minimum 400px)
+                            var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
+                            var chartWidth = Math.Max(400, availableWidth - usedWidth - 40); // 40px for window padding
+                            TransformChartContainer.Width = chartWidth;
+
+                            System.Diagnostics.Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
+                        }
+                    }
+                }, System.Windows.Threading.DispatcherPriority.Render);
+
+                // Debug: Check chart dimensions before rendering
+                System.Diagnostics.Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartPanel.Visibility}");
+
+                // Use ALL data for chart rendering
+                await RenderTransformChart(allDataList, allResults);
+
+                // Force chart update after rendering - multiple approaches for maximum compatibility
+                ChartTransformResult.Update(true, true);
+
+                // Force another layout pass and visual update
+                TransformChartPanel.UpdateLayout();
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    ChartTransformResult.InvalidateVisual();
+                    ChartTransformResult.Update(true, true);
+                }, System.Windows.Threading.DispatcherPriority.Render);
+
+                System.Diagnostics.Debug.WriteLine($"[TransformChart] After render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, SeriesCount={ChartTransformResult.Series?.Count ?? 0}");
+            }
+        }
+
+        private async Task RenderTransformChart(List<HealthMetricData> dataList, List<double> results)
+        {
+            if (dataList.Count == 0 || results.Count == 0)
+                return;
+
+            // Get date range from context or data
+            var ctx = _viewModel.ChartState.LastContext;
+            var from = ctx?.From ?? dataList.Min(d => d.NormalizedTimestamp);
+            var to = ctx?.To ?? dataList.Max(d => d.NormalizedTimestamp);
+
+            // Determine label based on operation
+            var operationTag = TransformOperationCombo.SelectedItem is System.Windows.Controls.ComboBoxItem item
+                ? item.Tag?.ToString() ?? "Transform"
+                : "Transform";
+
+            var label = operationTag switch
+            {
+                "Log" => "Log(Result)",
+                "Sqrt" => "√(Result)",
+                "Add" => "Result (Sum)",
+                "Subtract" => "Result (Difference)",
+                _ => "Transform Result"
+            };
+
+            // Create strategy using existing pipeline
+            var strategy = new TransformResultStrategy(dataList, results, label, from, to);
+
+            // Use existing chart rendering pipeline
+            // Pass metric type and subtype info for proper label formatting
+            string? operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : null;
+            bool isOperationChart = operationTag == "Subtract" || operationTag == "Add";
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                ChartTransformResult,
+                strategy,
+                label,
+                secondaryLabel: null,
+                minHeight: 400,
+                metricType: ctx?.MetricType,
+                primarySubtype: ctx?.PrimarySubtype,
+                secondarySubtype: ctx?.SecondarySubtype,
+                operationType: operationType,
+                isOperationChart: isOperationChart);
+        }
+
+        private async Task ComputeBinaryTransform(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string operation)
+        {
+            // Use ALL data for chart computation (proper normalization)
+            var allData1List = data1.Where(d => d.Value.HasValue)
+                                    .OrderBy(d => d.NormalizedTimestamp)
+                                    .ToList();
+
+            var allData2List = data2.Where(d => d.Value.HasValue)
+                                    .OrderBy(d => d.NormalizedTimestamp)
+                                    .ToList();
+
+            if (allData1List.Count == 0 || allData2List.Count == 0) return;
+
+            Func<double, double, double> op = operation switch
+            {
+                "Add" => DataVisualiser.Models.BinaryOperators.Sum,
+                "Subtract" => DataVisualiser.Models.BinaryOperators.Difference,
+                _ => (a, b) => a
+            };
+
+            // Compute on all data
+            var allValues1 = allData1List.Select(d => (double)d.Value!.Value).ToList();
+            var allValues2 = allData2List.Select(d => (double)d.Value!.Value).ToList();
+            var allResults = DataVisualiser.Helper.MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
+
+            // Use all data for grid display (DataGrid has scrolling enabled)
+            var minCount = Math.Min(Math.Min(allData1List.Count, allData2List.Count), allResults.Count);
+            var resultData = new List<object>();
+            for (int i = 0; i < minCount; i++)
+            {
+                resultData.Add(new
+                {
+                    Timestamp = allData1List[i].NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Value = double.IsNaN(allResults[i]) ? "NaN" : allResults[i].ToString("F4")
+                });
+            }
+
+            TransformGrid3.ItemsSource = resultData;
+            if (TransformGrid3.Columns.Count >= 2)
+            {
+                TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+                TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            }
+
+            // Show result grid and chart only if we have results
+            if (resultData.Count > 0)
+            {
+                TransformGrid3Panel.Visibility = Visibility.Visible;
+                TransformChartPanel.Visibility = Visibility.Visible;
+
+                // Force layout update and wait for it to complete (LiveCharts needs chart to be measured)
+                TransformChartPanel.UpdateLayout();
+
+                // Wait for layout pass to complete - ensures chart has actual dimensions
+                await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                // Calculate and set chart container width to fill remaining space
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (TransformChartContainer != null)
+                    {
+                        // Get the parent horizontal StackPanel
+                        var parentStackPanel = TransformChartContainer.Parent as FrameworkElement;
+                        if (parentStackPanel != null && parentStackPanel.Parent is FrameworkElement parentContainer)
+                        {
+                            double usedWidth = 0;
+                            // Sum widths of visible grids (use MinWidth if ActualWidth not available yet)
+                            // Grid 1 is always visible, find it by traversing the visual tree
+                            var grid1StackPanel = TransformGrid1.Parent as FrameworkElement;
+                            if (grid1StackPanel != null)
+                            {
+                                var grid1Width = grid1StackPanel.ActualWidth > 0 ? grid1StackPanel.ActualWidth : 250;
+                                usedWidth += grid1Width;
+                            }
+                            else
+                            {
+                                usedWidth += 250; // Fallback
+                            }
+
+                            if (TransformGrid2Panel.IsVisible)
+                            {
+                                var grid2Width = TransformGrid2Panel.ActualWidth > 0 ? TransformGrid2Panel.ActualWidth : 250;
+                                usedWidth += grid2Width;
+                            }
+
+                            if (TransformGrid3Panel.IsVisible)
+                            {
+                                var grid3Width = TransformGrid3Panel.ActualWidth > 0 ? TransformGrid3Panel.ActualWidth : 250;
+                                usedWidth += grid3Width;
+                            }
+
+                            // Add margins: 20px left margin, 10px between each grid, 10px before chart
+                            usedWidth += 20 + 10 + 10; // Left margin + spacing
+
+                            // Set Grid width to fill remaining space (minimum 400px)
+                            var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
+                            var chartWidth = Math.Max(400, availableWidth - usedWidth - 40); // 40px for window padding
+                            TransformChartContainer.Width = chartWidth;
+
+                            System.Diagnostics.Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
+                        }
+                    }
+                }, System.Windows.Threading.DispatcherPriority.Render);
+
+                // Debug: Check chart dimensions before rendering
+                System.Diagnostics.Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartPanel.Visibility}");
+
+                // Use ALL data for chart rendering (using data1 timestamps aligned with results)
+                // Need to align allData1List with allResults (they should already be aligned)
+                await RenderTransformChart(allData1List, allResults);
+
+                // Force chart update after rendering - multiple approaches for maximum compatibility
+                ChartTransformResult.Update(true, true);
+
+                // Force another layout pass and visual update
+                TransformChartPanel.UpdateLayout();
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    ChartTransformResult.InvalidateVisual();
+                    ChartTransformResult.Update(true, true);
+                }, System.Windows.Threading.DispatcherPriority.Render);
+
+                System.Diagnostics.Debug.WriteLine($"[TransformChart] After render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, SeriesCount={ChartTransformResult.Series?.Count ?? 0}");
+            }
         }
 
         #endregion
@@ -815,10 +1156,26 @@ namespace DataVisualiser
             UpdateChartVisibility(ChartRatioPanel, ChartRatioToggleButton, e.ShowRatio);
             UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
             UpdateChartVisibility(ChartWeekdayTrendPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
+            UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
 
             // If a specific chart was identified (visibility toggle or chart-specific config change), only render that chart
             if (!string.IsNullOrEmpty(e.ToggledChartName))
             {
+                // Transform panel visibility toggle - just update visibility, don't reload charts
+                if (e.ToggledChartName == "Transform" && e.IsVisibilityOnlyToggle)
+                {
+                    // Only populate grids if panel is being shown and we have data
+                    if (_viewModel.ChartState.IsTransformPanelVisible)
+                    {
+                        var transformCtx = _viewModel.ChartState.LastContext;
+                        if (transformCtx != null && ShouldRenderCharts(transformCtx))
+                        {
+                            PopulateTransformGrids(transformCtx);
+                        }
+                    }
+                    return; // Don't reload other charts
+                }
+
                 var ctx = _viewModel.ChartState.LastContext;
                 if (ctx != null && ShouldRenderCharts(ctx))
                 {
@@ -826,7 +1183,7 @@ namespace DataVisualiser
                 }
             }
             // Otherwise, render all charts (data change scenario)
-            else if (e.ShouldRenderCharts)
+            else if (e.ShouldRenderCharts && !e.IsVisibilityOnlyToggle)
             {
                 await RenderChartsFromLastContext();
             }
@@ -1023,13 +1380,13 @@ namespace DataVisualiser
 
                 var parityService = new ParityValidationService();
                 strategy = parityService.ExecuteCombinedMetricParityIfEnabled(
-                    leftCms,
-                    rightCms,
-                    series[0],
-                    series[1],
-                    labels[0],
-                    labels[1],
-                    from,
+                        leftCms,
+                        rightCms,
+                        series[0],
+                        series[1],
+                        labels[0],
+                        labels[1],
+                        from,
                     to,
                     ENABLE_COMBINED_METRIC_PARITY);
             }
@@ -1168,20 +1525,33 @@ namespace DataVisualiser
                 return;
 
             var hasSecondaryData = HasSecondaryData(ctx);
-
-            await RenderPrimaryChart(ctx);
-
-            // Render charts based on individual visibility states
             var metricType = ctx.MetricType;
             var primarySubtype = ctx.PrimarySubtype;
             var secondarySubtype = ctx.SecondarySubtype;
 
-            // Charts that require secondary data - only render if secondary data exists
+            // Only render charts that are visible - skip computation entirely for hidden charts
+            if (_viewModel.ChartState.IsMainVisible)
+            {
+                await RenderPrimaryChart(ctx);
+            }
+
+            // Charts that require secondary data - only render if visible AND secondary data exists
             if (hasSecondaryData)
             {
-                await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
-                await RenderDifference(ctx, metricType, primarySubtype, secondarySubtype);
-                await RenderRatio(ctx, metricType, primarySubtype, secondarySubtype);
+                if (_viewModel.ChartState.IsNormalizedVisible)
+                {
+                    await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
+                }
+
+                if (_viewModel.ChartState.IsDifferenceVisible)
+                {
+                    await RenderDifference(ctx, metricType, primarySubtype, secondarySubtype);
+                }
+
+                if (_viewModel.ChartState.IsRatioVisible)
+                {
+                    await RenderRatio(ctx, metricType, primarySubtype, secondarySubtype);
+                }
             }
             else
             {
@@ -1191,9 +1561,90 @@ namespace DataVisualiser
                 ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
             }
 
-            // Charts that don't require secondary data - always render based on visibility
-            await RenderWeeklyDistribution(ctx);
-            RenderWeeklyTrend(ctx);
+            // Charts that don't require secondary data - only render if visible
+            if (_viewModel.ChartState.IsWeeklyVisible)
+            {
+                await RenderWeeklyDistribution(ctx);
+            }
+
+            if (_viewModel.ChartState.IsWeeklyTrendVisible)
+            {
+                RenderWeeklyTrend(ctx);
+            }
+
+            // Populate transform panel grids if visible
+            if (_viewModel.ChartState.IsTransformPanelVisible)
+            {
+                PopulateTransformGrids(ctx);
+            }
+        }
+
+        private void PopulateTransformGrids(ChartDataContext ctx)
+        {
+            // Populate Grid 1 (Primary Data) - use all data (DataGrid has scrolling enabled)
+            if (ctx.Data1 != null)
+            {
+                var grid1Data = ctx.Data1.Where(d => d.Value.HasValue)
+                                         .OrderBy(d => d.NormalizedTimestamp)
+                                         .Select(d => new
+                                         {
+                                             Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                             Value = d.Value!.Value.ToString("F4")
+                                         }).ToList();
+
+                TransformGrid1.ItemsSource = grid1Data;
+                TransformGrid1Title.Text = ctx.DisplayName1 ?? "Primary Data";
+                TransformGrid1.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+                TransformGrid1.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            }
+
+            // Populate Grid 2 (Secondary Data) only if a second subtype was actually selected
+            var hasSecondary = HasSecondaryData(ctx);
+            var hasSecondSubtype = !string.IsNullOrEmpty(ctx.SecondarySubtype);
+
+            if (hasSecondary && hasSecondSubtype && ctx.Data2 != null)
+            {
+                TransformGrid2Panel.Visibility = Visibility.Visible;
+                var grid2Data = ctx.Data2.Where(d => d.Value.HasValue)
+                                         .OrderBy(d => d.NormalizedTimestamp)
+                                         .Select(d => new
+                                         {
+                                             Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                             Value = d.Value!.Value.ToString("F4")
+                                         }).ToList();
+
+                TransformGrid2.ItemsSource = grid2Data;
+                TransformGrid2Title.Text = ctx.DisplayName2 ?? "Secondary Data";
+                TransformGrid2.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+                TransformGrid2.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+
+                // Enable binary operations
+                var binaryItems = TransformOperationCombo.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+                    .Where(item => item.Tag?.ToString() == "Add" || item.Tag?.ToString() == "Subtract");
+                foreach (var item in binaryItems)
+                {
+                    item.IsEnabled = true;
+                }
+            }
+            else
+            {
+                TransformGrid2Panel.Visibility = Visibility.Collapsed;
+                TransformGrid2.ItemsSource = null;
+
+                // Disable binary operations
+                var binaryItems = TransformOperationCombo.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+                    .Where(item => item.Tag?.ToString() == "Add" || item.Tag?.ToString() == "Subtract");
+                foreach (var item in binaryItems)
+                {
+                    item.IsEnabled = false;
+                }
+            }
+
+            // Hide result grid and chart until compute is clicked
+            TransformGrid3Panel.Visibility = Visibility.Collapsed;
+            TransformChartPanel.Visibility = Visibility.Collapsed;
+            TransformGrid3.ItemsSource = null;
+            TransformComputeButton.IsEnabled = false;
         }
 
         /// <summary>
@@ -1497,6 +1948,21 @@ namespace DataVisualiser
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekdayTrend, _viewModel.ChartState.ChartTimestamps);
             _viewModel.ChartState.LastContext = null;
+
+            // Clear transform panel grids
+            ClearTransformGrids();
+        }
+
+        private void ClearTransformGrids()
+        {
+            TransformGrid1.ItemsSource = null;
+            TransformGrid2.ItemsSource = null;
+            TransformGrid3.ItemsSource = null;
+            TransformGrid2Panel.Visibility = Visibility.Collapsed;
+            TransformGrid3Panel.Visibility = Visibility.Collapsed;
+            TransformChartPanel.Visibility = Visibility.Collapsed;
+            TransformComputeButton.IsEnabled = false;
+            ChartHelper.ClearChart(ChartTransformResult, _viewModel.ChartState.ChartTimestamps);
         }
     }
 }

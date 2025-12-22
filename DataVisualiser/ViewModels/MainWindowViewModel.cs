@@ -501,6 +501,13 @@ namespace DataVisualiser.ViewModels
             ToggleChartVisibility("WeeklyTrend", () => ChartState.IsWeeklyTrendVisible, v => ChartState.IsWeeklyTrendVisible = v);
         }
 
+        public void ToggleTransformPanel()
+        {
+            ChartState.IsTransformPanelVisible = !ChartState.IsTransformPanelVisible;
+            OnPropertyChanged(nameof(ChartState));
+            RequestChartUpdate(isVisibilityOnlyToggle: true, toggledChartName: "Transform");
+        }
+
         // ======================
         // INotifyPropertyChanged
         // ======================
@@ -741,6 +748,7 @@ namespace DataVisualiser.ViewModels
                 ShowRatio = ChartState.IsRatioVisible,
                 ShowWeekly = ChartState.IsWeeklyVisible,
                 ShowWeeklyTrend = ChartState.IsWeeklyTrendVisible,
+                ShowTransformPanel = ChartState.IsTransformPanelVisible,
                 ShouldRenderCharts = ChartState.LastContext != null,
                 IsVisibilityOnlyToggle = isVisibilityOnlyToggle,
                 ToggledChartName = toggledChartName

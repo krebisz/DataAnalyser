@@ -32,6 +32,64 @@ namespace DataVisualiser.Helper
             }
         }
 
+        /// <summary>
+        /// Calculates the optimal maximum number of records to fetch based on date range.
+        /// Prevents performance issues with extremely large datasets while maintaining visual quality.
+        /// </summary>
+        /// <param name="from">Start date</param>
+        /// <param name="to">End date</param>
+        /// <returns>Maximum records to fetch, or null for no limit (small datasets)</returns>
+        public static int? CalculateOptimalMaxRecords(DateTime from, DateTime to)
+        {
+            var dateRange = to - from;
+            var totalDays = dateRange.TotalDays;
+            var totalHours = dateRange.TotalHours;
+
+            // For very short ranges (< 1 day), no limit needed
+            if (totalDays < 1)
+            {
+                return null; // No limit
+            }
+
+            // For daily data: ~1 record per day
+            // 2 years = ~730 records (acceptable)
+            // 10 years = ~3,650 records (should limit)
+            if (totalDays <= 730) // ~2 years
+            {
+                return null; // No limit for reasonable daily data
+            }
+
+            // For hourly data: ~24 records per day
+            // 2 years = ~17,520 records (should limit to ~10,000)
+            // 1 year = ~8,760 records (acceptable)
+            if (totalDays <= 365) // ~1 year
+            {
+                return null; // No limit for 1 year of hourly data
+            }
+
+            // For longer ranges, apply intelligent limits
+            // Target: ~10,000 records max for good performance
+            // Calculate sample rate to achieve this
+            if (totalDays > 365)
+            {
+                // Estimate records per day based on resolution
+                // Assume hourly data for long ranges (worst case)
+                var estimatedRecordsPerDay = 24.0; // Hourly
+                var estimatedTotalRecords = totalDays * estimatedRecordsPerDay;
+
+                if (estimatedTotalRecords > 10000)
+                {
+                    // Calculate sample rate to get ~10,000 records
+                    var sampleRate = (int)Math.Ceiling(estimatedTotalRecords / 10000.0);
+                    // Return null and let client-side handle it, or use SQL sampling
+                    // For now, use SQL TOP limit
+                    return 10000;
+                }
+            }
+
+            return null; // No limit needed
+        }
+
         public static RecordToDayRatio DetermineRecordToDayRatio(decimal recordToDayRatioValue)
         {
             // Use explicit range checks to avoid unreachable switch cases
@@ -778,6 +836,45 @@ namespace DataVisualiser.Helper
                     else
                     {
                         result.Add(value);
+                    }
+                }
+                catch
+                {
+                    result.Add(double.NaN);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Applies a unary operation to a list of values.
+        /// </summary>
+        public static List<double> ApplyUnaryOperation(List<double>? list, Func<double, double> operation)
+        {
+            if (list == null)
+                return new List<double>();
+
+            var result = new List<double>(capacity: list.Count);
+
+            foreach (var value in list)
+            {
+                if (double.IsNaN(value) || double.IsInfinity(value))
+                {
+                    result.Add(double.NaN);
+                    continue;
+                }
+
+                try
+                {
+                    double computed = operation(value);
+                    if (double.IsNaN(computed) || double.IsInfinity(computed))
+                    {
+                        result.Add(double.NaN);
+                    }
+                    else
+                    {
+                        result.Add(computed);
                     }
                 }
                 catch

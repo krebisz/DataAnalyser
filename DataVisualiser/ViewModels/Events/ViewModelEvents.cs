@@ -42,6 +42,7 @@ namespace DataVisualiser.ViewModels.Events
         public bool ShowRatio { get; set; }
         public bool ShowWeekly { get; set; }
         public bool ShowWeeklyTrend { get; init; }
+        public bool ShowTransformPanel { get; set; }
 
         // NEW: whether charts should be rendered
         public bool ShouldRenderCharts { get; set; }

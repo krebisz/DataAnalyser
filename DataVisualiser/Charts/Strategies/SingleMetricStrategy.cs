@@ -115,8 +115,9 @@ namespace DataVisualiser.Charts.Strategies
             if (orderedData == null || orderedData.Count == 0)
                 return null;
 
-            // Convert to List for MathHelper methods that require List<T>
-            var dataList = orderedData.ToList();
+            // orderedData is already a List (from PrepareOrderedData), but CreateSmoothedData requires List<T>
+            // Convert IReadOnlyList to List only if necessary
+            var dataList = orderedData is List<HealthMetricData> list ? list : orderedData.ToList();
 
             var dateRange = _to - _from;
             var tickInterval = MathHelper.DetermineTickInterval(dateRange);

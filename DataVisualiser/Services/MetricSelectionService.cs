@@ -1,6 +1,7 @@
-﻿using DataFileReader.Canonical;
+using DataFileReader.Canonical;
 using DataVisualiser.Data.Repositories;
 using DataVisualiser.Models;
+using System.Configuration;
 
 namespace DataVisualiser.Services
 {
@@ -22,11 +23,19 @@ namespace DataVisualiser.Services
         var dataFetcher = new DataFetcher(_connectionString);
         var cmsService = new CmsDataService(_connectionString);
 
+            // Calculate optimal max records for performance optimization (if enabled via config)
+            int? maxRecords = null;
+            var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
+            if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
+            {
+                maxRecords = DataVisualiser.Helper.MathHelper.CalculateOptimalMaxRecords(from, to);
+            }
+
         // -----------------------
-        // Legacy loads (unchanged)
+            // Legacy loads with result limiting
         // -----------------------
-        var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName);
-        var secondaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName);
+            var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, maxRecords);
+            var secondaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName, maxRecords);
 
         // ---------------------------------
         // Canonical ID resolution (explicit)
@@ -74,19 +83,29 @@ namespace DataVisualiser.Services
         {
             var dataFetcher = new DataFetcher(_connectionString);
 
+            // Calculate optimal max records for performance optimization (if enabled via config)
+            int? maxRecords = null;
+            var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
+            if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
+            {
+                maxRecords = DataVisualiser.Helper.MathHelper.CalculateOptimalMaxRecords(from, to);
+            }
+
             var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(
                 baseType,
                 primarySubtype,
                 from,
                 to,
-                tableName);
+                tableName,
+                maxRecords);
 
             var secondaryTask = dataFetcher.GetHealthMetricsDataByBaseType(
                 baseType,
                 secondarySubtype,
                 from,
                 to,
-                tableName);
+                tableName,
+                maxRecords);
 
             await Task.WhenAll(primaryTask, secondaryTask);
 

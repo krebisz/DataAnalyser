@@ -13,6 +13,7 @@ namespace DataVisualiser.State
         public bool IsRatioVisible { get; set; }
         public bool IsWeeklyVisible { get; set; }
         public bool IsWeeklyTrendVisible { get; set; }
+        public bool IsTransformPanelVisible { get; set; }
 
         // Weekly Trend (weekday series toggles)
         public bool ShowMonday { get; set; } = true;

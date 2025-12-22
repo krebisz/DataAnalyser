@@ -94,6 +94,9 @@ namespace DataVisualiser.Services
                 {
                     NormalizeYAxisForChart(targetChart, model, minHeight);
                 }
+
+                // Force chart update (especially important if chart was hidden when rendered)
+                targetChart.Update(true, true);
             }
             catch (Exception ex)
             {
@@ -259,7 +262,12 @@ namespace DataVisualiser.Services
             var syntheticRawData = BuildSyntheticRawData(model);
             var smoothedList = CollectSmoothedValues(model);
 
+            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxisForChart: chart={targetChart.Name}, syntheticRawData={syntheticRawData.Count}, smoothedList={smoothedList.Count}");
+
             ChartHelper.NormalizeYAxis(yAxis, syntheticRawData, smoothedList);
+
+            System.Diagnostics.Debug.WriteLine($"[TransformChart] After NormalizeYAxis: chart={targetChart.Name}, YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}, ShowLabels={yAxis.ShowLabels}");
+
             ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
             ChartHelper.InitializeChartTooltip(targetChart);
         }
