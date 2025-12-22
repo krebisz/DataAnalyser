@@ -1,200 +1,198 @@
-Folder PATH listing for: C:\Development\POCs\DataFileReaderRedux
+﻿Project Tree Snapshot
+Generated: 2025-12-22 15:07:41
+Root: C:\Development\POCs\DataFileReaderRedux
 
-+---.cursor
-|   +---plans
-|   |   |   project_state_assessment_18355c54.plan.md
-|   .gitattributes
-+---.github
-|   +---workflows
-|   .gitignore
-+---.vscode
-|   |   launch.json
-|   |   tasks.json
-+---assets
-|   |   c__Users_HP_Omen_AppData_Roaming_Cursor_User_workspaceStorage_7015c813c1df275769d3d8b268830a55_images_Screenshot_2025-12-04_080310-90a83677-dcf4-42be-8d19-c38161745075.png
-|   codebase-index.md
-|   Create-DataFileReaderRedux-Package.ps1
-|   Create-ProjectZip.ps1
-+---DataFileReader
-|   +---App
-|   |   |   HealthDataApp.cs
-|   |   App.config
-|   +---Canonical
-|   |   |   CanonicalMetricIdentityResolver.cs
-|   |   |   CanonicalMetricMapping.cs
-|   |   |   CanonicalMetricSeries.cs
-|   |   |   CmsTypeConverter.cs
-|   |   |   HealthMetricToCmsMapper.cs
-|   |   |   MetricCompatibilityHelper.cs
-|   |   |   MetricIdentityResolutionResult.cs
-|   +---Class
-|   |   |   AggregationPeriod.cs
-|   |   |   HierarchyObject.cs
-|   |   |   HierarchyObjectList.cs
-|   |   +---JSON
-|   |   |   |   IJson.cs
-|   |   |   |   JsonArray.cs
-|   |   |   |   JsonObject.cs
-|   |   |   |   JsonValue.cs
-|   |   |   MetaData.cs
-|   |   |   MetaDataComparer.cs
-|   |   |   MetaDataList.cs
-|   |   DataFileReader.csproj
-|   +---Helper
-|   |   |   ConsoleHelper.cs
-|   |   |   DataHelper.cs
-|   |   |   DataHelper_Old.cs
-|   |   |   DataNormalization.cs
-|   |   |   FileHelper.cs
-|   |   |   JsoonHelper.cs
-|   |   |   MetricTypeParser.cs
-|   |   |   SamsungHealthCsvParser.cs
-|   |   |   SamsungHealthParser.cs
-|   |   |   SQLHelper.cs
-|   |   |   TimeNormalizationHelper.cs
-|   +---Ingestion
-|   |   |   RawRecord.cs
-|   |   |   RawRecordFactory.cs
-|   +---Normalization
-|   |   +---Canonical
-|   |   |   |   CanonicalMetricSeries.cs
-|   |   |   |   DimensionSet.cs
-|   |   |   |   MetricIdentity.cs
-|   |   |   |   TimeAxis.cs
-|   |   |   DefaultNormalizationPipeline.cs
-|   |   |   INormalizationPipeline.cs
-|   |   |   INormalizationStage.cs
-|   |   |   NormalizationBootstrap.cs
-|   |   |   NormalizationContext.cs
-|   |   |   NormalizationDiagnostics.cs
-|   |   +---Stages
-|   |   |   |   CmsProductionStage.cs
-|   |   |   |   MetricIdentityResolutionStage.cs
-|   +---Parsers
-|   |   |   IHealthFileParser.cs
-|   |   |   LegacyJsonParser.cs
-|   |   |   SamsungCsvParser.cs
-|   |   |   SamsungJsonParser.cs
-|   |   Program.cs
-|   +---Properties
-|   |   +---PublishProfiles
-|   |   README.md
-|   |   SAMSUNG_HEALTH_CHANGES.md
-|   +---Services
-|   |   |   FileProcessingService.cs
-|   |   |   MetricAggregator.cs
-|   |   ShadowValidate_SamsungHealthCsv.cs
-|   DataFileReader .sln
-+---DataVisualiser
-|   |   App.config
-|   |   App.xaml
-|   |   App.xaml.cs
-|   |   AssemblyInfo.cs
-|   +---Charts
-|   |   |   ChartDataContext.cs
-|   |   |   ColourPalette.cs
-|   |   +---Computation
-|   |   |   |   ChartComputationEngine.cs
-|   |   |   |   ChartComputationResult.cs
-|   |   +---Helpers
-|   |   |   |   ChartHelper.cs
-|   |   |   |   ChartTooltipManager.cs
-|   |   |   |   WeeklyDistributionTooltip.cs
-|   |   |   IChartComputationStrategy.cs
-|   |   +---Parity
-|   |   |   |   IStrategyParityHarness.cs
-|   |   +---Rendering
-|   |   |   |   ChartRenderEngine.cs
-|   |   |   |   ChartRenderModel.cs
-|   |   |   |   ChartSeriesMode.cs
-|   |   |   |   FrequencyShadingRenderer.cs
-|   |   |   |   IFrequencyShadingRenderer.cs
-|   |   +---Strategies
-|   |   |   |   CombinedMetricStrategy.cs
-|   |   |   |   DifferenceStrategy.cs
-|   |   |   |   MultiMetricStrategy.cs
-|   |   |   |   NormalizedStrategy.cs
-|   |   |   |   RatioStrategy.cs
-|   |   |   |   SingleMetricStrategy.cs
-|   |   |   |   WeekdayTrendStrategy.cs
-|   |   |   |   WeeklyDistributionStrategy.cs
-|   +---Converters
-|   |   |   NormalizationModeConverter.cs
-|   +---Data
-|   |   +---Repositories
-|   |   |   |   CmsDataService.cs
-|   |   |   |   DataFetcher.cs
-|   |   |   SqlQueryBuilder.cs
-|   |   DataVisualiser.csproj
-|   |   DataVisualiser.csproj.user
-|   +---Helper
-|   |   |   CmsConversionHelper.cs
-|   |   |   FrequencyBinningHelper.cs
-|   |   |   MathHelper.cs
-|   |   |   StrategyComputationHelper.cs
-|   |   MainWindow.xaml
-|   |   MainWindow.xaml.cs
-|   +---Models
-|   |   |   BinaryOperatorRegistry.cs
-|   |   |   BinaryOperators.cs
-|   |   |   DateRangeResult.cs
-|   |   |   HealthMetricData.cs
-|   |   |   NormalizationMode.cs
-|   |   |   RecordToDayRatio.cs
-|   |   |   SmoothedDataPoint.cs
-|   |   |   TickInterval.cs
-|   |   |   WeekdayTrendPoint.cs
-|   |   |   WeekdayTrendResult.cs
-|   |   |   WeekdayTrendSeries.cs
-|   |   |   WeeklyDistributionResult.cs
-|   +---Services
-|   |   |   ChartDataContextBuilder.cs
-|   |   |   ChartUpdateCoordinator.cs
-|   |   |   MetricSelectionService.cs
-|   |   +---Shading
-|   |   |   |   FrequencyBasedShadingStrategy.cs
-|   |   |   |   IIntervalShadingStrategy.cs
-|   |   |   WeeklyDistributionService.cs
-|   |   |   WeeklyFrequencyRenderer.cs
-|   +---State
-|   |   |   ChartState.cs
-|   |   |   CmsConfiguration.cs
-|   |   |   MetricState.cs
-|   |   |   UiState.cs
-|   +---UI
-|   |   +---SubtypeSelectors
-|   |   |   |   SubtypeSelectorManager.cs
-|   +---ViewModels
-|   |   +---Commands
-|   |   |   |   RelayCommand.cs
-|   |   +---Events
-|   |   |   |   ViewModelEvents.cs
-|   |   |   MainWindowViewModel.cs
-|   dependency-summary.md
-+---documents
-|   |   Collaboration Protocol.md
-|   |   Current plan.odt
-|   |   IMPLEMENTATION_COMPARISON.md
-|   |   MASTER_OPERATING_PROTOCOL.md
-|   |   METRIC_COMPATIBILITY_INTEGRATION.md
-|   |   PHASE4_INTEGRATION_GUIDE.md
-|   |   PRIORITY_TASKS_COMPLETION_STATUS.md
-|   |   Project Bible.md
-|   |   Project Overview.md
-|   |   Project Philosphy.md
-|   |   Project Roadmap.md
-|   |   REFACTORING_IMPACT_ASSESSMENT.md
-|   |   REFACTORING_OPPORTUNITIES.md
-|   |   SYSTEM_MAP.md
-|   |   Workspace Workflow.md
-|   Generate-CodebaseIndex.ps1
-|   Generate-DependencySummary.ps1
-|   Generate-ProjectTree.ps1
-|   Generate-Repo-FileLinks.cmd
-|   Generate-Repo-FileLinks.ps1
-|   Initialize-DataVisualiserWorkspace.ps1
-|   links.txt
-|   project-tree.txt
-|   Refresh-WorkspaceWithLatestPackage.ps1
-|   Run-PublishPipeline.ps1
-|   Upload-LatestProjectPackage.ps1
+.cursor
+.cursor\plans
+.cursor\plans\project_state_assessment_18355c54.plan.md
+.gitattributes
+.github
+.github\workflows
+.gitignore
+.vscode
+.vscode\launch.json
+.vscode\tasks.json
+assets
+assets\c__Users_HP_Omen_AppData_Roaming_Cursor_User_workspaceStorage_7015c813c1df275769d3d8b268830a55_images_Screenshot_2025-12-04_080310-90a83677-dcf4-42be-8d19-c38161745075.png
+Create-DataFileReaderRedux-Package.ps1
+Create-ProjectZip.ps1
+DataFileReader
+DataFileReader .sln
+DataFileReader\App
+DataFileReader\App.config
+DataFileReader\App\HealthDataApp.cs
+DataFileReader\Canonical
+DataFileReader\Canonical\CanonicalMetricIdentityResolver.cs
+DataFileReader\Canonical\CanonicalMetricMapping.cs
+DataFileReader\Canonical\CanonicalMetricSeries.cs
+DataFileReader\Canonical\CmsTypeConverter.cs
+DataFileReader\Canonical\HealthMetricToCmsMapper.cs
+DataFileReader\Canonical\MetricCompatibilityHelper.cs
+DataFileReader\Canonical\MetricIdentityResolutionResult.cs
+DataFileReader\Class
+DataFileReader\Class\AggregationPeriod.cs
+DataFileReader\Class\HierarchyObject.cs
+DataFileReader\Class\HierarchyObjectList.cs
+DataFileReader\Class\JSON
+DataFileReader\Class\JSON\IJson.cs
+DataFileReader\Class\JSON\JsonArray.cs
+DataFileReader\Class\JSON\JsonObject.cs
+DataFileReader\Class\JSON\JsonValue.cs
+DataFileReader\Class\MetaData.cs
+DataFileReader\Class\MetaDataComparer.cs
+DataFileReader\Class\MetaDataList.cs
+DataFileReader\DataFileReader.csproj
+DataFileReader\Helper
+DataFileReader\Helper\ConsoleHelper.cs
+DataFileReader\Helper\DataHelper.cs
+DataFileReader\Helper\DataHelper_Old.cs
+DataFileReader\Helper\DataNormalization.cs
+DataFileReader\Helper\FileHelper.cs
+DataFileReader\Helper\JsoonHelper.cs
+DataFileReader\Helper\MetricTypeParser.cs
+DataFileReader\Helper\SamsungHealthCsvParser.cs
+DataFileReader\Helper\SamsungHealthParser.cs
+DataFileReader\Helper\SQLHelper.cs
+DataFileReader\Helper\TimeNormalizationHelper.cs
+DataFileReader\Ingestion
+DataFileReader\Ingestion\RawRecord.cs
+DataFileReader\Ingestion\RawRecordFactory.cs
+DataFileReader\Normalization
+DataFileReader\Normalization\Canonical
+DataFileReader\Normalization\Canonical\CanonicalMetricSeries.cs
+DataFileReader\Normalization\Canonical\DimensionSet.cs
+DataFileReader\Normalization\Canonical\MetricIdentity.cs
+DataFileReader\Normalization\Canonical\TimeAxis.cs
+DataFileReader\Normalization\DefaultNormalizationPipeline.cs
+DataFileReader\Normalization\INormalizationPipeline.cs
+DataFileReader\Normalization\INormalizationStage.cs
+DataFileReader\Normalization\NormalizationBootstrap.cs
+DataFileReader\Normalization\NormalizationContext.cs
+DataFileReader\Normalization\NormalizationDiagnostics.cs
+DataFileReader\Normalization\Stages
+DataFileReader\Normalization\Stages\CmsProductionStage.cs
+DataFileReader\Normalization\Stages\MetricIdentityResolutionStage.cs
+DataFileReader\Parsers
+DataFileReader\Parsers\IHealthFileParser.cs
+DataFileReader\Parsers\LegacyJsonParser.cs
+DataFileReader\Parsers\SamsungCsvParser.cs
+DataFileReader\Parsers\SamsungJsonParser.cs
+DataFileReader\Program.cs
+DataFileReader\Properties
+DataFileReader\Properties\PublishProfiles
+DataFileReader\README.md
+DataFileReader\SAMSUNG_HEALTH_CHANGES.md
+DataFileReader\Services
+DataFileReader\Services\FileProcessingService.cs
+DataFileReader\Services\MetricAggregator.cs
+DataFileReader\ShadowValidate_SamsungHealthCsv.cs
+DataVisualiser
+DataVisualiser\App.config
+DataVisualiser\App.xaml
+DataVisualiser\App.xaml.cs
+DataVisualiser\AssemblyInfo.cs
+DataVisualiser\Charts
+DataVisualiser\Charts\ChartDataContext.cs
+DataVisualiser\Charts\ColourPalette.cs
+DataVisualiser\Charts\Computation
+DataVisualiser\Charts\Computation\ChartComputationEngine.cs
+DataVisualiser\Charts\Computation\ChartComputationResult.cs
+DataVisualiser\Charts\Helpers
+DataVisualiser\Charts\Helpers\ChartHelper.cs
+DataVisualiser\Charts\Helpers\ChartTooltipManager.cs
+DataVisualiser\Charts\Helpers\WeeklyDistributionTooltip.cs
+DataVisualiser\Charts\IChartComputationStrategy.cs
+DataVisualiser\Charts\Parity
+DataVisualiser\Charts\Parity\CombinedMetricParityHarness.cs
+DataVisualiser\Charts\Parity\IStrategyParityHarness.cs
+DataVisualiser\Charts\Rendering
+DataVisualiser\Charts\Rendering\ChartRenderEngine.cs
+DataVisualiser\Charts\Rendering\ChartRenderModel.cs
+DataVisualiser\Charts\Rendering\ChartSeriesMode.cs
+DataVisualiser\Charts\Rendering\FrequencyShadingRenderer.cs
+DataVisualiser\Charts\Rendering\IFrequencyShadingRenderer.cs
+DataVisualiser\Charts\Strategies
+DataVisualiser\Charts\Strategies\CombinedMetricCmsStrategy.cs
+DataVisualiser\Charts\Strategies\CombinedMetricStrategy.cs
+DataVisualiser\Charts\Strategies\DifferenceStrategy.cs
+DataVisualiser\Charts\Strategies\MultiMetricStrategy.cs
+DataVisualiser\Charts\Strategies\NormalizedStrategy.cs
+DataVisualiser\Charts\Strategies\RatioStrategy.cs
+DataVisualiser\Charts\Strategies\SingleMetricCmsStrategy.cs
+DataVisualiser\Charts\Strategies\SingleMetricLegacyStrategy.cs
+DataVisualiser\Charts\Strategies\SingleMetricStrategy.cs
+DataVisualiser\Charts\Strategies\WeekdayTrendStrategy.cs
+DataVisualiser\Charts\Strategies\WeeklyDistributionStrategy.cs
+DataVisualiser\Converters
+DataVisualiser\Converters\NormalizationModeConverter.cs
+DataVisualiser\Data
+DataVisualiser\Data\Repositories
+DataVisualiser\Data\Repositories\CmsDataService.cs
+DataVisualiser\Data\Repositories\DataFetcher.cs
+DataVisualiser\Data\SqlQueryBuilder.cs
+DataVisualiser\DataVisualiser.csproj
+DataVisualiser\Helper
+DataVisualiser\Helper\CmsConversionHelper.cs
+DataVisualiser\Helper\FrequencyBinningHelper.cs
+DataVisualiser\Helper\MathHelper.cs
+DataVisualiser\Helper\StrategyComputationHelper.cs
+DataVisualiser\MainWindow.xaml
+DataVisualiser\MainWindow.xaml.cs
+DataVisualiser\Models
+DataVisualiser\Models\BinaryOperatorRegistry.cs
+DataVisualiser\Models\BinaryOperators.cs
+DataVisualiser\Models\DateRangeResult.cs
+DataVisualiser\Models\HealthMetricData.cs
+DataVisualiser\Models\NormalizationMode.cs
+DataVisualiser\Models\RecordToDayRatio.cs
+DataVisualiser\Models\SmoothedDataPoint.cs
+DataVisualiser\Models\TickInterval.cs
+DataVisualiser\Models\WeekdayTrendPoint.cs
+DataVisualiser\Models\WeekdayTrendResult.cs
+DataVisualiser\Models\WeekdayTrendSeries.cs
+DataVisualiser\Models\WeeklyDistributionResult.cs
+DataVisualiser\Services
+DataVisualiser\Services\ChartDataContextBuilder.cs
+DataVisualiser\Services\ChartUpdateCoordinator.cs
+DataVisualiser\Services\MetricSelectionService.cs
+DataVisualiser\Services\Shading
+DataVisualiser\Services\Shading\FrequencyBasedShadingStrategy.cs
+DataVisualiser\Services\Shading\IIntervalShadingStrategy.cs
+DataVisualiser\Services\WeeklyDistributionService.cs
+DataVisualiser\Services\WeeklyFrequencyRenderer.cs
+DataVisualiser\State
+DataVisualiser\State\ChartState.cs
+DataVisualiser\State\CmsConfiguration.cs
+DataVisualiser\State\MetricState.cs
+DataVisualiser\State\UiState.cs
+DataVisualiser\UI
+DataVisualiser\UI\SubtypeSelectors
+DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManager.cs
+DataVisualiser\ViewModels
+DataVisualiser\ViewModels\Commands
+DataVisualiser\ViewModels\Commands\RelayCommand.cs
+DataVisualiser\ViewModels\Events
+DataVisualiser\ViewModels\Events\ViewModelEvents.cs
+DataVisualiser\ViewModels\MainWindowViewModel.cs
+documents
+documents\Collaboration Protocol.md
+documents\Current plan.odt
+documents\MASTER_OPERATING_PROTOCOL.md
+documents\Project Bible.md
+documents\Project Overview.md
+documents\Project Philosphy.md
+documents\Project Roadmap.md
+documents\SYSTEM_MAP.md
+documents\Workspace Workflow.md
+Generate-CodebaseIndex.ps1
+Generate-DependencySummary.ps1
+Generate-ProjectTree.ps1
+Generate-Repo-FileLinks.cmd
+Generate-Repo-FileLinks.ps1
+Generate-WorkspaceState.ps1
+Initialize-DataVisualiserWorkspace.ps1
+links.txt
+project-tree.txt
+Refresh-WorkspaceWithLatestPackage.ps1
+Run-PublishPipeline.ps1
+Upload-LatestProjectPackage.ps1

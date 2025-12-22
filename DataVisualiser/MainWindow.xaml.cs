@@ -42,6 +42,9 @@ namespace DataVisualiser
 
         private bool _isInitializing = true;
         private bool _isChangingResolution = false;
+        private const bool ENABLE_COMBINED_CMS_PARITY = false;
+        private const bool EnableCombinedMetricParity = false;
+        private const bool ENABLE_COMBINED_METRIC_PARITY = false;
 
         public MainWindow()
         {
@@ -739,10 +742,10 @@ namespace DataVisualiser
                     from,
                     to);
             }
-            else if (selectedMetricSeries.Count == 1)
+            else if (_viewModel.ChartState.LastContext?.SemanticMetricCount == 1)
             {
-                // Phase 4: legacy path explicitly preserved
-                strategy = new SingleMetricLegacyStrategy(
+                strategy = CreateSingleMetricStrategy(
+                    _viewModel.ChartState.LastContext!,
                     selectedMetricSeries[0],
                     selectedMetricLabels[0],
                     from,
@@ -859,18 +862,28 @@ namespace DataVisualiser
         /// Selects the appropriate computation strategy based on the number of series.
         /// Returns the strategy and secondary label (if applicable).
         /// </summary>
-        private (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(
-            List<IEnumerable<HealthMetricData>> series,
-            List<string> labels,
-            DateTime from,
-            DateTime to)
+        private (IChartComputationStrategy strategy, string? secondaryLabel)
+            SelectComputationStrategy(
+                List<IEnumerable<HealthMetricData>> series,
+                List<string> labels,
+                DateTime from,
+                DateTime to)
         {
             string? secondaryLabel = null;
             IChartComputationStrategy strategy;
 
-            if (series.Count > 2)
+            var ctx = _viewModel.ChartState.LastContext!;
+            var semanticCount = ctx.SemanticMetricCount;
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[STRATEGY] SemanticMetricCount={semanticCount}, " +
+                $"PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, " +
+                $"SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}"
+            );
+
+            // ---------- MULTI METRIC ----------
+            if (semanticCount > 2)
             {
-                // N metrics → multi-series main chart (one line per metric)
                 strategy = new MultiMetricStrategy(
                     series,
                     labels,
@@ -878,30 +891,150 @@ namespace DataVisualiser
                     to,
                     unit: null);
             }
-            else if (series.Count == 2)
+            // ---------- COMBINED METRIC ----------
+            else if (semanticCount == 2)
             {
-                strategy = new CombinedMetricStrategy(
-                    series[0],
-                    series[1],
-                    labels[0],
-                    labels[1],
-                    from,
-                    to);
-
                 secondaryLabel = labels[1];
+
+                var leftCms = ctx.PrimaryCms as DataFileReader.Canonical.ICanonicalMetricSeries;
+                var rightCms = ctx.SecondaryCms as DataFileReader.Canonical.ICanonicalMetricSeries;
+
+                // 🔒 HARD GATE — parity OFF by default
+                const bool ENABLE_COMBINED_METRIC_PARITY = false;
+
+                if (ENABLE_COMBINED_METRIC_PARITY && leftCms != null && rightCms != null)
+                {
+                    var legacyStrategy = new CombinedMetricStrategy(
+                        series[0],
+                        series[1],
+                        labels[0],
+                        labels[1],
+                        from,
+                        to);
+
+                    var cmsStrategy = new CombinedMetricCmsStrategy(
+                        leftCms,
+                        rightCms,
+                        labels[0],
+                        labels[1],
+                        from,
+                        to);
+
+                    // --- Parity execution (diagnostic, non-throwing) ---
+                    var harness = new DataVisualiser.Charts.Parity.CombinedMetricParityHarness();
+
+                    var parityResult = harness.Validate(
+                        new DataVisualiser.Charts.Parity.StrategyParityContext
+                        {
+                            StrategyName = "CombinedMetric",
+                            MetricIdentity = $"{labels[0]}|{labels[1]}",
+                            Mode = DataVisualiser.Charts.Parity.ParityMode.Diagnostic
+                        },
+                        legacyExecution: () =>
+                        {
+                            var r = legacyStrategy.Compute();
+                            return new DataVisualiser.Charts.Parity.LegacyExecutionResult
+                            {
+                                Series = r?.Series?
+                                    .Select(s => new DataVisualiser.Charts.Parity.ParitySeries
+                                    {
+                                        SeriesKey = s.SeriesId,
+                                        Points = s.Timestamps
+                                            .Zip(s.RawValues, (t, v) =>
+                                                new DataVisualiser.Charts.Parity.ParityPoint
+                                                {
+                                                    Time = t,
+                                                    Value = v
+                                                })
+                                            .ToList()
+                                    })
+                                    .ToList()
+                                    ?? new List<DataVisualiser.Charts.Parity.ParitySeries>()
+                            };
+                        },
+                        cmsExecution: () =>
+                        {
+                            var r = cmsStrategy.Compute();
+                            return new DataVisualiser.Charts.Parity.CmsExecutionResult
+                            {
+                                Series = r?.Series?
+                                    .Select(s => new DataVisualiser.Charts.Parity.ParitySeries
+                                    {
+                                        SeriesKey = s.SeriesId,
+                                        Points = s.Timestamps
+                                            .Zip(s.RawValues, (t, v) =>
+                                                new DataVisualiser.Charts.Parity.ParityPoint
+                                                {
+                                                    Time = t,
+                                                    Value = v
+                                                })
+                                            .ToList()
+                                    })
+                                    .ToList()
+                                    ?? new List<DataVisualiser.Charts.Parity.ParitySeries>()
+                            };
+                        });
+
+                    System.Diagnostics.Debug.WriteLine(
+                        parityResult.Passed
+                            ? "[PARITY] CombinedMetric PASSED"
+                            : "[PARITY] CombinedMetric FAILED");
+
+                    strategy = cmsStrategy;
+                }
+                else
+                {
+                    strategy = new CombinedMetricStrategy(
+                        series[0],
+                        series[1],
+                        labels[0],
+                        labels[1],
+                        from,
+                        to);
+                }
             }
+            // ---------- SINGLE METRIC ----------
             else
             {
-                // Phase 4: legacy single-metric path (CMS selection handled upstream)
-                strategy = new SingleMetricLegacyStrategy(
+                strategy = CreateSingleMetricStrategy(
+                    ctx,
                     series[0],
                     labels[0],
                     from,
                     to);
             }
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[StrategySelection] semanticCount={semanticCount}, " +
+                $"series.Count={series.Count}, " +
+                $"strategy={strategy.GetType().Name}");
 
             return (strategy, secondaryLabel);
         }
+
+
+
+
+        private static IReadOnlyList<DataVisualiser.Charts.Parity.ParitySeries>
+    AdaptToParitySeries(List<DataVisualiser.Charts.Computation.SeriesResult>? series)
+        {
+            if (series == null || series.Count == 0)
+                return Array.Empty<DataVisualiser.Charts.Parity.ParitySeries>();
+
+            return series.Select(s => new DataVisualiser.Charts.Parity.ParitySeries
+            {
+                SeriesKey = s.SeriesId,
+                Points = s.Timestamps.Zip(
+                    s.RawValues,
+                    (t, v) => new DataVisualiser.Charts.Parity.ParityPoint
+                    {
+                        Time = t,
+                        Value = v
+                    }).ToList()
+            }).ToList();
+        }
+
+
 
         private async Task RenderOrClearChart(
             CartesianChart chart,
@@ -1169,6 +1302,55 @@ namespace DataVisualiser
                 "WeeklyTrend" => ChartWeekdayTrendPanel,
                 _ => null
             };
+
+        //private static IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
+        //{
+        //    //if (ctx.PrimaryCms != null)
+        //    //{
+        //        return new SingleMetricCmsStrategy(
+        //            (DataFileReader.Canonical.ICanonicalMetricSeries)ctx.PrimaryCms,
+        //            label,
+        //            from,
+        //            to);
+        //    //}
+
+        //    return new SingleMetricLegacyStrategy(
+        //        data,
+        //        label,
+        //        from,
+        //        to);
+        //}
+
+        private static IChartComputationStrategy CreateSingleMetricStrategy(
+    ChartDataContext ctx,
+    IEnumerable<HealthMetricData> data,
+    string label,
+    DateTime from,
+    DateTime to)
+        {
+            if (ctx.PrimaryCms is DataFileReader.Canonical.ICanonicalMetricSeries cms)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "[STRATEGY] Using SingleMetricCmsStrategy");
+
+                return new SingleMetricCmsStrategy(
+                    cms,
+                    label,
+                    from,
+                    to);
+            }
+
+            System.Diagnostics.Debug.WriteLine(
+                "[STRATEGY] Using SingleMetricLegacyStrategy");
+
+            return new SingleMetricLegacyStrategy(
+                data,
+                label,
+                from,
+                to);
+        }
+
+
 
         private void OnWeeklyTrendMondayToggled(object sender, RoutedEventArgs e) =>
             _viewModel.SetWeeklyTrendMondayVisible(((CheckBox)sender).IsChecked == true);

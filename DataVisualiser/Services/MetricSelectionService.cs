@@ -7,26 +7,17 @@ namespace DataVisualiser.Services
     public class MetricSelectionService
     {
         private readonly string _connectionString;
+        private readonly CmsDataService _cms; // <-- add
 
         public MetricSelectionService(string connectionString)
         {
             _connectionString = connectionString;
+            _cms = new CmsDataService(connectionString); // <-- add
         }
 
 
 
-public async Task<(
-    ICanonicalMetricSeries? PrimaryCms,
-    ICanonicalMetricSeries? SecondaryCms,
-    IEnumerable<HealthMetricData> PrimaryLegacy,
-    IEnumerable<HealthMetricData> SecondaryLegacy)>
-LoadMetricDataWithCmsAsync(
-    string baseType,
-    string? primarySubtype,
-    string? secondarySubtype,
-    DateTime from,
-    DateTime to,
-    string tableName)
+    public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<HealthMetricData> PrimaryLegacy, IEnumerable<HealthMetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
     {
         var dataFetcher = new DataFetcher(_connectionString);
         var cmsService = new CmsDataService(_connectionString);
@@ -34,68 +25,37 @@ LoadMetricDataWithCmsAsync(
         // -----------------------
         // Legacy loads (unchanged)
         // -----------------------
-        var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(
-            baseType,
-            primarySubtype,
-            from,
-            to,
-            tableName);
+        var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName);
+        var secondaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName);
 
-        var secondaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(
-            baseType,
-            secondarySubtype,
-            from,
-            to,
-            tableName);
+        // ---------------------------------
+        // Canonical ID resolution (explicit)
+        // ---------------------------------
+        var primaryCanonicalId = CanonicalMetricMapping.FromLegacyFields(baseType, primarySubtype);
+        var secondaryCanonicalId = CanonicalMetricMapping.FromLegacyFields(baseType, secondarySubtype);
 
-            // ---------------------------------
-            // Canonical ID resolution (explicit)
-            // ---------------------------------
-            var primaryCanonicalId =
-                CanonicalMetricMapping.FromLegacyFields(baseType, primarySubtype);
-
-            var secondaryCanonicalId =
-                CanonicalMetricMapping.FromLegacyFields(baseType, secondarySubtype);
-
-            // ------------------------
-            // CMS availability checks
-            // ------------------------
-            Task<IReadOnlyList<ICanonicalMetricSeries>>? primaryCmsTask = null;
+        // ------------------------
+        // CMS availability checks
+        // ------------------------
+        Task<IReadOnlyList<ICanonicalMetricSeries>>? primaryCmsTask = null;
         Task<IReadOnlyList<ICanonicalMetricSeries>>? secondaryCmsTask = null;
 
-        if (primaryCanonicalId != null &&
-            await cmsService.IsCmsAvailableAsync(primaryCanonicalId))
+        if (primaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(primaryCanonicalId))
         {
-            primaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(
-                primaryCanonicalId,
-                from,
-                to);
+            primaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(primaryCanonicalId, from, to);
         }
 
-        if (secondaryCanonicalId != null &&
-            await cmsService.IsCmsAvailableAsync(secondaryCanonicalId))
+        if (secondaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(secondaryCanonicalId))
         {
-            secondaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(
-                secondaryCanonicalId,
-                from,
-                to);
+            secondaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(secondaryCanonicalId, from, to);
         }
 
         // -------------------------
         // Await everything together
         // -------------------------
-        await Task.WhenAll(
-            primaryLegacyTask,
-            secondaryLegacyTask,
-            primaryCmsTask ?? Task.CompletedTask,
-            secondaryCmsTask ?? Task.CompletedTask);
+        await Task.WhenAll(primaryLegacyTask, secondaryLegacyTask, primaryCmsTask ?? Task.CompletedTask, secondaryCmsTask ?? Task.CompletedTask);
 
-        return (
-            PrimaryCms: primaryCmsTask?.Result.FirstOrDefault(),
-            SecondaryCms: secondaryCmsTask?.Result.FirstOrDefault(),
-            PrimaryLegacy: primaryLegacyTask.Result,
-            SecondaryLegacy: secondaryLegacyTask.Result
-        );
+        return (PrimaryCms: primaryCmsTask?.Result.FirstOrDefault(), SecondaryCms: secondaryCmsTask?.Result.FirstOrDefault(), PrimaryLegacy: primaryLegacyTask.Result, SecondaryLegacy: secondaryLegacyTask.Result);
     }
 
 

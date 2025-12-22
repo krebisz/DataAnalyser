@@ -1,9 +1,13 @@
 using DataVisualiser.Models;
+using DataFileReader.Canonical;
 
 namespace DataVisualiser.Charts
 {
     public class ChartDataContext
     {
+        public object? PrimaryCms { get; set; }
+        public object? SecondaryCms { get; set; }
+
         // Raw input from DB
         public IReadOnlyList<HealthMetricData>? Data1 { get; init; }
         public IReadOnlyList<HealthMetricData>? Data2 { get; init; }
@@ -28,6 +32,7 @@ namespace DataVisualiser.Charts
         // Metadata
         public string DisplayName1 { get; init; } = string.Empty;
         public string DisplayName2 { get; init; } = string.Empty;
+        public int SemanticMetricCount { get; init; }
 
         // Raw metric information for label formatting
         public string? MetricType { get; init; }

@@ -1,200 +1,216 @@
-PROJECT ROADMAP
+# PROJECT ROADMAP
 
-1. Purpose
+## 1. Purpose
 
 This document outlines the planned evolution of the project, describing major phases, their goals, and the order in which capabilities are introduced.
 
-It is directional, not binding.
-Binding rules reside in the Project Bible.
+It is **directional, not binding**.  
+Binding rules reside in the **Project Bible**.
 
-2. Guiding Principles
+---
+
+## 2. Guiding Principles
 
 Roadmap execution adheres to the following constraints:
 
-Semantic correctness over convenience
+- Semantic correctness over convenience  
+- Explicit contracts before implementation  
+- Non-destructive, additive evolution  
+- Clear separation between truth and exploration  
+- Execution proceeds only after foundations are locked  
 
-Explicit contracts before implementation
+---
 
-Non-destructive, additive evolution
+## 3. Phase Overview
 
-Clear separation between truth and exploration
+### Phase 1 — Ingestion & Persistence (Completed)
 
-Execution proceeds only after foundations are locked
-
-3. Phase Overview
-   Phase 1 — Ingestion & Persistence (Completed)
-
-Goal:
+**Goal**  
 Establish reliable ingestion of heterogeneous data sources and persist raw / lightly normalized records.
 
-Key outcomes:
+**Key outcomes**
 
-Multiple parsers (CSV / JSON)
+- Multiple parsers (CSV / JSON)
+- Unified storage via `HealthMetric`
+- Lossless data capture
+- Provider-agnostic ingestion
 
-Unified storage via HealthMetric
+**Status**: ✅ Complete
 
-Lossless data capture
+---
 
-Provider-agnostic ingestion
+### Phase 2 — Canonical Semantics & Normalization Foundations (Completed)
 
-Status: ✅ Complete
-
-Phase 2 — Canonical Semantics & Normalization Foundations (Completed)
-
-Goal:
+**Goal**  
 Formalize semantic authority and remove ambiguity from metric meaning.
 
-Key outcomes:
+**Key outcomes**
 
-Canonical Metric Series (CMS) contract
+- Canonical Metric Series (CMS) contract
+- Explicit canonical metric identity rules
+- Identity resolution scaffolding
+- HealthMetric → CMS mapping contract
+- Derived / dynamic metric identity framework
+- Structural / manifold analysis explicitly constrained
+- Contracts anchored in Project Bible and SYSTEM_MAP
 
-Explicit canonical metric identity rules
+**Status**: ✅ Complete
 
-Identity resolution scaffolding
+This phase establishes the semantic **truth layer** of the system.
 
-HealthMetric → CMS mapping contract
+---
 
-Derived / dynamic metric identity framework
+### Phase 3 — Execution: Canonical Identity & CMS Integration (Completed)
 
-Structural / manifold analysis explicitly constrained
-
-Contracts anchored in Project Bible and SYSTEM_MAP
-
-Status: ✅ Complete
-
-This phase establishes the semantic “truth layer” of the system.
-
-Phase 3 — Execution: Canonical Identity & CMS Integration (Completed)
-
-Goal:
+**Goal**  
 Introduce real behavior while preserving existing ingestion and storage.
 
-Scope:
+**Scope**
 
-Implement concrete identity resolution (metric family by metric family)
+- Implement concrete identity resolution (metric family by metric family)
+- Begin with Weight metric family
+- Implement CMS mapping in shadow mode
+- No destructive changes to existing flows
+- No changes to DataVisualiser yet
 
-Begin with Weight metric family
+**Deliverables**
 
-Implement CMS mapping in shadow mode
+- Deterministic identity resolution
+- CMS emitted alongside existing outputs
+- Diagnostics for identity and mapping failures
 
-No destructive changes to existing flows
+**Status**: ✅ Complete  
+(Core goals achieved; additional metric families may be added incrementally.)
 
-No changes to DataVisualiser yet
+---
 
-Deliverables:
+### Phase 4 — Consumer Adoption & Visualization Integration (In Progress)
 
-Deterministic identity resolution
-
-CMS emitted alongside existing outputs
-
-Diagnostics for identity and mapping failures
-
-Status: ✅ Complete (core goals achieved; additional metric families may be added incrementally).
-
-Phase 4 — Consumer Adoption & Visualization Integration (In Progress)
-
-Goal:
+**Goal**  
 Allow downstream systems (DataVisualiser) to consume CMS safely.
 
-Scope:
+**Scope**
 
-Define minimal CMS dependency for DataVisualiser
+- Define minimal CMS dependency for DataVisualiser
+- Parallel support for legacy `HealthMetric` paths
+- Explicit opt-in to CMS-based workflows
+- No forced migration
 
-Parallel support for legacy HealthMetric paths
+**Outcome**
 
-Explicit opt-in to CMS-based workflows
+- Safer aggregation
+- Explicit composition
+- Reduced semantic ambiguity in UI
+- Generalized cyclic distribution visualizations (e.g., weekly, hourly, or N-bucket cycles)
+- Foundation for user-defined metric transformations with preview tables feeding the charting pipeline
 
-No forced migration
+**Status**: ▶ In Progress (~55% complete)
 
-Outcome:
+CMS infrastructure is in place; multiple strategies are migrated or in progress; UI integration and remaining strategy migrations continue.
 
-Safer aggregation
+---
 
-Explicit composition
+### Phase 4A — Workspace Realignment & Parity Closure  
+*(Additive · Non-Destructive)*
 
-Reduced semantic ambiguity in UI
-Generalized cyclic distribution visualizations (e.g., weekly, hourly, or N-bucket cycles)
-Foundation for user-defined metric transformations with preview tables feeding the charting pipeline
+**Goal**  
+Allow controlled workspace reset and consolidation **without loss of semantic, architectural, or executional continuity**.
 
-Status: ▶ In Progress (~55% complete; CMS infrastructure and two strategies migrated, UI integration and remaining strategy migration ongoing)
+**Scope**
 
-Phase 5 — Derived Metrics & Analytical Composition (Planned)
+- Rehydrate workspace from frozen foundational documents
+- Preserve CMS + legacy parallelism guarantees
+- Complete remaining strategy migrations under parity harness protection
+- Explicitly close Phase 4 parity obligations before Phase 5 discussion
 
-Goal:
+**Constraints**
+
+- No architectural reinterpretation
+- No semantic contract changes
+- No implicit parity assumptions
+- All parity activation must be explicit and reversible
+
+**Outcome**
+
+- Clean workspace with preserved intent
+- Reduced cognitive load
+- Phase 4 completion without drift
+
+---
+
+### Phase 5 — Derived Metrics & Analytical Composition (Planned)
+
+**Goal**  
 Enable explicit creation of new metrics through composition and aggregation.
 
-Scope:
+**Scope**
 
-Dynamic / derived metric identity instantiation
+- Dynamic / derived metric identity instantiation
+- Explicit aggregation and transformation pipelines
+- Support for ephemeral and persistent derived metrics
+- No implicit promotion to canonical truth
 
-Explicit aggregation and transformation pipelines
+**Outcome**
 
-Support for ephemeral and persistent derived metrics
+- Advanced analysis without semantic erosion
+- User-driven metric synthesis
 
-No implicit promotion to canonical truth
+---
 
-Outcome:
+### Phase 6 — Structural / Manifold Analysis (Future)
 
-Advanced analysis without semantic erosion
-
-User-driven metric synthesis
-
-Phase 6 — Structural / Manifold Analysis (Future)
-
-Goal:
+**Goal**  
 Reintroduce advanced structural analysis capabilities without compromising semantic authority.
 
-Scope:
+**Scope**
 
-Structural similarity detection
+- Structural similarity detection
+- Equivalence class exploration
+- Analytical suggestion systems
 
-Equivalence class exploration
+**Constraints**
 
-Analytical suggestion systems
+- Non-authoritative
+- No automatic promotion
+- Explicit declaration required for semantic impact
 
-Constraints:
+---
 
-Non-authoritative
+## 4. Out of Scope (Explicit)
 
-No automatic promotion
+The roadmap does **not** include:
 
-Explicit declaration required for semantic impact
+- Heuristic identity inference
+- Silent aggregation
+- Implicit semantic promotion
+- Forced migrations
+- Architectural shortcuts
 
-4. Out of Scope (Explicit)
+---
 
-The roadmap does not include:
+## 5. Evolution Policy
 
-Heuristic identity inference
-
-Silent aggregation
-
-Implicit semantic promotion
-
-Forced migrations
-
-Architectural shortcuts
-
-5. Evolution Policy
-
-Phases may overlap only when explicitly declared
-
-Earlier phases must not be weakened by later work
+- Phases may overlap **only when explicitly declared**
+- Earlier phases must not be weakened by later work
 
 Any deviation from this roadmap requires:
 
-explicit justification
+- explicit justification
+- document updates
+- agreement
 
-document updates
+---
 
-agreement
+## 6. Intermediate Goals (Descriptive, Non-Binding)
 
-6. Intermediate Goals (Descriptive, Non-Binding)
-
-The following goals are **descriptive**, not binding; they clarify expected evolution within the existing phases:
+The following goals clarify expected evolution **within existing phases**:
 
 - **Generalized cyclic distribution charts**
-  - Extend current weekly distribution visualizations into a generic cyclic distribution engine (e.g., weekly, hourly, or N-bucket cycles) without altering underlying semantic contracts.
-- **User-defined metric transformations with preview**
-  - Allow users to define explicit transformations over canonical metric series (e.g., `A + B - C`, `sqrt(A)`), preview representative “before/after” values in a small grid, and feed the resulting derived series into the existing charting pipeline as ephemeral, non-canonical metrics.
+  - Extend weekly distribution visualizations into a generic cyclic engine (weekly, hourly, or N-bucket) without altering semantic contracts.
 
-End of Project Roadmap
+- **User-defined metric transformations with preview**
+  - Allow explicit transformations over CMS (e.g. `A + B - C`, `sqrt(A)`), preview before/after values in a grid, and feed results into the charting pipeline as ephemeral, non-canonical metrics.
+
+---
+
+**End of Project Roadmap**

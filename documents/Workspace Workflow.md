@@ -1,247 +1,265 @@
 📘 Workspace Workflow.md
 
-(Updated — Automation Wired In, Strict Mode–Compliant)
+(Updated — Automation Wired In, Strict Mode–Compliant, Drift-Hardened)
 
-⚠️ This document is part of the frozen core documentation set. See MASTER_OPERATING_PROTOCOL.md.
+⚠️ This document is part of the frozen core documentation set.  
+See MASTER_OPERATING_PROTOCOL.md for governing authority.
 
+------------------------------------------------------
 Workspace Initialization & Rehydration Protocol (Authoritative)
+------------------------------------------------------
 
-This document defines the exact artifacts and step-by-step process required to initialize or refresh a ChatGPT workspace for the DataFileReaderRedux solution.
+This document defines the exact artifacts and step-by-step process required to initialize,
+refresh, or deliberately reset a ChatGPT workspace for the DataFileReaderRedux solution.
 
-It ensures architectural consistency, prevents context drift, and allows deterministic rehydration across sessions.
+It exists to:
+- prevent contextual drift
+- enforce grounding discipline
+- ensure deterministic rehydration
+- protect execution velocity during long-running collaborations
 
+------------------------------------------------------
 🔒 SECTION 0 — SACRED WORKSPACE WORKFLOWS (IMMUTABLE)
+------------------------------------------------------
+
 ⛔ Sacred Workflow A — Create a New Workspace (Authoritative Sequence)
 
-Follow these steps exactly when starting a new ChatGPT workspace:
+Follow these steps exactly when starting a new ChatGPT workspace.
 
-Run structural generators:
+1. Run structural generators:
 
-Generate-ProjectTree.ps1 → produces project-tree.txt
+- Generate-ProjectTree.ps1 → produces project-tree.txt
+- Generate-CodebaseIndex.ps1 → produces codebase-index.md
+- Generate-DependencySummary.ps1 → produces dependency-summary.md
 
-Generate-CodebaseIndex.ps1 → produces codebase-index.md
+2. Verify the following documents are current:
 
-Generate-DependencySummary.ps1 → produces dependency-summary.md
+- MASTER_OPERATING_PROTOCOL.md
+- Project Bible.md
+- Project Overview.md
+- Project Roadmap.md
+- SYSTEM_MAP.md (if present)
 
-Verify the following documents are current:
+3. Prepare the Rehydration Bundle:
 
-MASTER_OPERATING_PROTOCOL.md
-
-Project Bible.md
-
-Project Overview.md
-
-Project Roadmap.md
-
-SYSTEM_MAP.md (if present)
-
-Prepare the Rehydration Bundle:
-
-project-tree.txt
-
-codebase-index.md
-
-dependency-summary.md
-
-MASTER_OPERATING_PROTOCOL.md
-
-Project Bible.md
-
-Project Overview.md
-
-Project Roadmap.md
-
-SYSTEM_MAP.md (if present)
+- project-tree.txt
+- codebase-index.md
+- dependency-summary.md
+- MASTER_OPERATING_PROTOCOL.md
+- Project Bible.md
+- Project Overview.md
+- Project Roadmap.md
+- SYSTEM_MAP.md (if present)
 
 (Optional) Latest solution ZIP or package
 
-Start a new ChatGPT conversation.
+4. Start a new ChatGPT conversation.
 
-(Optional but Recommended) Declare a workspace label.
-
-At the start of the conversation, the user may declare a workspace identifier in the form:
+(Optional but Recommended) Declare a workspace label:
 
 Workspace: <Project> — <Context> — <Qualifier>
 
+This label defines the identity and scope of the workspace for the duration of the conversation
+and is treated as the canonical workspace reference.
 
-This label defines the identity and scope of the workspace for the duration of the conversation and is treated as the canonical workspace reference.
+5. Upload ALL files from the Rehydration Bundle.
 
-Upload ALL files from the Rehydration Bundle.
-
-Enter the initialization command:
+6. Enter the initialization command:
 
 Initialize workspace with the uploaded files.
 
-
-Do NOT proceed with any development tasks until ChatGPT explicitly confirms:
+7. Do NOT proceed with any development tasks until ChatGPT explicitly confirms:
 
 Workspace successfully initialized.
 
+------------------------------------------------------
 ⛔ Sacred Workflow B — Refresh an Existing Workspace (Authoritative Sequence)
+------------------------------------------------------
 
-Follow these steps exactly when updating an existing workspace:
+Follow these steps exactly when updating an existing workspace.
 
-Re-run required generators:
+1. Re-run required generators:
 
-Always run Generate-ProjectTree.ps1
+- Always run Generate-ProjectTree.ps1
+- Run Generate-CodebaseIndex.ps1 if code structure changed
+- Run Generate-DependencySummary.ps1 if dependencies may have changed
 
-Run Generate-CodebaseIndex.ps1 if code structure changed
+2. Identify which documents require updating:
 
-Run Generate-DependencySummary.ps1 if dependencies may have changed
+- MASTER_OPERATING_PROTOCOL.md → only if collaboration rules change
+- Project Bible.md → only if architecture changes
+- Project Overview.md → only if system capabilities change
+- Project Roadmap.md → only if phase or trajectory changes
+- SYSTEM_MAP.md → only if structural intent changes
 
-Identify which documents require updating:
+3. Prepare the Refresh Bundle:
 
-Update MASTER_OPERATING_PROTOCOL.md only if collaboration rules change
+- Updated generated artifacts
+- Any updated documentation
+- (Optional) Updated solution ZIP
 
-Update Project Bible.md only if architecture changes
+4. Upload the Refresh Bundle to the existing ChatGPT workspace.
 
-Update Project Overview.md only if system capabilities change
-
-Update Project Roadmap.md only if phase or trajectory changes
-
-Update SYSTEM_MAP.md only if structural intent changes
-
-Prepare the Refresh Bundle:
-
-Updated generated artifacts (project-tree.txt, codebase-index.md, dependency-summary.md)
-
-Any updated documentation
-
-(Optional) Updated solution ZIP
-
-Upload the Refresh Bundle to the existing ChatGPT workspace.
-
-Enter the refresh command:
+5. Enter the refresh command:
 
 Refresh workspace with the updated files.
 
-
-Wait for explicit confirmation:
+6. Wait for explicit confirmation:
 
 Workspace successfully refreshed.
 
-
 Proceed with development only after confirmation.
 
+------------------------------------------------------
 ⚠️ Notes (Immutable)
+------------------------------------------------------
 
-Generated artifacts are authoritative for structure, but not for intent.
+- Generated artifacts are authoritative for structure, not intent.
+- Generated files must never be edited by hand.
+- These workflows MUST NOT be altered without explicit agreement.
+- These workflows override all other procedural descriptions.
 
-Generated files must never be edited by hand.
-
-These workflows MUST NOT be altered without explicit agreement.
-
-These workflows override all other procedural descriptions.
-
+------------------------------------------------------
 1. Required Rehydration Bundle
-
-Before starting a new ChatGPT workspace, prepare and upload the following files.
+------------------------------------------------------
 
 A. Mandatory Files
 
-project-tree.txt
-Structural listing of the repository.
-
-codebase-index.md
-Auto-generated index of namespaces, public symbols, and file roles.
-
-dependency-summary.md
-Auto-generated structural dependency overview.
-
-MASTER_OPERATING_PROTOCOL.md
-Defines strict operational constraints for ChatGPT.
-
-Project Bible.md
-Architectural authority.
-
-Project Overview.md
-High-level system summary.
-
-Project Roadmap.md
-Phase and evolution guide.
-
-SYSTEM_MAP.md (if present)
-Human-authored semantic map bridging intent and structure.
+- project-tree.txt  
+- codebase-index.md  
+- dependency-summary.md  
+- MASTER_OPERATING_PROTOCOL.md  
+- Project Bible.md  
+- Project Overview.md  
+- Project Roadmap.md  
+- SYSTEM_MAP.md (if present)
 
 B. Optional but Recommended
 
-Solution ZIP / Package
-For deep reference only (ChatGPT cannot extract contents automatically).
+- Solution ZIP / Package (reference only)
 
-2. When to Regenerate Each File
+------------------------------------------------------
+2. Workspace State Declaration (Additive · Mandatory)
+------------------------------------------------------
 
-Regenerate project-tree.txt when:
+> **Additive rule — derived from collaboration drift observations.**
 
-Files or folders change
+After initialization or refresh, the assistant MUST explicitly declare the workspace state
+before proposing or executing changes.
 
-Regenerate codebase-index.md when:
+The declaration MUST include:
 
-Public classes, interfaces, or namespaces change
+- Documents loaded (explicit list)
+- Code snapshot status (ZIP present or not)
+- Active project phase (e.g., Phase 4)
+- Parity status (e.g., none / partial / active / closed)
+- Any missing or unknown artifacts
 
-Files are added, removed, or renamed
+Example:
 
-Regenerate dependency-summary.md when:
+Workspace State:
+- Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Roadmap
+- Code snapshot: present (dated YYYY-MM-DD)
+- Phase: Phase 4 — Consumer Adoption
+- Parity: SingleMetric complete, CombinedMetric in progress
+- Unknowns: DifferenceStrategy CMS status
 
-New dependencies are introduced
+No execution may proceed until this declaration is acknowledged.
 
-Layering or coupling may have shifted
+------------------------------------------------------
+3. Grounding Gate (Additive · Enforcement Rule)
+------------------------------------------------------
 
-Update SYSTEM_MAP.md when:
+Before proposing **any code change**, the assistant MUST pass a grounding gate.
 
-Subsystem boundaries change
+The gate requires:
 
-New execution paths are introduced
+- Explicit list of files inspected
+- Explicit list of symbols verified
+- Explicit list of unknown or missing artifacts
 
-New extension mechanisms are added
+If a required file or symbol is missing:
+- execution MUST stop
+- the file must be requested explicitly
 
-3. New Workspace Checklist
+Conceptual, assumed, or “simplified” substitutions are prohibited in active phases.
 
-Run all required generators
+------------------------------------------------------
+4. Change Atomicity & Drop-In Safety (Additive)
+------------------------------------------------------
 
-Verify architectural documents
+All implementation guidance MUST be one of:
 
-Start a new ChatGPT conversation
+- Full method replacement
+- Full class replacement
+- Explicit before/after diff block
 
-(Optional) Declare workspace label
+Prohibited:
 
-Upload the full Rehydration Bundle
+- Partial snippets without surrounding context
+- “Modify this part” instructions
+- Multi-location changes without enumeration
 
-Issue: Initialize workspace with the uploaded files.
+------------------------------------------------------
+5. Phase Transition Guardrail (Additive)
+------------------------------------------------------
 
-Wait for confirmation
+Creating a new workspace is treated as a **controlled phase sub-step**, not an escape hatch.
 
-4. Workspace Refresh Checklist
+Before resetting a workspace, the following must be true:
 
-Re-run applicable generators
+- Documentation alignment complete
+- Parity obligations explicitly closed or deferred
+- Reset justification stated
 
-Update documentation only if required
+------------------------------------------------------
+6. Active Phase Artifacts (Reference-Only · Phase 4)
+------------------------------------------------------
 
-Upload updated artifacts
+> **Additive section. No existing rules are modified.**
 
-Issue: Refresh workspace with the updated files.
+The following files are actively relevant during Phase 4 (CMS adoption & parity):
 
-Wait for confirmation
+DataVisualiser — Strategies:
+- SingleMetricLegacyStrategy.cs
+- SingleMetricCmsStrategy.cs
+- CombinedMetricStrategy.cs
+- CombinedMetricCmsStrategy.cs
+- MultiMetricStrategy.cs
 
-5. Document Authority Hierarchy
+DataVisualiser — Parity:
+- IStrategyParityHarness.cs
+- CombinedMetricParityHarness.cs
 
-When reconstructing the workspace, ChatGPT interprets documents strictly in this order:
+DataVisualiser — Context & Wiring:
+- ChartDataContext.cs
+- ChartDataContextBuilder.cs
+- MetricSelectionService.cs
+- MainWindow.xaml.cs
+- MainWindowViewModel.cs
 
-MASTER_OPERATING_PROTOCOL.md (operational truth)
+DataFileReader — Canonical:
+- ICanonicalMetricSeries.cs
+- CanonicalMetricSeries.cs
 
-Project Bible.md (architectural truth)
+These files define the **CMS ↔ legacy coexistence boundary**.
 
-SYSTEM_MAP.md (semantic intent)
+------------------------------------------------------
+7. Document Authority Hierarchy
+------------------------------------------------------
 
-Project Overview.md (system summary)
+When reconstructing a workspace, documents are interpreted strictly in this order:
 
-Project Roadmap.md (evolutionary intent)
+1. MASTER_OPERATING_PROTOCOL.md
+2. Project Bible.md
+3. SYSTEM_MAP.md
+4. Project Overview.md
+5. Project Roadmap.md
+6. codebase-index.md
+7. dependency-summary.md
+8. project-tree.txt
+9. Solution ZIP (reference only)
 
-codebase-index.md (symbolic structure)
-
-dependency-summary.md (structural coupling)
-
-project-tree.txt (raw structure)
-
-Solution ZIP (reference only)
-
+------------------------------------------------------
 End of Workspace Workflow.md
+------------------------------------------------------

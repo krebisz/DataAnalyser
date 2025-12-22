@@ -40,6 +40,8 @@ Computation / Aggregation
 Presentation / Visualization
 ```
 
+
+
 Each stage has exclusive responsibility for its concern.
 
 ---
@@ -60,9 +62,12 @@ RawRecords are immutable and traceable.
 
 ### 5.1 Purpose
 
-The normalization layer is the sole authority for assigning semantic meaning to raw observations.
+The normalization layer is the **sole authority** for assigning semantic meaning to raw observations.
 
-It is deterministic, explicit, and rule-driven.
+It is:
+- deterministic
+- explicit
+- rule-driven
 
 ---
 
@@ -70,10 +75,10 @@ It is deterministic, explicit, and rule-driven.
 
 Normalization is composed of ordered stages, including but not limited to:
 
-1. Metric Identity Resolution
-2. Unit Normalization (future)
-3. Time Normalization (future)
-4. Dimensional Qualification (future)
+1. Metric Identity Resolution  
+2. Unit Normalization (future)  
+3. Time Normalization (future)  
+4. Dimensional Qualification (future)  
 
 Each stage:
 - has a single responsibility
@@ -101,38 +106,118 @@ Properties:
 - time semantics are explicit
 - suitable for computation and aggregation
 
-CMS is the only valid input for downstream computation.
+CMS is the **only valid semantic input** for downstream computation.
 
 ---
 
-## 7. Computation & Presentation
+## 6A. CMS Internal vs Consumer Representation (Additive Clarification)
+
+> **Additive clarification — no existing sections modified.**
+
+Two representations of Canonical Metric Series coexist by design.
+
+### 6A.1 Internal CMS (Normalization Authority)
+
+- Produced by the normalization pipeline
+- Strongly typed, normalization-scoped structures
+- Used exclusively within ingestion and normalization layers
+- Never consumed directly by visualization or UI layers
+
+This representation is the **semantic authority**.
+
+---
+
+### 6A.2 Consumer CMS Interface (Downstream Boundary)
+
+- Exposed via a consumer-facing interface (e.g. `ICanonicalMetricSeries`)
+- The **only CMS surface visible to downstream systems**
+- Decouples normalization internals from consumers
+- Enables parallel legacy + CMS adoption without leakage
+
+Conversion between internal CMS and consumer CMS is:
+- explicit
+- one-way
+- non-authoritative
+
+Semantic authority **never leaves normalization**.
+
+This boundary is mandatory.
+
+---
+
+## 7. Computation & Presentation Layer
 
 Downstream layers:
 - assume semantic correctness
 - do not reinterpret meaning
-- operate exclusively on CMS
+- operate on:
+  - consumer CMS, or
+  - legacy-compatible projections (during migration)
+
+No downstream layer may:
+- assign identity
+- reinterpret semantics
+- influence normalization outcomes
+
+---
+
+## 7A. Legacy + CMS Parallelism Boundary (Additive Clarification)
+
+> **Additive clarification — migration-specific.**
+
+During Phase 4:
+
+- Legacy computation paths and CMS-based paths **must coexist**
+- CMS adoption is **explicit and opt-in**
+- Legacy paths remain authoritative for comparison only
+
+No computation layer may silently switch semantic inputs.
+
+Parallelism exists to:
+- validate equivalence
+- protect correctness
+- prevent forced migration
+
+---
+
+## 7B. Parity Validation Boundary (Additive Clarification)
+
+> **Additive clarification — phase-exit semantics.**
+
+Parity validation is a **boundary artifact**, not an implementation detail.
+
+- Parity harnesses sit **between** legacy and CMS computation
+- They do not participate in normalization or presentation
+- They exist solely to validate equivalence of outcomes
+
+Parity:
+- is strategy-scoped
+- is explicitly activated
+- must not alter computation paths
+
+A strategy is not considered migrated until parity is proven.
 
 ---
 
 ## 8. Structural / Manifold Analysis Layer (Additive · Future / Exploratory)
 
-> **Additive Section — No existing sections are modified by this addition.**
+> **Additive section — no existing sections modified.**
 
 ### 8.1 Intent
 
-The Structural / Manifold Analysis Layer is an optional, future-facing analytical extension intended to:
-- explore structural similarity, equivalence, or hierarchy across metrics or datasets
-- support discovery, clustering, and comparative analysis
-- enable higher-order reasoning beyond deterministic metric computation
+An optional analytical layer intended to:
+- explore structural similarity, equivalence, or hierarchy
+- support discovery and comparison
+- enable higher-order reasoning
 
-This layer exists to provide **insight**, not authority.
+This layer provides **insight**, not authority.
 
 ---
 
 ### 8.2 Relationship to Core Pipeline
 
 This layer:
-- operates orthogonally to the ingestion and normalization pipeline
+- operates orthogonally to ingestion and normalization
 - consumes normalized or canonical data as input
 - does not modify RawRecords, normalization outputs, or CMS
 
@@ -151,24 +236,39 @@ Structural / Manifold Analysis MUST NOT:
 
 ### 8.4 Promotion Boundary
 
-Insights produced by structural or manifold analysis may be promoted only via:
+Insights may be promoted only via:
 - explicit, declarative rule changes
-- reviewable and reversible mechanisms
+- reviewable mechanisms
+- reversible processes
 
-No automatic or implicit back-propagation into canonical semantics is permitted.
+No automatic back-propagation is permitted.
 
 ---
 
-## 9. Evolutionary Direction
+## 9. Architectural Boundary Visibility (Additive Clarification)
+
+> **Additive clarification — enforcement-oriented.**
+
+When introducing or modifying a cross-project dependency, the following must be explicit:
+
+- source project
+- dependency direction
+- justification
+- migration intent (temporary vs permanent)
+
+Silent boundary erosion is prohibited.
+
+---
+
+## 10. Evolutionary Direction
 
 Future evolution must:
 - preserve ingestion boundaries
 - centralize semantic authority
-- keep analytical creativity isolated from canonical truth
+- isolate analytical creativity from canonical truth
 
 Deferred layers may be declared here without implementation commitment.
 
 ---
 
 **End of SYSTEM MAP**
-

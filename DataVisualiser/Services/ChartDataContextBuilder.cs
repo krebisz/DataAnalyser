@@ -1,5 +1,6 @@
 ﻿using DataVisualiser.Charts;
 using DataVisualiser.Models;
+using DataFileReader.Canonical;
 
 namespace DataVisualiser.Services
 {
@@ -52,8 +53,7 @@ namespace DataVisualiser.Services
             var norm2 = Normalize(raw2);
 
             // STEP 5 — Display labels
-            var (display1, display2) =
-                BuildDisplayNames(metricType, primarySubtype, secondarySubtype);
+            var (display1, display2) = BuildDisplayNames(metricType, primarySubtype, secondarySubtype);
 
             // Construct full context
             return new ChartDataContext
@@ -81,9 +81,47 @@ namespace DataVisualiser.Services
                 SecondarySubtype = secondarySubtype,
 
                 From = from,
-                To = to
+                To = to,
+
+                SemanticMetricCount = secondarySubtype == null ? 1 : 2
             };
         }
+
+
+        public ChartDataContext Build(
+            string metricType,
+            string? primarySubtype,
+            string? secondarySubtype,
+            IEnumerable<HealthMetricData> data1,
+            IEnumerable<HealthMetricData>? data2,
+            DateTime from,
+            DateTime to,
+            DataFileReader.Canonical.ICanonicalMetricSeries? primaryCms,
+            DataFileReader.Canonical.ICanonicalMetricSeries? secondaryCms)
+        {
+            var effectiveData1 = primaryCms != null
+                ? ConvertCmsToHealthMetricData(primaryCms, from, to)
+                : data1;
+
+            var effectiveData2 = secondaryCms != null
+                ? ConvertCmsToHealthMetricData(secondaryCms, from, to)
+                : data2;
+
+            var ctx = Build(
+                metricType,
+                primarySubtype,
+                secondarySubtype,
+                effectiveData1,
+                effectiveData2,
+                from,
+                to);
+
+            ctx.PrimaryCms = primaryCms;
+            ctx.SecondaryCms = secondaryCms;
+
+            return ctx;
+        }
+
 
         // ---------------------------------------------------------
         // TIMELINE CONSTRUCTION
@@ -212,5 +250,31 @@ namespace DataVisualiser.Services
 
             return (display1, display2);
         }
+
+        private static IEnumerable<HealthMetricData> ConvertCmsToHealthMetricData(
+    ICanonicalMetricSeries cms,
+    DateTime from,
+    DateTime to)
+        {
+            // Minimal, explicit adapter for Phase 4.
+            // This preserves CMS authority while keeping the existing numeric pipeline unchanged.
+
+            return cms.Samples
+                .Where(s => s.Value.HasValue)
+                .Where(s =>
+                {
+                    var ts = s.Timestamp.UtcDateTime;
+                    return ts >= from && ts <= to;
+                })
+                .Select(s => new HealthMetricData
+                {
+                    NormalizedTimestamp = s.Timestamp.UtcDateTime,
+                    Value = s.Value.Value,
+                    Unit = cms.Unit.Symbol
+                })
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
+        }
+
     }
 }

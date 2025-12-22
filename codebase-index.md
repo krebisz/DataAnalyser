@@ -1,567 +1,170 @@
 ﻿# Codebase Index
 
-_Auto-generated. Do not edit by hand._
-
-## Projects
-- C:\Development\POCs\DataFileReaderRedux\DataFileReader\DataFileReadercsproj
-- C:\Development\POCs\DataFileReaderRedux\DataVisualiser\DataVisualisercsproj
-
-## C# Source Files
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\App\HealthDataAppcs
-**Namespace:** DataFileReader.App;
-**Classes:**
-- public class HealthDataApp
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricIdentityResolvercs
-**Namespace:** DataFileReader.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricMappingcs
-**Namespace:** DataFileReader.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CanonicalMetricSeriescs
-**Namespace:** DataFileReader.Canonical
-**Interfaces:**
-- ICanonicalMetricSeries
-**Enums:**
-- TimeRepresentation
-- MetricDimension
-- DataCompleteness
-- ValidationStatus
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\CmsTypeConvertercs
-**Namespace:** DataFileReader.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\HealthMetricToCmsMappercs
-**Namespace:** DataFileReader.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricCompatibilityHelpercs
-**Namespace:** DataFileReader.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Canonical\MetricIdentityResolutionResultcs
-**Namespace:** DataFileReader.Canonical
-**Enums:**
-- IdentityResolutionFailureReason
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\JSON\IJsoncs
-**Interfaces:**
-- IJson
-- IJsonPrimitive
-- IJsonComplex
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\JSON\JsonArraycs
-**Classes:**
-- public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\JSON\JsonObjectcs
-**Classes:**
-- public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\JSON\JsonValuecs
-**Classes:**
-- public class JsonValue : IJsonPrimitive, IConvertible
-- public class Types
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\AggregationPeriodcs
-**Namespace:** DataFileReader.Class
-**Enums:**
-- AggregationPeriod
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\HierarchyObjectcs
-**Classes:**
-- public class HierarchyObject
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\HierarchyObjectListcs
-**Namespace:** DataFileReader.Class;
-**Classes:**
-- public class HierarchyObjectList
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\MetaDatacs
-**Namespace:** DataFileReader.Class
-**Classes:**
-- public class MetaData
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\MetaDataComparercs
-**Namespace:** DataFileReader.Class;
-**Classes:**
-- public class MetaDataComparer : IEqualityComparer<MetaData>
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Class\MetaDataListcs
-**Namespace:** DataFileReader.Class
-**Classes:**
-- public class MetaDataList
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\ConsoleHelpercs
-**Namespace:** DataFileReader.Helper;
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\DataHelpercs
-**Namespace:** DataFileReader.Helper;
-**Classes:**
-- public class RowComparer : IEqualityComparer<object[]>
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\DataHelper_Oldcs
-**Namespace:** DataFileReader.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\DataNormalizationcs
-**Namespace:** DataFileReader.Helper
-**Classes:**
-- public class DataNormalization
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\FileHelpercs
-**Namespace:** DataFileReader.Helper;
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\JsoonHelpercs
-**Namespace:** DataFileReader.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\MetricTypeParsercs
-**Namespace:** DataFileReader.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\SamsungHealthCsvParsercs
-**Namespace:** DataFileReader.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\SamsungHealthParsercs
-**Namespace:** DataFileReader.Helper
-**Classes:**
-- public class HealthMetric
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\SQLHelpercs
-**Namespace:** DataFileReader.Helper;
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Helper\TimeNormalizationHelpercs
-**Namespace:** DataFileReader.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Ingestion\RawRecordcs
-**Namespace:** DataFileReader.Ingestion
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Ingestion\RawRecordFactorycs
-**Namespace:** DataFileReader.Ingestion
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\CanonicalMetricSeriescs
-**Namespace:** DataFileReader.Normalization.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\DimensionSetcs
-**Namespace:** DataFileReader.Normalization.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\MetricIdentitycs
-**Namespace:** DataFileReader.Normalization.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Canonical\TimeAxiscs
-**Namespace:** DataFileReader.Normalization.Canonical
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\CmsProductionStagecs
-**Namespace:** DataFileReader.Normalization.Stages
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\Stages\MetricIdentityResolutionStagecs
-**Namespace:** DataFileReader.Normalization.Stages
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\DefaultNormalizationPipelinecs
-**Namespace:** DataFileReader.Normalization
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\INormalizationPipelinecs
-**Namespace:** DataFileReader.Normalization
-**Interfaces:**
-- INormalizationPipeline
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\INormalizationStagecs
-**Namespace:** DataFileReader.Normalization
-**Interfaces:**
-- INormalizationStage
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationBootstrapcs
-**Namespace:** DataFileReader.Normalization
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationContextcs
-**Namespace:** DataFileReader.Normalization
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Normalization\NormalizationDiagnosticscs
-**Namespace:** DataFileReader.Normalization
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\NETCoreApp,Version=v90AssemblyAttributescs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\obj\Debug\net90\DataFileReaderGlobalUsingsgcs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Parsers\IHealthFileParsercs
-**Namespace:** DataFileReader.Parsers;
-**Interfaces:**
-- IHealthFileParser
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Parsers\LegacyJsonParsercs
-**Classes:**
-- public class LegacyJsonParser : IHealthFileParser
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Parsers\SamsungCsvParsercs
-**Classes:**
-- public class SamsungCsvParser : IHealthFileParser
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Parsers\SamsungJsonParsercs
-**Classes:**
-- public class SamsungJsonParser : IHealthFileParser
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Services\FileProcessingServicecs
-**Namespace:** DataFileReader.Services;
-**Tags:** Service
-**Classes:**
-- public class FileProcessingService
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Services\MetricAggregatorcs
-**Namespace:** DataFileReader.Services;
-**Classes:**
-- public class MetricAggregator
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\Programcs
-**Entry Points:**
-- Main()
-
-### C:\Development\POCs\DataFileReaderRedux\DataFileReader\ShadowValidate_SamsungHealthCsvcs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Computation\ChartComputationEnginecs
-**Namespace:** DataVisualiser.Charts.Computation
-**Tags:** Engine
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Computation\ChartComputationResultcs
-**Namespace:** DataVisualiser.Charts.Computation
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Helpers\ChartHelpercs
-**Namespace:** DataVisualiser.Charts.Helpers
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Helpers\ChartTooltipManagercs
-**Namespace:** DataVisualiser.Charts.Helpers
-**Classes:**
-- public class ChartTooltipManager : IDisposable
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Helpers\WeeklyDistributionTooltipcs
-**Namespace:** DataVisualiser.Charts.Helpers
-**Classes:**
-- public class WeeklyDistributionTooltip : IDisposable
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Parity\IStrategyParityHarnesscs
-**Namespace:** DataVisualiser.Charts.Parity
-**Interfaces:**
-- IStrategyParityHarness
-**Enums:**
-- ParityMode
-- ParityLayer
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\ChartRenderEnginecs
-**Namespace:** DataVisualiser.Charts.Rendering
-**Tags:** Engine
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\ChartRenderModelcs
-**Namespace:** DataVisualiser.Charts.Rendering
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\ChartSeriesModecs
-**Namespace:** DataVisualiser.Charts.Rendering
-**Enums:**
-- ChartSeriesMode
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\FrequencyShadingRenderercs
-**Namespace:** DataVisualiser.Charts.Rendering
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Rendering\IFrequencyShadingRenderercs
-**Namespace:** DataVisualiser.Charts.Rendering
-**Interfaces:**
-- IFrequencyShadingRenderer
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\CombinedMetricStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\DifferenceStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\MultiMetricStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\NormalizedStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\RatioStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\SingleMetricStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\WeekdayTrendStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\Strategies\WeeklyDistributionStrategycs
-**Namespace:** DataVisualiser.Charts.Strategies
-**Tags:** Strategy
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\ChartDataContextcs
-**Namespace:** DataVisualiser.Charts
-**Classes:**
-- public class ChartDataContext
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\ColourPalettecs
-**Namespace:** DataVisualiser.Charts
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Charts\IChartComputationStrategycs
-**Namespace:** DataVisualiser.Charts
-**Tags:** Strategy
-**Interfaces:**
-- IChartComputationStrategy
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Converters\NormalizationModeConvertercs
-**Namespace:** DataVisualiser.Converters
-**Classes:**
-- public class NormalizationModeConverter : IValueConverter
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\Repositories\CmsDataServicecs
-**Namespace:** DataVisualiser.Data.Repositories
-**Tags:** Service
-**Classes:**
-- public class CmsDataService
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\Repositories\DataFetchercs
-**Namespace:** DataVisualiser.Data.Repositories
-**Classes:**
-- public class DataFetcher
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Data\SqlQueryBuildercs
-**Namespace:** DataVisualiser.Data
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\CmsConversionHelpercs
-**Namespace:** DataVisualiser.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\FrequencyBinningHelpercs
-**Namespace:** DataVisualiser.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\MathHelpercs
-**Namespace:** DataVisualiser.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Helper\StrategyComputationHelpercs
-**Namespace:** DataVisualiser.Helper
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\BinaryOperatorRegistrycs
-**Namespace:** DataVisualiser.Models
-**Classes:**
-- public class BinaryOperatorRegistry
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\BinaryOperatorscs
-**Namespace:** DataVisualiser.Models
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\DateRangeResultcs
-**Namespace:** DataVisualiser.Models
-**Tags:** DataCarrier (heuristic)
-**Classes:**
-- public class DateRangeResult
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\HealthMetricDatacs
-**Namespace:** DataVisualiser.Models
-**Tags:** DataCarrier (heuristic)
-**Classes:**
-- public class HealthMetricData
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\NormalizationModecs
-**Namespace:** DataVisualiser.Models
-**Enums:**
-- NormalizationMode
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\RecordToDayRatiocs
-**Namespace:** DataVisualiser.Models
-**Enums:**
-- RecordToDayRatio
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\SmoothedDataPointcs
-**Namespace:** DataVisualiser.Models
-**Tags:** DataCarrier (heuristic)
-**Classes:**
-- public class SmoothedDataPoint
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\TickIntervalcs
-**Namespace:** DataVisualiser.Models
-**Enums:**
-- TickInterval
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendPointcs
-**Namespace:** DataVisualiser.Models
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendResultcs
-**Namespace:** DataVisualiser.Models
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeekdayTrendSeriescs
-**Namespace:** DataVisualiser.Models
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Models\WeeklyDistributionResultcs
-**Namespace:** DataVisualiser.Models
-**Classes:**
-- public class WeeklyDistributionResult
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\NETCoreApp,Version=v90AssemblyAttributescs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\Appgics
-**Namespace:** DataVisualiser {
-**Entry Points:**
-- Main()
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\DataVisualiserGlobalUsingsgcs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\MainWindowgics
-**Namespace:** DataVisualiser {
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\obj\Debug\net90-windows\unoreloadcookiegcs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\Shading\FrequencyBasedShadingStrategycs
-**Namespace:** DataVisualiser.Services.Shading
-**Tags:** Strategy
-**Classes:**
-- public class FrequencyBasedShadingStrategy : IIntervalShadingStrategy
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\Shading\IIntervalShadingStrategycs
-**Namespace:** DataVisualiser.Services.Shading
-**Tags:** Strategy
-**Classes:**
-- public class IntervalShadingContext
-**Interfaces:**
-- IIntervalShadingStrategy
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\ChartDataContextBuildercs
-**Namespace:** DataVisualiser.Services
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\ChartUpdateCoordinatorcs
-**Namespace:** DataVisualiser.Services
-**Classes:**
-- public class ChartUpdateCoordinator
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\MetricSelectionServicecs
-**Namespace:** DataVisualiser.Services
-**Tags:** Service
-**Classes:**
-- public class MetricSelectionService
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\WeeklyDistributionServicecs
-**Namespace:** DataVisualiser.Services
-**Tags:** Service
-**Classes:**
-- public class WeeklyDistributionService
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Services\WeeklyFrequencyRenderercs
-**Namespace:** DataVisualiser.Services
-**Classes:**
-- public class WeeklyFrequencyRenderer
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\ChartStatecs
-**Namespace:** DataVisualiser.State
-**Classes:**
-- public class ChartState
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\CmsConfigurationcs
-**Namespace:** DataVisualiser.State
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\MetricStatecs
-**Namespace:** DataVisualiser.State
-**Classes:**
-- public class MetricState
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\State\UiStatecs
-**Namespace:** DataVisualiser.State
-**Tags:** DataCarrier (heuristic)
-**Classes:**
-- public class UiState
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManagercs
-**Namespace:** DataVisualiser.UI.SubtypeSelectors
-**Classes:**
-- public class SubtypeSelectorManager
-- public class SubtypeControlPair
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\ViewModels\Commands\RelayCommandcs
-**Namespace:** DataVisualiser.ViewModels.Commands
-**Classes:**
-- public class RelayCommand : ICommand
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\ViewModels\Events\ViewModelEventscs
-**Namespace:** DataVisualiser.ViewModels.Events
-**Classes:**
-- public class MetricTypesLoadedEventArgs : EventArgs
-- public class SubtypesLoadedEventArgs : EventArgs
-- public class DateRangeLoadedEventArgs : EventArgs
-- public class DataLoadedEventArgs : EventArgs
-- public class ChartVisibilityChangedEventArgs : EventArgs
-- public class ErrorEventArgs : EventArgs
-- public class ChartUpdateRequestedEventArgs : EventArgs
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\ViewModels\MainWindowViewModelcs
-**Namespace:** DataVisualiser.ViewModels
-**Tags:** ViewModel
-**Classes:**
-- public class MainWindowViewModel : INotifyPropertyChanged
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Appxamlcs
-**Namespace:** DataVisualiser
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\AssemblyInfocs
-_No public symbols detected._
-
-### C:\Development\POCs\DataFileReaderRedux\DataVisualiser\MainWindowxamlcs
-**Namespace:** DataVisualiser
-_No public symbols detected._
-
-## XAML Files
-- C:\Development\POCs\DataFileReaderRedux\DataVisualiser\Appxaml
-- C:\Development\POCs\DataFileReaderRedux\DataVisualiser\MainWindowxaml
+Generated: 2025-12-22 15:47:43  
+Root: C:\Development\POCs\DataFileReaderRedux
+
+This file is auto-generated.
+
+**Scope**
+- Declared symbols only
+- No inference
+- No semantic interpretation
+
+------------------------------------------------------
+
+| Kind | Name | Visibility | Namespace | File |
+|------|------|------------|-----------|------|
+| class | BinaryOperatorRegistry | public | DataVisualiser.Models | .\DataVisualiser\Models\BinaryOperatorRegistry.cs |
+| class | BinaryOperators | public | DataVisualiser.Models | .\DataVisualiser\Models\BinaryOperators.cs |
+| class | CanonicalMetricIdentityResolver | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricIdentityResolver.cs |
+| class | CanonicalMetricMapping | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricMapping.cs |
+| class | CanonicalMetricSeries | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\CanonicalMetricSeries.cs |
+| class | ChartComputationEngine | public | DataVisualiser.Charts.Computation | .\DataVisualiser\Charts\Computation\ChartComputationEngine.cs |
+| class | ChartComputationResult | public | DataVisualiser.Charts.Computation | .\DataVisualiser\Charts\Computation\ChartComputationResult.cs |
+| class | ChartDataContext | public | DataVisualiser.Charts | .\DataVisualiser\Charts\ChartDataContext.cs |
+| class | ChartDataContextBuilder | public | DataVisualiser.Services | .\DataVisualiser\Services\ChartDataContextBuilder.cs |
+| class | ChartHelper | public | DataVisualiser.Charts.Helpers | .\DataVisualiser\Charts\Helpers\ChartHelper.cs |
+| class | ChartRenderEngine | public | DataVisualiser.Charts.Rendering | .\DataVisualiser\Charts\Rendering\ChartRenderEngine.cs |
+| class | ChartRenderModel | public | DataVisualiser.Charts.Rendering | .\DataVisualiser\Charts\Rendering\ChartRenderModel.cs |
+| class | ChartState | public | DataVisualiser.State | .\DataVisualiser\State\ChartState.cs |
+| class | ChartTooltipManager | public | DataVisualiser.Charts.Helpers | .\DataVisualiser\Charts\Helpers\ChartTooltipManager.cs |
+| class | ChartUpdateCoordinator | public | DataVisualiser.Services | .\DataVisualiser\Services\ChartUpdateCoordinator.cs |
+| class | ChartUpdateRequestedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | ChartVisibilityChangedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | CmsConfiguration | public | DataVisualiser.State | .\DataVisualiser\State\CmsConfiguration.cs |
+| class | CmsConversionHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\CmsConversionHelper.cs |
+| class | CmsDataService | public | DataVisualiser.Data.Repositories | .\DataVisualiser\Data\Repositories\CmsDataService.cs |
+| class | CmsExecutionResult | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | CmsProductionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\CmsProductionStage.cs |
+| class | CmsTypeConverter | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CmsTypeConverter.cs |
+| class | ColourPalette | public | DataVisualiser.Charts | .\DataVisualiser\Charts\ColourPalette.cs |
+| class | CombinedMetricCmsStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\CombinedMetricCmsStrategy.cs |
+| class | CombinedMetricParityHarness | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\CombinedMetricParityHarness.cs |
+| class | CombinedMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\CombinedMetricStrategy.cs |
+| class | ConsoleHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\ConsoleHelper.cs |
+| class | DataFetcher | public | DataVisualiser.Data.Repositories | .\DataVisualiser\Data\Repositories\DataFetcher.cs |
+| class | DataHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper.cs |
+| class | DataHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper_Old.cs |
+| class | DataLoadedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | DataNormalization | public | DataFileReader.Helper | .\DataFileReader\Helper\DataNormalization.cs |
+| class | DateRangeLoadedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | DateRangeResult | public | DataVisualiser.Models | .\DataVisualiser\Models\DateRangeResult.cs |
+| class | DefaultNormalizationPipeline | public | DataFileReader.Normalization | .\DataFileReader\Normalization\DefaultNormalizationPipeline.cs |
+| class | DifferenceStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\DifferenceStrategy.cs |
+| class | DimensionSet | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\DimensionSet.cs |
+| class | ErrorEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | FileHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\FileHelper.cs |
+| class | FileProcessingService | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingService.cs |
+| class | FrequencyBasedShadingStrategy | public | DataVisualiser.Services.Shading | .\DataVisualiser\Services\Shading\FrequencyBasedShadingStrategy.cs |
+| class | FrequencyBinningHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\FrequencyBinningHelper.cs |
+| class | FrequencyShadingRenderer | public | DataVisualiser.Charts.Rendering | .\DataVisualiser\Charts\Rendering\FrequencyShadingRenderer.cs |
+| class | HealthDataApp | public | DataFileReader.App | .\DataFileReader\App\HealthDataApp.cs |
+| class | HealthMetric | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthParser.cs |
+| class | HealthMetricData | public | DataVisualiser.Models | .\DataVisualiser\Models\HealthMetricData.cs |
+| class | HealthMetricToCmsMapper | public | DataFileReader.Canonical | .\DataFileReader\Canonical\HealthMetricToCmsMapper.cs |
+| class | HierarchyObject | public |  | .\DataFileReader\Class\HierarchyObject.cs |
+| class | HierarchyObjectList | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyObjectList.cs |
+| class | IntervalShadingContext | public | DataVisualiser.Services.Shading | .\DataVisualiser\Services\Shading\IIntervalShadingStrategy.cs |
+| class | JsonArray | public |  | .\DataFileReader\Class\JSON\JsonArray.cs |
+| class | JsonObject | public |  | .\DataFileReader\Class\JSON\JsonObject.cs |
+| class | JsonValue | public |  | .\DataFileReader\Class\JSON\JsonValue.cs |
+| class | JsoonHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\JsoonHelper.cs |
+| class | LegacyExecutionResult | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | LegacyJsonParser | public |  | .\DataFileReader\Parsers\LegacyJsonParser.cs |
+| class | MainWindowViewModel | public | DataVisualiser.ViewModels | .\DataVisualiser\ViewModels\MainWindowViewModel.cs |
+| class | MathHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\MathHelper.cs |
+| class | MetaData | public | DataFileReader.Class | .\DataFileReader\Class\MetaData.cs |
+| class | MetaDataComparer | public | DataFileReader.Class | .\DataFileReader\Class\MetaDataComparer.cs |
+| class | MetaDataList | public | DataFileReader.Class | .\DataFileReader\Class\MetaDataList.cs |
+| class | MetricAggregator | public | DataFileReader.Services | .\DataFileReader\Services\MetricAggregator.cs |
+| class | MetricCompatibilityHelper | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricCompatibilityHelper.cs |
+| class | MetricIdentity | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\MetricIdentity.cs |
+| class | MetricIdentityResolutionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\MetricIdentityResolutionStage.cs |
+| class | MetricSelectionService | public | DataVisualiser.Services | .\DataVisualiser\Services\MetricSelectionService.cs |
+| class | MetricState | public | DataVisualiser.State | .\DataVisualiser\State\MetricState.cs |
+| class | MetricTypeParser | public | DataFileReader.Helper | .\DataFileReader\Helper\MetricTypeParser.cs |
+| class | MetricTypesLoadedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | MultiMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\MultiMetricStrategy.cs |
+| class | NormalizationBootstrap | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationBootstrap.cs |
+| class | NormalizationContext | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationContext.cs |
+| class | NormalizationDiagnostics | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationDiagnostics.cs |
+| class | NormalizationModeConverter | public | DataVisualiser.Converters | .\DataVisualiser\Converters\NormalizationModeConverter.cs |
+| class | NormalizedStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\NormalizedStrategy.cs |
+| class | ParityFailure | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | ParityPoint | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | ParityResult | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | ParitySeries | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | ParityTolerance | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | Program | internal |  | .\DataFileReader\Program.cs |
+| class | RatioStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\RatioStrategy.cs |
+| class | RawRecord | public | DataFileReader.Ingestion | .\DataFileReader\Ingestion\RawRecord.cs |
+| class | RawRecordFactory | public | DataFileReader.Ingestion | .\DataFileReader\Ingestion\RawRecordFactory.cs |
+| class | RelayCommand | public | DataVisualiser.ViewModels.Commands | .\DataVisualiser\ViewModels\Commands\RelayCommand.cs |
+| class | RowComparer | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper.cs |
+| class | SamsungCsvParser | public |  | .\DataFileReader\Parsers\SamsungCsvParser.cs |
+| class | SamsungHealthCsvParser | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthCsvParser.cs |
+| class | SamsungHealthParser | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthParser.cs |
+| class | SamsungJsonParser | public |  | .\DataFileReader\Parsers\SamsungJsonParser.cs |
+| class | SeriesResult | public | DataVisualiser.Charts.Computation | .\DataVisualiser\Charts\Computation\ChartComputationResult.cs |
+| class | ShadowValidate_SamsungHealthCsv | public |  | .\DataFileReader\ShadowValidate_SamsungHealthCsv.cs |
+| class | SingleMetricCmsStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricCmsStrategy.cs |
+| class | SingleMetricLegacyStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricLegacyStrategy.cs |
+| class | SingleMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricStrategy.cs |
+| class | SmoothedDataPoint | public | DataVisualiser.Models | .\DataVisualiser\Models\SmoothedDataPoint.cs |
+| class | SQLHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\SQLHelper.cs |
+| class | SqlQueryBuilder | public | DataVisualiser.Data | .\DataVisualiser\Data\SqlQueryBuilder.cs |
+| class | StrategyComputationHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\StrategyComputationHelper.cs |
+| class | StrategyParityContext | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | SubtypeControlPair | public | DataVisualiser.UI.SubtypeSelectors | .\DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManager.cs |
+| class | SubtypeSelectorManager | public | DataVisualiser.UI.SubtypeSelectors | .\DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManager.cs |
+| class | SubtypesLoadedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | TimeAxis | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\TimeAxis.cs |
+| class | TimeNormalizationHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\TimeNormalizationHelper.cs |
+| class | Types | public |  | .\DataFileReader\Class\JSON\JsonValue.cs |
+| class | UiState | public | DataVisualiser.State | .\DataVisualiser\State\UiState.cs |
+| class | WeekdayTrendPoint | public | DataVisualiser.Models | .\DataVisualiser\Models\WeekdayTrendPoint.cs |
+| class | WeekdayTrendResult | public | DataVisualiser.Models | .\DataVisualiser\Models\WeekdayTrendResult.cs |
+| class | WeekdayTrendSeries | public | DataVisualiser.Models | .\DataVisualiser\Models\WeekdayTrendSeries.cs |
+| class | WeekdayTrendStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\WeekdayTrendStrategy.cs |
+| class | WeeklyDistributionResult | public | DataVisualiser.Models | .\DataVisualiser\Models\WeeklyDistributionResult.cs |
+| class | WeeklyDistributionService | public | DataVisualiser.Services | .\DataVisualiser\Services\WeeklyDistributionService.cs |
+| class | WeeklyDistributionStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\WeeklyDistributionStrategy.cs |
+| class | WeeklyDistributionTooltip | public | DataVisualiser.Charts.Helpers | .\DataVisualiser\Charts\Helpers\WeeklyDistributionTooltip.cs |
+| class | WeeklyFrequencyRenderer | public | DataVisualiser.Services | .\DataVisualiser\Services\WeeklyFrequencyRenderer.cs |
+| enum | AggregationPeriod | public | DataFileReader.Class | .\DataFileReader\Class\AggregationPeriod.cs |
+| enum | ChartSeriesMode | public | DataVisualiser.Charts.Rendering | .\DataVisualiser\Charts\Rendering\ChartSeriesMode.cs |
+| enum | DataCompleteness | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| enum | IdentityResolutionFailureReason | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricIdentityResolutionResult.cs |
+| enum | MetricDimension | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| enum | NormalizationMode | public | DataVisualiser.Models | .\DataVisualiser\Models\NormalizationMode.cs |
+| enum | ParityLayer | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| enum | ParityMode | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| enum | RecordToDayRatio | public | DataVisualiser.Models | .\DataVisualiser\Models\RecordToDayRatio.cs |
+| enum | TickInterval | public | DataVisualiser.Models | .\DataVisualiser\Models\TickInterval.cs |
+| enum | TimeRepresentation | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| enum | ValidationStatus | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| interface | ICanonicalMetricSeries | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| interface | IChartComputationStrategy | public | DataVisualiser.Charts | .\DataVisualiser\Charts\IChartComputationStrategy.cs |
+| interface | IFrequencyShadingRenderer | public | DataVisualiser.Charts.Rendering | .\DataVisualiser\Charts\Rendering\IFrequencyShadingRenderer.cs |
+| interface | IHealthFileParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\IHealthFileParser.cs |
+| interface | IIntervalShadingStrategy | public | DataVisualiser.Services.Shading | .\DataVisualiser\Services\Shading\IIntervalShadingStrategy.cs |
+| interface | IJson | public |  | .\DataFileReader\Class\JSON\IJson.cs |
+| interface | IJsonComplex | public |  | .\DataFileReader\Class\JSON\IJson.cs |
+| interface | IJsonPrimitive | public |  | .\DataFileReader\Class\JSON\IJson.cs |
+| interface | INormalizationPipeline | public | DataFileReader.Normalization | .\DataFileReader\Normalization\INormalizationPipeline.cs |
+| interface | INormalizationStage | public | DataFileReader.Normalization | .\DataFileReader\Normalization\INormalizationStage.cs |
+| interface | IStrategyParityHarness | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| record | CanonicalMetricId | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | CanonicalMetricSeries | internal | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | FileProcessingResult | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingService.cs |
+| record | MetricIdentityResolutionResult | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricIdentityResolutionResult.cs |
+| record | MetricProvenance | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | MetricQuality | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | MetricSample | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | MetricUnit | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | TimeSemantics | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+
+
+------------------------------------------------------
+
+End of codebase-index.md

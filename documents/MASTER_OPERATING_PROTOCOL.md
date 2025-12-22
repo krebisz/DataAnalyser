@@ -11,7 +11,8 @@ It is authoritative for:
 - interaction constraints
 - enforcement of collaboration and documentation rules
 
-This document does **not** define architecture. Architectural law resides in the Project Bible.
+This document does **not** define architecture.  
+Architectural law resides in the **Project Bible**.
 
 ------------------------------------------------------
 
@@ -22,7 +23,7 @@ In descending order of authority:
 1. Project Bible.md — architectural law  
 2. SYSTEM_MAP.md — conceptual structure and boundaries  
 3. MASTER_OPERATING_PROTOCOL.md — execution and governance rules  
-4. Collaboration Protocol.md — relationship-specific collaboration rules  
+4. Collaboration Protocol.md — collaboration quick-reference  
 5. Project Roadmap.md — sequencing and planning  
 
 In the event of conflict, higher-authority documents prevail.
@@ -32,10 +33,11 @@ In the event of conflict, higher-authority documents prevail.
 ## 3. Scope of This Protocol
 
 This protocol governs:
+- how work proceeds
 - how changes are proposed
-- how documents are evolved
-- how alignment is maintained
+- how documents evolve
 - how ambiguity is resolved
+- how collaboration is enforced
 
 It does not:
 - prescribe implementation details
@@ -45,9 +47,9 @@ It does not:
 
 ## 4. Explicitness Requirement
 
-All significant decisions, assumptions, or changes must be made explicit.
+All significant decisions, assumptions, or changes must be **explicit**.
 
-Implicit behavior, silent assumptions, or inferred intent are not acceptable.
+Implicit behavior, silent assumptions, inferred intent, or “obvious” steps are not acceptable.
 
 ------------------------------------------------------
 
@@ -58,7 +60,7 @@ When conceptual, architectural, or procedural drift is detected:
 - the drift must be identified explicitly
 - resolution must occur before continuation
 
-Proceeding in the presence of known drift is a protocol violation.
+Proceeding with known drift is a protocol violation.
 
 ------------------------------------------------------
 
@@ -69,7 +71,7 @@ All non-trivial changes must be:
 - scoped clearly
 - justified briefly
 
-Approval must be deliberate. Silence does not imply consent.
+Silence does not imply consent.
 
 ------------------------------------------------------
 
@@ -91,7 +93,7 @@ Either party may:
 - request clarification
 - halt progress due to misalignment
 
-Challenge is cooperative, not adversarial.
+Correction is cooperative, not adversarial.
 
 ------------------------------------------------------
 
@@ -105,119 +107,190 @@ Higher-authority documents require higher discipline.
 
 ## 9A. Foundational Document Evolution Rule (Additive)
 
-### 9A.0 Definition
-
-Foundational documents include (but are not limited to):
-- MASTER_OPERATING_PROTOCOL.md
-- Project Bible.md
-- SYSTEM_MAP.md
-- Project Overview.md
-- Project Philosophy.md
-
-These documents encode architectural law, semantic boundaries, and long-term intent.
-
----
-
 ### 9A.1 Non-Destructive Default
 
-When proposing changes to any foundational document, the assistant must:
-- treat the existing document as authoritative
-- preserve all existing sections verbatim by default
-- apply changes only as **additive extensions** unless explicitly instructed otherwise
-
-Removal, condensation, reinterpretation, or restructuring of existing content is **prohibited by default**.
+- Existing content is authoritative  
+- Changes are additive unless explicitly approved otherwise  
+- Removal, reinterpretation, or compression is prohibited by default  
 
 ---
 
 ### 9A.2 Refactor-by-Proposal Requirement
 
-If the assistant determines that refactoring a foundational document would improve clarity, coherence, or long-term maintainability, it must follow this mandatory sequence:
+If refactoring is proposed:
+1. Provide an additive extension first
+2. Provide a refactored version separately
+3. Justify the refactor explicitly
 
-1. **First**, provide a newly **extended (additive)** version of the document, preserving all original content.
-2. **Second**, separately propose a **refactored version** of the document.
-3. Provide a **brief justification** for each proposed refactor.
-
-No refactored version may be treated as authoritative unless explicitly approved.
+No refactor becomes authoritative without approval.
 
 ---
 
 ### 9A.3 Information Preservation Guarantee
 
-If any refactor proposal would remove or collapse information that is:
-- relevant to system understanding, and
-- not already present in another workspace-initializing document
+If information would be removed:
+- it must be identified
+- it must be re-homed first
 
-The assistant must:
-- explicitly identify that information
-- propose where it must be re-homed (and added) **before** removal
-
-Loss of relevant information without re-homing is a protocol violation.
-
----
-
-### 9A.4 Explicit Agreement Requirement
-
-Destructive or restructuring changes to foundational documents may occur **only** when:
-- the changes are explicitly proposed
-- the impact is clearly stated
-- and the user gives deliberate, explicit approval
-
-Absent such approval, additive evolution is the only permitted mode.
+Loss without re-homing is a protocol violation.
 
 ------------------------------------------------------
 
-## 9B. Mandatory Grounding & Assumption Prohibition Rule (Additive)
+## 9B. Mandatory Grounding & Assumption Prohibition
 
 ### 9B.1 Grounding Requirement
 
-Before proposing any of the following:
+Before proposing:
 - architectural changes
 - refactors
 - new components
 - new workflows
-- new abstractions
+- abstractions
 
-the assistant must explicitly restate:
-- the **current system state**
-- the **relevant existing artifacts** (files, classes, or documents)
-- the **frozen vs evolvable boundaries** involved
-
-This grounding must precede the proposal.
+the assistant must explicitly list:
+- current system state
+- files inspected
+- symbols verified
+- frozen vs evolvable boundaries
 
 ---
 
 ### 9B.2 Assumption Prohibition
 
-If required information is not explicitly present in:
-- the current workspace
-- or the referenced foundational documents
+If information is not present, it is **UNKNOWN**.
 
-it must be treated as **UNKNOWN**.
-
-The assistant is prohibited from:
-- inferring intent
-- assuming absence
-- extrapolating architecture
-- relying on pattern-based expectations
-
-Proceeding on unstated assumptions is a protocol violation.
+The assistant must not:
+- infer intent
+- assume structure
+- extrapolate architecture
+- rely on pattern expectation
 
 ---
 
 ### 9B.3 Grounding Failure Stop Condition
 
-If grounding is missing, incorrect, or challenged:
-- all forward progress must stop
-- the grounding error must be identified and corrected
-- no new proposals may be introduced until resolution
+If grounding is missing or challenged:
+- progress halts
+- grounding is corrected
+- only then may work continue
 
-Correction precedes continuation.
+------------------------------------------------------
+
+## 9C. Execution Discipline Extensions
+
+### 9C.1 Workspace Initialization Discipline
+
+- Workspace state must be declared:
+  - documents loaded
+  - code snapshot or commit reference
+  - active phase
+  - parity status
+- Work may not proceed until workspace is explicitly **locked**
+- Missing artifacts are a **hard stop**
 
 ---
 
-### 9B.4 Enforcement
+### 9C.2 Assumption Suppression Gate
 
-Violation of this section invalidates the affected work under Section 10.
+Before implementation guidance:
+- list files inspected
+- list symbols verified
+- list unknowns
+
+Absent files or symbols → stop and request upload.
+
+Conceptual or assumed code is prohibited during active phases.
+
+---
+
+### 9C.3 Change Atomicity & Drop-In Safety
+
+All guidance must be:
+- full method replacement, or
+- full class replacement, or
+- explicit before/after diff
+
+Prohibited:
+- partial snippets
+- vague “modify this”
+- unenumerated multi-location changes
+
+---
+
+### 9C.4 Strategy Migration Protocol (Phase 4)
+
+A strategy is not migrated unless:
+- legacy path preserved
+- CMS constructor added
+- conversion isolated
+- parity harness wired (disabled)
+- activation flag present
+- equivalence demonstrated
+
+---
+
+### 9C.5 Parity as Phase-Exit Artifact
+
+- One parity harness per strategy
+- Explicit activation switch
+- Diagnostic + strict modes
+- Phase 4 cannot close without parity sign-off
+
+---
+
+### 9C.6 Document Impact Declaration
+
+All document updates must declare:
+- why this document
+- additive vs structural
+
+All updates must be output **in full**, never fragmented.
+
+---
+
+### 9C.7 Velocity Protection (“Proceed Mode”)
+
+When Proceed Mode is active:
+- output actions, code, or decisions only
+- no recap
+- no narrative
+- no justification unless requested
+
+---
+
+### 9C.8 Architectural Boundary Visibility
+
+New dependencies require declaration of:
+- source project
+- dependency direction
+- justification
+- migration intent
+
+Silent boundary erosion is prohibited.
+
+---
+
+### 9C.9 Phase Transition Guardrails
+
+Before phase transition or workspace reset:
+- documentation aligned
+- parity obligations closed
+- reset explicitly justified
+
+Workspace reset is a controlled phase step, not an escape hatch.
+
+---
+
+### 9C.10 Interaction Mode Declaration
+
+Interaction mode must be explicit or inferred:
+- Design
+- Migration
+- Debug
+- Documentation
+- Execution
+
+Response shape must conform to mode.
 
 ------------------------------------------------------
 

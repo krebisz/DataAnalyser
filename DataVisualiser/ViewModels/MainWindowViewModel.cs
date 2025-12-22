@@ -4,6 +4,7 @@ using DataVisualiser.State;
 using DataVisualiser.ViewModels.Commands;
 using DataVisualiser.ViewModels.Events;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -291,16 +292,17 @@ namespace DataVisualiser.ViewModels
             string tableName)
         {
             // Load data: data1 = first selected subtype (primary), data2 = second selected subtype (secondary)
-            var (data1, data2) = await _metricService.LoadMetricDataAsync(
-                metricType,
-                primarySubtype,   // First selected subtype → data1
-                secondarySubtype, // Second selected subtype → data2
-                MetricState.FromDate!.Value,
-                MetricState.ToDate!.Value,
-                tableName);
+            var (primaryCms, secondaryCms, data1, data2) =
+                await _metricService.LoadMetricDataWithCmsAsync(
+                    metricType,
+                    primarySubtype,
+                    secondarySubtype,
+                    MetricState.FromDate!.Value,
+                    MetricState.ToDate!.Value,
+                    tableName);
 
             // Mirror old MainWindow "no data" behaviour, but via ErrorOccured
-            if (data1 == null || !data1.Any())
+            if (primaryCms == null && (data1 == null || !data1.Any()))
             {
                 ErrorOccured?.Invoke(this, new ErrorEventArgs
                 {
@@ -310,7 +312,7 @@ namespace DataVisualiser.ViewModels
                 return false;
             }
 
-            if (data2 == null || !data2.Any())
+            if (secondaryCms == null && (data2 == null || !data2.Any()))
             {
                 ErrorOccured?.Invoke(this, new ErrorEventArgs
                 {
@@ -330,7 +332,13 @@ namespace DataVisualiser.ViewModels
                 data1,
                 data2,
                 MetricState.FromDate.Value,
-                MetricState.ToDate.Value);
+                MetricState.ToDate.Value,
+                primaryCms,
+                secondaryCms);
+
+            Debug.WriteLine(
+    $"[CTX] SemanticMetricCount={ChartState.LastContext.SemanticMetricCount}, " +
+    $"PrimaryCms={(ChartState.LastContext.PrimaryCms == null ? "NULL" : "SET")}");
 
             return true;
         }

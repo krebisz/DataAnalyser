@@ -1,143 +1,78 @@
+# Generate-CodebaseIndex.ps1
+# Emits a declarative index of declared symbols only
+# No inference. No semantic interpretation.
+
 param (
-    [string]$RootPath = ".",
-    [string]$OutputFile = "codebase-index.md"
+    [string]$Root = ".",
+    [string]$Output = "codebase-index.md"
 )
 
-Write-Host "Generating codebase index..."
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-$csFiles   = Get-ChildItem $RootPath -Recurse -Include *.cs -File
-$xamlFiles = Get-ChildItem $RootPath -Recurse -Include *.xaml -File
-$projects  = Get-ChildItem $RootPath -Recurse -Include *.csproj -File
+$symbolPattern = '^\s*(public|internal)?\s*(sealed\s+|abstract\s+|static\s+)?(class|record|interface|enum|struct)\s+([A-Za-z0-9_]+)'
+$namespacePattern = '^\s*namespace\s+([A-Za-z0-9_.]+)'
 
-$lines = @()
-$lines += "# Codebase Index"
-$lines += ""
-$lines += "_Auto-generated. Do not edit by hand._"
-$lines += ""
+$rows = @()
 
-# ----------------------------
-# Projects
-# ----------------------------
-$lines += "## Projects"
-foreach ($proj in $projects) {
-    $lines += "- $($proj.FullName.Replace($RootPath, '').TrimStart('\'))"
-}
-$lines += ""
+Get-ChildItem -Path $Root -Recurse -Filter *.cs |
+    Where-Object { $_.FullName -notmatch '\\obj\\|\\bin\\' } |
+    ForEach-Object {
 
-# ----------------------------
-# C# Files
-# ----------------------------
-$lines += "## C# Source Files"
+        $file = $_.FullName.Replace((Resolve-Path $Root).Path, ".")
+        $namespace = ""
 
-foreach ($file in $csFiles) {
+        Get-Content $_.FullName | ForEach-Object {
 
-    $relative = $file.FullName.Replace($RootPath, '').TrimStart('\')
-    $content  = Get-Content $file.FullName
+            if (-not $namespace -and $_ -match $namespacePattern) {
+                $namespace = $matches[1]
+            }
 
-    $namespace = $content |
-        Select-String '^\s*namespace\s+' |
-        Select-Object -First 1 |
-        ForEach-Object { ($_ -replace '^\s*namespace\s+', '').Trim() }
+            if ($_ -match $symbolPattern) {
+                $visibility = if ($matches[1]) { $matches[1] } else { "internal" }
+                $kind = $matches[3].ToLower()
+                $name = $matches[4]
 
-    $classMatches = $content |
-        Select-String '^\s*public\s+class\s+'
-
-    $interfaceMatches = $content |
-        Select-String '^\s*public\s+interface\s+'
-
-    $enumMatches = $content |
-        Select-String '^\s*public\s+enum\s+'
-
-    $entryPoints = $content |
-        Select-String 'static\s+void\s+Main\s*\('
-
-    # ----------------------------
-    # Heuristic: DataCarrier detection
-    # ----------------------------
-    $propertyMatches = $content |
-        Select-String 'public\s+.+\{\s*get;\s*set;\s*\}'
-
-    $methodMatches = $content |
-        Select-String 'public\s+.+\(' |
-        Where-Object { $_ -notmatch 'class|interface|enum' }
-
-    $isDataCarrier =
-        ($classMatches.Count -gt 0) -and
-        ($propertyMatches.Count -gt 0) -and
-        ($methodMatches.Count -eq 0)
-
-    $tags = @()
-
-    if ($file.Name -like '*ViewModel.cs' -or
-        ($content | Select-String 'INotifyPropertyChanged')) {
-        $tags += "ViewModel"
-    }
-
-    if ($file.Name -like '*Strategy.cs') { $tags += "Strategy" }
-    if ($file.Name -like '*Engine.cs')   { $tags += "Engine" }
-    if ($file.Name -like '*Service.cs')  { $tags += "Service" }
-
-    if ($isDataCarrier) {
-        $tags += "DataCarrier (heuristic)"
-    }
-
-    $lines += "### $relative"
-
-    if ($namespace) {
-        $lines += "**Namespace:** $namespace"
-    }
-
-    if ($tags.Count -gt 0) {
-        $lines += "**Tags:** " + ($tags -join ", ")
-    }
-
-    if ($classMatches) {
-        $lines += "**Classes:**"
-        foreach ($match in $classMatches) {
-            $lines += "- $($match.Line.Trim())"
+                $rows += [PSCustomObject]@{
+                    Kind       = $kind
+                    Name       = $name
+                    Visibility = $visibility
+                    Namespace  = $namespace
+                    File       = $file
+                }
+            }
         }
     }
 
-    if ($interfaceMatches) {
-        $lines += "**Interfaces:**"
-        foreach ($match in $interfaceMatches) {
-            $name = ($match.Line -replace '.*public\s+interface\s+', '').Split(' ')[0]
-            $lines += "- $name"
-        }
-    }
+# De-duplicate by Kind + Name + Namespace + File
+$rows = $rows |
+    Sort-Object Kind, Name, Namespace, File |
+    Get-Unique -AsString
 
-    if ($enumMatches) {
-        $lines += "**Enums:**"
-        foreach ($match in $enumMatches) {
-            $name = ($match.Line -replace '.*public\s+enum\s+', '').Split(' ')[0]
-            $lines += "- $name"
-        }
-    }
+# Emit markdown
+@"
+# Codebase Index
 
-    if ($entryPoints) {
-        $lines += "**Entry Points:**"
-        $lines += "- Main()"
-    }
+Generated: $timestamp  
+Root: $(Resolve-Path $Root)
 
-    if (-not ($classMatches -or $interfaceMatches -or $enumMatches -or $entryPoints)) {
-        $lines += "_No public symbols detected._"
-    }
+This file is auto-generated.
 
-    $lines += ""
-}
+**Scope**
+- Declared symbols only
+- No inference
+- No semantic interpretation
 
-# ----------------------------
-# XAML Files
-# ----------------------------
-$lines += "## XAML Files"
-foreach ($xaml in $xamlFiles) {
-    $relative = $xaml.FullName.Replace($RootPath, '').TrimStart('\')
-    $lines += "- $relative"
-}
+------------------------------------------------------
 
-# ----------------------------
-# Write Output
-# ----------------------------
-$lines | Set-Content $OutputFile -Encoding UTF8
+| Kind | Name | Visibility | Namespace | File |
+|------|------|------------|-----------|------|
+$( $rows | ForEach-Object {
+"| $($_.Kind) | $($_.Name) | $($_.Visibility) | $($_.Namespace) | $($_.File) |"
+} | Out-String )
 
-Write-Host "codebase-index.md generated successfully."
+------------------------------------------------------
+
+End of codebase-index.md
+"@ | Set-Content -Encoding UTF8 $Output
+
+Write-Host "Generated $Output"

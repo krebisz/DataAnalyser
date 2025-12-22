@@ -1,160 +1,133 @@
-COLLABORATION PROTOCOL
-1. Purpose
+# COLLABORATION PROTOCOL (Quick Reference)
 
-This document defines the interaction and collaboration rules governing how work is conducted between the user and the assistant.
+(Non-Authoritative · Behavioral Guide · Pointer Document)
+
+---
+
+## 1. Purpose
+
+This document provides a **concise interaction reference** for effective collaboration between the user and the assistant.
 
 It exists to:
+- reduce friction
+- minimize drift
+- optimize execution velocity
+- provide quick behavioral alignment
 
-reduce ambiguity
+It does **not** define architecture, governance, or enforcement.
 
-prevent drift
+---
 
-enforce precision
+## 2. Authority & Deference
 
-optimize collaboration efficiency
+This document is **subordinate** to all of the following:
 
-This document does not define architecture or governance authority.
+1. Project Bible.md (architecture)
+2. SYSTEM_MAP.md (boundaries & intent)
+3. MASTER_OPERATING_PROTOCOL.md (execution & governance)
 
-2. Relationship to Other Documents
+In any conflict, this document **yields immediately**.
 
-Authority order (highest to lowest):
+---
 
-Project Bible.md
+## 3. How to Use This Document
 
-SYSTEM_MAP.md
+Use this document when you are unsure:
+- how to phrase a request
+- how strict an interaction should be
+- why the assistant pauses or asks for files
+- which mode the collaboration is currently in
 
-MASTER_OPERATING_PROTOCOL.md
+This document is **reference-only**, not something to memorize.
 
-Collaboration Protocol.md
+---
 
-This document must defer to higher-authority documents in all cases.
+## 4. Interaction Modes (Signal-Only)
 
-3. Explicitness & Precision
+The collaboration operates in one of the following modes:
 
-Assumptions must be stated explicitly
+- **Design** – conceptual discussion, no code expected
+- **Migration** – structured refactor or phased change
+- **Debug** – error-driven, minimal speculation
+- **Documentation** – document alignment or updates
+- **Execution** – drop-in code only, no narrative
 
-File names, methods, and signatures must be exact
+If unclear, the assistant should ask.  
+If declared, the mode **governs response shape**.
 
-No inferred intent unless explicitly stated
+---
 
-If required context is missing, the assistant must ask before proceeding.
+## 5. File-First Expectation
 
-4. File-First Collaboration
+- Files provided by the user are authoritative
+- No assumptions about structure, helpers, or symbols
+- If a required file is missing → execution pauses
+- Exact filenames and scopes matter
 
-Code changes must reference exact files and locations
+This rule exists to **prevent imagined code paths**.
 
-The user provides authoritative files
+---
 
-The assistant must not assume file structure, method signatures, or return types
+## 6. Drop-In Safety Preference
 
-If a file is required, it must be explicitly requested.
+When providing implementation guidance, expect one of:
 
-5. Alignment & Correction
+- Full method replacement
+- Full class replacement
+- Explicit before/after diff
 
-Either party may:
+Avoid:
+- partial snippets
+- “modify this part” instructions
+- multi-location changes without enumeration
 
-pause execution
+---
 
-request clarification
+## 7. Verbosity Control (Default-Minimal)
 
-correct assumptions
+Unless requested otherwise, responses should be:
 
-Correction is cooperative, not adversarial.
+- concise
+- action-oriented
+- proportional to the task
 
-6. Scope Discipline
+No recap, summary, or justification unless explicitly requested.
 
-Tasks should remain within the explicitly stated scope
+---
 
-Scope expansion must be proposed, not assumed
+## 8. Decision Lock Awareness
 
-Non-essential exploration should be deferred unless requested
+Once something is:
+- explicitly agreed
+- anchored in code or a document
 
-7. Verbosity Control
+It is considered **locked** until explicitly reopened.
 
-Responses should be:
+This prevents conversational backtracking.
 
-precise
+---
 
-relevant
+## 9. When to Escalate
 
-proportional to task complexity
+Either party may pause progress to:
+- request clarification
+- surface drift
+- challenge assumptions
 
-Over-explanation is discouraged unless explicitly requested.
+Escalation is **cooperative**, not adversarial.
 
-8. Decision Locking
+---
 
-Once a decision is:
+## 10. What This Document Is Not
 
-explicitly stated
+This document is not:
+- a checklist
+- a governance mechanism
+- a substitute for MASTER_OPERATING_PROTOCOL.md
+- a place to encode architectural rules
 
-agreed upon
+It is intentionally lightweight.
 
-anchored in a document or code
+---
 
-It is considered locked and must not be revisited unless explicitly reopened.
-
-9. Delta-Based Interaction (Additive)
-
-Additive Section — interaction rule.
-
-Once a decision, rule, or architectural choice is anchored in a foundational document:
-
-The assistant must reference the document, not restate the reasoning
-
-Conversational recap is opt-in only
-
-Responses should focus on deltas, changes, or execution
-
-Re-derivation of established decisions is discouraged unless explicitly requested.
-
-10. No-Recap-by-Default Rule (Additive)
-
-Additive Section — verbosity optimization rule.
-
-By default, the assistant must not:
-
-recap previously agreed decisions
-
-re-explain established rationale
-
-summarize prior phases
-
-unless the user explicitly asks for:
-
-a recap
-
-a summary
-
-a refresher
-
-This rule exists to:
-
-reduce conversational footprint
-
-minimize token usage
-
-support execution-focused workflows
-
-11. Conflict Resolution
-
-If a conflict arises between:
-
-conversational instruction
-
-documented rules
-
-code artifacts
-
-The assistant must:
-
-stop
-
-identify the conflict explicitly
-
-request resolution before proceeding
-
-12. Enforcement
-
-Violation of this protocol invalidates the affected response and requires correction before continuation.
-
-End of Collaboration Protocol
+**End of Collaboration Protocol**
