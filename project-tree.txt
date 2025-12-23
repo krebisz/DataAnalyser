@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2025-12-23 09:04:54
+Generated: 2025-12-23 12:17:57
 Root: C:\Development\POCs\DataFileReaderRedux
 
 .cursor
@@ -14,8 +14,6 @@ Root: C:\Development\POCs\DataFileReaderRedux
 .vscode\tasks.json
 assets
 assets\c__Users_HP_Omen_AppData_Roaming_Cursor_User_workspaceStorage_7015c813c1df275769d3d8b268830a55_images_Screenshot_2025-12-04_080310-90a83677-dcf4-42be-8d19-c38161745075.png
-Create-DataFileReaderRedux-Package.ps1
-Create-ProjectZip.ps1
 DataFileReader
 DataFileReader .sln
 DataFileReader.Tests
@@ -95,13 +93,28 @@ DataVisualiser
 DataVisualiser.Tests
 DataVisualiser.Tests\DataVisualiser.Tests.csproj
 DataVisualiser.Tests\Helpers
+DataVisualiser.Tests\Helpers\MathHelperTests.cs
+DataVisualiser.Tests\Helpers\StrategyComputationHelperTests.cs
 DataVisualiser.Tests\Helpers\TestDataBuilders.cs
 DataVisualiser.Tests\Helpers\TestHelpers.cs
 DataVisualiser.Tests\Parity
 DataVisualiser.Tests\Parity\CombinedMetricParityTests.cs
+DataVisualiser.Tests\Parity\MultiMetricParityTests.cs
 DataVisualiser.Tests\Parity\SingleMetricParityTests.cs
 DataVisualiser.Tests\README.md
 DataVisualiser.Tests\Strategies
+DataVisualiser.Tests\Strategies\CombinedMetricStrategyTests.cs
+DataVisualiser.Tests\Strategies\DifferenceStrategyTests.cs
+DataVisualiser.Tests\Strategies\MultiMetricStrategyTests.cs
+DataVisualiser.Tests\Strategies\NormalizedStrategyTests.cs
+DataVisualiser.Tests\Strategies\RatioStrategyTests.cs
+DataVisualiser.Tests\Strategies\SingleMetricStrategyTests.cs
+DataVisualiser.Tests\Strategies\TransformResultStrategyTests.cs
+DataVisualiser.Tests\Transforms
+DataVisualiser.Tests\Transforms\TransformDataHelperTests.cs
+DataVisualiser.Tests\Transforms\TransformExpressionBuilderTests.cs
+DataVisualiser.Tests\Transforms\TransformExpressionEvaluatorTests.cs
+DataVisualiser.Tests\Transforms\TransformOperationRegistryTests.cs
 DataVisualiser\App.config
 DataVisualiser\App.xaml
 DataVisualiser\App.xaml.cs
@@ -217,10 +230,15 @@ documents\Workspace Workflow.md
 Generate-CodebaseIndex.ps1
 Generate-DependencySummary.ps1
 Generate-ProjectTree.ps1
-Generate-Repo-FileLinks.cmd
-Generate-Repo-FileLinks.ps1
-Initialize-DataVisualiserWorkspace.ps1
+images
+images\Logo.png
 links.txt
-Refresh-WorkspaceWithLatestPackage.ps1
-Run-PublishPipeline.ps1
-Upload-LatestProjectPackage.ps1
+scripts
+scripts\Create-DataFileReaderRedux-Package.ps1
+scripts\Create-ProjectZip.ps1
+scripts\Generate-Repo-FileLinks.cmd
+scripts\Generate-Repo-FileLinks.ps1
+scripts\Initialize-DataVisualiserWorkspace.ps1
+scripts\Refresh-WorkspaceWithLatestPackage.ps1
+scripts\Run-PublishPipeline.ps1
+scripts\Upload-LatestProjectPackage.ps1

@@ -1,227 +1,147 @@
-# PROJECT ROADMAP
-
-## 1. Purpose
-
-This document outlines the planned evolution of the project, describing major phases, their goals, and the order in which capabilities are introduced.
-
-It is **directional, not binding**.  
-Binding rules reside in the **Project Bible**.
+# PROJECT ROADMAP  
+**DataVisualiser**
 
 ---
 
-## 2. Guiding Principles
+## Purpose
 
-Roadmap execution adheres to the following constraints:
+This roadmap defines **phased execution milestones** for the migration, parity validation, and stabilization of the DataVisualiser system.
 
-- Semantic correctness over convenience
-- Explicit contracts before implementation
-- Non-destructive, additive evolution
-- Clear separation between truth and exploration
-- Execution proceeds only after foundations are locked
+It is a **status and sequencing document**, not an architectural authority.
 
 ---
 
-## 3. Phase Overview
+## Phase Overview
 
-### Phase 1 — Ingestion & Persistence (Completed)
+### Phase 1 — Baseline Stabilization  
+**Status:** COMPLETE
 
-**Goal**  
-Establish reliable ingestion of heterogeneous data sources and persist raw / lightly normalized records.
-
-**Key outcomes**
-
-- Multiple parsers (CSV / JSON)
-- Unified storage via `HealthMetric`
-- Lossless data capture
-- Provider-agnostic ingestion
-
-**Status**: ✅ Complete
+- Legacy system understood and frozen
+- Core computation paths identified
+- Baseline behavior documented
+- Initial CMS scaffolding completed
 
 ---
 
-### Phase 2 — Canonical Semantics & Normalization Foundations (Completed)
+### Phase 2 — CMS Core Infrastructure  
+**Status:** COMPLETE
 
-**Goal**  
-Formalize semantic authority and remove ambiguity from metric meaning.
-
-**Key outcomes**
-
-- Canonical Metric Series (CMS) contract
-- Explicit canonical metric identity rules
-- Identity resolution scaffolding
-- HealthMetric → CMS mapping contract
-- Derived / dynamic metric identity framework
-- Structural / manifold analysis explicitly constrained
-- Contracts anchored in Project Bible and SYSTEM_MAP
-
-**Status**: ✅ Complete
-
-This phase establishes the semantic **truth layer** of the system.
+- CMS computation pipeline established
+- Shared models stabilized
+- Helper and normalization logic implemented
+- CMS outputs verified for standalone correctness
 
 ---
 
-### Phase 3 — Execution: Canonical Identity & CMS Integration (Completed)
+### Phase 3 — Strategy Migration  
+**Status:** COMPLETE
 
-**Goal**  
-Introduce real behavior while preserving existing ingestion and storage.
+- SingleMetricStrategy
+- CombinedMetricStrategy
+- MultiMetricStrategy
+- DifferenceStrategy
+- RatioStrategy
+- NormalizedStrategy
 
-**Scope**
-
-- Implement concrete identity resolution (metric family by metric family)
-- Begin with Weight metric family
-- Implement CMS mapping in shadow mode
-- No destructive changes to existing flows
-- No changes to DataVisualiser yet
-
-**Deliverables**
-
-- Deterministic identity resolution
-- CMS emitted alongside existing outputs
-- Diagnostics for identity and mapping failures
-
-**Status**: ✅ Complete  
-(Core goals achieved; additional metric families may be added incrementally.)
+All strategies implemented in CMS and validated independently.
 
 ---
 
-### Phase 4 — Consumer Adoption & Visualization Integration (In Progress)
+### Phase 4 — Parity Validation (CRITICAL)
 
-**Goal**  
-Allow downstream systems (DataVisualiser) to consume CMS safely.
-
-**Scope**
-
-- Define minimal CMS dependency for DataVisualiser
-- Parallel support for legacy `HealthMetric` paths
-- Explicit opt-in to CMS-based workflows
-- No forced migration
-
-**Outcome**
-
-- Safer aggregation
-- Explicit composition
-- Reduced semantic ambiguity in UI
-- Generalized cyclic distribution visualizations (e.g., weekly, hourly, or N-bucket cycles)
-- Foundation for user-defined metric transformations with preview tables feeding the charting pipeline
-
-**Status**: ▶ In Progress (~65% complete)
-
-CMS infrastructure is in place; multiple strategies are migrated or in progress; UI integration and remaining strategy migrations continue. User-defined metric transformations with preview are implemented. Transform infrastructure is provisioned for future expansion (N-metrics, chained operations). Performance optimizations (SQL limiting, redundant call elimination) are in place.
+**Objective:**  
+Ensure CMS behavior is **numerically, structurally, and semantically identical** to Legacy behavior for all migrated features.
 
 ---
 
-### Phase 4A — Workspace Realignment & Parity Closure
+#### Phase 4A — Core Strategy Parity  
+**Status:** COMPLETE
 
-_(Additive · Non-Destructive)_
-
-**Goal**  
-Allow controlled workspace reset and consolidation **without loss of semantic, architectural, or executional continuity**.
-
-**Scope**
-
-- Rehydrate workspace from frozen foundational documents
-- Preserve CMS + legacy parallelism guarantees
-- Complete remaining strategy migrations under parity harness protection
-- Explicitly close Phase 4 parity obligations before Phase 5 discussion
-
-**Constraints**
-
-- No architectural reinterpretation
-- No semantic contract changes
-- No implicit parity assumptions
-- All parity activation must be explicit and reversible
-
-**Outcome**
-
-- Clean workspace with preserved intent
-- Reduced cognitive load
-- Phase 4 completion without drift
+- SingleMetricParityTests
+- CombinedMetricParityTests
+- MultiMetricParityTests
+- Helper parity (Math, alignment, smoothing, normalization)
 
 ---
 
-### Phase 5 — Derived Metrics & Analytical Composition (Planned)
+#### Phase 4B — Transform Pipeline Parity  
+**Status:** COMPLETE
 
-**Goal**  
-Enable explicit creation of new metrics through composition and aggregation.
+- TransformExpressionEvaluator parity
+- TransformExpressionBuilder parity
+- TransformOperationRegistry parity
+- TransformDataHelper parity
+- TransformResultStrategy parity
 
-**Scope**
-
-- Dynamic / derived metric identity instantiation
-- Explicit aggregation and transformation pipelines
-- Support for ephemeral and persistent derived metrics
-- No implicit promotion to canonical truth
-
-**Outcome**
-
-- Advanced analysis without semantic erosion
-- User-driven metric synthesis
+All transform semantics and ordering now match Legacy behavior.
 
 ---
 
-### Phase 6 — Structural / Manifold Analysis (Future)
+#### Phase 4C — Weekly / Temporal Strategy Migration  
+**Status:** PENDING (BLOCKING PHASE 4 CLOSURE)
 
-**Goal**  
-Reintroduce advanced structural analysis capabilities without compromising semantic authority.
+Legacy-dependent strategies not yet migrated to CMS:
 
-**Scope**
+- WeeklyDistributionStrategy
+- WeekdayTrendStrategy
 
-- Structural similarity detection
-- Equivalence class exploration
-- Analytical suggestion systems
+**Required next steps:**
+1. Migrate both strategies into CMS
+2. Validate basic runtime behavior
+3. Implement parity-aligned unit tests
+4. Confirm no divergence from Legacy outputs
 
-**Constraints**
-
-- Non-authoritative
-- No automatic promotion
-- Explicit declaration required for semantic impact
-
----
-
-## 4. Out of Scope (Explicit)
-
-The roadmap does **not** include:
-
-- Heuristic identity inference
-- Silent aggregation
-- Implicit semantic promotion
-- Forced migrations
-- Architectural shortcuts
+Phase 4 **cannot be closed** until this sub-phase is complete.
 
 ---
 
-## 5. Evolution Policy
+### Phase 5 — Optional End-to-End Parity  
+**Status:** OPTIONAL / DEFERRED
 
-- Phases may overlap **only when explicitly declared**
-- Earlier phases must not be weakened by later work
-
-Any deviation from this roadmap requires:
-
-- explicit justification
-- document updates
-- agreement
+- Single orchestration-level parity test
+- Guards against wiring or ordering regressions
+- Not required for Phase 4 sign-off
 
 ---
 
-## 6. Intermediate Goals (Descriptive, Non-Binding)
+### Phase 6 — Services & Orchestration  
+**Status:** NOT STARTED
 
-The following goals clarify expected evolution **within existing phases**:
+- Chart coordination services
+- Metric selection logic
+- Context builders
 
-- **Generalized cyclic distribution charts**
-
-  - Extend weekly distribution visualizations into a generic cyclic engine (weekly, hourly, or N-bucket) without altering semantic contracts.
-
-- **User-defined metric transformations with preview** ✅ **Complete**
-
-  - Allow explicit transformations over CMS (e.g. `A + B - C`, `sqrt(A)`), preview before/after values in a grid, and feed results into the charting pipeline as ephemeral, non-canonical metrics.
-  - **Status**: Implemented. Transform panel supports unary operations (Logarithm, Square Root) and binary operations (Add, Subtract) on metric data. Results are explicitly marked as ephemeral/non-canonical and displayed in preview grids before charting. Transform results are never promoted to canonical truth.
-  - **Infrastructure**: Transform expression tree architecture (`TransformExpression`, `TransformOperation`, `TransformOperationRegistry`) is provisioned for future expansion to N-metrics and chained operations. Evaluation and label generation use centralized helpers (`TransformExpressionEvaluator`, `TransformExpressionBuilder`, `TransformDataHelper`).
-
-- **Performance optimizations (Phase 1 quick wins)** ✅ **Complete**
-  - SQL result limiting (configurable via App.config)
-  - Eliminated redundant `ToList()` calls in strategies
-  - Skip computation for hidden charts
-  - **Status**: Implemented and configurable. SQL limiting defaults to enabled but can be disabled via configuration.
+Deferred until Phase 4 closure.
 
 ---
 
-**End of Project Roadmap**
+### Phase 7 — UI / State / Integration  
+**Status:** NOT STARTED
+
+- ViewModel tests
+- State container validation
+- Repository / persistence validation
+
+Out of scope until computational parity is complete.
+
+---
+
+## Current Critical Path
+WeeklyDistributionStrategy migration
+→ WeekdayTrendStrategy migration
+→ Corresponding CMS tests
+→ Phase 4 closure
+
+
+---
+
+## Roadmap Integrity Notes
+
+- No architectural changes were introduced during Phase 4
+- All updates in this roadmap are **status corrections only**
+- Sequence and intent remain unchanged
+
+---
+
+**Last Updated:** 2025-01-23  
+**Overall Status:** Phase 4 near-complete; blocked only on weekly / temporal strategy migration

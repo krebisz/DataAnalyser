@@ -1,6 +1,6 @@
 ﻿# Codebase Index
 
-Generated: 2025-12-23 09:05:17  
+Generated: 2025-12-23 12:18:48  
 Root: C:\Development\POCs\DataFileReaderRedux
 
 This file is auto-generated.
@@ -42,6 +42,7 @@ This file is auto-generated.
 | class | CombinedMetricParityHarness | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\CombinedMetricParityHarness.cs |
 | class | CombinedMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\CombinedMetricParityTests.cs |
 | class | CombinedMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\CombinedMetricStrategy.cs |
+| class | CombinedMetricStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\CombinedMetricStrategyTests.cs |
 | class | ConsoleHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\ConsoleHelper.cs |
 | class | DataFetcher | public | DataVisualiser.Data.Repositories | .\DataVisualiser\Data\Repositories\DataFetcher.cs |
 | class | DataHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper.cs |
@@ -52,6 +53,7 @@ This file is auto-generated.
 | class | DateRangeResult | public | DataVisualiser.Models | .\DataVisualiser\Models\DateRangeResult.cs |
 | class | DefaultNormalizationPipeline | public | DataFileReader.Normalization | .\DataFileReader\Normalization\DefaultNormalizationPipeline.cs |
 | class | DifferenceStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\DifferenceStrategy.cs |
+| class | DifferenceStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\DifferenceStrategyTests.cs |
 | class | DimensionSet | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\DimensionSet.cs |
 | class | ErrorEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
 | class | FileHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\FileHelper.cs |
@@ -75,6 +77,7 @@ This file is auto-generated.
 | class | LegacyJsonParser | public |  | .\DataFileReader\Parsers\LegacyJsonParser.cs |
 | class | MainWindowViewModel | public | DataVisualiser.ViewModels | .\DataVisualiser\ViewModels\MainWindowViewModel.cs |
 | class | MathHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\MathHelper.cs |
+| class | MathHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\MathHelperTests.cs |
 | class | MetaData | public | DataFileReader.Class | .\DataFileReader\Class\MetaData.cs |
 | class | MetaDataComparer | public | DataFileReader.Class | .\DataFileReader\Class\MetaDataComparer.cs |
 | class | MetaDataList | public | DataFileReader.Class | .\DataFileReader\Class\MetaDataList.cs |
@@ -89,12 +92,15 @@ This file is auto-generated.
 | class | MetricTypesLoadedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
 | class | MockCanonicalMetricSeries | internal | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
 | class | MockCmsBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
+| class | MultiMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\MultiMetricParityTests.cs |
 | class | MultiMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\MultiMetricStrategy.cs |
+| class | MultiMetricStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\MultiMetricStrategyTests.cs |
 | class | NormalizationBootstrap | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationBootstrap.cs |
 | class | NormalizationContext | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationContext.cs |
 | class | NormalizationDiagnostics | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationDiagnostics.cs |
 | class | NormalizationModeConverter | public | DataVisualiser.Converters | .\DataVisualiser\Converters\NormalizationModeConverter.cs |
 | class | NormalizedStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\NormalizedStrategy.cs |
+| class | NormalizedStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\NormalizedStrategyTests.cs |
 | class | ParityFailure | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
 | class | ParityPoint | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
 | class | ParityResult | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
@@ -104,6 +110,7 @@ This file is auto-generated.
 | class | ParityValidationService | public | DataVisualiser.Services | .\DataVisualiser\Services\ParityValidationService.cs |
 | class | Program | internal |  | .\DataFileReader\Program.cs |
 | class | RatioStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\RatioStrategy.cs |
+| class | RatioStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\RatioStrategyTests.cs |
 | class | RawRecord | public | DataFileReader.Ingestion | .\DataFileReader\Ingestion\RawRecord.cs |
 | class | RawRecordFactory | public | DataFileReader.Ingestion | .\DataFileReader\Ingestion\RawRecordFactory.cs |
 | class | RelayCommand | public | DataVisualiser.ViewModels.Commands | .\DataVisualiser\ViewModels\Commands\RelayCommand.cs |
@@ -118,10 +125,12 @@ This file is auto-generated.
 | class | SingleMetricLegacyStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricLegacyStrategy.cs |
 | class | SingleMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\SingleMetricParityTests.cs |
 | class | SingleMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricStrategy.cs |
+| class | SingleMetricStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\SingleMetricStrategyTests.cs |
 | class | SmoothedDataPoint | public | DataVisualiser.Models | .\DataVisualiser\Models\SmoothedDataPoint.cs |
 | class | SQLHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\SQLHelper.cs |
 | class | SqlQueryBuilder | public | DataVisualiser.Data | .\DataVisualiser\Data\SqlQueryBuilder.cs |
 | class | StrategyComputationHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\StrategyComputationHelper.cs |
+| class | StrategyComputationHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\StrategyComputationHelperTests.cs |
 | class | StrategyParityContext | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
 | class | SubtypeControlPair | public | DataVisualiser.UI.SubtypeSelectors | .\DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManager.cs |
 | class | SubtypeSelectorManager | public | DataVisualiser.UI.SubtypeSelectors | .\DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManager.cs |
@@ -131,13 +140,18 @@ This file is auto-generated.
 | class | TimeAxis | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\TimeAxis.cs |
 | class | TimeNormalizationHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\TimeNormalizationHelper.cs |
 | class | TransformDataHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\TransformDataHelper.cs |
+| class | TransformDataHelperTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformDataHelperTests.cs |
 | class | TransformExpression | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformExpression.cs |
 | class | TransformExpressionBuilder | public | DataVisualiser.Helper | .\DataVisualiser\Helper\TransformExpressionBuilder.cs |
+| class | TransformExpressionBuilderTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformExpressionBuilderTests.cs |
 | class | TransformExpressionEvaluator | public | DataVisualiser.Helper | .\DataVisualiser\Helper\TransformExpressionEvaluator.cs |
+| class | TransformExpressionEvaluatorTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformExpressionEvaluatorTests.cs |
 | class | TransformOperand | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformExpression.cs |
 | class | TransformOperation | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformExpression.cs |
 | class | TransformOperationRegistry | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformOperationRegistry.cs |
+| class | TransformOperationRegistryTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformOperationRegistryTests.cs |
 | class | TransformResultStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\TransformResultStrategy.cs |
+| class | TransformResultStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\TransformResultStrategyTests.cs |
 | class | Types | public |  | .\DataFileReader\Class\JSON\JsonValue.cs |
 | class | UiState | public | DataVisualiser.State | .\DataVisualiser\State\UiState.cs |
 | class | UnaryOperators | public | DataVisualiser.Models | .\DataVisualiser\Models\UnaryOperators.cs |
