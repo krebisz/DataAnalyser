@@ -178,6 +178,9 @@ namespace DataVisualiser
 
             _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
             _viewModel.ChartState.LastContext = new ChartDataContext();
+
+            // Initialize weekday trend chart type visibility
+            UpdateWeekdayTrendChartTypeVisibility();
         }
 
         private void InitializeSubtypeSelector()
@@ -442,6 +445,46 @@ namespace DataVisualiser
         private void OnChartWeekdayTrendToggle(object sender, RoutedEventArgs e)
         {
             _viewModel.ToggleWeeklyTrend();
+        }
+
+        private void OnChartWeekdayTrendTypeToggle(object sender, RoutedEventArgs e)
+        {
+            _viewModel.ToggleWeekdayTrendChartType();
+            UpdateWeekdayTrendChartTypeVisibility();
+
+            // Re-render the chart with current data if visible
+            if (_viewModel.ChartState.IsWeeklyTrendVisible && _viewModel.ChartState.LastContext != null)
+            {
+                var result = new WeekdayTrendStrategy().Compute(
+                    _viewModel.ChartState.LastContext.Data1!,
+                    _viewModel.ChartState.LastContext.From,
+                    _viewModel.ChartState.LastContext.To);
+                RenderWeekdayTrendChart(result);
+            }
+        }
+
+        private void UpdateWeekdayTrendChartTypeVisibility()
+        {
+            // Only update chart visibility if the panel itself is visible
+            if (!_viewModel.ChartState.IsWeeklyTrendVisible)
+            {
+                ChartWeekdayTrend.Visibility = Visibility.Collapsed;
+                ChartWeekdayTrendPolar.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            if (_viewModel.ChartState.IsWeekdayTrendPolarMode)
+            {
+                ChartWeekdayTrend.Visibility = Visibility.Collapsed;
+                ChartWeekdayTrendPolar.Visibility = Visibility.Visible;
+                ChartWeekdayTrendTypeToggleButton.Content = "Cartesian";
+            }
+            else
+            {
+                ChartWeekdayTrend.Visibility = Visibility.Visible;
+                ChartWeekdayTrendPolar.Visibility = Visibility.Collapsed;
+                ChartWeekdayTrendTypeToggleButton.Content = "Polar";
+            }
         }
 
         private void OnChartDiffToggle(object sender, RoutedEventArgs e)
@@ -1151,6 +1194,7 @@ namespace DataVisualiser
             UpdateChartVisibility(ChartRatioPanel, ChartRatioToggleButton, e.ShowRatio);
             UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
             UpdateChartVisibility(ChartWeekdayTrendPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
+            UpdateWeekdayTrendChartTypeVisibility();
             UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
 
             // If a specific chart was identified (visibility toggle or chart-specific config change), only render that chart
@@ -1441,16 +1485,19 @@ namespace DataVisualiser
 
         private void RenderWeekdayTrendChart(WeekdayTrendResult result)
         {
-            var weekdayStrokes = new[]
+            if (_viewModel.ChartState.IsWeekdayTrendPolarMode)
             {
-                System.Windows.Media.Brushes.SteelBlue,
-                System.Windows.Media.Brushes.CadetBlue,
-                System.Windows.Media.Brushes.SeaGreen,
-                System.Windows.Media.Brushes.OliveDrab,
-                System.Windows.Media.Brushes.Goldenrod,
-                System.Windows.Media.Brushes.OrangeRed,
-                System.Windows.Media.Brushes.IndianRed
-            };
+                RenderWeekdayTrendPolarChart(result);
+            }
+            else
+            {
+                RenderWeekdayTrendCartesianChart(result);
+            }
+        }
+
+        private void RenderWeekdayTrendCartesianChart(WeekdayTrendResult result)
+        {
+            var weekdayStrokes = GetWeekdayStrokes();
 
             ChartWeekdayTrend.Series.Clear();
             ChartWeekdayTrend.AxisX.Clear();
@@ -1479,19 +1526,7 @@ namespace DataVisualiser
                 if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
                     continue;
 
-                bool isEnabled = dayIndex switch
-                {
-                    0 => _viewModel.ChartState.ShowMonday,
-                    1 => _viewModel.ChartState.ShowTuesday,
-                    2 => _viewModel.ChartState.ShowWednesday,
-                    3 => _viewModel.ChartState.ShowThursday,
-                    4 => _viewModel.ChartState.ShowFriday,
-                    5 => _viewModel.ChartState.ShowSaturday,
-                    6 => _viewModel.ChartState.ShowSunday,
-                    _ => false
-                };
-
-                if (!isEnabled)
+                if (!IsDayEnabled(dayIndex))
                     continue;
 
                 var values = new ChartValues<ObservablePoint>();
@@ -1511,6 +1546,112 @@ namespace DataVisualiser
                     Stroke = weekdayStrokes[dayIndex]
                 });
             }
+        }
+
+        private void RenderWeekdayTrendPolarChart(WeekdayTrendResult result)
+        {
+            var weekdayStrokes = GetWeekdayStrokes();
+
+            ChartWeekdayTrendPolar.Series.Clear();
+            ChartWeekdayTrendPolar.AxisX.Clear();
+            ChartWeekdayTrendPolar.AxisY.Clear();
+
+            if (result == null || result.SeriesByDay.Count == 0)
+                return;
+
+            // Configure axes for polar-like display
+            ChartWeekdayTrendPolar.AxisX.Add(new Axis
+            {
+                Title = "Day of Week",
+                MinValue = 0,
+                MaxValue = 360,
+                LabelFormatter = v =>
+                {
+                    // Convert angle (0-360) to day name
+                    int dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
+                    return dayIndex switch
+                    {
+                        0 => "Mon",
+                        1 => "Tue",
+                        2 => "Wed",
+                        3 => "Thu",
+                        4 => "Fri",
+                        5 => "Sat",
+                        6 => "Sun",
+                        _ => ""
+                    };
+                }
+            });
+
+            ChartWeekdayTrendPolar.AxisY.Add(new Axis
+            {
+                Title = result.Unit ?? "Value",
+                MinValue = result.GlobalMin,
+                MaxValue = result.GlobalMax
+            });
+
+            // Convert each day's data to polar-like coordinates
+            // X (angle): 0° = Monday, 51.43° = Tuesday, ... 308.57° = Sunday (360/7 per day)
+            // Y (radius): value
+            for (int dayIndex = 0; dayIndex <= 6; dayIndex++)
+            {
+                if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
+                    continue;
+
+                if (!IsDayEnabled(dayIndex))
+                    continue;
+
+                var values = new ChartValues<ObservablePoint>();
+                // Base angle for this day (in degrees)
+                double baseAngleDegrees = dayIndex * 360.0 / 7.0;
+
+                // For each time point in the series, plot at the day's angle with the value as radius
+                foreach (var point in series.Points)
+                {
+                    values.Add(new ObservablePoint(baseAngleDegrees, point.Value));
+                }
+
+                ChartWeekdayTrendPolar.Series.Add(new LineSeries
+                {
+                    Title = series.Day.ToString(),
+                    Values = values,
+                    LineSmoothness = 0.3,
+                    StrokeThickness = 2,
+                    Stroke = weekdayStrokes[dayIndex],
+                    Fill = System.Windows.Media.Brushes.Transparent,
+                    PointGeometry = DefaultGeometries.Circle,
+                    PointGeometrySize = 6
+                });
+            }
+        }
+
+        private System.Windows.Media.Brush[] GetWeekdayStrokes()
+        {
+            return new[]
+            {
+                System.Windows.Media.Brushes.SteelBlue,
+                System.Windows.Media.Brushes.CadetBlue,
+                System.Windows.Media.Brushes.SeaGreen,
+                System.Windows.Media.Brushes.OliveDrab,
+                System.Windows.Media.Brushes.Goldenrod,
+                System.Windows.Media.Brushes.OrangeRed,
+                System.Windows.Media.Brushes.IndianRed
+            };
+        }
+
+        private bool IsDayEnabled(int dayIndex)
+        {
+            return dayIndex switch
+            {
+                0 => _viewModel.ChartState.ShowMonday,
+                1 => _viewModel.ChartState.ShowTuesday,
+                2 => _viewModel.ChartState.ShowWednesday,
+                3 => _viewModel.ChartState.ShowThursday,
+                4 => _viewModel.ChartState.ShowFriday,
+                5 => _viewModel.ChartState.ShowSaturday,
+                6 => _viewModel.ChartState.ShowSunday,
+                _ => false
+            };
         }
 
         private async Task RenderChartsFromLastContext()
@@ -1767,6 +1908,7 @@ namespace DataVisualiser
             ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
+            // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
         }
 
         private Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
@@ -1942,6 +2084,7 @@ namespace DataVisualiser
             ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekdayTrend, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartWeekdayTrendPolar, _viewModel.ChartState.ChartTimestamps);
             _viewModel.ChartState.LastContext = null;
 
             // Clear transform panel grids

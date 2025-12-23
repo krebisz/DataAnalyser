@@ -297,6 +297,14 @@
                                       Click="OnWeeklyTrendSaturdayToggled"/>
                             <CheckBox Content="Sun" IsChecked="True" Margin="5,0"
                                       Click="OnWeeklyTrendSundayToggled"/>
+
+                            <Button x:Name="ChartWeekdayTrendTypeToggleButton"
+                                    Content="Polar"
+                                    Margin="20,0,0,0"
+                                    Padding="10,3"
+                                    VerticalAlignment="Center"
+                                    Click="OnChartWeekdayTrendTypeToggle"
+                                    ToolTip="Toggle between Cartesian and Polar chart"/>
                         </StackPanel>
 
                         <StackPanel x:Name="ChartWeekdayTrendPanel" Orientation="Vertical">
@@ -309,6 +317,22 @@
                                                 MinHeight="400">
                                 <lvc:CartesianChart.AxisX>
                                     <lvc:Axis Title="Time"/>
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Value"
+                                              ShowLabels="True"/>
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                            <lvc:CartesianChart x:Name="ChartWeekdayTrendPolar"
+                                                LegendLocation="Right"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="400"
+                                                Visibility="Collapsed">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Title="Day of Week"
+                                              MinValue="0"
+                                              MaxValue="360"/>
                                 </lvc:CartesianChart.AxisX>
                                 <lvc:CartesianChart.AxisY>
                                     <lvc:Axis Title="Value"

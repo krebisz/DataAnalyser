@@ -305,7 +305,7 @@ namespace DataVisualiser.ViewModels
 
             // Validate secondary data (only if secondary subtype is selected)
             if (!MetricDataValidationHelper.ValidateSecondaryData(metricType, secondarySubtype, secondaryCms, data2, ErrorOccured))
-                {
+            {
                 ChartState.LastContext = null;
                 return false;
             }
@@ -499,6 +499,12 @@ namespace DataVisualiser.ViewModels
         public void ToggleWeeklyTrend()
         {
             ToggleChartVisibility("WeeklyTrend", () => ChartState.IsWeeklyTrendVisible, v => ChartState.IsWeeklyTrendVisible = v);
+        }
+
+        public void ToggleWeekdayTrendChartType()
+        {
+            ChartState.IsWeekdayTrendPolarMode = !ChartState.IsWeekdayTrendPolarMode;
+            OnPropertyChanged(nameof(ChartState));
         }
 
         public void ToggleTransformPanel()

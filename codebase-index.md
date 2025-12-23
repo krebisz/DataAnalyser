@@ -1,6 +1,6 @@
 ﻿# Codebase Index
 
-Generated: 2025-12-22 15:47:43  
+Generated: 2025-12-23 07:29:30  
 Root: C:\Development\POCs\DataFileReaderRedux
 
 This file is auto-generated.
@@ -40,6 +40,7 @@ This file is auto-generated.
 | class | ColourPalette | public | DataVisualiser.Charts | .\DataVisualiser\Charts\ColourPalette.cs |
 | class | CombinedMetricCmsStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\CombinedMetricCmsStrategy.cs |
 | class | CombinedMetricParityHarness | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\CombinedMetricParityHarness.cs |
+| class | CombinedMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\CombinedMetricParityTests.cs |
 | class | CombinedMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\CombinedMetricStrategy.cs |
 | class | ConsoleHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\ConsoleHelper.cs |
 | class | DataFetcher | public | DataVisualiser.Data.Repositories | .\DataVisualiser\Data\Repositories\DataFetcher.cs |
@@ -61,6 +62,7 @@ This file is auto-generated.
 | class | HealthDataApp | public | DataFileReader.App | .\DataFileReader\App\HealthDataApp.cs |
 | class | HealthMetric | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthParser.cs |
 | class | HealthMetricData | public | DataVisualiser.Models | .\DataVisualiser\Models\HealthMetricData.cs |
+| class | HealthMetricDataBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
 | class | HealthMetricToCmsMapper | public | DataFileReader.Canonical | .\DataFileReader\Canonical\HealthMetricToCmsMapper.cs |
 | class | HierarchyObject | public |  | .\DataFileReader\Class\HierarchyObject.cs |
 | class | HierarchyObjectList | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyObjectList.cs |
@@ -78,12 +80,15 @@ This file is auto-generated.
 | class | MetaDataList | public | DataFileReader.Class | .\DataFileReader\Class\MetaDataList.cs |
 | class | MetricAggregator | public | DataFileReader.Services | .\DataFileReader\Services\MetricAggregator.cs |
 | class | MetricCompatibilityHelper | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricCompatibilityHelper.cs |
+| class | MetricDataValidationHelper | public | DataVisualiser.ViewModels | .\DataVisualiser\ViewModels\MetricDataValidationHelper.cs |
 | class | MetricIdentity | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\MetricIdentity.cs |
 | class | MetricIdentityResolutionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\MetricIdentityResolutionStage.cs |
 | class | MetricSelectionService | public | DataVisualiser.Services | .\DataVisualiser\Services\MetricSelectionService.cs |
 | class | MetricState | public | DataVisualiser.State | .\DataVisualiser\State\MetricState.cs |
 | class | MetricTypeParser | public | DataFileReader.Helper | .\DataFileReader\Helper\MetricTypeParser.cs |
 | class | MetricTypesLoadedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | MockCanonicalMetricSeries | internal | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
+| class | MockCmsBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
 | class | MultiMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\MultiMetricStrategy.cs |
 | class | NormalizationBootstrap | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationBootstrap.cs |
 | class | NormalizationContext | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationContext.cs |
@@ -93,8 +98,10 @@ This file is auto-generated.
 | class | ParityFailure | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
 | class | ParityPoint | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
 | class | ParityResult | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | ParityResultAdapter | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\ParityResultAdapter.cs |
 | class | ParitySeries | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
 | class | ParityTolerance | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
+| class | ParityValidationService | public | DataVisualiser.Services | .\DataVisualiser\Services\ParityValidationService.cs |
 | class | Program | internal |  | .\DataFileReader\Program.cs |
 | class | RatioStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\RatioStrategy.cs |
 | class | RawRecord | public | DataFileReader.Ingestion | .\DataFileReader\Ingestion\RawRecord.cs |
@@ -109,6 +116,7 @@ This file is auto-generated.
 | class | ShadowValidate_SamsungHealthCsv | public |  | .\DataFileReader\ShadowValidate_SamsungHealthCsv.cs |
 | class | SingleMetricCmsStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricCmsStrategy.cs |
 | class | SingleMetricLegacyStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricLegacyStrategy.cs |
+| class | SingleMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\SingleMetricParityTests.cs |
 | class | SingleMetricStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\SingleMetricStrategy.cs |
 | class | SmoothedDataPoint | public | DataVisualiser.Models | .\DataVisualiser\Models\SmoothedDataPoint.cs |
 | class | SQLHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\SQLHelper.cs |
@@ -118,10 +126,21 @@ This file is auto-generated.
 | class | SubtypeControlPair | public | DataVisualiser.UI.SubtypeSelectors | .\DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManager.cs |
 | class | SubtypeSelectorManager | public | DataVisualiser.UI.SubtypeSelectors | .\DataVisualiser\UI\SubtypeSelectors\SubtypeSelectorManager.cs |
 | class | SubtypesLoadedEventArgs | public | DataVisualiser.ViewModels.Events | .\DataVisualiser\ViewModels\Events\ViewModelEvents.cs |
+| class | TestDataBuilders | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
+| class | TestHelpers | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestHelpers.cs |
 | class | TimeAxis | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\TimeAxis.cs |
 | class | TimeNormalizationHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\TimeNormalizationHelper.cs |
+| class | TransformDataHelper | public | DataVisualiser.Helper | .\DataVisualiser\Helper\TransformDataHelper.cs |
+| class | TransformExpression | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformExpression.cs |
+| class | TransformExpressionBuilder | public | DataVisualiser.Helper | .\DataVisualiser\Helper\TransformExpressionBuilder.cs |
+| class | TransformExpressionEvaluator | public | DataVisualiser.Helper | .\DataVisualiser\Helper\TransformExpressionEvaluator.cs |
+| class | TransformOperand | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformExpression.cs |
+| class | TransformOperation | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformExpression.cs |
+| class | TransformOperationRegistry | public | DataVisualiser.Models | .\DataVisualiser\Models\TransformOperationRegistry.cs |
+| class | TransformResultStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\TransformResultStrategy.cs |
 | class | Types | public |  | .\DataFileReader\Class\JSON\JsonValue.cs |
 | class | UiState | public | DataVisualiser.State | .\DataVisualiser\State\UiState.cs |
+| class | UnaryOperators | public | DataVisualiser.Models | .\DataVisualiser\Models\UnaryOperators.cs |
 | class | WeekdayTrendPoint | public | DataVisualiser.Models | .\DataVisualiser\Models\WeekdayTrendPoint.cs |
 | class | WeekdayTrendResult | public | DataVisualiser.Models | .\DataVisualiser\Models\WeekdayTrendResult.cs |
 | class | WeekdayTrendSeries | public | DataVisualiser.Models | .\DataVisualiser\Models\WeekdayTrendSeries.cs |

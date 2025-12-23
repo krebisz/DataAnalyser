@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2025-12-22 15:07:41
+Generated: 2025-12-23 07:29:11
 Root: C:\Development\POCs\DataFileReaderRedux
 
 .cursor
@@ -18,6 +18,11 @@ Create-DataFileReaderRedux-Package.ps1
 Create-ProjectZip.ps1
 DataFileReader
 DataFileReader .sln
+DataFileReader.Tests
+DataFileReader.Tests\Canonical
+DataFileReader.Tests\DataFileReader.Tests.csproj
+DataFileReader.Tests\Normalization
+DataFileReader.Tests\README.md
 DataFileReader\App
 DataFileReader\App.config
 DataFileReader\App\HealthDataApp.cs
@@ -87,6 +92,16 @@ DataFileReader\Services\FileProcessingService.cs
 DataFileReader\Services\MetricAggregator.cs
 DataFileReader\ShadowValidate_SamsungHealthCsv.cs
 DataVisualiser
+DataVisualiser.Tests
+DataVisualiser.Tests\DataVisualiser.Tests.csproj
+DataVisualiser.Tests\Helpers
+DataVisualiser.Tests\Helpers\TestDataBuilders.cs
+DataVisualiser.Tests\Helpers\TestHelpers.cs
+DataVisualiser.Tests\Parity
+DataVisualiser.Tests\Parity\CombinedMetricParityTests.cs
+DataVisualiser.Tests\Parity\SingleMetricParityTests.cs
+DataVisualiser.Tests\README.md
+DataVisualiser.Tests\Strategies
 DataVisualiser\App.config
 DataVisualiser\App.xaml
 DataVisualiser\App.xaml.cs
@@ -105,6 +120,7 @@ DataVisualiser\Charts\IChartComputationStrategy.cs
 DataVisualiser\Charts\Parity
 DataVisualiser\Charts\Parity\CombinedMetricParityHarness.cs
 DataVisualiser\Charts\Parity\IStrategyParityHarness.cs
+DataVisualiser\Charts\Parity\ParityResultAdapter.cs
 DataVisualiser\Charts\Rendering
 DataVisualiser\Charts\Rendering\ChartRenderEngine.cs
 DataVisualiser\Charts\Rendering\ChartRenderModel.cs
@@ -121,6 +137,7 @@ DataVisualiser\Charts\Strategies\RatioStrategy.cs
 DataVisualiser\Charts\Strategies\SingleMetricCmsStrategy.cs
 DataVisualiser\Charts\Strategies\SingleMetricLegacyStrategy.cs
 DataVisualiser\Charts\Strategies\SingleMetricStrategy.cs
+DataVisualiser\Charts\Strategies\TransformResultStrategy.cs
 DataVisualiser\Charts\Strategies\WeekdayTrendStrategy.cs
 DataVisualiser\Charts\Strategies\WeeklyDistributionStrategy.cs
 DataVisualiser\Converters
@@ -136,6 +153,9 @@ DataVisualiser\Helper\CmsConversionHelper.cs
 DataVisualiser\Helper\FrequencyBinningHelper.cs
 DataVisualiser\Helper\MathHelper.cs
 DataVisualiser\Helper\StrategyComputationHelper.cs
+DataVisualiser\Helper\TransformDataHelper.cs
+DataVisualiser\Helper\TransformExpressionBuilder.cs
+DataVisualiser\Helper\TransformExpressionEvaluator.cs
 DataVisualiser\MainWindow.xaml
 DataVisualiser\MainWindow.xaml.cs
 DataVisualiser\Models
@@ -147,6 +167,9 @@ DataVisualiser\Models\NormalizationMode.cs
 DataVisualiser\Models\RecordToDayRatio.cs
 DataVisualiser\Models\SmoothedDataPoint.cs
 DataVisualiser\Models\TickInterval.cs
+DataVisualiser\Models\TransformExpression.cs
+DataVisualiser\Models\TransformOperationRegistry.cs
+DataVisualiser\Models\UnaryOperators.cs
 DataVisualiser\Models\WeekdayTrendPoint.cs
 DataVisualiser\Models\WeekdayTrendResult.cs
 DataVisualiser\Models\WeekdayTrendSeries.cs
@@ -155,6 +178,7 @@ DataVisualiser\Services
 DataVisualiser\Services\ChartDataContextBuilder.cs
 DataVisualiser\Services\ChartUpdateCoordinator.cs
 DataVisualiser\Services\MetricSelectionService.cs
+DataVisualiser\Services\ParityValidationService.cs
 DataVisualiser\Services\Shading
 DataVisualiser\Services\Shading\FrequencyBasedShadingStrategy.cs
 DataVisualiser\Services\Shading\IIntervalShadingStrategy.cs
@@ -174,25 +198,29 @@ DataVisualiser\ViewModels\Commands\RelayCommand.cs
 DataVisualiser\ViewModels\Events
 DataVisualiser\ViewModels\Events\ViewModelEvents.cs
 DataVisualiser\ViewModels\MainWindowViewModel.cs
+DataVisualiser\ViewModels\MetricDataValidationHelper.cs
 documents
+documents\CODEBASE_ALIGNMENT_ASSESSMENT.md
 documents\Collaboration Protocol.md
 documents\Current plan.odt
 documents\MASTER_OPERATING_PROTOCOL.md
+documents\PARITY_VALIDATION_EXPLAINED.md
+documents\PERFORMANCE_ANALYSIS.md
+documents\PHASE_COMPLETION_COMPARISON.md
 documents\Project Bible.md
 documents\Project Overview.md
 documents\Project Philosphy.md
 documents\Project Roadmap.md
 documents\SYSTEM_MAP.md
+documents\TEST_SPECIFICATION_FOR_CHATGPT.md
 documents\Workspace Workflow.md
 Generate-CodebaseIndex.ps1
 Generate-DependencySummary.ps1
 Generate-ProjectTree.ps1
 Generate-Repo-FileLinks.cmd
 Generate-Repo-FileLinks.ps1
-Generate-WorkspaceState.ps1
 Initialize-DataVisualiserWorkspace.ps1
 links.txt
-project-tree.txt
 Refresh-WorkspaceWithLatestPackage.ps1
 Run-PublishPipeline.ps1
 Upload-LatestProjectPackage.ps1
