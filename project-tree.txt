@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2025-12-23 07:29:11
+Generated: 2025-12-23 09:04:54
 Root: C:\Development\POCs\DataFileReaderRedux
 
 .cursor
