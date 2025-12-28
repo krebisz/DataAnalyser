@@ -3,6 +3,7 @@ using DataFileReader.Normalization.Canonical;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Helpers;
 using DataVisualiser.Charts.Rendering;
+using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Shading;
@@ -133,6 +134,7 @@ namespace DataVisualiser.Services
                 ChartHelper.ClearChart(targetChart, _chartTimestamps);
             }
         }
+
 
         private static void ConfigureYAxis(
             CartesianChart targetChart,
@@ -1030,7 +1032,8 @@ namespace DataVisualiser.Services
                 enableParity: false).ConfigureAwait(true);
         }
 
-        private async Task<(Charts.Computation.ChartComputationResult? Result, Models.WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(
+        private async Task<(Charts.Computation.ChartComputationResult? Result, Models.WeeklyDistributionResult? ExtendedResult)>
+        ComputeWeeklyDistributionAsync(
             IEnumerable<HealthMetricData> data,
             DataFileReader.Canonical.ICanonicalMetricSeries? cmsSeries,
             string displayName,
@@ -1039,69 +1042,40 @@ namespace DataVisualiser.Services
             bool useCmsStrategy,
             bool enableParity)
         {
-            Models.WeeklyDistributionResult? extendedResult = null;
-            Charts.Computation.ChartComputationResult? result = null;
+            Charts.Computation.ChartComputationResult? result;
+            Models.WeeklyDistributionResult? extendedResult;
 
-            await Task.Run(() =>
+            // Legacy strategy (always available)
+            var legacyStrategy = new WeeklyDistributionStrategy(
+                data,
+                displayName,
+                from,
+                to);
+
+            var legacyResult = legacyStrategy.Compute();
+            var legacyExtended = legacyStrategy.ExtendedResult;
+
+            // CMS cut-over: PRIMARY metric only
+            if (useCmsStrategy && cmsSeries is not null)
             {
-                // Always compute legacy (needed for parity / fallback)
-                var legacyStrategy = new Charts.Strategies.WeeklyDistributionStrategy(
-                    data,
-                    displayName,
-                    from,
-                    to);
-
-                var legacyResult = legacyStrategy.Compute();
-                var legacyExtended = legacyStrategy.ExtendedResult;
-
-                if (!useCmsStrategy || cmsSeries == null)
-                {
-                    result = legacyResult;
-                    extendedResult = legacyExtended;
-                    return;
-                }
-
-                var cmsStrategy = new Charts.Strategies.CmsWeeklyDistributionStrategy(
+                var cmsStrategy = new CmsWeeklyDistributionStrategy(
                     cmsSeries,
                     from,
                     to,
                     displayName);
 
-                var cmsResult = cmsStrategy.Compute();
-                var cmsExtended = cmsStrategy.ExtendedResult;
-
-                if (enableParity)
-                {
-                    var harness = new DataVisualiser.Charts.Parity.WeeklyDistributionParityHarness();
-
-                    var parityResult = harness.Validate(
-                        new DataVisualiser.Charts.Parity.StrategyParityContext
-                        {
-                            StrategyName = "WeeklyDistribution",
-                            MetricIdentity = displayName,
-                            Mode = DataVisualiser.Charts.Parity.ParityMode.Diagnostic,
-                            Tolerance = new DataVisualiser.Charts.Parity.ParityTolerance
-                            {
-                                AllowFloatingPointDrift = true,
-                                ValueEpsilon = 1e-9
-                            }
-                        },
-                        legacyExecution: () => DataVisualiser.Charts.Parity.WeeklyDistributionParityHarness.ToLegacyExecutionResult(legacyExtended),
-                        cmsExecution: () => DataVisualiser.Charts.Parity.WeeklyDistributionParityHarness.ToCmsExecutionResult(cmsExtended));
-
-                    System.Diagnostics.Debug.WriteLine(
-                        parityResult.Passed
-                            ? "[PARITY] WeeklyDistribution PASSED"
-                            : "[PARITY] WeeklyDistribution FAILED");
-                }
-
-                // CMS becomes the returned strategy when enabled
-                result = cmsResult;
-                extendedResult = cmsExtended;
-            }).ConfigureAwait(true);
+                result = cmsStrategy.Compute();
+                extendedResult = cmsStrategy.ExtendedResult;
+            }
+            else
+            {
+                result = legacyResult;
+                extendedResult = legacyExtended;
+            }
 
             return (result, extendedResult);
         }
+
 
 
         ///// <summary>

@@ -56,7 +56,99 @@ All significant decisions, assumptions, or changes must be explicit.
 
 Implicit behavior, silent assumptions, inferred intent, or “obvious” steps are not acceptable.
 
-5. Drift Prevention
+5. Failure & Recovery Protocol (Additive)
+
+This section defines mandatory behavior when execution failure, misalignment, or systemic breakdown is detected.
+
+5.1 Failure Classification
+
+A failure must be classified into one or more of the following:
+
+Grounding Failure — missing, stale, or assumed code / documents
+
+Execution Locus Failure — no clear file / method where work occurs
+
+Drop-In Violation — partial or ambiguous implementation guidance
+
+Protocol Drift — deviation from declared workflow or phase rules
+
+Parity Integrity Failure — mismatch between legacy and CMS behavior
+
+Context Saturation Failure — operator burden exceeds protocol safeguards
+
+Unclassified failure is itself a protocol violation.
+
+5.2 Mandatory Failure Declaration
+
+Upon detection of failure:
+
+Forward progress must stop
+
+Failure type(s) must be named explicitly
+
+The last known stable state must be identified
+
+The workspace enters RECOVERY MODE
+
+Proceeding without declaration is prohibited.
+
+5.3 Recovery Mode Rules
+
+While in RECOVERY MODE:
+
+No new features or extensions may be introduced
+
+Only stabilization, alignment, or rollback actions are permitted
+
+All guidance must be:
+
+file-explicit
+
+method-explicit
+
+drop-in safe
+
+Narrative, speculative, or exploratory guidance is disallowed.
+
+5.4 Re-Grounding Requirement
+
+Before exiting RECOVERY MODE, the assistant must provide:
+
+Explicit list of files re-verified
+
+Explicit statement of current system truth
+
+Explicit identification of remaining unknowns
+
+Assumptions reset to UNKNOWN unless re-verified.
+
+5.5 Recovery Exit Conditions
+
+RECOVERY MODE may only exit when all are true:
+
+Compilation succeeds
+
+All tests pass
+
+Parity status explicitly declared
+
+Canonical documents match execution reality
+
+If any condition cannot be met, the workspace remains OPEN / UNSYNCED.
+
+5.6 Failure Retrospective Obligation
+
+Before workspace termination after failure:
+
+A concise failure summary must be produced
+
+Root causes must be mapped to protocol sections
+
+At least one preventative protocol adjustment must be proposed
+
+Failure without retrospective is incomplete work.
+
+6. Drift Prevention
 
 When conceptual, architectural, or procedural drift is detected:
 
@@ -68,7 +160,7 @@ resolution must occur before continuation
 
 Proceeding with known drift is a protocol violation.
 
-6. Change Proposal Discipline
+7. Change Proposal Discipline
 
 All non-trivial changes must be:
 
@@ -80,7 +172,7 @@ justified briefly
 
 Silence does not imply consent.
 
-7. Use of Foundational Documents
+8. Use of Foundational Documents
 
 Foundational documents encode long-term intent and constraints.
 
@@ -92,7 +184,7 @@ respect for historical context
 
 preference for additive evolution
 
-8. Correction & Challenge
+9. Correction & Challenge
 
 Either party may:
 
@@ -104,14 +196,14 @@ halt progress due to misalignment
 
 Correction is cooperative, not adversarial.
 
-9. Document Evolution Rules
+10. Document Evolution Rules
 
 Changes to documents must respect their role and authority.
 
 Higher-authority documents require higher discipline.
 
-9A. Foundational Document Evolution Rule (Additive)
-9A.1 Non-Destructive Default
+10A. Foundational Document Evolution Rule (Additive)
+10A.1 Non-Destructive Default
 
 Existing content is authoritative
 
@@ -119,7 +211,7 @@ Changes are additive unless explicitly approved otherwise
 
 Removal, reinterpretation, or compression is prohibited by default
 
-9A.2 Refactor-by-Proposal Requirement
+10A.2 Refactor-by-Proposal Requirement
 
 If refactoring is proposed:
 
@@ -131,7 +223,7 @@ Justify the refactor explicitly
 
 No refactor becomes authoritative without approval.
 
-9A.3 Information Preservation Guarantee
+10A.3 Information Preservation Guarantee
 
 If information would be removed:
 
@@ -141,8 +233,8 @@ it must be re-homed first
 
 Loss without re-homing is a protocol violation.
 
-9B. Mandatory Grounding & Assumption Prohibition
-9B.1 Grounding Requirement
+10B. Mandatory Grounding & Assumption Prohibition
+10B.1 Grounding Requirement
 
 Before proposing:
 
@@ -166,7 +258,7 @@ symbols verified
 
 frozen vs evolvable boundaries
 
-9B.2 Assumption Prohibition
+10B.2 Assumption Prohibition
 
 If information is not present, it is UNKNOWN.
 
@@ -180,7 +272,7 @@ extrapolate architecture
 
 rely on pattern expectation
 
-9B.3 Grounding Failure Stop Condition
+10B.3 Grounding Failure Stop Condition
 
 If grounding is missing or challenged:
 
@@ -190,8 +282,8 @@ grounding is corrected
 
 Only then may work continue.
 
-9C. Execution Discipline Extensions
-9C.1 Workspace Initialization Discipline
+10C. Execution Discipline Extensions
+10C.1 Workspace Initialization Discipline
 
 Workspace state must be declared:
 
@@ -207,7 +299,7 @@ Work may not proceed until workspace is explicitly locked.
 
 Missing artifacts are a hard stop.
 
-9C.2 Assumption Suppression Gate
+10C.2 Assumption Suppression Gate
 
 Before implementation guidance:
 
@@ -221,7 +313,7 @@ Absent files or symbols → stop and request upload.
 
 Conceptual or assumed code is prohibited during active phases.
 
-9C.3 Change Atomicity & Drop-In Safety
+10C.3 Change Atomicity & Drop-In Safety
 
 All guidance must be:
 
@@ -237,9 +329,9 @@ partial snippets
 
 vague “modify this”
 
-unenumbered multi-location changes
+unnumbered multi-location changes
 
-9C.4 Strategy Migration Protocol (Phase 4)
+10C.4 Strategy Migration Protocol (Phase 4)
 
 A strategy is not migrated unless:
 
@@ -255,7 +347,7 @@ activation flag present
 
 equivalence demonstrated
 
-9C.5 Parity as Phase-Exit Artifact
+10C.5 Parity as Phase-Exit Artifact
 
 One parity harness per strategy
 
@@ -265,7 +357,7 @@ Diagnostic + strict modes
 
 Phase 4 cannot close without parity sign-off.
 
-9C.6 Document Impact Declaration
+10C.6 Document Impact Declaration
 
 All document updates must declare:
 
@@ -275,7 +367,7 @@ additive vs structural
 
 All updates must be output in full, never fragmented.
 
-9C.7 Velocity Protection (“Proceed Mode”)
+10C.7 Velocity Protection (“Proceed Mode”)
 
 When Proceed Mode is active:
 
@@ -287,7 +379,7 @@ no narrative
 
 no justification unless requested
 
-9C.8 Architectural Boundary Visibility
+10C.8 Architectural Boundary Visibility
 
 New dependencies require declaration of:
 
@@ -301,7 +393,7 @@ migration intent
 
 Silent boundary erosion is prohibited.
 
-9C.9 Phase Transition Guardrails
+10C.9 Phase Transition Guardrails
 
 Before phase transition or workspace reset:
 
@@ -313,7 +405,7 @@ reset explicitly justified
 
 Workspace reset is a controlled phase step, not an escape hatch.
 
-9C.10 Interaction Mode Declaration
+10C.10 Interaction Mode Declaration
 
 Interaction mode must be explicit or inferred:
 
@@ -329,7 +421,7 @@ Execution
 
 Response shape must conform to mode.
 
-9C.11 Test Cycle Discipline (Additive)
+10C.11 Test Cycle Discipline (Additive)
 
 When implementing or migrating tests, the following cycle is mandatory:
 
@@ -347,8 +439,8 @@ Lock behavior and update specifications
 
 Deviation from this cycle requires explicit justification.
 
-9D. Execution Feasibility & Observability Invariants (Additive)
-9D.1 Execution Locus Requirement
+10D. Execution Feasibility & Observability Invariants (Additive)
+10D.1 Execution Locus Requirement
 
 Any step with a success criterion is invalid unless it explicitly declares:
 
@@ -356,7 +448,7 @@ where it executes (file / class / method or inspection-only)
 
 Steps lacking an execution locus may not proceed.
 
-9D.2 Observability Requirement
+10D.2 Observability Requirement
 
 Correctness without observability is treated as non-existence.
 
@@ -364,7 +456,7 @@ Any success criterion must be paired with a declared observability mechanism.
 
 Heuristic verification is prohibited unless explicitly sanctioned.
 
-9D.3 Temporary Instrumentation Rule
+10D.3 Temporary Instrumentation Rule
 
 Temporary hooks or instrumentation are permitted only if they declare:
 
@@ -376,13 +468,13 @@ explicit removal step
 
 Undeclared or permanent instrumentation is a protocol violation.
 
-9D.4 No-Closure Rule
+10D.4 No-Closure Rule
 
 A workspace may not be closed while canonical documents are out of sync with execution reality.
 
 If such divergence exists, the workspace enters an OPEN / UNSYNCED state.
 
-9D.5 Response Attenuation Mandate
+10D.5 Response Attenuation Mandate
 
 As operator signal tightens (fatigue, terseness, correction cadence):
 
@@ -390,8 +482,8 @@ verbosity must strictly decrease
 
 protocol adherence supersedes pattern inference
 
-10. Enforcement
+11. Enforcement
 
 Violation of this protocol invalidates the affected work and requires correction before continuation.
 
-11. End of MASTER OPERATING PROTOCOL
+12. End of MASTER OPERATING PROTOCOL

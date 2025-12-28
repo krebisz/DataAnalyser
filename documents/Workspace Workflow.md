@@ -1,5 +1,4 @@
-📘 Workspace Workflow.md
-
+📘 Workspace Workflow.md  
 (Updated — Automation Wired In, Strict Mode–Compliant, Drift-Hardened)
 
 ⚠️ This document is part of the frozen core documentation set.  
@@ -259,6 +258,48 @@ When reconstructing a workspace, documents are interpreted strictly in this orde
 7. dependency-summary.md
 8. project-tree.txt
 9. Solution ZIP (reference only)
+
+------------------------------------------------------
+8. Cut-Over Locus Declaration (Additive · Mandatory)
+------------------------------------------------------
+
+Before beginning any migration or refactor task, the following MUST be explicitly declared:
+
+- File name
+- Class name
+- Method name
+- Call site (who invokes it)
+
+This declaration establishes the **single locus of behavioral change**.
+
+No implementation may proceed without this declaration being acknowledged.
+
+------------------------------------------------------
+9. Reachability Proof Requirement (Additive · Mandatory)
+------------------------------------------------------
+
+For any new or migrated logic, the assistant MUST declare:
+
+- How execution can be observed
+- Where a breakpoint/log/test confirms reachability
+
+Examples:
+- Parity harness invocation
+- Unit test assertion
+- Service-layer call confirmed via breakpoint
+
+A task without reachability proof is considered **non-executable**.
+
+------------------------------------------------------
+10. Systemic Failure Re-Entry Rule (Additive)
+------------------------------------------------------
+
+If a task triggers systemic failure (per MASTER_OPERATING_PROTOCOL):
+
+- Workspace is considered **tainted**
+- Execution halts
+- Only rehydration, inspection, or protocol repair may occur
+- No forward progress resumes until a clean state is acknowledged
 
 ------------------------------------------------------
 End of Workspace Workflow.md

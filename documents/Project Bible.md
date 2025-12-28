@@ -1,180 +1,288 @@
-PROJECT BIBLE
-1. Purpose
+# PROJECT BIBLE
+Status: Canonical
+Scope: Architectural Law
+
+---
+
+## 1. Purpose
 
 The Project Bible defines binding architectural law for the system.
 
 It establishes:
 
-non-negotiable principles
-
-semantic authority boundaries
-
-long-term invariants
+- non-negotiable principles
+- semantic authority boundaries
+- long-term invariants
 
 If a decision conflicts with this document, the decision is invalid.
 
-2. Core Principles (Binding)
+---
 
-Lossless Ingestion — raw data must never be destroyed or silently altered
+## 2. Core Principles (Binding)
 
-Explicit Semantics — meaning is assigned declaratively, not inferred
+### Lossless Ingestion
+Raw data must never be destroyed or silently altered.
 
-Single Semantic Authority — normalization is the sole arbiter of meaning
+### Explicit Semantics
+Meaning is assigned declaratively, not inferred.
 
-Determinism — identical inputs produce identical outputs
+### Single Semantic Authority
+Normalization is the sole arbiter of meaning.
 
-Reversibility — evolution must allow rollback
+### Determinism
+Identical inputs produce identical outputs.
 
-3. Semantic Authority
+### Reversibility
+Evolution must allow rollback.
+
+---
+
+## 3. Semantic Authority
 
 Metric meaning:
 
-is defined once
-
-is stable
-
-is opaque to consumers
+- is defined once
+- is stable
+- is opaque to consumers
 
 No downstream layer may reinterpret or override semantic decisions.
 
-4. Identity Law
+---
+
+## 4. Identity Law
 
 Metric identity:
 
-must be canonical
-
-must be globally unique
-
-must not encode source-specific information
+- must be canonical
+- must be globally unique
+- must not encode source-specific information
 
 Identity resolution is declarative and explainable.
 
-5. Normalization Law
+---
+
+## 5. Normalization Law
 
 Normalization:
 
-is staged
-
-is ordered
-
-is explicit
+- is staged
+- is ordered
+- is explicit
 
 Each stage:
 
-has a single responsibility
+- has a single responsibility
+- must not inspect concerns outside its scope
 
-must not inspect concerns outside its scope
+---
 
-6. Canonical Metric Series Law
+## 6. Canonical Metric Series Law
 
 CMS:
 
-is the only trusted analytical input
+- is the only trusted analytical input
+- is required for computation
+- is assumed correct by consumers
 
-is required for computation
+---
 
-is assumed correct by consumers
-
-7. Prohibited Behaviors
+## 7. Prohibited Behaviors
 
 The system must never:
 
-infer semantic meaning implicitly
+- infer semantic meaning implicitly
+- conflate structure with meaning
+- allow heuristic logic to alter identity
+- permit silent semantic drift
 
-conflate structure with meaning
+---
 
-allow heuristic logic to alter identity
-
-permit silent semantic drift
-
-8. Evolution Constraints
+## 8. Evolution Constraints
 
 Future changes must:
 
-preserve declared boundaries
-
-maintain semantic authority
-
-avoid architectural shortcuts
+- preserve declared boundaries
+- maintain semantic authority
+- avoid architectural shortcuts
 
 Convenience must not override correctness.
 
-9. Structural / Manifold Analysis Constraint (Additive · Binding)
+---
+
+## 9. Structural / Manifold Analysis Constraint (Additive · Binding)
 
 Additive Section — No existing sections are modified by this addition.
 
 The system MAY introduce future analytical subsystems that:
 
-analyze structural similarity, equivalence, or hierarchy
-
-operate on normalized or canonical representations
-
-support exploratory or comparative analysis
+- analyze structural similarity, equivalence, or hierarchy
+- operate on normalized or canonical representations
+- support exploratory or comparative analysis
 
 Such subsystems MUST NOT:
 
-assign or alter canonical metric identity
-
-modify normalization outcomes
-
-influence computation or rendering implicitly
+- assign or alter canonical metric identity
+- modify normalization outcomes
+- influence computation or rendering implicitly
 
 Any promotion of insights into canonical semantics MUST:
 
-be explicit
-
-be declarative
-
-be reviewable
-
-be reversible
+- be explicit
+- be declarative
+- be reviewable
+- be reversible
 
 No automatic or implicit back-propagation is permitted.
 
-Appendix A. Architectural Rationale (Non-Binding)
+---
+
+## 10. Temporal Execution & Migration Law (Additive · Binding)
+
+Additive Section — Introduced to support phased migration without violating Canonical Law.
+
+### 10.1 Temporal Coexistence
+
+The system MAY temporarily support multiple execution paths (e.g. legacy and CMS-based) **provided that**:
+
+- Canonical law remains authoritative
+- No semantic authority is duplicated
+- Coexistence is explicitly bounded and observable
+
+Temporal coexistence is a *migration state*, not a steady-state design.
+
+---
+
+### 10.2 Migration Non-Violation Rule
+
+During migration phases:
+
+- Legacy execution is permitted **only as a compatibility reference**
+- CMS execution is the sole forward path
+
+Legacy paths MUST NOT:
+
+- define new semantics
+- diverge behaviorally without parity visibility
+- be silently preferred over CMS logic
+
+---
+
+### 10.3 Parity as Architectural Safety Mechanism
+
+Parity testing is a **structural safety tool**, not a heuristic convenience.
+
+Parity exists to:
+
+- validate behavioral equivalence
+- expose divergence explicitly
+- protect Canonical assumptions during transition
+
+Parity mechanisms MUST:
+
+- be isolated from production execution
+- be deterministic
+- never influence live computation
+
+---
+
+### 10.4 Execution Reachability Constraint
+
+A computation path that is:
+
+- unreachable
+- unobservable
+- or conditionally bypassed
+
+is considered **architecturally non-existent**, regardless of correctness.
+
+Migration work MUST prove execution reachability.
+
+---
+
+## 11. Service & Rendering Layer Constraint (Additive · Binding)
+
+Additive Section — Clarifies downstream boundaries.
+
+Service and rendering layers:
+
+- consume results
+- do not define semantics
+- do not select meaning
+- do not infer correctness
+
+They MAY:
+
+- switch between explicitly declared strategies
+- visualize Canonical outputs
+- reflect migration state
+
+They MUST NOT:
+
+- conditionally reinterpret Canonical results
+- embed semantic branching logic
+
+---
+
+## 12. Canonical Boundary Enforcement Rule (Additive · Binding)
+
+Additive Section — Prevents silent law erosion.
+
+Any code that:
+
+- constructs Canonical objects
+- mutates Canonical series
+- selects Canonical strategy
+
+MUST reside within explicitly designated Canonical boundaries.
+
+Violation constitutes architectural breach.
+
+---
+
+## Appendix A. Architectural Rationale (Non-Binding)
 
 Explanatory only — not architectural law.
 
-A.1 Why Explicit Semantics Exist
+### A.1 Why Explicit Semantics Exist
 
 Earlier designs relied on inferred meaning derived from structure, naming, or statistical behavior.
 This led to ambiguity, drift, and irreproducible outcomes.
 
 Declarative semantics were introduced to guarantee:
 
-stability
+- stability
+- auditability
+- long-term trust
 
-auditability
+---
 
-long-term trust
-
-A.2 Why Canonical Identity Is Enforced
+### A.2 Why Canonical Identity Is Enforced
 
 Allowing multiple representations or inferred equivalence caused semantic erosion over time.
 
 Canonical identity enforces:
 
-one meaning
-
-one reference
-
-stable comparison
+- one meaning
+- one reference
+- stable comparison
 
 Exploration is allowed elsewhere — never here.
 
-A.3 Historical Failure Modes
+---
+
+### A.3 Historical Failure Modes
 
 Observed failures that motivated this document:
 
-Structural similarity mistaken for semantic equivalence
-
-Heuristics leaking into normalization
-
-Silent reinterpretation by downstream consumers
+- Structural similarity mistaken for semantic equivalence
+- Heuristics leaking into normalization
+- Silent reinterpretation by downstream consumers
 
 These failures justify strict separation between law and analysis.
 
-Appendix B. Derived & Dynamic Metric Identity (Non-Binding)
+---
+
+## Appendix B. Derived & Dynamic Metric Identity (Non-Binding)
 
 Additive Appendix — does not modify binding law.
 
@@ -182,20 +290,20 @@ Derived or dynamic metrics are first-class semantic entities created through exp
 
 Constraints:
 
-Derived metrics MUST have their own canonical identity
+- Derived metrics MUST have their own canonical identity
+- Derived metrics MUST declare dimension, unit, and provenance
+- Source identities are never altered or overridden
 
-Derived metrics MUST declare dimension, unit, and provenance
-
-Source identities are never altered or overridden
-
-No derived metric may be instantiated implicitly or heuristically
+No derived metric may be instantiated implicitly or heuristically.
 
 Derived identities may be ephemeral (session-scoped) or persistent.
 In all cases, identity creation must be explicit, reviewable, and reversible.
 
 Analytical or structural systems may suggest derived identities but MUST NOT promote them without explicit declaration.
 
-Appendix C. Contract-First Semantic Compression (Non-Binding)
+---
+
+## Appendix C. Contract-First Semantic Compression (Non-Binding)
 
 Additive Appendix — explanatory only.
 
@@ -203,12 +311,12 @@ The project adopts a contract-first discipline to reduce ambiguity, repetition, 
 
 Principles:
 
-Semantic truth is expressed through text-only contracts (identity rules, mapping contracts, layer constraints)
+- Semantic truth is expressed through text-only contracts
+- Once anchored, a contract is authoritative
+- Conversational re-derivation is discouraged
 
-Once a contract is authored and anchored, it becomes the authoritative reference
+Contracts act as lossless compression for architectural intent.
 
-Conversational re-derivation of decisions covered by a contract is discouraged unless explicitly requested
-
-Contracts act as a lossless compression mechanism for architectural and semantic intent and replace conversational memory.
+---
 
 End of Project Bible

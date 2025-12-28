@@ -1,476 +1,219 @@
-WeeklyDistributionStrategy — CMS Migration Execution Instructions
+Weekly Distribution Migration — Consolidated State & Handoff
+Status
 
-Workspace: DataAnalyser—2025.12.23.2—Dev.CmsMigration
-Strategy: WeeklyDistributionStrategy
-Mode: Sequential, parity-locked, single-risk steps
+WeeklyDistributionStrategy CMS migration: INCOMPLETE, PARTIALLY VALIDATED
 
-Ground Rules (Do Not Reinterpret)
+CMS strategy implementation exists
 
-Legacy behavior is authoritative
+Unit tests for CMS logic pass
 
-CMS output must be bit-for-bit equivalent
+Parity harness infrastructure exists
 
-One step completed and verified before moving on
+No effective cut-over to CMS execution path has occurred
 
-No work on any other strategy
+Legacy strategy remains the only active execution path
 
-Tests must not introduce new seams or visibility changes
+Migration effort terminated due to systemic protocol breakdown, not algorithmic failure
 
-Structural Invariants (Additive)
-Execution Locus Requirement
+What Was Successfully Achieved (Atomic Progress)
+1. CMS Strategy Implementation
 
-Every step that declares a success criterion must declare where it executes:
+CmsWeeklyDistributionStrategy implemented
 
-File
+Uses ICanonicalMetricSeries exclusively
 
-Class
+Explicitly ignores secondary metrics (by design)
 
-Method or explicitly marked Inspection-Only
+Leaves aggregation extensible for future phases
 
-Steps lacking an execution locus are invalid.
+2. CMS Strategy Test Coverage
 
-Observability Requirement
+CmsWeeklyDistributionStrategyTests compile and pass
 
-A step is verifiable only if its outcome can be observed without inference.
-If no safe observability mechanism exists, the step must be marked Inspection-Only or deferred.
+Tests validate:
 
-Temporary Instrumentation Rule
+Phase 5 & 6 observability via extended result
 
-If a step requires temporary hooks or helpers:
+Correct bucketing, counts, bounds
 
-Scope must be explicit
+Tests use legal public surfaces only
 
-Purpose must be explicit
+No reliance on debug-only or protected internals
 
-Removal step must be declared
+3. Parity Infrastructure
 
-Step 1 — CMS Strategy Shell
+Parity harness framework exists and compiles
 
-Execution locus
+Legacy vs CMS parity can be asserted in isolation
 
-File: CmsWeeklyDistributionStrategy.cs
+One parity test exists and passes
 
-Class: CmsWeeklyDistributionStrategy
+Parity was never wired into live execution
 
-Method: constructor only
+4. Architectural Alignment (Local)
 
-Do
+CMS contract respected
 
-Create CmsWeeklyDistributionStrategy
+No mutation of canonical semantics
 
-Constructor params:
+No refactor of legacy behavior
 
-ICanonicalMetricSeries series
+No UI changes required for CMS logic correctness
 
-DateTime from
+What Was Not Achieved (Blocking Gaps)
+1. No Execution Cut-Over
 
-DateTime to
+CMS strategy is never invoked in production flow
 
-string label
+useCmsStrategy remains false
 
-Test opportunity
+cmsSeries remains null
 
-None (structure only)
+All UI → Service → Strategy calls resolve to legacy
 
-Observability
+Result: CMS correctness is unobservable outside unit tests.
 
-Compilation only
+2. Service-Layer Contract Drift
 
-Stop when
+WeeklyDistributionService accumulated:
 
-Code compiles
+ambiguous overloads
 
-No logic present
+unreachable parameters
 
-Legacy untouched
+conflicting method signatures
 
-User action: Create file, paste skeleton, confirm build succeeds.
+Attempts to wire CMS here caused cascading compile failures
 
-Step 2 — Materialize CMS Input
+Root cause: no single, frozen cut-over locus was enforced
 
-Execution locus
+3. Protocol Violations (Systemic)
 
-File: CmsWeeklyDistributionStrategy.cs
+Repeated violations of the Master Protocol caused exponential drag:
 
-Class: CmsWeeklyDistributionStrategy
+Partial method bodies instead of atomic replacements
 
-Method: internal/private materialization helper
+Vague references to non-existent methods
 
-Do
+Assumed execution paths without reachability proof
 
-Project CMS samples to in-memory list:
+Re-asking for files already provided
 
-Timestamp (local)
+Instructions that required inference instead of determinism
 
-double Value
+These failures dominated effort, not the algorithm.
 
-string Unit
+Formal Root Cause
 
-Test opportunity
+The migration failed due to lack of a single authoritative execution switch point combined with insufficient protocol enforcement on atomic change scope.
 
-Conceptual invariant only:
+Notably:
 
-sample order preserved
+CMS strategy correctness ≠ CMS strategy adoption
 
-non-null cardinality preserved
+Parity tests without wiring ≠ migration completion
 
-Implementation deferred (no safe public surface yet)
+Current Ground Truth (As of Termination)
+Invariants (Verified)
 
-Observability
+Legacy weekly distribution behavior is stable
 
-Inspection-only (code review)
+CMS weekly distribution behavior matches legacy when executed
 
-Stop when
+Tests do not lie
 
-Item count equals CMS non-null sample count
+Unknowns / Unverified
 
-Order preserved exactly
+CMS behavior in live UI flow
 
-User action: Implement projection and perform code inspection.
+Interaction with multi-metric selection in production
 
-Step 3 — Apply Legacy Filter Rules
+Performance characteristics under CMS path
 
-Execution locus
+Canonical Definition of “Migration Complete” (For Re-entry)
 
-File: CmsWeeklyDistributionStrategy.cs
+The Weekly Distribution CMS migration is complete iff all are true:
 
-Class: CmsWeeklyDistributionStrategy
+Single Cut-Over Point Defined
 
-Method: internal filter helper (temporary execution hook permitted)
+Exactly one method selects legacy vs CMS
 
-Do
+No downstream conditionals
 
-Filter [from, to] inclusive
+CMS Strategy Is Reachable
 
-Exclude null / missing values
+CMS path invoked by UI through service
 
-Order ascending by timestamp
+No null / default fallback
 
-Test opportunity
+Parity Harness Active at Cut-Over
 
-Deterministic CMS input
+Legacy + CMS executed side-by-side
 
-Assertion on filtered count
+Failure blocks promotion
 
-Prefer to defer formal parity to Step 11
+Legacy Preserved
 
-Observability
+Legacy code remains intact and callable
 
-Temporary internal hook permitted
+CMS is opt-in until parity proven
 
-Inspection-only if no hook is present
+One-Way Promotion
 
-Instrumentation lifecycle
+CMS becomes default only after parity closure
 
-Hook introduced: Step 3
+Legacy demoted, not deleted
 
-Hook removed or subsumed: Step 11
+Explicit Non-Goals (Still Valid)
 
-Stop when
+No aggregation of secondary metrics (future work)
 
-Result count matches legacy filtered count
+No UI redesign
 
-User action: Implement filtering and verify against legacy data.
+No performance optimization
 
-Step 4 — Weekday Bucketing
+No generalized cyclic refactor
 
-Execution locus
+No derived metrics
 
-File: CmsWeeklyDistributionStrategy.cs
+Recommended Next Workspace Focus (Single Task)
 
-Class: CmsWeeklyDistributionStrategy
+Define and implement a single, provable CMS cut-over locus for Weekly Distribution.
 
-Method: weekday bucketing helper
+Scope (Strict)
 
-Do
+One method
 
-Map timestamp → weekday index:
+One decision
 
-Monday = 0 … Sunday = 6
+One parity assertion
 
-Populate Dictionary<int, List<double>> DayValues
+No refactors elsewhere
 
-Test opportunity
+First Concrete Step (For Next Agent)
 
-Partial parity:
+Identify exact method where Weekly Distribution strategy is selected
 
-each value in exactly one bucket
+Freeze that method signature
 
-sum of bucket counts = filtered count
+Introduce CMS strategy selection behind a single flag
 
-Observability
+Enable parity harness there
 
-Inspection-only or deferred parity
+Stop
 
-Stop when
+Why This Document Exists
 
-Every value appears in exactly one bucket
+This replaces four drifting artifacts with:
 
-Bucket sizes match legacy DayValues
+One source of truth
 
-User action: Implement bucketing and inspect per-day counts.
+No historical noise
 
-Step 5 — Per-Day Statistics
+Clear termination state
 
-Execution locus
+Clear re-entry conditions
 
-File: CmsWeeklyDistributionStrategy.cs
+It is designed to be dropped verbatim into a new workspace initialization and understood without context reconstruction.
 
-Class: CmsWeeklyDistributionStrategy
-
-Method: per-day stats helper
-
-Do
-For weekday indices 0..6:
-
-If bucket empty:
-
-Min = NaN
-
-Max = NaN
-
-Range = NaN
-
-Count = 0
-
-Else:
-
-Compute Min, Max
-
-Range = Max − Min
-
-Count = value count
-
-Test opportunity
-
-Strong parity candidate:
-
-arrays length = 7
-
-NaN placement identical
-
-Observability
-
-Deferred to CMS result snapshot
-
-Stop when
-
-Arrays length = 7
-
-Values equal legacy Mins / Maxs / Ranges / Counts
-
-User action: Implement stats and diff against legacy snapshot.
-
-Step 6 — Global Bounds
-
-Execution locus
-
-File: CmsWeeklyDistributionStrategy.cs
-
-Class: CmsWeeklyDistributionStrategy
-
-Method: global bounds helper
-
-Do
-
-GlobalMin = min(non-NaN mins)
-
-GlobalMax = max(non-NaN maxs)
-
-Apply legacy degenerate handling
-
-Test opportunity
-
-Deterministic numeric equality
-
-Observability
-
-Deferred to parity harness
-
-Stop when
-
-Values exactly equal legacy GlobalMin / GlobalMax
-
-User action: Implement bounds and verify exact equality.
-
-Step 7 — Bin Construction
-
-Execution locus
-
-File: CmsWeeklyDistributionStrategy.cs
-
-Class: CmsWeeklyDistributionStrategy
-
-Method: bin construction helper
-
-Do
-
-BinSize = FrequencyBinningHelper.CalculateBinSize(GlobalMin, GlobalMax)
-
-Bins = CreateBins(GlobalMin, GlobalMax, BinSize)
-
-Test opportunity
-
-Structural parity:
-
-bin count
-
-boundaries
-
-Observability
-
-CMS result serialization
-
-Stop when
-
-BinSize equals legacy
-
-Bin boundaries identical
-
-Bin count identical
-
-User action: Implement bin logic and compare to legacy bins.
-
-Step 8 — Frequency Calculation
-
-Execution locus
-
-File: CmsWeeklyDistributionStrategy.cs
-
-Class: CmsWeeklyDistributionStrategy
-
-Method: frequency calculation helper
-
-Do
-
-For each weekday:
-
-BinValuesAndCountFrequencies(DayValues[day], Bins)
-
-NormalizeFrequencies(FrequenciesPerDay)
-
-Test opportunity
-
-High-value parity:
-
-raw frequencies
-
-normalized frequencies
-
-Observability
-
-CMS result serialization
-
-Stop when
-
-Raw frequencies equal legacy
-
-Normalized frequencies equal legacy
-
-User action: Implement frequencies and verify against legacy maps.
-
-Step 9 — CMS Result Assembly
-
-Execution locus
-
-File: CmsWeeklyDistributionStrategy.cs
-
-Class: CmsWeeklyDistributionStrategy
-
-Method: result assembly
-
-Do
-
-Populate CMS WeeklyDistributionResult with all fields.
-
-Test opportunity
-
-Snapshot parity test (preferred)
-
-Observability
-
-JSON diff against legacy snapshot
-
-Stop when
-
-Serialized CMS result matches legacy snapshot exactly
-
-User action: Serialize CMS result and diff against legacy JSON.
-
-Step 10 — Compatibility Result Mapping
-
-Execution locus
-
-File: CmsWeeklyDistributionStrategy.cs
-
-Class: CmsWeeklyDistributionStrategy
-
-Method: compatibility mapping
-
-Do
-
-Build ChartComputationResult
-
-Preserve ordering and units
-
-Test opportunity
-
-Compatibility parity
-
-Observability
-
-Serialized output comparison
-
-Stop when
-
-Serialized result equals legacy output
-
-User action: Map result and compare serialized output.
-
-Step 11 — Parity Harness
-
-Execution locus
-
-Declared parity harness (test or diagnostic runner)
-
-Do
-
-Execute legacy and CMS paths with identical inputs
-
-Compare outputs
-
-Observability
-
-Primary enforcement point
-
-Stop when
-
-Zero diffs
-
-No tolerances used
-
-User action: Run harness and confirm clean parity.
-
-Step 12 — Lock Strategy
-
-Execution locus
-
-Governance / documentation update
-
-Do
-
-Mark strategy as CMS-migrated
-
-Leave legacy code unchanged
-
-Stop when
-
-Parity harness green
-
-Strategy flagged complete
-
-No other strategy touched
-
-User action: Declare migration complete and stop work.
-
-End of instructions.
+End of Consolidated Weekly Distribution Migration State

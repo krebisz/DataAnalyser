@@ -1,11 +1,16 @@
 # PROJECT OVERVIEW
+Status: Descriptive (Non-Binding)
+Scope: Intent, Trajectory, and Current State
+
+---
 
 ## 1. Purpose
 
 This document provides a high-level description of the project, its intent, and its current trajectory.
 
 It is **descriptive, not binding**.  
-Architectural law resides in **Project Bible.md**.
+Architectural law resides in **Project Bible.md**.  
+Execution discipline resides in **MASTER_OPERATING_PROTOCOL.md**.
 
 ---
 
@@ -14,6 +19,8 @@ Architectural law resides in **Project Bible.md**.
 The project exists to ingest heterogeneous structured data, normalize it into a **deterministic and semantically authoritative metric space**, and enable computation and visualization **without semantic erosion**.
 
 The primary objective is **trustworthy metric meaning**, not visualization, analytics, or UI convenience.
+
+Visualization and analytics are treated as **consumers of truth**, not definers of it.
 
 ---
 
@@ -33,7 +40,7 @@ Downstream consumers are designed to **trust semantics, not reinterpret them**.
 
 ---
 
-## 4. Historical Context & Design Evolution (Additive)
+## 4. Historical Context & Design Evolution
 
 > Contextual section — explanatory only.
 
@@ -43,6 +50,8 @@ Early iterations explored structural and hierarchical equivalence across heterog
 
 This approach proved valuable for exploratory insight.
 
+---
+
 ### 4.2 Limitations Identified
 
 When applied to persisted metrics and computation, structural inference introduced unacceptable risks:
@@ -50,6 +59,10 @@ When applied to persisted metrics and computation, structural inference introduc
 - structurally similar data representing different semantics
 - loss of auditability
 - long-term semantic drift
+
+These risks were deemed incompatible with the project’s trust objectives.
+
+---
 
 ### 4.3 Transition to Canonical Metric Semantics
 
@@ -62,6 +75,8 @@ The system transitioned to a **metric-first deterministic model**:
 
 This established a **truth layer** that downstream systems can consume safely.
 
+---
+
 ### 4.4 Deferred Structural Analysis
 
 Structural and manifold-style analysis was **deliberately deferred**, not discarded.
@@ -72,10 +87,13 @@ It is now treated as a **future, non-authoritative analytical layer**, explicitl
 
 ## 5. Relationship to Foundational Documents
 
+This document must be interpreted alongside:
+
 - **Project Bible.md** — architectural law and invariants
-- **SYSTEM_MAP.md** — conceptual layering and boundaries
-- **MASTER_OPERATING_PROTOCOL.md** — execution and collaboration discipline
-- **Project Roadmap.md** — phase sequencing and intent
+- **SYSTEM_MAP.md** — conceptual layering and execution boundaries
+- **MASTER_OPERATING_PROTOCOL.md** — execution, collaboration, and failure discipline
+- **Workspace Workflow.md** — workspace initialization and grounding rules
+- **Project Roadmap.md** — sequencing and intent
 
 In case of conflict, higher-authority documents prevail.
 
@@ -83,53 +101,87 @@ In case of conflict, higher-authority documents prevail.
 
 ## 6. Current Phase Status (Descriptive)
 
-This reflects **actual implementation state**, not aspiration:
+This reflects **actual implementation state**, not aspiration.
 
-- **Phase 1 — Ingestion & Persistence**  
-  Complete. Lossless ingestion and unified storage are stable.
+### Phase 1 — Ingestion & Persistence  
+**Complete**
 
-- **Phase 2 — Canonical Semantics & Normalization Foundations**  
-  Complete. Canonical Metric Series (CMS), identity rules, and normalization contracts are established.
-
-- **Phase 3 — Canonical Identity & CMS Integration**  
-  Complete. CMS is produced deterministically alongside legacy outputs.
-
-- **Phase 4 — Consumer Adoption & Visualization Integration**  
-  In progress (~65% complete).  
-  DataVisualiser now:
-
-  - consumes CMS through an explicit dependency surface
-  - supports **parallel CMS and legacy execution paths**
-  - migrates strategies incrementally
-  - uses parity harnesses to validate equivalence without forcing migration
-  - provides **user-defined metric transformations** with preview grids and charting pipeline integration
-    - Transform results are explicitly ephemeral and non-canonical
-    - Operations include unary (Logarithm, Square Root) and binary (Add, Subtract)
-    - Results are never promoted to canonical truth
-    - Transform infrastructure uses expression tree architecture (`TransformExpression`, `TransformOperation`, `TransformOperationRegistry`) provisioned for future expansion
-    - Evaluation and data processing centralized in helper classes (`TransformExpressionEvaluator`, `TransformExpressionBuilder`, `TransformDataHelper`)
-  - includes **performance optimizations**:
-    - Configurable SQL result limiting (default enabled)
-    - Eliminated redundant `ToList()` calls
-    - Skip computation for hidden charts
-
-  Parity is treated as a **phase obligation**, not an implementation detail.
-
-- **Phase 5 — Derived Metrics & Analytical Composition**  
-  Planned. No derived metrics are authoritative by default.
-
-- **Future — Structural / Manifold Analysis**  
-  Deferred, non-authoritative, and explicitly constrained.
+- Lossless ingestion
+- Unified persistence
+- No semantic inference at ingestion
 
 ---
 
-## 7. Derived & Dynamic Metrics (Clarification, Non-Binding)
+### Phase 2 — Canonical Semantics & Normalization Foundations  
+**Complete**
+
+- Canonical Metric Series (CMS)
+- Metric identity resolution
+- Deterministic normalization contracts
+
+---
+
+### Phase 3 — Canonical Identity & CMS Integration  
+**Complete**
+
+- CMS produced alongside legacy outputs
+- Identity and semantics stabilized
+- Downstream exposure via consumer interfaces
+
+---
+
+### Phase 4 — Consumer Adoption & Visualization Integration  
+**In Progress (~65%)**
+
+DataVisualiser currently:
+
+- Consumes CMS through an explicit dependency surface
+- Supports **parallel CMS and legacy execution paths**
+- Migrates strategies incrementally
+- Uses parity harnesses to validate equivalence without forced cut-over
+- Provides **user-defined metric transformations**:
+  - Unary: Logarithm, Square Root
+  - Binary: Add, Subtract
+- Treats transform results as:
+  - ephemeral
+  - non-canonical
+  - non-promotable without declaration
+- Integrates transform results into:
+  - preview grids
+  - charting pipeline
+- Applies performance optimizations:
+  - configurable SQL result limiting
+  - elimination of redundant materialization
+  - computation skipping for hidden charts
+
+Parity is treated as a **phase obligation**, not an implementation detail.
+
+---
+
+### Phase 5 — Derived Metrics & Analytical Composition  
+**Planned**
+
+- Derived metrics are not authoritative by default
+- Promotion to canonical truth requires explicit declaration
+
+---
+
+### Future — Structural / Manifold Analysis  
+**Deferred**
+
+- Non-authoritative
+- Explicitly constrained
+- Insight-only unless promoted declaratively
+
+---
+
+## 7. Derived & Dynamic Metrics (Clarification)
 
 Derived metrics are **explicit semantic entities**, created through declared composition or aggregation of canonical metrics.
 
 Constraints:
 
-- Every derived metric has its **own identity**
+- Each derived metric has its **own identity**
 - Source identities are never mutated
 - Units, dimensions, and provenance are explicit
 - Promotion to canonical truth is never implicit
@@ -140,39 +192,64 @@ Derived metrics may be ephemeral or persistent, but are always **intentional and
 
 ## 7A. Transform Operations (Phase 4 Implementation)
 
-The system currently supports **ephemeral transform operations** (Phase 4):
+The system currently supports **ephemeral transform operations**:
 
-- Transform results are **explicitly non-canonical** and **ephemeral**
-- Operations include unary (Logarithm, Square Root) and binary (Add, Subtract)
-- Results are displayed in preview grids and charted, but **never promoted to canonical truth**
-- Transform operations track provenance (source metrics, operation type) but do not create authoritative identities
+- Results are explicitly non-canonical
+- Operations include unary and binary forms
+- Results are visualized but not promoted
+- Provenance is tracked (sources + operation)
 
-**Infrastructure Architecture**:
+### Infrastructure Architecture (Descriptive)
 
-- **Expression Tree Model**: `TransformExpression`, `TransformOperand`, `TransformOperation` provide a flexible structure for representing operations
-- **Operation Registry**: `TransformOperationRegistry` centralizes available operations and supports registration of new operations
-- **Evaluation Engine**: `TransformExpressionEvaluator` handles expression evaluation, label generation, and metric alignment
-- **Builder Pattern**: `TransformExpressionBuilder` bridges simple operation strings to expression trees
-- **Data Processing**: `TransformDataHelper` provides utilities for result data formatting
-- **Strategy Integration**: `TransformResultStrategy` integrates transform results into the charting pipeline
+- Expression Tree Model:
+  - `TransformExpression`
+  - `TransformOperand`
+  - `TransformOperation`
+- Operation Registry:
+  - `TransformOperationRegistry`
+- Evaluation Engine:
+  - `TransformExpressionEvaluator`
+- Builder:
+  - `TransformExpressionBuilder`
+- Data Processing:
+  - `TransformDataHelper`
+- Strategy Integration:
+  - `TransformResultStrategy`
 
-**Future Expansion Readiness**:
+### Expansion Readiness
 
-The infrastructure is provisioned to support:
+Provisioned to support:
 
-- N-metrics (not just 1 or 2)
-- Chained operations (e.g., `log(A + B)`, `sqrt(A - B + C)`)
+- N-metric expressions
+- Chained operations
 - Complex expression trees
 
-This implementation aligns with Phase 4 intermediate goals and provides a foundation for Phase 5 derived metrics, while maintaining strict separation from canonical semantic authority.
+This aligns with Phase 4 goals while preserving Canonical boundaries.
 
 ---
 
-## 8. Summary
+## 8. Migration & Parity Status (Additive · Descriptive)
+
+Additive clarification based on recent execution experience.
+
+- CMS strategies may exist without being reachable
+- Migration is only considered real once:
+  - execution reachability is proven
+  - parity is observable
+- Partial migrations are expected and acceptable
+- Non-reachable logic is treated as **non-existent**
+
+This document reflects **state**, not guarantee.
+
+---
+
+## 9. Summary
 
 Canonical semantics form the foundation.  
 Everything else builds on top — **explicitly, reversibly, and without inference**.
 
+The system favors **trust, auditability, and long-term coherence** over speed or convenience.
+
 ---
 
-**End of Project Overview**
+End of Project Overview

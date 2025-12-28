@@ -1,4 +1,4 @@
-# 🧭 PROJECT PHILOSOPHY
+# PROJECT PHILOSOPHY
 
 (Non-Binding Orientation — Guiding Context, Not Law)
 
@@ -174,6 +174,62 @@ It should not be updated for:
 - phase transitions
 - new features
 - implementation discoveries
+
+---
+
+## 8. Philosophy–Execution Separation (Additive · Clarification)
+
+Additive section — introduced to prevent category errors observed in collaboration.
+
+Philosophical guidance:
+- informs *direction*
+- contextualizes *restraint*
+- legitimizes patience and staged evolution
+
+It does **not**:
+- authorize implementation shortcuts
+- weaken architectural law
+- override execution protocol
+
+When philosophical intent appears to conflict with execution discipline, **discipline prevails**.
+
+---
+
+## 9. Temporal Reality Acknowledgement (Additive · Clarification)
+
+Additive section — clarifies expectations during long-running work.
+
+The project accepts that:
+- progress may be non-linear
+- some sessions yield structural insight rather than completed features
+- aborted implementations may still advance system coherence
+
+Such outcomes are:
+- acceptable
+- expected
+- valuable
+
+Failure to complete a task does not imply failure of intent, provided:
+- understanding improves
+- future work becomes cheaper or safer
+
+---
+
+## 10. Human–System Collaboration Ethos (Additive · Clarification)
+
+Additive section — non-binding but explicit.
+
+The project assumes:
+- humans operate under fatigue, context-switching, and bounded attention
+- tools must reduce, not amplify, cognitive load
+- rigor exists to *support* creativity, not suppress it
+
+Protocols and architecture exist to:
+- protect human intent from entropy
+- preserve long-term coherence
+- allow work to resume cleanly after interruption
+
+This document legitimizes **careful pacing** and **deliberate resets**.
 
 ---
 
