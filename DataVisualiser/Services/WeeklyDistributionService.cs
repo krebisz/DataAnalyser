@@ -1,3 +1,5 @@
+using DataFileReader.Canonical;
+using DataFileReader.Normalization.Canonical;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Helpers;
 using DataVisualiser.Charts.Rendering;
@@ -24,6 +26,8 @@ namespace DataVisualiser.Services
         private const double YAxisPaddingPercentage = 0.05;
         private const double MinYAxisPadding = 5.0;
         private const double MaxColumnWidth = 40.0;
+
+        private const bool UseCmsWeeklyDistribution = false;
 
         private IFrequencyShadingRenderer? _frequencyRenderer;
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
@@ -63,12 +67,12 @@ namespace DataVisualiser.Services
             DateTime to,
             double minHeight = DefaultMinHeight,
             bool useFrequencyShading = true,
-            int intervalCount = 10)
+            int intervalCount = 10,
+            DataFileReader.Canonical.ICanonicalMetricSeries? cmsSeries = null,
+            bool enableParity = false)
         {
             if (targetChart == null)
-            {
                 throw new ArgumentNullException(nameof(targetChart));
-            }
 
             if (data == null)
             {
@@ -76,8 +80,20 @@ namespace DataVisualiser.Services
                 return;
             }
 
-            // Compute using the strategy on a background thread (same pattern as other charts).
-            var (result, extendedResult) = await ComputeWeeklyDistributionAsync(data, displayName, from, to);
+            // Toggle: CMS path only when cmsSeries provided
+            var useCmsStrategy = (cmsSeries != null);
+
+            var tuple = await ComputeWeeklyDistributionAsync(
+                data,
+                cmsSeries,
+                displayName,
+                from,
+                to,
+                useCmsStrategy: useCmsStrategy,
+                enableParity: enableParity);
+
+            var result = tuple.Result;
+            var extendedResult = tuple.ExtendedResult;
 
             if (result == null || extendedResult == null)
             {
@@ -87,24 +103,22 @@ namespace DataVisualiser.Services
 
             try
             {
-                // Clear previous series
                 targetChart.Series.Clear();
 
-                // Step 1: Render the original min/max range visualization (baseline + range columns)
-                // This was the working implementation before
-                RenderOriginalMinMaxChart(targetChart, result!, displayName, minHeight, extendedResult, useFrequencyShading, intervalCount);
+                RenderOriginalMinMaxChart(
+                    targetChart,
+                    result,
+                    displayName,
+                    minHeight,
+                    extendedResult,
+                    useFrequencyShading,
+                    intervalCount);
 
-                // Weekly chart has no per-point timestamps, but we keep the dictionary consistent
                 _chartTimestamps[targetChart] = new List<DateTime>();
-
-                // Explicitly disable default LiveCharts tooltip for weekly chart
-                // We use our custom tooltip instead
                 targetChart.DataTooltip = null;
 
-                // Set up tooltip
-                SetupWeeklyTooltip(targetChart, result!, extendedResult, useFrequencyShading, intervalCount);
+                SetupWeeklyTooltip(targetChart, result, extendedResult, useFrequencyShading, intervalCount);
 
-                // Height handling consistent with other charts
                 ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
             }
             catch (Exception ex)
@@ -116,7 +130,6 @@ namespace DataVisualiser.Services
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
 
-                // Ensure chart is left in a clean state
                 ChartHelper.ClearChart(targetChart, _chartTimestamps);
             }
         }
@@ -1000,35 +1013,126 @@ namespace DataVisualiser.Services
 
         #endregion
 
-        /// <summary>
-        /// Calculates simple tooltip data for Simple Range mode (min, max, range, count per day).
-        /// </summary>
-        /// <summary>
-        /// Computes weekly distribution on a background thread.
-        /// </summary>
+        private async Task<(Charts.Computation.ChartComputationResult? Result, Models.WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(
+    IEnumerable<HealthMetricData> data,
+    string displayName,
+    DateTime from,
+    DateTime to)
+        {
+            // Backwards-compatible default (legacy-only)
+            return await ComputeWeeklyDistributionAsync(
+                data,
+                cmsSeries: null,
+                displayName,
+                from,
+                to,
+                useCmsStrategy: false,
+                enableParity: false).ConfigureAwait(true);
+        }
+
         private async Task<(Charts.Computation.ChartComputationResult? Result, Models.WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(
             IEnumerable<HealthMetricData> data,
+            DataFileReader.Canonical.ICanonicalMetricSeries? cmsSeries,
             string displayName,
             DateTime from,
-            DateTime to)
+            DateTime to,
+            bool useCmsStrategy,
+            bool enableParity)
         {
             Models.WeeklyDistributionResult? extendedResult = null;
             Charts.Computation.ChartComputationResult? result = null;
 
             await Task.Run(() =>
             {
-                var strategy = new Charts.Strategies.WeeklyDistributionStrategy(
+                // Always compute legacy (needed for parity / fallback)
+                var legacyStrategy = new Charts.Strategies.WeeklyDistributionStrategy(
                     data,
                     displayName,
                     from,
                     to);
 
-                result = strategy.Compute();
-                extendedResult = strategy.ExtendedResult;
+                var legacyResult = legacyStrategy.Compute();
+                var legacyExtended = legacyStrategy.ExtendedResult;
+
+                if (!useCmsStrategy || cmsSeries == null)
+                {
+                    result = legacyResult;
+                    extendedResult = legacyExtended;
+                    return;
+                }
+
+                var cmsStrategy = new Charts.Strategies.CmsWeeklyDistributionStrategy(
+                    cmsSeries,
+                    from,
+                    to,
+                    displayName);
+
+                var cmsResult = cmsStrategy.Compute();
+                var cmsExtended = cmsStrategy.ExtendedResult;
+
+                if (enableParity)
+                {
+                    var harness = new DataVisualiser.Charts.Parity.WeeklyDistributionParityHarness();
+
+                    var parityResult = harness.Validate(
+                        new DataVisualiser.Charts.Parity.StrategyParityContext
+                        {
+                            StrategyName = "WeeklyDistribution",
+                            MetricIdentity = displayName,
+                            Mode = DataVisualiser.Charts.Parity.ParityMode.Diagnostic,
+                            Tolerance = new DataVisualiser.Charts.Parity.ParityTolerance
+                            {
+                                AllowFloatingPointDrift = true,
+                                ValueEpsilon = 1e-9
+                            }
+                        },
+                        legacyExecution: () => DataVisualiser.Charts.Parity.WeeklyDistributionParityHarness.ToLegacyExecutionResult(legacyExtended),
+                        cmsExecution: () => DataVisualiser.Charts.Parity.WeeklyDistributionParityHarness.ToCmsExecutionResult(cmsExtended));
+
+                    System.Diagnostics.Debug.WriteLine(
+                        parityResult.Passed
+                            ? "[PARITY] WeeklyDistribution PASSED"
+                            : "[PARITY] WeeklyDistribution FAILED");
+                }
+
+                // CMS becomes the returned strategy when enabled
+                result = cmsResult;
+                extendedResult = cmsExtended;
             }).ConfigureAwait(true);
 
             return (result, extendedResult);
         }
+
+
+        ///// <summary>
+        ///// Calculates simple tooltip data for Simple Range mode (min, max, range, count per day).
+        ///// </summary>
+        ///// <summary>
+        ///// Computes weekly distribution on a background thread.
+        ///// </summary>
+        //private async Task<(Charts.Computation.ChartComputationResult? Result, Models.WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(
+        //    IEnumerable<HealthMetricData> data,
+        //    string displayName,
+        //    DateTime from,
+        //    DateTime to)
+        //{
+        //    Models.WeeklyDistributionResult? extendedResult = null;
+        //    Charts.Computation.ChartComputationResult? result = null;
+
+        //    await Task.Run(() =>
+        //    {
+        //        var strategy = new Charts.Strategies.WeeklyDistributionStrategy(
+        //            data,
+        //            displayName,
+        //            from,
+        //            to);
+
+        //        result = strategy.Compute();
+        //        extendedResult = strategy.ExtendedResult;
+        //    }).ConfigureAwait(true);
+
+        //    return (result, extendedResult);
+        //}
 
         /// <summary>
         /// Sets up tooltip for weekly distribution chart.

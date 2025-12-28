@@ -188,7 +188,7 @@ progress halts
 
 grounding is corrected
 
-only then may work continue
+Only then may work continue.
 
 9C. Execution Discipline Extensions
 9C.1 Workspace Initialization Discipline
@@ -203,9 +203,9 @@ active phase
 
 parity status
 
-Work may not proceed until workspace is explicitly locked
+Work may not proceed until workspace is explicitly locked.
 
-Missing artifacts are a hard stop
+Missing artifacts are a hard stop.
 
 9C.2 Assumption Suppression Gate
 
@@ -237,7 +237,7 @@ partial snippets
 
 vague “modify this”
 
-unenumerated multi-location changes
+unenumbered multi-location changes
 
 9C.4 Strategy Migration Protocol (Phase 4)
 
@@ -263,7 +263,7 @@ Explicit activation switch
 
 Diagnostic + strict modes
 
-Phase 4 cannot close without parity sign-off
+Phase 4 cannot close without parity sign-off.
 
 9C.6 Document Impact Declaration
 
@@ -346,6 +346,49 @@ Resolve mismatches
 Lock behavior and update specifications
 
 Deviation from this cycle requires explicit justification.
+
+9D. Execution Feasibility & Observability Invariants (Additive)
+9D.1 Execution Locus Requirement
+
+Any step with a success criterion is invalid unless it explicitly declares:
+
+where it executes (file / class / method or inspection-only)
+
+Steps lacking an execution locus may not proceed.
+
+9D.2 Observability Requirement
+
+Correctness without observability is treated as non-existence.
+
+Any success criterion must be paired with a declared observability mechanism.
+
+Heuristic verification is prohibited unless explicitly sanctioned.
+
+9D.3 Temporary Instrumentation Rule
+
+Temporary hooks or instrumentation are permitted only if they declare:
+
+scope
+
+purpose
+
+explicit removal step
+
+Undeclared or permanent instrumentation is a protocol violation.
+
+9D.4 No-Closure Rule
+
+A workspace may not be closed while canonical documents are out of sync with execution reality.
+
+If such divergence exists, the workspace enters an OPEN / UNSYNCED state.
+
+9D.5 Response Attenuation Mandate
+
+As operator signal tightens (fatigue, terseness, correction cadence):
+
+verbosity must strictly decrease
+
+protocol adherence supersedes pattern inference
 
 10. Enforcement
 

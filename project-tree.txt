@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2025-12-23 12:17:57
+Generated: 2025-12-25 09:14:19
 Root: C:\Development\POCs\DataFileReaderRedux
 
 .cursor
@@ -14,6 +14,7 @@ Root: C:\Development\POCs\DataFileReaderRedux
 .vscode\tasks.json
 assets
 assets\c__Users_HP_Omen_AppData_Roaming_Cursor_User_workspaceStorage_7015c813c1df275769d3d8b268830a55_images_Screenshot_2025-12-04_080310-90a83677-dcf4-42be-8d19-c38161745075.png
+codebase-index.md
 DataFileReader
 DataFileReader .sln
 DataFileReader.Tests
@@ -91,6 +92,9 @@ DataFileReader\Services\MetricAggregator.cs
 DataFileReader\ShadowValidate_SamsungHealthCsv.cs
 DataVisualiser
 DataVisualiser.Tests
+DataVisualiser.Tests\Charts
+DataVisualiser.Tests\Charts\Strategies
+DataVisualiser.Tests\Charts\Strategies\CmsWeeklyDistributionStrategyTests.cs
 DataVisualiser.Tests\DataVisualiser.Tests.csproj
 DataVisualiser.Tests\Helpers
 DataVisualiser.Tests\Helpers\MathHelperTests.cs
@@ -141,6 +145,7 @@ DataVisualiser\Charts\Rendering\ChartSeriesMode.cs
 DataVisualiser\Charts\Rendering\FrequencyShadingRenderer.cs
 DataVisualiser\Charts\Rendering\IFrequencyShadingRenderer.cs
 DataVisualiser\Charts\Strategies
+DataVisualiser\Charts\Strategies\CmsWeeklyDistributionStrategy.cs
 DataVisualiser\Charts\Strategies\CombinedMetricCmsStrategy.cs
 DataVisualiser\Charts\Strategies\CombinedMetricStrategy.cs
 DataVisualiser\Charts\Strategies\DifferenceStrategy.cs
@@ -212,6 +217,7 @@ DataVisualiser\ViewModels\Events
 DataVisualiser\ViewModels\Events\ViewModelEvents.cs
 DataVisualiser\ViewModels\MainWindowViewModel.cs
 DataVisualiser\ViewModels\MetricDataValidationHelper.cs
+dependency-summary.md
 documents
 documents\CODEBASE_ALIGNMENT_ASSESSMENT.md
 documents\Collaboration Protocol.md
@@ -226,13 +232,17 @@ documents\Project Philosphy.md
 documents\Project Roadmap.md
 documents\SYSTEM_MAP.md
 documents\TEST_SPECIFICATION_FOR_CHATGPT.md
+documents\WeekdayTrendStrategy.md
+documents\WeeklyDistributionStrategyMigration.md
 documents\Workspace Workflow.md
+documents\Workspace_Context_Declaration.md
 Generate-CodebaseIndex.ps1
 Generate-DependencySummary.ps1
 Generate-ProjectTree.ps1
 images
 images\Logo.png
 links.txt
+project-tree.txt
 scripts
 scripts\Create-DataFileReaderRedux-Package.ps1
 scripts\Create-ProjectZip.ps1

@@ -1,6 +1,6 @@
 ﻿# Codebase Index
 
-Generated: 2025-12-23 12:18:48  
+Generated: 2025-12-25 09:14:32  
 Root: C:\Development\POCs\DataFileReaderRedux
 
 This file is auto-generated.
@@ -37,6 +37,8 @@ This file is auto-generated.
 | class | CmsExecutionResult | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\IStrategyParityHarness.cs |
 | class | CmsProductionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\CmsProductionStage.cs |
 | class | CmsTypeConverter | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CmsTypeConverter.cs |
+| class | CmsWeeklyDistributionStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\CmsWeeklyDistributionStrategy.cs |
+| class | CmsWeeklyDistributionStrategyTests | internal | DataVisualiser.Tests.Charts.Strategies | .\DataVisualiser.Tests\Charts\Strategies\CmsWeeklyDistributionStrategyTests.cs |
 | class | ColourPalette | public | DataVisualiser.Charts | .\DataVisualiser\Charts\ColourPalette.cs |
 | class | CombinedMetricCmsStrategy | public | DataVisualiser.Charts.Strategies | .\DataVisualiser\Charts\Strategies\CombinedMetricCmsStrategy.cs |
 | class | CombinedMetricParityHarness | public | DataVisualiser.Charts.Parity | .\DataVisualiser\Charts\Parity\CombinedMetricParityHarness.cs |

@@ -1,34 +1,31 @@
-# SYSTEM MAP
+SYSTEM MAP
+1. Purpose
 
-## 1. Purpose
-
-This document defines the **conceptual structure of the system**, its major layers, and the relationships between them.
+This document defines the conceptual structure of the system, its major layers, and the relationships between them.
 
 It is authoritative for:
 
-- semantic boundaries
-- responsibility separation
-- present and future system shape
+semantic boundaries
 
-It is **not** an implementation guide.
+responsibility separation
 
----
+present and future system shape
 
-## 2. High-Level System Overview
+It is not an implementation guide.
+
+2. High-Level System Overview
 
 The system is designed to ingest heterogeneous data sources, normalize them into a canonical, deterministic metric space, and support computation, visualization, and future analytical extensions.
 
 The architecture is deliberately layered to ensure:
 
-- lossless ingestion
-- explicit semantic authority
-- reversible evolution
+lossless ingestion
 
----
+explicit semantic authority
 
-## 3. Core Data Flow (Authoritative)
+reversible evolution
 
-```
+3. Core Data Flow (Authoritative)
 External Sources
     ↓
 Ingestion (Raw)
@@ -40,317 +37,362 @@ Canonical Metric Series (CMS)
 Computation / Aggregation
     ↓
 Presentation / Visualization
-```
+
 
 Each stage has exclusive responsibility for its concern.
 
----
+4. Ingestion Layer
+4.1 Raw Record
 
-## 4. Ingestion Layer
+Represents lossless, uninterpreted observations
 
-### 4.1 Raw Record
+Captures raw fields, timestamps, and source metadata
 
-- Represents lossless, uninterpreted observations
-- Captures raw fields, timestamps, and source metadata
-- Makes no semantic claims
+Makes no semantic claims
 
 RawRecords are immutable and traceable.
 
----
+5. Normalization Layer
+5.1 Purpose
 
-## 5. Normalization Layer
-
-### 5.1 Purpose
-
-The normalization layer is the **sole authority** for assigning semantic meaning to raw observations.
+The normalization layer is the sole authority for assigning semantic meaning to raw observations.
 
 It is:
 
-- deterministic
-- explicit
-- rule-driven
+deterministic
 
----
+explicit
 
-### 5.2 Normalization Stages
+rule-driven
+
+5.2 Normalization Stages
 
 Normalization is composed of ordered stages, including but not limited to:
 
-1. Metric Identity Resolution
-2. Unit Normalization (future)
-3. Time Normalization (future)
-4. Dimensional Qualification (future)
+Metric Identity Resolution
+
+Unit Normalization (future)
+
+Time Normalization (future)
+
+Dimensional Qualification (future)
 
 Each stage:
 
-- has a single responsibility
-- must not override earlier stages
+has a single responsibility
 
----
+must not override earlier stages
 
-### 5.3 Metric Identity Resolution
+5.3 Metric Identity Resolution
 
 Metric Identity Resolution:
 
-- determines what a metric _is_
-- assigns canonical metric identity
-- does not infer meaning from values
+determines what a metric is
+
+assigns canonical metric identity
+
+does not infer meaning from values
 
 This stage is declarative, stable, and explainable.
 
----
-
-## 6. Canonical Metric Series (CMS)
+6. Canonical Metric Series (CMS)
 
 CMS represents trusted, semantically-resolved metrics.
 
 Properties:
 
-- identity is canonical and opaque
-- time semantics are explicit
-- suitable for computation and aggregation
+identity is canonical and opaque
 
-CMS is the **only valid semantic input** for downstream computation.
+time semantics are explicit
 
----
+suitable for computation and aggregation
 
-## 6A. CMS Internal vs Consumer Representation (Additive Clarification)
+CMS is the only valid semantic input for downstream computation.
 
-> **Additive clarification — no existing sections modified.**
+6A. CMS Internal vs Consumer Representation (Additive Clarification)
+
+Additive clarification — no existing sections modified.
 
 Two representations of Canonical Metric Series coexist by design.
 
-### 6A.1 Internal CMS (Normalization Authority)
+6A.1 Internal CMS (Normalization Authority)
 
-- Produced by the normalization pipeline
-- Strongly typed, normalization-scoped structures
-- Used exclusively within ingestion and normalization layers
-- Never consumed directly by visualization or UI layers
+Produced by the normalization pipeline
 
-This representation is the **semantic authority**.
+Strongly typed, normalization-scoped structures
 
----
+Used exclusively within ingestion and normalization layers
 
-### 6A.2 Consumer CMS Interface (Downstream Boundary)
+Never consumed directly by visualization or UI layers
 
-- Exposed via a consumer-facing interface (e.g. `ICanonicalMetricSeries`)
-- The **only CMS surface visible to downstream systems**
-- Decouples normalization internals from consumers
-- Enables parallel legacy + CMS adoption without leakage
+This representation is the semantic authority.
+
+6A.2 Consumer CMS Interface (Downstream Boundary)
+
+Exposed via a consumer-facing interface (e.g. ICanonicalMetricSeries)
+
+The only CMS surface visible to downstream systems
+
+Decouples normalization internals from consumers
+
+Enables parallel legacy + CMS adoption without leakage
 
 Conversion between internal CMS and consumer CMS is:
 
-- explicit
-- one-way
-- non-authoritative
+explicit
 
-Semantic authority **never leaves normalization**.
+one-way
+
+non-authoritative
+
+Semantic authority never leaves normalization.
 
 This boundary is mandatory.
 
----
-
-## 7. Computation & Presentation Layer
+7. Computation & Presentation Layer
 
 Downstream layers:
 
-- assume semantic correctness
-- do not reinterpret meaning
-- operate on:
-  - consumer CMS, or
-  - legacy-compatible projections (during migration)
+assume semantic correctness
+
+do not reinterpret meaning
+
+operate on:
+
+consumer CMS, or
+
+legacy-compatible projections (during migration)
 
 No downstream layer may:
 
-- assign identity
-- reinterpret semantics
-- influence normalization outcomes
+assign identity
 
----
+reinterpret semantics
 
-## 7C. Ephemeral Transformations & Derived Metrics (Additive Clarification)
+influence normalization outcomes
 
-> **Additive clarification — Phase 4 implementation.**
+7A. Legacy + CMS Parallelism Boundary (Additive Clarification)
 
-### 7C.1 Transform Operations
-
-The system supports user-defined transformations over canonical metrics:
-
-- **Unary operations**: Logarithm, Square Root
-- **Binary operations**: Add, Subtract
-- Operations are applied to metric values, not identities
-
-### 7C.2 Transform Infrastructure
-
-Transform operations are implemented using an expression tree architecture:
-
-- **TransformExpression**: Represents operations as expression trees, supporting nested/chained operations
-- **TransformOperation**: Encapsulates operation logic (unary, binary, n-ary)
-- **TransformOperationRegistry**: Centralized registry of available operations
-- **TransformExpressionEvaluator**: Evaluates expressions over aligned metric data, generates labels, aligns metrics by timestamp
-- **TransformExpressionBuilder**: Builds expressions from simple operation strings
-- **TransformDataHelper**: Utilities for formatting transform result data
-- **TransformResultStrategy**: Integrates transform results into charting pipeline
-
-The infrastructure is provisioned for future expansion to:
-
-- N-metrics (not just 1 or 2)
-- Chained operations (e.g., `log(A + B)`, `sqrt(A - B + C)`)
-- Complex expression trees
-
-### 7C.3 Transform Results Are Ephemeral
-
-Transform results:
-
-- are **explicitly non-canonical**
-- have **no semantic authority**
-- are **never promoted to canonical truth**
-- exist only for visualization and exploratory analysis
-
-### 7C.4 Transform Pipeline
-
-Transform operations:
-
-1. Accept canonical metric data as input
-2. Build expression trees from operation specifications
-3. Evaluate expressions over aligned metric data
-4. Apply mathematical operations to values
-5. Produce ephemeral results with:
-   - derived units (preserved from sources where applicable)
-   - operation provenance (tracked but not authoritative)
-   - preview grids before charting
-6. Feed results into charting pipeline as non-authoritative series via `TransformResultStrategy`
-
-### 7C.5 Boundaries
-
-Transform layer:
-
-- **does not** create canonical metric identities
-- **does not** influence normalization
-- **does not** persist results as authoritative metrics
-- **does** provide explicit operation tracking
-- **does** maintain separation from canonical truth
-- **does** use expression tree architecture for extensibility
-
-This boundary ensures transforms remain **exploratory tools**, not semantic mutations.
-
----
-
-## 7A. Legacy + CMS Parallelism Boundary (Additive Clarification)
-
-> **Additive clarification — migration-specific.**
+Additive clarification — migration-specific.
 
 During Phase 4:
 
-- Legacy computation paths and CMS-based paths **must coexist**
-- CMS adoption is **explicit and opt-in**
-- Legacy paths remain authoritative for comparison only
+Legacy computation paths and CMS-based paths must coexist
+
+CMS adoption is explicit and opt-in
+
+Legacy paths remain authoritative for comparison only
 
 No computation layer may silently switch semantic inputs.
 
 Parallelism exists to:
 
-- validate equivalence
-- protect correctness
-- prevent forced migration
+validate equivalence
 
----
+protect correctness
 
-## 7B. Parity Validation Boundary (Additive Clarification)
+prevent forced migration
 
-> **Additive clarification — phase-exit semantics.**
+7B. Parity Validation Boundary (Additive Clarification)
 
-Parity validation is a **boundary artifact**, not an implementation detail.
+Additive clarification — phase-exit semantics.
 
-- Parity harnesses sit **between** legacy and CMS computation
-- They do not participate in normalization or presentation
-- They exist solely to validate equivalence of outcomes
+Parity validation is a boundary artifact, not an implementation detail.
+
+Parity harnesses sit between legacy and CMS computation
+
+They do not participate in normalization or presentation
+
+They exist solely to validate equivalence of outcomes
 
 Parity:
 
-- is strategy-scoped
-- is explicitly activated
-- must not alter computation paths
+is strategy-scoped
+
+is explicitly activated
+
+must not alter computation paths
 
 A strategy is not considered migrated until parity is proven.
 
----
+7C. Ephemeral Transformations & Derived Metrics (Additive Clarification)
 
-## 8. Structural / Manifold Analysis Layer (Additive · Future / Exploratory)
+Additive clarification — Phase 4 implementation.
 
-> **Additive section — no existing sections modified.**
+7C.1 Transform Operations
 
-### 8.1 Intent
+The system supports user-defined transformations over canonical metrics:
+
+Unary operations (e.g. logarithm, square root)
+
+Binary operations (e.g. add, subtract)
+
+Operations are applied to metric values, not identities.
+
+7C.2 Transform Infrastructure
+
+Transform operations are implemented using an expression tree architecture, including:
+
+TransformExpression
+
+TransformOperation
+
+TransformOperationRegistry
+
+TransformExpressionEvaluator
+
+TransformExpressionBuilder
+
+TransformDataHelper
+
+TransformResultStrategy
+
+This infrastructure is provisioned for future expansion to:
+
+N-metric expressions
+
+chained and nested operations
+
+7C.3 Transform Results Are Ephemeral
+
+Transform results:
+
+are explicitly non-canonical
+
+have no semantic authority
+
+are never promoted to canonical truth
+
+exist only for visualization and exploratory analysis
+
+7C.4 Transform Pipeline
+
+Transform operations:
+
+Accept canonical metric data
+
+Build expression trees
+
+Evaluate expressions over aligned data
+
+Apply mathematical operations
+
+Produce ephemeral results with provenance
+
+Feed results into charting pipeline
+
+7C.5 Boundaries
+
+The transform layer:
+
+does not create canonical metric identities
+
+does not influence normalization
+
+does not persist authoritative metrics
+
+8. Structural / Manifold Analysis Layer (Future / Exploratory)
+
+Additive section — no existing sections modified.
+
+8.1 Intent
 
 An optional analytical layer intended to:
 
-- explore structural similarity, equivalence, or hierarchy
-- support discovery and comparison
-- enable higher-order reasoning
+explore structural similarity, equivalence, or hierarchy
 
-This layer provides **insight**, not authority.
+support discovery and comparison
 
----
+enable higher-order reasoning
 
-### 8.2 Relationship to Core Pipeline
+This layer provides insight, not authority.
+
+8.2 Relationship to Core Pipeline
 
 This layer:
 
-- operates orthogonally to ingestion and normalization
-- consumes normalized or canonical data as input
-- does not modify RawRecords, normalization outputs, or CMS
+operates orthogonally to ingestion and normalization
 
-It must not participate in ingestion, normalization, or computation.
+consumes normalized or canonical data
 
----
+does not modify RawRecords or CMS
 
-### 8.3 Non-Authority Constraint (Binding)
+8.3 Non-Authority Constraint (Binding)
 
-Structural / Manifold Analysis MUST NOT:
+Structural analysis MUST NOT:
 
-- assign or alter canonical metric identity
-- modify normalization outcomes
-- influence computation or rendering implicitly
+assign or alter canonical metric identity
 
----
+modify normalization outcomes
 
-### 8.4 Promotion Boundary
+influence computation or rendering implicitly
+
+8.4 Promotion Boundary
 
 Insights may be promoted only via:
 
-- explicit, declarative rule changes
-- reviewable mechanisms
-- reversible processes
+explicit, declarative rule changes
+
+reviewable mechanisms
+
+reversible processes
 
 No automatic back-propagation is permitted.
 
----
+9. Component Executability & Observability Classification (Additive · Binding)
 
-## 9. Architectural Boundary Visibility (Additive Clarification)
+Additive clarification — structural enforcement.
 
-> **Additive clarification — enforcement-oriented.**
+All components in the system must be explicitly classified as one of the following:
+
+9.1 Executable Components
+
+Have a defined instantiation and execution path
+
+May be invoked directly or via orchestration
+
+May host temporary instrumentation or parity harnesses
+
+9.2 Non-Executable Components
+
+Strategies, helpers, mappers, and pure transformers
+
+Have no direct execution locus
+
+Must not be assumed runnable
+
+Require an external execution surface for observation
+
+Execution assumptions about non-executable components are prohibited.
+
+10. Architectural Boundary Visibility (Additive Clarification)
 
 When introducing or modifying a cross-project dependency, the following must be explicit:
 
-- source project
-- dependency direction
-- justification
-- migration intent (temporary vs permanent)
+source project
+
+dependency direction
+
+justification
+
+migration intent (temporary vs permanent)
 
 Silent boundary erosion is prohibited.
 
----
-
-## 10. Evolutionary Direction
+11. Evolutionary Direction
 
 Future evolution must:
 
-- preserve ingestion boundaries
-- centralize semantic authority
-- isolate analytical creativity from canonical truth
+preserve ingestion boundaries
+
+centralize semantic authority
+
+isolate analytical creativity from canonical truth
 
 Deferred layers may be declared here without implementation commitment.
 
----
+12. Structural Invariant (Additive · Cross-Document)
 
-**End of SYSTEM MAP**
+A system component may not be treated as executable unless an explicit execution locus and observability mechanism are declared.
+
+End of SYSTEM MAP
