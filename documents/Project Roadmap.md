@@ -50,7 +50,7 @@ CMS produces deterministic, independently verifiable outputs.
 ---
 
 ### Phase 3 — Strategy Migration  
-**Status:** COMPLETE
+**Status:** PARTIALLY COMPLETE (ORCHESTRATION GAP IDENTIFIED)
 
 Migrated strategies:
 
@@ -61,13 +61,23 @@ Migrated strategies:
 - RatioStrategy
 - NormalizedStrategy
 
-All strategies:
-- implemented in CMS
-- validated independently
-- not yet required to be reachable from UI/services
+**What Was Completed:**
+- Strategies implemented in CMS
+- Strategies validated independently (unit tests)
+- Strategies pass parity tests in isolation
 
-**Closure Condition:**  
+**Critical Gap Identified:**
+- Strategies were migrated **without orchestration layer assessment**
+- Orchestration layer (`ChartDataContextBuilder`, `ChartUpdateCoordinator`) was never migrated
+- Strategies never tested in unified pipeline context
+- CMS-to-legacy conversion happens before strategies receive data
+- **Result**: Strategies receive legacy format even when CMS is available
+
+**Original Closure Condition (Flawed):**  
 Strategies compile, execute in isolation, and match expected semantics.
+
+**Corrected Closure Condition:**  
+Strategies compile, execute in isolation, AND work correctly in unified pipeline with migrated orchestration layer.
 
 ---
 
@@ -160,16 +170,60 @@ Phase 4 **cannot be closed** until this sub-phase is complete.
 
 ---
 
+### Phase 3.5 — Orchestration Layer Assessment (CRITICAL GAP)
+**Status:** NOT STARTED (BLOCKING PHASE 4)
+
+**Purpose:**  
+Assess and migrate the orchestration layer that coordinates strategies in the unified pipeline.
+
+**Why This Phase Exists:**
+Phase 3 migrated strategies in isolation, but the orchestration layer was never assessed. When cut-over was attempted (weekly distribution), it exposed that:
+- `ChartDataContextBuilder` converts CMS to legacy before strategies receive it
+- `ChartUpdateCoordinator` expects legacy format
+- `MetricSelectionService` uses legacy data loading
+- Strategies never actually receive CMS data in production pipeline
+
+**Required Work:**
+1. Map data flow: UI → Service → Strategy
+2. Identify all CMS-to-legacy conversion points
+3. Design unified cut-over mechanism (`StrategyCutOverService`)
+4. Migrate orchestration to handle CMS directly
+5. Test one strategy end-to-end (SingleMetricStrategy as reference)
+6. Validate unified pipeline handles CMS correctly
+
+**Includes:**
+- `ChartDataContextBuilder` - Remove CMS-to-legacy conversion
+- `ChartUpdateCoordinator` - Handle CMS data directly
+- `MetricSelectionService` - CMS data loading coordination
+- `MainWindow.SelectComputationStrategy` - Unified cut-over logic
+- `StrategyCutOverService` - Single decision point for all strategies
+
+**Closure Condition:**  
+- Orchestration layer handles CMS directly (no conversion)
+- SingleMetricStrategy works end-to-end in unified pipeline
+- Unified cut-over mechanism established and tested
+- One strategy fully migrated and validated in production context
+
+**Guardrail:**
+- Phase 3.5 MUST complete before Phase 4 can proceed
+- No strategy cut-over until orchestration is migrated
+- Test strategies in unified pipeline, not just isolation
+
+---
+
 ### Phase 6 — Services & Orchestration  
-**Status:** NOT STARTED
+**Status:** NOT STARTED (DEPENDS ON PHASE 3.5)
+
+**Note:** Phase 3.5 addresses the critical orchestration gap. Phase 6 will handle remaining service-level concerns after orchestration is established.
 
 Includes:
-- Chart coordination services
-- Metric selection logic
-- Context builders
+- Chart coordination services (advanced features)
+- Metric selection logic (extensions)
+- Context builders (optimizations)
 
 **Guardrail:**
 - Phase 6 MUST NOT begin until Phase 4 is closed
+- Phase 3.5 must complete first (orchestration foundation)
 - No service refactors permitted while parity incomplete
 
 ---
@@ -188,24 +242,42 @@ Includes:
 
 ---
 
-## Current Critical Path (Authoritative)
+## Current Critical Path (Authoritative - CORRECTED)
 
-WeeklyDistributionStrategy CMS cut-over  
-→ WeekdayTrendStrategy CMS cut-over  
-→ Strategy-level parity confirmation  
-→ Phase 4 closure  
-→ Phase 6 eligibility
+**Phase 3.5 - Orchestration Layer Assessment** (BLOCKING)
+→ SingleMetricStrategy end-to-end migration (reference implementation)
+→ Unified cut-over mechanism (`StrategyCutOverService`)
+→ Orchestration layer handles CMS directly
+→ **Then**: WeeklyDistributionStrategy CMS cut-over  
+→ **Then**: WeekdayTrendStrategy CMS cut-over  
+→ **Then**: Strategy-level parity confirmation in pipeline context
+→ **Then**: Phase 4 closure  
+→ **Then**: Phase 6 eligibility
 
 ---
 
 ## Roadmap Integrity Notes
 
-- No architectural changes were introduced during Phase 4
-- Recent failures were **execution-discipline failures**, not design failures
-- All updates in this roadmap are **status clarifications**, not re-sequencing
-- The roadmap remains valid once protocol enforcement is respected
+**Critical Correction (2025-01-04):**
+- Phase 3 completion was premature - strategies migrated without orchestration assessment
+- Orchestration layer gap identified when weekly distribution cut-over attempted
+- Phase 3.5 added to address orchestration layer migration
+- Recent failures were **orchestration-layer failures**, not just execution-discipline failures
+- Strategies work in isolation but fail in unified pipeline due to orchestration gap
+
+**Root Cause:**
+- Strategies migrated assuming orchestration would "just work" once all strategies done
+- Reality: Orchestration layer was never assessed or migrated
+- CMS converted to legacy before strategies receive it
+- Strategies never actually receive CMS data in production pipeline
+
+**Corrected Approach:**
+- Phase 3.5: Assess and migrate orchestration layer first
+- Test strategies in unified pipeline context, not just isolation
+- Establish unified cut-over mechanism before completing strategy migrations
+- Then proceed with Phase 4 (parity in pipeline context)
 
 ---
 
-**Last Updated:** 2025-01-23  
-**Overall Status:** Phase 4 blocked only by weekly / temporal strategy cut-over and reachability proof
+**Last Updated:** 2025-01-04  
+**Overall Status:** Phase 3.5 (Orchestration Assessment) is blocking. Phase 4 cannot proceed until orchestration layer is migrated and strategies tested in unified pipeline context.

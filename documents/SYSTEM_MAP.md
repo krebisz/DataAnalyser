@@ -164,6 +164,68 @@ They MUST NOT:
 
 ---
 
+## 7D. Orchestration Layer (Additive · Critical Migration Component)
+
+**Additive clarification** — Identified as critical gap during migration.
+
+### 7D.1 Purpose
+
+The orchestration layer coordinates strategies within the unified pipeline:
+- Data flow: UI → Service → Strategy
+- Format conversion: CMS ↔ Legacy (during migration)
+- Strategy selection: Legacy vs CMS cut-over
+- Context building: Unified timeline, alignment, smoothing
+
+### 7D.2 Key Components
+
+**ChartDataContextBuilder**:
+- Builds unified context from metric data
+- **CRITICAL GAP**: Currently converts CMS to legacy before strategies receive it
+- **REQUIRED**: Must handle CMS directly, pass to strategies without conversion
+
+**ChartUpdateCoordinator**:
+- Coordinates chart updates across multiple charts
+- **CRITICAL GAP**: Expects legacy format
+- **REQUIRED**: Must handle CMS data directly
+
+**MetricSelectionService**:
+- Loads metric data from database
+- **CRITICAL GAP**: Uses legacy data loading
+- **REQUIRED**: Must coordinate CMS and legacy data loading
+
+**StrategyCutOverService** (To Be Created):
+- Single decision point for legacy vs CMS
+- Unified cut-over mechanism for all strategies
+- Parity validation at cut-over point
+- **REQUIRED**: Must be created before strategy cut-overs
+
+### 7D.3 Migration Gap Identified
+
+**Problem**: Phase 3 migrated strategies in isolation without assessing orchestration layer.
+
+**Result**: When cut-over was attempted (weekly distribution), it exposed:
+- CMS converted to legacy before strategies receive it
+- Strategies never actually receive CMS data in production
+- Orchestration layer cannot coordinate CMS and legacy together
+- "Migrated" strategies work in isolation but fail in unified pipeline
+
+**Solution**: Phase 3.5 - Orchestration Layer Assessment
+- Map data flow through orchestration
+- Identify all conversion points
+- Design unified cut-over mechanism
+- Migrate orchestration to handle CMS directly
+- Test strategies in unified pipeline context
+
+### 7D.4 Boundaries
+
+The orchestration layer:
+- MUST NOT convert CMS to legacy (defeats migration purpose)
+- MUST provide unified cut-over mechanism (single decision point)
+- MUST coordinate CMS and legacy during migration (parallel paths)
+- MUST validate parity at cut-over point (safety mechanism)
+
+---
+
 ## 7A. Legacy + CMS Parallelism Boundary (Additive · Binding)
 
 Additive clarification — migration-specific.

@@ -99,23 +99,21 @@ namespace DataVisualiser.Services
             DataFileReader.Canonical.ICanonicalMetricSeries? primaryCms,
             DataFileReader.Canonical.ICanonicalMetricSeries? secondaryCms)
         {
-            var effectiveData1 = primaryCms != null
-                ? ConvertCmsToHealthMetricData(primaryCms, from, to)
-                : data1;
-
-            var effectiveData2 = secondaryCms != null
-                ? ConvertCmsToHealthMetricData(secondaryCms, from, to)
-                : data2;
-
+            // CRITICAL FIX: Don't convert CMS to legacy here.
+            // Strategies should receive CMS directly via StrategyCutOverService.
+            // Only convert if we need legacy data for derived calculations (diff/ratio/norm).
+            // For now, use legacy data as-is and let strategies handle CMS directly.
+            
             var ctx = Build(
                 metricType,
                 primarySubtype,
                 secondarySubtype,
-                effectiveData1,
-                effectiveData2,
+                data1,
+                data2,
                 from,
                 to);
 
+            // Store CMS in context for strategies to use directly
             ctx.PrimaryCms = primaryCms;
             ctx.SecondaryCms = secondaryCms;
 

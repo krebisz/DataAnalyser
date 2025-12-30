@@ -105,13 +105,27 @@ These failures dominated effort, not the algorithm.
 
 Formal Root Cause
 
-The migration failed due to lack of a single authoritative execution switch point combined with insufficient protocol enforcement on atomic change scope.
+The migration failed due to **orchestration layer gap** combined with lack of a single authoritative execution switch point.
+
+**Primary Root Cause:**
+- Phase 3 migrated strategies in isolation without assessing orchestration layer
+- Orchestration layer (`ChartDataContextBuilder`, `ChartUpdateCoordinator`) was never migrated
+- CMS converted to legacy before strategies receive it
+- Strategies never actually receive CMS data in production pipeline
+- When cut-over attempted, orchestration couldn't handle CMS, breaking other metrics
+
+**Secondary Root Cause:**
+- Lack of single authoritative execution switch point
+- Insufficient protocol enforcement on atomic change scope
+- Fragmented cut-over logic across multiple layers
 
 Notably:
 
 CMS strategy correctness ≠ CMS strategy adoption
 
 Parity tests without wiring ≠ migration completion
+
+**Orchestration layer migration ≠ Strategy migration** (critical distinction)
 
 Current Ground Truth (As of Termination)
 Invariants (Verified)
@@ -176,31 +190,45 @@ No generalized cyclic refactor
 
 No derived metrics
 
-Recommended Next Workspace Focus (Single Task)
+Recommended Next Workspace Focus (Corrected - Orchestration First)
 
-Define and implement a single, provable CMS cut-over locus for Weekly Distribution.
+**CRITICAL**: Weekly Distribution cannot be cut-over until orchestration layer is migrated.
 
-Scope (Strict)
+**Phase 3.5 - Orchestration Layer Assessment** (Must Complete First):
 
-One method
+1. **Assess Orchestration Layer**:
+   - Map data flow: UI → Service → Strategy
+   - Identify all CMS-to-legacy conversion points
+   - Document current orchestration behavior
 
-One decision
+2. **Design Unified Cut-Over Mechanism**:
+   - Create `StrategyCutOverService` (single decision point)
+   - Design parity validation at cut-over
+   - Establish configuration flags
 
-One parity assertion
+3. **Migrate Orchestration**:
+   - Remove CMS-to-legacy conversion in `ChartDataContextBuilder`
+   - Update `ChartUpdateCoordinator` to handle CMS
+   - Update `MetricSelectionService` to coordinate CMS/legacy
 
-No refactors elsewhere
+4. **Test SingleMetricStrategy End-to-End** (Reference Implementation):
+   - Test in unified pipeline context
+   - Validate orchestration handles CMS correctly
+   - Verify cut-over mechanism works
 
-First Concrete Step (For Next Agent)
+**Then**: Weekly Distribution Cut-Over
 
-Identify exact method where Weekly Distribution strategy is selected
+After orchestration is migrated:
+- Define single cut-over locus for Weekly Distribution
+- Use unified `StrategyCutOverService`
+- Enable parity harness at cut-over point
+- Test in unified pipeline context
 
-Freeze that method signature
-
-Introduce CMS strategy selection behind a single flag
-
-Enable parity harness there
-
-Stop
+**Scope (Corrected)**:
+- Orchestration layer migration (foundation)
+- SingleMetricStrategy end-to-end (reference)
+- Unified cut-over mechanism (pattern)
+- Then: Weekly Distribution cut-over (application of pattern)
 
 Why This Document Exists
 
@@ -214,6 +242,31 @@ Clear termination state
 
 Clear re-entry conditions
 
+**Updated (2025-01-04)**: Document now reflects orchestration layer gap identified during migration attempt. Weekly Distribution cannot be cut-over until orchestration layer is migrated first.
+
 It is designed to be dropped verbatim into a new workspace initialization and understood without context reconstruction.
+
+---
+
+## Critical Update: Orchestration Layer Gap
+
+**Date**: 2025-01-04
+
+**Discovery**: When weekly distribution cut-over was attempted, it exposed that the orchestration layer was never migrated. This broke other metrics because:
+
+1. **ChartDataContextBuilder** converts CMS to legacy before strategies receive it
+2. **Strategies never actually receive CMS data** in production pipeline
+3. **Orchestration cannot coordinate CMS and legacy** together
+4. **"Migrated" strategies work in isolation but fail in unified pipeline**
+
+**Root Cause**: Phase 3 migrated strategies assuming orchestration would "just work" once all strategies were done. This assumption was flawed.
+
+**Corrected Approach**:
+1. Phase 3.5: Assess and migrate orchestration layer first
+2. Test SingleMetricStrategy end-to-end (reference implementation)
+3. Establish unified cut-over mechanism
+4. Then: Complete weekly distribution cut-over
+
+**Status**: Weekly Distribution migration blocked until orchestration layer is migrated.
 
 End of Consolidated Weekly Distribution Migration State

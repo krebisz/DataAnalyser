@@ -1,0 +1,228 @@
+The thread '.NET TP Worker' (11844) has exited with code 0 (0x0).
+[CMS] LoadMetricDataWithCmsAsync: baseType=Weight, primarySubtype=weight, primaryCanonicalId=metric.body_weight
+The thread 40132 has exited with code 0 (0x0).
+[CMS] IsCmsAvailableAsync: canonicalMetricId=metric.body_weight, mappedMetricType=weight, mappedSubtype=null, recordCount=0
+[CMS] IsCmsAvailableAsync: Direct count query found data: MetricType=weight, Subtype=null, count=13295
+[CMS] IsCmsAvailableAsync for metric.body_weight: True
+[CMS] IsCmsAvailableAsync: canonicalMetricId=metric.body_weight, mappedMetricType=weight, mappedSubtype=null, recordCount=0
+[CmsDataService] GetCmsByCanonicalIdAsync: Aggregated 171 unique samples (from 1703 series, 1703 total samples before deduplication)
+[CMS] IsCmsAvailableAsync: Direct count query found data: MetricType=weight, Subtype=null, count=13295
+[CmsDataService] GetCmsByCanonicalIdAsync: Aggregated 171 unique samples (from 1703 series, 1703 total samples before deduplication)
+[CMS] LoadMetricDataWithCmsAsync result: PrimaryCms=SET, PrimaryCmsCount=1, SecondaryCms=SET, SecondaryCmsCount=1
+[ChartDataContextBuilder] Build with CMS: primaryCms=SET(171 samples), cmsData1Count=171, legacyData1Count=171, effectiveData1Count=171, secondaryCms=SET(171 samples), cmsData2Count=171, legacyData2Count=169, effectiveData2Count=171
+[CTX] SemanticMetricCount=2, PrimaryCms=SET, metricType=Weight, primarySubtype=weight
+[STRATEGY] ActualSeriesCount=2, SemanticMetricCount=2, PrimaryCms=SET, SecondaryCms=SET
+[StrategySelection] actualSeriesCount=2, series.Count=2, strategy=CombinedMetricStrategy
+[STRATEGY] ActualSeriesCount=2, SemanticMetricCount=2, PrimaryCms=SET, SecondaryCms=SET
+[StrategySelection] actualSeriesCount=2, series.Count=2, strategy=CombinedMetricStrategy
+[TransformChart] Render: chart=ChartMain, Timestamps=171, PrimaryRaw=171, PrimarySmoothed=171, NormalizedIntervals=23
+[TransformChart] RenderPrimarySeries: chart=ChartMain, dataTimestamps=171, PrimaryRaw=171, PrimarySmoothed=171
+[TransformChart] CreateAndPopulateSeries: title=Weight:weight (smooth), total=171, valid=171, NaN=0, first=33.04938333333333, last=28.561037499999998
+[TransformChart] Added smoothed series: Weight:weight (smooth), values=171
+[TransformChart] CreateAndPopulateSeries: title=Weight:weight (raw), total=171, valid=171, NaN=0, first=34.4903, last=28.6777
+[TransformChart] Added raw series: Weight:weight (raw), values=171
+[TransformChart] CreateAndPopulateSeries: title=Weight:fat_free_mass (smooth), total=171, valid=171, NaN=0, first=33.04938333333333, last=28.561037499999998
+[TransformChart] CreateAndPopulateSeries: title=Weight:fat_free_mass (raw), total=171, valid=171, NaN=0, first=34.4903, last=28.6777
+[TransformChart] After Render: chart=ChartMain, SeriesCount=4
+[TransformChart] ConfigureXAxis: dataTimestamps=171, normalizedIntervals=23, total=171, chart=ChartMain
+[TransformChart] NormalizeYAxisForChart: chart=ChartMain, syntheticRawData=342, smoothedList=342
+[TransformChart] NormalizeYAxis: rawData=342, smoothedValues=342, allValues=684
+[TransformChart] NormalizeYAxis: dataMin=27.7437, dataMax=34.4903
+[TransformChart] NormalizeYAxis: After padding - minValue=27.40637, maxValue=34.82763, range=7.42126
+[TransformChart] NormalizeYAxis: Final - YMin=27, YMax=35, Step=1, ShowLabels=True
+[TransformChart] After NormalizeYAxis: chart=ChartMain, YMin=27, YMax=35, ShowLabels=True
+'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\9.0.8\System.Runtime.Numerics.dll'. Symbol loading disabled by Include/Exclude setting.
+[TransformChart] Render: chart=ChartMain, Timestamps=171, PrimaryRaw=171, PrimarySmoothed=171, NormalizedIntervals=23
+[TransformChart] RenderPrimarySeries: chart=ChartMain, dataTimestamps=171, PrimaryRaw=171, PrimarySmoothed=171
+[TransformChart] CreateAndPopulateSeries: title=Weight:weight (smooth), total=171, valid=171, NaN=0, first=33.04938333333333, last=28.561037499999998
+[TransformChart] Added smoothed series: Weight:weight (smooth), values=171
+[TransformChart] CreateAndPopulateSeries: title=Weight:weight (raw), total=171, valid=171, NaN=0, first=34.4903, last=28.6777
+[TransformChart] Added raw series: Weight:weight (raw), values=171
+[TransformChart] CreateAndPopulateSeries: title=Weight:fat_free_mass (smooth), total=171, valid=171, NaN=0, first=33.04938333333333, last=28.561037499999998
+[TransformChart] CreateAndPopulateSeries: title=Weight:fat_free_mass (raw), total=171, valid=171, NaN=0, first=34.4903, last=28.6777
+[TransformChart] After Render: chart=ChartMain, SeriesCount=4
+[TransformChart] ConfigureXAxis: dataTimestamps=171, normalizedIntervals=23, total=171, chart=ChartMain
+[TransformChart] NormalizeYAxisForChart: chart=ChartMain, syntheticRawData=342, smoothedList=342
+[TransformChart] NormalizeYAxis: rawData=342, smoothedValues=342, allValues=684
+[TransformChart] NormalizeYAxis: dataMin=27.7437, dataMax=34.4903
+[TransformChart] NormalizeYAxis: After padding - minValue=27.40637, maxValue=34.82763, range=7.42126
+[TransformChart] NormalizeYAxis: Final - YMin=27, YMax=35, Step=1, ShowLabels=True
+[TransformChart] After NormalizeYAxis: chart=ChartMain, YMin=27, YMax=35, ShowLabels=True
+[WeeklyDistribution] RenderWeeklyDistribution: PrimaryCms=SET, cmsSeries=SET
+[WeeklyDistribution] Cut-over check: cmsSeries=SET, useCmsStrategy=True
+[WeeklyDistribution] RenderWeeklyDistribution: PrimaryCms=SET, cmsSeries=SET
+[WeeklyDistribution] Cut-over check: cmsSeries=SET, useCmsStrategy=True
+[WeeklyDistribution] Using CMS strategy
+[WeeklyDistribution] Using CMS strategy
+[CmsWeeklyDistributionStrategy] MaterializeSeries: 171 samples, first=2023-08-16 19:05:05, last=2024-01-04 17:14:09
+[CmsWeeklyDistributionStrategy] MaterializeSeries: 171 samples, first=2023-08-16 19:05:05, last=2024-01-04 17:14:09
+[CmsWeeklyDistributionStrategy] BucketByWeekday: Total samples=171, Day distribution: Mon=37, Tue=33, Wed=31, Thu=30, Fri=29, Sat=5, Sun=6
+[CmsWeeklyDistributionStrategy] BucketByWeekday: Total samples=171, Day distribution: Mon=37, Tue=33, Wed=31, Thu=30, Fri=29, Sat=5, Sun=6
+[PARITY] WeeklyDistribution PASSED
+[PARITY] WeeklyDistribution PASSED
+=== WeeklyDistribution: Data Summary ===
+Global Min: 27.7437, Global Max: 34.4903, Range: 6.7466
+Day Min/Max values:
+  Day 0: Min=27.7437, Max=32.9780, Range=5.2343
+  Day 1: Min=28.8344, Max=33.8820, Range=5.0476
+  Day 2: Min=28.7845, Max=34.4903, Range=5.7058
+  Day 3: Min=27.8878, Max=33.8542, Range=5.9664
+  Day 4: Min=27.9874, Max=33.4097, Range=5.4223
+  Day 5: Min=30.3372, Max=32.7737, Range=2.4365
+  Day 6: Min=28.7730, Max=31.0932, Range=2.3202
+Day 0 raw values (first 10): 31.2172, 32.9780, 31.2862, 30.8570, 31.4142, 30.4242, 30.5702, 30.8650, 31.1196, 30.9587
+Day 0 total value count: 37
+=== WeeklyDistribution: Creating Intervals ===
+Interval Count: 25, Interval Size: 0.269864
+  Interval 0: [27.743700, 28.013564[half-open)
+  Interval 1: [28.013564, 28.283428[half-open)
+  Interval 2: [28.283428, 28.553292[half-open)
+  Interval 5: [29.093020, 29.362884[half-open)
+  Interval 10: [30.442340, 30.712204[half-open)
+  Interval 15: [31.791660, 32.061524[half-open)
+  Interval 20: [33.140980, 33.410844[half-open)
+  Interval 22: [33.680708, 33.950572[half-open)
+  Interval 23: [33.950572, 34.220436[half-open)
+  Interval 24: [34.220436, 34.490300[inclusive]
+Total intervals created: 25
+Day 0 frequencies: Total values=37, Non-zero intervals=15, Max frequency=5
+  First intervals: I0=1, I1=2, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 1 frequencies: Total values=33, Non-zero intervals=15, Max frequency=4
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 2 frequencies: Total values=31, Non-zero intervals=14, Max frequency=6
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=1
+Day 3 frequencies: Total values=30, Non-zero intervals=16, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 4 frequencies: Total values=29, Non-zero intervals=13, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 5 frequencies: Total values=5, Non-zero intervals=4, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 6 frequencies: Total values=6, Non-zero intervals=5, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+=== WeeklyDistribution: Color Mapping (Frequency-Based) ===
+Global max frequency: 6
+=== WeeklyDistribution: Creating Intervals ===
+Interval Count: 25, Interval Size: 0.269864
+  Interval 0: [27.743700, 28.013564[half-open)
+  Interval 1: [28.013564, 28.283428[half-open)
+  Interval 2: [28.283428, 28.553292[half-open)
+  Interval 5: [29.093020, 29.362884[half-open)
+  Interval 10: [30.442340, 30.712204[half-open)
+  Interval 15: [31.791660, 32.061524[half-open)
+  Interval 20: [33.140980, 33.410844[half-open)
+  Interval 22: [33.680708, 33.950572[half-open)
+  Interval 23: [33.950572, 34.220436[half-open)
+  Interval 24: [34.220436, 34.490300[inclusive]
+Total intervals created: 25
+Day 0 frequencies: Total values=37, Non-zero intervals=15, Max frequency=5
+  First intervals: I0=1, I1=2, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 1 frequencies: Total values=33, Non-zero intervals=15, Max frequency=4
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 2 frequencies: Total values=31, Non-zero intervals=14, Max frequency=6
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=1
+Day 3 frequencies: Total values=30, Non-zero intervals=16, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 4 frequencies: Total values=29, Non-zero intervals=13, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 5 frequencies: Total values=5, Non-zero intervals=4, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 6 frequencies: Total values=6, Non-zero intervals=5, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+=== WeeklyDistribution: Data Summary ===
+Global Min: 27.7437, Global Max: 34.4903, Range: 6.7466
+Day Min/Max values:
+  Day 0: Min=27.7437, Max=32.9780, Range=5.2343
+  Day 1: Min=28.8344, Max=33.8820, Range=5.0476
+  Day 2: Min=28.7845, Max=34.4903, Range=5.7058
+  Day 3: Min=27.8878, Max=33.8542, Range=5.9664
+  Day 4: Min=27.9874, Max=33.4097, Range=5.4223
+  Day 5: Min=30.3372, Max=32.7737, Range=2.4365
+  Day 6: Min=28.7730, Max=31.0932, Range=2.3202
+Day 0 raw values (first 10): 31.2172, 32.9780, 31.2862, 30.8570, 31.4142, 30.4242, 30.5702, 30.8650, 31.1196, 30.9587
+Day 0 total value count: 37
+=== WeeklyDistribution: Creating Intervals ===
+Interval Count: 25, Interval Size: 0.269864
+  Interval 0: [27.743700, 28.013564[half-open)
+  Interval 1: [28.013564, 28.283428[half-open)
+  Interval 2: [28.283428, 28.553292[half-open)
+  Interval 5: [29.093020, 29.362884[half-open)
+  Interval 10: [30.442340, 30.712204[half-open)
+  Interval 15: [31.791660, 32.061524[half-open)
+  Interval 20: [33.140980, 33.410844[half-open)
+  Interval 22: [33.680708, 33.950572[half-open)
+  Interval 23: [33.950572, 34.220436[half-open)
+  Interval 24: [34.220436, 34.490300[inclusive]
+Total intervals created: 25
+Day 0 frequencies: Total values=37, Non-zero intervals=15, Max frequency=5
+  First intervals: I0=1, I1=2, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 1 frequencies: Total values=33, Non-zero intervals=15, Max frequency=4
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 2 frequencies: Total values=31, Non-zero intervals=14, Max frequency=6
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=1
+Day 3 frequencies: Total values=30, Non-zero intervals=16, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 4 frequencies: Total values=29, Non-zero intervals=13, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 5 frequencies: Total values=5, Non-zero intervals=4, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 6 frequencies: Total values=6, Non-zero intervals=5, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+=== WeeklyDistribution: Color Mapping (Frequency-Based) ===
+Global max frequency: 6
+=== WeeklyDistribution: Creating Intervals ===
+Interval Count: 25, Interval Size: 0.269864
+  Interval 0: [27.743700, 28.013564[half-open)
+  Interval 1: [28.013564, 28.283428[half-open)
+  Interval 2: [28.283428, 28.553292[half-open)
+  Interval 5: [29.093020, 29.362884[half-open)
+  Interval 10: [30.442340, 30.712204[half-open)
+  Interval 15: [31.791660, 32.061524[half-open)
+  Interval 20: [33.140980, 33.410844[half-open)
+  Interval 22: [33.680708, 33.950572[half-open)
+  Interval 23: [33.950572, 34.220436[half-open)
+  Interval 24: [34.220436, 34.490300[inclusive]
+Total intervals created: 25
+Day 0 frequencies: Total values=37, Non-zero intervals=15, Max frequency=5
+  First intervals: I0=1, I1=2, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 1 frequencies: Total values=33, Non-zero intervals=15, Max frequency=4
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 2 frequencies: Total values=31, Non-zero intervals=14, Max frequency=6
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=1
+Day 3 frequencies: Total values=30, Non-zero intervals=16, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=1, I23=0, I24=0
+Day 4 frequencies: Total values=29, Non-zero intervals=13, Max frequency=4
+  First intervals: I0=1, I1=1, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 5 frequencies: Total values=5, Non-zero intervals=4, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+Day 6 frequencies: Total values=6, Non-zero intervals=5, Max frequency=2
+  First intervals: I0=0, I1=0, I2=0
+  Last intervals: I22=0, I23=0, I24=0
+The thread 18972 has exited with code 0 (0x0).
+Extracted embedded document 'System.Threading\LowLevelLifoSemaphore.cs' to 'C:\Users\HP Omen\AppData\Local\Temp\.vsdbgsrc\0d9a2f3304259ac7f635bb99fe9b3f66535ff90378f9f26244f2638bd8c55451\LowLevelLifoSemaphore.cs'

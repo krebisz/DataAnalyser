@@ -12,13 +12,13 @@ namespace DataVisualiser.State
         /// Global flag to enable CMS-based data workflows.
         /// Default: false (legacy mode)
         /// </summary>
-        public static bool UseCmsData { get; set; } = false;
+        public static bool UseCmsData { get; set; } = true; // ENABLED for SingleMetricStrategy testing
 
         /// <summary>
         /// Per-strategy CMS enablement.
         /// Allows gradual migration strategy by strategy.
         /// </summary>
-        public static bool UseCmsForSingleMetric { get; set; } = false;
+        public static bool UseCmsForSingleMetric { get; set; } = true; // ENABLED for testing
         public static bool UseCmsForMultiMetric { get; set; } = false;
         public static bool UseCmsForCombinedMetric { get; set; } = false;
         public static bool UseCmsForDifference { get; set; } = false;

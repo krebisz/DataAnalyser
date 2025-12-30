@@ -2016,26 +2016,22 @@ namespace DataVisualiser
     DateTime from,
     DateTime to)
         {
-            if (ctx.PrimaryCms is DataFileReader.Canonical.ICanonicalMetricSeries cms)
+            // Use unified cut-over service
+            var cutOverService = new DataVisualiser.Services.Implementations.StrategyCutOverService(
+                new DataVisualiser.Services.Implementations.DataPreparationService());
+
+            var parameters = new DataVisualiser.Services.Abstractions.StrategyCreationParameters
             {
-                System.Diagnostics.Debug.WriteLine(
-                    "[STRATEGY] Using SingleMetricCmsStrategy");
+                LegacyData1 = data,
+                Label1 = label,
+                From = from,
+                To = to
+            };
 
-                return new SingleMetricCmsStrategy(
-                    cms,
-                    label,
-                    from,
-                    to);
-            }
-
-            System.Diagnostics.Debug.WriteLine(
-                "[STRATEGY] Using SingleMetricLegacyStrategy");
-
-            return new SingleMetricLegacyStrategy(
-                data,
-                label,
-                from,
-                to);
+            return cutOverService.CreateStrategy(
+                DataVisualiser.Services.Abstractions.StrategyType.SingleMetric,
+                ctx,
+                parameters);
         }
 
 
