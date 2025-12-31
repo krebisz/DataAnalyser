@@ -1,4 +1,5 @@
 # SYSTEM MAP
+
 Status: Canonical
 Scope: Conceptual Structure & Boundary Law
 
@@ -42,7 +43,7 @@ Canonical Metric Series (CMS)
 ↓  
 Computation / Aggregation  
 ↓  
-Presentation / Visualization  
+Presentation / Visualization
 
 Each stage has **exclusive responsibility** for its concern.
 
@@ -90,7 +91,7 @@ Each stage:
 
 Metric Identity Resolution:
 
-- determines what a metric *is*
+- determines what a metric _is_
 - assigns canonical metric identity
 - does not infer meaning from values
 
@@ -171,6 +172,7 @@ They MUST NOT:
 ### 7D.1 Purpose
 
 The orchestration layer coordinates strategies within the unified pipeline:
+
 - Data flow: UI → Service → Strategy
 - Format conversion: CMS ↔ Legacy (during migration)
 - Strategy selection: Legacy vs CMS cut-over
@@ -179,21 +181,25 @@ The orchestration layer coordinates strategies within the unified pipeline:
 ### 7D.2 Key Components
 
 **ChartDataContextBuilder**:
+
 - Builds unified context from metric data
 - **CRITICAL GAP**: Currently converts CMS to legacy before strategies receive it
 - **REQUIRED**: Must handle CMS directly, pass to strategies without conversion
 
 **ChartUpdateCoordinator**:
+
 - Coordinates chart updates across multiple charts
 - **CRITICAL GAP**: Expects legacy format
 - **REQUIRED**: Must handle CMS data directly
 
 **MetricSelectionService**:
+
 - Loads metric data from database
 - **CRITICAL GAP**: Uses legacy data loading
 - **REQUIRED**: Must coordinate CMS and legacy data loading
 
 **StrategyCutOverService** (To Be Created):
+
 - Single decision point for legacy vs CMS
 - Unified cut-over mechanism for all strategies
 - Parity validation at cut-over point
@@ -204,12 +210,14 @@ The orchestration layer coordinates strategies within the unified pipeline:
 **Problem**: Phase 3 migrated strategies in isolation without assessing orchestration layer.
 
 **Result**: When cut-over was attempted (weekly distribution), it exposed:
+
 - CMS converted to legacy before strategies receive it
 - Strategies never actually receive CMS data in production
 - Orchestration layer cannot coordinate CMS and legacy together
 - "Migrated" strategies work in isolation but fail in unified pipeline
 
 **Solution**: Phase 3.5 - Orchestration Layer Assessment
+
 - Map data flow through orchestration
 - Identify all conversion points
 - Design unified cut-over mechanism
@@ -219,6 +227,7 @@ The orchestration layer coordinates strategies within the unified pipeline:
 ### 7D.4 Boundaries
 
 The orchestration layer:
+
 - MUST NOT convert CMS to legacy (defeats migration purpose)
 - MUST provide unified cut-over mechanism (single decision point)
 - MUST coordinate CMS and legacy during migration (parallel paths)
@@ -252,7 +261,7 @@ Additive clarification — phase-exit semantics.
 
 Parity validation is a **boundary artifact**, not an implementation detail.
 
-- Parity harnesses sit *between* legacy and CMS computation
+- Parity harnesses sit _between_ legacy and CMS computation
 - They do not participate in normalization or presentation
 - They exist solely to validate equivalence of outcomes
 
@@ -285,11 +294,16 @@ Transform operations are implemented using expression-tree infrastructure, inclu
 
 - TransformExpression
 - TransformOperation
-- TransformOperationRegistry
+- TransformOperationRegistry (supports Add, Subtract, Divide binary operations; Log, Sqrt unary operations)
 - TransformExpressionEvaluator
 - TransformExpressionBuilder
 - TransformDataHelper
 - TransformResultStrategy
+
+**Current Operations** (as of 2025-01-XX):
+
+- **Unary**: Log, Sqrt
+- **Binary**: Add, Subtract, Divide (Ratio)
 
 Provisioned for future expansion to:
 
@@ -415,6 +429,79 @@ A computation path that is:
 is considered **architecturally non-existent**, regardless of correctness.
 
 Migration work MUST prove execution reachability.
+
+---
+
+## 7E. UI / Presentation Layer (Additive · Binding)
+
+**Additive clarification** — UI consolidation and standardization work.
+
+### 7E.1 Purpose
+
+The UI/Presentation layer provides visualization and user interaction for computed metrics and transforms.
+
+### 7E.2 Chart Panel Architecture
+
+**ChartPanelController** (Reusable Component):
+
+- Base UserControl providing standardized chart panel structure
+- Encapsulates: header (title, toggle), behavioral controls, chart content
+- Supports dependency injection of rendering context via `IChartRenderingContext`
+- Enables consistent UI structure across all chart panels
+
+**Chart-Specific Controllers**:
+
+- `MainChartController` - Main metrics chart (migrated to new structure)
+- Future: `NormalizedChartController`, `DiffRatioChartController`, etc.
+
+**Benefits**:
+
+- Eliminates duplicate UI code (~50+ lines per chart panel)
+- Standardizes chart panel structure
+- Enables easier maintenance and future additions
+
+### 7E.3 Chart Consolidation
+
+**ChartDiffRatio** (Unified Chart):
+
+- Consolidates previously separate ChartDiff and ChartRatio charts
+- Uses operation toggle (Difference "-" vs Ratio "/")
+- Leverages `TransformResultStrategy` with "Subtract" or "Divide" operations
+- Unified with transform pipeline infrastructure
+
+### 7E.4 Rendering Context
+
+**IChartRenderingContext**:
+
+- Interface providing access to chart data and state
+- Decouples chart controllers from MainWindow implementation
+- Enables testability and reusability
+
+**ChartRenderingContextAdapter**:
+
+- Adapter bridging MainWindow/ViewModel to `IChartRenderingContext`
+- Provides access to `ChartDataContext` and `ChartState`
+
+### 7E.5 Migration Status
+
+**Completed**:
+
+- ChartPanelController component created
+- MainChartController migrated (1/6 charts)
+- ChartDiffRatio unified (2 charts → 1 chart)
+
+**Remaining**:
+
+- 5 chart panels to migrate (ChartNorm, ChartDiffRatio, ChartWeekdayTrend, ChartWeekly, TransformPanel)
+
+### 7E.6 Boundaries
+
+The UI layer:
+
+- MUST NOT perform computation (delegates to strategies)
+- MUST NOT assign semantic meaning (consumes canonical/computed data)
+- MUST provide clear separation between presentation and computation
+- MUST support both legacy and CMS data paths during migration
 
 ---
 

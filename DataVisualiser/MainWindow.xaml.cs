@@ -102,6 +102,9 @@ namespace DataVisualiser
             DataContext = _viewModel;
 
             WireViewModelEvents();
+            
+            // Wire up MainChartController events
+            MainChartController.ToggleRequested += OnMainChartToggleRequested;
 
             // Initialize date range through viewModel
             var initialFromDate = DateTime.UtcNow.AddDays(-30);
@@ -137,7 +140,7 @@ namespace DataVisualiser
             UpdateSecondaryDataRequiredButtonStates(_viewModel.MetricState.SelectedSubtypes.Count);
 
             // Sync main chart button text with initial state (visible = true, so button should show "Hide")
-            UpdateChartVisibility(ChartMainPanel, ChartMainToggleButton, _viewModel.ChartState.IsMainVisible);
+            MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
             UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
         }
 
@@ -154,14 +157,14 @@ namespace DataVisualiser
         {
             var chartLabels = new Dictionary<CartesianChart, string>
             {
-                { ChartMain, "Main" },
+                { MainChartController.Chart, "Main" },
                 { ChartNorm, "Norm" },
                 { ChartDiffRatio, "DiffRatio" },
                 { ChartTransformResult, "Transform" }
             };
 
             _tooltipManager = new ChartTooltipManager(this, chartLabels);
-            _tooltipManager.AttachChart(ChartMain, "Main");
+            _tooltipManager.AttachChart(MainChartController.Chart, "Main");
             _tooltipManager.AttachChart(ChartNorm, "Norm");
             _tooltipManager.AttachChart(ChartDiffRatio, "DiffRatio");
             _tooltipManager.AttachChart(ChartTransformResult, "Transform");
@@ -218,7 +221,7 @@ namespace DataVisualiser
 
         private void InitializeChartBehavior()
         {
-            ChartHelper.InitializeChartBehavior(ChartMain);
+            ChartHelper.InitializeChartBehavior(MainChartController.Chart);
             ChartHelper.InitializeChartBehavior(ChartWeekly);
             ChartHelper.InitializeChartBehavior(ChartNorm);
             ChartHelper.InitializeChartBehavior(ChartDiffRatio);
@@ -227,7 +230,7 @@ namespace DataVisualiser
         private void ClearChartsOnStartup()
         {
             // Clear charts on startup to prevent gibberish tick labels
-            ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
@@ -235,7 +238,7 @@ namespace DataVisualiser
 
         private void DisableAxisLabelsWhenNoData()
         {
-            DisableAxisLabels(ChartMain);
+            DisableAxisLabels(MainChartController.Chart);
             DisableAxisLabels(ChartNorm);
             DisableAxisLabels(ChartDiffRatio);
             DisableAxisLabels(ChartWeekly);
@@ -249,7 +252,7 @@ namespace DataVisualiser
 
         private void SetDefaultChartTitles()
         {
-            ChartMainTitle.Text = "Metrics: Total";
+            MainChartController.Panel.Title = "Metrics: Total";
             ChartNormTitle.Text = "Metrics: Normalized";
             ChartDiffRatioTitle.Text = "Difference / Ratio";
             UpdateDiffRatioOperationButton(); // Initialize button state
@@ -437,6 +440,11 @@ namespace DataVisualiser
         #region Chart Visibility Toggle Handlers
 
         private void OnChartMainToggle(object sender, RoutedEventArgs e)
+        {
+            _viewModel.ToggleMain();
+        }
+
+        private void OnMainChartToggleRequested(object? sender, EventArgs e)
         {
             _viewModel.ToggleMain();
         }
@@ -872,7 +880,8 @@ namespace DataVisualiser
 
         private void OnResetZoom(object sender, RoutedEventArgs e)
         {
-            ChartHelper.ResetZoom(ref ChartMain);
+            var mainChart = MainChartController.Chart;
+            ChartHelper.ResetZoom(ref mainChart);
             ChartHelper.ResetZoom(ref ChartNorm);
             ChartHelper.ResetZoom(ref ChartDiffRatio);
             ChartHelper.ResetZoom(ref ChartWeekly);
@@ -886,7 +895,7 @@ namespace DataVisualiser
             _viewModel.ChartState.LeftTitle = leftName;
             _viewModel.ChartState.RightTitle = rightName;
 
-            ChartMainTitle.Text = $"{leftName} vs. {rightName}";
+            MainChartController.Panel.Title = $"{leftName} vs. {rightName}";
             ChartNormTitle.Text = $"{leftName} ~ {rightName}";
             ChartDiffRatioTitle.Text = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
         }
@@ -904,7 +913,7 @@ namespace DataVisualiser
             string label2 = !string.IsNullOrEmpty(subtype2) ? subtype2 : string.Empty;
 
             string chartMainLabel = !string.IsNullOrEmpty(label2) ? $"{label1} vs {label2}" : label1;
-            _tooltipManager.UpdateChartLabel(ChartMain, chartMainLabel);
+            _tooltipManager.UpdateChartLabel(MainChartController.Chart, chartMainLabel);
 
             string chartDiffRatioLabel = !string.IsNullOrEmpty(label2) 
                 ? $"{label1} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {label2}" 
@@ -1216,7 +1225,7 @@ namespace DataVisualiser
         private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
         {
             // Update visibility for all charts (just UI state, doesn't clear data)
-            UpdateChartVisibility(ChartMainPanel, ChartMainToggleButton, e.ShowMain);
+            MainChartController.Panel.IsChartVisible = e.ShowMain;
             UpdateChartVisibility(ChartNormPanel, ChartNormToggleButton, e.ShowNormalized);
             UpdateChartVisibility(ChartDiffRatioPanel, ChartDiffRatioToggleButton, e.ShowDiffRatio);
             UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
@@ -1318,7 +1327,7 @@ namespace DataVisualiser
 
             await _primaryChartRenderingService.RenderPrimaryChartAsync(
                 ctx,
-                ChartMain,
+                MainChartController.Chart,
                 data1,
                 data2,
                 displayName1,
@@ -2057,7 +2066,7 @@ namespace DataVisualiser
 
         private void ClearAllCharts()
         {
-            ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
