@@ -1,11 +1,13 @@
 using DataFileReader.Canonical;
 using DataFileReader.Normalization.Canonical;
+using DataVisualiser.Charts;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Helpers;
 using DataVisualiser.Charts.Rendering;
 using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Helper;
 using DataVisualiser.Models;
+using DataVisualiser.Services.Abstractions;
 using DataVisualiser.Services.Shading;
 using DataVisualiser.Services.WeeklyDistribution;
 using LiveCharts;
@@ -28,6 +30,7 @@ namespace DataVisualiser.Services
         private const double YAxisPaddingPercentage = 0.05;
         private const double MinYAxisPadding = 5.0;
         private const double MaxColumnWidth = 40.0;
+        private readonly IStrategyCutOverService _strategyCutOverService;
 
         private const bool UseCmsWeeklyDistribution = false;
 
@@ -36,9 +39,13 @@ namespace DataVisualiser.Services
         private IIntervalShadingStrategy _shadingStrategy;
         private FrequencyShadingCalculator _frequencyShadingCalculator;
 
-        public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IIntervalShadingStrategy? shadingStrategy = null)
+        public WeeklyDistributionService(
+            Dictionary<CartesianChart, List<DateTime>> chartTimestamps,
+            IStrategyCutOverService strategyCutOverService,
+            IIntervalShadingStrategy? shadingStrategy = null)
         {
             _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
+            _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
             _shadingStrategy = shadingStrategy ?? new FrequencyBasedShadingStrategy();
             _frequencyRenderer = new FrequencyShadingRenderer(MaxColumnWidth);
             _frequencyShadingCalculator = new FrequencyShadingCalculator(_shadingStrategy);
@@ -915,35 +922,42 @@ namespace DataVisualiser.Services
             bool useCmsStrategy,
             bool enableParity)
         {
-            Charts.Computation.ChartComputationResult? result;
-            Models.WeeklyDistributionResult? extendedResult;
-
-            // Legacy strategy (always available)
-            var legacyStrategy = new WeeklyDistributionStrategy(
-                data,
-                displayName,
-                from,
-                to);
-
-            var legacyResult = legacyStrategy.Compute();
-            var legacyExtended = legacyStrategy.ExtendedResult;
-
-            // CMS cut-over: PRIMARY metric only
-            if (useCmsStrategy && cmsSeries is not null)
+            // Create minimal ChartDataContext for cut-over decision
+            var ctx = new ChartDataContext
             {
-                var cmsStrategy = new CmsWeeklyDistributionStrategy(
-                    cmsSeries,
-                    from,
-                    to,
-                    displayName);
+                PrimaryCms = cmsSeries,
+                Data1 = data?.ToList(),
+                DisplayName1 = displayName,
+                From = from,
+                To = to
+            };
 
-                result = cmsStrategy.Compute();
-                extendedResult = cmsStrategy.ExtendedResult;
+            // Create strategy using unified cut-over service
+            var parameters = new StrategyCreationParameters
+            {
+                LegacyData1 = data,
+                Label1 = displayName,
+                From = from,
+                To = to
+            };
+
+            var strategy = _strategyCutOverService.CreateStrategy(
+                StrategyType.WeeklyDistribution,
+                ctx,
+                parameters);
+
+            // Compute result
+            var result = strategy.Compute();
+
+            // Extract ExtendedResult (WeeklyDistribution strategies have this property)
+            Models.WeeklyDistributionResult? extendedResult = null;
+            if (strategy is WeeklyDistributionStrategy legacyStrategy)
+            {
+                extendedResult = legacyStrategy.ExtendedResult;
             }
-            else
+            else if (strategy is CmsWeeklyDistributionStrategy cmsStrategy)
             {
-                result = legacyResult;
-                extendedResult = legacyExtended;
+                extendedResult = cmsStrategy.ExtendedResult;
             }
 
             return (result, extendedResult);

@@ -139,6 +139,12 @@ namespace DataVisualiser.Services.Implementations
                     parameters.From,
                     parameters.To),
 
+                StrategyType.WeeklyDistribution => new CmsWeeklyDistributionStrategy(
+                    ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"),
+                    parameters.From,
+                    parameters.To,
+                    parameters.Label1),
+
                 // TODO: Implement other CMS strategies
                 _ => CreateLegacyStrategy(strategyType, parameters)
             };
@@ -186,7 +192,8 @@ namespace DataVisualiser.Services.Implementations
                     parameters.Label1,
                     parameters.Label2,
                     parameters.From,
-                    parameters.To),
+                    parameters.To,
+                    parameters.NormalizationMode ?? NormalizationMode.PercentageOfMax),
 
                 StrategyType.MultiMetric => new MultiMetricStrategy(
                     parameters.LegacySeries ?? Array.Empty<IEnumerable<HealthMetricData>>(),
@@ -194,6 +201,12 @@ namespace DataVisualiser.Services.Implementations
                     parameters.From,
                     parameters.To,
                     parameters.Unit),
+
+                StrategyType.WeeklyDistribution => new WeeklyDistributionStrategy(
+                    parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(),
+                    parameters.Label1,
+                    parameters.From,
+                    parameters.To),
 
                 _ => throw new NotSupportedException($"Strategy type {strategyType} is not supported")
             };

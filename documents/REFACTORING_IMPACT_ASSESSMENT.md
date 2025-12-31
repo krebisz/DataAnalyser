@@ -109,4 +109,66 @@
 
 ---
 
+## Remaining Refactoring Priorities
+
+### 🔴 High Priority - Phase 3.5 (Orchestration Assessment)
+
+**1. `ChartRenderingOrchestrator.RenderNormalized/Difference/Ratio` (lines 171-253)**
+
+- **Issue**: Directly instantiates strategies (`new NormalizedStrategy`, `new DifferenceStrategy`, etc.)
+- **Refactor**: Use `IStrategyCutOverService.CreateStrategy()` instead
+- **Impact**: Unifies cut-over logic, enables Phase 3.5 orchestration
+
+**2. `WeeklyDistributionService.ComputeWeeklyDistributionAsync` (lines 908-950)**
+
+- **Issue**: Manual cut-over logic (`if (useCmsStrategy && cmsSeries != null)`)
+- **Refactor**: Delegate to `IStrategyCutOverService.CreateStrategy(StrategyType.WeeklyDistribution, ...)`
+- **Impact**: Removes duplicate cut-over logic, aligns with unified service
+
+**3. `ChartRenderingOrchestrator.RenderPrimaryChart` (line 164)**
+
+- **Issue**: Placeholder; actual logic in `MainWindow.RenderMainChart` (~180 lines)
+- **Refactor**: Extract main chart rendering to use `StrategyCutOverService` for single/multi/combined metric strategies
+- **Impact**: Completes orchestrator abstraction, enables main chart cut-over
+
+### 🟡 Medium Priority - Phase 3 (Strategy Migration)
+
+**4. `StrategyCutOverService.CreateCmsStrategy/CreateLegacyStrategy` (lines 121-199)**
+
+- **Issue**: Large switch statements (50+ lines each)
+- **Refactor**: Extract to `IStrategyFactory` implementations (one per strategy type)
+- **Impact**: Easier to extend for new strategies, better testability
+
+**5. `MainWindow.RenderMainChart` (line 1277)**
+
+- **Issue**: Complex multi-series logic with subtype loading (~180 lines)
+- **Refactor**: Extract to `PrimaryChartRenderingService` that uses `StrategyCutOverService`
+- **Impact**: Reduces MainWindow complexity, enables main chart migration
+
+### 🟢 Lower Priority - Phase 4 (Parity Validation)
+
+**6. `StrategyCutOverService.ValidateParity` (lines 72-119)**
+
+- **Issue**: Simplified validation; should delegate to existing parity harnesses
+- **Refactor**: Use `IStrategyParityHarness` implementations (e.g., `CombinedMetricParityHarness`)
+- **Impact**: Enables proper parity validation for Phase 4
+
+**7. `WeeklyDistributionService.RenderIntervals` (line 523)**
+
+- **Issue**: Large method (~200+ lines) with complex rendering logic
+- **Refactor**: Extract interval rendering to `WeeklyIntervalRenderer` class
+- **Impact**: Improves testability and maintainability
+
+### Summary
+
+- **Critical for Phase 3.5**: #1, #2, #3 (unify cut-over usage)
+- **Important for Phase 3**: #4, #5 (strategy factory pattern, main chart abstraction)
+- **Helpful for Phase 4**: #6, #7 (parity validation, code organization)
+
+**Recommendation**: Start with #1-#3 to enable Phase 3.5 orchestration assessment.
+
+---
+
 **Overall Assessment**: 🟢 **POSITIVE IMPACT** - Refactoring provides solid foundation for remaining phases, reduces complexity, and enables faster future migrations.
+
+---

@@ -74,7 +74,14 @@ namespace DataVisualiser
                 _chartState.ChartTimestamps);
 
             _chartUpdateCoordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
-            _weeklyDistributionService = new WeeklyDistributionService(_chartState.ChartTimestamps);
+            
+            // Create StrategyCutOverService for unified cut-over logic
+            var dataPreparationService = new DataVisualiser.Services.Implementations.DataPreparationService();
+            var strategyCutOverService = new DataVisualiser.Services.Implementations.StrategyCutOverService(dataPreparationService);
+            
+            _weeklyDistributionService = new WeeklyDistributionService(
+                _chartState.ChartTimestamps,
+                strategyCutOverService);
 
             _viewModel = new MainWindowViewModel(
                 _chartState,

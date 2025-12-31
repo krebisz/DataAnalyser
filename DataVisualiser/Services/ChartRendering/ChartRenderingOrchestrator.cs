@@ -176,14 +176,21 @@ namespace DataVisualiser.Services.ChartRendering
             string? secondarySubtype,
             NormalizationMode normalizationMode)
         {
-            var strategy = new NormalizedStrategy(
-                ctx.Data1!,
-                ctx.Data2!,
-                ctx.DisplayName1,
-                ctx.DisplayName2,
-                ctx.From,
-                ctx.To,
-                normalizationMode);
+            var parameters = new StrategyCreationParameters
+            {
+                LegacyData1 = ctx.Data1,
+                LegacyData2 = ctx.Data2,
+                Label1 = ctx.DisplayName1,
+                Label2 = ctx.DisplayName2,
+                From = ctx.From,
+                To = ctx.To,
+                NormalizationMode = normalizationMode
+            };
+
+            var strategy = _strategyCutOverService.CreateStrategy(
+                StrategyType.Normalized,
+                ctx,
+                parameters);
 
             await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
                 chartNorm,
@@ -204,13 +211,20 @@ namespace DataVisualiser.Services.ChartRendering
             string? primarySubtype,
             string? secondarySubtype)
         {
-            var strategy = new DifferenceStrategy(
-                ctx.Data1!,
-                ctx.Data2!,
-                ctx.DisplayName1,
-                ctx.DisplayName2,
-                ctx.From,
-                ctx.To);
+            var parameters = new StrategyCreationParameters
+            {
+                LegacyData1 = ctx.Data1,
+                LegacyData2 = ctx.Data2,
+                Label1 = ctx.DisplayName1,
+                Label2 = ctx.DisplayName2,
+                From = ctx.From,
+                To = ctx.To
+            };
+
+            var strategy = _strategyCutOverService.CreateStrategy(
+                StrategyType.Difference,
+                ctx,
+                parameters);
 
             await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
                 chartDiff,
@@ -231,13 +245,20 @@ namespace DataVisualiser.Services.ChartRendering
             string? primarySubtype,
             string? secondarySubtype)
         {
-            var strategy = new RatioStrategy(
-                ctx.Data1!,
-                ctx.Data2!,
-                ctx.DisplayName1,
-                ctx.DisplayName2,
-                ctx.From,
-                ctx.To);
+            var parameters = new StrategyCreationParameters
+            {
+                LegacyData1 = ctx.Data1,
+                LegacyData2 = ctx.Data2,
+                Label1 = ctx.DisplayName1,
+                Label2 = ctx.DisplayName2,
+                From = ctx.From,
+                To = ctx.To
+            };
+
+            var strategy = _strategyCutOverService.CreateStrategy(
+                StrategyType.Ratio,
+                ctx,
+                parameters);
 
             await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
                 chartRatio,

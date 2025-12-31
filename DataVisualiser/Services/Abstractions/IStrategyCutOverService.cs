@@ -59,6 +59,7 @@ namespace DataVisualiser.Services.Abstractions
         public DateTime From { get; init; }
         public DateTime To { get; init; }
         public string? Unit { get; init; }
+        public NormalizationMode? NormalizationMode { get; init; }
     }
 
     /// <summary>
