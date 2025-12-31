@@ -9,8 +9,8 @@ namespace DataVisualiser.State
         // Track which charts are visible
         public bool IsMainVisible { get; set; } = true; // Default to visible (Show on startup)
         public bool IsNormalizedVisible { get; set; }
-        public bool IsDifferenceVisible { get; set; }
-        public bool IsRatioVisible { get; set; }
+        public bool IsDiffRatioVisible { get; set; } // Unified Diff/Ratio chart
+        public bool IsDiffRatioDifferenceMode { get; set; } = true; // true = Difference (-), false = Ratio (/)
         public bool IsWeeklyVisible { get; set; }
         public bool IsWeeklyTrendVisible { get; set; }
         public bool IsTransformPanelVisible { get; set; }

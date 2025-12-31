@@ -38,8 +38,7 @@ namespace DataVisualiser.ViewModels.Events
     {
         public bool ShowMain { get; set; }
         public bool ShowNormalized { get; set; }
-        public bool ShowDifference { get; set; }
-        public bool ShowRatio { get; set; }
+        public bool ShowDiffRatio { get; set; }
         public bool ShowWeekly { get; set; }
         public bool ShowWeeklyTrend { get; init; }
         public bool ShowTransformPanel { get; set; }

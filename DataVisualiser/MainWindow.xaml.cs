@@ -156,16 +156,14 @@ namespace DataVisualiser
             {
                 { ChartMain, "Main" },
                 { ChartNorm, "Norm" },
-                { ChartDiff, "Diff" },
-                { ChartRatio, "Ratio" },
+                { ChartDiffRatio, "DiffRatio" },
                 { ChartTransformResult, "Transform" }
             };
 
             _tooltipManager = new ChartTooltipManager(this, chartLabels);
             _tooltipManager.AttachChart(ChartMain, "Main");
             _tooltipManager.AttachChart(ChartNorm, "Norm");
-            _tooltipManager.AttachChart(ChartDiff, "Diff");
-            _tooltipManager.AttachChart(ChartRatio, "Ratio");
+            _tooltipManager.AttachChart(ChartDiffRatio, "DiffRatio");
             _tooltipManager.AttachChart(ChartTransformResult, "Transform");
         }
 
@@ -186,8 +184,7 @@ namespace DataVisualiser
             _viewModel.SetLoadingSubtypes(false);
             _viewModel.SetMainVisible(true); // Default to visible (Show on startup)
             _viewModel.SetNormalizedVisible(false);
-            _viewModel.SetDifferenceVisible(false);
-            _viewModel.SetRatioVisible(false);
+            _viewModel.SetDiffRatioVisible(false);
             _viewModel.SetWeeklyVisible(false);
             _viewModel.CompleteInitialization();
 
@@ -224,8 +221,7 @@ namespace DataVisualiser
             ChartHelper.InitializeChartBehavior(ChartMain);
             ChartHelper.InitializeChartBehavior(ChartWeekly);
             ChartHelper.InitializeChartBehavior(ChartNorm);
-            ChartHelper.InitializeChartBehavior(ChartDiff);
-            ChartHelper.InitializeChartBehavior(ChartRatio);
+            ChartHelper.InitializeChartBehavior(ChartDiffRatio);
         }
 
         private void ClearChartsOnStartup()
@@ -233,8 +229,7 @@ namespace DataVisualiser
             // Clear charts on startup to prevent gibberish tick labels
             ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-            ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-            ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
         }
 
@@ -242,8 +237,7 @@ namespace DataVisualiser
         {
             DisableAxisLabels(ChartMain);
             DisableAxisLabels(ChartNorm);
-            DisableAxisLabels(ChartDiff);
-            DisableAxisLabels(ChartRatio);
+            DisableAxisLabels(ChartDiffRatio);
             DisableAxisLabels(ChartWeekly);
         }
 
@@ -257,8 +251,8 @@ namespace DataVisualiser
         {
             ChartMainTitle.Text = "Metrics: Total";
             ChartNormTitle.Text = "Metrics: Normalized";
-            ChartDiffTitle.Text = "Metric Difference";
-            ChartRatioTitle.Text = "Metrics: Ratio";
+            ChartDiffRatioTitle.Text = "Difference / Ratio";
+            UpdateDiffRatioOperationButton(); // Initialize button state
         }
 
         #endregion
@@ -502,14 +496,42 @@ namespace DataVisualiser
             }
         }
 
-        private void OnChartDiffToggle(object sender, RoutedEventArgs e)
+        private void OnChartDiffRatioToggle(object sender, RoutedEventArgs e)
         {
-            _viewModel.ToggleDiff();
+            _viewModel.ToggleDiffRatio();
         }
 
-        private void OnChartRatioToggle(object sender, RoutedEventArgs e)
+        private async void OnChartDiffRatioOperationToggle(object sender, RoutedEventArgs e)
         {
-            _viewModel.ToggleRatio();
+            _viewModel.ToggleDiffRatioOperation();
+            UpdateDiffRatioOperationButton();
+
+            // Re-render the chart with current data if visible
+            if (_viewModel.ChartState.IsDiffRatioVisible && _viewModel.ChartState.LastContext != null)
+            {
+                var ctx = _viewModel.ChartState.LastContext;
+                var hasSecondaryData = HasSecondaryData(ctx);
+                if (hasSecondaryData)
+                {
+                    await RenderDiffRatio(ctx, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
+                }
+            }
+        }
+
+        private void UpdateDiffRatioOperationButton()
+        {
+            if (ChartDiffRatioOperationToggleButton != null)
+            {
+                // Button shows the operation that will be selected when clicked (opposite of current state)
+                ChartDiffRatioOperationToggleButton.Content = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "/" : "-";
+                ChartDiffRatioOperationToggleButton.ToolTip = _viewModel.ChartState.IsDiffRatioDifferenceMode 
+                    ? "Switch to Ratio (/)" 
+                    : "Switch to Difference (-)";
+            }
+            if (ChartDiffRatioAxisY != null)
+            {
+                ChartDiffRatioAxisY.Title = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "Difference" : "Ratio";
+            }
         }
 
         private void OnTransformPanelToggle(object sender, RoutedEventArgs e)
@@ -852,8 +874,7 @@ namespace DataVisualiser
         {
             ChartHelper.ResetZoom(ref ChartMain);
             ChartHelper.ResetZoom(ref ChartNorm);
-            ChartHelper.ResetZoom(ref ChartDiff);
-            ChartHelper.ResetZoom(ref ChartRatio);
+            ChartHelper.ResetZoom(ref ChartDiffRatio);
             ChartHelper.ResetZoom(ref ChartWeekly);
         }
 
@@ -867,8 +888,7 @@ namespace DataVisualiser
 
             ChartMainTitle.Text = $"{leftName} vs. {rightName}";
             ChartNormTitle.Text = $"{leftName} ~ {rightName}";
-            ChartDiffTitle.Text = $"{leftName} - {rightName}";
-            ChartRatioTitle.Text = $"{leftName} / {rightName}";
+            ChartDiffRatioTitle.Text = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
         }
 
         private void UpdateChartLabels(string subtype1, string subtype2)
@@ -886,11 +906,10 @@ namespace DataVisualiser
             string chartMainLabel = !string.IsNullOrEmpty(label2) ? $"{label1} vs {label2}" : label1;
             _tooltipManager.UpdateChartLabel(ChartMain, chartMainLabel);
 
-            string chartDiffLabel = !string.IsNullOrEmpty(label2) ? $"{label1} - {label2}" : label1;
-            _tooltipManager.UpdateChartLabel(ChartDiff, chartDiffLabel);
-
-            string chartRatioLabel = !string.IsNullOrEmpty(label2) ? $"{label1} / {label2}" : label1;
-            _tooltipManager.UpdateChartLabel(ChartRatio, chartRatioLabel);
+            string chartDiffRatioLabel = !string.IsNullOrEmpty(label2) 
+                ? $"{label1} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {label2}" 
+                : label1;
+            _tooltipManager.UpdateChartLabel(ChartDiffRatio, chartDiffRatioLabel);
         }
 
         private void UpdateChartTitlesFromCombos()
@@ -1085,21 +1104,15 @@ namespace DataVisualiser
                     _viewModel.SetNormalizedVisible(false);
                 }
 
-                if (_viewModel.ChartState.IsDifferenceVisible)
+                if (_viewModel.ChartState.IsDiffRatioVisible)
                 {
-                    _viewModel.SetDifferenceVisible(false);
-                }
-
-                if (_viewModel.ChartState.IsRatioVisible)
-                {
-                    _viewModel.SetRatioVisible(false);
+                    _viewModel.SetDiffRatioVisible(false);
                 }
             }
 
             // Update button enabled states (this is UI-only, not part of the rendering pipeline)
             ChartNormToggleButton.IsEnabled = hasSecondaryData;
-            ChartDiffToggleButton.IsEnabled = hasSecondaryData;
-            ChartRatioToggleButton.IsEnabled = hasSecondaryData;
+            ChartDiffRatioToggleButton.IsEnabled = hasSecondaryData;
         }
 
         private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -1205,8 +1218,7 @@ namespace DataVisualiser
             // Update visibility for all charts (just UI state, doesn't clear data)
             UpdateChartVisibility(ChartMainPanel, ChartMainToggleButton, e.ShowMain);
             UpdateChartVisibility(ChartNormPanel, ChartNormToggleButton, e.ShowNormalized);
-            UpdateChartVisibility(ChartDiffPanel, ChartDiffToggleButton, e.ShowDifference);
-            UpdateChartVisibility(ChartRatioPanel, ChartRatioToggleButton, e.ShowRatio);
+            UpdateChartVisibility(ChartDiffRatioPanel, ChartDiffRatioToggleButton, e.ShowDiffRatio);
             UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
             UpdateChartVisibility(ChartWeekdayTrendPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
             UpdateWeekdayTrendChartTypeVisibility();
@@ -1626,22 +1638,16 @@ namespace DataVisualiser
                     await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
                 }
 
-                if (_viewModel.ChartState.IsDifferenceVisible)
+                if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
                 {
-                    await RenderDifference(ctx, metricType, primarySubtype, secondarySubtype);
-                }
-
-                if (_viewModel.ChartState.IsRatioVisible)
-                {
-                    await RenderRatio(ctx, metricType, primarySubtype, secondarySubtype);
+                    await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
                 }
             }
             else
             {
                 // Clear charts that require secondary data when no secondary data exists
                 ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-                ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-                ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+                ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
             }
 
             // Charts that don't require secondary data - only render if visible
@@ -1802,17 +1808,10 @@ namespace DataVisualiser
                     }
                     break;
 
-                case "Diff":
-                    if (_viewModel.ChartState.IsDifferenceVisible && hasSecondaryData)
+                case "DiffRatio":
+                    if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
                     {
-                        await RenderDifference(ctx, metricType, primarySubtype, secondarySubtype);
-                    }
-                    break;
-
-                case "Ratio":
-                    if (_viewModel.ChartState.IsRatioVisible && hasSecondaryData)
-                    {
-                        await RenderRatio(ctx, metricType, primarySubtype, secondarySubtype);
+                        await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
                     }
                     break;
 
@@ -1844,15 +1843,13 @@ namespace DataVisualiser
             await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
             await RenderWeeklyDistribution(ctx);
             RenderWeeklyTrend(ctx);
-            await RenderDifference(ctx, metricType, primarySubtype, secondarySubtype);
-            await RenderRatio(ctx, metricType, primarySubtype, secondarySubtype);
+            await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
         }
 
         private void ClearSecondaryChartsAndReturn()
         {
             ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-            ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-            ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
             // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
@@ -1899,31 +1896,71 @@ namespace DataVisualiser
             // Note: We don't clear the chart when hiding - just hide the panel to preserve data
         }
 
-        private Task RenderDifference(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
+        private async Task RenderDiffRatio(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
         {
-            return RenderOrClearChart(
-                ChartDiff,
-                _viewModel.ChartState.IsDifferenceVisible,
-                new DifferenceStrategy(ctx.Data1!, ctx.Data2!, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To),
-                $"{ctx.DisplayName1} - {ctx.DisplayName2}",
-                metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondarySubtype,
-                operationType: "-",
-                isOperationChart: true);
-        }
+            if (!_viewModel.ChartState.IsDiffRatioVisible || ctx.Data1 == null || ctx.Data2 == null)
+                return;
 
-        private Task RenderRatio(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
-        {
-            return RenderOrClearChart(
-                ChartRatio,
-                _viewModel.ChartState.IsRatioVisible,
-                new RatioStrategy(ctx.Data1!, ctx.Data2!, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To),
-                $"{ctx.DisplayName1} / {ctx.DisplayName2}",
+            var operation = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "Subtract" : "Divide";
+            var operationSymbol = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/";
+
+            // Use transform infrastructure to compute the operation
+            var allData1List = ctx.Data1.Where(d => d.Value.HasValue)
+                                        .OrderBy(d => d.NormalizedTimestamp)
+                                        .ToList();
+
+            var allData2List = ctx.Data2.Where(d => d.Value.HasValue)
+                                        .OrderBy(d => d.NormalizedTimestamp)
+                                        .ToList();
+
+            if (allData1List.Count == 0 || allData2List.Count == 0)
+                return;
+
+            // Align data by timestamp
+            var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
+            if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
+                return;
+
+            // Build expression and evaluate
+            var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
+            List<double> computedResults;
+            List<IReadOnlyList<HealthMetricData>> metricsList = new List<IReadOnlyList<HealthMetricData>> { alignedData.Item1, alignedData.Item2 };
+
+            if (expression == null)
+            {
+                // Fallback to legacy approach
+                Func<double, double, double> op = operation switch
+                {
+                    "Subtract" => BinaryOperators.Difference,
+                    "Divide" => BinaryOperators.Ratio,
+                    _ => (a, b) => a
+                };
+
+                var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
+                var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
+                computedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
+            }
+            else
+            {
+                computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
+            }
+
+            // Generate label
+            string label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metricsList, ctx);
+
+            // Create strategy and render
+            var strategy = new TransformResultStrategy(alignedData.Item1, computedResults, label, ctx.From, ctx.To);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                ChartDiffRatio,
+                strategy,
+                label,
+                secondaryLabel: null,
+                minHeight: 400,
                 metricType: metricType,
                 primarySubtype: primarySubtype,
                 secondarySubtype: secondarySubtype,
-                operationType: "/",
+                operationType: operationSymbol,
                 isOperationChart: true);
         }
 
@@ -1931,8 +1968,7 @@ namespace DataVisualiser
             chartName switch
             {
                 "Norm" => ChartNormPanel,
-                "Diff" => ChartDiffPanel,
-                "Ratio" => ChartRatioPanel,
+                "DiffRatio" => ChartDiffRatioPanel,
                 "Weekly" => ChartWeeklyPanel,
                 "WeeklyTrend" => ChartWeekdayTrendPanel,
                 _ => null
@@ -2023,8 +2059,7 @@ namespace DataVisualiser
         {
             ChartHelper.ClearChart(ChartMain, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-            ChartHelper.ClearChart(ChartDiff, _viewModel.ChartState.ChartTimestamps);
-            ChartHelper.ClearChart(ChartRatio, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekdayTrend, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(ChartWeekdayTrendPolar, _viewModel.ChartState.ChartTimestamps);

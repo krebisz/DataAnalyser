@@ -1,6 +1,7 @@
 using DataVisualiser.Charts;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Charts.Strategies;
+using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
 using DataVisualiser.State;
@@ -37,8 +38,7 @@ namespace DataVisualiser.Services.ChartRendering
             ChartState chartState,
             CartesianChart chartMain,
             CartesianChart chartNorm,
-            CartesianChart chartDiff,
-            CartesianChart chartRatio,
+            CartesianChart chartDiffRatio,
             CartesianChart chartWeekly)
         {
             if (!ShouldRenderCharts(ctx))
@@ -63,22 +63,16 @@ namespace DataVisualiser.Services.ChartRendering
                     await RenderNormalized(ctx, chartNorm, metricType, primarySubtype, secondarySubtype, chartState.SelectedNormalizationMode);
                 }
 
-                if (chartState.IsDifferenceVisible)
+                if (chartState.IsDiffRatioVisible)
                 {
-                    await RenderDifference(ctx, chartDiff, metricType, primarySubtype, secondarySubtype);
-                }
-
-                if (chartState.IsRatioVisible)
-                {
-                    await RenderRatio(ctx, chartRatio, metricType, primarySubtype, secondarySubtype);
+                    await RenderDiffRatio(ctx, chartDiffRatio, metricType, primarySubtype, secondarySubtype, chartState);
                 }
             }
             else
             {
                 // Clear charts that require secondary data when no secondary data exists
                 Charts.Helpers.ChartHelper.ClearChart(chartNorm, chartState.ChartTimestamps);
-                Charts.Helpers.ChartHelper.ClearChart(chartDiff, chartState.ChartTimestamps);
-                Charts.Helpers.ChartHelper.ClearChart(chartRatio, chartState.ChartTimestamps);
+                Charts.Helpers.ChartHelper.ClearChart(chartDiffRatio, chartState.ChartTimestamps);
             }
 
             // Render charts that don't require secondary data
@@ -102,8 +96,7 @@ namespace DataVisualiser.Services.ChartRendering
             ChartState chartState,
             CartesianChart chartMain,
             CartesianChart chartNorm,
-            CartesianChart chartDiff,
-            CartesianChart chartRatio,
+            CartesianChart chartDiffRatio,
             CartesianChart chartWeekly)
         {
             var hasSecondaryData = HasSecondaryData(ctx);
@@ -127,17 +120,10 @@ namespace DataVisualiser.Services.ChartRendering
                     }
                     break;
 
-                case "Diff":
-                    if (chartState.IsDifferenceVisible && hasSecondaryData)
+                case "DiffRatio":
+                    if (chartState.IsDiffRatioVisible && hasSecondaryData)
                     {
-                        await RenderDifference(ctx, chartDiff, metricType, primarySubtype, secondarySubtype);
-                    }
-                    break;
-
-                case "Ratio":
-                    if (chartState.IsRatioVisible && hasSecondaryData)
-                    {
-                        await RenderRatio(ctx, chartRatio, metricType, primarySubtype, secondarySubtype);
+                        await RenderDiffRatio(ctx, chartDiffRatio, metricType, primarySubtype, secondarySubtype, chartState);
                     }
                     break;
 
@@ -300,71 +286,78 @@ namespace DataVisualiser.Services.ChartRendering
                 isOperationChart: true);
         }
 
-        private async Task RenderDifference(
+        private async Task RenderDiffRatio(
             ChartDataContext ctx,
-            CartesianChart chartDiff,
+            CartesianChart chartDiffRatio,
             string? metricType,
             string? primarySubtype,
-            string? secondarySubtype)
+            string? secondarySubtype,
+            ChartState? chartState = null)
         {
-            var parameters = new StrategyCreationParameters
-            {
-                LegacyData1 = ctx.Data1,
-                LegacyData2 = ctx.Data2,
-                Label1 = ctx.DisplayName1,
-                Label2 = ctx.DisplayName2,
-                From = ctx.From,
-                To = ctx.To
-            };
+            if (ctx.Data1 == null || ctx.Data2 == null)
+                return;
 
-            var strategy = _strategyCutOverService.CreateStrategy(
-                StrategyType.Difference,
-                ctx,
-                parameters);
+            var isDifferenceMode = chartState?.IsDiffRatioDifferenceMode ?? true;
+            var operation = isDifferenceMode ? "Subtract" : "Divide";
+            var operationSymbol = isDifferenceMode ? "-" : "/";
+
+            // Use transform infrastructure to compute the operation
+            var allData1List = ctx.Data1.Where(d => d.Value.HasValue)
+                                        .OrderBy(d => d.NormalizedTimestamp)
+                                        .ToList();
+
+            var allData2List = ctx.Data2.Where(d => d.Value.HasValue)
+                                        .OrderBy(d => d.NormalizedTimestamp)
+                                        .ToList();
+
+            if (allData1List.Count == 0 || allData2List.Count == 0)
+                return;
+
+            // Align data by timestamp
+            var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
+            if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
+                return;
+
+            // Build expression and evaluate
+            var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
+            List<double> computedResults;
+            List<IReadOnlyList<HealthMetricData>> metricsList = new List<IReadOnlyList<HealthMetricData>> { alignedData.Item1, alignedData.Item2 };
+
+            if (expression == null)
+            {
+                // Fallback to legacy approach
+                Func<double, double, double> op = operation switch
+                {
+                    "Subtract" => BinaryOperators.Difference,
+                    "Divide" => BinaryOperators.Ratio,
+                    _ => (a, b) => a
+                };
+
+                var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
+                var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
+                computedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
+            }
+            else
+            {
+                computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
+            }
+
+            // Generate label
+            string label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metricsList, ctx);
+
+            // Create strategy and render
+            var strategy = new TransformResultStrategy(alignedData.Item1, computedResults, label, ctx.From, ctx.To);
 
             await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                chartDiff,
+                chartDiffRatio,
                 strategy,
-                $"{ctx.DisplayName1} - {ctx.DisplayName2}",
+                label,
+                secondaryLabel: null,
                 minHeight: 400,
                 metricType: metricType,
                 primarySubtype: primarySubtype,
                 secondarySubtype: secondarySubtype,
-                operationType: "-",
-                isOperationChart: true);
-        }
-
-        private async Task RenderRatio(
-            ChartDataContext ctx,
-            CartesianChart chartRatio,
-            string? metricType,
-            string? primarySubtype,
-            string? secondarySubtype)
-        {
-            var parameters = new StrategyCreationParameters
-            {
-                LegacyData1 = ctx.Data1,
-                LegacyData2 = ctx.Data2,
-                Label1 = ctx.DisplayName1,
-                Label2 = ctx.DisplayName2,
-                From = ctx.From,
-                To = ctx.To
-            };
-
-            var strategy = _strategyCutOverService.CreateStrategy(
-                StrategyType.Ratio,
-                ctx,
-                parameters);
-
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                chartRatio,
-                strategy,
-                $"{ctx.DisplayName1} / {ctx.DisplayName2}",
-                minHeight: 400,
-                metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondarySubtype,
-                operationType: "/",
+                operationType: operationSymbol,
                 isOperationChart: true);
         }
 

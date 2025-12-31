@@ -54,8 +54,8 @@ namespace DataVisualiser.ViewModels
         public ICommand LoadSubtypesCommand { get; }
         public ICommand LoadDataCommand { get; }
         public ICommand ToggleNormCommand { get; }
-        public ICommand ToggleRatioCommand { get; }
-        public ICommand ToggleDiffCommand { get; }
+        public ICommand ToggleDiffRatioCommand { get; }
+        public ICommand ToggleDiffRatioOperationCommand { get; }
         public ICommand ToggleWeeklyCommand { get; }
 
         public MainWindowViewModel(
@@ -78,8 +78,8 @@ namespace DataVisualiser.ViewModels
             LoadSubtypesCommand = new RelayCommand(_ => LoadSubtypes());
             LoadDataCommand = new RelayCommand(_ => LoadData(), _ => CanLoadData());
             ToggleNormCommand = new RelayCommand(_ => ToggleNorm());
-            ToggleRatioCommand = new RelayCommand(_ => ToggleRatio());
-            ToggleDiffCommand = new RelayCommand(_ => ToggleDiff());
+            ToggleDiffRatioCommand = new RelayCommand(_ => ToggleDiffRatio());
+            ToggleDiffRatioOperationCommand = new RelayCommand(_ => ToggleDiffRatioOperation());
             ToggleWeeklyCommand = new RelayCommand(_ => ToggleWeekly());
         }
 
@@ -482,14 +482,21 @@ namespace DataVisualiser.ViewModels
             ToggleChartVisibility("Norm", () => ChartState.IsNormalizedVisible, v => ChartState.IsNormalizedVisible = v);
         }
 
-        public void ToggleRatio()
+        public void ToggleDiffRatio()
         {
-            ToggleChartVisibility("Ratio", () => ChartState.IsRatioVisible, v => ChartState.IsRatioVisible = v);
+            ToggleChartVisibility("DiffRatio", () => ChartState.IsDiffRatioVisible, v => ChartState.IsDiffRatioVisible = v);
         }
 
-        public void ToggleDiff()
+        public void ToggleDiffRatioOperation()
         {
-            ToggleChartVisibility("Diff", () => ChartState.IsDifferenceVisible, v => ChartState.IsDifferenceVisible = v);
+            ChartState.IsDiffRatioDifferenceMode = !ChartState.IsDiffRatioDifferenceMode;
+            OnPropertyChanged(nameof(ChartState));
+            
+            // Re-render if visible
+            if (ChartState.IsDiffRatioVisible && ChartState.LastContext != null)
+            {
+                RequestChartUpdate();
+            }
         }
 
         public void ToggleWeekly()
@@ -539,15 +546,9 @@ namespace DataVisualiser.ViewModels
             RequestChartUpdate();
         }
 
-        public void SetDifferenceVisible(bool value)
+        public void SetDiffRatioVisible(bool value)
         {
-            ChartState.IsDifferenceVisible = value;
-            RequestChartUpdate();
-        }
-
-        public void SetRatioVisible(bool value)
-        {
-            ChartState.IsRatioVisible = value;
+            ChartState.IsDiffRatioVisible = value;
             RequestChartUpdate();
         }
 
@@ -750,8 +751,7 @@ namespace DataVisualiser.ViewModels
             {
                 ShowMain = ChartState.IsMainVisible,
                 ShowNormalized = ChartState.IsNormalizedVisible,
-                ShowDifference = ChartState.IsDifferenceVisible,
-                ShowRatio = ChartState.IsRatioVisible,
+                ShowDiffRatio = ChartState.IsDiffRatioVisible,
                 ShowWeekly = ChartState.IsWeeklyVisible,
                 ShowWeeklyTrend = ChartState.IsWeeklyTrendVisible,
                 ShowTransformPanel = ChartState.IsTransformPanelVisible,

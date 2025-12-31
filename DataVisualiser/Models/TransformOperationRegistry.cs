@@ -19,6 +19,7 @@ namespace DataVisualiser.Models
             // Register binary operations
             Register(TransformOperation.Binary("Add", "Add", BinaryOperators.Sum));
             Register(TransformOperation.Binary("Subtract", "Subtract", BinaryOperators.Difference));
+            Register(TransformOperation.Binary("Divide", "Divide", BinaryOperators.Ratio));
 
             // Future: Register n-ary operations here
             // Example: Register(TransformOperation.Nary("Sum", "Sum", -1, values => values.Sum()));
