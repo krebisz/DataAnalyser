@@ -1,5 +1,6 @@
 using DataFileReader.Canonical;
 using DataVisualiser.Charts;
+using DataVisualiser.Charts.Parity;
 using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
@@ -84,53 +85,145 @@ namespace DataVisualiser.Services.Implementations
             return CreateLegacyStrategy(strategyType, parameters);
         }
 
-        public ParityResult ValidateParity(
+        public Abstractions.ParityResult ValidateParity(
             IChartComputationStrategy legacyStrategy,
             IChartComputationStrategy cmsStrategy)
         {
             if (legacyStrategy == null || cmsStrategy == null)
             {
-                return new ParityResult
+                return new Abstractions.ParityResult
                 {
                     Passed = false,
                     Message = "One or both strategies are null"
                 };
             }
 
-            // Execute both strategies
+            // Determine strategy type from strategy instances
+            var strategyType = DetermineStrategyType(legacyStrategy, cmsStrategy);
+            
+            // Get appropriate parity harness
+            var harness = GetParityHarness(strategyType);
+            if (harness == null)
+            {
+                // Fallback to basic validation if no harness available
+                return PerformBasicValidation(legacyStrategy, cmsStrategy);
+            }
+
+            // Use parity harness for full validation
+            var context = new Charts.Parity.StrategyParityContext
+            {
+                StrategyName = strategyType?.ToString() ?? "Unknown",
+                MetricIdentity = "ParityValidation",
+                Mode = Charts.Parity.ParityMode.Diagnostic
+            };
+
+            var harnessResult = harness.Validate(
+                context,
+                legacyExecution: () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()),
+                cmsExecution: () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
+
+            // Convert Charts.Parity.ParityResult to Abstractions.ParityResult
+            return ConvertParityResult(harnessResult);
+        }
+
+        private StrategyType? DetermineStrategyType(
+            IChartComputationStrategy legacyStrategy,
+            IChartComputationStrategy cmsStrategy)
+        {
+            // Determine strategy type from strategy class names
+            var legacyTypeName = legacyStrategy.GetType().Name;
+            var cmsTypeName = cmsStrategy.GetType().Name;
+
+            // Map strategy class names to StrategyType enum
+            if (legacyTypeName.Contains("SingleMetric") || cmsTypeName.Contains("SingleMetric"))
+                return StrategyType.SingleMetric;
+            if (legacyTypeName.Contains("CombinedMetric") || cmsTypeName.Contains("CombinedMetric"))
+                return StrategyType.CombinedMetric;
+            if (legacyTypeName.Contains("MultiMetric") || cmsTypeName.Contains("MultiMetric"))
+                return StrategyType.MultiMetric;
+            if (legacyTypeName.Contains("Difference") || cmsTypeName.Contains("Difference"))
+                return StrategyType.Difference;
+            if (legacyTypeName.Contains("Ratio") || cmsTypeName.Contains("Ratio"))
+                return StrategyType.Ratio;
+            if (legacyTypeName.Contains("Normalized") || cmsTypeName.Contains("Normalized"))
+                return StrategyType.Normalized;
+            if (legacyTypeName.Contains("WeeklyDistribution") || cmsTypeName.Contains("WeeklyDistribution"))
+                return StrategyType.WeeklyDistribution;
+            if (legacyTypeName.Contains("WeekdayTrend") || cmsTypeName.Contains("WeekdayTrend"))
+                return StrategyType.WeekdayTrend;
+
+            return null;
+        }
+
+        private Charts.Parity.IStrategyParityHarness? GetParityHarness(StrategyType? strategyType)
+        {
+            return strategyType switch
+            {
+                StrategyType.CombinedMetric => new CombinedMetricParityHarness(),
+                StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
+                // TODO: Add harnesses for other strategy types as they become available
+                _ => null
+            };
+        }
+
+        private Abstractions.ParityResult PerformBasicValidation(
+            IChartComputationStrategy legacyStrategy,
+            IChartComputationStrategy cmsStrategy)
+        {
+            // Fallback basic validation when no harness is available
             var legacyResult = legacyStrategy.Compute();
             var cmsResult = cmsStrategy.Compute();
 
-            // Basic validation
             if (legacyResult == null && cmsResult == null)
             {
-                return new ParityResult { Passed = true, Message = "Both strategies returned null" };
+                return new Abstractions.ParityResult { Passed = true, Message = "Both strategies returned null" };
             }
 
             if (legacyResult == null || cmsResult == null)
             {
-                return new ParityResult
+                return new Abstractions.ParityResult
                 {
                     Passed = false,
                     Message = $"One strategy returned null: legacy={legacyResult == null}, cms={cmsResult == null}"
                 };
             }
 
-            // Compare results (simplified - full parity harness should be used)
             var timestampsMatch = legacyResult.Timestamps.Count == cmsResult.Timestamps.Count;
             var valuesMatch = legacyResult.PrimaryRawValues.Count == cmsResult.PrimaryRawValues.Count;
 
             if (!timestampsMatch || !valuesMatch)
             {
-                return new ParityResult
+                return new Abstractions.ParityResult
                 {
                     Passed = false,
                     Message = $"Result counts differ: timestamps={timestampsMatch}, values={valuesMatch}"
                 };
             }
 
-            // TODO: Full numeric comparison using existing parity harness
-            return new ParityResult { Passed = true, Message = "Basic validation passed" };
+            return new Abstractions.ParityResult { Passed = true, Message = "Basic validation passed" };
+        }
+
+        private Abstractions.ParityResult ConvertParityResult(Charts.Parity.ParityResult harnessResult)
+        {
+            if (harnessResult.Passed)
+            {
+                return new Abstractions.ParityResult { Passed = true, Message = "Parity validation passed" };
+            }
+
+            var failureMessages = harnessResult.Failures
+                .Select(f => $"[{f.Layer}] {f.Message}")
+                .ToList();
+
+            return new Abstractions.ParityResult
+            {
+                Passed = false,
+                Message = string.Join("; ", failureMessages),
+                Details = new Dictionary<string, object>
+                {
+                    { "FailureCount", harnessResult.Failures.Count },
+                    { "Failures", harnessResult.Failures.Select(f => new { f.Layer, f.Message }) }
+                }
+            };
         }
 
         private IChartComputationStrategy CreateCmsStrategy(

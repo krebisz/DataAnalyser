@@ -538,173 +538,21 @@ namespace DataVisualiser.Services
             double[] cumulativeStackHeight,
             int globalMaxFreq)
         {
-            int seriesCreated = 0;
-
-            for (int intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
-            {
-                var interval = intervals[intervalIndex];
-
-                var state = BuildIntervalState(
-                    intervalIndex,
-                    interval,
-                    mins,
-                    ranges,
-                    frequenciesPerDay,
-                    uniformIntervalHeight,
-                    cumulativeStackHeight);
-
-                if (!state.HasData)
-                    continue;
-
-                // 1) Baseline series (transparent) to position this interval at its absolute Y value.
-                AddBaselineSeries(chart, state.Baselines);
-
-                // 2) White fill for zero-frequency segments inside the day's value range.
-                if (state.HasZeroFreqDays)
-                {
-                    AddWhiteSeries(chart, state.WhiteHeights);
-                    seriesCreated++;
-                }
-
-                // 3) Colored fill for non-zero frequency segments.
-                if (state.HasNonZeroFreqDays)
-                {
-                    var color = ResolveIntervalColor(frequenciesPerDay, colorMap, intervalIndex);
-                    AddColoredSeries(chart, state.ColoredHeights, color);
-                    seriesCreated++;
-                }
-            }
-
-            return seriesCreated;
+            var renderer = new WeeklyIntervalRenderer();
+            return renderer.RenderIntervals(
+                chart,
+                mins,
+                ranges,
+                intervals,
+                frequenciesPerDay,
+                colorMap,
+                uniformIntervalHeight,
+                cumulativeStackHeight,
+                globalMaxFreq);
         }
 
         #endregion
 
-        #region Interval state builder
-
-        private IntervalRenderState BuildIntervalState(
-            int intervalIndex,
-            (double Min, double Max) interval,
-            List<double> mins,
-            List<double> ranges,
-            Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
-            double uniformIntervalHeight,
-            double[] cumulativeStackHeight)
-        {
-            var state = new IntervalRenderState(uniformIntervalHeight);
-
-            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
-            {
-                double dayMin = SafeMin(mins, dayIndex);
-                double dayRange = SafeRange(ranges, dayIndex);
-                double dayMax = dayMin + dayRange;
-
-                bool hasDayData = dayRange > 0 && !double.IsNaN(ranges[dayIndex]);
-                bool intervalOverlapsDayRange = interval.Min < dayMax && interval.Max > dayMin;
-
-                if (!hasDayData || !intervalOverlapsDayRange)
-                {
-                    state.AddEmpty();
-                    continue;
-                }
-
-                // Frequency lookup for this day/interval.
-                int frequency = 0;
-                if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) &&
-                    dayFreqs.TryGetValue(intervalIndex, out var f))
-                {
-                    frequency = f;
-                }
-
-                // Baseline positioning:
-                // We want the *top of the current stack* to move to interval.Min, then add intervalHeight.
-                // Since series stack, we store "baseline = desiredPosition - currentStackHeight".
-                double desiredPosition = interval.Min;
-                double currentStack = cumulativeStackHeight[dayIndex];
-                double baseline = desiredPosition - currentStack;
-
-                if (baseline < 0)
-                {
-                    // If already past desired position, clamp baseline and just stack forward.
-                    baseline = 0;
-                    cumulativeStackHeight[dayIndex] = currentStack + uniformIntervalHeight;
-                }
-                else
-                {
-                    cumulativeStackHeight[dayIndex] = interval.Min + uniformIntervalHeight;
-                }
-
-                state.Add(baseline, frequency);
-
-                // Optional targeted debug (kept compact).
-                if (dayIndex == 1) // Tuesday
-                {
-                    Debug.WriteLine(
-                        $"  Interval {intervalIndex} [{interval.Min:F4}, {interval.Max:F4}] Tue: Baseline={baseline:F4}, Height={uniformIntervalHeight:F6}, Freq={frequency}");
-                }
-            }
-
-            return state;
-        }
-
-        #endregion
-
-        #region Series creation
-
-        private void AddBaselineSeries(CartesianChart chart, ChartValues<double> baselineValues)
-        {
-            chart.Series.Add(new StackedColumnSeries
-            {
-                Title = null,
-                Values = baselineValues,
-                Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                StrokeThickness = 0,
-                MaxColumnWidth = MaxColumnWidth,
-                DataLabels = false
-            });
-        }
-
-        private void AddWhiteSeries(CartesianChart chart, ChartValues<double> whiteValues)
-        {
-            var whiteBrush = new SolidColorBrush(Colors.White);
-            whiteBrush.Freeze();
-
-            var strokeBrush = new SolidColorBrush(Color.FromRgb(200, 200, 200));
-            strokeBrush.Freeze();
-
-            chart.Series.Add(new StackedColumnSeries
-            {
-                Title = null,
-                Values = whiteValues,
-                Fill = whiteBrush,
-                Stroke = strokeBrush,
-                StrokeThickness = 1.0,
-                MaxColumnWidth = MaxColumnWidth,
-                DataLabels = false
-            });
-        }
-
-        private void AddColoredSeries(CartesianChart chart, ChartValues<double> coloredValues, Color fillColor)
-        {
-            var fillBrush = new SolidColorBrush(fillColor);
-            fillBrush.Freeze();
-
-            var strokeBrush = Darken(fillColor);
-            strokeBrush.Freeze();
-
-            chart.Series.Add(new StackedColumnSeries
-            {
-                Title = null,
-                Values = coloredValues,
-                Fill = fillBrush,
-                Stroke = strokeBrush,
-                StrokeThickness = 1.0,
-                MaxColumnWidth = MaxColumnWidth,
-                DataLabels = false
-            });
-        }
-
-        #endregion
 
         #region Fallback + guards
 
