@@ -1,5 +1,6 @@
 using DataVisualiser.Charts;
 using DataVisualiser.Charts.Computation;
+using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
 using DataVisualiser.State;
@@ -10,6 +11,7 @@ namespace DataVisualiser.Services.ChartRendering
     /// <summary>
     /// Orchestrates chart rendering operations, extracting complex rendering logic
     /// from MainWindow to improve maintainability and testability.
+    /// Handles multi-chart rendering, visibility management, and chart-specific rendering strategies.
     /// </summary>
     public sealed class ChartRenderingOrchestrator
     {
@@ -28,71 +30,9 @@ namespace DataVisualiser.Services.ChartRendering
         }
 
         /// <summary>
-        /// Renders a single chart by name from the provided context.
+        /// Renders all charts based on the provided context and visibility state.
         /// </summary>
-        public async Task RenderSingleChartAsync(
-            string chartName,
-            ChartDataContext ctx,
-            ChartState chartState)
-        {
-            if (ctx == null || !ShouldRenderCharts(ctx))
-                return;
-
-            var hasSecondaryData = HasSecondaryData(ctx);
-            var metricType = ctx.MetricType;
-            var primarySubtype = ctx.PrimarySubtype;
-            var secondarySubtype = ctx.SecondarySubtype;
-
-            switch (chartName)
-            {
-                case "Main":
-                    if (chartState.IsMainVisible)
-                    {
-                        await RenderMainChartAsync(ctx, chartState);
-                    }
-                    break;
-
-                case "Norm":
-                    if (chartState.IsNormalizedVisible && hasSecondaryData)
-                    {
-                        await RenderNormalizedAsync(ctx, metricType, primarySubtype, secondarySubtype);
-                    }
-                    break;
-
-                case "Diff":
-                    if (chartState.IsDifferenceVisible && hasSecondaryData)
-                    {
-                        await RenderDifferenceAsync(ctx, metricType, primarySubtype, secondarySubtype);
-                    }
-                    break;
-
-                case "Ratio":
-                    if (chartState.IsRatioVisible && hasSecondaryData)
-                    {
-                        await RenderRatioAsync(ctx, metricType, primarySubtype, secondarySubtype);
-                    }
-                    break;
-
-                case "Weekly":
-                    if (chartState.IsWeeklyVisible)
-                    {
-                        await RenderWeeklyDistributionAsync(ctx, chartState);
-                    }
-                    break;
-
-                case "WeeklyTrend":
-                    if (chartState.IsWeeklyTrendVisible)
-                    {
-                        RenderWeeklyTrend(ctx);
-                    }
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Renders all charts from the provided context based on visibility state.
-        /// </summary>
-        public async Task RenderAllChartsAsync(
+        public async Task RenderChartsFromContext(
             ChartDataContext ctx,
             ChartState chartState,
             CartesianChart chartMain,
@@ -109,28 +49,28 @@ namespace DataVisualiser.Services.ChartRendering
             var primarySubtype = ctx.PrimarySubtype;
             var secondarySubtype = ctx.SecondarySubtype;
 
-            // Primary chart
+            // Render primary chart if visible
             if (chartState.IsMainVisible)
             {
-                await RenderMainChartAsync(ctx, chartState);
+                await RenderPrimaryChart(ctx, chartMain);
             }
 
-            // Charts that require secondary data
+            // Render secondary charts if visible and data available
             if (hasSecondaryData)
             {
                 if (chartState.IsNormalizedVisible)
                 {
-                    await RenderNormalizedAsync(ctx, metricType, primarySubtype, secondarySubtype);
+                    await RenderNormalized(ctx, chartNorm, metricType, primarySubtype, secondarySubtype, chartState.SelectedNormalizationMode);
                 }
 
                 if (chartState.IsDifferenceVisible)
                 {
-                    await RenderDifferenceAsync(ctx, metricType, primarySubtype, secondarySubtype);
+                    await RenderDifference(ctx, chartDiff, metricType, primarySubtype, secondarySubtype);
                 }
 
                 if (chartState.IsRatioVisible)
                 {
-                    await RenderRatioAsync(ctx, metricType, primarySubtype, secondarySubtype);
+                    await RenderRatio(ctx, chartRatio, metricType, primarySubtype, secondarySubtype);
                 }
             }
             else
@@ -141,10 +81,10 @@ namespace DataVisualiser.Services.ChartRendering
                 Charts.Helpers.ChartHelper.ClearChart(chartRatio, chartState.ChartTimestamps);
             }
 
-            // Charts that don't require secondary data
+            // Render charts that don't require secondary data
             if (chartState.IsWeeklyVisible)
             {
-                await RenderWeeklyDistributionAsync(ctx, chartState);
+                await RenderWeeklyDistribution(ctx, chartWeekly, chartState);
             }
 
             if (chartState.IsWeeklyTrendVisible)
@@ -153,47 +93,184 @@ namespace DataVisualiser.Services.ChartRendering
             }
         }
 
-        private async Task RenderMainChartAsync(ChartDataContext ctx, ChartState chartState)
+        /// <summary>
+        /// Renders a single chart by name.
+        /// </summary>
+        public async Task RenderSingleChart(
+            string chartName,
+            ChartDataContext ctx,
+            ChartState chartState,
+            CartesianChart chartMain,
+            CartesianChart chartNorm,
+            CartesianChart chartDiff,
+            CartesianChart chartRatio,
+            CartesianChart chartWeekly)
         {
-            // This will be implemented by extracting logic from MainWindow
-            // For now, this is a placeholder that maintains the interface
+            var hasSecondaryData = HasSecondaryData(ctx);
+            var metricType = ctx.MetricType;
+            var primarySubtype = ctx.PrimarySubtype;
+            var secondarySubtype = ctx.SecondarySubtype;
+
+            switch (chartName)
+            {
+                case "Main":
+                    if (chartState.IsMainVisible)
+                    {
+                        await RenderPrimaryChart(ctx, chartMain);
+                    }
+                    break;
+
+                case "Norm":
+                    if (chartState.IsNormalizedVisible && hasSecondaryData)
+                    {
+                        await RenderNormalized(ctx, chartNorm, metricType, primarySubtype, secondarySubtype, chartState.SelectedNormalizationMode);
+                    }
+                    break;
+
+                case "Diff":
+                    if (chartState.IsDifferenceVisible && hasSecondaryData)
+                    {
+                        await RenderDifference(ctx, chartDiff, metricType, primarySubtype, secondarySubtype);
+                    }
+                    break;
+
+                case "Ratio":
+                    if (chartState.IsRatioVisible && hasSecondaryData)
+                    {
+                        await RenderRatio(ctx, chartRatio, metricType, primarySubtype, secondarySubtype);
+                    }
+                    break;
+
+                case "Weekly":
+                    if (chartState.IsWeeklyVisible)
+                    {
+                        await RenderWeeklyDistribution(ctx, chartWeekly, chartState);
+                    }
+                    break;
+
+                case "WeeklyTrend":
+                    if (chartState.IsWeeklyTrendVisible)
+                    {
+                        RenderWeeklyTrend(ctx);
+                    }
+                    break;
+            }
         }
 
-        private async Task RenderNormalizedAsync(
+        /// <summary>
+        /// Renders the primary (main) chart. This delegates to MainWindow's RenderMainChart
+        /// which handles the complex multi-series logic.
+        /// </summary>
+        public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain)
+        {
+            // This method is a placeholder - actual rendering is handled by MainWindow.RenderMainChart
+            // which has complex logic for building series lists and loading additional subtypes
+            await Task.CompletedTask;
+        }
+
+        private async Task RenderNormalized(
             ChartDataContext ctx,
+            CartesianChart chartNorm,
+            string? metricType,
+            string? primarySubtype,
+            string? secondarySubtype,
+            NormalizationMode normalizationMode)
+        {
+            var strategy = new NormalizedStrategy(
+                ctx.Data1!,
+                ctx.Data2!,
+                ctx.DisplayName1,
+                ctx.DisplayName2,
+                ctx.From,
+                ctx.To,
+                normalizationMode);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                chartNorm,
+                strategy,
+                $"{ctx.DisplayName1} ~ {ctx.DisplayName2}",
+                minHeight: 400,
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondarySubtype,
+                operationType: "~",
+                isOperationChart: true);
+        }
+
+        private async Task RenderDifference(
+            ChartDataContext ctx,
+            CartesianChart chartDiff,
             string? metricType,
             string? primarySubtype,
             string? secondarySubtype)
         {
-            // Implementation extracted from MainWindow
+            var strategy = new DifferenceStrategy(
+                ctx.Data1!,
+                ctx.Data2!,
+                ctx.DisplayName1,
+                ctx.DisplayName2,
+                ctx.From,
+                ctx.To);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                chartDiff,
+                strategy,
+                $"{ctx.DisplayName1} - {ctx.DisplayName2}",
+                minHeight: 400,
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondarySubtype,
+                operationType: "-",
+                isOperationChart: true);
         }
 
-        private async Task RenderDifferenceAsync(
+        private async Task RenderRatio(
             ChartDataContext ctx,
+            CartesianChart chartRatio,
             string? metricType,
             string? primarySubtype,
             string? secondarySubtype)
         {
-            // Implementation extracted from MainWindow
+            var strategy = new RatioStrategy(
+                ctx.Data1!,
+                ctx.Data2!,
+                ctx.DisplayName1,
+                ctx.DisplayName2,
+                ctx.From,
+                ctx.To);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                chartRatio,
+                strategy,
+                $"{ctx.DisplayName1} / {ctx.DisplayName2}",
+                minHeight: 400,
+                metricType: metricType,
+                primarySubtype: primarySubtype,
+                secondarySubtype: secondarySubtype,
+                operationType: "/",
+                isOperationChart: true);
         }
 
-        private async Task RenderRatioAsync(
+        private async Task RenderWeeklyDistribution(
             ChartDataContext ctx,
-            string? metricType,
-            string? primarySubtype,
-            string? secondarySubtype)
+            CartesianChart chartWeekly,
+            ChartState chartState)
         {
-            // Implementation extracted from MainWindow
-        }
-
-        private async Task RenderWeeklyDistributionAsync(ChartDataContext ctx, ChartState chartState)
-        {
-            // Implementation extracted from MainWindow
+            await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(
+                chartWeekly,
+                ctx.Data1!,
+                ctx.DisplayName1,
+                ctx.From,
+                ctx.To,
+                minHeight: 400,
+                useFrequencyShading: chartState.UseFrequencyShading,
+                intervalCount: chartState.WeeklyIntervalCount);
         }
 
         private void RenderWeeklyTrend(ChartDataContext ctx)
         {
             // Implementation extracted from MainWindow
+            // TODO: Implement weekly trend rendering
         }
 
         private static bool ShouldRenderCharts(ChartDataContext? ctx)
@@ -207,4 +284,3 @@ namespace DataVisualiser.Services.ChartRendering
         }
     }
 }
-
