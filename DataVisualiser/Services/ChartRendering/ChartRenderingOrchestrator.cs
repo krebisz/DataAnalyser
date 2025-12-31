@@ -158,14 +158,110 @@ namespace DataVisualiser.Services.ChartRendering
         }
 
         /// <summary>
-        /// Renders the primary (main) chart. This delegates to MainWindow's RenderMainChart
-        /// which handles the complex multi-series logic.
+        /// Renders the primary (main) chart using StrategyCutOverService.
+        /// Handles single, combined, and multi-metric strategies.
         /// </summary>
-        public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain)
+        public async Task RenderPrimaryChart(
+            ChartDataContext ctx,
+            CartesianChart chartMain,
+            IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries = null,
+            IReadOnlyList<string>? additionalLabels = null)
         {
-            // This method is a placeholder - actual rendering is handled by MainWindow.RenderMainChart
-            // which has complex logic for building series lists and loading additional subtypes
-            await Task.CompletedTask;
+            if (ctx == null || chartMain == null)
+                return;
+
+            // Build series list from context and additional series
+            var series = new List<IEnumerable<HealthMetricData>> { ctx.Data1 ?? Array.Empty<HealthMetricData>() };
+            var labels = new List<string> { ctx.DisplayName1 ?? string.Empty };
+
+            if (ctx.Data2 != null && ctx.Data2.Any())
+            {
+                series.Add(ctx.Data2);
+                labels.Add(ctx.DisplayName2 ?? string.Empty);
+            }
+
+            // Add additional series if provided (for multi-metric scenarios)
+            if (additionalSeries != null && additionalLabels != null)
+            {
+                for (int i = 0; i < Math.Min(additionalSeries.Count, additionalLabels.Count); i++)
+                {
+                    if (additionalSeries[i] != null && additionalSeries[i].Any())
+                    {
+                        series.Add(additionalSeries[i]);
+                        labels.Add(additionalLabels[i]);
+                    }
+                }
+            }
+
+            // Select strategy based on series count
+            var actualSeriesCount = series.Count;
+            IChartComputationStrategy strategy;
+            string? secondaryLabel = null;
+
+            if (actualSeriesCount > 2)
+            {
+                // Multi-metric strategy
+                var parameters = new StrategyCreationParameters
+                {
+                    LegacySeries = series,
+                    Labels = labels,
+                    From = ctx.From,
+                    To = ctx.To
+                };
+
+                strategy = _strategyCutOverService.CreateStrategy(
+                    StrategyType.MultiMetric,
+                    ctx,
+                    parameters);
+            }
+            else if (actualSeriesCount == 2)
+            {
+                // Combined metric strategy
+                secondaryLabel = labels[1];
+
+                var parameters = new StrategyCreationParameters
+                {
+                    LegacyData1 = series[0],
+                    LegacyData2 = series[1],
+                    Label1 = labels[0],
+                    Label2 = labels[1],
+                    From = ctx.From,
+                    To = ctx.To
+                };
+
+                strategy = _strategyCutOverService.CreateStrategy(
+                    StrategyType.CombinedMetric,
+                    ctx,
+                    parameters);
+            }
+            else
+            {
+                // Single metric strategy
+                var parameters = new StrategyCreationParameters
+                {
+                    LegacyData1 = series[0],
+                    Label1 = labels[0],
+                    From = ctx.From,
+                    To = ctx.To
+                };
+
+                strategy = _strategyCutOverService.CreateStrategy(
+                    StrategyType.SingleMetric,
+                    ctx,
+                    parameters);
+            }
+
+            // Update chart using the strategy
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                chartMain,
+                strategy,
+                labels[0],
+                secondaryLabel,
+                minHeight: 400,
+                metricType: ctx.MetricType,
+                primarySubtype: ctx.PrimarySubtype,
+                secondarySubtype: secondaryLabel != null ? ctx.SecondarySubtype : null,
+                isOperationChart: false);
         }
 
         private async Task RenderNormalized(

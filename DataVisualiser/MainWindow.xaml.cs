@@ -1292,24 +1292,37 @@ namespace DataVisualiser
             string? primarySubtype = null,
             string? secondarySubtype = null)
         {
+            var ctx = _viewModel.ChartState.LastContext;
+            if (ctx == null)
+                return;
+
             // Build initial series list for multi-metric routing
             var (series, labels) = BuildInitialSeriesList(data1, data2, displayName1, displayName2);
 
             // Load additional subtypes if more than 2 are selected
             await LoadAdditionalSubtypesAsync(series, labels, metricType, from, to);
 
-            var (strategy, secondaryLabel) = SelectComputationStrategy(series, labels, from, to);
+            // Extract additional series (beyond the first 2 from context)
+            IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries = null;
+            IReadOnlyList<string>? additionalLabels = null;
 
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                ChartMain,
-                strategy,
-                labels[0],
-                secondaryLabel,
-                minHeight: 400,
-                metricType: metricType,
-                primarySubtype: primarySubtype,
-                secondarySubtype: secondaryLabel != null ? secondarySubtype : null,
-                isOperationChart: false);
+            if (series.Count > 2)
+            {
+                additionalSeries = series.Skip(2).ToList();
+                additionalLabels = labels.Skip(2).ToList();
+            }
+
+            // Use ChartRenderingOrchestrator if available, otherwise fall back to direct strategy creation
+            // Note: ChartRenderingOrchestrator is not yet injected into MainWindow, so we'll use StrategyCutOverService directly
+            var dataPreparationService = new DataVisualiser.Services.Implementations.DataPreparationService();
+            var strategyCutOverService = new DataVisualiser.Services.Implementations.StrategyCutOverService(dataPreparationService);
+            
+            var orchestrator = new DataVisualiser.Services.ChartRendering.ChartRenderingOrchestrator(
+                _chartUpdateCoordinator,
+                _weeklyDistributionService,
+                strategyCutOverService);
+
+            await orchestrator.RenderPrimaryChart(ctx, ChartMain, additionalSeries, additionalLabels);
         }
 
         /// <summary>
