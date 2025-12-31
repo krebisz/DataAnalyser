@@ -5,6 +5,7 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Models;
     using DataVisualiser.Services.Abstractions;
     using DataVisualiser.Services.Implementations;
+    using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
     using System.Linq;
 
     /// <summary>
@@ -20,6 +21,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string _label;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         public TransformResultStrategy(
             List<HealthMetricData> data,
@@ -28,7 +30,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _data = data ?? throw new ArgumentNullException(nameof(data));
             _computedValues = computedValues ?? throw new ArgumentNullException(nameof(computedValues));
@@ -37,6 +40,7 @@ namespace DataVisualiser.Charts.Strategies
             _to = to;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         public string PrimaryLabel => _label;
@@ -71,8 +75,8 @@ namespace DataVisualiser.Charts.Strategies
                 }
             }
 
-            // Use unit from first data point if available
-            Unit = _data.FirstOrDefault()?.Unit;
+            // Use unified unit resolution service
+            Unit = _unitResolutionService.ResolveUnit(_data);
 
             // Use unified timeline service
             var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);

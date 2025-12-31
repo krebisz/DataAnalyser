@@ -5,6 +5,7 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Models;
     using DataVisualiser.Services.Abstractions;
     using DataVisualiser.Services.Implementations;
+    using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
     public sealed class NormalizedStrategy : IChartComputationStrategy
     {
@@ -17,6 +18,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly NormalizationMode _mode;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         public NormalizedStrategy(
             IEnumerable<HealthMetricData> left,
@@ -38,7 +40,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime to,
             NormalizationMode mode,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _left = left ?? Array.Empty<HealthMetricData>();
             _right = right ?? Array.Empty<HealthMetricData>();
@@ -49,6 +52,7 @@ namespace DataVisualiser.Charts.Strategies
             _mode = mode;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         public string PrimaryLabel => $"{_labelLeft} ~ {_labelRight}";
@@ -85,7 +89,7 @@ namespace DataVisualiser.Charts.Strategies
 
             var (raw1, raw2, smooth1, smooth2) = normalization.Value;
 
-            Unit = StrategyComputationHelper.GetUnit(ordered1, ordered2);
+            Unit = _unitResolutionService.ResolveUnit(ordered1, ordered2);
 
             return new ChartComputationResult
             {

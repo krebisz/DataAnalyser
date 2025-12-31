@@ -5,6 +5,7 @@ using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
 using DataVisualiser.Services.Implementations;
+using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -25,6 +26,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string _labelRight;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         public CombinedMetricCmsStrategy(
             ICanonicalMetricSeries left,
@@ -34,7 +36,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _left = left ?? throw new ArgumentNullException(nameof(left));
             _right = right ?? throw new ArgumentNullException(nameof(right));
@@ -44,6 +47,7 @@ namespace DataVisualiser.Charts.Strategies
             _to = to;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         public string PrimaryLabel => _labelLeft;
@@ -93,7 +97,7 @@ namespace DataVisualiser.Charts.Strategies
             var primarySmoothed = _smoothingService.SmoothSeries(leftSynthetic, timestamps, _from, _to);
             var secondarySmoothed = _smoothingService.SmoothSeries(rightSynthetic, timestamps, _from, _to);
 
-            Unit = ResolveUnit(_left, _right);
+            Unit = _unitResolutionService.ResolveUnit(_left, _right);
 
             return new ChartComputationResult
             {
@@ -150,15 +154,7 @@ namespace DataVisualiser.Charts.Strategies
         }
 
         // Smoothing logic moved to ISmoothingService
-
-        private static string? ResolveUnit(ICanonicalMetricSeries left, ICanonicalMetricSeries right)
-        {
-            var leftUnit = left.Unit.Symbol;
-            var rightUnit = right.Unit.Symbol;
-
-            if (string.IsNullOrWhiteSpace(leftUnit)) return string.IsNullOrWhiteSpace(rightUnit) ? null : rightUnit;
-            return leftUnit; // authoritative (even if mismatch)
-        }
+        // Unit resolution moved to IUnitResolutionService
 
         private sealed record CmsPoint(DateTime Timestamp, decimal? ValueDecimal);
     }

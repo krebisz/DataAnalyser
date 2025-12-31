@@ -3,6 +3,7 @@ using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
 using DataVisualiser.Services.Implementations;
+using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -21,6 +22,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string _labelRight;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         public CombinedMetricStrategy(
             IEnumerable<HealthMetricData> left,
@@ -30,7 +32,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _left = left ?? Array.Empty<HealthMetricData>();
             _right = right ?? Array.Empty<HealthMetricData>();
@@ -40,6 +43,7 @@ namespace DataVisualiser.Charts.Strategies
             _to = to;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         public string PrimaryLabel => _labelLeft;
@@ -69,7 +73,7 @@ namespace DataVisualiser.Charts.Strategies
             var primarySmoothed = _smoothingService.SmoothSeries(leftOrdered, timestamps, _from, _to);
             var secondarySmoothed = _smoothingService.SmoothSeries(rightOrdered, timestamps, _from, _to);
 
-            Unit = ResolveUnit(leftOrdered, rightOrdered);
+            Unit = _unitResolutionService.ResolveUnit(leftOrdered, rightOrdered);
 
             return new ChartComputationResult
             {
@@ -112,14 +116,7 @@ namespace DataVisualiser.Charts.Strategies
         }
 
         // Smoothing logic moved to ISmoothingService
-
-        private static string? ResolveUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)
-        {
-            var leftUnit = left.FirstOrDefault()?.Unit;
-            var rightUnit = right.FirstOrDefault()?.Unit;
-
-            return leftUnit == rightUnit ? leftUnit : leftUnit ?? rightUnit;
-        }
+        // Unit resolution moved to IUnitResolutionService
 
     }
 }

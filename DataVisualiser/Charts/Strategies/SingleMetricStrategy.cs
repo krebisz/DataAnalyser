@@ -6,6 +6,7 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Models;
     using DataVisualiser.Services.Abstractions;
     using DataVisualiser.Services.Implementations;
+    using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
     using System.Linq;
 
     public sealed class SingleMetricStrategy : IChartComputationStrategy
@@ -18,6 +19,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly bool _useCms;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         /// <summary>
         /// Legacy constructor using HealthMetricData.
@@ -28,7 +30,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _data = data ?? Array.Empty<HealthMetricData>();
             _cmsData = null;
@@ -38,6 +41,7 @@ namespace DataVisualiser.Charts.Strategies
             _useCms = false;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         /// <summary>
@@ -49,7 +53,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _data = null;
             _cmsData = cmsData ?? throw new ArgumentNullException(nameof(cmsData));
@@ -59,6 +64,7 @@ namespace DataVisualiser.Charts.Strategies
             _useCms = true;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         public string PrimaryLabel => _label;
@@ -79,8 +85,8 @@ namespace DataVisualiser.Charts.Strategies
             if (!orderedData.Any())
                 return null; // engine will treat null as no-data
 
-            // Use unit from first data point (legacy behavior)
-            var unitFromData = orderedData.FirstOrDefault()?.Unit;
+            // Use unified unit resolution service
+            var unitFromData = _unitResolutionService.ResolveUnit(orderedData);
             return ComputeFromHealthMetricData(orderedData, unitFromData);
         }
 
@@ -148,8 +154,8 @@ namespace DataVisualiser.Charts.Strategies
             // Use unified smoothing service
             var smoothedValues = _smoothingService.SmoothSeries(dataList, rawTimestamps, _from, _to);
 
-            // Use provided unit or fall back to first data point's unit
-            Unit = unit ?? dataList.FirstOrDefault()?.Unit;
+            // Use provided unit or fall back to unit resolution service
+            Unit = unit ?? _unitResolutionService.ResolveUnit(dataList);
 
             return new ChartComputationResult
             {

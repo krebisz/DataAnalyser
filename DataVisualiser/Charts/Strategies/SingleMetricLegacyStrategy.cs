@@ -11,6 +11,7 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Models;
     using DataVisualiser.Services.Abstractions;
     using DataVisualiser.Services.Implementations;
+    using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -27,6 +28,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string _label;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         public SingleMetricLegacyStrategy(
             IEnumerable<HealthMetricData> data,
@@ -34,7 +36,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _data = (data ?? Array.Empty<HealthMetricData>()).ToList();
             _label = label ?? "Metric";
@@ -42,6 +45,7 @@ namespace DataVisualiser.Charts.Strategies
             _to = to;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         public string PrimaryLabel => _label;
@@ -67,7 +71,7 @@ namespace DataVisualiser.Charts.Strategies
             // Use unified smoothing service
             var smoothedValues = _smoothingService.SmoothSeries(orderedData, timestamps, _from, _to);
 
-            Unit = orderedData.FirstOrDefault()?.Unit;
+            Unit = _unitResolutionService.ResolveUnit(orderedData);
 
             return new ChartComputationResult
             {

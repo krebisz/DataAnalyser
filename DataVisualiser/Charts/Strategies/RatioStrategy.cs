@@ -3,6 +3,7 @@ using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
 using DataVisualiser.Services.Implementations;
+using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -19,6 +20,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string _labelRight;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         public RatioStrategy(
             IEnumerable<HealthMetricData> left,
@@ -28,7 +30,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime from,
             DateTime to,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _left = left ?? Array.Empty<HealthMetricData>();
             _right = right ?? Array.Empty<HealthMetricData>();
@@ -38,6 +41,7 @@ namespace DataVisualiser.Charts.Strategies
             _to = to;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         public string PrimaryLabel => $"{_labelLeft} / {_labelRight}";
@@ -64,7 +68,7 @@ namespace DataVisualiser.Charts.Strategies
             var smoothedValues =
                 CreateSmoothedRatioSeries(timestamps, rawRatio);
 
-            Unit = ResolveRatioUnit(leftOrdered, rightOrdered);
+            Unit = _unitResolutionService.ResolveRatioUnit(leftOrdered, rightOrdered);
 
             return new ChartComputationResult
             {
@@ -130,12 +134,6 @@ namespace DataVisualiser.Charts.Strategies
             return _smoothingService.SmoothSeries(ratioData, timestamps, _from, _to);
         }
 
-        private static string? ResolveRatioUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)
-        {
-            var unitLeft = left.FirstOrDefault()?.Unit;
-            var unitRight = right.FirstOrDefault()?.Unit;
-
-            return (!string.IsNullOrEmpty(unitLeft) && !string.IsNullOrEmpty(unitRight)) ? $"{unitLeft}/{unitRight}" : null;
-        }
+        // Unit resolution moved to IUnitResolutionService
     }
 }
