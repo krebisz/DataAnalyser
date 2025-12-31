@@ -35,6 +35,7 @@ namespace DataVisualiser
         private MetricSelectionService _metricSelectionService;
         private ChartUpdateCoordinator _chartUpdateCoordinator;
         private WeeklyDistributionService _weeklyDistributionService;
+        private PrimaryChartRenderingService? _primaryChartRenderingService;
         private SubtypeSelectorManager _selectorManager;
 
         private readonly ChartState _chartState = new();
@@ -82,6 +83,13 @@ namespace DataVisualiser
             _weeklyDistributionService = new WeeklyDistributionService(
                 _chartState.ChartTimestamps,
                 strategyCutOverService);
+
+            // Create PrimaryChartRenderingService
+            _primaryChartRenderingService = new PrimaryChartRenderingService(
+                _chartUpdateCoordinator,
+                _weeklyDistributionService,
+                strategyCutOverService,
+                _connectionString);
 
             _viewModel = new MainWindowViewModel(
                 _chartState,
@@ -1293,104 +1301,23 @@ namespace DataVisualiser
             string? secondarySubtype = null)
         {
             var ctx = _viewModel.ChartState.LastContext;
-            if (ctx == null)
+            if (ctx == null || _primaryChartRenderingService == null)
                 return;
 
-            // Build initial series list for multi-metric routing
-            var (series, labels) = BuildInitialSeriesList(data1, data2, displayName1, displayName2);
-
-            // Load additional subtypes if more than 2 are selected
-            await LoadAdditionalSubtypesAsync(series, labels, metricType, from, to);
-
-            // Extract additional series (beyond the first 2 from context)
-            IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries = null;
-            IReadOnlyList<string>? additionalLabels = null;
-
-            if (series.Count > 2)
-            {
-                additionalSeries = series.Skip(2).ToList();
-                additionalLabels = labels.Skip(2).ToList();
-            }
-
-            // Use ChartRenderingOrchestrator if available, otherwise fall back to direct strategy creation
-            // Note: ChartRenderingOrchestrator is not yet injected into MainWindow, so we'll use StrategyCutOverService directly
-            var dataPreparationService = new DataVisualiser.Services.Implementations.DataPreparationService();
-            var strategyCutOverService = new DataVisualiser.Services.Implementations.StrategyCutOverService(dataPreparationService);
-            
-            var orchestrator = new DataVisualiser.Services.ChartRendering.ChartRenderingOrchestrator(
-                _chartUpdateCoordinator,
-                _weeklyDistributionService,
-                strategyCutOverService);
-
-            await orchestrator.RenderPrimaryChart(ctx, ChartMain, additionalSeries, additionalLabels);
+            await _primaryChartRenderingService.RenderPrimaryChartAsync(
+                ctx,
+                ChartMain,
+                data1,
+                data2,
+                displayName1,
+                displayName2,
+                from,
+                to,
+                metricType,
+                _viewModel.MetricState.SelectedSubtypes,
+                _viewModel.MetricState.ResolutionTableName);
         }
 
-        /// <summary>
-        /// Builds the initial series list and labels from primary and secondary data.
-        /// </summary>
-        private (List<IEnumerable<HealthMetricData>> series, List<string> labels) BuildInitialSeriesList(
-            IEnumerable<HealthMetricData> data1,
-            IEnumerable<HealthMetricData>? data2,
-            string displayName1,
-            string displayName2)
-        {
-            var series = new List<IEnumerable<HealthMetricData>> { data1 };
-            var labels = new List<string> { displayName1 };
-
-            if (data2 != null && data2.Any())
-            {
-                series.Add(data2);
-                labels.Add(displayName2);
-            }
-
-            return (series, labels);
-        }
-
-        /// <summary>
-        /// Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
-        /// </summary>
-        private async Task LoadAdditionalSubtypesAsync(
-            List<IEnumerable<HealthMetricData>> series,
-            List<string> labels,
-            string? metricType,
-            DateTime from,
-            DateTime to)
-        {
-            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
-            if (selectedSubtypes.Count <= 2 || string.IsNullOrEmpty(metricType))
-                return;
-
-            var dataFetcher = new DataFetcher(_connectionString);
-            var tableName = _viewModel.MetricState.ResolutionTableName ?? "HealthMetrics";
-
-            // Load data for subtypes 3, 4, etc.
-            for (int i = 2; i < selectedSubtypes.Count; i++)
-            {
-                var subtype = selectedSubtypes[i];
-                if (string.IsNullOrWhiteSpace(subtype))
-                    continue;
-
-                try
-                {
-                    var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(
-                        metricType,
-                        subtype,
-                        from,
-                        to,
-                        tableName);
-
-                    if (additionalData != null && additionalData.Any())
-                    {
-                        series.Add(additionalData);
-                        labels.Add($"{metricType}:{subtype}");
-                    }
-                }
-                catch
-                {
-                    // Skip if loading fails
-                }
-            }
-        }
 
         /// <summary>
         /// Selects the appropriate computation strategy based on the number of series.

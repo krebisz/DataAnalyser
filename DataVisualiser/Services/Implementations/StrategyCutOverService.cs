@@ -3,6 +3,7 @@ using DataVisualiser.Charts;
 using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
+using DataVisualiser.Services.Implementations.Factories;
 using DataVisualiser.State;
 
 namespace DataVisualiser.Services.Implementations
@@ -14,10 +15,24 @@ namespace DataVisualiser.Services.Implementations
     public sealed class StrategyCutOverService : IStrategyCutOverService
     {
         private readonly IDataPreparationService _dataPreparation;
+        private readonly Dictionary<StrategyType, IStrategyFactory> _factories;
 
         public StrategyCutOverService(IDataPreparationService dataPreparation)
         {
             _dataPreparation = dataPreparation ?? throw new ArgumentNullException(nameof(dataPreparation));
+            
+            // Initialize factories
+            _factories = new Dictionary<StrategyType, IStrategyFactory>
+            {
+                { StrategyType.SingleMetric, new SingleMetricStrategyFactory() },
+                { StrategyType.CombinedMetric, new CombinedMetricStrategyFactory() },
+                { StrategyType.MultiMetric, new MultiMetricStrategyFactory() },
+                { StrategyType.Difference, new DifferenceStrategyFactory() },
+                { StrategyType.Ratio, new RatioStrategyFactory() },
+                { StrategyType.Normalized, new NormalizedStrategyFactory() },
+                { StrategyType.WeeklyDistribution, new WeeklyDistributionStrategyFactory() },
+                { StrategyType.WeekdayTrend, new WeekdayTrendStrategyFactory() }
+            };
         }
 
         public bool ShouldUseCms(StrategyType strategyType, ChartDataContext ctx)
@@ -123,93 +138,24 @@ namespace DataVisualiser.Services.Implementations
             ChartDataContext ctx,
             StrategyCreationParameters parameters)
         {
-            return strategyType switch
+            if (!_factories.TryGetValue(strategyType, out var factory))
             {
-                StrategyType.SingleMetric => new SingleMetricCmsStrategy(
-                    ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"),
-                    parameters.Label1,
-                    parameters.From,
-                    parameters.To),
+                throw new NotSupportedException($"Strategy type {strategyType} is not supported");
+            }
 
-                StrategyType.CombinedMetric => new CombinedMetricCmsStrategy(
-                    ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"),
-                    ctx.SecondaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("SecondaryCms is null"),
-                    parameters.Label1,
-                    parameters.Label2,
-                    parameters.From,
-                    parameters.To),
-
-                StrategyType.WeeklyDistribution => new CmsWeeklyDistributionStrategy(
-                    ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"),
-                    parameters.From,
-                    parameters.To,
-                    parameters.Label1),
-
-                // TODO: Implement other CMS strategies
-                _ => CreateLegacyStrategy(strategyType, parameters)
-            };
+            return factory.CreateCmsStrategy(ctx, parameters);
         }
 
         private IChartComputationStrategy CreateLegacyStrategy(
             StrategyType strategyType,
             StrategyCreationParameters parameters)
         {
-            return strategyType switch
+            if (!_factories.TryGetValue(strategyType, out var factory))
             {
-                StrategyType.SingleMetric => new SingleMetricLegacyStrategy(
-                    parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                    parameters.Label1,
-                    parameters.From,
-                    parameters.To),
+                throw new NotSupportedException($"Strategy type {strategyType} is not supported");
+            }
 
-                StrategyType.CombinedMetric => new CombinedMetricStrategy(
-                    parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                    parameters.LegacyData2 ?? Array.Empty<HealthMetricData>(),
-                    parameters.Label1,
-                    parameters.Label2,
-                    parameters.From,
-                    parameters.To),
-
-                StrategyType.Difference => new DifferenceStrategy(
-                    parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                    parameters.LegacyData2 ?? Array.Empty<HealthMetricData>(),
-                    parameters.Label1,
-                    parameters.Label2,
-                    parameters.From,
-                    parameters.To),
-
-                StrategyType.Ratio => new RatioStrategy(
-                    parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                    parameters.LegacyData2 ?? Array.Empty<HealthMetricData>(),
-                    parameters.Label1,
-                    parameters.Label2,
-                    parameters.From,
-                    parameters.To),
-
-                StrategyType.Normalized => new NormalizedStrategy(
-                    parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                    parameters.LegacyData2 ?? Array.Empty<HealthMetricData>(),
-                    parameters.Label1,
-                    parameters.Label2,
-                    parameters.From,
-                    parameters.To,
-                    parameters.NormalizationMode ?? NormalizationMode.PercentageOfMax),
-
-                StrategyType.MultiMetric => new MultiMetricStrategy(
-                    parameters.LegacySeries ?? Array.Empty<IEnumerable<HealthMetricData>>(),
-                    parameters.Labels ?? Array.Empty<string>(),
-                    parameters.From,
-                    parameters.To,
-                    parameters.Unit),
-
-                StrategyType.WeeklyDistribution => new WeeklyDistributionStrategy(
-                    parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                    parameters.Label1,
-                    parameters.From,
-                    parameters.To),
-
-                _ => throw new NotSupportedException($"Strategy type {strategyType} is not supported")
-            };
+            return factory.CreateLegacyStrategy(parameters);
         }
     }
 }
