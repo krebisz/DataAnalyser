@@ -3,6 +3,9 @@ using DataFileReader.Canonical;
 using DataVisualiser.Charts;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Models;
+using DataVisualiser.Services.Abstractions;
+using DataVisualiser.Services.Implementations;
+using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -12,6 +15,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _from;
         private readonly DateTime _to;
         private readonly string _label;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         public IReadOnlyList<object> Bins { get; private set; } = Array.Empty<object>();
 
@@ -24,12 +28,14 @@ namespace DataVisualiser.Charts.Strategies
             ICanonicalMetricSeries series,
             DateTime from,
             DateTime to,
-            string label)
+            string label,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _series = series ?? throw new ArgumentNullException(nameof(series));
             _from = from;
             _to = to;
             _label = label ?? string.Empty;
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         private void ComputeFrequencies(
@@ -71,7 +77,7 @@ namespace DataVisualiser.Charts.Strategies
 
         public string PrimaryLabel => _label;
         public string SecondaryLabel => string.Empty;
-        public string? Unit => null;
+        public string? Unit => _unitResolutionService.ResolveUnit(_series);
         public WeeklyDistributionResult? ExtendedResult { get; private set; }
 
 
@@ -121,10 +127,11 @@ namespace DataVisualiser.Charts.Strategies
                 Bins = bins,
                 FrequenciesPerDay = freqs,
                 NormalizedFrequenciesPerDay = norm,
-                Unit = _series.Unit.Symbol
+                Unit = _unitResolutionService.ResolveUnit(_series)
             };
 
             // Minimal ChartComputationResult (matches legacy weekly distribution convention)
+            var resolvedUnit = _unitResolutionService.ResolveUnit(_series);
             return new ChartComputationResult
             {
                 PrimaryRawValues = mins.ToList(),
@@ -136,7 +143,7 @@ namespace DataVisualiser.Charts.Strategies
                 NormalizedIntervals = new List<DateTime>(),
                 TickInterval = TickInterval.Day,
                 DateRange = _to - _from,
-                Unit = _series.Unit.Symbol
+                Unit = resolvedUnit
             };
         }
 

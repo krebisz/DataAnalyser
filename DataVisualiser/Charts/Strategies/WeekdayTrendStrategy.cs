@@ -1,10 +1,20 @@
 using DataVisualiser.Helper;
 using DataVisualiser.Models;
+using DataVisualiser.Services.Abstractions;
+using DataVisualiser.Services.Implementations;
+using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
 namespace DataVisualiser.Charts.Strategies
 {
     public sealed class WeekdayTrendStrategy
     {
+        private readonly IUnitResolutionService _unitResolutionService;
+
+        public WeekdayTrendStrategy(IUnitResolutionService? unitResolutionService = null)
+        {
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
+        }
+
         public WeekdayTrendResult Compute(
             IEnumerable<HealthMetricData> data,
             DateTime from,
@@ -19,7 +29,7 @@ namespace DataVisualiser.Charts.Strategies
             {
                 From = from,
                 To = to,
-                Unit = filtered.FirstOrDefault()?.Unit
+                Unit = _unitResolutionService.ResolveUnit(filtered)
             };
 
             if (filtered.Count == 0)

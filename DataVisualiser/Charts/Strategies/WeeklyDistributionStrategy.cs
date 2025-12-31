@@ -2,6 +2,9 @@ using DataVisualiser.Charts.Computation;
 using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services;
+using DataVisualiser.Services.Abstractions;
+using DataVisualiser.Services.Implementations;
+using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -15,13 +18,20 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _from;
         private readonly DateTime _to;
         private readonly string _label;
+        private readonly IUnitResolutionService _unitResolutionService;
 
-        public WeeklyDistributionStrategy(IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
+        public WeeklyDistributionStrategy(
+            IEnumerable<HealthMetricData> data,
+            string label,
+            DateTime from,
+            DateTime to,
+            IUnitResolutionService? unitResolutionService = null)
         {
             _data = data ?? Array.Empty<HealthMetricData>();
             _label = label ?? "Metric";
             _from = from;
             _to = to;
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         // friendly name for chart title/legend (not used as series name here)
@@ -55,7 +65,7 @@ namespace DataVisualiser.Charts.Strategies
 
             var stats = ComputeDailyStatistics(buckets);
 
-            Unit = ordered.FirstOrDefault()?.Unit;
+            Unit = _unitResolutionService.ResolveUnit(ordered);
 
             var frequencyData =
                 ComputeFrequencyDistributions(

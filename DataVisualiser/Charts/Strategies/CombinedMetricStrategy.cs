@@ -63,7 +63,7 @@ namespace DataVisualiser.Charts.Strategies
                 return null;
 
             var (timestamps, primaryRaw, secondaryRaw) =
-                AlignByIndex(leftOrdered, rightOrdered, count);
+                StrategyComputationHelper.AlignByIndex(leftOrdered, rightOrdered, count);
 
             // Use unified timeline service
             var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
@@ -95,26 +95,7 @@ namespace DataVisualiser.Charts.Strategies
             return StrategyComputationHelper.FilterAndOrderByRange(source, _from, _to);
         }
 
-        private static (List<DateTime> Timestamps, List<double> Primary, List<double> Secondary)
-        AlignByIndex(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right, int count)
-        {
-            var timestamps = new List<DateTime>(count);
-            var primary = new List<double>(count);
-            var secondary = new List<double>(count);
-
-            for (int i = 0; i < count; i++)
-            {
-                var l = left[i];
-                var r = right[i];
-
-                timestamps.Add(l.NormalizedTimestamp);
-                primary.Add(l.Value.HasValue ? (double)l.Value.Value : double.NaN);
-                secondary.Add(r.Value.HasValue ? (double)r.Value.Value : double.NaN);
-            }
-
-            return (timestamps, primary, secondary);
-        }
-
+        // Alignment logic moved to StrategyComputationHelper
         // Smoothing logic moved to ISmoothingService
         // Unit resolution moved to IUnitResolutionService
 

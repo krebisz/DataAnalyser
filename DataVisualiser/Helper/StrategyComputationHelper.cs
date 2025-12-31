@@ -133,6 +133,60 @@ namespace DataVisualiser.Helper
         {
             return ordered1.FirstOrDefault()?.Unit ?? ordered2.FirstOrDefault()?.Unit;
         }
+
+        /// <summary>
+        /// Aligns two HealthMetricData series by index and extracts timestamps and values.
+        /// Used by strategies that need to align two series by their ordered index.
+        /// </summary>
+        public static (List<DateTime> Timestamps, List<double> Primary, List<double> Secondary)
+            AlignByIndex(
+                IReadOnlyList<HealthMetricData> left,
+                IReadOnlyList<HealthMetricData> right,
+                int count)
+        {
+            var timestamps = new List<DateTime>(count);
+            var primary = new List<double>(count);
+            var secondary = new List<double>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                var l = left[i];
+                var r = right[i];
+
+                timestamps.Add(l.NormalizedTimestamp);
+                primary.Add(l.Value.HasValue ? (double)l.Value.Value : double.NaN);
+                secondary.Add(r.Value.HasValue ? (double)r.Value.Value : double.NaN);
+            }
+
+            return (timestamps, primary, secondary);
+        }
+
+        /// <summary>
+        /// Aligns two CmsPoint series by index and extracts timestamps and values.
+        /// Used by CMS strategies that need to align two series by their ordered index.
+        /// </summary>
+        public static (List<DateTime> Timestamps, List<double> Primary, List<double> Secondary)
+            AlignByIndex(
+                IReadOnlyList<(DateTime Timestamp, decimal? ValueDecimal)> left,
+                IReadOnlyList<(DateTime Timestamp, decimal? ValueDecimal)> right,
+                int count)
+        {
+            var timestamps = new List<DateTime>(count);
+            var primary = new List<double>(count);
+            var secondary = new List<double>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                var l = left[i];
+                var r = right[i];
+
+                timestamps.Add(l.Timestamp);
+                primary.Add(l.ValueDecimal.HasValue ? (double)l.ValueDecimal.Value : double.NaN);
+                secondary.Add(r.ValueDecimal.HasValue ? (double)r.ValueDecimal.Value : double.NaN);
+            }
+
+            return (timestamps, primary, secondary);
+        }
     }
 }
 

@@ -72,7 +72,10 @@ namespace DataVisualiser.Charts.Strategies
             if (count == 0)
                 return null;
 
-            var (timestamps, primaryRaw, secondaryRaw) = AlignByIndex(leftOrdered, rightOrdered, count);
+            // Convert CmsPoint to tuple format for alignment helper
+            var leftTuples = leftOrdered.Select(p => (p.Timestamp, p.ValueDecimal)).ToList();
+            var rightTuples = rightOrdered.Select(p => (p.Timestamp, p.ValueDecimal)).ToList();
+            var (timestamps, primaryRaw, secondaryRaw) = StrategyComputationHelper.AlignByIndex(leftTuples, rightTuples, count);
 
             // Use unified timeline service
             var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
@@ -132,29 +135,9 @@ namespace DataVisualiser.Charts.Strategies
                 .ToList();
         }
 
-        private static (List<DateTime> Timestamps, List<double> Primary, List<double> Secondary)
-            AlignByIndex(IReadOnlyList<CmsPoint> left, IReadOnlyList<CmsPoint> right, int count)
-        {
-            var timestamps = new List<DateTime>(count);
-            var primary = new List<double>(count);
-            var secondary = new List<double>(count);
-
-            for (int i = 0; i < count; i++)
-            {
-                var l = left[i];
-                var r = right[i];
-
-                timestamps.Add(l.Timestamp);
-
-                primary.Add(l.ValueDecimal.HasValue ? (double)l.ValueDecimal.Value : double.NaN);
-                secondary.Add(r.ValueDecimal.HasValue ? (double)r.ValueDecimal.Value : double.NaN);
-            }
-
-            return (timestamps, primary, secondary);
-        }
-
         // Smoothing logic moved to ISmoothingService
         // Unit resolution moved to IUnitResolutionService
+        // Alignment logic moved to StrategyComputationHelper
 
         private sealed record CmsPoint(DateTime Timestamp, decimal? ValueDecimal);
     }

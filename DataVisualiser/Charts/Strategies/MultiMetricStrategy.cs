@@ -4,6 +4,7 @@ using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Abstractions;
 using DataVisualiser.Services.Implementations;
+using UnitResolutionService = DataVisualiser.Services.Implementations.UnitResolutionService;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -20,6 +21,7 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string? _unit;
         private readonly ITimelineService _timelineService;
         private readonly ISmoothingService _smoothingService;
+        private readonly IUnitResolutionService _unitResolutionService;
 
         /// <summary>
         /// Legacy constructor using HealthMetricData collections.
@@ -31,7 +33,8 @@ namespace DataVisualiser.Charts.Strategies
             DateTime to,
             string? unit = null,
             ITimelineService? timelineService = null,
-            ISmoothingService? smoothingService = null)
+            ISmoothingService? smoothingService = null,
+            IUnitResolutionService? unitResolutionService = null)
         {
             if (series == null || series.Count == 0)
                 throw new ArgumentException("At least one metric series is required.", nameof(series));
@@ -45,6 +48,7 @@ namespace DataVisualiser.Charts.Strategies
             _unit = unit;
             _timelineService = timelineService ?? new TimelineService();
             _smoothingService = smoothingService ?? new SmoothingService();
+            _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
         }
 
         /// <summary>
@@ -89,7 +93,12 @@ namespace DataVisualiser.Charts.Strategies
             _labels = labels;
             _from = from;
             _to = to;
-            _unit = cmsSeries.FirstOrDefault()?.Unit.Symbol;
+            // Use unified unit resolution service (default implementation)
+            var unitResolutionService = new UnitResolutionService();
+            _unit = cmsSeries.Count > 0 ? unitResolutionService.ResolveUnit(cmsSeries[0]) : null;
+            _timelineService = new TimelineService();
+            _smoothingService = new SmoothingService();
+            _unitResolutionService = unitResolutionService;
         }
 
         public string PrimaryLabel => _labels.Count > 0 ? _labels[0] : "Multi-Metric";
@@ -147,10 +156,10 @@ namespace DataVisualiser.Charts.Strategies
             // Use unified smoothing service
             var smoothedValues = _smoothingService.SmoothSeries(orderedData, rawTimestamps, _from, _to);
 
-            // Capture unit from first non-null series
+            // Capture unit from first non-null series using unified service
             if (Unit == null)
             {
-                Unit = orderedData.FirstOrDefault()?.Unit;
+                Unit = _unitResolutionService.ResolveUnit(orderedData);
             }
 
             return BuildSeriesResult(seriesIndex, label, rawTimestamps, rawValues, smoothedValues.ToList());
