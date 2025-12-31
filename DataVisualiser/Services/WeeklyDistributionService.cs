@@ -7,6 +7,7 @@ using DataVisualiser.Charts.Strategies;
 using DataVisualiser.Helper;
 using DataVisualiser.Models;
 using DataVisualiser.Services.Shading;
+using DataVisualiser.Services.WeeklyDistribution;
 using LiveCharts;
 using LiveCharts.Wpf;
 using System.Diagnostics;
@@ -33,12 +34,14 @@ namespace DataVisualiser.Services
         private IFrequencyShadingRenderer? _frequencyRenderer;
         private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
         private IIntervalShadingStrategy _shadingStrategy;
+        private FrequencyShadingCalculator _frequencyShadingCalculator;
 
         public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IIntervalShadingStrategy? shadingStrategy = null)
         {
             _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
             _shadingStrategy = shadingStrategy ?? new FrequencyBasedShadingStrategy();
             _frequencyRenderer = new FrequencyShadingRenderer(MaxColumnWidth);
+            _frequencyShadingCalculator = new FrequencyShadingCalculator(_shadingStrategy);
         }
 
         /// <summary>
@@ -47,6 +50,7 @@ namespace DataVisualiser.Services
         public void SetShadingStrategy(IIntervalShadingStrategy strategy)
         {
             _shadingStrategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
+            _frequencyShadingCalculator = new FrequencyShadingCalculator(_shadingStrategy);
         }
 
         /// <summary>
@@ -220,7 +224,7 @@ namespace DataVisualiser.Services
 
             var shadingData = useFrequencyShading
                 ? BuildFrequencyShadingData(dayValues, globalMin, globalMax, intervalCount)
-                : FrequencyShadingData.Empty;
+                : WeeklyDistribution.FrequencyShadingData.Empty;
 
             AddBaselineAndRangeSeries(
                 targetChart,
@@ -246,15 +250,7 @@ namespace DataVisualiser.Services
             targetChart.LegendLocation = LiveCharts.LegendLocation.None;
         }
 
-        private sealed record FrequencyShadingData(
-    List<(double Min, double Max)> Intervals,
-    Dictionary<int, Dictionary<int, int>> FrequenciesPerDay,
-    Dictionary<int, Dictionary<int, Color>> ColorMap,
-    Dictionary<int, List<double>> DayValues)
-        {
-            public static readonly FrequencyShadingData Empty =
-                new(new(), new(), new(), new());
-        }
+        // FrequencyShadingData moved to FrequencyShadingCalculator namespace
 
         private bool TryExtractMinMax(
             ChartComputationResult result,
@@ -294,27 +290,17 @@ namespace DataVisualiser.Services
             return (min, max);
         }
 
-        private FrequencyShadingData BuildFrequencyShadingData(
-    Dictionary<int, List<double>> dayValues,
-    double globalMin,
-    double globalMax,
-    int intervalCount)
+        private WeeklyDistribution.FrequencyShadingData BuildFrequencyShadingData(
+            Dictionary<int, List<double>> dayValues,
+            double globalMin,
+            double globalMax,
+            int intervalCount)
         {
-            var intervals = CreateUniformIntervals(globalMin, globalMax, intervalCount);
-            var frequencies = CountFrequenciesPerInterval(dayValues, intervals);
-
-            var context = new IntervalShadingContext
-            {
-                Intervals = intervals,
-                FrequenciesPerDay = frequencies,
-                DayValues = dayValues,
-                GlobalMin = globalMin,
-                GlobalMax = globalMax
-            };
-
-            var colorMap = _shadingStrategy.CalculateColorMap(context);
-
-            return new FrequencyShadingData(intervals, frequencies, colorMap, dayValues);
+            return _frequencyShadingCalculator.BuildFrequencyShadingData(
+                dayValues,
+                globalMin,
+                globalMax,
+                intervalCount);
         }
 
         private void AddBaselineAndRangeSeries(
@@ -372,12 +358,12 @@ namespace DataVisualiser.Services
         }
 
         private void ApplyFrequencyShadingViaRenderer(
-    CartesianChart chart,
-    List<double> mins,
-    List<double> ranges,
-    FrequencyShadingData data,
-    double globalMin,
-    double globalMax)
+            CartesianChart chart,
+            List<double> mins,
+            List<double> ranges,
+            WeeklyDistribution.FrequencyShadingData data,
+            double globalMin,
+            double globalMax)
         {
             var context = new IntervalShadingContext
             {
@@ -464,120 +450,7 @@ namespace DataVisualiser.Services
             return dayValues;
         }
 
-        /// <summary>
-        /// Step 2: Create uniform partitions/intervals for the y-axis (20-30 intervals).
-        /// These intervals are shared across all days and represent the stratification of the y-axis.
-        /// </summary>
-        private List<(double Min, double Max)> CreateUniformIntervals(double globalMin, double globalMax, int intervalCount)
-        {
-            var intervals = new List<(double Min, double Max)>();
-
-            if (globalMax <= globalMin || intervalCount <= 0)
-            {
-                // Return a single interval if invalid input
-                intervals.Add((globalMin, globalMax));
-                return intervals;
-            }
-
-            double intervalSize = (globalMax - globalMin) / intervalCount;
-
-            System.Diagnostics.Debug.WriteLine($"=== WeeklyDistribution: Creating Intervals ===");
-            System.Diagnostics.Debug.WriteLine($"Interval Count: {intervalCount}, Interval Size: {intervalSize:F6}");
-
-            for (int i = 0; i < intervalCount; i++)
-            {
-                double min = globalMin + i * intervalSize;
-                // Last interval includes the max value to ensure we cover the full range
-                double max = (i == intervalCount - 1) ? globalMax : min + intervalSize;
-                intervals.Add((min, max));
-
-                // Log first 3, last 3, and every 5th interval
-                if (i < 3 || i >= intervalCount - 3 || i % 5 == 0)
-                {
-                    string intervalType = i == intervalCount - 1 ? "[inclusive]" : "[half-open)";
-                    System.Diagnostics.Debug.WriteLine($"  Interval {i}: [{min:F6}, {max:F6}{intervalType}");
-                }
-            }
-
-            System.Diagnostics.Debug.WriteLine($"Total intervals created: {intervals.Count}");
-
-            return intervals;
-        }
-
-        /// <summary>
-        /// Step 3: Count the number of values that fall in each interval, for each separate day.
-        /// </summary>
-        private Dictionary<int, Dictionary<int, int>> CountFrequenciesPerInterval(
-            Dictionary<int, List<double>> dayValues,
-            List<(double Min, double Max)> intervals)
-        {
-            var frequenciesPerDay = new Dictionary<int, Dictionary<int, int>>();
-
-            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
-            {
-                var frequencies = new Dictionary<int, int>();
-
-                // Initialize all intervals to 0
-                for (int i = 0; i < intervals.Count; i++)
-                {
-                    frequencies[i] = 0;
-                }
-
-                // Count values in each interval
-                if (dayValues.TryGetValue(dayIndex, out var values))
-                {
-                    foreach (var value in values)
-                    {
-                        if (double.IsNaN(value) || double.IsInfinity(value))
-                            continue;
-
-                        // Find which interval this value belongs to
-                        for (int i = 0; i < intervals.Count; i++)
-                        {
-                            var interval = intervals[i];
-                            // Check if value is in [Min, Max) for all intervals except the last, which is [Min, Max]
-                            if (i < intervals.Count - 1)
-                            {
-                                if (value >= interval.Min && value < interval.Max)
-                                {
-                                    frequencies[i]++;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                // Last interval is inclusive on both ends
-                                if (value >= interval.Min && value <= interval.Max)
-                                {
-                                    frequencies[i]++;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                frequenciesPerDay[dayIndex] = frequencies;
-
-                // Log frequency summary for each day
-                int totalValues = frequencies.Values.Sum();
-                int nonZeroIntervals = frequencies.Values.Count(f => f > 0);
-                int maxFreq = frequencies.Values.DefaultIfEmpty(0).Max();
-                System.Diagnostics.Debug.WriteLine($"Day {dayIndex} frequencies: Total values={totalValues}, Non-zero intervals={nonZeroIntervals}, Max frequency={maxFreq}");
-
-                // Log frequencies for first few and last few intervals
-                if (frequencies.Count > 0)
-                {
-                    var sortedIntervals = frequencies.OrderBy(kvp => kvp.Key).ToList();
-                    var firstFew = sortedIntervals.Take(3).Select(kvp => $"I{kvp.Key}={kvp.Value}").ToList();
-                    var lastFew = sortedIntervals.Skip(Math.Max(0, sortedIntervals.Count - 3)).Select(kvp => $"I{kvp.Key}={kvp.Value}").ToList();
-                    System.Diagnostics.Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
-                    System.Diagnostics.Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");
-                }
-            }
-
-            return frequenciesPerDay;
-        }
+        // Frequency shading calculation methods moved to FrequencyShadingCalculator
 
         private void ApplyFrequencyShading(
             CartesianChart targetChart,
@@ -1230,10 +1103,10 @@ namespace DataVisualiser.Services
                 globalMax = globalMin + 1;
 
             // Create intervals (same as in RenderOriginalMinMaxChart)
-            var intervals = CreateUniformIntervals(globalMin, globalMax, intervalCount);
+            var intervals = _frequencyShadingCalculator.CreateUniformIntervals(globalMin, globalMax, intervalCount);
 
             // Count frequencies per interval per day
-            var frequenciesPerDay = CountFrequenciesPerInterval(dayValues, intervals);
+            var frequenciesPerDay = _frequencyShadingCalculator.CountFrequenciesPerInterval(dayValues, intervals);
 
             // Calculate percentages for each day
             for (int dayIndex = 0; dayIndex < 7; dayIndex++)

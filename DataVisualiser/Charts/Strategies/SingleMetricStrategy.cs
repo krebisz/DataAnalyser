@@ -4,6 +4,8 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Charts.Computation;
     using DataVisualiser.Helper;
     using DataVisualiser.Models;
+    using DataVisualiser.Services.Abstractions;
+    using DataVisualiser.Services.Implementations;
     using System.Linq;
 
     public sealed class SingleMetricStrategy : IChartComputationStrategy
@@ -14,11 +16,19 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _to;
         private readonly string _label;
         private readonly bool _useCms;
+        private readonly ITimelineService _timelineService;
+        private readonly ISmoothingService _smoothingService;
 
         /// <summary>
         /// Legacy constructor using HealthMetricData.
         /// </summary>
-        public SingleMetricStrategy(IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
+        public SingleMetricStrategy(
+            IEnumerable<HealthMetricData> data,
+            string label,
+            DateTime from,
+            DateTime to,
+            ITimelineService? timelineService = null,
+            ISmoothingService? smoothingService = null)
         {
             _data = data ?? Array.Empty<HealthMetricData>();
             _cmsData = null;
@@ -26,12 +36,20 @@ namespace DataVisualiser.Charts.Strategies
             _from = from;
             _to = to;
             _useCms = false;
+            _timelineService = timelineService ?? new TimelineService();
+            _smoothingService = smoothingService ?? new SmoothingService();
         }
 
         /// <summary>
         /// Phase 4: Constructor using Canonical Metric Series.
         /// </summary>
-        public SingleMetricStrategy(ICanonicalMetricSeries cmsData, string label, DateTime from, DateTime to)
+        public SingleMetricStrategy(
+            ICanonicalMetricSeries cmsData,
+            string label,
+            DateTime from,
+            DateTime to,
+            ITimelineService? timelineService = null,
+            ISmoothingService? smoothingService = null)
         {
             _data = null;
             _cmsData = cmsData ?? throw new ArgumentNullException(nameof(cmsData));
@@ -39,6 +57,8 @@ namespace DataVisualiser.Charts.Strategies
             _from = from;
             _to = to;
             _useCms = true;
+            _timelineService = timelineService ?? new TimelineService();
+            _smoothingService = smoothingService ?? new SmoothingService();
         }
 
         public string PrimaryLabel => _label;
@@ -119,15 +139,14 @@ namespace DataVisualiser.Charts.Strategies
             // Convert IReadOnlyList to List only if necessary
             var dataList = orderedData is List<HealthMetricData> list ? list : orderedData.ToList();
 
-            var dateRange = _to - _from;
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
             var rawTimestamps = dataList.Select(d => d.NormalizedTimestamp).ToList();
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-            var intervalIndices = rawTimestamps
-                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
-                .ToList();
-            var smoothedData = MathHelper.CreateSmoothedData(dataList, _from, _to);
-            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, rawTimestamps);
+
+            // Use unified timeline service
+            var timeline = _timelineService.GenerateTimeline(_from, _to, rawTimestamps);
+            var intervalIndices = _timelineService.MapToIntervals(rawTimestamps, timeline);
+
+            // Use unified smoothing service
+            var smoothedValues = _smoothingService.SmoothSeries(dataList, rawTimestamps, _from, _to);
 
             // Use provided unit or fall back to first data point's unit
             Unit = unit ?? dataList.FirstOrDefault()?.Unit;
@@ -135,14 +154,14 @@ namespace DataVisualiser.Charts.Strategies
             return new ChartComputationResult
             {
                 Timestamps = rawTimestamps,
-                IntervalIndices = intervalIndices,
-                NormalizedIntervals = normalizedIntervals,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
                 PrimaryRawValues = dataList
                     .Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN)
                     .ToList(),
-                PrimarySmoothed = smoothedValues,
-                TickInterval = tickInterval,
-                DateRange = dateRange,
+                PrimarySmoothed = smoothedValues.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
                 Unit = Unit
             };
         }

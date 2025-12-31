@@ -103,7 +103,7 @@ namespace DataVisualiser.Services
             // Strategies should receive CMS directly via StrategyCutOverService.
             // Only convert if we need legacy data for derived calculations (diff/ratio/norm).
             // For now, use legacy data as-is and let strategies handle CMS directly.
-            
+
             var ctx = Build(
                 metricType,
                 primarySubtype,

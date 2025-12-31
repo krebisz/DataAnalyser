@@ -2,6 +2,8 @@ using DataFileReader.Canonical;
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Helper;
 using DataVisualiser.Models;
+using DataVisualiser.Services.Abstractions;
+using DataVisualiser.Services.Implementations;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -16,6 +18,8 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _from;
         private readonly DateTime _to;
         private readonly string? _unit;
+        private readonly ITimelineService _timelineService;
+        private readonly ISmoothingService _smoothingService;
 
         /// <summary>
         /// Legacy constructor using HealthMetricData collections.
@@ -25,7 +29,9 @@ namespace DataVisualiser.Charts.Strategies
             IReadOnlyList<string> labels,
             DateTime from,
             DateTime to,
-            string? unit = null)
+            string? unit = null,
+            ITimelineService? timelineService = null,
+            ISmoothingService? smoothingService = null)
         {
             if (series == null || series.Count == 0)
                 throw new ArgumentException("At least one metric series is required.", nameof(series));
@@ -37,6 +43,8 @@ namespace DataVisualiser.Charts.Strategies
             _from = from;
             _to = to;
             _unit = unit;
+            _timelineService = timelineService ?? new TimelineService();
+            _smoothingService = smoothingService ?? new SmoothingService();
         }
 
         /// <summary>
@@ -136,9 +144,8 @@ namespace DataVisualiser.Charts.Strategies
                 .Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN)
                 .ToList();
 
-            // Apply smoothing (same as SingleMetricStrategy)
-            var smoothedData = MathHelper.CreateSmoothedData(orderedData, _from, _to);
-            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, rawTimestamps);
+            // Use unified smoothing service
+            var smoothedValues = _smoothingService.SmoothSeries(orderedData, rawTimestamps, _from, _to);
 
             // Capture unit from first non-null series
             if (Unit == null)
@@ -146,7 +153,7 @@ namespace DataVisualiser.Charts.Strategies
                 Unit = orderedData.FirstOrDefault()?.Unit;
             }
 
-            return BuildSeriesResult(seriesIndex, label, rawTimestamps, rawValues, smoothedValues);
+            return BuildSeriesResult(seriesIndex, label, rawTimestamps, rawValues, smoothedValues.ToList());
         }
 
         /// <summary>
@@ -186,25 +193,20 @@ namespace DataVisualiser.Charts.Strategies
         /// </summary>
         private ChartComputationResult BuildComputationResult(List<SeriesResult> seriesResults)
         {
-            // Determine common metadata from all series
-            var dateRange = _to - _from;
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-
             // Collect all unique timestamps across all series for the main timeline
             var allTimestamps = CollectAllTimestamps(seriesResults);
 
-            var intervalIndices = allTimestamps
-                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
-                .ToList();
+            // Use unified timeline service
+            var timeline = _timelineService.GenerateTimeline(_from, _to, allTimestamps);
+            var intervalIndices = _timelineService.MapToIntervals(allTimestamps, timeline);
 
             return new ChartComputationResult
             {
                 Timestamps = allTimestamps,
-                IntervalIndices = intervalIndices,
-                NormalizedIntervals = normalizedIntervals,
-                TickInterval = tickInterval,
-                DateRange = dateRange,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
                 Unit = Unit ?? _unit,
                 // Populate Series array with one result per sub-metric
                 Series = seriesResults

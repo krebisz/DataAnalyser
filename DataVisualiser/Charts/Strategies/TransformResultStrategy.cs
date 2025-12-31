@@ -3,6 +3,8 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Charts.Computation;
     using DataVisualiser.Helper;
     using DataVisualiser.Models;
+    using DataVisualiser.Services.Abstractions;
+    using DataVisualiser.Services.Implementations;
     using System.Linq;
 
     /// <summary>
@@ -16,19 +18,25 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _from;
         private readonly DateTime _to;
         private readonly string _label;
+        private readonly ITimelineService _timelineService;
+        private readonly ISmoothingService _smoothingService;
 
         public TransformResultStrategy(
             List<HealthMetricData> data,
             List<double> computedValues,
             string label,
             DateTime from,
-            DateTime to)
+            DateTime to,
+            ITimelineService? timelineService = null,
+            ISmoothingService? smoothingService = null)
         {
             _data = data ?? throw new ArgumentNullException(nameof(data));
             _computedValues = computedValues ?? throw new ArgumentNullException(nameof(computedValues));
             _label = label ?? "Transform Result";
             _from = from;
             _to = to;
+            _timelineService = timelineService ?? new TimelineService();
+            _smoothingService = smoothingService ?? new SmoothingService();
         }
 
         public string PrimaryLabel => _label;
@@ -66,41 +74,31 @@ namespace DataVisualiser.Charts.Strategies
             // Use unit from first data point if available
             Unit = _data.FirstOrDefault()?.Unit;
 
-            // Determine tick interval based on date range
-            var dateRange = _to - _from;
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
+            // Use unified timeline service
+            var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
+            var intervalIndices = _timelineService.MapToIntervals(timestamps, timeline);
 
-            // Generate normalized intervals for proper axis spacing
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
+            // Convert computed values to HealthMetricData for smoothing
+            var dataForSmoothing = _data.Zip(_computedValues, (d, v) => new HealthMetricData
+            {
+                NormalizedTimestamp = d.NormalizedTimestamp,
+                Value = (decimal)v,
+                Unit = d.Unit,
+                Provider = d.Provider
+            }).ToList();
 
-            // Map timestamps to interval indices
-            var intervalIndices = timestamps
-                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
-                .ToList();
-
-            // Apply smoothing to transform results for consistency with other charts
-            var smoothedData = MathHelper.CreateSmoothedData(
-                _data.Zip(_computedValues, (d, v) => new HealthMetricData
-                {
-                    NormalizedTimestamp = d.NormalizedTimestamp,
-                    Value = (decimal)v,
-                    Unit = d.Unit,
-                    Provider = d.Provider
-                }).ToList(),
-                _from,
-                _to);
-
-            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, timestamps);
+            // Use unified smoothing service
+            var smoothedValues = _smoothingService.SmoothSeries(dataForSmoothing, timestamps, _from, _to);
 
             return new ChartComputationResult
             {
                 Timestamps = timestamps,
-                IntervalIndices = intervalIndices,
-                NormalizedIntervals = normalizedIntervals,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
                 PrimaryRawValues = rawValues,
-                PrimarySmoothed = smoothedValues,
-                TickInterval = tickInterval,
-                DateRange = dateRange,
+                PrimarySmoothed = smoothedValues.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
                 Unit = Unit
             };
         }
