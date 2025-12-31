@@ -584,67 +584,169 @@ namespace DataVisualiser.Charts.Helpers
         /// <summary>
         /// Normalizes Y-axis ticks to show uniform intervals (~10 ticks) with rounded bounds.
         /// </summary>
-        public static void NormalizeYAxis(Axis yAxis, List<HealthMetricData> rawData, List<double> smoothedValues)
+        public static void NormalizeYAxis(
+            Axis yAxis,
+            List<HealthMetricData> rawData,
+            List<double> smoothedValues)
         {
             var allValues = CollectAllValues(rawData, smoothedValues);
+            LogInputCounts(rawData, smoothedValues, allValues);
 
-            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: rawData={rawData?.Count ?? 0}, smoothedValues={smoothedValues?.Count ?? 0}, allValues={allValues.Count}");
-
-            if (!allValues.Any())
+            if (!TryGetValidMinMax(allValues, out var dataMin, out var dataMax))
             {
-                System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: No values, resetting Y-axis");
                 ResetYAxisToInvalid(yAxis);
                 return;
             }
 
-            double dataMin = allValues.Min();
-            double dataMax = allValues.Max();
+            var padded = CalculatePaddedRange(dataMin, dataMax);
+            LogPaddedRange(padded);
 
-            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: dataMin={dataMin}, dataMax={dataMax}");
-
-            if (double.IsNaN(dataMin) || double.IsNaN(dataMax) || double.IsInfinity(dataMin) || double.IsInfinity(dataMax))
+            if (!TryApplyFallbackAxis(yAxis, padded))
             {
-                System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: Invalid min/max, resetting Y-axis");
-                ResetYAxisToInvalid(yAxis);
-                return;
+                ApplyNiceAxis(yAxis, padded, dataMin);
             }
 
+            FinalizeAxis(yAxis);
+        }
+
+        private static void LogInputCounts(
+    List<HealthMetricData> rawData,
+    List<double> smoothedValues,
+    List<double> allValues)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[TransformChart] NormalizeYAxis: rawData={rawData?.Count ?? 0}, " +
+                $"smoothedValues={smoothedValues?.Count ?? 0}, allValues={allValues.Count}");
+        }
+
+        private static void LogPaddedRange((double Min, double Max, double Range) padded)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[TransformChart] NormalizeYAxis: After padding - " +
+                $"minValue={padded.Min}, maxValue={padded.Max}, range={padded.Range}");
+        }
+
+        private static bool TryGetValidMinMax(
+            List<double> values,
+            out double min,
+            out double max)
+        {
+            min = max = 0;
+
+            if (!values.Any())
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "[TransformChart] NormalizeYAxis: No values, resetting Y-axis");
+                return false;
+            }
+
+            min = values.Min();
+            max = values.Max();
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[TransformChart] NormalizeYAxis: dataMin={min}, dataMax={max}");
+
+            if (double.IsNaN(min) || double.IsNaN(max) ||
+                double.IsInfinity(min) || double.IsInfinity(max))
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "[TransformChart] NormalizeYAxis: Invalid min/max, resetting Y-axis");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static (double Min, double Max, double Range) CalculatePaddedRange(
+    double dataMin,
+    double dataMax)
+        {
             double range = dataMax - dataMin;
             var (minValue, maxValue) = ApplyPadding(dataMin, dataMax, range);
-            range = maxValue - minValue;
+            return (minValue, maxValue, maxValue - minValue);
+        }
 
-            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: After padding - minValue={minValue}, maxValue={maxValue}, range={range}");
-
+        private static bool TryApplyFallbackAxis(
+    Axis yAxis,
+    (double Min, double Max, double Range) padded)
+        {
             const double targetTicks = 10.0;
-            double rawTickInterval = range / targetTicks;
+            double rawTickInterval = padded.Range / targetTicks;
 
-            if (rawTickInterval <= 0 || double.IsNaN(rawTickInterval) || double.IsInfinity(rawTickInterval))
+            if (rawTickInterval > 0 &&
+                !double.IsNaN(rawTickInterval) &&
+                !double.IsInfinity(rawTickInterval))
             {
-                yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(minValue);
-                yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(maxValue);
-                System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: Using fallback - YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}");
-                var fallbackStep = MathHelper.RoundToThreeSignificantDigits(range / targetTicks);
-                yAxis.Separator = fallbackStep > 0 ? new LiveCharts.Wpf.Separator { Step = fallbackStep } : new LiveCharts.Wpf.Separator();
-                yAxis.ShowLabels = true;
-                yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
-                return;
+                return false; // fallback not needed
             }
 
-            double niceInterval = CalculateNiceInterval(range, targetTicks);
-            var (niceMin, niceMax) = CalculateNiceBounds(minValue, maxValue, niceInterval, dataMin);
+            yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(padded.Min);
+            yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(padded.Max);
 
-            yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(niceMin);
-            yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(niceMax);
+            var fallbackStep =
+                MathHelper.RoundToThreeSignificantDigits(padded.Range / targetTicks);
 
-            double step = MathHelper.RoundToThreeSignificantDigits(niceInterval);
-            if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
-                step = MathHelper.RoundToThreeSignificantDigits((yAxis.MaxValue - yAxis.MinValue) / targetTicks);
+            yAxis.Separator = fallbackStep > 0
+                ? new LiveCharts.Wpf.Separator { Step = fallbackStep }
+                : new LiveCharts.Wpf.Separator();
 
-            yAxis.Separator = new LiveCharts.Wpf.Separator { Step = step };
-            yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+            yAxis.LabelFormatter = value =>
+                MathHelper.FormatToThreeSignificantDigits(value);
+
             yAxis.ShowLabels = true;
 
-            System.Diagnostics.Debug.WriteLine($"[TransformChart] NormalizeYAxis: Final - YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}, Step={step}, ShowLabels={yAxis.ShowLabels}");
+            System.Diagnostics.Debug.WriteLine(
+                $"[TransformChart] NormalizeYAxis: Using fallback - " +
+                $"YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}");
+
+            return true;
+        }
+        private static void ApplyNiceAxis(
+    Axis yAxis,
+    (double Min, double Max, double Range) padded,
+    double dataMin)
+        {
+            const double targetTicks = 10.0;
+
+            double niceInterval =
+                CalculateNiceInterval(padded.Range, targetTicks);
+
+            var (niceMin, niceMax) =
+                CalculateNiceBounds(
+                    padded.Min,
+                    padded.Max,
+                    niceInterval,
+                    dataMin);
+
+            yAxis.MinValue =
+                MathHelper.RoundToThreeSignificantDigits(niceMin);
+
+            yAxis.MaxValue =
+                MathHelper.RoundToThreeSignificantDigits(niceMax);
+
+            double step =
+                MathHelper.RoundToThreeSignificantDigits(niceInterval);
+
+            if (step <= 0 || double.IsNaN(step) || double.IsInfinity(step))
+            {
+                step = MathHelper.RoundToThreeSignificantDigits(
+                    (yAxis.MaxValue - yAxis.MinValue) / targetTicks);
+            }
+
+            yAxis.Separator =
+                new LiveCharts.Wpf.Separator { Step = step };
+
+            yAxis.LabelFormatter =
+                value => MathHelper.FormatToThreeSignificantDigits(value);
+
+            yAxis.ShowLabels = true;
+
+            System.Diagnostics.Debug.WriteLine(
+                $"[TransformChart] NormalizeYAxis: Final - " +
+                $"YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}, Step={step}");
+        }
+        private static void FinalizeAxis(Axis yAxis)
+        {
             yAxis.Labels = null;
         }
 

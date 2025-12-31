@@ -89,73 +89,111 @@ namespace DataVisualiser.Services.WeeklyDistribution
             Dictionary<int, List<double>> dayValues,
             List<(double Min, double Max)> intervals)
         {
-            var frequenciesPerDay = new Dictionary<int, Dictionary<int, int>>();
+            var result = new Dictionary<int, Dictionary<int, int>>();
 
-            for (int dayIndex = 0; dayIndex < 7; dayIndex++)
+            foreach (var dayIndex in EnumerateDays())
             {
-                var frequencies = new Dictionary<int, int>();
+                var frequencies = InitializeFrequencies(intervals.Count);
 
-                // Initialize all intervals to 0
-                for (int i = 0; i < intervals.Count; i++)
-                {
-                    frequencies[i] = 0;
-                }
-
-                // Count values in each interval
                 if (dayValues.TryGetValue(dayIndex, out var values))
                 {
-                    foreach (var value in values)
-                    {
-                        if (double.IsNaN(value) || double.IsInfinity(value))
-                            continue;
-
-                        // Find which interval this value belongs to
-                        for (int i = 0; i < intervals.Count; i++)
-                        {
-                            var interval = intervals[i];
-                            // Check if value is in [Min, Max) for all intervals except the last, which is [Min, Max]
-                            if (i < intervals.Count - 1)
-                            {
-                                if (value >= interval.Min && value < interval.Max)
-                                {
-                                    frequencies[i]++;
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                // Last interval is inclusive on both ends
-                                if (value >= interval.Min && value <= interval.Max)
-                                {
-                                    frequencies[i]++;
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    CountValuesIntoIntervals(values, intervals, frequencies);
                 }
 
-                frequenciesPerDay[dayIndex] = frequencies;
-
-                // Log frequency summary for each day
-                int totalValues = frequencies.Values.Sum();
-                int nonZeroIntervals = frequencies.Values.Count(f => f > 0);
-                int maxFreq = frequencies.Values.DefaultIfEmpty(0).Max();
-                Debug.WriteLine($"Day {dayIndex} frequencies: Total values={totalValues}, Non-zero intervals={nonZeroIntervals}, Max frequency={maxFreq}");
-
-                // Log frequencies for first few and last few intervals
-                if (frequencies.Count > 0)
-                {
-                    var sortedIntervals = frequencies.OrderBy(kvp => kvp.Key).ToList();
-                    var firstFew = sortedIntervals.Take(3).Select(kvp => $"I{kvp.Key}={kvp.Value}").ToList();
-                    var lastFew = sortedIntervals.Skip(Math.Max(0, sortedIntervals.Count - 3)).Select(kvp => $"I{kvp.Key}={kvp.Value}").ToList();
-                    Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
-                    Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");
-                }
+                result[dayIndex] = frequencies;
+                LogDaySummary(dayIndex, frequencies);
             }
 
-            return frequenciesPerDay;
+            return result;
         }
+
+        private static IEnumerable<int> EnumerateDays()
+        {
+            for (int day = 0; day < 7; day++)
+                yield return day;
+        }
+
+        private static Dictionary<int, int> InitializeFrequencies(int intervalCount)
+        {
+            var frequencies = new Dictionary<int, int>(intervalCount);
+
+            for (int i = 0; i < intervalCount; i++)
+                frequencies[i] = 0;
+
+            return frequencies;
+        }
+        private static void CountValuesIntoIntervals(
+    IEnumerable<double> values,
+    List<(double Min, double Max)> intervals,
+    Dictionary<int, int> frequencies)
+        {
+            foreach (var value in values)
+            {
+                if (!IsValidValue(value))
+                    continue;
+
+                int intervalIndex = FindIntervalIndex(value, intervals);
+                if (intervalIndex >= 0)
+                    frequencies[intervalIndex]++;
+            }
+        }
+        private static bool IsValidValue(double value)
+        {
+            return !double.IsNaN(value) && !double.IsInfinity(value);
+        }
+        private static int FindIntervalIndex(
+    double value,
+    List<(double Min, double Max)> intervals)
+        {
+            for (int i = 0; i < intervals.Count; i++)
+            {
+                var interval = intervals[i];
+                bool isLast = (i == intervals.Count - 1);
+
+                if (IsValueInInterval(value, interval, isLast))
+                    return i;
+            }
+
+            return -1;
+        }
+        private static bool IsValueInInterval(
+    double value,
+    (double Min, double Max) interval,
+    bool inclusiveUpperBound)
+        {
+            return inclusiveUpperBound
+                ? value >= interval.Min && value <= interval.Max
+                : value >= interval.Min && value < interval.Max;
+        }
+        private static void LogDaySummary(
+    int dayIndex,
+    Dictionary<int, int> frequencies)
+        {
+            int totalValues = frequencies.Values.Sum();
+            int nonZeroIntervals = frequencies.Values.Count(f => f > 0);
+            int maxFreq = frequencies.Values.DefaultIfEmpty(0).Max();
+
+            Debug.WriteLine(
+                $"Day {dayIndex} frequencies: " +
+                $"Total values={totalValues}, " +
+                $"Non-zero intervals={nonZeroIntervals}, " +
+                $"Max frequency={maxFreq}");
+
+            if (frequencies.Count == 0)
+                return;
+
+            var ordered = frequencies.OrderBy(kvp => kvp.Key).ToList();
+
+            var firstFew = ordered.Take(3)
+                .Select(kvp => $"I{kvp.Key}={kvp.Value}");
+
+            var lastFew = ordered.Skip(Math.Max(0, ordered.Count - 3))
+                .Select(kvp => $"I{kvp.Key}={kvp.Value}");
+
+            Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
+            Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");
+        }
+
     }
 
     /// <summary>
