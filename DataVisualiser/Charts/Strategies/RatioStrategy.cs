@@ -1,6 +1,8 @@
 using DataVisualiser.Charts.Computation;
 using DataVisualiser.Helper;
 using DataVisualiser.Models;
+using DataVisualiser.Services.Abstractions;
+using DataVisualiser.Services.Implementations;
 
 namespace DataVisualiser.Charts.Strategies
 {
@@ -15,6 +17,8 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _to;
         private readonly string _labelLeft;
         private readonly string _labelRight;
+        private readonly ITimelineService _timelineService;
+        private readonly ISmoothingService _smoothingService;
 
         public RatioStrategy(
             IEnumerable<HealthMetricData> left,
@@ -22,7 +26,9 @@ namespace DataVisualiser.Charts.Strategies
             string labelLeft,
             string labelRight,
             DateTime from,
-            DateTime to)
+            DateTime to,
+            ITimelineService? timelineService = null,
+            ISmoothingService? smoothingService = null)
         {
             _left = left ?? Array.Empty<HealthMetricData>();
             _right = right ?? Array.Empty<HealthMetricData>();
@@ -30,6 +36,8 @@ namespace DataVisualiser.Charts.Strategies
             _labelRight = labelRight ?? "Right";
             _from = from;
             _to = to;
+            _timelineService = timelineService ?? new TimelineService();
+            _smoothingService = smoothingService ?? new SmoothingService();
         }
 
         public string PrimaryLabel => $"{_labelLeft} / {_labelRight}";
@@ -48,19 +56,11 @@ namespace DataVisualiser.Charts.Strategies
             var (timestamps, rawRatio) =
                 ComputeIndexAlignedRatios(leftOrdered, rightOrdered, count);
 
-            var dateRange = _to - _from;
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-            var normalizedIntervals =
-                MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
+            // Use unified timeline service
+            var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
+            var intervalIndices = _timelineService.MapToIntervals(timestamps, timeline);
 
-            var intervalIndices = timestamps
-                .Select(ts =>
-                    MathHelper.MapTimestampToIntervalIndex(
-                        ts,
-                        normalizedIntervals,
-                        tickInterval))
-                .ToList();
-
+            // Use unified smoothing service
             var smoothedValues =
                 CreateSmoothedRatioSeries(timestamps, rawRatio);
 
@@ -69,12 +69,12 @@ namespace DataVisualiser.Charts.Strategies
             return new ChartComputationResult
             {
                 Timestamps = timestamps,
-                IntervalIndices = intervalIndices,
-                NormalizedIntervals = normalizedIntervals,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
                 PrimaryRawValues = rawRatio,
-                PrimarySmoothed = smoothedValues,
-                TickInterval = tickInterval,
-                DateRange = dateRange,
+                PrimarySmoothed = smoothedValues.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
                 Unit = Unit
             };
         }
@@ -110,7 +110,7 @@ namespace DataVisualiser.Charts.Strategies
             return (timestamps, ratios);
         }
 
-        private List<double> CreateSmoothedRatioSeries(IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawRatios)
+        private IReadOnlyList<double> CreateSmoothedRatioSeries(IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawRatios)
         {
             var ratioData = new List<HealthMetricData>(timestamps.Count);
 
@@ -126,9 +126,8 @@ namespace DataVisualiser.Charts.Strategies
                 });
             }
 
-            var smoothedPoints = MathHelper.CreateSmoothedData(ratioData, _from, _to);
-
-            return MathHelper.InterpolateSmoothedData(smoothedPoints, timestamps.ToList());
+            // Use unified smoothing service
+            return _smoothingService.SmoothSeries(ratioData, timestamps, _from, _to);
         }
 
         private static string? ResolveRatioUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)

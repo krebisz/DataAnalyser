@@ -9,6 +9,8 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Charts.Computation;
     using DataVisualiser.Helper;
     using DataVisualiser.Models;
+    using DataVisualiser.Services.Abstractions;
+    using DataVisualiser.Services.Implementations;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -23,17 +25,23 @@ namespace DataVisualiser.Charts.Strategies
         private readonly DateTime _from;
         private readonly DateTime _to;
         private readonly string _label;
+        private readonly ITimelineService _timelineService;
+        private readonly ISmoothingService _smoothingService;
 
         public SingleMetricLegacyStrategy(
             IEnumerable<HealthMetricData> data,
             string label,
             DateTime from,
-            DateTime to)
+            DateTime to,
+            ITimelineService? timelineService = null,
+            ISmoothingService? smoothingService = null)
         {
             _data = (data ?? Array.Empty<HealthMetricData>()).ToList();
             _label = label ?? "Metric";
             _from = from;
             _to = to;
+            _timelineService = timelineService ?? new TimelineService();
+            _smoothingService = smoothingService ?? new SmoothingService();
         }
 
         public string PrimaryLabel => _label;
@@ -50,31 +58,28 @@ namespace DataVisualiser.Charts.Strategies
             if (orderedData.Count == 0)
                 return null;
 
-            var dateRange = _to - _from;
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-
             var timestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-            var intervalIndices = timestamps
-                .Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval))
-                .ToList();
 
-            var smoothedData = MathHelper.CreateSmoothedData(orderedData, _from, _to);
-            var smoothedValues = MathHelper.InterpolateSmoothedData(smoothedData, timestamps);
+            // Use unified timeline service
+            var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
+            var intervalIndices = _timelineService.MapToIntervals(timestamps, timeline);
+
+            // Use unified smoothing service
+            var smoothedValues = _smoothingService.SmoothSeries(orderedData, timestamps, _from, _to);
 
             Unit = orderedData.FirstOrDefault()?.Unit;
 
             return new ChartComputationResult
             {
                 Timestamps = timestamps,
-                IntervalIndices = intervalIndices,
-                NormalizedIntervals = normalizedIntervals,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
                 PrimaryRawValues = orderedData
                     .Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN)
                     .ToList(),
-                PrimarySmoothed = smoothedValues,
-                TickInterval = tickInterval,
-                DateRange = dateRange,
+                PrimarySmoothed = smoothedValues.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
                 Unit = Unit
             };
         }

@@ -3,6 +3,8 @@ namespace DataVisualiser.Charts.Strategies
     using DataVisualiser.Charts.Computation;
     using DataVisualiser.Helper;
     using DataVisualiser.Models;
+    using DataVisualiser.Services.Abstractions;
+    using DataVisualiser.Services.Implementations;
 
     public sealed class NormalizedStrategy : IChartComputationStrategy
     {
@@ -13,6 +15,8 @@ namespace DataVisualiser.Charts.Strategies
         private readonly string _labelLeft;
         private readonly string _labelRight;
         private readonly NormalizationMode _mode;
+        private readonly ITimelineService _timelineService;
+        private readonly ISmoothingService _smoothingService;
 
         public NormalizedStrategy(
             IEnumerable<HealthMetricData> left,
@@ -32,7 +36,9 @@ namespace DataVisualiser.Charts.Strategies
             string labelRight,
             DateTime from,
             DateTime to,
-            NormalizationMode mode)
+            NormalizationMode mode,
+            ITimelineService? timelineService = null,
+            ISmoothingService? smoothingService = null)
         {
             _left = left ?? Array.Empty<HealthMetricData>();
             _right = right ?? Array.Empty<HealthMetricData>();
@@ -41,6 +47,8 @@ namespace DataVisualiser.Charts.Strategies
             _from = from;
             _to = to;
             _mode = mode;
+            _timelineService = timelineService ?? new TimelineService();
+            _smoothingService = smoothingService ?? new SmoothingService();
         }
 
         public string PrimaryLabel => $"{_labelLeft} ~ {_labelRight}";
@@ -62,10 +70,13 @@ namespace DataVisualiser.Charts.Strategies
 
             if (timestamps.Count == 0) return null;
 
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(_from, _to, tickInterval);
-            var intervalIndices = timestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, normalizedIntervals, tickInterval)).ToList();
+            // Use unified timeline service
+            var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
+            var intervalIndices = _timelineService.MapToIntervals(timestamps, timeline);
 
-            var (interpSmoothed1, interpSmoothed2) = StrategyComputationHelper.ProcessSmoothedData(ordered1, ordered2, timestamps, _from, _to);
+            // Use unified smoothing service
+            var interpSmoothed1 = _smoothingService.SmoothSeries(ordered1, timestamps, _from, _to).ToList();
+            var interpSmoothed2 = _smoothingService.SmoothSeries(ordered2, timestamps, _from, _to).ToList();
 
             var (rawValues1, rawValues2) = ExtractAlignedRawValues(ordered1, ordered2, timestamps);
             var normalization = NormalizeSeries(rawValues1, rawValues2, interpSmoothed1, interpSmoothed2);
@@ -79,14 +90,14 @@ namespace DataVisualiser.Charts.Strategies
             return new ChartComputationResult
             {
                 Timestamps = timestamps,
-                IntervalIndices = intervalIndices,
-                NormalizedIntervals = normalizedIntervals,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
                 PrimaryRawValues = raw1,
-                PrimarySmoothed = smooth1,
+                PrimarySmoothed = smooth1.ToList(),
                 SecondaryRawValues = raw2,
-                SecondarySmoothed = smooth2,
-                TickInterval = tickInterval,
-                DateRange = dateRange,
+                SecondarySmoothed = smooth2.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
                 Unit = Unit
             };
         }
