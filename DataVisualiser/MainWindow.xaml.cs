@@ -25,11 +25,11 @@ namespace DataVisualiser
 {
     public partial class MainWindow : Window
     {
-        private readonly ChartComputationEngine _chartComputationEngine;
-        private readonly ChartRenderEngine _chartRenderEngine;
+        private ChartComputationEngine _chartComputationEngine;
+        private ChartRenderEngine _chartRenderEngine;
         private ChartTooltipManager? _tooltipManager;
 
-        private readonly string _connectionString;
+        private string _connectionString;
         private List<string>? subtypeList;
 
         private MetricSelectionService _metricSelectionService;
@@ -41,7 +41,7 @@ namespace DataVisualiser
         private readonly ChartState _chartState = new();
         private readonly MetricState _metricState = new();
         private readonly UiState _uiState = new();
-        private readonly MainWindowViewModel _viewModel;
+        private MainWindowViewModel _viewModel;
 
         private bool _isInitializing = true;
         private bool _isChangingResolution = false;
@@ -53,13 +53,30 @@ namespace DataVisualiser
         {
             InitializeComponent();
 
+            InitializeWindowLayout();
+
+            InitializeInfrastructure();
+            InitializeChartPipeline();
+            InitializeViewModel();
+            InitializeUiBindings();
+
+            ExecuteStartupSequence();
+
+            RegisterLifecycleEvents();
+        }
+
+        #region Initialization Phases
+
+        private void InitializeWindowLayout()
+        {
             // Pin window to top-left corner
             Left = 0;
             Top = 0;
+        }
 
-            _connectionString =
-                ConfigurationManager.AppSettings["HealthDB"]
-                ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
+        private void InitializeInfrastructure()
+        {
+            _connectionString = ResolveConnectionString();
 
             _metricSelectionService = new MetricSelectionService(_connectionString);
 
@@ -67,30 +84,17 @@ namespace DataVisualiser
             _chartRenderEngine = new ChartRenderEngine();
 
             InitializeTooltips();
+        }
 
-            _chartUpdateCoordinator = new ChartUpdateCoordinator(
-                _chartComputationEngine,
-                _chartRenderEngine,
-                _tooltipManager,
-                _chartState.ChartTimestamps);
+        private void InitializeChartPipeline()
+        {
+            _chartUpdateCoordinator = CreateChartUpdateCoordinator();
+            _weeklyDistributionService = CreateWeeklyDistributionService();
+            _primaryChartRenderingService = CreatePrimaryChartRenderingService();
+        }
 
-            _chartUpdateCoordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
-            
-            // Create StrategyCutOverService for unified cut-over logic
-            var dataPreparationService = new DataVisualiser.Services.Implementations.DataPreparationService();
-            var strategyCutOverService = new DataVisualiser.Services.Implementations.StrategyCutOverService(dataPreparationService);
-            
-            _weeklyDistributionService = new WeeklyDistributionService(
-                _chartState.ChartTimestamps,
-                strategyCutOverService);
-
-            // Create PrimaryChartRenderingService
-            _primaryChartRenderingService = new PrimaryChartRenderingService(
-                _chartUpdateCoordinator,
-                _weeklyDistributionService,
-                strategyCutOverService,
-                _connectionString);
-
+        private void InitializeViewModel()
+        {
             _viewModel = new MainWindowViewModel(
                 _chartState,
                 _metricState,
@@ -100,49 +104,134 @@ namespace DataVisualiser
                 _weeklyDistributionService);
 
             DataContext = _viewModel;
+        }
 
+        private void InitializeUiBindings()
+        {
             WireViewModelEvents();
-            
+
             // Wire up MainChartController events
             MainChartController.ToggleRequested += OnMainChartToggleRequested;
+        }
 
-            // Initialize date range through viewModel
-            var initialFromDate = DateTime.UtcNow.AddDays(-30);
-            var initialToDate = DateTime.UtcNow;
-            _viewModel.SetDateRange(initialFromDate, initialToDate);
-            FromDate.SelectedDate = _viewModel.MetricState.FromDate;
-            ToDate.SelectedDate = _viewModel.MetricState.ToDate;
-
+        private void ExecuteStartupSequence()
+        {
+            InitializeDateRange();
             InitializeDefaultUiState();
             InitializeSubtypeSelector();
+            InitializeResolution();
+            InitializeCharts();
 
+            _viewModel.RequestChartUpdate();
+
+            // Mark initialization as complete
+            _isInitializing = false;
+
+            SyncInitialButtonStates();
+        }
+
+        private void RegisterLifecycleEvents()
+        {
+            Closing += MainWindow_Closing;
+        }
+
+        #endregion
+
+        #region Factory / Creation Methods
+
+        private string ResolveConnectionString()
+        {
+            return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
+        }
+
+        private ChartUpdateCoordinator CreateChartUpdateCoordinator()
+        {
+            var coordinator = new ChartUpdateCoordinator(
+                _chartComputationEngine,
+                _chartRenderEngine,
+                _tooltipManager,
+                _chartState.ChartTimestamps);
+
+            coordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
+
+            return coordinator;
+        }
+
+        private WeeklyDistributionService CreateWeeklyDistributionService()
+        {
+            var dataPreparationService = new DataVisualiser.Services.Implementations.DataPreparationService();
+            var strategyCutOverService = new DataVisualiser.Services.Implementations.StrategyCutOverService(dataPreparationService);
+
+            return new WeeklyDistributionService(
+                _chartState.ChartTimestamps,
+                strategyCutOverService);
+        }
+
+        private PrimaryChartRenderingService CreatePrimaryChartRenderingService()
+        {
+            var dataPreparationService = new DataVisualiser.Services.Implementations.DataPreparationService();
+            var strategyCutOverService = new DataVisualiser.Services.Implementations.StrategyCutOverService(dataPreparationService);
+
+            return new PrimaryChartRenderingService(
+                _chartUpdateCoordinator,
+                _weeklyDistributionService,
+                strategyCutOverService,
+                _connectionString);
+        }
+
+        #endregion
+
+        #region Startup Helpers
+
+        private void InitializeDateRange()
+        {
+            var initialFromDate = DateTime.UtcNow.AddDays(-30);
+            var initialToDate = DateTime.UtcNow;
+
+            _viewModel.SetDateRange(initialFromDate, initialToDate);
+
+            FromDate.SelectedDate = _viewModel.MetricState.FromDate;
+            ToDate.SelectedDate = _viewModel.MetricState.ToDate;
+        }
+
+        private void InitializeResolution()
+        {
             InitializeResolutionCombo();
 
             // Set initial resolution selection
             ResolutionCombo.SelectedItem = "All";
 
-            _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
-            _viewModel.LoadMetricsCommand.Execute(null);
+            _viewModel.MetricState.ResolutionTableName =
+                ChartHelper.GetTableNameFromResolution(ResolutionCombo);
 
+            _viewModel.LoadMetricsCommand.Execute(null);
+        }
+
+        private void InitializeCharts()
+        {
             InitializeChartBehavior();
             ClearChartsOnStartup();
             DisableAxisLabelsWhenNoData();
             SetDefaultChartTitles();
-
-            _viewModel.RequestChartUpdate();
-
-            Closing += MainWindow_Closing;
-
-            // Mark initialization as complete - event handlers can now safely use _viewModel
-            _isInitializing = false;
-
-            // Initialize button states based on current subtype selection
-            UpdateSecondaryDataRequiredButtonStates(_viewModel.MetricState.SelectedSubtypes.Count);
-
-            // Sync main chart button text with initial state (visible = true, so button should show "Hide")
-            MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
-            UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
         }
+
+        private void SyncInitialButtonStates()
+        {
+            UpdateSecondaryDataRequiredButtonStates(
+                _viewModel.MetricState.SelectedSubtypes.Count);
+
+            // Sync main chart button text with initial state
+            MainChartController.Panel.IsChartVisible =
+                _viewModel.ChartState.IsMainVisible;
+
+            UpdateChartVisibility(
+                TransformPanel,
+                TransformPanelToggleButton,
+                _viewModel.ChartState.IsTransformPanelVisible);
+        }
+
+        #endregion
+
 
         private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -1679,46 +1768,68 @@ namespace DataVisualiser
 
         private void PopulateTransformGrids(ChartDataContext ctx)
         {
-            // Populate Grid 1 (Primary Data) - use all data (DataGrid has scrolling enabled)
+            // ---------- Grid 1: Primary data ----------
             if (ctx.Data1 != null)
             {
-                var grid1Data = ctx.Data1.Where(d => d.Value.HasValue)
-                                         .OrderBy(d => d.NormalizedTimestamp)
-                                         .Select(d => new
-                                         {
-                                             Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                                             Value = d.Value!.Value.ToString("F4")
-                                         }).ToList();
+                var grid1Data = ctx.Data1
+                    .Where(d => d.Value.HasValue)
+                    .OrderBy(d => d.NormalizedTimestamp)
+                    .Select(d => new
+                    {
+                        Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                        Value = d.Value!.Value.ToString("F4")
+                    })
+                    .ToList();
 
                 TransformGrid1.ItemsSource = grid1Data;
                 TransformGrid1Title.Text = ctx.DisplayName1 ?? "Primary Data";
-                TransformGrid1.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-                TransformGrid1.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+
+                if (TransformGrid1.Columns.Count >= 2)
+                {
+                    TransformGrid1.Columns[0].Width =
+                        new DataGridLength(1, DataGridLengthUnitType.Auto);
+                    TransformGrid1.Columns[1].Width =
+                        new DataGridLength(1, DataGridLengthUnitType.Auto);
+                }
             }
 
-            // Populate Grid 2 (Secondary Data) only if a second subtype was actually selected
-            var hasSecondary = HasSecondaryData(ctx);
-            var hasSecondSubtype = !string.IsNullOrEmpty(ctx.SecondarySubtype);
+            // ---------- Grid 2: Secondary data (only if valid) ----------
+            bool hasSecondaryData = HasSecondaryData(ctx);
+            bool hasSecondSubtype = !string.IsNullOrEmpty(ctx.SecondarySubtype);
 
-            if (hasSecondary && hasSecondSubtype && ctx.Data2 != null)
+            if (hasSecondaryData && hasSecondSubtype && ctx.Data2 != null)
             {
                 TransformGrid2Panel.Visibility = Visibility.Visible;
-                var grid2Data = ctx.Data2.Where(d => d.Value.HasValue)
-                                         .OrderBy(d => d.NormalizedTimestamp)
-                                         .Select(d => new
-                                         {
-                                             Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                                             Value = d.Value!.Value.ToString("F4")
-                                         }).ToList();
+
+                var grid2Data = ctx.Data2
+                    .Where(d => d.Value.HasValue)
+                    .OrderBy(d => d.NormalizedTimestamp)
+                    .Select(d => new
+                    {
+                        Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                        Value = d.Value!.Value.ToString("F4")
+                    })
+                    .ToList();
 
                 TransformGrid2.ItemsSource = grid2Data;
                 TransformGrid2Title.Text = ctx.DisplayName2 ?? "Secondary Data";
-                TransformGrid2.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-                TransformGrid2.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+
+                if (TransformGrid2.Columns.Count >= 2)
+                {
+                    TransformGrid2.Columns[0].Width =
+                        new DataGridLength(1, DataGridLengthUnitType.Auto);
+                    TransformGrid2.Columns[1].Width =
+                        new DataGridLength(1, DataGridLengthUnitType.Auto);
+                }
 
                 // Enable binary operations
-                var binaryItems = TransformOperationCombo.Items.Cast<System.Windows.Controls.ComboBoxItem>()
-                    .Where(item => item.Tag?.ToString() == "Add" || item.Tag?.ToString() == "Subtract");
+                var binaryItems =
+                    TransformOperationCombo.Items
+                        .Cast<System.Windows.Controls.ComboBoxItem>()
+                        .Where(item =>
+                            item.Tag?.ToString() == "Add" ||
+                            item.Tag?.ToString() == "Subtract");
+
                 foreach (var item in binaryItems)
                 {
                     item.IsEnabled = true;
@@ -1730,20 +1841,26 @@ namespace DataVisualiser
                 TransformGrid2.ItemsSource = null;
 
                 // Disable binary operations
-                var binaryItems = TransformOperationCombo.Items.Cast<System.Windows.Controls.ComboBoxItem>()
-                    .Where(item => item.Tag?.ToString() == "Add" || item.Tag?.ToString() == "Subtract");
+                var binaryItems =
+                    TransformOperationCombo.Items
+                        .Cast<System.Windows.Controls.ComboBoxItem>()
+                        .Where(item =>
+                            item.Tag?.ToString() == "Add" ||
+                            item.Tag?.ToString() == "Subtract");
+
                 foreach (var item in binaryItems)
                 {
                     item.IsEnabled = false;
                 }
             }
 
-            // Hide result grid and chart until compute is clicked
+            // ---------- Reset transform result state ----------
             TransformGrid3Panel.Visibility = Visibility.Collapsed;
             TransformChartPanel.Visibility = Visibility.Collapsed;
             TransformGrid3.ItemsSource = null;
             TransformComputeButton.IsEnabled = false;
         }
+
 
         /// <summary>
         /// Validates that the chart context is valid and has data to render.

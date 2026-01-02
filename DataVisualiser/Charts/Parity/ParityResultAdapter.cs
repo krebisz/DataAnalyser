@@ -11,50 +11,41 @@ namespace DataVisualiser.Charts.Parity
         public static LegacyExecutionResult ToLegacyExecutionResult(ChartComputationResult? result)
         {
             if (result == null)
-                return new LegacyExecutionResult { Series = Array.Empty<ParitySeries>() };
+                return new LegacyExecutionResult { Series = new List<ParitySeries>() };
 
             var series = new List<ParitySeries>();
 
-            // Primary series
-            if (result.PrimaryRawValues != null && result.PrimaryRawValues.Count > 0)
+            // Create primary series if available
+            if (result.PrimaryRawValues?.Count > 0)
             {
-                series.Add(new ParitySeries
-                {
-                    SeriesKey = "Primary",
-                    Points = result.Timestamps
-                        .Zip(result.PrimaryRawValues, (t, v) => new ParityPoint { Time = t, Value = v })
-                        .ToList()
-                });
+                series.Add(CreateSeries("Primary", result.Timestamps, result.PrimaryRawValues));
             }
 
-            // Secondary series
-            if (result.SecondaryRawValues != null && result.SecondaryRawValues.Count > 0)
+            // Create secondary series if available
+            if (result.SecondaryRawValues?.Count > 0)
             {
-                series.Add(new ParitySeries
-                {
-                    SeriesKey = "Secondary",
-                    Points = result.Timestamps
-                        .Zip(result.SecondaryRawValues, (t, v) => new ParityPoint { Time = t, Value = v })
-                        .ToList()
-                });
+                series.Add(CreateSeries("Secondary", result.Timestamps, result.SecondaryRawValues));
             }
 
-            // Multi-series support
-            if (result.Series != null && result.Series.Count > 0)
+            // Create multi-series if available
+            if (result.Series?.Count > 0)
             {
-                foreach (var s in result.Series)
+                foreach (var seriesItem in result.Series)
                 {
-                    series.Add(new ParitySeries
-                    {
-                        SeriesKey = s.SeriesId,
-                        Points = s.Timestamps
-                            .Zip(s.RawValues, (t, v) => new ParityPoint { Time = t, Value = v })
-                            .ToList()
-                    });
+                    series.Add(CreateSeries(seriesItem.SeriesId, seriesItem.Timestamps, seriesItem.RawValues));
                 }
             }
 
             return new LegacyExecutionResult { Series = series };
+        }
+
+        private static ParitySeries CreateSeries(string seriesKey, IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawValues)
+        {
+            return new ParitySeries
+            {
+                SeriesKey = seriesKey,
+                Points = timestamps.Zip(rawValues, (t, v) => new ParityPoint { Time = t, Value = v }).ToList()
+            };
         }
 
         public static CmsExecutionResult ToCmsExecutionResult(ChartComputationResult? result)
@@ -76,11 +67,7 @@ namespace DataVisualiser.Charts.Parity
                 SeriesKey = s.SeriesId,
                 Points = s.Timestamps.Zip(
                     s.RawValues,
-                    (t, v) => new ParityPoint
-                    {
-                        Time = t,
-                        Value = v
-                    }).ToList()
+                    (t, v) => new ParityPoint{Time = t, Value = v}).ToList()
             }).ToList();
         }
     }
