@@ -109,46 +109,53 @@ namespace DataVisualiser.Charts.Helpers
 
         private void OnChartDataHover(object? sender, ChartPoint chartPoint)
         {
-            // If chartPoint is null or invalid, hide tooltip immediately
-            // This means we've moved off a data point
+            if (!TryResolveHoverContext(chartPoint, out int dayIndex, out var intervals))
+            {
+                HideTooltip();
+                return;
+            }
+
+            UpdateHoverState(dayIndex);
+            ShowTooltip(dayIndex, intervals);
+        }
+        private bool TryResolveHoverContext(ChartPoint chartPoint, out int dayIndex, out List<(double Min, double Max, int Count, double Percentage)> intervals)
+        {
+            dayIndex = -1;
+            intervals = null!;
+
             if (chartPoint == null || chartPoint.SeriesView == null)
-            {
-                HideTooltip();
-                return;
-            }
+                return false;
 
-            // The x-axis index (0-6) represents the day of week
-            int dayIndex = (int)Math.Round(chartPoint.X);
+            dayIndex = (int)Math.Round(chartPoint.X);
             if (dayIndex < 0 || dayIndex > 6)
-            {
-                // Invalid day index - hide tooltip
-                HideTooltip();
-                return;
-            }
+                return false;
 
-            // Get interval data for this day
-            if (!_dayIntervalData.TryGetValue(dayIndex, out var intervals) || intervals == null || intervals.Count == 0)
-            {
-                // No data for this day - hide tooltip
-                HideTooltip();
-                return;
-            }
+            if (!_dayIntervalData.TryGetValue(dayIndex, out intervals) ||
+                intervals == null || intervals.Count == 0)
+                return false;
 
-            // Valid hover - update timestamp and day index
+            return true;
+        }
+
+        private void UpdateHoverState(int dayIndex)
+        {
             _lastValidHoverTime = DateTime.Now;
             _lastValidDayIndex = dayIndex;
+        }
 
-            // Create and show tooltip content
-            var tooltipContent = CreateTooltipContent(dayIndex, intervals);
-            _tooltipPopup.Child = tooltipContent;
+        private void ShowTooltip(
+            int dayIndex,
+            List<(double Min, double Max, int Count, double Percentage)> intervals)
+        {
+            _tooltipPopup.Child = CreateTooltipContent(dayIndex, intervals);
 
-            // Position tooltip near mouse
             var mousePos = Mouse.GetPosition(_chart);
             _tooltipPopup.HorizontalOffset = mousePos.X + 10;
             _tooltipPopup.VerticalOffset = mousePos.Y + 10;
 
             _tooltipPopup.IsOpen = true;
         }
+
 
         private void OnChartDataClick(object? sender, ChartPoint chartPoint)
         {
@@ -194,23 +201,56 @@ namespace DataVisualiser.Charts.Helpers
 
         private void HideTooltip()
         {
-            _tooltipPopup.IsOpen = false;
-            // Reset hover time and day index so timer doesn't immediately re-show it
+            if (_tooltipPopup.IsOpen)
+                _tooltipPopup.IsOpen = false;
+
             _lastValidHoverTime = DateTime.MinValue;
             _lastValidDayIndex = -1;
         }
 
-        private FrameworkElement CreateTooltipContent(int dayIndex, List<(double Min, double Max, int Count, double Percentage)> intervals)
+
+        private FrameworkElement CreateTooltipContent(
+            int dayIndex,
+            List<(double Min, double Max, int Count, double Percentage)> intervals)
         {
-            var stackPanel = new StackPanel
+            var stackPanel = CreateTooltipRoot();
+
+            stackPanel.Children.Add(CreateDayHeader(dayIndex));
+            stackPanel.Children.Add(CreateTotalHeader(intervals));
+            stackPanel.Children.Add(CreateSeparator());
+
+            var intervalPanel = CreateIntervalsPanel(intervals);
+
+            if (intervals.Count > 15)
+            {
+                stackPanel.Children.Add(new ScrollViewer
+                {
+                    Content = intervalPanel,
+                    MaxHeight = 400,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                });
+            }
+            else
+            {
+                stackPanel.Children.Add(intervalPanel);
+            }
+
+            return WrapTooltip(stackPanel);
+        }
+
+        private StackPanel CreateTooltipRoot()
+        {
+            return new StackPanel
             {
                 Orientation = Orientation.Vertical,
                 Background = new SolidColorBrush(Color.FromRgb(245, 245, 245)),
                 Margin = new Thickness(8)
             };
+        }
 
-            // Day header
-            var dayHeader = new TextBlock
+        private TextBlock CreateDayHeader(int dayIndex)
+        {
+            return new TextBlock
             {
                 Text = _dayNames[dayIndex],
                 FontWeight = FontWeights.Bold,
@@ -218,11 +258,13 @@ namespace DataVisualiser.Charts.Helpers
                 Margin = new Thickness(0, 0, 0, 8),
                 Foreground = new SolidColorBrush(Color.FromRgb(50, 50, 50))
             };
-            stackPanel.Children.Add(dayHeader);
+        }
 
-            // Total count header
+        private TextBlock CreateTotalHeader(
+            List<(double Min, double Max, int Count, double Percentage)> intervals)
+        {
             int totalCount = intervals.Sum(i => i.Count);
-            var totalHeader = new TextBlock
+            return new TextBlock
             {
                 Text = $"Total Values: {totalCount}",
                 FontSize = 12,
@@ -230,100 +272,82 @@ namespace DataVisualiser.Charts.Helpers
                 Margin = new Thickness(0, 0, 0, 6),
                 Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
             };
-            stackPanel.Children.Add(totalHeader);
+        }
 
-            // Separator
-            var separator = new Border
+        private UIElement CreateSeparator()
+        {
+            return new Border
             {
                 Height = 1,
                 Background = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
                 Margin = new Thickness(0, 0, 0, 6)
             };
-            stackPanel.Children.Add(separator);
+        }
 
-            // Interval breakdown
-            var intervalsPanel = new StackPanel
+        private StackPanel CreateIntervalsPanel(
+            List<(double Min, double Max, int Count, double Percentage)> intervals)
+        {
+            var panel = new StackPanel { Orientation = Orientation.Vertical, MaxHeight = 400 };
+
+            foreach (var interval in intervals.OrderBy(i => i.Min))
             {
-                Orientation = Orientation.Vertical,
-                MaxHeight = 400 // Limit height and allow scrolling if needed
-            };
-
-            // Sort intervals by Min value (ascending)
-            var sortedIntervals = intervals.OrderBy(i => i.Min).ToList();
-
-            foreach (var interval in sortedIntervals)
-            {
-                // Only show intervals that have data or are within the day's range
                 if (interval.Count == 0 && interval.Percentage == 0)
                     continue;
 
-                var intervalPanel = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(0, 2, 0, 2)
-                };
-
-                // Interval range
-                var rangeText = new TextBlock
-                {
-                    Text = $"[{interval.Min:F2} - {interval.Max:F2}]",
-                    FontSize = 11,
-                    FontFamily = new FontFamily("Consolas"),
-                    Width = 120,
-                    Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 60))
-                };
-                intervalPanel.Children.Add(rangeText);
-
-                // Percentage
-                var percentageText = new TextBlock
-                {
-                    Text = $"{interval.Percentage:F1}%",
-                    FontSize = 11,
-                    Width = 60,
-                    TextAlignment = TextAlignment.Right,
-                    Margin = new Thickness(8, 0, 0, 0),
-                    Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
-                };
-                intervalPanel.Children.Add(percentageText);
-
-                // Count
-                var countText = new TextBlock
-                {
-                    Text = $"Count: {interval.Count}",
-                    FontSize = 11,
-                    Margin = new Thickness(8, 0, 0, 0),
-                    Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
-                };
-                intervalPanel.Children.Add(countText);
-
-                intervalsPanel.Children.Add(intervalPanel);
+                panel.Children.Add(CreateIntervalRow(interval));
             }
 
-            // Wrap in ScrollViewer if there are many intervals
-            if (sortedIntervals.Count > 15)
-            {
-                var scrollViewer = new ScrollViewer
-                {
-                    Content = intervalsPanel,
-                    MaxHeight = 400,
-                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto
-                };
-                stackPanel.Children.Add(scrollViewer);
-            }
-            else
-            {
-                stackPanel.Children.Add(intervalsPanel);
-            }
+            return panel;
+        }
 
-            // Wrap in border
-            var border = new Border
+        private UIElement CreateIntervalRow(
+            (double Min, double Max, int Count, double Percentage) interval)
+        {
+            var panel = new StackPanel
             {
-                Child = stackPanel,
-                Background = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 2, 0, 2)
+            };
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = $"[{interval.Min:F2} - {interval.Max:F2}]",
+                FontSize = 11,
+                FontFamily = new FontFamily("Consolas"),
+                Width = 120,
+                Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 60))
+            });
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = $"{interval.Percentage:F1}%",
+                FontSize = 11,
+                Width = 60,
+                TextAlignment = TextAlignment.Right,
+                Margin = new Thickness(8, 0, 0, 0),
+                Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
+            });
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = $"Count: {interval.Count}",
+                FontSize = 11,
+                Margin = new Thickness(8, 0, 0, 0),
+                Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
+            });
+
+            return panel;
+        }
+
+        private Border WrapTooltip(StackPanel content)
+        {
+            return new Border
+            {
+                Child = content,
+                Background = Brushes.White,
                 BorderBrush = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(0),
                 Effect = new System.Windows.Media.Effects.DropShadowEffect
                 {
                     Color = Colors.Black,
@@ -333,9 +357,8 @@ namespace DataVisualiser.Charts.Helpers
                     BlurRadius = 5
                 }
             };
-
-            return border;
         }
+
 
         public void Dispose()
         {

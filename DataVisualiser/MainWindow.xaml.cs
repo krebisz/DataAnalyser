@@ -617,19 +617,21 @@ namespace DataVisualiser
 
         private void UpdateDiffRatioOperationButton()
         {
+            bool isDifference = _viewModel.ChartState.IsDiffRatioDifferenceMode;
+
             if (ChartDiffRatioOperationToggleButton != null)
             {
-                // Button shows the operation that will be selected when clicked (opposite of current state)
-                ChartDiffRatioOperationToggleButton.Content = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "/" : "-";
-                ChartDiffRatioOperationToggleButton.ToolTip = _viewModel.ChartState.IsDiffRatioDifferenceMode 
-                    ? "Switch to Ratio (/)" 
-                    : "Switch to Difference (-)";
+                ChartDiffRatioOperationToggleButton.Content = isDifference ? "/" : "-";
+                ChartDiffRatioOperationToggleButton.ToolTip =
+                    isDifference ? "Switch to Ratio (/)" : "Switch to Difference (-)";
             }
+
             if (ChartDiffRatioAxisY != null)
             {
-                ChartDiffRatioAxisY.Title = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "Difference" : "Ratio";
+                ChartDiffRatioAxisY.Title = isDifference ? "Difference" : "Ratio";
             }
         }
+
 
         private void OnTransformPanelToggle(object sender, RoutedEventArgs e)
         {
@@ -1768,98 +1770,91 @@ namespace DataVisualiser
 
         private void PopulateTransformGrids(ChartDataContext ctx)
         {
-            // ---------- Grid 1: Primary data ----------
-            if (ctx.Data1 != null)
-            {
-                var grid1Data = ctx.Data1
-                    .Where(d => d.Value.HasValue)
-                    .OrderBy(d => d.NormalizedTimestamp)
-                    .Select(d => new
-                    {
-                        Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                        Value = d.Value!.Value.ToString("F4")
-                    })
-                    .ToList();
+            PopulateTransformGrid(
+                ctx.Data1,
+                TransformGrid1,
+                TransformGrid1Title,
+                ctx.DisplayName1 ?? "Primary Data",
+                alwaysVisible: true);
 
-                TransformGrid1.ItemsSource = grid1Data;
-                TransformGrid1Title.Text = ctx.DisplayName1 ?? "Primary Data";
+            bool hasSecondary =
+                HasSecondaryData(ctx) &&
+                !string.IsNullOrEmpty(ctx.SecondarySubtype) &&
+                ctx.Data2 != null;
 
-                if (TransformGrid1.Columns.Count >= 2)
-                {
-                    TransformGrid1.Columns[0].Width =
-                        new DataGridLength(1, DataGridLengthUnitType.Auto);
-                    TransformGrid1.Columns[1].Width =
-                        new DataGridLength(1, DataGridLengthUnitType.Auto);
-                }
-            }
-
-            // ---------- Grid 2: Secondary data (only if valid) ----------
-            bool hasSecondaryData = HasSecondaryData(ctx);
-            bool hasSecondSubtype = !string.IsNullOrEmpty(ctx.SecondarySubtype);
-
-            if (hasSecondaryData && hasSecondSubtype && ctx.Data2 != null)
+            if (hasSecondary)
             {
                 TransformGrid2Panel.Visibility = Visibility.Visible;
 
-                var grid2Data = ctx.Data2
-                    .Where(d => d.Value.HasValue)
-                    .OrderBy(d => d.NormalizedTimestamp)
-                    .Select(d => new
-                    {
-                        Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                        Value = d.Value!.Value.ToString("F4")
-                    })
-                    .ToList();
+                PopulateTransformGrid(
+                    ctx.Data2,
+                    TransformGrid2,
+                    TransformGrid2Title,
+                    ctx.DisplayName2 ?? "Secondary Data",
+                    alwaysVisible: false);
 
-                TransformGrid2.ItemsSource = grid2Data;
-                TransformGrid2Title.Text = ctx.DisplayName2 ?? "Secondary Data";
-
-                if (TransformGrid2.Columns.Count >= 2)
-                {
-                    TransformGrid2.Columns[0].Width =
-                        new DataGridLength(1, DataGridLengthUnitType.Auto);
-                    TransformGrid2.Columns[1].Width =
-                        new DataGridLength(1, DataGridLengthUnitType.Auto);
-                }
-
-                // Enable binary operations
-                var binaryItems =
-                    TransformOperationCombo.Items
-                        .Cast<System.Windows.Controls.ComboBoxItem>()
-                        .Where(item =>
-                            item.Tag?.ToString() == "Add" ||
-                            item.Tag?.ToString() == "Subtract");
-
-                foreach (var item in binaryItems)
-                {
-                    item.IsEnabled = true;
-                }
+                SetBinaryTransformOperationsEnabled(true);
             }
             else
             {
                 TransformGrid2Panel.Visibility = Visibility.Collapsed;
                 TransformGrid2.ItemsSource = null;
-
-                // Disable binary operations
-                var binaryItems =
-                    TransformOperationCombo.Items
-                        .Cast<System.Windows.Controls.ComboBoxItem>()
-                        .Where(item =>
-                            item.Tag?.ToString() == "Add" ||
-                            item.Tag?.ToString() == "Subtract");
-
-                foreach (var item in binaryItems)
-                {
-                    item.IsEnabled = false;
-                }
+                SetBinaryTransformOperationsEnabled(false);
             }
 
-            // ---------- Reset transform result state ----------
+            ResetTransformResultState();
+        }
+        private void PopulateTransformGrid(
+            IEnumerable<HealthMetricData>? data,
+            DataGrid grid,
+            TextBlock title,
+            string titleText,
+            bool alwaysVisible)
+        {
+            if (data == null && !alwaysVisible)
+                return;
+
+            var rows = data?
+                .Where(d => d.Value.HasValue)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .Select(d => new
+                {
+                    Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Value = d.Value!.Value.ToString("F4")
+                })
+                .ToList();
+
+            grid.ItemsSource = rows;
+            title.Text = titleText;
+
+            if (grid.Columns.Count >= 2)
+            {
+                grid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+                grid.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            }
+        }
+
+        private void SetBinaryTransformOperationsEnabled(bool enabled)
+        {
+            var binaryItems =
+                TransformOperationCombo.Items
+                    .Cast<ComboBoxItem>()
+                    .Where(i =>
+                        i.Tag?.ToString() == "Add" ||
+                        i.Tag?.ToString() == "Subtract");
+
+            foreach (var item in binaryItems)
+                item.IsEnabled = enabled;
+        }
+
+        private void ResetTransformResultState()
+        {
             TransformGrid3Panel.Visibility = Visibility.Collapsed;
             TransformChartPanel.Visibility = Visibility.Collapsed;
             TransformGrid3.ItemsSource = null;
             TransformComputeButton.IsEnabled = false;
         }
+
 
 
         /// <summary>

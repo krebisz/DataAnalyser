@@ -75,55 +75,45 @@ namespace DataVisualiser.Charts.Helpers
         /// </summary>
         public static string GetChartValuesAtIndex(CartesianChart chart, int index)
         {
-            if (chart == null) return "N/A";
-            if (chart.Series == null || chart.Series.Count == 0) return "No series";
+            if (chart?.Series == null || chart.Series.Count == 0)
+                return "N/A";
 
             var parts = new List<string>();
 
-            foreach (var s in chart.Series)
+            foreach (var series in chart.Series)
             {
-                if (s is LineSeries lineSeries)
+                if (series is not LineSeries lineSeries)
                 {
-                    var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
-
-                    if (lineSeries.Values == null)
-                    {
-                        parts.Add($"{title}: N/A");
-                        continue;
-                    }
-
-                    if (index >= 0 && index < lineSeries.Values.Count)
-                    {
-                        try
-                        {
-                            var raw = lineSeries.Values[index];
-                            if (raw == null)
-                            {
-                                parts.Add($"{title}: N/A");
-                            }
-                            else
-                            {
-                                var val = Convert.ToDouble(raw);
-                                parts.Add($"{title}: {MathHelper.FormatToThreeSignificantDigits(val)}");
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            parts.Add($"{title}: N/A");
-                        }
-                    }
-                    else
-                    {
-                        parts.Add($"{title}: N/A");
-                    }
+                    parts.Add($"{series.Title ?? "Series"}: N/A");
+                    continue;
                 }
-                else
-                {
-                    parts.Add($"{s.Title ?? "Series"}: N/A");
-                }
+
+                var title = string.IsNullOrWhiteSpace(lineSeries.Title)
+                    ? "Series"
+                    : lineSeries.Title;
+
+                parts.Add($"{title}: {GetFormattedValue(lineSeries, index)}");
             }
 
             return string.Join(" | ", parts);
+        }
+
+        private static string GetFormattedValue(LineSeries series, int index)
+        {
+            if (series.Values == null || index < 0 || index >= series.Values.Count)
+                return "N/A";
+
+            try
+            {
+                var raw = series.Values[index];
+                return raw == null
+                    ? "N/A"
+                    : MathHelper.FormatToThreeSignificantDigits(Convert.ToDouble(raw));
+            }
+            catch
+            {
+                return "N/A";
+            }
         }
 
         /// <summary>
@@ -197,36 +187,36 @@ namespace DataVisualiser.Charts.Helpers
         /// Returns formatted values in the order: Primary smooth, Secondary smooth, Primary Raw, Secondary Raw.
         /// Format: "{metric subtype} smooth: {value}" or "{metric subtype} Raw: {value}"
         /// </summary>
-        public static string GetChartValuesFormattedAtIndex(CartesianChart chart, int index)
+        public static string GetChartValuesFormattedAtIndex(
+            CartesianChart chart,
+            int index)
         {
-            if (chart == null || chart.Series == null || chart.Series.Count == 0)
+            if (chart?.Series == null || chart.Series.Count == 0)
                 return "N/A";
 
-            var (primaryName, secondaryName) = IdentifySeriesNames(chart);
+            var (primary, secondary) = IdentifySeriesNames(chart);
             var values = new Dictionary<string, string>();
 
-            foreach (var s in chart.Series)
+            foreach (var series in chart.Series.OfType<LineSeries>())
             {
-                if (s is LineSeries lineSeries)
-                {
-                    var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
-                    var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(title);
-                    var formattedValue = ExtractFormattedValue(lineSeries, index);
+                var (baseName, isRaw, isSmoothed) =
+                    ParseSeriesTitle(series.Title ?? "Series");
 
-                    string key;
-                    if (baseName == primaryName)
-                        key = isSmoothed ? "PrimarySmoothed" : "PrimaryRaw";
-                    else if (baseName == secondaryName)
-                        key = isSmoothed ? "SecondarySmoothed" : "SecondaryRaw";
-                    else
-                        continue;
+                var formatted = ExtractFormattedValue(series, index);
 
-                    values[key] = formattedValue;
-                }
+                var key = baseName == primary
+                    ? isSmoothed ? "PrimarySmoothed" : "PrimaryRaw"
+                    : baseName == secondary
+                        ? isSmoothed ? "SecondarySmoothed" : "SecondaryRaw"
+                        : null;
+
+                if (key != null)
+                    values[key] = formatted;
             }
 
-            return BuildFormattedString(primaryName, secondaryName, values);
+            return BuildFormattedString(primary, secondary, values);
         }
+
 
         /// <summary>
         /// Builds the formatted string in the specified order.
@@ -272,45 +262,53 @@ namespace DataVisualiser.Charts.Helpers
         /// <summary>
         /// Draws (or moves) a thin black vertical line by using an AxisSection with zero width.
         /// </summary>
-        public static void UpdateVerticalLineForChart(ref CartesianChart chart, int index, ref AxisSection? sectionField)
+        public static void UpdateVerticalLineForChart(
+            ref CartesianChart chart,
+            int index,
+            ref AxisSection? sectionField)
         {
-            if (chart == null || index < 0) return;
+            if (chart == null || index < 0)
+                return;
 
             var axis = GetXAxisSafely(chart);
-            if (axis == null) return;
+            if (axis?.Sections == null)
+                return;
 
-            // Remove existing section
-            if (sectionField != null)
-            {
-                var chartRef = chart;
-                RemoveAxisSection(ref chartRef, sectionField);
-                sectionField = null;
-            }
+            TryRemoveAxisSection(axis, sectionField);
 
-            // Create and add new section
             try
             {
                 var line = new AxisSection
                 {
                     Value = index,
                     SectionWidth = 0,
-                    Stroke = new SolidColorBrush(Colors.Black),
+                    Stroke = Brushes.Black,
                     StrokeThickness = 1,
                     Fill = Brushes.Transparent
                 };
 
-                var axisRef = GetXAxisSafely(chart);
-                if (axisRef?.Sections != null)
-                {
-                    axisRef.Sections.Add(line);
-                    sectionField = line;
-                }
+                axis.Sections.Add(line);
+                sectionField = line;
             }
             catch
             {
-                // Axis may have been disposed - leave sectionField as null
+                sectionField = null;
             }
         }
+        private static void TryRemoveAxisSection(Axis axis, AxisSection? section)
+        {
+            if (section == null) return;
+
+            try
+            {
+                axis.Sections.Remove(section);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
 
         public static Border CreateBorder(StackPanel stack)
         {

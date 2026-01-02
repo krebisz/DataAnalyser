@@ -54,12 +54,17 @@ namespace DataVisualiser.Charts.Helpers
             if (!CanAttach(chart))
                 return;
 
+            RegisterChart(chart, label);
+            SubscribeChartEvents(chart);
+        }
+        private void RegisterChart(CartesianChart chart, string? label)
+        {
             var textBlock = CreateAndRegisterTextBlock(chart);
             AddTextBlockToPopup(textBlock);
             RegisterChartLabel(chart, label);
             InitializeVerticalLineTracking(chart);
-            SubscribeChartEvents(chart);
         }
+
 
         /// <summary>
         /// Detaches a chart from this tooltip manager, removing event handlers and cleaning up resources.
@@ -70,10 +75,15 @@ namespace DataVisualiser.Charts.Helpers
                 return;
 
             UnsubscribeChartEvents(chart);
-            RemoveVerticalLine(chart);
-            RemoveTextBlockFromPopup(chart);
+            RemoveChartVisuals(chart);
             CleanupChartState(chart);
         }
+        private void RemoveChartVisuals(CartesianChart chart)
+        {
+            RemoveVerticalLine(chart);
+            RemoveTextBlockFromPopup(chart);
+        }
+
 
         private bool CanAttach(CartesianChart? chart)
         {
@@ -198,43 +208,52 @@ namespace DataVisualiser.Charts.Helpers
         /// </summary>
         private void OnChartDataHover(object? sender, ChartPoint chartPoint)
         {
-            if (chartPoint == null || sender is not CartesianChart chart) return;
+            if (sender is not CartesianChart chart || chartPoint == null)
+                return;
 
             int index = (int)Math.Round(chartPoint.X);
 
-            // Update timestamp text
-            string timestampText = GetTimestampTextForIndex(index);
-            if (_timestampText != null)
-            {
-                _timestampText.Text = timestampText;
-            }
+            UpdateTimestampText(index);
+            UpdateChartValueTextBlocks(index);
+            ShowHoverPopup();
+            UpdateVerticalLines(index);
+        }
+        private void UpdateTimestampText(int index)
+        {
+            _timestampText.Text = GetTimestampTextForIndex(index);
+        }
 
-            // Update text for each attached chart
-            var charts = _chartTextBlocks.Keys.ToArray();
-            foreach (var attachedChart in charts)
+        private void UpdateChartValueTextBlocks(int index)
+        {
+            foreach (var (chart, textBlock) in _chartTextBlocks)
             {
-                if (_chartTextBlocks.TryGetValue(attachedChart, out var textBlock))
-                {
-                    // Use the new formatted method that shows: Primary smooth, Secondary smooth, Primary Raw, Secondary Raw
-                    string chartValues = ChartHelper.GetChartValuesFormattedAtIndex(attachedChart, index);
-                    textBlock.Text = chartValues;
-                }
+                textBlock.Text =
+                    ChartHelper.GetChartValuesFormattedAtIndex(chart, index);
             }
+        }
 
-            // Position the popup
+        private void ShowHoverPopup()
+        {
             ChartHelper.PositionHoverPopup(_hoverPopup);
+        }
 
-            // Update vertical lines for all attached charts
-            foreach (var attachedChart in charts)
+        private void UpdateVerticalLines(int index)
+        {
+            foreach (var chart in _chartVerticalLines.Keys.ToArray())
             {
-                if (_chartVerticalLines.TryGetValue(attachedChart, out var verticalLine))
+                if (_chartVerticalLines.TryGetValue(chart, out var verticalLine))
                 {
-                    var chartRef = attachedChart; // Local variable for ref parameter
-                    ChartHelper.UpdateVerticalLineForChart(ref chartRef, index, ref verticalLine);
-                    _chartVerticalLines[attachedChart] = verticalLine;
+                    var chartRef = chart;
+                    ChartHelper.UpdateVerticalLineForChart(
+                        ref chartRef,
+                        index,
+                        ref verticalLine);
+
+                    _chartVerticalLines[chart] = verticalLine;
                 }
             }
         }
+
 
         /// <summary>
         /// Handles the MouseLeave event from any attached chart.
@@ -249,23 +268,16 @@ namespace DataVisualiser.Charts.Helpers
         /// </summary>
         private void ClearHoverVisuals()
         {
-            if (_hoverPopup != null && _hoverPopup.IsOpen)
-            {
+            if (_hoverPopup.IsOpen)
                 _hoverPopup.IsOpen = false;
-            }
 
-            // Remove vertical lines from all charts
-            var charts = _chartVerticalLines.Keys.ToArray();
-            foreach (var chart in charts)
+            foreach (var chart in _chartVerticalLines.Keys.ToArray())
             {
-                if (_chartVerticalLines.TryGetValue(chart, out var verticalLine))
-                {
-                    var chartRef = chart; // Local variable for ref parameter
-                    ChartHelper.RemoveAxisSection(ref chartRef, verticalLine);
-                    _chartVerticalLines[chart] = null;
-                }
+                RemoveVerticalLine(chart);
+                _chartVerticalLines[chart] = null;
             }
         }
+
 
         /// <summary>
         /// Gets the timestamp text for a given index by searching through all attached charts' timestamp data.
