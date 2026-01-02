@@ -61,44 +61,23 @@ namespace DataVisualiser.Charts.Strategies
             if (_left.Samples.Count == 0 && _right.Samples.Count == 0)
                 return null;
 
-            // Filter + order inside [from,to] (DateTimeOffset -> DateTime boundary normalization)
             var leftOrdered = FilterAndOrder(_left, _from, _to);
             var rightOrdered = FilterAndOrder(_right, _from, _to);
 
             if (leftOrdered.Count == 0 && rightOrdered.Count == 0)
                 return null;
 
-            var count = Math.Min(leftOrdered.Count, rightOrdered.Count);
-            if (count == 0)
+            var (timestamps, primaryRaw, secondaryRaw) =
+                AlignSeries(leftOrdered, rightOrdered);
+
+            if (timestamps.Count == 0)
                 return null;
 
-            // Convert CmsPoint to tuple format for alignment helper
-            var leftTuples = leftOrdered.Select(p => (p.Timestamp, p.ValueDecimal)).ToList();
-            var rightTuples = rightOrdered.Select(p => (p.Timestamp, p.ValueDecimal)).ToList();
-            var (timestamps, primaryRaw, secondaryRaw) = StrategyComputationHelper.AlignByIndex(leftTuples, rightTuples, count);
-
-            // Use unified timeline service
             var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
             var intervalIndices = _timelineService.MapToIntervals(timestamps, timeline);
 
-            // Synthesize HealthMetricData for smoothing service
-            var leftSynthetic = leftOrdered.Select(p => new HealthMetricData
-            {
-                NormalizedTimestamp = p.Timestamp,
-                Value = p.ValueDecimal,
-                Unit = _left.Unit.Symbol
-            }).ToList();
-
-            var rightSynthetic = rightOrdered.Select(p => new HealthMetricData
-            {
-                NormalizedTimestamp = p.Timestamp,
-                Value = p.ValueDecimal,
-                Unit = _right.Unit.Symbol
-            }).ToList();
-
-            // Use unified smoothing service
-            var primarySmoothed = _smoothingService.SmoothSeries(leftSynthetic, timestamps, _from, _to);
-            var secondarySmoothed = _smoothingService.SmoothSeries(rightSynthetic, timestamps, _from, _to);
+            var (primarySmoothed, secondarySmoothed) =
+                SmoothSeries(leftOrdered, rightOrdered, timestamps);
 
             Unit = _unitResolutionService.ResolveUnit(_left, _right);
 
@@ -109,15 +88,71 @@ namespace DataVisualiser.Charts.Strategies
                 NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
 
                 PrimaryRawValues = primaryRaw,
-                PrimarySmoothed = primarySmoothed.ToList(),
+                PrimarySmoothed = primarySmoothed,
 
                 SecondaryRawValues = secondaryRaw,
-                SecondarySmoothed = secondarySmoothed.ToList(),
+                SecondarySmoothed = secondarySmoothed,
 
                 TickInterval = timeline.TickInterval,
                 DateRange = timeline.DateRange,
                 Unit = Unit
             };
+        }
+
+        private (List<DateTime> Timestamps, List<double> Primary, List<double> Secondary)
+    AlignSeries(
+        List<CmsPoint> left,
+        List<CmsPoint> right)
+        {
+            var count = Math.Min(left.Count, right.Count);
+            if (count == 0)
+                return (new List<DateTime>(), new List<double>(), new List<double>());
+
+            var leftTuples = left.Select(p => (p.Timestamp, p.ValueDecimal)).ToList();
+            var rightTuples = right.Select(p => (p.Timestamp, p.ValueDecimal)).ToList();
+
+            var (timestamps, primaryRaw, secondaryRaw) =
+                StrategyComputationHelper.AlignByIndex(
+                    leftTuples,
+                    rightTuples,
+                    count);
+
+            return (
+                timestamps,
+                primaryRaw.ToList(),
+                secondaryRaw.ToList()
+            );
+        }
+        private (List<double> Primary, List<double> Secondary)
+    SmoothSeries(
+        List<CmsPoint> left,
+        List<CmsPoint> right,
+        List<DateTime> timestamps)
+        {
+            var leftSynthetic = left.Select(p => new HealthMetricData
+            {
+                NormalizedTimestamp = p.Timestamp,
+                Value = p.ValueDecimal,
+                Unit = _left.Unit.Symbol
+            }).ToList();
+
+            var rightSynthetic = right.Select(p => new HealthMetricData
+            {
+                NormalizedTimestamp = p.Timestamp,
+                Value = p.ValueDecimal,
+                Unit = _right.Unit.Symbol
+            }).ToList();
+
+            var primarySmoothed =
+                _smoothingService.SmoothSeries(leftSynthetic, timestamps, _from, _to);
+
+            var secondarySmoothed =
+                _smoothingService.SmoothSeries(rightSynthetic, timestamps, _from, _to);
+
+            return (
+                primarySmoothed.ToList(),
+                secondarySmoothed.ToList()
+            );
         }
 
         // ----- helpers -----

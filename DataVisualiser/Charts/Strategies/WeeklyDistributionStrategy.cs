@@ -51,10 +51,7 @@ namespace DataVisualiser.Charts.Strategies
         /// </summary>
         public ChartComputationResult? Compute()
         {
-            if (_data == null)
-                return null;
-
-            if (_from > _to)
+            if (_data == null || _from > _to)
                 return null;
 
             var ordered = FilterData(_data, _from, _to);
@@ -85,6 +82,7 @@ namespace DataVisualiser.Charts.Strategies
                 _from,
                 _to);
         }
+
 
         private static List<HealthMetricData> FilterData(
             IEnumerable<HealthMetricData> data,
@@ -178,31 +176,36 @@ namespace DataVisualiser.Charts.Strategies
             double globalMin,
             double globalMax)
         {
-            var bins = new List<(double Min, double Max)>();
-            double binSize = 1.0;
+            var dayValuesDict = BuildDayValuesDictionary(buckets);
 
-            var frequencies = new Dictionary<int, Dictionary<int, int>>();
-            var normalized = new Dictionary<int, Dictionary<int, double>>();
+            if (double.IsNaN(globalMin) ||
+                double.IsNaN(globalMax) ||
+                globalMax <= globalMin)
+            {
+                return (
+                    new List<(double, double)>(),
+                    1.0,
+                    new Dictionary<int, Dictionary<int, int>>(),
+                    new Dictionary<int, Dictionary<int, double>>()
+                );
+            }
 
-            var dayValuesDict = new Dictionary<int, List<double>>();
+            return WeeklyFrequencyRenderer
+                .PrepareBinsAndFrequencies(
+                    dayValuesDict,
+                    globalMin,
+                    globalMax);
+        }
+
+        private static Dictionary<int, List<double>> BuildDayValuesDictionary(
+    List<List<double>> buckets)
+        {
+            var dict = new Dictionary<int, List<double>>(7);
             for (int i = 0; i < 7; i++)
             {
-                dayValuesDict[i] = buckets[i];
+                dict[i] = buckets[i];
             }
-
-            if (!double.IsNaN(globalMin) &&
-                !double.IsNaN(globalMax) &&
-                globalMax > globalMin)
-            {
-                (bins, binSize, frequencies, normalized) =
-                    WeeklyFrequencyRenderer
-                        .PrepareBinsAndFrequencies(
-                            dayValuesDict,
-                            globalMin,
-                            globalMax);
-            }
-
-            return (bins, binSize, frequencies, normalized);
+            return dict;
         }
 
         private static WeeklyDistributionResult BuildExtendedResult(

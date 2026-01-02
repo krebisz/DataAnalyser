@@ -45,47 +45,80 @@ namespace DataVisualiser.Services.ChartRendering
                 return;
 
             var hasSecondaryData = HasSecondaryData(ctx);
-            var metricType = ctx.MetricType;
-            var primarySubtype = ctx.PrimarySubtype;
-            var secondarySubtype = ctx.SecondarySubtype;
 
-            // Render primary chart if visible
-            if (chartState.IsMainVisible)
-            {
-                await RenderPrimaryChart(ctx, chartMain);
-            }
+            await RenderPrimaryIfVisible(ctx, chartState, chartMain);
 
-            // Render secondary charts if visible and data available
             if (hasSecondaryData)
             {
-                if (chartState.IsNormalizedVisible)
-                {
-                    await RenderNormalized(ctx, chartNorm, metricType, primarySubtype, secondarySubtype, chartState.SelectedNormalizationMode);
-                }
-
-                if (chartState.IsDiffRatioVisible)
-                {
-                    await RenderDiffRatio(ctx, chartDiffRatio, metricType, primarySubtype, secondarySubtype, chartState);
-                }
+                await RenderSecondaryChartsIfVisible(
+                    ctx,
+                    chartState,
+                    chartNorm,
+                    chartDiffRatio);
             }
             else
             {
-                // Clear charts that require secondary data when no secondary data exists
-                Charts.Helpers.ChartHelper.ClearChart(chartNorm, chartState.ChartTimestamps);
-                Charts.Helpers.ChartHelper.ClearChart(chartDiffRatio, chartState.ChartTimestamps);
+                ClearSecondaryCharts(chartNorm, chartDiffRatio, chartState);
             }
 
-            // Render charts that don't require secondary data
-            if (chartState.IsWeeklyVisible)
+            await RenderWeeklyChartsIfVisible(ctx, chartState, chartWeekly);
+        }
+        private async Task RenderPrimaryIfVisible(
+    ChartDataContext ctx,
+    ChartState chartState,
+    CartesianChart chartMain)
+        {
+            if (chartState.IsMainVisible)
+                await RenderPrimaryChart(ctx, chartMain);
+        }
+        private async Task RenderSecondaryChartsIfVisible(
+    ChartDataContext ctx,
+    ChartState chartState,
+    CartesianChart chartNorm,
+    CartesianChart chartDiffRatio)
+        {
+            if (chartState.IsNormalizedVisible)
             {
-                await RenderWeeklyDistribution(ctx, chartWeekly, chartState);
+                await RenderNormalized(
+                    ctx,
+                    chartNorm,
+                    ctx.MetricType,
+                    ctx.PrimarySubtype,
+                    ctx.SecondarySubtype,
+                    chartState.SelectedNormalizationMode);
             }
 
-            if (chartState.IsWeeklyTrendVisible)
+            if (chartState.IsDiffRatioVisible)
             {
-                RenderWeeklyTrend(ctx);
+                await RenderDiffRatio(
+                    ctx,
+                    chartDiffRatio,
+                    ctx.MetricType,
+                    ctx.PrimarySubtype,
+                    ctx.SecondarySubtype,
+                    chartState);
             }
         }
+        private static void ClearSecondaryCharts(
+            CartesianChart chartNorm,
+            CartesianChart chartDiffRatio,
+            ChartState chartState)
+        {
+            Charts.Helpers.ChartHelper.ClearChart(chartNorm, chartState.ChartTimestamps);
+            Charts.Helpers.ChartHelper.ClearChart(chartDiffRatio, chartState.ChartTimestamps);
+        }
+        private async Task RenderWeeklyChartsIfVisible(
+    ChartDataContext ctx,
+    ChartState chartState,
+    CartesianChart chartWeekly)
+        {
+            if (chartState.IsWeeklyVisible)
+                await RenderWeeklyDistribution(ctx, chartWeekly, chartState);
+
+            if (chartState.IsWeeklyTrendVisible)
+                RenderWeeklyTrend(ctx);
+        }
+
 
         /// <summary>
         /// Renders a single chart by name.
@@ -99,49 +132,45 @@ namespace DataVisualiser.Services.ChartRendering
             CartesianChart chartDiffRatio,
             CartesianChart chartWeekly)
         {
-            var hasSecondaryData = HasSecondaryData(ctx);
-            var metricType = ctx.MetricType;
-            var primarySubtype = ctx.PrimarySubtype;
-            var secondarySubtype = ctx.SecondarySubtype;
+            if (!ShouldRenderCharts(ctx))
+                return;
 
             switch (chartName)
             {
                 case "Main":
-                    if (chartState.IsMainVisible)
-                    {
-                        await RenderPrimaryChart(ctx, chartMain);
-                    }
+                    await RenderPrimaryIfVisible(ctx, chartState, chartMain);
                     break;
 
                 case "Norm":
-                    if (chartState.IsNormalizedVisible && hasSecondaryData)
-                    {
-                        await RenderNormalized(ctx, chartNorm, metricType, primarySubtype, secondarySubtype, chartState.SelectedNormalizationMode);
-                    }
+                    if (HasSecondaryData(ctx))
+                        await RenderSecondaryChartsIfVisible(
+                            ctx,
+                            chartState,
+                            chartNorm,
+                            chartDiffRatio: null);
                     break;
 
                 case "DiffRatio":
-                    if (chartState.IsDiffRatioVisible && hasSecondaryData)
-                    {
-                        await RenderDiffRatio(ctx, chartDiffRatio, metricType, primarySubtype, secondarySubtype, chartState);
-                    }
+                    if (HasSecondaryData(ctx) && chartState.IsDiffRatioVisible)
+                        await RenderDiffRatio(
+                            ctx,
+                            chartDiffRatio,
+                            ctx.MetricType,
+                            ctx.PrimarySubtype,
+                            ctx.SecondarySubtype,
+                            chartState);
                     break;
 
                 case "Weekly":
-                    if (chartState.IsWeeklyVisible)
-                    {
-                        await RenderWeeklyDistribution(ctx, chartWeekly, chartState);
-                    }
-                    break;
-
                 case "WeeklyTrend":
-                    if (chartState.IsWeeklyTrendVisible)
-                    {
-                        RenderWeeklyTrend(ctx);
-                    }
+                    await RenderWeeklyChartsIfVisible(
+                        ctx,
+                        chartState,
+                        chartWeekly);
                     break;
             }
         }
+
 
         /// <summary>
         /// Renders the primary (main) chart using StrategyCutOverService.
@@ -156,9 +185,38 @@ namespace DataVisualiser.Services.ChartRendering
             if (ctx == null || chartMain == null)
                 return;
 
-            // Build series list from context and additional series
-            var series = new List<IEnumerable<HealthMetricData>> { ctx.Data1 ?? Array.Empty<HealthMetricData>() };
-            var labels = new List<string> { ctx.DisplayName1 ?? string.Empty };
+            var (series, labels) =
+                BuildSeriesAndLabels(ctx, additionalSeries, additionalLabels);
+
+            var strategy =
+                CreatePrimaryStrategy(ctx, series, labels, out var secondaryLabel);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+                chartMain,
+                strategy,
+                labels[0],
+                secondaryLabel,
+                minHeight: 400,
+                metricType: ctx.MetricType,
+                primarySubtype: ctx.PrimarySubtype,
+                secondarySubtype: secondaryLabel != null ? ctx.SecondarySubtype : null,
+                isOperationChart: false);
+        }
+        private static (List<IEnumerable<HealthMetricData>> Series, List<string> Labels)
+    BuildSeriesAndLabels(
+        ChartDataContext ctx,
+        IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries,
+        IReadOnlyList<string>? additionalLabels)
+        {
+            var series = new List<IEnumerable<HealthMetricData>>
+    {
+        ctx.Data1 ?? Array.Empty<HealthMetricData>()
+    };
+
+            var labels = new List<string>
+    {
+        ctx.DisplayName1 ?? string.Empty
+    };
 
             if (ctx.Data2 != null && ctx.Data2.Any())
             {
@@ -166,7 +224,6 @@ namespace DataVisualiser.Services.ChartRendering
                 labels.Add(ctx.DisplayName2 ?? string.Empty);
             }
 
-            // Add additional series if provided (for multi-metric scenarios)
             if (additionalSeries != null && additionalLabels != null)
             {
                 for (int i = 0; i < Math.Min(additionalSeries.Count, additionalLabels.Count); i++)
@@ -179,76 +236,60 @@ namespace DataVisualiser.Services.ChartRendering
                 }
             }
 
-            // Select strategy based on series count
-            var actualSeriesCount = series.Count;
-            IChartComputationStrategy strategy;
-            string? secondaryLabel = null;
+            return (series, labels);
+        }
+        private IChartComputationStrategy CreatePrimaryStrategy(
+    ChartDataContext ctx,
+    List<IEnumerable<HealthMetricData>> series,
+    List<string> labels,
+    out string? secondaryLabel)
+        {
+            secondaryLabel = null;
 
-            if (actualSeriesCount > 2)
+            if (series.Count > 2)
             {
-                // Multi-metric strategy
-                var parameters = new StrategyCreationParameters
-                {
-                    LegacySeries = series,
-                    Labels = labels,
-                    From = ctx.From,
-                    To = ctx.To
-                };
-
-                strategy = _strategyCutOverService.CreateStrategy(
+                return _strategyCutOverService.CreateStrategy(
                     StrategyType.MultiMetric,
                     ctx,
-                    parameters);
+                    new StrategyCreationParameters
+                    {
+                        LegacySeries = series,
+                        Labels = labels,
+                        From = ctx.From,
+                        To = ctx.To
+                    });
             }
-            else if (actualSeriesCount == 2)
+
+            if (series.Count == 2)
             {
-                // Combined metric strategy
                 secondaryLabel = labels[1];
 
-                var parameters = new StrategyCreationParameters
-                {
-                    LegacyData1 = series[0],
-                    LegacyData2 = series[1],
-                    Label1 = labels[0],
-                    Label2 = labels[1],
-                    From = ctx.From,
-                    To = ctx.To
-                };
-
-                strategy = _strategyCutOverService.CreateStrategy(
+                return _strategyCutOverService.CreateStrategy(
                     StrategyType.CombinedMetric,
                     ctx,
-                    parameters);
+                    new StrategyCreationParameters
+                    {
+                        LegacyData1 = series[0],
+                        LegacyData2 = series[1],
+                        Label1 = labels[0],
+                        Label2 = labels[1],
+                        From = ctx.From,
+                        To = ctx.To
+                    });
             }
-            else
-            {
-                // Single metric strategy
-                var parameters = new StrategyCreationParameters
+
+            return _strategyCutOverService.CreateStrategy(
+                StrategyType.SingleMetric,
+                ctx,
+                new StrategyCreationParameters
                 {
                     LegacyData1 = series[0],
                     Label1 = labels[0],
                     From = ctx.From,
                     To = ctx.To
-                };
-
-                strategy = _strategyCutOverService.CreateStrategy(
-                    StrategyType.SingleMetric,
-                    ctx,
-                    parameters);
-            }
-
-            // Update chart using the strategy
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-                chartMain,
-                strategy,
-                labels[0],
-                secondaryLabel,
-                minHeight: 400,
-                metricType: ctx.MetricType,
-                primarySubtype: ctx.PrimarySubtype,
-                secondarySubtype: secondaryLabel != null ? ctx.SecondarySubtype : null,
-                isOperationChart: false);
+                });
         }
+
 
         private async Task RenderNormalized(
             ChartDataContext ctx,

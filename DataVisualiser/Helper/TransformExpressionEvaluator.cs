@@ -33,125 +33,165 @@ namespace DataVisualiser.Helper
             if (metrics == null || metrics.Count == 0)
                 throw new ArgumentException("At least one metric series is required.", nameof(metrics));
 
-            // Validate all metrics have the same length (aligned)
-            var firstLength = metrics[0].Count;
-            if (metrics.Any(m => m.Count != firstLength))
-                throw new ArgumentException("All metric series must be aligned (same length).", nameof(metrics));
+            var length = ValidateAlignedMetrics(metrics);
 
-            // Evaluate expression for each timestamp position
-            var results = new List<double>(firstLength);
-            for (int i = 0; i < firstLength; i++)
+            var results = new List<double>(length);
+            for (int i = 0; i < length; i++)
             {
-                var result = EvaluateAt(expression, metrics, i);
-                results.Add(result);
+                results.Add(EvaluateAt(expression, metrics, i));
             }
 
             return results;
+        }
+
+        private static int ValidateAlignedMetrics(
+    IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics)
+        {
+            var length = metrics[0].Count;
+            if (metrics.Any(m => m.Count != length))
+                throw new ArgumentException(
+                    "All metric series must be aligned (same length).",
+                    nameof(metrics));
+
+            return length;
         }
 
         /// <summary>
         /// Evaluates the expression at a specific timestamp index.
         /// </summary>
         private static double EvaluateAt(
-            TransformExpression expression,
-            IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics,
-            int index)
+    TransformExpression expression,
+    IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics,
+    int index)
         {
-            // Leaf node: return metric value directly
             if (expression.Operation == null)
-            {
-                if (expression.Operands.Count != 1 || expression.Operands[0].MetricIndex == null)
-                    return double.NaN;
+                return ResolveLeafValue(expression, metrics, index);
 
-                var metricIndex = expression.Operands[0].MetricIndex.Value;
-                if (metricIndex < 0 || metricIndex >= metrics.Count)
-                    return double.NaN;
+            var operandValues = EvaluateOperands(expression, metrics, index);
+            return expression.Operation.Execute(operandValues);
+        }
 
-                var metric = metrics[metricIndex];
-                if (index >= metric.Count)
-                    return double.NaN;
 
-                var dataPoint = metric[index];
-                return dataPoint.Value.HasValue ? (double)dataPoint.Value.Value : double.NaN;
-            }
+        private static double ResolveLeafValue(
+    TransformExpression expression,
+    IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics,
+    int index)
+        {
+            if (expression.Operands.Count != 1 ||
+                !expression.Operands[0].MetricIndex.HasValue)
+                return double.NaN;
 
-            // Operation node: evaluate operands first, then apply operation
-            var operandValues = new List<double>();
+            return ResolveMetricValue(
+                metrics,
+                expression.Operands[0].MetricIndex.Value,
+                index);
+        }
+
+        private static List<double> EvaluateOperands(
+    TransformExpression expression,
+    IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics,
+    int index)
+        {
+            var values = new List<double>(expression.Operands.Count);
+
             foreach (var operand in expression.Operands)
             {
-                double value;
-                if (operand.MetricIndex.HasValue)
-                {
-                    // Direct metric reference
-                    var metricIndex = operand.MetricIndex.Value;
-                    if (metricIndex < 0 || metricIndex >= metrics.Count || index >= metrics[metricIndex].Count)
-                    {
-                        value = double.NaN;
-                    }
-                    else
-                    {
-                        var dataPoint = metrics[metricIndex][index];
-                        value = dataPoint.Value.HasValue ? (double)dataPoint.Value.Value : double.NaN;
-                    }
-                }
-                else if (operand.Expression != null)
-                {
-                    // Nested expression (chaining)
-                    value = EvaluateAt(operand.Expression, metrics, index);
-                }
-                else
-                {
-                    value = double.NaN;
-                }
-
-                operandValues.Add(value);
+                values.Add(EvaluateOperand(operand, metrics, index));
             }
 
-            // Apply operation
-            return expression.Operation.Execute(operandValues);
+            return values;
+        }
+
+        private static double EvaluateOperand(
+    TransformOperand operand,
+    IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics,
+    int index)
+        {
+            if (operand.MetricIndex.HasValue)
+                return ResolveMetricValue(metrics, operand.MetricIndex.Value, index);
+
+            if (operand.Expression != null)
+                return EvaluateAt(operand.Expression, metrics, index);
+
+            return double.NaN;
+        }
+
+        private static double ResolveMetricValue(
+    IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics,
+    int metricIndex,
+    int index)
+        {
+            if (metricIndex < 0 ||
+                metricIndex >= metrics.Count ||
+                index >= metrics[metricIndex].Count)
+                return double.NaN;
+
+            var dataPoint = metrics[metricIndex][index];
+            return dataPoint.Value.HasValue
+                ? (double)dataPoint.Value.Value
+                : double.NaN;
+        }
+        public static string GenerateLabel(
+    TransformExpression expression,
+    IReadOnlyList<string> metricLabels)
+        {
+            if (expression == null)
+                return "Transform Result";
+
+            var label = BuildLabel(expression, metricLabels);
+            return $"[Transform] {label}";
         }
 
         /// <summary>
         /// Generates a human-readable label for a transform expression.
         /// </summary>
-        public static string GenerateLabel(
+        private static string BuildLabel(
             TransformExpression expression,
             IReadOnlyList<string> metricLabels)
         {
-            if (expression == null)
-                return "Transform Result";
-
-            // Leaf node: return metric label
             if (expression.Operation == null)
+                return ResolveMetricLabel(expression, metricLabels);
+
+            var operandLabels = expression.Operands
+                .Select(op => ResolveOperandLabel(op, metricLabels))
+                .ToList();
+
+            var symbol = GetOperationSymbol(expression.Operation.Id);
+            return string.Join($" {symbol} ", operandLabels);
+        }
+        private static string ResolveOperandLabel(
+    TransformOperand operand,
+    IReadOnlyList<string> metricLabels)
+        {
+            if (operand.MetricIndex.HasValue)
             {
-                if (expression.Operands.Count == 1 && expression.Operands[0].MetricIndex.HasValue)
-                {
-                    var idx = expression.Operands[0].MetricIndex.Value;
-                    return idx >= 0 && idx < metricLabels.Count ? metricLabels[idx] : $"Metric[{idx}]";
-                }
-                return "Metric";
+                var idx = operand.MetricIndex.Value;
+                return idx >= 0 && idx < metricLabels.Count
+                    ? metricLabels[idx]
+                    : $"Metric[{idx}]";
             }
 
-            // Operation node: build label from operation and operands
-            var operandLabels = expression.Operands.Select(op =>
-            {
-                if (op.MetricIndex.HasValue)
-                {
-                    var idx = op.MetricIndex.Value;
-                    return idx >= 0 && idx < metricLabels.Count ? metricLabels[idx] : $"Metric[{idx}]";
-                }
-                if (op.Expression != null)
-                {
-                    return $"({GenerateLabel(op.Expression, metricLabels)})";
-                }
-                return "?";
-            }).ToList();
+            if (operand.Expression != null)
+                return $"({BuildLabel(operand.Expression, metricLabels)})";
 
-            var operationSymbol = GetOperationSymbol(expression.Operation.Id);
-            var label = string.Join($" {operationSymbol} ", operandLabels);
-
-            return $"[Transform] {label}";
+            return "?";
         }
+        private static string ResolveMetricLabel(
+    TransformExpression expression,
+    IReadOnlyList<string> metricLabels)
+        {
+            if (expression.Operands.Count == 1 &&
+                expression.Operands[0].MetricIndex.HasValue)
+            {
+                var idx = expression.Operands[0].MetricIndex.Value;
+                return idx >= 0 && idx < metricLabels.Count
+                    ? metricLabels[idx]
+                    : $"Metric[{idx}]";
+            }
+
+            return "Metric";
+        }
+
 
         /// <summary>
         /// Gets the display symbol for an operation.

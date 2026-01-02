@@ -107,25 +107,28 @@ namespace DataVisualiser.Charts.Strategies
 
         public ChartComputationResult? Compute()
         {
-            var seriesResults = new List<SeriesResult>();
-
-            // Process each series independently (like SingleMetricStrategy)
-            for (int i = 0; i < _series.Count; i++)
-            {
-                var seriesData = _series[i];
-                var label = _labels[i];
-
-                var processedSeries = ProcessSingleSeries(seriesData, i, label);
-                if (processedSeries != null)
-                {
-                    seriesResults.Add(processedSeries);
-                }
-            }
+            var seriesResults = ProcessAllSeries();
 
             if (seriesResults.Count == 0)
                 return null;
 
             return BuildComputationResult(seriesResults);
+        }
+
+        private List<SeriesResult> ProcessAllSeries()
+        {
+            var results = new List<SeriesResult>();
+
+            for (int i = 0; i < _series.Count; i++)
+            {
+                var processed = ProcessSingleSeries(_series[i], i, _labels[i]);
+                if (processed != null)
+                {
+                    results.Add(processed);
+                }
+            }
+
+            return results;
         }
 
         /// <summary>
@@ -137,32 +140,45 @@ namespace DataVisualiser.Charts.Strategies
             int seriesIndex,
             string label)
         {
-            // Filter, order, and process like SingleMetricStrategy
-            var orderedData = seriesData
-                .Where(d => d.Value.HasValue &&
-                           d.NormalizedTimestamp >= _from &&
-                           d.NormalizedTimestamp <= _to)
-                .OrderBy(d => d.NormalizedTimestamp)
-                .ToList();
-
-            if (!orderedData.Any())
-                return null; // Skip empty series
+            var orderedData = FilterAndOrderSeries(seriesData);
+            if (orderedData.Count == 0)
+                return null;
 
             var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
             var rawValues = orderedData
                 .Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN)
                 .ToList();
 
-            // Use unified smoothing service
-            var smoothedValues = _smoothingService.SmoothSeries(orderedData, rawTimestamps, _from, _to);
+            var smoothedValues =
+                _smoothingService.SmoothSeries(
+                    orderedData,
+                    rawTimestamps,
+                    _from,
+                    _to);
 
-            // Capture unit from first non-null series using unified service
             if (Unit == null)
             {
                 Unit = _unitResolutionService.ResolveUnit(orderedData);
             }
 
-            return BuildSeriesResult(seriesIndex, label, rawTimestamps, rawValues, smoothedValues.ToList());
+            return BuildSeriesResult(
+                seriesIndex,
+                label,
+                rawTimestamps,
+                rawValues,
+                smoothedValues.ToList());
+        }
+
+        private List<HealthMetricData> FilterAndOrderSeries(
+    IEnumerable<HealthMetricData> seriesData)
+        {
+            return seriesData
+                .Where(d =>
+                    d.Value.HasValue &&
+                    d.NormalizedTimestamp >= _from &&
+                    d.NormalizedTimestamp <= _to)
+                .OrderBy(d => d.NormalizedTimestamp)
+                .ToList();
         }
 
         /// <summary>
