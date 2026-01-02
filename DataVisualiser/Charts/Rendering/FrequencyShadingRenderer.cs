@@ -33,27 +33,33 @@ namespace DataVisualiser.Charts.Rendering
                 return;
             }
 
-            double uniformIntervalHeight = CalculateUniformIntervalHeight(globalMin, globalMax, intervals.Count);
-            int globalMaxFreq = CalculateGlobalMaxFrequency(frequenciesPerDay);
+            var uniformIntervalHeight =
+                CalculateUniformIntervalHeight(globalMin, globalMax, intervals.Count);
 
-            var cumulativeStackHeight = InitializeCumulativeStack(globalMin);
+            var globalMaxFreq =
+                CalculateGlobalMaxFrequency(frequenciesPerDay);
 
-            int seriesCreated = RenderIntervals(
-                targetChart,
-                mins,
-                ranges,
-                intervals,
-                frequenciesPerDay,
-                colorMap,
-                uniformIntervalHeight,
-                cumulativeStackHeight,
-                globalMaxFreq);
+            var cumulativeStackHeight =
+                InitializeCumulativeStack(globalMin);
+
+            int seriesCreated =
+                RenderIntervals(
+                    targetChart,
+                    mins,
+                    ranges,
+                    intervals,
+                    frequenciesPerDay,
+                    colorMap,
+                    uniformIntervalHeight,
+                    cumulativeStackHeight,
+                    globalMaxFreq);
 
             if (seriesCreated == 0)
             {
                 RestoreSimpleRangeSeries(targetChart, ranges);
             }
         }
+
 
         #region Core rendering
 
@@ -72,7 +78,7 @@ namespace DataVisualiser.Charts.Rendering
 
             for (int intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
             {
-                var state = BuildIntervalState(
+                var intervalState = BuildIntervalState(
                     intervalIndex,
                     intervals[intervalIndex],
                     mins,
@@ -81,21 +87,21 @@ namespace DataVisualiser.Charts.Rendering
                     uniformIntervalHeight,
                     cumulativeStackHeight);
 
-                if (!state.HasData)
+                if (!intervalState.HasData)
                     continue;
 
-                AddBaselineSeries(chart, state.Baselines);
+                AddBaselineSeries(chart, intervalState.Baselines);
 
-                if (state.HasZeroFreqDays)
+                if (intervalState.HasZeroFreqDays)
                 {
-                    AddWhiteSeries(chart, state.WhiteHeights);
+                    AddWhiteSeries(chart, intervalState.WhiteHeights);
                     seriesCreated++;
                 }
 
-                if (state.HasNonZeroFreqDays)
+                if (intervalState.HasNonZeroFreqDays)
                 {
                     var color = ResolveIntervalColor(frequenciesPerDay, colorMap, intervalIndex);
-                    AddColoredSeries(chart, state.ColoredHeights, color);
+                    AddColoredSeries(chart, intervalState.ColoredHeights, color);
                     seriesCreated++;
                 }
             }
@@ -108,7 +114,23 @@ namespace DataVisualiser.Charts.Rendering
             Dictionary<int, Dictionary<int, Color>> colorMap,
             int intervalIndex)
         {
-            // Pick the day with the highest frequency for this interval (most representative color).
+            var (bestDay, bestFreq) = FindMostRepresentativeDay(
+                frequenciesPerDay, intervalIndex);
+
+            if (bestDay >= 0 &&
+                colorMap.TryGetValue(bestDay, out var dayColorMap) &&
+                dayColorMap.TryGetValue(intervalIndex, out var chosen))
+            {
+                return chosen;
+            }
+
+            return Color.FromRgb(173, 216, 230); // fallback
+        }
+
+        private static (int Day, int Frequency) FindMostRepresentativeDay(
+    Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
+    int intervalIndex)
+        {
             int bestDay = -1;
             int bestFreq = 0;
 
@@ -123,14 +145,7 @@ namespace DataVisualiser.Charts.Rendering
                 }
             }
 
-            if (bestDay >= 0 &&
-                colorMap.TryGetValue(bestDay, out var dayColorMap) &&
-                dayColorMap.TryGetValue(intervalIndex, out var chosen))
-            {
-                return chosen;
-            }
-
-            return Color.FromRgb(173, 216, 230); // fallback
+            return (bestDay, bestFreq);
         }
 
         #endregion

@@ -83,38 +83,78 @@ namespace DataVisualiser.Charts.Strategies
 
         public ChartComputationResult? Compute()
         {
-            // Phase 2
             var materialized = MaterializeSeries();
-
-            // Phase 3
             var filteredSamples = ApplyRangeFilter(materialized);
 
-            // Phase 4
-            var dayValues = BucketByWeekday(filteredSamples.Select(x => (x.Timestamp, x.Value)));
+            var dayValues =
+                BucketByWeekday(filteredSamples.Select(x => (x.Timestamp, x.Value)));
 
-            // Phase 5
-            ComputePerDayStatistics(dayValues, out var mins, out var maxs, out var ranges, out var counts);
+            ComputePerDayStatistics(
+                dayValues,
+                out var mins,
+                out var maxs,
+                out var ranges,
+                out var counts);
 
-            // Phase 6
-            ComputeGlobalBounds(mins, maxs, out var globalMin, out var globalMax);
+            ComputeGlobalBounds(
+                mins,
+                maxs,
+                out var globalMin,
+                out var globalMax);
 
-            // Phase 7
-            var bins = new List<(double Min, double Max)>();
-            var binSize = 0d;
-            var freqs = new Dictionary<int, Dictionary<int, int>>();
-            var norm = new Dictionary<int, Dictionary<int, double>>();
+            var (bins, binSize, freqs, norm) =
+                PrepareFrequencyData(dayValues, globalMin, globalMax);
 
-            if (!double.IsNaN(globalMin) &&
-                !double.IsNaN(globalMax) &&
-                globalMax > globalMin)
+            ExtendedResult = BuildExtendedResult(
+                mins, maxs, ranges, counts,
+                dayValues,
+                globalMin, globalMax,
+                binSize, bins,
+                freqs, norm);
+
+            return BuildChartComputationResult(mins, ranges);
+        }
+
+        private static (
+    List<(double Min, double Max)> Bins,
+    double BinSize,
+    Dictionary<int, Dictionary<int, int>> Frequencies,
+    Dictionary<int, Dictionary<int, double>> Normalized
+) PrepareFrequencyData(
+    Dictionary<int, List<double>> dayValues,
+    double globalMin,
+    double globalMax)
+        {
+            if (double.IsNaN(globalMin) ||
+                double.IsNaN(globalMax) ||
+                globalMax <= globalMin)
             {
-                (bins, binSize, freqs, norm) =
-                    DataVisualiser.Services.WeeklyFrequencyRenderer
-                        .PrepareBinsAndFrequencies(dayValues, globalMin, globalMax);
+                return (
+                    new List<(double, double)>(),
+                    0d,
+                    new Dictionary<int, Dictionary<int, int>>(),
+                    new Dictionary<int, Dictionary<int, double>>()
+                );
             }
 
-            // Phase 8 — fully populate ExtendedResult (legal surface)
-            ExtendedResult = new WeeklyDistributionResult
+            return DataVisualiser.Services.WeeklyFrequencyRenderer
+                .PrepareBinsAndFrequencies(dayValues, globalMin, globalMax);
+        }
+
+        private WeeklyDistributionResult BuildExtendedResult(
+    double[] mins,
+    double[] maxs,
+    double[] ranges,
+    int[] counts,
+    Dictionary<int, List<double>> dayValues,
+    double globalMin,
+    double globalMax,
+    double binSize,
+    List<(double Min, double Max)> bins,
+    Dictionary<int, Dictionary<int, int>> freqs,
+    Dictionary<int, Dictionary<int, double>> norm)
+        {
+            return new WeeklyDistributionResult
             {
                 Mins = mins.ToList(),
                 Maxs = maxs.ToList(),
@@ -129,9 +169,13 @@ namespace DataVisualiser.Charts.Strategies
                 NormalizedFrequenciesPerDay = norm,
                 Unit = _unitResolutionService.ResolveUnit(_series)
             };
-
-            // Minimal ChartComputationResult (matches legacy weekly distribution convention)
+        }
+        private ChartComputationResult BuildChartComputationResult(
+            double[] mins,
+            double[] ranges)
+        {
             var resolvedUnit = _unitResolutionService.ResolveUnit(_series);
+
             return new ChartComputationResult
             {
                 PrimaryRawValues = mins.ToList(),
@@ -146,7 +190,6 @@ namespace DataVisualiser.Charts.Strategies
                 Unit = resolvedUnit
             };
         }
-
 
         private List<(DateTime Timestamp, double Value, string Unit)> MaterializeSeries()
         {

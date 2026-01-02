@@ -15,26 +15,56 @@ namespace DataVisualiser.Charts.Rendering
         /// - SecondaryRaw/SecondarySmoothed = second selected metric subtype (when applicable)
         /// This ordering is maintained across all charts and strategies.
         /// </summary>
-        public void Render(CartesianChart targetChart, ChartRenderModel model, double minHeight = 400.0)
+        public void Render(
+            CartesianChart targetChart,
+            ChartRenderModel model,
+            double minHeight = 400.0)
         {
             ValidateInputs(targetChart, model);
-            ClearChart(targetChart);
+            PrepareChart(targetChart);
 
-            System.Diagnostics.Debug.WriteLine($"[TransformChart] Render: chart={targetChart.Name}, Timestamps={model.Timestamps?.Count ?? 0}, PrimaryRaw={model.PrimaryRaw?.Count ?? 0}, PrimarySmoothed={model.PrimarySmoothed?.Count ?? 0}, NormalizedIntervals={model.NormalizedIntervals?.Count ?? 0}");
+            LogRenderStart(targetChart, model);
 
             if (HasMultiSeriesMode(model))
-            {
                 RenderMultiSeriesMode(targetChart, model);
-            }
             else
-            {
                 RenderLegacyMode(targetChart, model);
-            }
 
-            System.Diagnostics.Debug.WriteLine($"[TransformChart] After Render: chart={targetChart.Name}, SeriesCount={targetChart.Series?.Count ?? 0}");
+            LogRenderEnd(targetChart);
 
-            ConfigureXAxis(targetChart, model);
-            ConfigureYAxis(targetChart);
+            ConfigureAxes(targetChart, model);
+        }
+
+        private static void PrepareChart(CartesianChart chart)
+        {
+            chart.Series.Clear();
+        }
+
+        private static void ConfigureAxes(
+            CartesianChart chart,
+            ChartRenderModel model)
+        {
+            ConfigureXAxis(chart, model);
+            ConfigureYAxis(chart);
+        }
+
+        private static void LogRenderStart(
+            CartesianChart chart,
+            ChartRenderModel model)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[TransformChart] Render: chart={chart.Name}, " +
+                $"Timestamps={model.Timestamps?.Count ?? 0}, " +
+                $"PrimaryRaw={model.PrimaryRaw?.Count ?? 0}, " +
+                $"PrimarySmoothed={model.PrimarySmoothed?.Count ?? 0}, " +
+                $"NormalizedIntervals={model.NormalizedIntervals?.Count ?? 0}");
+        }
+
+        private static void LogRenderEnd(CartesianChart chart)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[TransformChart] After Render: chart={chart.Name}, " +
+                $"SeriesCount={chart.Series?.Count ?? 0}");
         }
 
         /// <summary>
@@ -106,42 +136,76 @@ namespace DataVisualiser.Charts.Rendering
         /// <summary>
         /// Renders a single series result, including both raw and smoothed series based on SeriesMode.
         /// </summary>
-        private void RenderSingleSeries(CartesianChart targetChart, SeriesResult seriesResult, List<DateTime> mainTimeline, ChartSeriesMode seriesMode)
+        private void RenderSingleSeries(
+            CartesianChart targetChart,
+            SeriesResult seriesResult,
+            List<DateTime> mainTimeline,
+            ChartSeriesMode seriesMode)
         {
             var seriesColor = ColourPalette.Next(targetChart);
 
-            // Align series values to main timeline
-            var alignedRaw = AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
-            var alignedSmoothed = seriesResult.Smoothed != null
-                ? AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline)
-                : null;
+            var alignedRaw =
+                AlignSeriesToTimeline(
+                    seriesResult.Timestamps,
+                    seriesResult.RawValues,
+                    mainTimeline);
 
-            // Render smoothed series if available and enabled
-            if (seriesMode == ChartSeriesMode.RawAndSmoothed || seriesMode == ChartSeriesMode.SmoothedOnly)
-            {
-                if (alignedSmoothed != null && alignedSmoothed.Count > 0)
-                {
-                    var smoothedSeries = CreateAndPopulateSeries(
-                        $"{seriesResult.DisplayName} (smooth)",
-                        5,
-                        2,
-                        seriesColor,
-                        alignedSmoothed);
-                    targetChart.Series.Add(smoothedSeries);
-                }
-            }
+            var alignedSmoothed =
+                seriesResult.Smoothed != null
+                    ? AlignSeriesToTimeline(
+                        seriesResult.Timestamps,
+                        seriesResult.Smoothed,
+                        mainTimeline)
+                    : null;
 
-            // Render raw series if enabled
-            if (seriesMode == ChartSeriesMode.RawAndSmoothed || seriesMode == ChartSeriesMode.RawOnly)
-            {
-                var rawSeries = CreateAndPopulateSeries(
-                    $"{seriesResult.DisplayName} (raw)",
-                    3,
-                    1,
-                    Colors.DarkGray,
-                    alignedRaw);
-                targetChart.Series.Add(rawSeries);
-            }
+            TryRenderSeries(
+                targetChart,
+                seriesResult,
+                alignedSmoothed,
+                seriesColor,
+                seriesMode,
+                isSmoothed: true);
+
+            TryRenderSeries(
+                targetChart,
+                seriesResult,
+                alignedRaw,
+                Colors.DarkGray,
+                seriesMode,
+                isSmoothed: false);
+        }
+
+        private void TryRenderSeries(
+    CartesianChart chart,
+    SeriesResult result,
+    IList<double>? values,
+    Color color,
+    ChartSeriesMode mode,
+    bool isSmoothed)
+        {
+            if (values == null || values.Count == 0)
+                return;
+
+            if (isSmoothed &&
+                mode == ChartSeriesMode.RawOnly)
+                return;
+
+            if (!isSmoothed &&
+                mode == ChartSeriesMode.SmoothedOnly)
+                return;
+
+            var title =
+                $"{result.DisplayName} ({(isSmoothed ? "smooth" : "raw")})";
+
+            var series =
+                CreateAndPopulateSeries(
+                    title,
+                    isSmoothed ? 5 : 3,
+                    isSmoothed ? 2 : 1,
+                    color,
+                    values);
+
+            chart.Series.Add(series);
         }
 
         /// <summary>
