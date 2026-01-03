@@ -13,7 +13,7 @@ using UnitResolutionService = UnitResolutionService;
 public sealed class SingleMetricStrategy : IChartComputationStrategy
 {
     private readonly ICanonicalMetricSeries?        _cmsData;
-    private readonly IEnumerable<HealthMetricData>? _data;
+    private readonly IEnumerable<MetricData>? _data;
     private readonly DateTime                       _from;
     private readonly ISmoothingService              _smoothingService;
     private readonly ITimelineService               _timelineService;
@@ -22,11 +22,11 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
     private readonly bool                           _useCms;
 
     /// <summary>
-    ///     Legacy constructor using HealthMetricData.
+    ///     Legacy constructor using MetricData.
     /// </summary>
-    public SingleMetricStrategy(IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+    public SingleMetricStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
-        _data = data ?? Array.Empty<HealthMetricData>();
+        _data = data ?? Array.Empty<MetricData>();
         _cmsData = null;
         PrimaryLabel = label ?? "Metric";
         _from = from;
@@ -84,7 +84,7 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
         if (_cmsData == null || _cmsData.Samples.Count == 0)
             return null;
 
-        // Convert CMS samples to HealthMetricData for compatibility with existing smoothing logic
+        // Convert CMS samples to MetricData for compatibility with existing smoothing logic
         var healthMetricData = CmsConversionHelper.ConvertSamplesToHealthMetricData(_cmsData, _from, _to).
                                                    ToList();
 
@@ -105,14 +105,14 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
     /// <param name="orderedData">Filtered and ordered health metric data</param>
     /// <param name="unit">Optional unit override (if null, uses first data point's unit)</param>
     /// <returns>Chart computation result or null if no data</returns>
-    private ChartComputationResult? ComputeFromHealthMetricData(IReadOnlyList<HealthMetricData> orderedData, string? unit = null)
+    private ChartComputationResult? ComputeFromHealthMetricData(IReadOnlyList<MetricData> orderedData, string? unit = null)
     {
         if (orderedData == null || orderedData.Count == 0)
             return null;
 
         // orderedData is already a List (from PrepareOrderedData), but CreateSmoothedData requires List<T>
         // Convert IReadOnlyList to List only if necessary
-        var dataList = orderedData is List<HealthMetricData> list ? list : orderedData.ToList();
+        var dataList = orderedData is List<MetricData> list ? list : orderedData.ToList();
 
         var rawTimestamps = dataList.Select(d => d.NormalizedTimestamp).
                                      ToList();

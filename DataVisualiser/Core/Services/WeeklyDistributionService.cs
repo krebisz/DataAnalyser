@@ -65,7 +65,7 @@ public class WeeklyDistributionService
     /// <param name="minHeight">Minimum height for the chart</param>
     /// <param name="useFrequencyShading">Whether to use frequency shading or simple range view</param>
     /// <param name="intervalCount">Number of intervals to divide the value range into. Default is 10.</param>
-    public async Task UpdateWeeklyDistributionChartAsync(CartesianChart targetChart, IEnumerable<HealthMetricData> data, string displayName, DateTime from, DateTime to, double minHeight = DefaultMinHeight, bool useFrequencyShading = true, int intervalCount = 10, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
+    public async Task UpdateWeeklyDistributionChartAsync(CartesianChart targetChart, IEnumerable<MetricData> data, string displayName, DateTime from, DateTime to, double minHeight = DefaultMinHeight, bool useFrequencyShading = true, int intervalCount = 10, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -410,14 +410,14 @@ public class WeeklyDistributionService
 
     #endregion
 
-    private async Task<(ChartComputationResult? Result, WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(IEnumerable<HealthMetricData> data, string displayName, DateTime from, DateTime to)
+    private async Task<(ChartComputationResult? Result, WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(IEnumerable<MetricData> data, string displayName, DateTime from, DateTime to)
     {
         // Backwards-compatible default (legacy-only)
         return await ComputeWeeklyDistributionAsync(data, null, displayName, from, to, false, false).
                 ConfigureAwait(true);
     }
 
-    private async Task<(ChartComputationResult? Result, WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(IEnumerable<HealthMetricData> data, ICanonicalMetricSeries? cmsSeries, string displayName, DateTime from, DateTime to, bool useCmsStrategy, bool enableParity)
+    private async Task<(ChartComputationResult? Result, WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(IEnumerable<MetricData> data, ICanonicalMetricSeries? cmsSeries, string displayName, DateTime from, DateTime to, bool useCmsStrategy, bool enableParity)
     {
         // Create minimal ChartDataContext for cut-over decision
         var ctx = new ChartDataContext

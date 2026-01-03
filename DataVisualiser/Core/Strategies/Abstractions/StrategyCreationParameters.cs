@@ -7,9 +7,9 @@ namespace DataVisualiser.Core.Strategies.Abstractions;
 /// </summary>
 public class StrategyCreationParameters
 {
-    public IEnumerable<HealthMetricData>?                LegacyData1       { get; init; }
-    public IEnumerable<HealthMetricData>?                LegacyData2       { get; init; }
-    public IReadOnlyList<IEnumerable<HealthMetricData>>? LegacySeries      { get; init; }
+    public IEnumerable<MetricData>?                LegacyData1       { get; init; }
+    public IEnumerable<MetricData>?                LegacyData2       { get; init; }
+    public IReadOnlyList<IEnumerable<MetricData>>? LegacySeries      { get; init; }
     public string                                        Label1            { get; init; } = string.Empty;
     public string                                        Label2            { get; init; } = string.Empty;
     public IReadOnlyList<string>?                        Labels            { get; init; }

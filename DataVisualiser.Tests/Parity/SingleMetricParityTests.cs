@@ -72,7 +72,7 @@ public class SingleMetricParityTests
         var to = DateTime.UtcNow;
 
         // Act
-        var legacyStrategy = new SingleMetricStrategy(Array.Empty<HealthMetricData>(), "Test", from, to);
+        var legacyStrategy = new SingleMetricStrategy(Array.Empty<MetricData>(), "Test", from, to);
         var legacyResult = legacyStrategy.Compute();
 
         var cmsData = TestDataBuilders.CanonicalMetricSeries().
@@ -95,7 +95,7 @@ public class SingleMetricParityTests
         var interval = TimeSpan.FromDays(1);
 
         // Create data with some null values
-        var legacyData = new List<HealthMetricData>
+        var legacyData = new List<MetricData>
         {
                 new()
                 {

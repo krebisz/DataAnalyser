@@ -17,7 +17,7 @@ public class ParityValidationService
     ///     Executes parity validation for CombinedMetric strategies if enabled.
     ///     Returns the validated strategy (CMS if parity passes, legacy otherwise).
     /// </summary>
-    public IChartComputationStrategy ExecuteCombinedMetricParityIfEnabled(ICanonicalMetricSeries? leftCms, ICanonicalMetricSeries? rightCms, IEnumerable<HealthMetricData> leftLegacy, IEnumerable<HealthMetricData> rightLegacy, string labelLeft, string labelRight, DateTime from, DateTime to, bool enableParity = false)
+    public IChartComputationStrategy ExecuteCombinedMetricParityIfEnabled(ICanonicalMetricSeries? leftCms, ICanonicalMetricSeries? rightCms, IEnumerable<MetricData> leftLegacy, IEnumerable<MetricData> rightLegacy, string labelLeft, string labelRight, DateTime from, DateTime to, bool enableParity = false)
     {
         if (!enableParity || leftCms == null || rightCms == null)
             return new CombinedMetricStrategy(leftLegacy, rightLegacy, labelLeft, labelRight, from, to);

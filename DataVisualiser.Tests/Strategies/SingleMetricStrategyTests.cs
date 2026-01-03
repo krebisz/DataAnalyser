@@ -12,7 +12,7 @@ public sealed class SingleMetricStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenDataIsEmpty()
     {
-        var data = Enumerable.Empty<HealthMetricData>();
+        var data = Enumerable.Empty<MetricData>();
 
         var strategy = new SingleMetricStrategy(data, "Test", From, To);
 
@@ -24,7 +24,7 @@ public sealed class SingleMetricStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenAllValuesAreNull()
     {
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {
@@ -50,7 +50,7 @@ public sealed class SingleMetricStrategyTests
     [Fact]
     public void Compute_ShouldFilterNullValues()
     {
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {
@@ -84,7 +84,7 @@ public sealed class SingleMetricStrategyTests
     [Fact]
     public void Compute_ShouldOrderByTimestamp()
     {
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {

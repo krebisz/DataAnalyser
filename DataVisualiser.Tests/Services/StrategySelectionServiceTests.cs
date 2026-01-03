@@ -31,7 +31,7 @@ public sealed class StrategySelectionServiceTests
     public void SelectComputationStrategy_ShouldReturnSingleMetricStrategy_WhenOneSeries()
     {
         // Arrange
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
                 TestDataBuilders.HealthMetricData().
                                  BuildSeries(5, TimeSpan.FromDays(1))
@@ -64,7 +64,7 @@ public sealed class StrategySelectionServiceTests
     public void SelectComputationStrategy_ShouldReturnCombinedMetricStrategy_WhenTwoSeries()
     {
         // Arrange
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
                 TestDataBuilders.HealthMetricData().
                                  BuildSeries(5, TimeSpan.FromDays(1)),
@@ -98,7 +98,7 @@ public sealed class StrategySelectionServiceTests
     public void SelectComputationStrategy_ShouldReturnMultiMetricStrategy_WhenThreeOrMoreSeries()
     {
         // Arrange
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
                 TestDataBuilders.HealthMetricData().
                                  BuildSeries(5, TimeSpan.FromDays(1)),
@@ -156,7 +156,7 @@ public sealed class StrategySelectionServiceTests
     public void LoadAdditionalSubtypesAsync_ShouldReturnEarly_WhenSubtypesCountIsTwoOrLess()
     {
         // Arrange
-        var series = new List<IEnumerable<HealthMetricData>>();
+        var series = new List<IEnumerable<MetricData>>();
         var labels = new List<string>();
         var selectedSubtypes = new List<string?>
         {
@@ -177,7 +177,7 @@ public sealed class StrategySelectionServiceTests
     public void LoadAdditionalSubtypesAsync_ShouldReturnEarly_WhenMetricTypeIsNullOrEmpty()
     {
         // Arrange
-        var series = new List<IEnumerable<HealthMetricData>>();
+        var series = new List<IEnumerable<MetricData>>();
         var labels = new List<string>();
         var selectedSubtypes = new List<string?>
         {

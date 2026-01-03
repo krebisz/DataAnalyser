@@ -22,7 +22,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeUnaryTransform_ShouldReturnEmpty_WhenDataIsEmpty()
     {
         // Arrange
-        var data = Enumerable.Empty<HealthMetricData>();
+        var data = Enumerable.Empty<MetricData>();
 
         // Act
         var result = _service.ComputeUnaryTransform(data, "Log");
@@ -38,7 +38,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeUnaryTransform_ShouldReturnEmpty_WhenAllValuesAreNull()
     {
         // Arrange
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {
@@ -106,7 +106,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeUnaryTransform_ShouldFilterNullValues()
     {
         // Arrange
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {
@@ -139,7 +139,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeBinaryTransform_ShouldReturnEmpty_WhenData1IsEmpty()
     {
         // Arrange
-        var data1 = Enumerable.Empty<HealthMetricData>();
+        var data1 = Enumerable.Empty<MetricData>();
         var data2 = TestDataBuilders.HealthMetricData().
                                      BuildSeries(5, TimeSpan.FromDays(1));
 
@@ -157,7 +157,7 @@ public sealed class TransformComputationServiceTests
         // Arrange
         var data1 = TestDataBuilders.HealthMetricData().
                                      BuildSeries(5, TimeSpan.FromDays(1));
-        var data2 = Enumerable.Empty<HealthMetricData>();
+        var data2 = Enumerable.Empty<MetricData>();
 
         // Act
         var result = _service.ComputeBinaryTransform(data1, data2, "Add");
@@ -223,7 +223,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeBinaryTransform_ShouldAlignDataByTimestamp()
     {
         // Arrange
-        var data1 = new List<HealthMetricData>
+        var data1 = new List<MetricData>
         {
                 new()
                 {
@@ -237,7 +237,7 @@ public sealed class TransformComputationServiceTests
                 }
         };
 
-        var data2 = new List<HealthMetricData>
+        var data2 = new List<MetricData>
         {
                 new()
                 {
@@ -265,7 +265,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeBinaryTransform_ShouldReturnEmpty_WhenNoOverlappingTimestamps()
     {
         // Arrange
-        var data1 = new List<HealthMetricData>
+        var data1 = new List<MetricData>
         {
                 new()
                 {
@@ -274,7 +274,7 @@ public sealed class TransformComputationServiceTests
                 }
         };
 
-        var data2 = new List<HealthMetricData>
+        var data2 = new List<MetricData>
         {
                 new()
                 {

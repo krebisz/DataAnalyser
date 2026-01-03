@@ -16,17 +16,17 @@ public sealed class DifferenceStrategy : IChartComputationStrategy
     private readonly DateTime                      _from;
     private readonly string                        _labelLeft;
     private readonly string                        _labelRight;
-    private readonly IEnumerable<HealthMetricData> _left;
-    private readonly IEnumerable<HealthMetricData> _right;
+    private readonly IEnumerable<MetricData> _left;
+    private readonly IEnumerable<MetricData> _right;
     private readonly ISmoothingService             _smoothingService;
     private readonly ITimelineService              _timelineService;
     private readonly DateTime                      _to;
     private readonly IUnitResolutionService        _unitResolutionService;
 
-    public DifferenceStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+    public DifferenceStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
-        _left = left ?? Array.Empty<HealthMetricData>();
-        _right = right ?? Array.Empty<HealthMetricData>();
+        _left = left ?? Array.Empty<MetricData>();
+        _right = right ?? Array.Empty<MetricData>();
         _labelLeft = labelLeft ?? "Left";
         _labelRight = labelRight ?? "Right";
         _from = from;
@@ -73,12 +73,12 @@ public sealed class DifferenceStrategy : IChartComputationStrategy
         };
     }
 
-    private List<HealthMetricData> FilterAndOrder(IEnumerable<HealthMetricData> source)
+    private List<MetricData> FilterAndOrder(IEnumerable<MetricData> source)
     {
         return StrategyComputationHelper.FilterAndOrderByRange(source, _from, _to);
     }
 
-    private static(List<DateTime> Timestamps, List<double> RawDifferences) ComputeIndexAlignedDifferences(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right, int count)
+    private static(List<DateTime> Timestamps, List<double> RawDifferences) ComputeIndexAlignedDifferences(IReadOnlyList<MetricData> left, IReadOnlyList<MetricData> right, int count)
     {
         var timestamps = new List<DateTime>(count);
         var diffs = new List<double>(count);
@@ -99,12 +99,12 @@ public sealed class DifferenceStrategy : IChartComputationStrategy
         return (timestamps, diffs);
     }
 
-    private IReadOnlyList<double> CreateSmoothedDifferenceSeries(IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawDiff, IReadOnlyList<HealthMetricData> leftOrdered)
+    private IReadOnlyList<double> CreateSmoothedDifferenceSeries(IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawDiff, IReadOnlyList<MetricData> leftOrdered)
     {
-        var diffData = new List<HealthMetricData>(timestamps.Count);
+        var diffData = new List<MetricData>(timestamps.Count);
 
         for (var i = 0; i < timestamps.Count; i++)
-            diffData.Add(new HealthMetricData
+            diffData.Add(new MetricData
             {
                     NormalizedTimestamp = timestamps[i],
                     Value = double.IsNaN(rawDiff[i]) ? null : (decimal)rawDiff[i],

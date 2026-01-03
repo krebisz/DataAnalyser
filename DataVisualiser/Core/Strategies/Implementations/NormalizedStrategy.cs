@@ -14,22 +14,22 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
     private readonly DateTime                      _from;
     private readonly string                        _labelLeft;
     private readonly string                        _labelRight;
-    private readonly IEnumerable<HealthMetricData> _left;
+    private readonly IEnumerable<MetricData> _left;
     private readonly NormalizationMode             _mode;
-    private readonly IEnumerable<HealthMetricData> _right;
+    private readonly IEnumerable<MetricData> _right;
     private readonly ISmoothingService             _smoothingService;
     private readonly ITimelineService              _timelineService;
     private readonly DateTime                      _to;
     private readonly IUnitResolutionService        _unitResolutionService;
 
-    public NormalizedStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to) : this(left, right, labelLeft, labelRight, from, to, NormalizationMode.PercentageOfMax)
+    public NormalizedStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to) : this(left, right, labelLeft, labelRight, from, to, NormalizationMode.PercentageOfMax)
     {
     }
 
-    public NormalizedStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, NormalizationMode mode, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+    public NormalizedStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, NormalizationMode mode, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
-        _left = left ?? Array.Empty<HealthMetricData>();
-        _right = right ?? Array.Empty<HealthMetricData>();
+        _left = left ?? Array.Empty<MetricData>();
+        _right = right ?? Array.Empty<MetricData>();
         _labelLeft = labelLeft ?? "Left";
         _labelRight = labelRight ?? "Right";
         _from = from;
@@ -95,7 +95,7 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
         };
     }
 
-    private static(List<double> Raw1, List<double> Raw2) ExtractAlignedRawValues(List<HealthMetricData> ordered1, List<HealthMetricData> ordered2, List<DateTime> timestamps)
+    private static(List<double> Raw1, List<double> Raw2) ExtractAlignedRawValues(List<MetricData> ordered1, List<MetricData> ordered2, List<DateTime> timestamps)
     {
         var (dict1, dict2) = StrategyComputationHelper.CreateTimestampValueDictionaries(ordered1, ordered2);
         return StrategyComputationHelper.ExtractAlignedRawValues(timestamps, dict1, dict2);

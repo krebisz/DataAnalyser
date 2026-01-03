@@ -10,7 +10,7 @@ namespace DataVisualiser.Core.Strategies.Factories;
 /// </summary>
 public sealed class SingleMetricStrategyFactory : StrategyFactoryBase
 {
-    public SingleMetricStrategyFactory() : base((ctx, p) => new SingleMetricStrategy(ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"), p.Label1, p.From, p.To), p => new SingleMetricStrategy(p.LegacyData1 ?? Array.Empty<HealthMetricData>(), p.Label1, p.From, p.To))
+    public SingleMetricStrategyFactory() : base((ctx, p) => new SingleMetricStrategy(ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"), p.Label1, p.From, p.To), p => new SingleMetricStrategy(p.LegacyData1 ?? Array.Empty<MetricData>(), p.Label1, p.From, p.To))
     {
     }
 }

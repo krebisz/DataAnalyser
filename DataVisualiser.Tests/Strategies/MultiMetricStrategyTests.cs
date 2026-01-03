@@ -12,10 +12,10 @@ public sealed class MultiMetricStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenAllSeriesEmpty()
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
-                Enumerable.Empty<HealthMetricData>(),
-                Enumerable.Empty<HealthMetricData>()
+                Enumerable.Empty<MetricData>(),
+                Enumerable.Empty<MetricData>()
         };
 
         var strategy = new MultiMetricStrategy(series, new[]
@@ -32,9 +32,9 @@ public sealed class MultiMetricStrategyTests
     [Fact]
     public void Compute_ShouldSkipEmptySeries_AndReturnRemaining()
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
-                Enumerable.Empty<HealthMetricData>(),
+                Enumerable.Empty<MetricData>(),
                 TestDataBuilders.HealthMetricData().
                                  WithTimestamp(From).
                                  WithUnit("kg").
@@ -57,7 +57,7 @@ public sealed class MultiMetricStrategyTests
     [Fact]
     public void Compute_ShouldEmitOneSeriesResult_PerInputSeries()
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
                 TestDataBuilders.HealthMetricData().
                                  WithTimestamp(From).
@@ -84,9 +84,9 @@ public sealed class MultiMetricStrategyTests
     [Fact]
     public void Compute_ShouldOrderTimestamps_PerSeries()
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
-                new List<HealthMetricData>
+                new List<MetricData>
                 {
                         new()
                         {
@@ -124,7 +124,7 @@ public sealed class MultiMetricStrategyTests
     [Fact]
     public void Compute_ShouldGenerateSmoothedValues_PerSeries()
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
                 TestDataBuilders.HealthMetricData().
                                  WithTimestamp(From).
@@ -148,7 +148,7 @@ public sealed class MultiMetricStrategyTests
     [Fact]
     public void Compute_ShouldSetUnit_FromFirstNonEmptySeries()
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
                 TestDataBuilders.HealthMetricData().
                                  WithTimestamp(From).

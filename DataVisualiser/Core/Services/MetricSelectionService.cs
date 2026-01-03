@@ -18,7 +18,7 @@ public class MetricSelectionService
     }
 
 
-    public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<HealthMetricData> PrimaryLegacy, IEnumerable<HealthMetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
+    public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
     {
         var dataFetcher = new DataFetcher(_connectionString);
         var cmsService = new CmsDataService(_connectionString);
@@ -65,7 +65,7 @@ public class MetricSelectionService
     // ------------------------------------------------------------
     // LOAD METRIC DATA (PRIMARY + SECONDARY)
     // ------------------------------------------------------------
-    public async Task<(IEnumerable<HealthMetricData> Primary, IEnumerable<HealthMetricData> Secondary)> LoadMetricDataAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
+    public async Task<(IEnumerable<MetricData> Primary, IEnumerable<MetricData> Secondary)> LoadMetricDataAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
     {
         var dataFetcher = new DataFetcher(_connectionString);
 

@@ -8,8 +8,8 @@ public class ChartDataContext
     public object? SecondaryCms { get; set; }
 
     // Raw input from DB
-    public IReadOnlyList<HealthMetricData>? Data1 { get; init; }
-    public IReadOnlyList<HealthMetricData>? Data2 { get; init; }
+    public IReadOnlyList<MetricData>? Data1 { get; init; }
+    public IReadOnlyList<MetricData>? Data2 { get; init; }
 
     // Unified timeline
     public IReadOnlyList<DateTime>? Timestamps { get; init; }

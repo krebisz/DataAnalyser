@@ -14,7 +14,7 @@ public sealed class WeekdayTrendStrategy
         _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
     }
 
-    public WeekdayTrendResult Compute(IEnumerable<HealthMetricData> data, DateTime from, DateTime to)
+    public WeekdayTrendResult Compute(IEnumerable<MetricData> data, DateTime from, DateTime to)
     {
         if (data == null)
             throw new ArgumentNullException(nameof(data));
@@ -44,12 +44,12 @@ public sealed class WeekdayTrendStrategy
         return result;
     }
 
-    private static List<HealthMetricData> FilterData(IEnumerable<HealthMetricData> data, DateTime from, DateTime to)
+    private static List<MetricData> FilterData(IEnumerable<MetricData> data, DateTime from, DateTime to)
     {
         return StrategyComputationHelper.FilterAndOrderByRange(data, from, to);
     }
 
-    private(Dictionary<int, WeekdayTrendSeries> SeriesByDay, double GlobalMin, double GlobalMax) BuildWeekdaySeries(List<HealthMetricData> filtered)
+    private(Dictionary<int, WeekdayTrendSeries> SeriesByDay, double GlobalMin, double GlobalMax) BuildWeekdaySeries(List<MetricData> filtered)
     {
         var seriesByDay = new Dictionary<int, WeekdayTrendSeries>();
 

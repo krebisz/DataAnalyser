@@ -14,14 +14,14 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
 {
-    private readonly IEnumerable<HealthMetricData> _data;
+    private readonly IEnumerable<MetricData> _data;
     private readonly DateTime                      _from;
     private readonly DateTime                      _to;
     private readonly IUnitResolutionService        _unitResolutionService;
 
-    public WeeklyDistributionStrategy(IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null)
+    public WeeklyDistributionStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null)
     {
-        _data = data ?? Array.Empty<HealthMetricData>();
+        _data = data ?? Array.Empty<MetricData>();
         PrimaryLabel = label ?? "Metric";
         _from = from;
         _to = to;
@@ -67,12 +67,12 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
     }
 
 
-    private static List<HealthMetricData> FilterData(IEnumerable<HealthMetricData> data, DateTime from, DateTime to)
+    private static List<MetricData> FilterData(IEnumerable<MetricData> data, DateTime from, DateTime to)
     {
         return StrategyComputationHelper.FilterAndOrderByRange(data, from, to);
     }
 
-    private static List<List<double>> BucketByWeekday(IEnumerable<HealthMetricData> ordered)
+    private static List<List<double>> BucketByWeekday(IEnumerable<MetricData> ordered)
     {
         var buckets = Enumerable.Range(0, 7).
                                  Select(_ => new List<double>()).

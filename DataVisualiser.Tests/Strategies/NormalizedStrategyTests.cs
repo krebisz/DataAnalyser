@@ -11,8 +11,8 @@ public sealed class NormalizedStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
     {
-        var left = Enumerable.Empty<HealthMetricData>();
-        var right = Enumerable.Empty<HealthMetricData>();
+        var left = Enumerable.Empty<MetricData>();
+        var right = Enumerable.Empty<MetricData>();
 
         var strategy = new NormalizedStrategy(left, right, "L", "R", From, To);
 
@@ -24,7 +24,7 @@ public sealed class NormalizedStrategyTests
     [Fact]
     public void Compute_ShouldReturnResult_WithNaNs_WhenNoOverlappingTimestamps()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -34,7 +34,7 @@ public sealed class NormalizedStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -56,7 +56,7 @@ public sealed class NormalizedStrategyTests
     [Fact]
     public void Compute_ShouldNormalizePrimaryRawValues_ForPercentageOfMax_EvenWhenAlignmentHasGaps()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -90,7 +90,7 @@ public sealed class NormalizedStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -115,7 +115,7 @@ public sealed class NormalizedStrategyTests
     [Fact]
     public void Compute_ShouldReturnTwoSeries_ForRelativeToMax()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -131,7 +131,7 @@ public sealed class NormalizedStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -163,7 +163,7 @@ public sealed class NormalizedStrategyTests
     [Fact]
     public void Compute_ShouldGenerateSmoothedSeries()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -191,7 +191,7 @@ public sealed class NormalizedStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -230,7 +230,7 @@ public sealed class NormalizedStrategyTests
     [Fact]
     public void Compute_ShouldResolveUnit_FromInputSeries()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -240,7 +240,7 @@ public sealed class NormalizedStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -261,7 +261,7 @@ public sealed class NormalizedStrategyTests
     [Fact]
     public void SecondaryLabel_ShouldBeSet_ForRelativeToMax()
     {
-        var strategy = new NormalizedStrategy(Enumerable.Empty<HealthMetricData>(), Enumerable.Empty<HealthMetricData>(), "L", "R", From, To, NormalizationMode.RelativeToMax);
+        var strategy = new NormalizedStrategy(Enumerable.Empty<MetricData>(), Enumerable.Empty<MetricData>(), "L", "R", From, To, NormalizationMode.RelativeToMax);
 
         Assert.Equal("R (baseline)", strategy.SecondaryLabel);
     }

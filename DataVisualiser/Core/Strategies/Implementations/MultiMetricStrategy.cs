@@ -17,7 +17,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
 {
     private readonly DateTime                                     _from;
     private readonly IReadOnlyList<string>                        _labels;
-    private readonly IReadOnlyList<IEnumerable<HealthMetricData>> _series;
+    private readonly IReadOnlyList<IEnumerable<MetricData>> _series;
     private readonly ISmoothingService                            _smoothingService;
     private readonly ITimelineService                             _timelineService;
     private readonly DateTime                                     _to;
@@ -25,9 +25,9 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
     private readonly IUnitResolutionService                       _unitResolutionService;
 
     /// <summary>
-    ///     Legacy constructor using HealthMetricData collections.
+    ///     Legacy constructor using MetricData collections.
     /// </summary>
-    public MultiMetricStrategy(IReadOnlyList<IEnumerable<HealthMetricData>> series, IReadOnlyList<string> labels, DateTime from, DateTime to, string? unit = null, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+    public MultiMetricStrategy(IReadOnlyList<IEnumerable<MetricData>> series, IReadOnlyList<string> labels, DateTime from, DateTime to, string? unit = null, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
         if (series == null || series.Count == 0)
             throw new ArgumentException("At least one metric series is required.", nameof(series));
@@ -46,7 +46,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
 
     /// <summary>
     ///     Phase 4: Constructor using Canonical Metric Series.
-    ///     Validates metric compatibility and converts CMS to HealthMetricData for processing.
+    ///     Validates metric compatibility and converts CMS to MetricData for processing.
     /// </summary>
     public MultiMetricStrategy(IReadOnlyList<ICanonicalMetricSeries> cmsSeries, IReadOnlyList<string> labels, DateTime from, DateTime to)
     {
@@ -69,7 +69,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
             throw new ArgumentException($"Cannot combine incompatible metrics: {reason}", nameof(cmsSeries));
         }
 
-        // Convert each CMS to HealthMetricData using helper
+        // Convert each CMS to MetricData using helper
         var series = cmsSeries.Select(cms => CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).
                                                                  ToList()).
                                ToList();
@@ -118,7 +118,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
     ///     Processes a single series: filters, orders, applies smoothing, and builds a SeriesResult.
     ///     Returns null if the series is empty.
     /// </summary>
-    private SeriesResult? ProcessSingleSeries(IEnumerable<HealthMetricData> seriesData, int seriesIndex, string label)
+    private SeriesResult? ProcessSingleSeries(IEnumerable<MetricData> seriesData, int seriesIndex, string label)
     {
         var orderedData = StrategyComputationHelper.FilterAndOrderByRange(seriesData, _from, _to);
         if (orderedData.Count == 0)

@@ -11,5 +11,5 @@ public interface ISmoothingService
     /// <summary>
     ///     Creates smoothed values for a series of health metric data.
     /// </summary>
-    IReadOnlyList<double> SmoothSeries(IReadOnlyList<HealthMetricData> orderedData, IReadOnlyList<DateTime> timestamps, DateTime from, DateTime to);
+    IReadOnlyList<double> SmoothSeries(IReadOnlyList<MetricData> orderedData, IReadOnlyList<DateTime> timestamps, DateTime from, DateTime to);
 }

@@ -10,7 +10,7 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public sealed class UnitResolutionService : IUnitResolutionService
 {
-    public string? ResolveUnit(IReadOnlyList<HealthMetricData> data)
+    public string? ResolveUnit(IReadOnlyList<MetricData> data)
     {
         if (data == null || data.Count == 0)
             return null;
@@ -19,7 +19,7 @@ public sealed class UnitResolutionService : IUnitResolutionService
                     Unit;
     }
 
-    public string? ResolveUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)
+    public string? ResolveUnit(IReadOnlyList<MetricData> left, IReadOnlyList<MetricData> right)
     {
         if (left == null || left.Count == 0)
             return right?.FirstOrDefault()?.
@@ -69,7 +69,7 @@ public sealed class UnitResolutionService : IUnitResolutionService
         return leftUnit;
     }
 
-    public string? ResolveRatioUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)
+    public string? ResolveRatioUnit(IReadOnlyList<MetricData> left, IReadOnlyList<MetricData> right)
     {
         if (left == null || left.Count == 0 || right == null || right.Count == 0)
             return null;

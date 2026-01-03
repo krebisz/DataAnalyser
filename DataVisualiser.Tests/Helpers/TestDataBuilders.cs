@@ -44,9 +44,9 @@ public class HealthMetricDataBuilder
         return this;
     }
 
-    public HealthMetricData Build()
+    public MetricData Build()
     {
-        return new HealthMetricData
+        return new MetricData
         {
                 NormalizedTimestamp = _timestamp,
                 Value = _value,
@@ -55,13 +55,13 @@ public class HealthMetricDataBuilder
         };
     }
 
-    public List<HealthMetricData> BuildSeries(int count, TimeSpan interval)
+    public List<MetricData> BuildSeries(int count, TimeSpan interval)
     {
-        var series = new List<HealthMetricData>();
+        var series = new List<MetricData>();
         var current = _timestamp;
         for (var i = 0; i < count; i++)
         {
-            series.Add(new HealthMetricData
+            series.Add(new MetricData
             {
                     NormalizedTimestamp = current,
                     Value = _value,

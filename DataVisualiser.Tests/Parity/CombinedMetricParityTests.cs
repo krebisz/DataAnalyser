@@ -108,7 +108,7 @@ public class CombinedMetricParityTests
         // Act
         var result = _harness.Validate(context, () =>
         {
-            var legacyStrategy = new CombinedMetricStrategy(Array.Empty<HealthMetricData>(), Array.Empty<HealthMetricData>(), "Left", "Right", from, to);
+            var legacyStrategy = new CombinedMetricStrategy(Array.Empty<MetricData>(), Array.Empty<MetricData>(), "Left", "Right", from, to);
             return legacyStrategy.Compute()?.
                                   ToLegacyExecutionResult() ?? new LegacyExecutionResult
             {

@@ -22,8 +22,8 @@ public class WeeklyDistributionParityHarnessTests
                                    WithSampleCount(10).
                                    Build();
 
-        // Build equivalent legacy HealthMetricData samples
-        var legacy = new List<HealthMetricData>();
+        // Build equivalent legacy MetricData samples
+        var legacy = new List<MetricData>();
         var current = start;
         for (var i = 0; i < 10; i++)
         {

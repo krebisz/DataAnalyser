@@ -8,9 +8,9 @@ public sealed class TransformResultStrategyTests
     private static readonly DateTime From = new(2024, 01, 01);
     private static readonly DateTime To   = new(2024, 01, 05);
 
-    private static List<HealthMetricData> BuildSourceData()
+    private static List<MetricData> BuildSourceData()
     {
-        return new List<HealthMetricData>
+        return new List<MetricData>
         {
                 new()
                 {
@@ -36,7 +36,7 @@ public sealed class TransformResultStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenSourceDataEmpty()
     {
-        var strategy = new TransformResultStrategy(new List<HealthMetricData>(), new List<double>(), "X", From, To);
+        var strategy = new TransformResultStrategy(new List<MetricData>(), new List<double>(), "X", From, To);
 
         var result = strategy.Compute();
 

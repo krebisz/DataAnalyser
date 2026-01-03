@@ -263,7 +263,7 @@ public partial class MainWindow : Window
         if (bool.TryParse(showDebugPopup, out var showDebug) && showDebug)
         {
             var data1 = ctx.Data1.ToList();
-            var data2 = ctx.Data2?.ToList() ?? new List<HealthMetricData>();
+            var data2 = ctx.Data2?.ToList() ?? new List<MetricData>();
 
             var msg = $"Data1 count: {data1.Count}\n" + $"Data2 count: {data2.Count}\n" + $"First 3 timestamps (Data1):\n" + string.Join("\n", data1.Take(3).
                                                                                                                                                      Select(d => d.NormalizedTimestamp)) + "\n\nFirst 3 timestamps (Data2):\n" + string.Join("\n", data2.Take(3).
@@ -320,7 +320,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private ChartComputationResult? ComputeMainChart(IReadOnlyList<IEnumerable<HealthMetricData>> selectedMetricSeries, IReadOnlyList<string> selectedMetricLabels, string? unit, DateTime from, DateTime to)
+    private ChartComputationResult? ComputeMainChart(IReadOnlyList<IEnumerable<MetricData>> selectedMetricSeries, IReadOnlyList<string> selectedMetricLabels, string? unit, DateTime from, DateTime to)
     {
         IChartComputationStrategy strategy;
         var ctx = _viewModel.ChartState.LastContext;
@@ -338,7 +338,7 @@ public partial class MainWindow : Window
     }
 
 
-    private async Task RenderMainChart(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null)
+    private async Task RenderMainChart(IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null)
     {
         var ctx = _viewModel.ChartState.LastContext;
         if (ctx == null || _chartRenderingOrchestrator == null)
@@ -352,7 +352,7 @@ public partial class MainWindow : Window
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    private(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to)
+    private(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -624,7 +624,7 @@ public partial class MainWindow : Window
         ResetTransformResultState();
     }
 
-    private void PopulateTransformGrid(IEnumerable<HealthMetricData>? data, DataGrid grid, TextBlock title, string titleText, bool alwaysVisible)
+    private void PopulateTransformGrid(IEnumerable<MetricData>? data, DataGrid grid, TextBlock title, string titleText, bool alwaysVisible)
     {
         if (data == null && !alwaysVisible)
             return;
@@ -806,7 +806,7 @@ public partial class MainWindow : Window
         // Build expression and evaluate
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
         List<double> computedResults;
-        var metricsList = new List<IReadOnlyList<HealthMetricData>>
+        var metricsList = new List<IReadOnlyList<MetricData>>
         {
                 alignedData.Item1,
                 alignedData.Item2
@@ -854,7 +854,7 @@ public partial class MainWindow : Window
         };
     }
 
-    private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
+    private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<MetricData> data, string label, DateTime from, DateTime to)
     {
         // Use unified cut-over service
         if (_strategyCutOverService == null)
@@ -871,7 +871,7 @@ public partial class MainWindow : Window
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
     }
 
-    private IChartComputationStrategy CreateMultiMetricStrategy(ChartDataContext ctx, List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to, string? unit = null)
+    private IChartComputationStrategy CreateMultiMetricStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to, string? unit = null)
     {
         // Use unified cut-over service
         if (_strategyCutOverService == null)
@@ -889,7 +889,7 @@ public partial class MainWindow : Window
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
     }
 
-    private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string label1, string label2, DateTime from, DateTime to)
+    private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string label1, string label2, DateTime from, DateTime to)
     {
         // Use unified cut-over service
         if (_strategyCutOverService == null)
@@ -908,7 +908,7 @@ public partial class MainWindow : Window
         return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
     }
 
-    private IChartComputationStrategy CreateNormalizedStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string label1, string label2, DateTime from, DateTime to, NormalizationMode normalizationMode)
+    private IChartComputationStrategy CreateNormalizedStrategy(ChartDataContext ctx, IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string label1, string label2, DateTime from, DateTime to, NormalizationMode normalizationMode)
     {
         // Use unified cut-over service
         if (_strategyCutOverService == null)
@@ -1599,7 +1599,7 @@ public partial class MainWindow : Window
             await ComputeBinaryTransform(ctx.Data1, ctx.Data2, operationTag);
     }
 
-    private async Task ComputeUnaryTransform(IEnumerable<HealthMetricData> data, string operation)
+    private async Task ComputeUnaryTransform(IEnumerable<MetricData> data, string operation)
     {
         // Use ALL data for chart computation (proper normalization)
         var allDataList = data.Where(d => d.Value.HasValue).
@@ -1612,7 +1612,7 @@ public partial class MainWindow : Window
         // Phase 4: Use new transform expression infrastructure
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0);
         List<double> computedResults;
-        List<IReadOnlyList<HealthMetricData>> metricsList;
+        List<IReadOnlyList<MetricData>> metricsList;
 
         if (expression == null)
         {
@@ -1627,7 +1627,7 @@ public partial class MainWindow : Window
             var allValues = allDataList.Select(d => (double)d.Value!.Value).
                                         ToList();
             computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
-            metricsList = new List<IReadOnlyList<HealthMetricData>>
+            metricsList = new List<IReadOnlyList<MetricData>>
             {
                     allDataList
             };
@@ -1636,7 +1636,7 @@ public partial class MainWindow : Window
         {
             // Evaluate using new infrastructure
             Debug.WriteLine($"[Transform] UNARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
-            metricsList = new List<IReadOnlyList<HealthMetricData>>
+            metricsList = new List<IReadOnlyList<MetricData>>
             {
                     allDataList
             };
@@ -1651,7 +1651,7 @@ public partial class MainWindow : Window
     /// <summary>
     ///     Phase 4: Shared method to render transform results (grid and chart) using new infrastructure.
     /// </summary>
-    private async Task RenderTransformResults(List<HealthMetricData> dataList, List<double> results, string operation, List<IReadOnlyList<HealthMetricData>> metrics)
+    private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics)
     {
         var resultData = TransformExpressionEvaluator.CreateTransformResultData(dataList, results);
         PopulateTransformResultGrid(resultData);
@@ -1766,7 +1766,7 @@ public partial class MainWindow : Window
     /// <summary>
     ///     Phase 4: Renders transform chart using new infrastructure for label generation.
     /// </summary>
-    private async Task RenderTransformChart(List<HealthMetricData> dataList, List<double> results, string operation, List<IReadOnlyList<HealthMetricData>> metrics)
+    private async Task RenderTransformChart(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics)
     {
         if (dataList.Count == 0 || results.Count == 0)
             return;
@@ -1792,7 +1792,7 @@ public partial class MainWindow : Window
     }
 
 
-    private async Task ComputeBinaryTransform(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string operation)
+    private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation)
     {
         // Use ALL data for chart computation (proper normalization)
         var allData1List = data1.Where(d => d.Value.HasValue).
@@ -1814,7 +1814,7 @@ public partial class MainWindow : Window
         // Phase 4: Use new transform expression infrastructure
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
         List<double> binaryComputedResults;
-        List<IReadOnlyList<HealthMetricData>> binaryMetricsList;
+        List<IReadOnlyList<MetricData>> binaryMetricsList;
 
         if (expression == null)
         {
@@ -1832,7 +1832,7 @@ public partial class MainWindow : Window
             var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
                                          ToList();
             binaryComputedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
-            binaryMetricsList = new List<IReadOnlyList<HealthMetricData>>
+            binaryMetricsList = new List<IReadOnlyList<MetricData>>
             {
                     alignedData.Item1,
                     alignedData.Item2
@@ -1843,7 +1843,7 @@ public partial class MainWindow : Window
         {
             // Evaluate using new infrastructure
             Debug.WriteLine($"[Transform] BINARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
-            binaryMetricsList = new List<IReadOnlyList<HealthMetricData>>
+            binaryMetricsList = new List<IReadOnlyList<MetricData>>
             {
                     alignedData.Item1,
                     alignedData.Item2

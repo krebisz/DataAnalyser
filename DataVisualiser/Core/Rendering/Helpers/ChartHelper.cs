@@ -464,7 +464,7 @@ public static class ChartHelper
     /// <summary>
     ///     Collects all valid numeric values from raw data and smoothed values.
     /// </summary>
-    private static List<double> CollectAllValues(List<HealthMetricData> rawData, List<double> smoothedValues)
+    private static List<double> CollectAllValues(List<MetricData> rawData, List<double> smoothedValues)
     {
         var allValues = new List<double>();
 
@@ -576,7 +576,7 @@ public static class ChartHelper
     /// <summary>
     ///     Normalizes Y-axis ticks to show uniform intervals (~10 ticks) with rounded bounds.
     /// </summary>
-    public static void NormalizeYAxis(Axis yAxis, List<HealthMetricData> rawData, List<double> smoothedValues)
+    public static void NormalizeYAxis(Axis yAxis, List<MetricData> rawData, List<double> smoothedValues)
     {
         var allValues = CollectAllValues(rawData, smoothedValues);
         LogInputCounts(rawData, smoothedValues, allValues);
@@ -596,7 +596,7 @@ public static class ChartHelper
         FinalizeAxis(yAxis);
     }
 
-    private static void LogInputCounts(List<HealthMetricData> rawData, List<double> smoothedValues, List<double> allValues)
+    private static void LogInputCounts(List<MetricData> rawData, List<double> smoothedValues, List<double> allValues)
     {
         Debug.WriteLine($"[TransformChart] NormalizeYAxis: rawData={rawData?.Count ?? 0}, " + $"smoothedValues={smoothedValues?.Count ?? 0}, allValues={allValues.Count}");
     }

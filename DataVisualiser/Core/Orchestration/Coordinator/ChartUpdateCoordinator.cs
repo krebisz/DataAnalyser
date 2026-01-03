@@ -135,19 +135,19 @@ public class ChartUpdateCoordinator
     }
 
     /// <summary>
-    ///     Builds synthetic HealthMetricData from the render model for Y-axis normalization.
+    ///     Builds synthetic MetricData from the render model for Y-axis normalization.
     ///     Handles both multi-series mode and legacy primary/secondary mode.
     /// </summary>
-    private List<HealthMetricData> BuildSyntheticRawData(ChartRenderModel model)
+    private List<MetricData> BuildSyntheticRawData(ChartRenderModel model)
     {
         return EnumerateRawPoints(model).
                Select(p => CreateMetric(p.Timestamp, p.Value, model.Unit)).
                ToList();
     }
 
-    private static HealthMetricData CreateMetric(DateTime timestamp, double value, string unit)
+    private static MetricData CreateMetric(DateTime timestamp, double value, string unit)
     {
-        return new HealthMetricData
+        return new MetricData
         {
                 NormalizedTimestamp = timestamp,
                 Value = double.IsNaN(value) ? null : (decimal)value,

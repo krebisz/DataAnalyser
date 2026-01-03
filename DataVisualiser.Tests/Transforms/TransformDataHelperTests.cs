@@ -8,7 +8,7 @@ public sealed class TransformDataHelperTests
     [Fact]
     public void CreateTransformResultData_ShouldCreateOneObjectPerInput()
     {
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {
@@ -36,7 +36,7 @@ public sealed class TransformDataHelperTests
     [Fact]
     public void CreateTransformResultData_ShouldFormatTimestampAndValue()
     {
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {
@@ -67,7 +67,7 @@ public sealed class TransformDataHelperTests
     [Fact]
     public void CreateTransformResultData_ShouldRenderNaNAsStringNaN()
     {
-        var data = new List<HealthMetricData>
+        var data = new List<MetricData>
         {
                 new()
                 {

@@ -15,14 +15,14 @@ using UnitResolutionService = UnitResolutionService;
 public sealed class TransformResultStrategy : IChartComputationStrategy
 {
     private readonly List<double>           _computedValues;
-    private readonly List<HealthMetricData> _data;
+    private readonly List<MetricData> _data;
     private readonly DateTime               _from;
     private readonly ISmoothingService      _smoothingService;
     private readonly ITimelineService       _timelineService;
     private readonly DateTime               _to;
     private readonly IUnitResolutionService _unitResolutionService;
 
-    public TransformResultStrategy(List<HealthMetricData> data, List<double> computedValues, string label, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+    public TransformResultStrategy(List<MetricData> data, List<double> computedValues, string label, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
         _data = data ?? throw new ArgumentNullException(nameof(data));
         _computedValues = computedValues ?? throw new ArgumentNullException(nameof(computedValues));
@@ -70,8 +70,8 @@ public sealed class TransformResultStrategy : IChartComputationStrategy
         var timeline = _timelineService.GenerateTimeline(_from, _to, timestamps);
         var intervalIndices = _timelineService.MapToIntervals(timestamps, timeline);
 
-        // Convert computed values to HealthMetricData for smoothing
-        var dataForSmoothing = _data.Zip(_computedValues, (d, v) => new HealthMetricData
+        // Convert computed values to MetricData for smoothing
+        var dataForSmoothing = _data.Zip(_computedValues, (d, v) => new MetricData
                                      {
                                              NormalizedTimestamp = d.NormalizedTimestamp,
                                              Value = (decimal)v,

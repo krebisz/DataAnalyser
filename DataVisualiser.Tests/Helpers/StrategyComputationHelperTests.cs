@@ -11,7 +11,7 @@ public sealed class StrategyComputationHelperTests
     [Fact]
     public void PrepareDataForComputation_ShouldReturnNull_WhenBothInputsEmpty()
     {
-        var result = StrategyComputationHelper.PrepareDataForComputation(Enumerable.Empty<HealthMetricData>(), Enumerable.Empty<HealthMetricData>(), From, To);
+        var result = StrategyComputationHelper.PrepareDataForComputation(Enumerable.Empty<MetricData>(), Enumerable.Empty<MetricData>(), From, To);
 
         Assert.Null(result);
     }
@@ -19,7 +19,7 @@ public sealed class StrategyComputationHelperTests
     [Fact]
     public void PrepareDataForComputation_ShouldOrderAndFilterInputs()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -38,7 +38,7 @@ public sealed class StrategyComputationHelperTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -69,7 +69,7 @@ public sealed class StrategyComputationHelperTests
     [Fact]
     public void CombineTimestamps_ShouldUnionAndOrder_FromHealthMetricData()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -81,7 +81,7 @@ public sealed class StrategyComputationHelperTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -128,7 +128,7 @@ public sealed class StrategyComputationHelperTests
     [Fact]
     public void ProcessSmoothedData_ShouldReturnPairedSmoothedLists()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -142,7 +142,7 @@ public sealed class StrategyComputationHelperTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {

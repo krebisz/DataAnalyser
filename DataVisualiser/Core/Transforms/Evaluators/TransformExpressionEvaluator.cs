@@ -22,7 +22,7 @@ public static class TransformExpressionEvaluator
     /// <param name="expression">The transform expression to evaluate.</param>
     /// <param name="metrics">List of metric data series, each aligned by timestamp.</param>
     /// <returns>List of computed values, one per timestamp.</returns>
-    public static List<double> Evaluate(TransformExpression expression, IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics)
+    public static List<double> Evaluate(TransformExpression expression, IReadOnlyList<IReadOnlyList<MetricData>> metrics)
     {
         if (expression == null)
             throw new ArgumentNullException(nameof(expression));
@@ -38,7 +38,7 @@ public static class TransformExpressionEvaluator
         return results;
     }
 
-    private static int ValidateAlignedMetrics(IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics)
+    private static int ValidateAlignedMetrics(IReadOnlyList<IReadOnlyList<MetricData>> metrics)
     {
         var length = metrics[0].Count;
         if (metrics.Any(m => m.Count != length))
@@ -50,7 +50,7 @@ public static class TransformExpressionEvaluator
     /// <summary>
     ///     Evaluates the expression at a specific timestamp index.
     /// </summary>
-    private static double EvaluateAt(TransformExpression expression, IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics, int index)
+    private static double EvaluateAt(TransformExpression expression, IReadOnlyList<IReadOnlyList<MetricData>> metrics, int index)
     {
         if (expression.Operation == null)
             return ResolveLeafValue(expression, metrics, index);
@@ -60,7 +60,7 @@ public static class TransformExpressionEvaluator
     }
 
 
-    private static double ResolveLeafValue(TransformExpression expression, IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics, int index)
+    private static double ResolveLeafValue(TransformExpression expression, IReadOnlyList<IReadOnlyList<MetricData>> metrics, int index)
     {
         if (expression.Operands.Count != 1 || !expression.Operands[0].MetricIndex.HasValue)
             return double.NaN;
@@ -68,7 +68,7 @@ public static class TransformExpressionEvaluator
         return ResolveMetricValue(metrics, expression.Operands[0].MetricIndex.Value, index);
     }
 
-    private static List<double> EvaluateOperands(TransformExpression expression, IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics, int index)
+    private static List<double> EvaluateOperands(TransformExpression expression, IReadOnlyList<IReadOnlyList<MetricData>> metrics, int index)
     {
         var values = new List<double>(expression.Operands.Count);
 
@@ -78,7 +78,7 @@ public static class TransformExpressionEvaluator
         return values;
     }
 
-    private static double EvaluateOperand(TransformOperand operand, IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics, int index)
+    private static double EvaluateOperand(TransformOperand operand, IReadOnlyList<IReadOnlyList<MetricData>> metrics, int index)
     {
         if (operand.MetricIndex.HasValue)
             return ResolveMetricValue(metrics, operand.MetricIndex.Value, index);
@@ -89,7 +89,7 @@ public static class TransformExpressionEvaluator
         return double.NaN;
     }
 
-    private static double ResolveMetricValue(IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics, int metricIndex, int index)
+    private static double ResolveMetricValue(IReadOnlyList<IReadOnlyList<MetricData>> metrics, int metricIndex, int index)
     {
         if (metricIndex < 0 || metricIndex >= metrics.Count || index >= metrics[metricIndex].Count)
             return double.NaN;
@@ -170,7 +170,7 @@ public static class TransformExpressionEvaluator
     /// <param name="metrics">List of metric data series.</param>
     /// <param name="ctx">Chart data context for metric labels.</param>
     /// <returns>Generated label string.</returns>
-    public static string GenerateTransformLabel(string operation, IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics, ChartDataContext? ctx)
+    public static string GenerateTransformLabel(string operation, IReadOnlyList<IReadOnlyList<MetricData>> metrics, ChartDataContext? ctx)
     {
         var metricIndices = metrics.Count > 0 ? Enumerable.Range(0, metrics.Count).
                                                            ToArray() : new[]
@@ -237,10 +237,10 @@ public static class TransformExpressionEvaluator
     ///     Aligns two metric series by timestamp, keeping only points that exist in both.
     ///     Required for transform expression evaluation which expects aligned data.
     /// </summary>
-    public static(List<HealthMetricData>, List<HealthMetricData>) AlignMetricsByTimestamp(List<HealthMetricData> data1, List<HealthMetricData> data2)
+    public static(List<MetricData>, List<MetricData>) AlignMetricsByTimestamp(List<MetricData> data1, List<MetricData> data2)
     {
-        var aligned1 = new List<HealthMetricData>();
-        var aligned2 = new List<HealthMetricData>();
+        var aligned1 = new List<MetricData>();
+        var aligned2 = new List<MetricData>();
 
         var data2Lookup = data2.ToDictionary(d => d.NormalizedTimestamp, d => d);
 
@@ -257,7 +257,7 @@ public static class TransformExpressionEvaluator
     /// <summary>
     ///     Creates result data objects for transform grid display.
     /// </summary>
-    public static List<object> CreateTransformResultData(List<HealthMetricData> dataList, List<double> results)
+    public static List<object> CreateTransformResultData(List<MetricData> dataList, List<double> results)
     {
         return dataList.Zip(results, (d, r) => new
                         {

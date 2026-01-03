@@ -18,9 +18,9 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 public sealed class CombinedMetricStrategy : IChartComputationStrategy
 {
     private readonly DateTime                       _from;
-    private readonly IEnumerable<HealthMetricData>? _left;
+    private readonly IEnumerable<MetricData>? _left;
     private readonly ICanonicalMetricSeries?        _leftCms;
-    private readonly IEnumerable<HealthMetricData>? _right;
+    private readonly IEnumerable<MetricData>? _right;
     private readonly ICanonicalMetricSeries?        _rightCms;
     private readonly ISmoothingService              _smoothingService;
     private readonly ITimelineService               _timelineService;
@@ -29,12 +29,12 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
     private readonly bool                           _useCms;
 
     /// <summary>
-    ///     Legacy constructor using HealthMetricData.
+    ///     Legacy constructor using MetricData.
     /// </summary>
-    public CombinedMetricStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+    public CombinedMetricStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
-        _left = left ?? Array.Empty<HealthMetricData>();
-        _right = right ?? Array.Empty<HealthMetricData>();
+        _left = left ?? Array.Empty<MetricData>();
+        _right = right ?? Array.Empty<MetricData>();
         _leftCms = null;
         _rightCms = null;
         PrimaryLabel = labelLeft ?? "Left";
@@ -132,9 +132,9 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
     }
 
     /// <summary>
-    ///     Compute from HealthMetricData (Legacy).
+    ///     Compute from MetricData (Legacy).
     /// </summary>
-    private ChartComputationResult? ComputeFromHealthMetricData(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right)
+    private ChartComputationResult? ComputeFromHealthMetricData(IEnumerable<MetricData> left, IEnumerable<MetricData> right)
     {
         var leftOrdered = FilterAndOrder(left);
         var rightOrdered = FilterAndOrder(right);
@@ -173,7 +173,7 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
         };
     }
 
-    private List<HealthMetricData> FilterAndOrder(IEnumerable<HealthMetricData> source)
+    private List<MetricData> FilterAndOrder(IEnumerable<MetricData> source)
     {
         return StrategyComputationHelper.FilterAndOrderByRange(source, _from, _to);
     }
@@ -201,7 +201,7 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
 
     private(List<double> Primary, List<double> Secondary) SmoothSeriesCms(List<CmsPoint> left, List<CmsPoint> right, List<DateTime> timestamps)
     {
-        var leftSynthetic = left.Select(p => new HealthMetricData
+        var leftSynthetic = left.Select(p => new MetricData
                                  {
                                          NormalizedTimestamp = p.Timestamp,
                                          Value = p.ValueDecimal,
@@ -209,7 +209,7 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
                                  }).
                                  ToList();
 
-        var rightSynthetic = right.Select(p => new HealthMetricData
+        var rightSynthetic = right.Select(p => new MetricData
                                    {
                                            NormalizedTimestamp = p.Timestamp,
                                            Value = p.ValueDecimal,

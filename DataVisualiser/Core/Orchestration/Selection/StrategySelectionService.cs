@@ -28,7 +28,7 @@ public sealed class StrategySelectionService
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    public(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<HealthMetricData>> series, List<string> labels, ChartDataContext ctx, DateTime from, DateTime to)
+    public(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, ChartDataContext ctx, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -62,7 +62,7 @@ public sealed class StrategySelectionService
     /// <summary>
     ///     Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
     /// </summary>
-    public async Task LoadAdditionalSubtypesAsync(List<IEnumerable<HealthMetricData>> series, List<string> labels, string? metricType, string? resolutionTableName, DateTime from, DateTime to, List<string?> selectedSubtypes)
+    public async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, string? metricType, string? resolutionTableName, DateTime from, DateTime to, List<string?> selectedSubtypes)
     {
         if (selectedSubtypes.Count <= 2 || string.IsNullOrEmpty(metricType))
             return;
@@ -94,7 +94,7 @@ public sealed class StrategySelectionService
         }
     }
 
-    private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
+    private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<MetricData> data, string label, DateTime from, DateTime to)
     {
         var parameters = new StrategyCreationParameters
         {
@@ -107,7 +107,7 @@ public sealed class StrategySelectionService
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
     }
 
-    private IChartComputationStrategy CreateMultiMetricStrategy(ChartDataContext ctx, List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to)
+    private IChartComputationStrategy CreateMultiMetricStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
         var parameters = new StrategyCreationParameters
         {
@@ -120,7 +120,7 @@ public sealed class StrategySelectionService
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
     }
 
-    private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to)
+    private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
         var leftCms = ctx.PrimaryCms as ICanonicalMetricSeries;
         var rightCms = ctx.SecondaryCms as ICanonicalMetricSeries;

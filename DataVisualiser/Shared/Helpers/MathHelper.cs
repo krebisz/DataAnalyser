@@ -209,7 +209,7 @@ public static class MathHelper
     /// <summary>
     ///     Fallback method: Creates smoothed data by grouping points by count (not time-based) to avoid overflow
     /// </summary>
-    private static List<SmoothedDataPoint> CreateSmoothedDataByPointCount(List<HealthMetricData> data, int numberOfBins)
+    private static List<SmoothedDataPoint> CreateSmoothedDataByPointCount(List<MetricData> data, int numberOfBins)
     {
         var smoothedPoints = new List<SmoothedDataPoint>();
 
@@ -217,7 +217,7 @@ public static class MathHelper
             return smoothedPoints;
 
         var pointsPerBin = Math.Max(1, data.Count / numberOfBins);
-        var bins = new List<List<HealthMetricData>>();
+        var bins = new List<List<MetricData>>();
 
         for (var i = 0; i < data.Count; i += pointsPerBin)
         {
@@ -260,7 +260,7 @@ public static class MathHelper
     ///     Creates smoothed/averaged data by binning points into intervals
     ///     with a maximum of 10 points per bin.
     /// </summary>
-    public static List<SmoothedDataPoint> CreateSmoothedData(List<HealthMetricData> data, DateTime fromDate, DateTime toDate)
+    public static List<SmoothedDataPoint> CreateSmoothedData(List<MetricData> data, DateTime fromDate, DateTime toDate)
     {
         if (data == null || data.Count == 0)
             return new List<SmoothedDataPoint>();
@@ -644,9 +644,9 @@ public static class MathHelper
 
     #region Binning Logic
 
-    private static Dictionary<int, List<HealthMetricData>> BinDataByTime(List<HealthMetricData> data, DateTime fromDate, int numberOfBins, double binSizeTicks)
+    private static Dictionary<int, List<MetricData>> BinDataByTime(List<MetricData> data, DateTime fromDate, int numberOfBins, double binSizeTicks)
     {
-        var bins = new Dictionary<int, List<HealthMetricData>>();
+        var bins = new Dictionary<int, List<MetricData>>();
 
         foreach (var point in data)
         {
@@ -657,7 +657,7 @@ public static class MathHelper
 
             if (!bins.TryGetValue(binIndex, out var bin))
             {
-                bin = new List<HealthMetricData>();
+                bin = new List<MetricData>();
                 bins[binIndex] = bin;
             }
 
@@ -682,7 +682,7 @@ public static class MathHelper
 
     #region Aggregation
 
-    private static List<SmoothedDataPoint> CreateAveragedPointsFromBins(Dictionary<int, List<HealthMetricData>> bins)
+    private static List<SmoothedDataPoint> CreateAveragedPointsFromBins(Dictionary<int, List<MetricData>> bins)
     {
         var result = new List<SmoothedDataPoint>();
 
@@ -696,7 +696,7 @@ public static class MathHelper
         return result;
     }
 
-    private static SmoothedDataPoint? TryCreateAveragedPoint(List<HealthMetricData> points)
+    private static SmoothedDataPoint? TryCreateAveragedPoint(List<MetricData> points)
     {
         if (points == null || points.Count == 0)
             return null;

@@ -16,7 +16,7 @@ public sealed class TransformOperationService
     /// <summary>
     ///     Executes a unary transform operation (Log, Sqrt) on the provided data.
     /// </summary>
-    public TransformOperationResult ComputeUnaryTransform(IEnumerable<HealthMetricData> data, string operation)
+    public TransformOperationResult ComputeUnaryTransform(IEnumerable<MetricData> data, string operation)
     {
         var preparedData = data.Where(d => d.Value.HasValue).
                                 OrderBy(d => d.NormalizedTimestamp).
@@ -29,7 +29,7 @@ public sealed class TransformOperationService
                     Message = "No valid data points found"
             };
 
-        var metricsList = new List<IReadOnlyList<HealthMetricData>>
+        var metricsList = new List<IReadOnlyList<MetricData>>
         {
                 preparedData
         };
@@ -76,7 +76,7 @@ public sealed class TransformOperationService
     /// <summary>
     ///     Executes a binary transform operation (Add, Subtract) on two data series.
     /// </summary>
-    public TransformOperationResult ComputeBinaryTransform(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string operation)
+    public TransformOperationResult ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation)
     {
         var prepared1 = data1.Where(d => d.Value.HasValue).
                               OrderBy(d => d.NormalizedTimestamp).
@@ -102,7 +102,7 @@ public sealed class TransformOperationService
                     Message = "No aligned data points found after timestamp alignment"
             };
 
-        var metricsList = new List<IReadOnlyList<HealthMetricData>>
+        var metricsList = new List<IReadOnlyList<MetricData>>
         {
                 aligned1,
                 aligned2

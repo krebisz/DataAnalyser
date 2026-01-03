@@ -12,10 +12,10 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public sealed class DataPreparationService : IDataPreparationService
 {
-    public IReadOnlyList<HealthMetricData> PrepareLegacyData(IEnumerable<HealthMetricData>? source, DateTime from, DateTime to)
+    public IReadOnlyList<MetricData> PrepareLegacyData(IEnumerable<MetricData>? source, DateTime from, DateTime to)
     {
         if (source == null)
-            return Array.Empty<HealthMetricData>();
+            return Array.Empty<MetricData>();
 
         return source.Where(d => d != null && d.Value.HasValue && d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to).
                       OrderBy(d => d.NormalizedTimestamp).
@@ -32,7 +32,7 @@ public sealed class DataPreparationService : IDataPreparationService
                    ToList();
     }
 
-    public IReadOnlyList<HealthMetricData> ConvertCmsToLegacy(ICanonicalMetricSeries cms, DateTime from, DateTime to)
+    public IReadOnlyList<MetricData> ConvertCmsToLegacy(ICanonicalMetricSeries cms, DateTime from, DateTime to)
     {
         if (cms == null)
             throw new ArgumentNullException(nameof(cms));

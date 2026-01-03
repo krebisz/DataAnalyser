@@ -9,7 +9,7 @@ namespace DataVisualiser.UI.ViewModels;
 /// </summary>
 public static class MetricDataValidationHelper
 {
-    public static bool ValidatePrimaryData(string metricType, string? primarySubtype, object? primaryCms, IEnumerable<HealthMetricData>? data1, EventHandler<ErrorEventArgs>? errorHandler)
+    public static bool ValidatePrimaryData(string metricType, string? primarySubtype, object? primaryCms, IEnumerable<MetricData>? data1, EventHandler<ErrorEventArgs>? errorHandler)
     {
         if (primaryCms == null && (data1 == null || !data1.Any()))
         {
@@ -23,7 +23,7 @@ public static class MetricDataValidationHelper
         return true;
     }
 
-    public static bool ValidateSecondaryData(string metricType, string? secondarySubtype, object? secondaryCms, IEnumerable<HealthMetricData>? data2, EventHandler<ErrorEventArgs>? errorHandler)
+    public static bool ValidateSecondaryData(string metricType, string? secondarySubtype, object? secondaryCms, IEnumerable<MetricData>? data2, EventHandler<ErrorEventArgs>? errorHandler)
     {
         if (secondarySubtype != null && secondaryCms == null && (data2 == null || !data2.Any()))
         {

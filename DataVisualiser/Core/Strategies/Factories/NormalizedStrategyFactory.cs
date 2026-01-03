@@ -16,6 +16,6 @@ public sealed class NormalizedStrategyFactory : StrategyFactoryBase
 
     private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p)
     {
-        return new NormalizedStrategy(p.LegacyData1 ?? Array.Empty<HealthMetricData>(), p.LegacyData2 ?? Array.Empty<HealthMetricData>(), p.Label1, p.Label2, p.From, p.To, p.NormalizationMode ?? NormalizationMode.PercentageOfMax);
+        return new NormalizedStrategy(p.LegacyData1 ?? Array.Empty<MetricData>(), p.LegacyData2 ?? Array.Empty<MetricData>(), p.Label1, p.Label2, p.From, p.To, p.NormalizationMode ?? NormalizationMode.PercentageOfMax);
     }
 }

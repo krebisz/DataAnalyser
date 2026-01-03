@@ -16,6 +16,6 @@ public sealed class RatioStrategyFactory : StrategyFactoryBase
 
     private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p)
     {
-        return new RatioStrategy(p.LegacyData1 ?? Array.Empty<HealthMetricData>(), p.LegacyData2 ?? Array.Empty<HealthMetricData>(), p.Label1, p.Label2, p.From, p.To);
+        return new RatioStrategy(p.LegacyData1 ?? Array.Empty<MetricData>(), p.LegacyData2 ?? Array.Empty<MetricData>(), p.Label1, p.Label2, p.From, p.To);
     }
 }

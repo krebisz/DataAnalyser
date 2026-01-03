@@ -8,10 +8,10 @@ namespace DataVisualiser.Core.Data.Repositories;
 /// <summary>
 ///     Service for fetching Canonical Metric Series data for DataVisualiser.
 ///     Phase 4 Integration: This service provides CMS-based data access alongside
-///     the legacy HealthMetricData path. It enables explicit opt-in to CMS workflows.
+///     the legacy MetricData path. It enables explicit opt-in to CMS workflows.
 ///     Architecture:
 ///     - Uses HealthMetricToCmsMapper to convert stored HealthMetric records to CMS
-///     - Provides adapter methods to convert CMS back to HealthMetricData for compatibility
+///     - Provides adapter methods to convert CMS back to MetricData for compatibility
 ///     - Supports parallel operation with legacy DataFetcher
 /// </summary>
 public class CmsDataService
@@ -64,14 +64,14 @@ public class CmsDataService
     }
 
     /// <summary>
-    ///     Fetches CMS data and converts to HealthMetricData for backward compatibility.
+    ///     Fetches CMS data and converts to MetricData for backward compatibility.
     ///     This allows gradual migration of strategies.
     /// </summary>
-    public async Task<IEnumerable<HealthMetricData>> GetHealthMetricDataFromCmsAsync(string canonicalMetricId, DateTime from, DateTime to)
+    public async Task<IEnumerable<MetricData>> GetHealthMetricDataFromCmsAsync(string canonicalMetricId, DateTime from, DateTime to)
     {
         var cmsList = await GetCmsByCanonicalIdAsync(canonicalMetricId, from, to);
 
-        // Convert CMS back to HealthMetricData for compatibility
+        // Convert CMS back to MetricData for compatibility
         return CmsConversionHelper.ConvertMultipleCmsToHealthMetricData(cmsList, from, to);
     }
 

@@ -16,7 +16,7 @@ public sealed class TransformComputationService
     /// <summary>
     ///     Computes a unary transform operation (Log, Sqrt) on the provided data.
     /// </summary>
-    public TransformComputationResult ComputeUnaryTransform(IEnumerable<HealthMetricData> data, string operation)
+    public TransformComputationResult ComputeUnaryTransform(IEnumerable<MetricData> data, string operation)
     {
         var allDataList = PrepareMetricData(data);
         if (allDataList.Count == 0)
@@ -24,7 +24,7 @@ public sealed class TransformComputationService
 
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0);
 
-        var metricsList = new List<IReadOnlyList<HealthMetricData>>
+        var metricsList = new List<IReadOnlyList<MetricData>>
         {
                 allDataList
         };
@@ -38,7 +38,7 @@ public sealed class TransformComputationService
     /// <summary>
     ///     Computes a binary transform operation (Add, Subtract) on the provided data.
     /// </summary>
-    public TransformComputationResult ComputeBinaryTransform(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string operation)
+    public TransformComputationResult ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation)
     {
         var list1 = PrepareMetricData(data1);
         var list2 = PrepareMetricData(data2);
@@ -53,7 +53,7 @@ public sealed class TransformComputationService
 
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
 
-        var metricsList = new List<IReadOnlyList<HealthMetricData>>
+        var metricsList = new List<IReadOnlyList<MetricData>>
         {
                 aligned1,
                 aligned2
@@ -65,14 +65,14 @@ public sealed class TransformComputationService
     }
 
 
-    private static List<HealthMetricData> PrepareMetricData(IEnumerable<HealthMetricData> data)
+    private static List<MetricData> PrepareMetricData(IEnumerable<MetricData> data)
     {
         return data.Where(d => d.Value.HasValue).
                     OrderBy(d => d.NormalizedTimestamp).
                     ToList();
     }
 
-    private static List<double> EvaluateWithExpression(TransformExpression expression, List<IReadOnlyList<HealthMetricData>> metricsList, string operation, bool isUnary)
+    private static List<double> EvaluateWithExpression(TransformExpression expression, List<IReadOnlyList<MetricData>> metricsList, string operation, bool isUnary)
     {
         Debug.WriteLine($"[Transform] {(isUnary ? "UNARY" : "BINARY")} - Using NEW infrastructure for operation: {operation}");
 
@@ -83,7 +83,7 @@ public sealed class TransformComputationService
         return results;
     }
 
-    private static List<double> EvaluateUnaryLegacy(IReadOnlyList<HealthMetricData> data, string operation)
+    private static List<double> EvaluateUnaryLegacy(IReadOnlyList<MetricData> data, string operation)
     {
         Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
 
@@ -100,7 +100,7 @@ public sealed class TransformComputationService
         return MathHelper.ApplyUnaryOperation(values, op);
     }
 
-    private static List<double> EvaluateBinaryLegacy(IReadOnlyList<HealthMetricData> data1, IReadOnlyList<HealthMetricData> data2, string operation)
+    private static List<double> EvaluateBinaryLegacy(IReadOnlyList<MetricData> data1, IReadOnlyList<MetricData> data2, string operation)
     {
         Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
 
@@ -119,7 +119,7 @@ public sealed class TransformComputationService
         return MathHelper.ApplyBinaryOperation(values1, values2, op);
     }
 
-    private static TransformComputationResult BuildResult(IReadOnlyList<HealthMetricData> dataList, List<double> computedResults, string operation, List<IReadOnlyList<HealthMetricData>> metricsList)
+    private static TransformComputationResult BuildResult(IReadOnlyList<MetricData> dataList, List<double> computedResults, string operation, List<IReadOnlyList<MetricData>> metricsList)
     {
         return new TransformComputationResult
         {

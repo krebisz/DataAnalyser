@@ -24,10 +24,10 @@ public sealed class MultiMetricParityTests
     [Fact]
     public void Parity_ShouldPass_WithEmptyData()
     {
-        var legacySeries = new List<IEnumerable<HealthMetricData>>
+        var legacySeries = new List<IEnumerable<MetricData>>
         {
-                Enumerable.Empty<HealthMetricData>(),
-                Enumerable.Empty<HealthMetricData>()
+                Enumerable.Empty<MetricData>(),
+                Enumerable.Empty<MetricData>()
         };
 
         AssertParity(legacySeries, new[]
@@ -40,7 +40,7 @@ public sealed class MultiMetricParityTests
     [Fact]
     public void Parity_ShouldPass_WithMismatchedCounts()
     {
-        var legacySeries = new List<IEnumerable<HealthMetricData>>
+        var legacySeries = new List<IEnumerable<MetricData>>
         {
                 TestDataBuilders.HealthMetricData().
                                  WithUnit("kg").
@@ -58,9 +58,9 @@ public sealed class MultiMetricParityTests
         });
     }
 
-    private static List<IEnumerable<HealthMetricData>> CreateLegacySeries(int seriesCount, int pointsPerSeries)
+    private static List<IEnumerable<MetricData>> CreateLegacySeries(int seriesCount, int pointsPerSeries)
     {
-        var result = new List<IEnumerable<HealthMetricData>>();
+        var result = new List<IEnumerable<MetricData>>();
 
         for (var i = 0; i < seriesCount; i++)
             result.Add(TestDataBuilders.HealthMetricData().
@@ -70,7 +70,7 @@ public sealed class MultiMetricParityTests
         return result;
     }
 
-    private static void AssertParity(IReadOnlyList<IEnumerable<HealthMetricData>> legacySeries, IReadOnlyList<string> labels)
+    private static void AssertParity(IReadOnlyList<IEnumerable<MetricData>> legacySeries, IReadOnlyList<string> labels)
     {
         var legacyStrategy = new MultiMetricStrategy(legacySeries, labels, From, To);
 

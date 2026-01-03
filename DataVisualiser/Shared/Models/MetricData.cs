@@ -3,7 +3,7 @@ namespace DataVisualiser.Shared.Models;
 /// <summary>
 ///     Data class for health metric records
 /// </summary>
-public class HealthMetricData
+public class MetricData
 {
     public DateTime NormalizedTimestamp { get; set; }
     public decimal? Value               { get; set; }

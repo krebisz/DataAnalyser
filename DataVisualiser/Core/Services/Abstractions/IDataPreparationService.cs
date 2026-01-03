@@ -10,9 +10,9 @@ namespace DataVisualiser.Core.Services.Abstractions;
 public interface IDataPreparationService
 {
     /// <summary>
-    ///     Filters and orders legacy HealthMetricData by date range.
+    ///     Filters and orders legacy MetricData by date range.
     /// </summary>
-    IReadOnlyList<HealthMetricData> PrepareLegacyData(IEnumerable<HealthMetricData>? source, DateTime from, DateTime to);
+    IReadOnlyList<MetricData> PrepareLegacyData(IEnumerable<MetricData>? source, DateTime from, DateTime to);
 
     /// <summary>
     ///     Filters and orders CMS data samples (returns CMS, not converted).
@@ -23,5 +23,5 @@ public interface IDataPreparationService
     ///     Converts CMS to legacy format (when needed for compatibility).
     ///     Should be avoided when possible - prefer using CMS directly.
     /// </summary>
-    IReadOnlyList<HealthMetricData> ConvertCmsToLegacy(ICanonicalMetricSeries cms, DateTime from, DateTime to);
+    IReadOnlyList<MetricData> ConvertCmsToLegacy(ICanonicalMetricSeries cms, DateTime from, DateTime to);
 }

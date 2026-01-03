@@ -121,7 +121,7 @@ public sealed class ChartRenderingOrchestrator
     ///     Renders the primary (main) chart using StrategyCutOverService.
     ///     Handles single, combined, and multi-metric strategies.
     /// </summary>
-    public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain, IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries = null, IReadOnlyList<string>? additionalLabels = null)
+    public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain, IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null, IReadOnlyList<string>? additionalLabels = null)
     {
         if (ctx == null || chartMain == null)
             return;
@@ -137,7 +137,7 @@ public sealed class ChartRenderingOrchestrator
     ///     Renders the primary chart with support for additional subtypes.
     ///     Loads additional subtype data if more than 2 subtypes are selected.
     /// </summary>
-    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<string>? selectedSubtypes = null, string? resolutionTableName = null)
+    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<string>? selectedSubtypes = null, string? resolutionTableName = null)
     {
         if (ctx == null || chartMain == null)
             return;
@@ -149,7 +149,7 @@ public sealed class ChartRenderingOrchestrator
         await LoadAdditionalSubtypesAsync(series, labels, metricType, from, to, selectedSubtypes, resolutionTableName);
 
         // Extract additional series (beyond the first 2 from context)
-        IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries = null;
+        IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null;
         IReadOnlyList<string>? additionalLabels = null;
 
         if (series.Count > 2)
@@ -164,11 +164,11 @@ public sealed class ChartRenderingOrchestrator
         await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels);
     }
 
-    private static(List<IEnumerable<HealthMetricData>> Series, List<string> Labels) BuildSeriesAndLabels(ChartDataContext ctx, IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries, IReadOnlyList<string>? additionalLabels)
+    private static(List<IEnumerable<MetricData>> Series, List<string> Labels) BuildSeriesAndLabels(ChartDataContext ctx, IReadOnlyList<IEnumerable<MetricData>>? additionalSeries, IReadOnlyList<string>? additionalLabels)
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
-                ctx.Data1 ?? Array.Empty<HealthMetricData>()
+                ctx.Data1 ?? Array.Empty<MetricData>()
         };
 
         var labels = new List<string>
@@ -194,7 +194,7 @@ public sealed class ChartRenderingOrchestrator
         return (series, labels);
     }
 
-    private IChartComputationStrategy CreatePrimaryStrategy(ChartDataContext ctx, List<IEnumerable<HealthMetricData>> series, List<string> labels, out string? secondaryLabel)
+    private IChartComputationStrategy CreatePrimaryStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, out string? secondaryLabel)
     {
         secondaryLabel = null;
 
@@ -279,7 +279,7 @@ public sealed class ChartRenderingOrchestrator
         // Build expression and evaluate
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
         List<double> computedResults;
-        var metricsList = new List<IReadOnlyList<HealthMetricData>>
+        var metricsList = new List<IReadOnlyList<MetricData>>
         {
                 alignedData.Item1,
                 alignedData.Item2
@@ -339,9 +339,9 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Builds the initial series list and labels from primary and secondary data.
     /// </summary>
-    private static(List<IEnumerable<HealthMetricData>> series, List<string> labels) BuildInitialSeriesList(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData>? data2, string displayName1, string displayName2)
+    private static(List<IEnumerable<MetricData>> series, List<string> labels) BuildInitialSeriesList(IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2)
     {
-        var series = new List<IEnumerable<HealthMetricData>>
+        var series = new List<IEnumerable<MetricData>>
         {
                 data1
         };
@@ -362,7 +362,7 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
     /// </summary>
-    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<HealthMetricData>> series, List<string> labels, string? metricType, DateTime from, DateTime to, IReadOnlyList<string>? selectedSubtypes, string? resolutionTableName)
+    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, string? metricType, DateTime from, DateTime to, IReadOnlyList<string>? selectedSubtypes, string? resolutionTableName)
     {
         if (selectedSubtypes == null || selectedSubtypes.Count <= 2 || string.IsNullOrEmpty(metricType) || string.IsNullOrEmpty(_connectionString))
             return;

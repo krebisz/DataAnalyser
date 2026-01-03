@@ -16,17 +16,17 @@ public sealed class RatioStrategy : IChartComputationStrategy
     private readonly DateTime                      _from;
     private readonly string                        _labelLeft;
     private readonly string                        _labelRight;
-    private readonly IEnumerable<HealthMetricData> _left;
-    private readonly IEnumerable<HealthMetricData> _right;
+    private readonly IEnumerable<MetricData> _left;
+    private readonly IEnumerable<MetricData> _right;
     private readonly ISmoothingService             _smoothingService;
     private readonly ITimelineService              _timelineService;
     private readonly DateTime                      _to;
     private readonly IUnitResolutionService        _unitResolutionService;
 
-    public RatioStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+    public RatioStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
-        _left = left ?? Array.Empty<HealthMetricData>();
-        _right = right ?? Array.Empty<HealthMetricData>();
+        _left = left ?? Array.Empty<MetricData>();
+        _right = right ?? Array.Empty<MetricData>();
         _labelLeft = labelLeft ?? "Left";
         _labelRight = labelRight ?? "Right";
         _from = from;
@@ -73,12 +73,12 @@ public sealed class RatioStrategy : IChartComputationStrategy
         };
     }
 
-    private List<HealthMetricData> FilterAndOrder(IEnumerable<HealthMetricData> source)
+    private List<MetricData> FilterAndOrder(IEnumerable<MetricData> source)
     {
         return StrategyComputationHelper.FilterAndOrderByRange(source, _from, _to);
     }
 
-    private static(List<DateTime> Timestamps, List<double> RawRatios) ComputeIndexAlignedRatios(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right, int count)
+    private static(List<DateTime> Timestamps, List<double> RawRatios) ComputeIndexAlignedRatios(IReadOnlyList<MetricData> left, IReadOnlyList<MetricData> right, int count)
     {
         var timestamps = new List<DateTime>(count);
         var ratios = new List<double>(count);
@@ -101,10 +101,10 @@ public sealed class RatioStrategy : IChartComputationStrategy
 
     private IReadOnlyList<double> CreateSmoothedRatioSeries(IReadOnlyList<DateTime> timestamps, IReadOnlyList<double> rawRatios)
     {
-        var ratioData = new List<HealthMetricData>(timestamps.Count);
+        var ratioData = new List<MetricData>(timestamps.Count);
 
         for (var i = 0; i < timestamps.Count; i++)
-            ratioData.Add(new HealthMetricData
+            ratioData.Add(new MetricData
             {
                     NormalizedTimestamp = timestamps[i],
                     Value = double.IsNaN(rawRatios[i]) ? null : (decimal)rawRatios[i],

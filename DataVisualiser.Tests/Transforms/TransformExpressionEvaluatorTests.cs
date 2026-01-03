@@ -7,9 +7,9 @@ namespace DataVisualiser.Tests.Transforms;
 
 public sealed class TransformExpressionEvaluatorTests
 {
-    private static List<HealthMetricData> Series(params(DateTime ts, decimal? v)[] points)
+    private static List<MetricData> Series(params(DateTime ts, decimal? v)[] points)
     {
-        return points.Select(p => new HealthMetricData
+        return points.Select(p => new MetricData
                       {
                               NormalizedTimestamp = p.ts,
                               Value = p.v,
@@ -21,9 +21,9 @@ public sealed class TransformExpressionEvaluatorTests
     [Fact]
     public void Evaluate_ShouldThrow_WhenExpressionNull()
     {
-        Assert.Throws<ArgumentNullException>(() => TransformExpressionEvaluator.Evaluate(null!, new List<IReadOnlyList<HealthMetricData>>
+        Assert.Throws<ArgumentNullException>(() => TransformExpressionEvaluator.Evaluate(null!, new List<IReadOnlyList<MetricData>>
         {
-                new List<HealthMetricData>()
+                new List<MetricData>()
         }));
     }
 
@@ -33,7 +33,7 @@ public sealed class TransformExpressionEvaluatorTests
         var expr = TransformExpression.Metric(0);
 
         Assert.Throws<ArgumentException>(() => TransformExpressionEvaluator.Evaluate(expr, null!));
-        Assert.Throws<ArgumentException>(() => TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<HealthMetricData>>()));
+        Assert.Throws<ArgumentException>(() => TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>()));
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class TransformExpressionEvaluatorTests
         var m0 = Series((new DateTime(2024, 1, 1), 1m));
         var m1 = Series((new DateTime(2024, 1, 1), 2m), (new DateTime(2024, 1, 2), 3m));
 
-        Assert.Throws<ArgumentException>(() => TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<HealthMetricData>>
+        Assert.Throws<ArgumentException>(() => TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
         {
                 m0,
                 m1
@@ -58,7 +58,7 @@ public sealed class TransformExpressionEvaluatorTests
 
         var m0 = Series((new DateTime(2024, 1, 1), 10m), (new DateTime(2024, 1, 2), null), (new DateTime(2024, 1, 3), 30m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<HealthMetricData>>
+        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
         {
                 m0
         });
@@ -79,7 +79,7 @@ public sealed class TransformExpressionEvaluatorTests
 
         var m0 = Series((new DateTime(2024, 1, 1), 9m), (new DateTime(2024, 1, 2), 16m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<HealthMetricData>>
+        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
         {
                 m0
         });
@@ -100,7 +100,7 @@ public sealed class TransformExpressionEvaluatorTests
         var m0 = Series((new DateTime(2024, 1, 1), 10m), (new DateTime(2024, 1, 2), 20m));
         var m1 = Series((new DateTime(2024, 1, 1), 1m), (new DateTime(2024, 1, 2), 2m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<HealthMetricData>>
+        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
         {
                 m0,
                 m1
@@ -128,7 +128,7 @@ public sealed class TransformExpressionEvaluatorTests
         var m0 = Series((new DateTime(2024, 1, 1), 9m));
         var m1 = Series((new DateTime(2024, 1, 1), 1m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<HealthMetricData>>
+        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
         {
                 m0,
                 m1

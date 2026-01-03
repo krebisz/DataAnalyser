@@ -16,6 +16,6 @@ public sealed class MultiMetricStrategyFactory : StrategyFactoryBase
 
     private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p)
     {
-        return new MultiMetricStrategy(p.LegacySeries ?? Array.Empty<IEnumerable<HealthMetricData>>(), p.Labels ?? Array.Empty<string>(), p.From, p.To, p.Unit);
+        return new MultiMetricStrategy(p.LegacySeries ?? Array.Empty<IEnumerable<MetricData>>(), p.Labels ?? Array.Empty<string>(), p.From, p.To, p.Unit);
     }
 }

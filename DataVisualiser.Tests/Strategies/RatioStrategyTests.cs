@@ -12,8 +12,8 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
     {
-        var left = Enumerable.Empty<HealthMetricData>();
-        var right = Enumerable.Empty<HealthMetricData>();
+        var left = Enumerable.Empty<MetricData>();
+        var right = Enumerable.Empty<MetricData>();
 
         var strategy = new RatioStrategy(left, right, "L", "R", From, To);
 
@@ -30,7 +30,7 @@ public sealed class RatioStrategyTests
                                     WithUnit("kg").
                                     BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = Enumerable.Empty<HealthMetricData>();
+        var right = Enumerable.Empty<MetricData>();
 
         var strategy = new RatioStrategy(left, right, "L", "R", From, To);
 
@@ -64,7 +64,7 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldCalculateLeftDividedByRight()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -80,7 +80,7 @@ public sealed class RatioStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {
@@ -111,7 +111,7 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldProduceNaN_WhenRightValueIsZero()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -121,7 +121,7 @@ public sealed class RatioStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {

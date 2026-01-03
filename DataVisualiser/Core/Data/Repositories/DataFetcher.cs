@@ -96,7 +96,7 @@ public class DataFetcher
     /// <summary>
     ///     Retrieves health metrics data from the database filtered by MetricType and date range.
     /// </summary>
-    public async Task<IEnumerable<HealthMetricData>> GetHealthMetricsData(string metricType, DateTime from, DateTime to)
+    public async Task<IEnumerable<MetricData>> GetHealthMetricsData(string metricType, DateTime from, DateTime to)
     {
         if (string.IsNullOrWhiteSpace(metricType))
             throw new ArgumentException("Metric type cannot be null or empty.", nameof(metricType));
@@ -121,7 +121,7 @@ public class DataFetcher
                     AND Value IS NOT NULL
                 ORDER BY NormalizedTimestamp";
 
-        var results = await conn.QueryAsync<HealthMetricData>(sql, new
+        var results = await conn.QueryAsync<MetricData>(sql, new
         {
                 MetricType = metricType,
                 FromDate = from,
@@ -253,7 +253,7 @@ public class DataFetcher
     ///     Maximum number of records to return. If null, returns all records. Used for performance
     ///     optimization with large datasets.
     /// </param>
-    public async Task<IEnumerable<HealthMetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype = null, DateTime? from = null, DateTime? to = null, string tableName = "HealthMetrics", int? maxRecords = null)
+    public async Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype = null, DateTime? from = null, DateTime? to = null, string tableName = "HealthMetrics", int? maxRecords = null)
     {
         if (string.IsNullOrWhiteSpace(baseType))
             throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
@@ -300,7 +300,7 @@ public class DataFetcher
         sql.Append(" AND Value IS NOT NULL");
         sql.Append(" ORDER BY NormalizedTimestamp");
 
-        var results = await conn.QueryAsync<HealthMetricData>(sql.ToString(), parameters);
+        var results = await conn.QueryAsync<MetricData>(sql.ToString(), parameters);
 
         return results;
     }

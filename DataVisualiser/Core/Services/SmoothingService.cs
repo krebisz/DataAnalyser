@@ -10,7 +10,7 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public sealed class SmoothingService : ISmoothingService
 {
-    public IReadOnlyList<double> SmoothSeries(IReadOnlyList<HealthMetricData> orderedData, IReadOnlyList<DateTime> timestamps, DateTime from, DateTime to)
+    public IReadOnlyList<double> SmoothSeries(IReadOnlyList<MetricData> orderedData, IReadOnlyList<DateTime> timestamps, DateTime from, DateTime to)
     {
         if (orderedData == null || orderedData.Count == 0)
             return Array.Empty<double>();
@@ -19,7 +19,7 @@ public sealed class SmoothingService : ISmoothingService
             return Array.Empty<double>();
 
         // Convert IReadOnlyList to List if necessary (MathHelper requires List)
-        var dataList = orderedData is List<HealthMetricData> list ? list : orderedData.ToList();
+        var dataList = orderedData is List<MetricData> list ? list : orderedData.ToList();
 
         // Create smoothed data points
         var smoothedPoints = MathHelper.CreateSmoothedData(dataList, from, to);

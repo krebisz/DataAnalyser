@@ -3,7 +3,7 @@ namespace DataVisualiser.UI.State;
 /// <summary>
 ///     Configuration for CMS (Canonical Metric Series) integration in DataVisualiser.
 ///     Phase 4: Enables explicit opt-in to CMS-based workflows.
-///     When enabled, strategies will use CMS data instead of legacy HealthMetricData.
+///     When enabled, strategies will use CMS data instead of legacy MetricData.
 /// </summary>
 public static class CmsConfiguration
 {

@@ -272,7 +272,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         // When only one subtype is selected, ensure data2 is empty to prevent mixing with all subtypes
         // GetHealthMetricsDataByBaseType with null subtype returns ALL subtypes, which corrupts the chart
         if (secondarySubtype == null)
-            data2 = Enumerable.Empty<HealthMetricData>();
+            data2 = Enumerable.Empty<MetricData>();
 
         // Validate primary data
         if (!MetricDataValidationHelper.ValidatePrimaryData(metricType, primarySubtype, primaryCms, data1, ErrorOccured))

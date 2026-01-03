@@ -12,8 +12,8 @@ public sealed class CombinedMetricStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
     {
-        var left = Enumerable.Empty<HealthMetricData>();
-        var right = Enumerable.Empty<HealthMetricData>();
+        var left = Enumerable.Empty<MetricData>();
+        var right = Enumerable.Empty<MetricData>();
 
         var strategy = new CombinedMetricStrategy(left, right, "L", "R", From, To);
 
@@ -30,7 +30,7 @@ public sealed class CombinedMetricStrategyTests
                                     WithUnit("kg").
                                     BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = Enumerable.Empty<HealthMetricData>();
+        var right = Enumerable.Empty<MetricData>();
 
         var strategy = new CombinedMetricStrategy(left, right, "L", "R", From, To);
 
@@ -65,7 +65,7 @@ public sealed class CombinedMetricStrategyTests
     [Fact]
     public void Compute_ShouldOrderByTimestamp()
     {
-        var left = new List<HealthMetricData>
+        var left = new List<MetricData>
         {
                 new()
                 {
@@ -87,7 +87,7 @@ public sealed class CombinedMetricStrategyTests
                 }
         };
 
-        var right = new List<HealthMetricData>
+        var right = new List<MetricData>
         {
                 new()
                 {

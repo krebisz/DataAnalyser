@@ -6,7 +6,7 @@ namespace DataVisualiser.Core.Orchestration.Builders;
 
 /// <summary>
 ///     Builds a fully aligned, fully derived ChartDataContext from raw
-///     HealthMetricData series. This includes unified timeline construction,
+///     MetricData series. This includes unified timeline construction,
 ///     numeric extraction, smoothing, ratio/diff/normalization calculations.
 /// </summary>
 public sealed class ChartDataContextBuilder
@@ -24,13 +24,13 @@ public sealed class ChartDataContextBuilder
     /// </summary>
     public ChartDataContext Build(string                         metricType,       string? primarySubtype, // First selected subtype
                                   string?                        secondarySubtype, // Second selected subtype
-                                  IEnumerable<HealthMetricData>  data1,            // First selected subtype data (primary)
-                                  IEnumerable<HealthMetricData>? data2,            // Second selected subtype data (secondary)
+                                  IEnumerable<MetricData>  data1,            // First selected subtype data (primary)
+                                  IEnumerable<MetricData>? data2,            // Second selected subtype data (secondary)
                                   DateTime                       from,             DateTime to)
     {
         // Normalize inputs - maintain ordering: list1 = first selected, list2 = second selected
-        var list1 = data1?.ToList() ?? new List<HealthMetricData>(); // First selected subtype
-        var list2 = data2?.ToList() ?? new List<HealthMetricData>(); // Second selected subtype
+        var list1 = data1?.ToList() ?? new List<MetricData>(); // First selected subtype
+        var list2 = data2?.ToList() ?? new List<MetricData>(); // Second selected subtype
 
         // STEP 1 � Unified timeline
         var timestamps = BuildUnifiedTimeline(list1, list2);
@@ -85,7 +85,7 @@ public sealed class ChartDataContextBuilder
     }
 
 
-    public ChartDataContext Build(string metricType, string? primarySubtype, string? secondarySubtype, IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData>? data2, DateTime from, DateTime to, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
+    public ChartDataContext Build(string metricType, string? primarySubtype, string? secondarySubtype, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, DateTime from, DateTime to, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
     {
         // CRITICAL FIX: Don't convert CMS to legacy here.
         // Strategies should receive CMS directly via StrategyCutOverService.
@@ -105,7 +105,7 @@ public sealed class ChartDataContextBuilder
     // ---------------------------------------------------------
     // TIMELINE CONSTRUCTION
     // ---------------------------------------------------------
-    private static IReadOnlyList<DateTime> BuildUnifiedTimeline(List<HealthMetricData> list1, List<HealthMetricData> list2)
+    private static IReadOnlyList<DateTime> BuildUnifiedTimeline(List<MetricData> list1, List<MetricData> list2)
     {
         return list1.Select(d => d.NormalizedTimestamp.Date).
                      Concat(list2.Select(d => d.NormalizedTimestamp.Date)).
@@ -117,7 +117,7 @@ public sealed class ChartDataContextBuilder
     // ---------------------------------------------------------
     // VALUE ALIGNMENT
     // ---------------------------------------------------------
-    private static IReadOnlyList<double> AlignValues(List<HealthMetricData> source, IReadOnlyList<DateTime> timeline)
+    private static IReadOnlyList<double> AlignValues(List<MetricData> source, IReadOnlyList<DateTime> timeline)
     {
         // Map: date -> numeric value
         var dict = source.GroupBy(d => d.NormalizedTimestamp.Date).
@@ -209,9 +209,9 @@ public sealed class ChartDataContextBuilder
         return (display1, display2);
     }
 
-    private static IEnumerable<HealthMetricData> ConvertCmsToHealthMetricData(ICanonicalMetricSeries cms, DateTime from, DateTime to)
+    private static IEnumerable<MetricData> ConvertCmsToHealthMetricData(ICanonicalMetricSeries cms, DateTime from, DateTime to)
     {
-        // Use CmsConversionHelper for consistent CMS-to-HealthMetricData conversion
+        // Use CmsConversionHelper for consistent CMS-to-MetricData conversion
         return CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to);
     }
 }
