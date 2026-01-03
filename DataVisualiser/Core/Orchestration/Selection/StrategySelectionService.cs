@@ -1,7 +1,6 @@
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Core.Strategies.Abstractions;
-using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Validation;
 using System.Diagnostics;
@@ -41,7 +40,7 @@ public sealed class StrategySelectionService
         // Multi-metric strategy (3+ series)
         if (actualSeriesCount > 2)
         {
-            strategy = new MultiMetricStrategy(series, labels, from, to);
+            strategy = CreateMultiMetricStrategy(ctx, series, labels, from, to);
         }
         // Combined metric strategy (2 series)
         else if (actualSeriesCount == 2)
@@ -106,6 +105,19 @@ public sealed class StrategySelectionService
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
+    }
+
+    private IChartComputationStrategy CreateMultiMetricStrategy(ChartDataContext ctx, List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to)
+    {
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries = series,
+            Labels = labels,
+            From = from,
+            To = to
+        };
+
+        return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
     }
 
     private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to)

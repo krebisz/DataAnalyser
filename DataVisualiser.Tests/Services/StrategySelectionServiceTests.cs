@@ -111,13 +111,30 @@ namespace DataVisualiser.Tests.Services
             var from = DateTime.UtcNow.AddDays(-10);
             var to = DateTime.UtcNow;
 
+            var mockStrategy = new Mock<IChartComputationStrategy>();
+            _mockCutOverService
+                .Setup(s => s.CreateStrategy(
+                    StrategyType.MultiMetric,
+                    It.IsAny<ChartDataContext>(),
+                    It.IsAny<StrategyCreationParameters>()))
+                .Returns(mockStrategy.Object);
+
             // Act
             var (strategy, secondaryLabel) = _service.SelectComputationStrategy(series, labels, ctx, from, to);
 
             // Assert
             Assert.NotNull(strategy);
-            Assert.IsType<MultiMetricStrategy>(strategy);
             Assert.Null(secondaryLabel);
+            _mockCutOverService.Verify(
+                s => s.CreateStrategy(
+                    StrategyType.MultiMetric,
+                    ctx,
+                    It.Is<StrategyCreationParameters>(p =>
+                        p.LegacySeries == series &&
+                        p.Labels == labels &&
+                        p.From == from &&
+                        p.To == to)),
+                Times.Once);
         }
 
         [Fact]

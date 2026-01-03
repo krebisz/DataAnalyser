@@ -58,6 +58,7 @@ public partial class MainWindow : Window
     private ChartTooltipManager? _tooltipManager;
     private MainWindowViewModel _viewModel;
     private WeeklyDistributionService _weeklyDistributionService;
+    private IStrategyCutOverService? _strategyCutOverService;
     private List<string>? _subtypeList;
 
     public MainWindow()
@@ -104,7 +105,8 @@ public partial class MainWindow : Window
             {
                 var ctx = _viewModel.ChartState.LastContext;
 
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, new NormalizedStrategy(ctx.Data1, ctx.Data2, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode), $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400);
+                var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1, ctx.Data2, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400);
             }
         }
         catch
@@ -325,13 +327,14 @@ public partial class MainWindow : Window
     private ChartComputationResult? ComputeMainChart(IReadOnlyList<IEnumerable<HealthMetricData>> selectedMetricSeries, IReadOnlyList<string> selectedMetricLabels, string? unit, DateTime from, DateTime to)
     {
         IChartComputationStrategy strategy;
+        var ctx = _viewModel.ChartState.LastContext;
 
         if (selectedMetricSeries.Count > 2)
-            strategy = new MultiMetricStrategy(selectedMetricSeries, selectedMetricLabels, from, to, unit);
+            strategy = CreateMultiMetricStrategy(ctx!, selectedMetricSeries.ToList(), selectedMetricLabels.ToList(), from, to, unit);
         else if (selectedMetricSeries.Count == 2)
-            strategy = new CombinedMetricStrategy(selectedMetricSeries[0], selectedMetricSeries[1], selectedMetricLabels[0], selectedMetricLabels[1], from, to);
-        else if (_viewModel.ChartState.LastContext?.SemanticMetricCount == 1)
-            strategy = CreateSingleMetricStrategy(_viewModel.ChartState.LastContext!, selectedMetricSeries[0], selectedMetricLabels[0], from, to);
+            strategy = CreateCombinedMetricStrategy(ctx!, selectedMetricSeries[0], selectedMetricSeries[1], selectedMetricLabels[0], selectedMetricLabels[1], from, to);
+        else if (ctx?.SemanticMetricCount == 1)
+            strategy = CreateSingleMetricStrategy(ctx, selectedMetricSeries[0], selectedMetricLabels[0], from, to);
         else
             return null;
 
@@ -367,18 +370,13 @@ public partial class MainWindow : Window
         // ---------- MULTI METRIC ----------
         if (actualSeriesCount > 2)
         {
-            strategy = new MultiMetricStrategy(series, labels, from, to);
+            strategy = CreateMultiMetricStrategy(ctx, series, labels, from, to);
         }
         // ---------- COMBINED METRIC ----------
         else if (actualSeriesCount == 2)
         {
             secondaryLabel = labels[1];
-
-            var leftCms = ctx.PrimaryCms as ICanonicalMetricSeries;
-            var rightCms = ctx.SecondaryCms as ICanonicalMetricSeries;
-
-            var parityService = new ParityValidationService();
-            strategy = parityService.ExecuteCombinedMetricParityIfEnabled(leftCms, rightCms, series[0], series[1], labels[0], labels[1], from, to);
+            strategy = CreateCombinedMetricStrategy(ctx, series[0], series[1], labels[0], labels[1], from, to);
         }
         // ---------- SINGLE METRIC ----------
         else
@@ -763,7 +761,8 @@ public partial class MainWindow : Window
 
     private Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
     {
-        return RenderOrClearChart(ChartNorm, _viewModel.ChartState.IsNormalizedVisible, new NormalizedStrategy(ctx.Data1!, ctx.Data2!, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode), $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true);
+        var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1!, ctx.Data2!, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
+        return RenderOrClearChart(ChartNorm, _viewModel.ChartState.IsNormalizedVisible, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true);
     }
 
     private async Task RenderWeeklyDistribution(ChartDataContext ctx)
@@ -877,10 +876,11 @@ public partial class MainWindow : Window
     //        to);
     //}
 
-    private static IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
+    private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
     {
         // Use unified cut-over service
-        var cutOverService = new StrategyCutOverService(new DataPreparationService());
+        if (_strategyCutOverService == null)
+            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
 
         var parameters = new StrategyCreationParameters
         {
@@ -890,7 +890,64 @@ public partial class MainWindow : Window
             To = to
         };
 
-        return cutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
+        return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
+    }
+
+    private IChartComputationStrategy CreateMultiMetricStrategy(ChartDataContext ctx, List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to, string? unit = null)
+    {
+        // Use unified cut-over service
+        if (_strategyCutOverService == null)
+            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries = series,
+            Labels = labels,
+            From = from,
+            To = to,
+            Unit = unit
+        };
+
+        return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+    }
+
+    private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string label1, string label2, DateTime from, DateTime to)
+    {
+        // Use unified cut-over service
+        if (_strategyCutOverService == null)
+            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = data1,
+            LegacyData2 = data2,
+            Label1 = label1,
+            Label2 = label2,
+            From = from,
+            To = to
+        };
+
+        return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
+    }
+
+    private IChartComputationStrategy CreateNormalizedStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string label1, string label2, DateTime from, DateTime to, NormalizationMode normalizationMode)
+    {
+        // Use unified cut-over service
+        if (_strategyCutOverService == null)
+            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = data1,
+            LegacyData2 = data2,
+            Label1 = label1,
+            Label2 = label2,
+            From = from,
+            To = to,
+            NormalizationMode = normalizationMode
+        };
+
+        return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
     }
 
 
@@ -1061,9 +1118,9 @@ public partial class MainWindow : Window
     private ChartRenderingOrchestrator CreateChartRenderingOrchestrator()
     {
         var dataPreparationService = new DataPreparationService();
-        var strategyCutOverService = new StrategyCutOverService(dataPreparationService);
+        _strategyCutOverService = new StrategyCutOverService(dataPreparationService);
 
-        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, strategyCutOverService, _connectionString);
+        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, _strategyCutOverService, _connectionString);
     }
 
     #endregion
