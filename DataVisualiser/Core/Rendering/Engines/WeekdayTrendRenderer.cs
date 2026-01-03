@@ -1,5 +1,6 @@
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
+using DataVisualiser.Core.Rendering.Helpers;
 using LiveCharts;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
@@ -39,7 +40,7 @@ public sealed class WeekdayTrendRenderingService
 
     private void RenderCartesianChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
     {
-        chart.Series.Clear();
+        ChartHelper.ClearChart(chart, chartState.ChartTimestamps);
         chart.AxisX.Clear();
         chart.AxisY.Clear();
 
@@ -88,7 +89,7 @@ public sealed class WeekdayTrendRenderingService
 
     private void RenderPolarChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
     {
-        chart.Series.Clear();
+        ChartHelper.ClearChart(chart, chartState.ChartTimestamps);
         chart.AxisX.Clear();
         chart.AxisY.Clear();
 

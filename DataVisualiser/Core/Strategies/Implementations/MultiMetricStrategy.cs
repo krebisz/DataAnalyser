@@ -121,7 +121,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
     /// </summary>
     private SeriesResult? ProcessSingleSeries(IEnumerable<HealthMetricData> seriesData, int seriesIndex, string label)
     {
-        var orderedData = FilterAndOrderSeries(seriesData);
+        var orderedData = StrategyComputationHelper.FilterAndOrderByRange(seriesData, _from, _to);
         if (orderedData.Count == 0)
             return null;
 
@@ -138,12 +138,6 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
         return BuildSeriesResult(seriesIndex, label, rawTimestamps, rawValues, smoothedValues.ToList());
     }
 
-    private List<HealthMetricData> FilterAndOrderSeries(IEnumerable<HealthMetricData> seriesData)
-    {
-        return seriesData.Where(d => d.Value.HasValue && d.NormalizedTimestamp >= _from && d.NormalizedTimestamp <= _to).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
-    }
 
     /// <summary>
     ///     Builds a SeriesResult from processed series data.

@@ -8,6 +8,20 @@ namespace DataVisualiser.Shared.Helpers;
 public static class StrategyComputationHelper
 {
     /// <summary>
+    ///     Filters out null-valued points and orders data by timestamp.
+    ///     Simple version without date range filtering.
+    /// </summary>
+    public static List<HealthMetricData> PrepareOrderedData(IEnumerable<HealthMetricData> source)
+    {
+        if (source == null)
+            return new List<HealthMetricData>();
+
+        return source.Where(d => d != null && d.Value.HasValue).
+            OrderBy(d => d!.NormalizedTimestamp).
+            ToList();
+    }
+
+    /// <summary>
     ///     Filters out null or missing values and restricts data to the [from, to] range,
     ///     ordered by NormalizedTimestamp.
     /// </summary>

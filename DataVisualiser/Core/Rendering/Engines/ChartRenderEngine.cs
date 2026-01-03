@@ -37,7 +37,7 @@ public sealed class ChartRenderEngine
 
     private static void PrepareChart(CartesianChart chart)
     {
-        chart.Series.Clear();
+        ChartHelper.ClearChart(chart);
     }
 
     private static void ConfigureAxes(CartesianChart chart, ChartRenderModel model)

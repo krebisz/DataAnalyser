@@ -1,6 +1,7 @@
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.Shared.Helpers;
 
 namespace DataVisualiser.Core.Orchestration.Builders;
 
@@ -32,24 +33,24 @@ public sealed class ChartDataContextBuilder
         var list1 = data1?.ToList() ?? new List<HealthMetricData>(); // First selected subtype
         var list2 = data2?.ToList() ?? new List<HealthMetricData>(); // Second selected subtype
 
-        // STEP 1 — Unified timeline
+        // STEP 1 ï¿½ Unified timeline
         var timestamps = BuildUnifiedTimeline(list1, list2);
 
-        // STEP 2 — Extract aligned numeric arrays
+        // STEP 2 ï¿½ Extract aligned numeric arrays
         var raw1 = AlignValues(list1, timestamps);
         var raw2 = AlignValues(list2, timestamps);
 
-        // STEP 3 — Smoothing
+        // STEP 3 ï¿½ Smoothing
         var smooth1 = Smooth(raw1, SmoothWindow);
         var smooth2 = Smooth(raw2, SmoothWindow);
 
-        // STEP 4 — Derived series
+        // STEP 4 ï¿½ Derived series
         var diff = ComputeDifference(raw1, raw2);
         var ratio = ComputeRatio(raw1, raw2);
         var norm1 = Normalize(raw1);
         var norm2 = Normalize(raw2);
 
-        // STEP 5 — Display labels
+        // STEP 5 ï¿½ Display labels
         var (display1, display2) = BuildDisplayNames(metricType, primarySubtype, secondarySubtype);
 
         // Construct full context
@@ -211,22 +212,7 @@ public sealed class ChartDataContextBuilder
 
     private static IEnumerable<HealthMetricData> ConvertCmsToHealthMetricData(ICanonicalMetricSeries cms, DateTime from, DateTime to)
     {
-        // Minimal, explicit adapter for Phase 4.
-        // This preserves CMS authority while keeping the existing numeric pipeline unchanged.
-
-        return cms.Samples.Where(s => s.Value.HasValue).
-            Where(s =>
-            {
-                var ts = s.Timestamp.UtcDateTime;
-                return ts >= from && ts <= to;
-            }).
-            Select(s => new HealthMetricData
-            {
-                NormalizedTimestamp = s.Timestamp.UtcDateTime,
-                Value = s.Value.Value,
-                Unit = cms.Unit.Symbol
-            }).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+        // Use CmsConversionHelper for consistent CMS-to-HealthMetricData conversion
+        return CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to);
     }
 }

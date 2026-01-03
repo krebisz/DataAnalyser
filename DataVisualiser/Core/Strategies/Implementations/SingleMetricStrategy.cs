@@ -67,7 +67,7 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
         if (_data == null)
             return null;
 
-        var orderedData = PrepareOrderedData(_data);
+        var orderedData = StrategyComputationHelper.PrepareOrderedData(_data);
 
         if (!orderedData.Any())
             return null; // engine will treat null as no-data
@@ -92,22 +92,11 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
         if (!healthMetricData.Any())
             return null;
 
-        var orderedData = PrepareOrderedData(healthMetricData);
+        var orderedData = StrategyComputationHelper.PrepareOrderedData(healthMetricData);
 
         // Use unit from CMS (more authoritative than individual data points)
         var unitFromCms = _cmsData.Unit.Symbol;
         return ComputeFromHealthMetricData(orderedData, unitFromCms);
-    }
-
-    /// <summary>
-    ///     Filters out null-valued points and orders data by timestamp.
-    ///     Shared between legacy and CMS paths to ensure consistent behavior.
-    /// </summary>
-    private static List<HealthMetricData> PrepareOrderedData(IEnumerable<HealthMetricData> source)
-    {
-        return source.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
     }
 
     /// <summary>
