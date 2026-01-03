@@ -13,54 +13,151 @@ public sealed class TransformComputationService
     /// <summary>
     ///     Computes a unary transform operation (Log, Sqrt) on the provided data.
     /// </summary>
-    public TransformComputationResult ComputeUnaryTransform(IEnumerable<HealthMetricData> data, string operation)
+    public TransformComputationResult ComputeUnaryTransform(
+        IEnumerable<HealthMetricData> data,
+        string operation)
     {
-        // Use ALL data for chart computation (proper normalization)
-        var allDataList = data.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
-
+        var allDataList = PrepareMetricData(data);
         if (allDataList.Count == 0)
             return TransformComputationResult.Empty;
 
-        // Phase 4: Use new transform expression infrastructure
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0);
-        List<double> computedResults;
-        List<IReadOnlyList<HealthMetricData>> metricsList;
+        var expression =
+            TransformExpressionBuilder.BuildFromOperation(operation, 0);
 
-        if (expression == null)
+        var metricsList = new List<IReadOnlyList<HealthMetricData>>
         {
-            // Fallback to legacy approach if operation not found in registry
-            Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
-            var op = operation switch
-            {
-                "Log" => UnaryOperators.Logarithm,
-                "Sqrt" => UnaryOperators.SquareRoot,
-                _ => x => x
-            };
-            var allValues = allDataList.Select(d => (double)d.Value!.Value).
-                ToList();
-            computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
-            metricsList = new List<IReadOnlyList<HealthMetricData>>
-            {
-                allDataList
-            };
-        }
-        else
-        {
-            // Evaluate using new infrastructure
-            Debug.WriteLine($"[Transform] UNARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
-            metricsList = new List<IReadOnlyList<HealthMetricData>>
-            {
-                allDataList
-            };
-            computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-            Debug.WriteLine($"[Transform] UNARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
-        }
+            allDataList
+        };
 
+        var computedResults =
+            expression != null
+                ? EvaluateWithExpression(expression, metricsList, operation, isUnary: true)
+                : EvaluateUnaryLegacy(allDataList, operation);
+
+        return BuildResult(
+            allDataList,
+            computedResults,
+            operation,
+            metricsList);
+    }
+
+
+    /// <summary>
+    ///     Computes a binary transform operation (Add, Subtract) on the provided data.
+    /// </summary>
+    public TransformComputationResult ComputeBinaryTransform(
+        IEnumerable<HealthMetricData> data1,
+        IEnumerable<HealthMetricData> data2,
+        string operation)
+    {
+        var list1 = PrepareMetricData(data1);
+        var list2 = PrepareMetricData(data2);
+
+        if (list1.Count == 0 || list2.Count == 0)
+            return TransformComputationResult.Empty;
+
+        var (aligned1, aligned2) =
+            TransformExpressionEvaluator.AlignMetricsByTimestamp(list1, list2);
+
+        if (aligned1.Count == 0 || aligned2.Count == 0)
+            return TransformComputationResult.Empty;
+
+        var expression =
+            TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
+
+        var metricsList = new List<IReadOnlyList<HealthMetricData>>
+        {
+            aligned1,
+            aligned2
+        };
+
+        var computedResults =
+            expression != null
+                ? EvaluateWithExpression(expression, metricsList, operation, isUnary: false)
+                : EvaluateBinaryLegacy(aligned1, aligned2, operation);
+
+        return BuildResult(
+            aligned1,
+            computedResults,
+            operation,
+            metricsList);
+    }
+
+
+    private static List<HealthMetricData> PrepareMetricData(
+        IEnumerable<HealthMetricData> data)
+    {
+        return data
+            .Where(d => d.Value.HasValue)
+            .OrderBy(d => d.NormalizedTimestamp)
+            .ToList();
+    }
+
+    private static List<double> EvaluateWithExpression(
+        TransformExpression expression,
+        List<IReadOnlyList<HealthMetricData>> metricsList,
+        string operation,
+        bool isUnary)
+    {
+        Debug.WriteLine(
+            $"[Transform] {(isUnary ? "UNARY" : "BINARY")} - Using NEW infrastructure for operation: {operation}");
+
+        var results =
+            TransformExpressionEvaluator.Evaluate(expression, metricsList);
+
+        Debug.WriteLine(
+            $"[Transform] {(isUnary ? "UNARY" : "BINARY")} - Evaluated {results.Count} results using TransformExpressionEvaluator");
+
+        return results;
+    }
+    private static List<double> EvaluateUnaryLegacy(
+        IReadOnlyList<HealthMetricData> data,
+        string operation)
+    {
+        Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
+
+        var op = operation switch
+        {
+            "Log" => UnaryOperators.Logarithm,
+            "Sqrt" => UnaryOperators.SquareRoot,
+            _ => x => x
+        };
+
+        var values =
+            data.Select(d => (double)d.Value!.Value).ToList();
+
+        return MathHelper.ApplyUnaryOperation(values, op);
+    }
+    private static List<double> EvaluateBinaryLegacy(
+        IReadOnlyList<HealthMetricData> data1,
+        IReadOnlyList<HealthMetricData> data2,
+        string operation)
+    {
+        Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
+
+        var op = operation switch
+        {
+            "Add" => BinaryOperators.Sum,
+            "Subtract" => BinaryOperators.Difference,
+            _ => (a, b) => a
+        };
+
+        var values1 =
+            data1.Select(d => (double)d.Value!.Value).ToList();
+        var values2 =
+            data2.Select(d => (double)d.Value!.Value).ToList();
+
+        return MathHelper.ApplyBinaryOperation(values1, values2, op);
+    }
+    private static TransformComputationResult BuildResult(
+        IReadOnlyList<HealthMetricData> dataList,
+        List<double> computedResults,
+        string operation,
+        List<IReadOnlyList<HealthMetricData>> metricsList)
+    {
         return new TransformComputationResult
         {
-            DataList = allDataList,
+            DataList = dataList.ToList(),
             ComputedResults = computedResults,
             Operation = operation,
             MetricsList = metricsList,
@@ -68,76 +165,4 @@ public sealed class TransformComputationService
         };
     }
 
-    /// <summary>
-    ///     Computes a binary transform operation (Add, Subtract) on the provided data.
-    /// </summary>
-    public TransformComputationResult ComputeBinaryTransform(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData> data2, string operation)
-    {
-        // Use ALL data for chart computation (proper normalization)
-        var allData1List = data1.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
-
-        var allData2List = data2.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
-
-        if (allData1List.Count == 0 || allData2List.Count == 0)
-            return TransformComputationResult.Empty;
-
-        // Phase 4: Align data by timestamp (required for expression evaluator)
-        var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
-        if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
-            return TransformComputationResult.Empty;
-
-        // Phase 4: Use new transform expression infrastructure
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
-        List<double> binaryComputedResults;
-        List<IReadOnlyList<HealthMetricData>> binaryMetricsList;
-
-        if (expression == null)
-        {
-            // Fallback to legacy approach if operation not found in registry
-            Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
-            var op = operation switch
-            {
-                "Add" => BinaryOperators.Sum,
-                "Subtract" => BinaryOperators.Difference,
-                _ => (a, b) => a
-            };
-
-            var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
-                ToList();
-            var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
-                ToList();
-            binaryComputedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
-            binaryMetricsList = new List<IReadOnlyList<HealthMetricData>>
-            {
-                alignedData.Item1,
-                alignedData.Item2
-            };
-            Debug.WriteLine($"[Transform] BINARY - Legacy computation completed: {binaryComputedResults.Count} results");
-        }
-        else
-        {
-            // Evaluate using new infrastructure
-            Debug.WriteLine($"[Transform] BINARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
-            binaryMetricsList = new List<IReadOnlyList<HealthMetricData>>
-            {
-                alignedData.Item1,
-                alignedData.Item2
-            };
-            binaryComputedResults = TransformExpressionEvaluator.Evaluate(expression, binaryMetricsList);
-            Debug.WriteLine($"[Transform] BINARY - Evaluated {binaryComputedResults.Count} results using TransformExpressionEvaluator");
-        }
-
-        return new TransformComputationResult
-        {
-            DataList = alignedData.Item1,
-            ComputedResults = binaryComputedResults,
-            Operation = operation,
-            MetricsList = binaryMetricsList,
-            IsSuccess = true
-        };
-    }
 }

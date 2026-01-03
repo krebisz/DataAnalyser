@@ -16,92 +16,192 @@ public sealed class WeeklyIntervalRenderer
     /// <summary>
     ///     Renders interval series on the chart.
     /// </summary>
-    public int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
+    public int RenderIntervals(
+        CartesianChart chart,
+        List<double> mins,
+        List<double> ranges,
+        List<(double Min, double Max)> intervals,
+        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
+        Dictionary<int, Dictionary<int, Color>> colorMap,
+        double uniformIntervalHeight,
+        double[] cumulativeStackHeight,
+        int globalMaxFreq)
     {
         var seriesCreated = 0;
 
         for (var intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
         {
-            var interval = intervals[intervalIndex];
-
-            var state = BuildIntervalState(intervalIndex, interval, mins, ranges, frequenciesPerDay, uniformIntervalHeight, cumulativeStackHeight);
+            var state = BuildIntervalState(
+                intervalIndex,
+                intervals[intervalIndex],
+                mins,
+                ranges,
+                frequenciesPerDay,
+                uniformIntervalHeight,
+                cumulativeStackHeight);
 
             if (!state.HasData)
                 continue;
 
-            // 1) Baseline series (transparent) to position this interval at its absolute Y value.
-            AddBaselineSeries(chart, state.Baselines);
+            EmitBaseline(chart, state);
 
-            // 2) White fill for zero-frequency segments inside the day's value range.
-            if (state.HasZeroFreqDays)
-            {
-                AddWhiteSeries(chart, state.WhiteHeights);
-                seriesCreated++;
-            }
-
-            // 3) Colored fill for non-zero frequency segments.
-            if (state.HasNonZeroFreqDays)
-            {
-                var color = ResolveIntervalColor(frequenciesPerDay, colorMap, intervalIndex);
-                AddColoredSeries(chart, state.ColoredHeights, color);
-                seriesCreated++;
-            }
+            seriesCreated += EmitIntervalSeries(
+                chart,
+                intervalIndex,
+                state,
+                frequenciesPerDay,
+                colorMap);
         }
 
         return seriesCreated;
     }
 
-    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, double uniformIntervalHeight, double[] cumulativeStackHeight)
+    private static void EmitBaseline(
+        CartesianChart chart,
+        IntervalRenderState state)
+    {
+        chart.Series.Add(new StackedColumnSeries
+        {
+            Title = null,
+            Values = state.Baselines,
+            Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+            StrokeThickness = 0,
+            MaxColumnWidth = MaxColumnWidth,
+            DataLabels = false
+        });
+    }
+    private int EmitIntervalSeries(
+        CartesianChart chart,
+        int intervalIndex,
+        IntervalRenderState state,
+        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
+        Dictionary<int, Dictionary<int, Color>> colorMap)
+    {
+        var created = 0;
+
+        if (state.HasZeroFreqDays)
+        {
+            AddWhiteSeries(chart, state.WhiteHeights);
+            created++;
+        }
+
+        if (state.HasNonZeroFreqDays)
+        {
+            var color = ResolveIntervalColor(
+                frequenciesPerDay,
+                colorMap,
+                intervalIndex);
+
+            AddColoredSeries(chart, state.ColoredHeights, color);
+            created++;
+        }
+
+        return created;
+    }
+
+    private IntervalRenderState BuildIntervalState(
+        int intervalIndex,
+        (double Min, double Max) interval,
+        List<double> mins,
+        List<double> ranges,
+        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
+        double uniformIntervalHeight,
+        double[] cumulativeStackHeight)
     {
         var state = new IntervalRenderState(uniformIntervalHeight);
 
         for (var dayIndex = 0; dayIndex < 7; dayIndex++)
         {
-            var dayMin = SafeMin(mins, dayIndex);
-            var dayRange = SafeRange(ranges, dayIndex);
-            var dayMax = dayMin + dayRange;
-
-            var hasDayData = dayRange > 0 && !double.IsNaN(ranges[dayIndex]);
-            var intervalOverlapsDayRange = interval.Min < dayMax && interval.Max > dayMin;
-
-            if (!hasDayData || !intervalOverlapsDayRange)
+            if (!TryComputeDayIntervalOverlap(
+                    dayIndex,
+                    interval,
+                    mins,
+                    ranges,
+                    out var dayMin,
+                    out var dayMax))
             {
                 state.AddEmpty();
                 continue;
             }
 
-            // Frequency lookup for this day/interval.
-            var frequency = 0;
-            if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var f))
-                frequency = f;
+            var frequency =
+                ResolveFrequency(
+                    frequenciesPerDay,
+                    dayIndex,
+                    intervalIndex);
 
-            // Baseline positioning:
-            // We want the *top of the current stack* to move to interval.Min, then add intervalHeight.
-            // Since series stack, we store "baseline = desiredPosition - currentStackHeight".
-            var desiredPosition = interval.Min;
-            var currentStack = cumulativeStackHeight[dayIndex];
-            var baseline = desiredPosition - currentStack;
-
-            if (baseline < 0)
-            {
-                // If already past desired position, clamp baseline and just stack forward.
-                baseline = 0;
-                cumulativeStackHeight[dayIndex] = currentStack + uniformIntervalHeight;
-            }
-            else
-            {
-                cumulativeStackHeight[dayIndex] = interval.Min + uniformIntervalHeight;
-            }
+            var baseline =
+                ComputeBaseline(
+                    interval.Min,
+                    uniformIntervalHeight,
+                    ref cumulativeStackHeight[dayIndex]);
 
             state.Add(baseline, frequency);
 
-            // Optional targeted debug (kept compact).
-            if (dayIndex == 1) // Tuesday
-                Debug.WriteLine($"  Interval {intervalIndex} [{interval.Min:F4}, {interval.Max:F4}] Tue: Baseline={baseline:F4}, Height={uniformIntervalHeight:F6}, Freq={frequency}");
+            if (dayIndex == 1)
+                Debug.WriteLine(
+                    $"  Interval {intervalIndex} [{interval.Min:F4}, {interval.Max:F4}] Tue: Baseline={baseline:F4}, Height={uniformIntervalHeight:F6}, Freq={frequency}");
         }
 
         return state;
     }
+    private static bool TryComputeDayIntervalOverlap(
+        int dayIndex,
+        (double Min, double Max) interval,
+        List<double> mins,
+        List<double> ranges,
+        out double dayMin,
+        out double dayMax)
+    {
+        dayMin = SafeValue(mins, dayIndex);
+        var dayRange = SafePositive(ranges, dayIndex);
+        dayMax = dayMin + dayRange;
+
+        return dayRange > 0 &&
+               interval.Min < dayMax &&
+               interval.Max > dayMin;
+    }
+    private static int ResolveFrequency(
+        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
+        int dayIndex,
+        int intervalIndex)
+    {
+        return frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) &&
+               dayFreqs.TryGetValue(intervalIndex, out var freq)
+            ? freq
+            : 0;
+    }
+    private static double ComputeBaseline(
+        double intervalMin,
+        double intervalHeight,
+        ref double cumulativeStack)
+    {
+        var baseline = intervalMin - cumulativeStack;
+
+        if (baseline < 0)
+        {
+            baseline = 0;
+            cumulativeStack += intervalHeight;
+        }
+        else
+        {
+            cumulativeStack = intervalMin + intervalHeight;
+        }
+
+        return baseline;
+    }
+    private static double SafeValue(List<double> values, int index)
+    {
+        var v = values[index];
+        return double.IsNaN(v) ? 0.0 : v;
+    }
+
+    private static double SafePositive(List<double> values, int index)
+    {
+        var v = values[index];
+        return double.IsNaN(v) || v < 0 ? 0.0 : v;
+    }
+
 
     private void AddBaselineSeries(CartesianChart chart, ChartValues<double> baselineValues)
     {

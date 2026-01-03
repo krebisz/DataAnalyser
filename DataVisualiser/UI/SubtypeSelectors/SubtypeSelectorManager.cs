@@ -39,15 +39,29 @@ public class SubtypeSelectorManager
     // ============================================================
     public ComboBox AddSubtypeCombo(IEnumerable<string> subtypeList)
     {
-        var index = _dynamicControls.Count + 2; // 2nd, 3rd, 4th subtype…
+        var index = _dynamicControls.Count + 2;
 
-        var label = new Label
+        var label = CreateSubtypeLabel(index);
+        var combo = CreateSubtypeCombo(subtypeList);
+
+        InsertControls(label, combo);
+
+        _dynamicControls.Add(new SubtypeControlPair(label, combo));
+        _dynamicCombos.Add(combo);
+
+        return combo;
+    }
+    private static Label CreateSubtypeLabel(int index)
+    {
+        return new Label
         {
             Content = $"Metric Subtype {index}:",
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(5, 0, 0, 0)
         };
-
+    }
+    private ComboBox CreateSubtypeCombo(IEnumerable<string> subtypeList)
+    {
         var combo = new ComboBox
         {
             Width = 250,
@@ -60,38 +74,40 @@ public class SubtypeSelectorManager
             combo.Items.Add(subtype);
 
         combo.SelectedIndex = 0;
-
-        combo.SelectionChanged += (s, e) => SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
-
-        // Find the "Add Subtype" button to keep it at the end
-        Button? addButton = null;
-        var buttonIndex = -1;
-        for (var i = _parentPanel.Children.Count - 1; i >= 0; i--)
-            if (_parentPanel.Children[i] is Button btn && btn.Content?.ToString() == "Add Subtype")
-            {
-                addButton = btn;
-                buttonIndex = i;
-                break;
-            }
-
-        // If button found, insert before it; otherwise add to end
-        if (addButton != null && buttonIndex >= 0)
-        {
-            _parentPanel.Children.Insert(buttonIndex, label);
-            _parentPanel.Children.Insert(buttonIndex + 1, combo);
-        }
-        else
-        {
-            // ADD BOTH TO THE PANEL IN ORDER
-            _parentPanel.Children.Add(label);
-            _parentPanel.Children.Add(combo);
-        }
-
-        _dynamicControls.Add(new SubtypeControlPair(label, combo));
-        _dynamicCombos.Add(combo); // Also add to _dynamicCombos for GetSecondarySubtype()
+        combo.SelectionChanged += (_, _) =>
+            SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
 
         return combo;
     }
+    private void InsertControls(Label label, ComboBox combo)
+    {
+        var (button, index) = FindAddSubtypeButton();
+
+        if (button != null && index >= 0)
+        {
+            _parentPanel.Children.Insert(index, label);
+            _parentPanel.Children.Insert(index + 1, combo);
+        }
+        else
+        {
+            _parentPanel.Children.Add(label);
+            _parentPanel.Children.Add(combo);
+        }
+    }
+    private (Button? Button, int Index) FindAddSubtypeButton()
+    {
+        for (var i = _parentPanel.Children.Count - 1; i >= 0; i--)
+        {
+            if (_parentPanel.Children[i] is Button btn &&
+                btn.Content?.ToString() == "Add Subtype")
+            {
+                return (btn, i);
+            }
+        }
+
+        return (null, -1);
+    }
+
 
 
     // ============================================================
@@ -115,13 +131,11 @@ public class SubtypeSelectorManager
     // ============================================================
     public IReadOnlyList<ComboBox> GetActiveCombos()
     {
-        var list = new List<ComboBox>
-        {
-            PrimaryCombo
-        };
-        list.AddRange(_dynamicControls.Select(p => p.Combo));
-        return list;
+        return new[] { PrimaryCombo }
+            .Concat(_dynamicControls.Select(p => p.Combo))
+            .ToList();
     }
+
 
 
     // ============================================================
