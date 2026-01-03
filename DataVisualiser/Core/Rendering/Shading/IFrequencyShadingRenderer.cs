@@ -1,4 +1,3 @@
-using DataVisualiser.Core.Rendering.Shading;
 using LiveCharts.Wpf;
 using System.Windows.Media;
 

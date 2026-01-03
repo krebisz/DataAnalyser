@@ -1,4 +1,3 @@
-using DataVisualiser.Shared.Models;
 using DataVisualiser.Core.Transforms.Operations;
 
 namespace DataVisualiser.Core.Transforms.Expressions;

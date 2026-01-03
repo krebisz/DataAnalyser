@@ -1,7 +1,6 @@
-using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Shared.Helpers;
 using LiveCharts.Wpf;
 using System.Diagnostics;

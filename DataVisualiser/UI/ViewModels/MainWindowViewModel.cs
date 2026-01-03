@@ -1,8 +1,7 @@
-using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services;
-using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Builders;
 using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Services;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels.Commands;
 using DataVisualiser.UI.ViewModels.Events;

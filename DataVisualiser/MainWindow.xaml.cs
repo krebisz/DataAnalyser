@@ -1,21 +1,20 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
+using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
-using DataVisualiser.Shared.Helpers;
-using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services;
-using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Transforms.Evaluators;
 using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
+using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.SubtypeSelectors;
 using DataVisualiser.UI.ViewModels;
@@ -39,9 +38,7 @@ namespace DataVisualiser;
 
 public partial class MainWindow : Window
 {
-    private const bool ENABLE_COMBINED_CMS_PARITY = false;
     private const bool EnableCombinedMetricParity = false;
-    private const bool ENABLE_COMBINED_METRIC_PARITY = false;
 
     private readonly ChartState _chartState = new();
     private readonly MetricState _metricState = new();
@@ -61,7 +58,7 @@ public partial class MainWindow : Window
     private ChartTooltipManager? _tooltipManager;
     private MainWindowViewModel _viewModel;
     private WeeklyDistributionService _weeklyDistributionService;
-    private List<string>? subtypeList;
+    private List<string>? _subtypeList;
 
     public MainWindow()
     {
@@ -238,7 +235,7 @@ public partial class MainWindow : Window
         SubtypeCombo.IsEnabled = subtypeListLocal.Any();
         SubtypeCombo.SelectedIndex = 0;
 
-        subtypeList = subtypeListLocal;
+        _subtypeList = subtypeListLocal;
 
         BuildDynamicSubtypeControls(subtypeListLocal);
         UpdateSelectedSubtypesInViewModel();
@@ -379,9 +376,6 @@ public partial class MainWindow : Window
 
             var leftCms = ctx.PrimaryCms as ICanonicalMetricSeries;
             var rightCms = ctx.SecondaryCms as ICanonicalMetricSeries;
-
-            // 🔒 HARD GATE — parity OFF by default
-            const bool ENABLE_COMBINED_METRIC_PARITY = false;
 
             var parityService = new ParityValidationService();
             strategy = parityService.ExecuteCombinedMetricParityIfEnabled(leftCms, rightCms, series[0], series[1], labels[0], labels[1], from, to);
@@ -1391,10 +1385,10 @@ public partial class MainWindow : Window
 
     private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
     {
-        if (subtypeList == null || !subtypeList.Any())
+        if (_subtypeList == null || !_subtypeList.Any())
             return;
 
-        var newCombo = _selectorManager.AddSubtypeCombo(subtypeList);
+        var newCombo = _selectorManager.AddSubtypeCombo(_subtypeList);
         newCombo.SelectedIndex = 0;
         newCombo.IsEnabled = true;
 

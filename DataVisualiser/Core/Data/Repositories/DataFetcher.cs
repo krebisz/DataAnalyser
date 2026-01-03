@@ -1,6 +1,6 @@
 using Dapper;
-using DataVisualiser.Shared.Models;
 using DataVisualiser.Core.Data.QueryBuilders;
+using DataVisualiser.Shared.Models;
 using Microsoft.Data.SqlClient;
 using System.Text;
 

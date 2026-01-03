@@ -1,10 +1,8 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Strategies.Implementations;
-using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Data.Repositories;
+using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Validation;
 using System.Diagnostics;
 
@@ -114,9 +112,6 @@ public sealed class StrategySelectionService
     {
         var leftCms = ctx.PrimaryCms as ICanonicalMetricSeries;
         var rightCms = ctx.SecondaryCms as ICanonicalMetricSeries;
-
-        // Hard gate — parity OFF by default
-        const bool ENABLE_COMBINED_METRIC_PARITY = false;
 
         return _parityValidationService.ExecuteCombinedMetricParityIfEnabled(leftCms, rightCms, series[0], series[1], labels[0], labels[1], from, to);
     }

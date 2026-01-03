@@ -1,7 +1,6 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Shared.Models;
 using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Orchestration.Builders;
 

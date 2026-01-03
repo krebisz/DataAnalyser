@@ -1,9 +1,8 @@
-using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services.Abstractions;
-using DataVisualiser.Core.Services;
 
 namespace DataVisualiser.Core.Strategies.Implementations;
 

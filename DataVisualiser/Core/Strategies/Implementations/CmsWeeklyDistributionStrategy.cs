@@ -1,11 +1,9 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
+using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Shared.Models;
 using UnitResolutionService = DataVisualiser.Core.Services.UnitResolutionService;
 
 namespace DataVisualiser.Core.Strategies.Implementations;

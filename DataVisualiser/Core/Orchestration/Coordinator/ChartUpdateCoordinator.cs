@@ -1,10 +1,9 @@
-using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
-using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using LiveCharts.Wpf;
 using System.Diagnostics;

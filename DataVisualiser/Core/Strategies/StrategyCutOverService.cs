@@ -1,9 +1,9 @@
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Validation.Parity;
 using DataVisualiser.Core.Services.Abstractions;
-using DataVisualiser.Core.Strategies.Factories;
 using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Factories;
 using DataVisualiser.UI.State;
+using DataVisualiser.Validation.Parity;
 using ParityResult = DataVisualiser.Validation.ParityResult;
 
 namespace DataVisualiser.Core.Strategies;

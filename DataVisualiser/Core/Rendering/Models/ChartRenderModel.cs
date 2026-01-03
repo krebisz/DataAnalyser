@@ -1,4 +1,3 @@
-using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Shared.Models;
 using System.Windows.Media;

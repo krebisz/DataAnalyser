@@ -1,7 +1,7 @@
 using DataFileReader.Canonical;
+using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services.Abstractions;
 using MetricSample = DataFileReader.Canonical.MetricSample;
 
 namespace DataVisualiser.Core.Services;

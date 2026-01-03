@@ -1,5 +1,5 @@
-using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Core.Services.Abstractions;
+using DataVisualiser.Shared.Helpers;
 
 namespace DataVisualiser.Core.Services;
 

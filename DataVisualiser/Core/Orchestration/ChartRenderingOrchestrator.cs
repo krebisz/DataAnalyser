@@ -1,16 +1,14 @@
-using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Data.Repositories;
+using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
-using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.UI.State;
 using LiveCharts.Wpf;
 

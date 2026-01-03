@@ -1,6 +1,6 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Shared.Models;
 using DataVisualiser.Core.Services.Abstractions;
+using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Services;
 
