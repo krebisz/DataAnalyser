@@ -2,23 +2,28 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services.Abstractions;
 
 namespace DataVisualiser.Core.Strategies.Factories;
 
 /// <summary>
 ///     Factory for creating Normalized strategies.
 /// </summary>
-public sealed class NormalizedStrategyFactory : IStrategyFactory
+public sealed class NormalizedStrategyFactory : StrategyFactoryBase
 {
-    public IChartComputationStrategy CreateCmsStrategy(ChartDataContext ctx, StrategyCreationParameters parameters)
-    {
-        // TODO: Implement CMS Normalized strategy
-        return CreateLegacyStrategy(parameters);
-    }
+    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p) =>
+        new NormalizedStrategy(
+            p.LegacyData1 ?? Array.Empty<HealthMetricData>(),
+            p.LegacyData2 ?? Array.Empty<HealthMetricData>(),
+            p.Label1,
+            p.Label2,
+            p.From,
+            p.To,
+            p.NormalizationMode ?? NormalizationMode.PercentageOfMax);
 
-    public IChartComputationStrategy CreateLegacyStrategy(StrategyCreationParameters parameters)
+    public NormalizedStrategyFactory()
+        : base(
+            cmsFactory: (ctx, p) => CreateLegacy(p), // TODO: Implement CMS Normalized strategy
+            legacyFactory: CreateLegacy)
     {
-        return new NormalizedStrategy(parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(), parameters.LegacyData2 ?? Array.Empty<HealthMetricData>(), parameters.Label1, parameters.Label2, parameters.From, parameters.To, parameters.NormalizationMode ?? NormalizationMode.PercentageOfMax);
     }
 }

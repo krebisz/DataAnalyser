@@ -2,23 +2,27 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.Core.Services.Abstractions;
 
 namespace DataVisualiser.Core.Strategies.Factories;
 
 /// <summary>
 ///     Factory for creating Difference strategies.
 /// </summary>
-public sealed class DifferenceStrategyFactory : IStrategyFactory
+public sealed class DifferenceStrategyFactory : StrategyFactoryBase
 {
-    public IChartComputationStrategy CreateCmsStrategy(ChartDataContext ctx, StrategyCreationParameters parameters)
-    {
-        // TODO: Implement CMS Difference strategy
-        return CreateLegacyStrategy(parameters);
-    }
+    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p) =>
+        new DifferenceStrategy(
+            p.LegacyData1 ?? Array.Empty<HealthMetricData>(),
+            p.LegacyData2 ?? Array.Empty<HealthMetricData>(),
+            p.Label1,
+            p.Label2,
+            p.From,
+            p.To);
 
-    public IChartComputationStrategy CreateLegacyStrategy(StrategyCreationParameters parameters)
+    public DifferenceStrategyFactory()
+        : base(
+            cmsFactory: (ctx, p) => CreateLegacy(p), // TODO: Implement CMS Difference strategy
+            legacyFactory: CreateLegacy)
     {
-        return new DifferenceStrategy(parameters.LegacyData1 ?? Array.Empty<HealthMetricData>(), parameters.LegacyData2 ?? Array.Empty<HealthMetricData>(), parameters.Label1, parameters.Label2, parameters.From, parameters.To);
     }
 }

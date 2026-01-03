@@ -1,23 +1,20 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Strategies.Abstractions;
-using DataVisualiser.Core.Services.Abstractions;
 
 namespace DataVisualiser.Core.Strategies.Factories;
 
 /// <summary>
 ///     Factory for creating WeekdayTrend strategies.
 /// </summary>
-public sealed class WeekdayTrendStrategyFactory : IStrategyFactory
+public sealed class WeekdayTrendStrategyFactory : StrategyFactoryBase
 {
-    public IChartComputationStrategy CreateCmsStrategy(ChartDataContext ctx, StrategyCreationParameters parameters)
-    {
-        // TODO: Implement CMS WeekdayTrend strategy
-        return CreateLegacyStrategy(parameters);
-    }
+    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p) =>
+        throw new NotSupportedException("WeekdayTrend strategy is not yet implemented"); // TODO: Implement WeekdayTrend strategy creation
 
-    public IChartComputationStrategy CreateLegacyStrategy(StrategyCreationParameters parameters)
+    public WeekdayTrendStrategyFactory()
+        : base(
+            cmsFactory: (ctx, p) => CreateLegacy(p), // TODO: Implement CMS WeekdayTrend strategy
+            legacyFactory: CreateLegacy)
     {
-        // TODO: Implement WeekdayTrend strategy creation
-        throw new NotSupportedException("WeekdayTrend strategy is not yet implemented");
     }
 }
