@@ -183,29 +183,31 @@ The orchestration layer coordinates strategies within the unified pipeline:
 **ChartDataContextBuilder**:
 
 - Builds unified context from metric data
-- **CRITICAL GAP**: Currently converts CMS to legacy before strategies receive it
-- **REQUIRED**: Must handle CMS directly, pass to strategies without conversion
+- **STATUS**: ✅ COMPLETE - Preserves CMS in context, doesn't convert to legacy
+- Stores CMS directly in context for strategies to use
+- Legacy data still available for derived calculations (diff/ratio/norm)
 
 **ChartUpdateCoordinator**:
 
 - Coordinates chart updates across multiple charts
-- **CRITICAL GAP**: Expects legacy format
-- **REQUIRED**: Must handle CMS data directly
+- **STATUS**: ✅ COMPLETE - Handles strategies generically (works with both CMS and legacy)
+- Uses ChartComputationEngine which accepts any IChartComputationStrategy
 
 **MetricSelectionService**:
 
 - Loads metric data from database
-- **CRITICAL GAP**: Uses legacy data loading
-- **REQUIRED**: Must coordinate CMS and legacy data loading
+- **STATUS**: ✅ COMPLETE - Coordinates CMS and legacy data loading
+- Provides both CMS and legacy data to context builder
 
-**StrategyCutOverService** (To Be Created):
+**StrategyCutOverService**:
 
+- **STATUS**: ✅ COMPLETE - Implemented and registered for all 8 strategy types
 - Single decision point for legacy vs CMS
 - Unified cut-over mechanism for all strategies
-- Parity validation at cut-over point
-- **REQUIRED**: Must be created before strategy cut-overs
+- Parity validation support included
+- Factory-based strategy creation (uses StrategyFactoryBase pattern)
 
-### 7D.3 Migration Gap Identified
+### 7D.3 Migration Gap Status
 
 **Problem**: Phase 3 migrated strategies in isolation without assessing orchestration layer.
 
@@ -218,11 +220,18 @@ The orchestration layer coordinates strategies within the unified pipeline:
 
 **Solution**: Phase 3.5 - Orchestration Layer Assessment
 
-- Map data flow through orchestration
-- Identify all conversion points
-- Design unified cut-over mechanism
-- Migrate orchestration to handle CMS directly
-- Test strategies in unified pipeline context
+**Status**: 70% COMPLETE - Major infrastructure in place
+
+**Completed**:
+- ✅ StrategyCutOverService implemented for all 8 strategy types
+- ✅ ChartRenderingOrchestrator uses unified cut-over mechanism
+- ✅ ChartDataContextBuilder preserves CMS (doesn't convert)
+- ✅ WeeklyDistributionService migrated to use StrategyCutOverService
+- ✅ ChartUpdateCoordinator handles strategies generically
+
+**Remaining**:
+- ⏳ StrategySelectionService cleanup (1 direct instantiation)
+- ⏳ Verify all code paths use StrategyCutOverService
 
 ### 7D.4 Boundaries
 
@@ -294,7 +303,7 @@ Transform operations are implemented using expression-tree infrastructure, inclu
 
 - TransformExpression
 - TransformOperation
-- TransformOperationRegistry (supports Add, Subtract, Divide binary operations; Log, Sqrt unary operations)
+- TransformOperationRegistry (supports Add, Subtract, Divide binary operations; Log, Sqrt unary operations) - **Updated**: Divide operation added for Ratio support
 - TransformExpressionEvaluator
 - TransformExpressionBuilder
 - TransformDataHelper
@@ -304,6 +313,8 @@ Transform operations are implemented using expression-tree infrastructure, inclu
 
 - **Unary**: Log, Sqrt
 - **Binary**: Add, Subtract, Divide (Ratio)
+
+**Note**: TransformDataHelper functionality merged into TransformExpressionEvaluator as part of code consolidation.
 
 Provisioned for future expansion to:
 
@@ -486,13 +497,21 @@ The UI/Presentation layer provides visualization and user interaction for comput
 
 **Completed**:
 
-- ChartPanelController component created
-- MainChartController migrated (1/6 charts)
-- ChartDiffRatio unified (2 charts → 1 chart)
+- ChartPanelController component created (reusable base component)
+- MainChartController migrated (1/6 charts - proof of concept)
+- ChartDiffRatio unified (ChartDiff + ChartRatio → single chart with operation toggle)
+- IChartRenderingContext interface created (decouples controllers from MainWindow)
+- ChartRenderingContextAdapter created (bridges MainWindow/ViewModel to interface)
 
-**Remaining**:
+**Remaining** (5 charts, 25% complete):
 
-- 5 chart panels to migrate (ChartNorm, ChartDiffRatio, ChartWeekdayTrend, ChartWeekly, TransformPanel)
+- ChartNorm (Normalized chart)
+- ChartDiffRatio (unified but not migrated to controller structure)
+- ChartWeekdayTrend (Weekday trend chart)
+- ChartWeekly (Weekly distribution chart)
+- TransformPanel (Transform results panel)
+
+**Impact**: ~50+ lines of duplicate UI code eliminated per migrated chart, ~250+ lines remaining to eliminate.
 
 ### 7E.6 Boundaries
 

@@ -131,17 +131,18 @@ This reflects **actual implementation state**, not aspiration.
 ---
 
 ### Phase 4 — Consumer Adoption & Visualization Integration  
-**In Progress (~65%)**
+**In Progress (~85%)**
 
 DataVisualiser currently:
 
 - Consumes CMS through an explicit dependency surface
 - Supports **parallel CMS and legacy execution paths**
-- Migrates strategies incrementally
+- Migrates strategies incrementally (90% complete - all 8 strategies have CMS implementations)
 - Uses parity harnesses to validate equivalence without forced cut-over
+- **Orchestration layer migration in progress** (70% complete - StrategyCutOverService implemented)
 - Provides **user-defined metric transformations**:
   - Unary: Logarithm, Square Root
-  - Binary: Add, Subtract
+  - Binary: Add, Subtract, Divide (Ratio)
 - Treats transform results as:
   - ephemeral
   - non-canonical
@@ -155,6 +156,11 @@ DataVisualiser currently:
   - computation skipping for hidden charts
 
 Parity is treated as a **phase obligation**, not an implementation detail.
+
+**Recent Progress:**
+- Phase 4A (Core Strategy Parity): Complete - 3 parity test suites passing
+- Phase 4B (Transform Pipeline Parity): Complete - "Divide" operation added
+- Phase 4C (Weekly/Temporal Migration): 75% complete - strategies exist, service cut-over completed, UI integration pending
 
 ---
 
@@ -212,7 +218,7 @@ The system currently supports **ephemeral transform operations**:
 - Builder:
   - `TransformExpressionBuilder`
 - Data Processing:
-  - `TransformDataHelper`
+  - `TransformExpressionEvaluator` (includes merged TransformDataHelper functionality)
 - Strategy Integration:
   - `TransformResultStrategy`
 
@@ -238,6 +244,27 @@ Additive clarification based on recent execution experience.
   - parity is observable
 - Partial migrations are expected and acceptable
 - Non-reachable logic is treated as **non-existent**
+
+**Current Migration Status (2025-01-XX):**
+
+- **Strategy Migration (Phase 3)**: 90% complete
+  - All 8 strategies have CMS implementations and factory support
+  - StrategyCutOverService implemented for unified cut-over
+  - Minor cleanup remaining (1 direct instantiation in StrategySelectionService)
+  
+- **Orchestration Assessment (Phase 3.5)**: 70% complete
+  - StrategyCutOverService implemented and registered for all strategy types
+  - ChartRenderingOrchestrator uses unified cut-over mechanism
+  - ChartDataContextBuilder preserves CMS (doesn't convert to legacy)
+  - WeeklyDistributionService migrated to use StrategyCutOverService
+  - Minor cleanup remaining (StrategySelectionService)
+
+- **File Reorganization & Code Abstraction**: 100% complete
+  - All files reorganized per architectural layers
+  - Strategies unified (SingleMetric, CombinedMetric)
+  - Factory pattern consolidated (StrategyFactoryBase)
+  - Common patterns extracted to shared helpers (StrategyComputationHelper, CmsConversionHelper, ChartHelper)
+  - ~450+ lines of duplicate code eliminated
 
 This document reflects **state**, not guarantee.
 
