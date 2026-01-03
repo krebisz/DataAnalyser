@@ -73,88 +73,133 @@ public class WeeklyFrequencyRenderer
     ///     Step 4 & 5: Assign color shade to each y-interval for each day and draw the chart.
     ///     Creates stacked column series where each bin is a segment, colored by frequency.
     /// </summary>
-    public static void RenderChart(CartesianChart targetChart, WeeklyDistributionResult result, double minHeight)
+    public static void RenderChart(
+        CartesianChart targetChart,
+        WeeklyDistributionResult result,
+        double minHeight)
     {
         if (result?.Bins == null || result.Bins.Count == 0)
             return;
 
         var seriesCollection = new SeriesCollection();
 
-        // Track cumulative baseline per day (Mon=0 .. Sun=6)
         var cumulativeBaseline = new double[7];
         Array.Fill(cumulativeBaseline, 0.0);
 
-        // For each bin (interval on Y axis)
         for (var binIndex = 0; binIndex < result.Bins.Count; binIndex++)
         {
-            var bin = result.Bins[binIndex];
-            var binHeight = bin.Max - bin.Min;
-
-            // For each day, compute baseline, height, and color
-            for (var dayIndex = 0; dayIndex < 7; dayIndex++)
-            {
-                // Lookup normalized frequency
-                var normalizedFreq = 0.0;
-                if (result.NormalizedFrequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs))
-                    dayFreqs.TryGetValue(binIndex, out normalizedFreq);
-
-                // Skip empty segments
-                if (normalizedFreq <= 0.0)
-                    continue;
-
-                // Determine color for this bin/day
-                var binColor = MapFrequencyToColor(normalizedFreq);
-
-                var baselineValue = cumulativeBaseline[dayIndex];
-
-                // Build baseline values (only active day has baseline)
-                var baselineValues = new ChartValues<double>();
-                var heightValues = new ChartValues<double>();
-                for (var d = 0; d < 7; d++)
-                {
-                    baselineValues.Add(d == dayIndex ? baselineValue : 0.0);
-                    heightValues.Add(d == dayIndex ? binHeight : 0.0);
-                }
-
-                // Transparent baseline series
-                var baselineSeries = new StackedColumnSeries
-                {
-                    Title = null,
-                    Values = baselineValues,
-                    Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-                    StrokeThickness = 0,
-                    MaxColumnWidth = MaxColumnWidth,
-                    DataLabels = false
-                };
-
-                // Colored bin segment
-                var fillBrush = new SolidColorBrush(binColor);
-                fillBrush.Freeze();
-
-                var strokeBrush = new SolidColorBrush(binColor);
-                strokeBrush.Freeze();
-
-                var binSeries = new StackedColumnSeries
-                {
-                    Title = null,
-                    Values = heightValues,
-                    Fill = fillBrush,
-                    Stroke = strokeBrush,
-                    StrokeThickness = 0.5,
-                    MaxColumnWidth = MaxColumnWidth,
-                    DataLabels = false
-                };
-
-                seriesCollection.Add(baselineSeries);
-                seriesCollection.Add(binSeries);
-
-                // Advance baseline for this day
-                cumulativeBaseline[dayIndex] += binHeight;
-            }
+            RenderBin(
+                seriesCollection,
+                result,
+                binIndex,
+                cumulativeBaseline);
         }
 
-        // Apply to chart
         targetChart.Series = seriesCollection;
         targetChart.LegendLocation = LegendLocation.None;
     }
+    private static void RenderBin(
+    SeriesCollection seriesCollection,
+    WeeklyDistributionResult result,
+    int binIndex,
+    double[] cumulativeBaseline)
+    {
+        var bin = result.Bins[binIndex];
+        var binHeight = bin.Max - bin.Min;
+
+        for (var dayIndex = 0; dayIndex < 7; dayIndex++)
+        {
+            RenderBinForDay(
+                seriesCollection,
+                result,
+                binIndex,
+                dayIndex,
+                binHeight,
+                cumulativeBaseline);
+        }
+    }
+    private static void RenderBinForDay(
+    SeriesCollection seriesCollection,
+    WeeklyDistributionResult result,
+    int binIndex,
+    int dayIndex,
+    double binHeight,
+    double[] cumulativeBaseline)
+    {
+        if (!TryGetNormalizedFrequency(
+                result,
+                dayIndex,
+                binIndex,
+                out var normalizedFreq) ||
+            normalizedFreq <= 0.0)
+            return;
+
+        var color = MapFrequencyToColor(normalizedFreq);
+        var baseline = cumulativeBaseline[dayIndex];
+
+        var baselineValues = BuildValues(dayIndex, baseline);
+        var heightValues = BuildValues(dayIndex, binHeight);
+
+        seriesCollection.Add(CreateBaselineSeries(baselineValues));
+        seriesCollection.Add(CreateColoredSeries(heightValues, color));
+
+        cumulativeBaseline[dayIndex] += binHeight;
+    }
+    private static bool TryGetNormalizedFrequency(
+    WeeklyDistributionResult result,
+    int dayIndex,
+    int binIndex,
+    out double normalizedFreq)
+    {
+        normalizedFreq = 0.0;
+
+        return result.NormalizedFrequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs)
+               && dayFreqs.TryGetValue(binIndex, out normalizedFreq);
+    }
+    private static ChartValues<double> BuildValues(
+    int activeDayIndex,
+    double value)
+    {
+        var values = new ChartValues<double>();
+
+        for (var d = 0; d < 7; d++)
+            values.Add(d == activeDayIndex ? value : 0.0);
+
+        return values;
+    }
+    private static StackedColumnSeries CreateBaselineSeries(
+    ChartValues<double> baselineValues)
+    {
+        return new StackedColumnSeries
+        {
+            Title = null,
+            Values = baselineValues,
+            Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+            StrokeThickness = 0,
+            MaxColumnWidth = MaxColumnWidth,
+            DataLabels = false
+        };
+    }
+    private static StackedColumnSeries CreateColoredSeries(
+    ChartValues<double> heightValues,
+    Color color)
+    {
+        var fillBrush = new SolidColorBrush(color);
+        fillBrush.Freeze();
+
+        var strokeBrush = new SolidColorBrush(color);
+        strokeBrush.Freeze();
+
+        return new StackedColumnSeries
+        {
+            Title = null,
+            Values = heightValues,
+            Fill = fillBrush,
+            Stroke = strokeBrush,
+            StrokeThickness = 0.5,
+            MaxColumnWidth = MaxColumnWidth,
+            DataLabels = false
+        };
+    }
+
 }

@@ -39,13 +39,26 @@ public class ChartUpdateCoordinator
     ///     Runs the supplied strategy, then renders the result into the target chart.
     ///     If the strategy returns null, the chart is cleared.
     /// </summary>
-    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false)
+    public async Task UpdateChartUsingStrategyAsync(
+        CartesianChart targetChart,
+        IChartComputationStrategy strategy,
+        string primaryLabel,
+        string? secondaryLabel = null,
+        double minHeight = 400.0,
+        string? metricType = null,
+        string? primarySubtype = null,
+        string? secondarySubtype = null,
+        string? operationType = null,
+        bool isOperationChart = false)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
         if (strategy == null)
             throw new ArgumentNullException(nameof(strategy));
 
+        // -------------------------
+        // Phase 1: Compute
+        // -------------------------
         var result = await _chartComputationEngine.ComputeAsync(strategy);
 
         if (result == null)
@@ -54,34 +67,54 @@ public class ChartUpdateCoordinator
             return;
         }
 
-        // Build render model from computation result
-        var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart);
+        // -------------------------
+        // Phase 2: Build render model
+        // -------------------------
+        var model = BuildChartRenderModel(
+            strategy,
+            result,
+            targetChart,
+            primaryLabel,
+            secondaryLabel,
+            metricType,
+            primarySubtype,
+            secondarySubtype,
+            operationType,
+            isOperationChart);
 
+        // -------------------------
+        // Phase 3: Render + post-render sync
+        // -------------------------
         try
         {
-            // Render series
+            // Render series (sync render engine)
             _chartRenderEngine.Render(targetChart, model, minHeight);
 
             // Track timestamps for tooltips / hover sync
             _chartTimestamps[targetChart] = model.Timestamps;
 
-            // Keep tooltip manager in sync
+            // Keep tooltip manager in sync (timestamps only in this coordinator)
             _tooltipManager?.UpdateChartTimestamps(targetChart, model.Timestamps);
 
-            // Normalise Y-axis and adjust chart height based on all data we actually rendered
+            // Normalise Y-axis and adjust chart height based on rendered data
             if (targetChart.AxisY.Count > 0)
                 NormalizeYAxisForChart(targetChart, model, minHeight);
 
-            // Force chart update (especially important if chart was hidden when rendered)
+            // Force chart update (important if chart was hidden when rendered)
             targetChart.Update(true, true);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Error rendering chart: {ex.Message}", "Chart Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(
+                $"Error rendering chart: {ex.Message}",
+                "Chart Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
 
             ChartHelper.ClearChart(targetChart, _chartTimestamps);
         }
     }
+
 
     /// <summary>
     ///     Builds a ChartRenderModel from a computation result and strategy metadata.

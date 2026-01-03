@@ -67,7 +67,17 @@ public class WeeklyDistributionService
     /// <param name="minHeight">Minimum height for the chart</param>
     /// <param name="useFrequencyShading">Whether to use frequency shading or simple range view</param>
     /// <param name="intervalCount">Number of intervals to divide the value range into. Default is 10.</param>
-    public async Task UpdateWeeklyDistributionChartAsync(CartesianChart targetChart, IEnumerable<HealthMetricData> data, string displayName, DateTime from, DateTime to, double minHeight = DefaultMinHeight, bool useFrequencyShading = true, int intervalCount = 10, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
+    public async Task UpdateWeeklyDistributionChartAsync(
+        CartesianChart targetChart,
+        IEnumerable<HealthMetricData> data,
+        string displayName,
+        DateTime from,
+        DateTime to,
+        double minHeight = DefaultMinHeight,
+        bool useFrequencyShading = true,
+        int intervalCount = 10,
+        ICanonicalMetricSeries? cmsSeries = null,
+        bool enableParity = false)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -78,15 +88,19 @@ public class WeeklyDistributionService
             return;
         }
 
-        // Toggle: CMS path only when cmsSeries provided
         var useCmsStrategy = cmsSeries != null;
 
-        var tuple = await ComputeWeeklyDistributionAsync(data, cmsSeries, displayName, from, to, useCmsStrategy, enableParity);
+        var (result, frequencyResult) =
+            await ComputeWeeklyDistributionAsync(
+                data,
+                cmsSeries,
+                displayName,
+                from,
+                to,
+                useCmsStrategy,
+                enableParity);
 
-        var result = tuple.Result;
-        var extendedResult = tuple.ExtendedResult;
-
-        if (result == null || extendedResult == null)
+        if (result == null || frequencyResult == null)
         {
             ChartHelper.ClearChart(targetChart, _chartTimestamps);
             return;
@@ -94,21 +108,43 @@ public class WeeklyDistributionService
 
         try
         {
+            // --- Render ---
             targetChart.Series.Clear();
 
-            RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, extendedResult, useFrequencyShading, intervalCount);
+            RenderOriginalMinMaxChart(
+                targetChart,
+                result,
+                displayName,
+                minHeight,
+                frequencyResult,
+                useFrequencyShading,
+                intervalCount);
 
+            // --- Tooltip / state ---
             _chartTimestamps[targetChart] = new List<DateTime>();
             targetChart.DataTooltip = null;
 
-            SetupWeeklyTooltip(targetChart, result, extendedResult, useFrequencyShading, intervalCount);
+            SetupWeeklyTooltip(
+                targetChart,
+                result,
+                frequencyResult,
+                useFrequencyShading,
+                intervalCount);
 
-            ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
+            ChartHelper.AdjustChartHeightBasedOnYAxis(
+                targetChart,
+                minHeight);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
-            MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Debug.WriteLine(
+                $"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
+
+            MessageBox.Show(
+                $"Error updating chart: {ex.Message}\n\nSee debug output for details.",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
 
             ChartHelper.ClearChart(targetChart, _chartTimestamps);
         }
@@ -196,19 +232,27 @@ public class WeeklyDistributionService
 
     // FrequencyShadingData moved to FrequencyShadingCalculator namespace
 
-    private bool TryExtractMinMax(ChartComputationResult result, CartesianChart chart, out List<double> mins, out List<double> ranges)
+    private bool TryExtractMinMax(
+        ChartComputationResult result,
+        CartesianChart chart,
+        out List<double> mins,
+        out List<double> ranges)
     {
         mins = result.PrimaryRawValues;
         ranges = result.PrimarySmoothed;
 
-        if (mins == null || ranges == null || mins.Count != 7 || ranges.Count != 7)
-        {
-            ChartHelper.ClearChart(chart, _chartTimestamps);
-            return false;
-        }
+        var isValid =
+            mins != null &&
+            ranges != null &&
+            mins.Count == 7 &&
+            ranges.Count == 7;
 
-        return true;
+        if (!isValid)
+            ChartHelper.ClearChart(chart, _chartTimestamps);
+
+        return isValid;
     }
+
 
     private (double Min, double Max) CalculateGlobalMinMax(List<double> mins, List<double> ranges)
     {
@@ -342,13 +386,20 @@ public class WeeklyDistributionService
     /// <summary>
     ///     Gets day values from frequency data. Returns empty lists if not available.
     /// </summary>
-    private Dictionary<int, List<double>> GetDayValuesFromStrategy(WeeklyDistributionResult? frequencyData)
+    private Dictionary<int, List<double>> GetDayValuesFromStrategy(
+        WeeklyDistributionResult? frequencyData)
     {
-        var dayValues = new Dictionary<int, List<double>>();
+        var dayValues = new Dictionary<int, List<double>>(7);
+
         for (var i = 0; i < 7; i++)
-            dayValues[i] = frequencyData?.DayValues?.TryGetValue(i, out var values) == true ? values : new List<double>();
+            dayValues[i] =
+                frequencyData?.DayValues?.TryGetValue(i, out var values) == true
+                    ? values
+                    : new List<double>();
+
         return dayValues;
     }
+
 
     // Frequency shading calculation methods moved to FrequencyShadingCalculator
 
