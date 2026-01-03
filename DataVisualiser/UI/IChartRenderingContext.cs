@@ -1,5 +1,5 @@
-using DataVisualiser.Charts;
-using DataVisualiser.State;
+using DataVisualiser.Core.Orchestration;
+using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI;
 

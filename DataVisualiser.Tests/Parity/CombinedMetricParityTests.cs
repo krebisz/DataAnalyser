@@ -1,13 +1,14 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Charts.Parity;
-using DataVisualiser.Charts.Strategies;
+using DataVisualiser.Validation.Parity;
+using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using Xunit;
 
 namespace DataVisualiser.Tests.Parity
 {
     /// <summary>
-    /// Parity validation tests for CombinedMetricStrategy vs CombinedMetricCmsStrategy.
+    /// Parity validation tests for CombinedMetricStrategy (legacy) vs CombinedMetricStrategy (CMS).
     /// Validates that legacy and CMS paths produce equivalent results.
     /// </summary>
     public class CombinedMetricParityTests
@@ -86,7 +87,7 @@ namespace DataVisualiser.Tests.Parity
                 },
                 cmsExecution: () =>
                 {
-                    var cmsStrategy = new CombinedMetricCmsStrategy(
+                    var cmsStrategy = new CombinedMetricStrategy(
                         leftCms,
                         rightCms,
                         "Left",
@@ -122,8 +123,8 @@ namespace DataVisualiser.Tests.Parity
                 legacyExecution: () =>
                 {
                     var legacyStrategy = new CombinedMetricStrategy(
-                        Array.Empty<DataVisualiser.Models.HealthMetricData>(),
-                        Array.Empty<DataVisualiser.Models.HealthMetricData>(),
+                        Array.Empty<HealthMetricData>(),
+                        Array.Empty<HealthMetricData>(),
                         "Left",
                         "Right",
                         from,
@@ -140,7 +141,7 @@ namespace DataVisualiser.Tests.Parity
                         .WithSampleCount(0)
                         .Build();
 
-                    var cmsStrategy = new CombinedMetricCmsStrategy(
+                    var cmsStrategy = new CombinedMetricStrategy(
                         leftCms,
                         rightCms,
                         "Left",
@@ -213,7 +214,7 @@ namespace DataVisualiser.Tests.Parity
                 },
                 cmsExecution: () =>
                 {
-                    var cmsStrategy = new CombinedMetricCmsStrategy(
+                    var cmsStrategy = new CombinedMetricStrategy(
                         leftCms,
                         rightCms,
                         "Left",

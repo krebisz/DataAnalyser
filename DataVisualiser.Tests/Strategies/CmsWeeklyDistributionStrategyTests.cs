@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using DataVisualiser.Charts.Strategies;
+using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Tests.Helpers;
 using Xunit;
 

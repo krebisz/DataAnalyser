@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DataVisualiser.Charts.Strategies;
-using DataVisualiser.Models;
+using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Shared.Models;
 using Xunit;
 
 namespace DataVisualiser.Tests.Strategies

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DataVisualiser.Helper;
-using DataVisualiser.Models;
+using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Core.Transforms.Expressions;
+using DataVisualiser.Core.Transforms.Operations;
+using DataVisualiser.Shared.Models;
 using Xunit;
 
 namespace DataVisualiser.Tests.Transforms

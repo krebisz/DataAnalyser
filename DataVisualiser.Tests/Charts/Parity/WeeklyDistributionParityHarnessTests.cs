@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using DataVisualiser.Charts.Parity;
-using DataVisualiser.Charts.Strategies;
-using DataVisualiser.Models;
+using DataVisualiser.Validation.Parity;
+using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using Xunit;
 

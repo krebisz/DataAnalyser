@@ -1,3 +1,28 @@
+using DataFileReader.Canonical;
+using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Computation;
+using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Rendering.Models;
+using DataVisualiser.Core.Strategies;
+using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Shared.Models;
+using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Services.Abstractions;
+using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Core.Transforms.Expressions;
+using DataVisualiser.Core.Transforms.Operations;
+using DataVisualiser.UI.State;
+using DataVisualiser.UI.SubtypeSelectors;
+using DataVisualiser.UI.ViewModels;
+using DataVisualiser.UI.ViewModels.Events;
+using LiveCharts;
+using LiveCharts.Defaults;
+using LiveCharts.Wpf;
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
@@ -7,26 +32,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Threading;
-using DataFileReader.Canonical;
-using DataVisualiser.Charts;
-using DataVisualiser.Charts.Computation;
-using DataVisualiser.Charts.Helpers;
-using DataVisualiser.Charts.Rendering;
-using DataVisualiser.Charts.Strategies;
-using DataVisualiser.Helper;
-using DataVisualiser.Models;
-using DataVisualiser.Services;
-using DataVisualiser.Services.Abstractions;
-using DataVisualiser.Services.Implementations;
-using DataVisualiser.State;
-using DataVisualiser.UI.SubtypeSelectors;
-using DataVisualiser.ViewModels;
-using DataVisualiser.ViewModels.Events;
-using LiveCharts;
-using LiveCharts.Defaults;
-using LiveCharts.Wpf;
-using ChartHelper = DataVisualiser.Charts.Helpers.ChartHelper;
-using ParityValidationService = DataVisualiser.Services.ParityValidationService;
+using ChartHelper = DataVisualiser.Core.Rendering.Helpers.ChartHelper;
+using ParityValidationService = DataVisualiser.Validation.ParityValidationService;
 
 namespace DataVisualiser;
 
@@ -49,7 +56,7 @@ public partial class MainWindow : Window
     private bool _isInitializing = true;
 
     private MetricSelectionService _metricSelectionService;
-    private PrimaryChartRenderingService? _primaryChartRenderingService;
+    private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
     private SubtypeSelectorManager _selectorManager;
     private ChartTooltipManager? _tooltipManager;
     private MainWindowViewModel _viewModel;
@@ -338,10 +345,10 @@ public partial class MainWindow : Window
     private async Task RenderMainChart(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null)
     {
         var ctx = _viewModel.ChartState.LastContext;
-        if (ctx == null || _primaryChartRenderingService == null)
+        if (ctx == null || _chartRenderingOrchestrator == null)
             return;
 
-        await _primaryChartRenderingService.RenderPrimaryChartAsync(ctx, MainChartController.Chart, data1, data2, displayName1, displayName2, from, to, metricType, _viewModel.MetricState.SelectedSubtypes, _viewModel.MetricState.ResolutionTableName);
+        await _chartRenderingOrchestrator.RenderPrimaryChartAsync(ctx, MainChartController.Chart, data1, data2, displayName1, displayName2, from, to, metricType, _viewModel.MetricState.SelectedSubtypes, _viewModel.MetricState.ResolutionTableName);
     }
 
 
@@ -992,7 +999,7 @@ public partial class MainWindow : Window
     {
         _chartUpdateCoordinator = CreateChartUpdateCoordinator();
         _weeklyDistributionService = CreateWeeklyDistributionService();
-        _primaryChartRenderingService = CreatePrimaryChartRenderingService();
+        _chartRenderingOrchestrator = CreateChartRenderingOrchestrator();
     }
 
     private void InitializeViewModel()
@@ -1057,12 +1064,12 @@ public partial class MainWindow : Window
         return new WeeklyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
     }
 
-    private PrimaryChartRenderingService CreatePrimaryChartRenderingService()
+    private ChartRenderingOrchestrator CreateChartRenderingOrchestrator()
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService);
 
-        return new PrimaryChartRenderingService(_chartUpdateCoordinator, _weeklyDistributionService, strategyCutOverService, _connectionString);
+        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, strategyCutOverService, _connectionString);
     }
 
     #endregion
@@ -1617,7 +1624,7 @@ public partial class MainWindow : Window
     /// </summary>
     private async Task RenderTransformResults(List<HealthMetricData> dataList, List<double> results, string operation, List<IReadOnlyList<HealthMetricData>> metrics)
     {
-        var resultData = TransformDataHelper.CreateTransformResultData(dataList, results);
+        var resultData = TransformExpressionEvaluator.CreateTransformResultData(dataList, results);
         PopulateTransformResultGrid(resultData);
 
         if (resultData.Count == 0)

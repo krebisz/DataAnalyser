@@ -1,5 +1,5 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Models;
+using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Tests.Helpers
 {

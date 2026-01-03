@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using DataVisualiser.Helper;
-using DataVisualiser.Models;
+using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Shared.Models;
 using Xunit;
 
 namespace DataVisualiser.Tests.Transforms
@@ -19,7 +19,7 @@ namespace DataVisualiser.Tests.Transforms
 
             var results = new List<double> { 10.123456, double.NaN };
 
-            var output = TransformDataHelper.CreateTransformResultData(data, results);
+            var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
 
             Assert.Equal(2, output.Count);
         }
@@ -34,7 +34,7 @@ namespace DataVisualiser.Tests.Transforms
 
             var results = new List<double> { 10.123456 };
 
-            var output = TransformDataHelper.CreateTransformResultData(data, results);
+            var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
 
             Assert.Single(output);
 
@@ -56,7 +56,7 @@ namespace DataVisualiser.Tests.Transforms
 
             var results = new List<double> { double.NaN };
 
-            var output = TransformDataHelper.CreateTransformResultData(data, results);
+            var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
 
             var item = output[0]!;
             var value = item.GetType().GetProperty("Value")!.GetValue(item) as string;

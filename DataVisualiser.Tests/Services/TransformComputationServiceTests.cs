@@ -1,5 +1,5 @@
-using DataVisualiser.Models;
-using DataVisualiser.Services.Transform;
+using DataVisualiser.Shared.Models;
+using DataVisualiser.Core.Transforms;
 using DataVisualiser.Tests.Helpers;
 using Xunit;
 

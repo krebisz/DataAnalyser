@@ -10,7 +10,6 @@
 
 
   <ItemGroup>
-    <PackageReference Include="CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView" Version="3.1.2" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="LiveCharts.Core" Version="0.9.8" />
     <PackageReference Include="LiveCharts.Wpf.Core" Version="0.9.8" />

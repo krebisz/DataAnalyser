@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using DataVisualiser.Models;
+using DataVisualiser.Core.Transforms.Operations;
 using Xunit;
 
 namespace DataVisualiser.Tests.Transforms

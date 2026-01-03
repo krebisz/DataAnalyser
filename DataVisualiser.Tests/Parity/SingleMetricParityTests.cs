@@ -1,13 +1,14 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Charts.Strategies;
-using DataVisualiser.Charts.Parity;
+using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Validation.Parity;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Shared.Models;
 using Xunit;
 
 namespace DataVisualiser.Tests.Parity
 {
     /// <summary>
-    /// Parity validation tests for SingleMetricStrategy (legacy) vs SingleMetricCmsStrategy.
+    /// Parity validation tests for SingleMetricStrategy (legacy) vs SingleMetricStrategy (CMS).
     /// Validates that legacy and CMS paths produce equivalent results.
     /// </summary>
     public class SingleMetricParityTests
@@ -40,7 +41,7 @@ namespace DataVisualiser.Tests.Parity
             var legacyStrategy = new SingleMetricStrategy(legacyData, "Test", from, to);
             var legacyResult = legacyStrategy.Compute();
 
-            var cmsStrategy = new SingleMetricCmsStrategy(cmsData, "Test", from, to);
+            var cmsStrategy = new SingleMetricStrategy(cmsData, "Test", from, to);
             var cmsResult = cmsStrategy.Compute();
 
             // Assert - Compare results directly
@@ -78,7 +79,7 @@ namespace DataVisualiser.Tests.Parity
 
             // Act
             var legacyStrategy = new SingleMetricStrategy(
-                Array.Empty<DataVisualiser.Models.HealthMetricData>(),
+                Array.Empty<HealthMetricData>(),
                 "Test",
                 from,
                 to);
@@ -87,7 +88,7 @@ namespace DataVisualiser.Tests.Parity
             var cmsData = TestDataBuilders.CanonicalMetricSeries()
                 .WithSampleCount(0)
                 .Build();
-            var cmsStrategy = new SingleMetricCmsStrategy(cmsData, "Test", from, to);
+            var cmsStrategy = new SingleMetricStrategy(cmsData, "Test", from, to);
             var cmsResult = cmsStrategy.Compute();
 
             // Assert - Both should return null for empty data
@@ -104,7 +105,7 @@ namespace DataVisualiser.Tests.Parity
             var interval = TimeSpan.FromDays(1);
 
             // Create data with some null values
-            var legacyData = new List<DataVisualiser.Models.HealthMetricData>
+            var legacyData = new List<HealthMetricData>
             {
                 new() { NormalizedTimestamp = from, Value = 100m, Unit = "kg" },
                 new() { NormalizedTimestamp = from.Add(interval), Value = null, Unit = "kg" },

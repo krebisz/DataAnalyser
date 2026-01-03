@@ -1,6 +1,6 @@
-using DataVisualiser.Models;
-using DataVisualiser.Services.Shading;
-using DataVisualiser.Services.WeeklyDistribution;
+using DataVisualiser.Shared.Models;
+using DataVisualiser.Core.Rendering.Shading;
+using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
 using Moq;
 using System.Windows.Media;
