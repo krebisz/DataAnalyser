@@ -1,10 +1,8 @@
-namespace DataVisualiser.Models
-{
-    public enum NormalizationMode
-    {
-        ZeroToOne,
-        PercentageOfMax,
-        RelativeToMax
-    }
-}
+namespace DataVisualiser.Models;
 
+public enum NormalizationMode
+{
+    ZeroToOne,
+    PercentageOfMax,
+    RelativeToMax
+}

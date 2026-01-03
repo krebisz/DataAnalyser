@@ -1,197 +1,176 @@
-using DataVisualiser.Charts.Strategies;
+using System.Globalization;
+using System.Windows.Media;
 using DataVisualiser.Models;
 using DataVisualiser.State;
 using LiveCharts;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
-using System.Globalization;
-using System.Windows.Media;
 
-namespace DataVisualiser.Services
+namespace DataVisualiser.Services;
+
+/// <summary>
+///     Handles rendering of weekday trend charts (both Cartesian and Polar modes).
+///     Extracts complex weekday trend rendering logic from MainWindow.
+/// </summary>
+public sealed class WeekdayTrendRenderingService
 {
-    /// <summary>
-    /// Handles rendering of weekday trend charts (both Cartesian and Polar modes).
-    /// Extracts complex weekday trend rendering logic from MainWindow.
-    /// </summary>
-    public sealed class WeekdayTrendRenderingService
+    private static readonly Brush[] WeekdayStrokes =
     {
-        private static readonly Brush[] WeekdayStrokes = new[]
+        Brushes.SteelBlue,
+        Brushes.CadetBlue,
+        Brushes.SeaGreen,
+        Brushes.OliveDrab,
+        Brushes.Goldenrod,
+        Brushes.OrangeRed,
+        Brushes.IndianRed
+    };
+
+    /// <summary>
+    ///     Renders a weekday trend chart based on the chart state mode (Cartesian or Polar).
+    ///     Note: Polar mode uses a CartesianChart with special axis configuration.
+    /// </summary>
+    public void RenderWeekdayTrendChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chartCartesian, CartesianChart chartPolar)
+    {
+        if (chartState.IsWeekdayTrendPolarMode)
+            RenderPolarChart(result, chartState, chartPolar);
+        else
+            RenderCartesianChart(result, chartState, chartCartesian);
+    }
+
+    private void RenderCartesianChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
+    {
+        chart.Series.Clear();
+        chart.AxisX.Clear();
+        chart.AxisY.Clear();
+
+        if (result == null || result.SeriesByDay.Count == 0)
+            return;
+
+        chart.AxisX.Add(new Axis
         {
-            Brushes.SteelBlue,
-            Brushes.CadetBlue,
-            Brushes.SeaGreen,
-            Brushes.OliveDrab,
-            Brushes.Goldenrod,
-            Brushes.OrangeRed,
-            Brushes.IndianRed
-        };
+            Title = "Time",
+            MinValue = result.From.Ticks,
+            MaxValue = result.To.Ticks,
+            LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+        });
 
-        /// <summary>
-        /// Renders a weekday trend chart based on the chart state mode (Cartesian or Polar).
-        /// Note: Polar mode uses a CartesianChart with special axis configuration.
-        /// </summary>
-        public void RenderWeekdayTrendChart(
-            WeekdayTrendResult result,
-            ChartState chartState,
-            CartesianChart chartCartesian,
-            CartesianChart chartPolar)
+        chart.AxisY.Add(new Axis
         {
-            if (chartState.IsWeekdayTrendPolarMode)
-            {
-                RenderPolarChart(result, chartState, chartPolar);
-            }
-            else
-            {
-                RenderCartesianChart(result, chartState, chartCartesian);
-            }
-        }
+            Title = result.Unit ?? "Value",
+            MinValue = result.GlobalMin,
+            MaxValue = result.GlobalMax
+        });
 
-        private void RenderCartesianChart(
-            WeekdayTrendResult result,
-            ChartState chartState,
-            CartesianChart chart)
+        for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
         {
-            chart.Series.Clear();
-            chart.AxisX.Clear();
-            chart.AxisY.Clear();
+            if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
+                continue;
 
-            if (result == null || result.SeriesByDay.Count == 0)
-                return;
+            if (!IsDayEnabled(dayIndex, chartState))
+                continue;
 
-            chart.AxisX.Add(new Axis
+            var values = new ChartValues<ObservablePoint>();
+            foreach (var point in series.Points)
+                values.Add(new ObservablePoint(point.Date.Ticks, point.Value));
+
+            chart.Series.Add(new LineSeries
             {
-                Title = "Time",
-                MinValue = result.From.Ticks,
-                MaxValue = result.To.Ticks,
-                LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                Title = series.Day.ToString(),
+                Values = values,
+                PointGeometry = null,
+                LineSmoothness = 0.3,
+                Fill = Brushes.Transparent,
+                StrokeThickness = 2,
+                Stroke = WeekdayStrokes[dayIndex]
             });
-
-            chart.AxisY.Add(new Axis
-            {
-                Title = result.Unit ?? "Value",
-                MinValue = result.GlobalMin,
-                MaxValue = result.GlobalMax
-            });
-
-            for (int dayIndex = 0; dayIndex <= 6; dayIndex++)
-            {
-                if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
-                    continue;
-
-                if (!IsDayEnabled(dayIndex, chartState))
-                    continue;
-
-                var values = new ChartValues<ObservablePoint>();
-                foreach (var point in series.Points)
-                {
-                    values.Add(new ObservablePoint(point.Date.Ticks, point.Value));
-                }
-
-                chart.Series.Add(new LineSeries
-                {
-                    Title = series.Day.ToString(),
-                    Values = values,
-                    PointGeometry = null,
-                    LineSmoothness = 0.3,
-                    Fill = Brushes.Transparent,
-                    StrokeThickness = 2,
-                    Stroke = WeekdayStrokes[dayIndex]
-                });
-            }
-        }
-
-        private void RenderPolarChart(
-            WeekdayTrendResult result,
-            ChartState chartState,
-            CartesianChart chart)
-        {
-            chart.Series.Clear();
-            chart.AxisX.Clear();
-            chart.AxisY.Clear();
-
-            if (result == null || result.SeriesByDay.Count == 0)
-                return;
-
-            // Configure axes for polar-like display
-            chart.AxisX.Add(new Axis
-            {
-                Title = "Day of Week",
-                MinValue = 0,
-                MaxValue = 360,
-                LabelFormatter = v =>
-                {
-                    // Convert angle (0-360) to day name
-                    int dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
-                    return dayIndex switch
-                    {
-                        0 => "Mon",
-                        1 => "Tue",
-                        2 => "Wed",
-                        3 => "Thu",
-                        4 => "Fri",
-                        5 => "Sat",
-                        6 => "Sun",
-                        _ => ""
-                    };
-                }
-            });
-
-            chart.AxisY.Add(new Axis
-            {
-                Title = result.Unit ?? "Value",
-                MinValue = result.GlobalMin,
-                MaxValue = result.GlobalMax
-            });
-
-            // Convert each day's data to polar-like coordinates
-            // X (angle): 0° = Monday, 51.43° = Tuesday, ... 308.57° = Sunday (360/7 per day)
-            // Y (radius): value
-            for (int dayIndex = 0; dayIndex <= 6; dayIndex++)
-            {
-                if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
-                    continue;
-
-                if (!IsDayEnabled(dayIndex, chartState))
-                    continue;
-
-                var values = new ChartValues<ObservablePoint>();
-                // Base angle for this day (in degrees)
-                double baseAngleDegrees = dayIndex * 360.0 / 7.0;
-
-                // For each time point in the series, plot at the day's angle with the value as radius
-                foreach (var point in series.Points)
-                {
-                    values.Add(new ObservablePoint(baseAngleDegrees, point.Value));
-                }
-
-                chart.Series.Add(new LineSeries
-                {
-                    Title = series.Day.ToString(),
-                    Values = values,
-                    LineSmoothness = 0.3,
-                    StrokeThickness = 2,
-                    Stroke = WeekdayStrokes[dayIndex],
-                    Fill = Brushes.Transparent,
-                    PointGeometry = DefaultGeometries.Circle,
-                    PointGeometrySize = 6
-                });
-            }
-        }
-
-        private static bool IsDayEnabled(int dayIndex, ChartState chartState)
-        {
-            return dayIndex switch
-            {
-                0 => chartState.ShowMonday,
-                1 => chartState.ShowTuesday,
-                2 => chartState.ShowWednesday,
-                3 => chartState.ShowThursday,
-                4 => chartState.ShowFriday,
-                5 => chartState.ShowSaturday,
-                6 => chartState.ShowSunday,
-                _ => false
-            };
         }
     }
-}
 
+    private void RenderPolarChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
+    {
+        chart.Series.Clear();
+        chart.AxisX.Clear();
+        chart.AxisY.Clear();
+
+        if (result == null || result.SeriesByDay.Count == 0)
+            return;
+
+        // Configure axes for polar-like display
+        chart.AxisX.Add(new Axis
+        {
+            Title = "Day of Week",
+            MinValue = 0,
+            MaxValue = 360,
+            LabelFormatter = v =>
+            {
+                // Convert angle (0-360) to day name
+                var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
+                return dayIndex switch
+                {
+                    0 => "Mon",
+                    1 => "Tue",
+                    2 => "Wed",
+                    3 => "Thu",
+                    4 => "Fri",
+                    5 => "Sat",
+                    6 => "Sun",
+                    _ => ""
+                };
+            }
+        });
+
+        chart.AxisY.Add(new Axis
+        {
+            Title = result.Unit ?? "Value",
+            MinValue = result.GlobalMin,
+            MaxValue = result.GlobalMax
+        });
+
+        // Convert each day's data to polar-like coordinates
+        // X (angle): 0° = Monday, 51.43° = Tuesday, ... 308.57° = Sunday (360/7 per day)
+        // Y (radius): value
+        for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
+        {
+            if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
+                continue;
+
+            if (!IsDayEnabled(dayIndex, chartState))
+                continue;
+
+            var values = new ChartValues<ObservablePoint>();
+            // Base angle for this day (in degrees)
+            var baseAngleDegrees = dayIndex * 360.0 / 7.0;
+
+            // For each time point in the series, plot at the day's angle with the value as radius
+            foreach (var point in series.Points)
+                values.Add(new ObservablePoint(baseAngleDegrees, point.Value));
+
+            chart.Series.Add(new LineSeries
+            {
+                Title = series.Day.ToString(),
+                Values = values,
+                LineSmoothness = 0.3,
+                StrokeThickness = 2,
+                Stroke = WeekdayStrokes[dayIndex],
+                Fill = Brushes.Transparent,
+                PointGeometry = DefaultGeometries.Circle,
+                PointGeometrySize = 6
+            });
+        }
+    }
+
+    private static bool IsDayEnabled(int dayIndex, ChartState chartState)
+    {
+        return dayIndex switch
+        {
+            0 => chartState.ShowMonday,
+            1 => chartState.ShowTuesday,
+            2 => chartState.ShowWednesday,
+            3 => chartState.ShowThursday,
+            4 => chartState.ShowFriday,
+            5 => chartState.ShowSaturday,
+            6 => chartState.ShowSunday,
+            _ => false
+        };
+    }
+}

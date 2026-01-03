@@ -1,21 +1,21 @@
+using System.Configuration;
 using DataFileReader.Canonical;
 using DataVisualiser.Data.Repositories;
+using DataVisualiser.Helper;
 using DataVisualiser.Models;
-using System.Configuration;
 
-namespace DataVisualiser.Services
+namespace DataVisualiser.Services;
+
+public class MetricSelectionService
 {
-    public class MetricSelectionService
+    private readonly CmsDataService _cms; // <-- add
+    private readonly string _connectionString;
+
+    public MetricSelectionService(string connectionString)
     {
-        private readonly string _connectionString;
-        private readonly CmsDataService _cms; // <-- add
-
-        public MetricSelectionService(string connectionString)
-        {
-            _connectionString = connectionString;
-            _cms = new CmsDataService(connectionString); // <-- add
-        }
-
+        _connectionString = connectionString;
+        _cms = new CmsDataService(connectionString); // <-- add
+    }
 
 
     public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<HealthMetricData> PrimaryLegacy, IEnumerable<HealthMetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
@@ -23,19 +23,17 @@ namespace DataVisualiser.Services
         var dataFetcher = new DataFetcher(_connectionString);
         var cmsService = new CmsDataService(_connectionString);
 
-            // Calculate optimal max records for performance optimization (if enabled via config)
-            int? maxRecords = null;
-            var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
-            if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
-            {
-                maxRecords = DataVisualiser.Helper.MathHelper.CalculateOptimalMaxRecords(from, to);
-            }
+        // Calculate optimal max records for performance optimization (if enabled via config)
+        int? maxRecords = null;
+        var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
+        if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
+            maxRecords = MathHelper.CalculateOptimalMaxRecords(from, to);
 
         // -----------------------
-            // Legacy loads with result limiting
+        // Legacy loads with result limiting
         // -----------------------
-            var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, maxRecords);
-            var secondaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName, maxRecords);
+        var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, maxRecords);
+        var secondaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName, maxRecords);
 
         // ---------------------------------
         // Canonical ID resolution (explicit)
@@ -50,14 +48,10 @@ namespace DataVisualiser.Services
         Task<IReadOnlyList<ICanonicalMetricSeries>>? secondaryCmsTask = null;
 
         if (primaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(primaryCanonicalId))
-        {
             primaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(primaryCanonicalId, from, to);
-        }
 
         if (secondaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(secondaryCanonicalId))
-        {
             secondaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(secondaryCanonicalId, from, to);
-        }
 
         // -------------------------
         // Await everything together
@@ -68,84 +62,58 @@ namespace DataVisualiser.Services
     }
 
 
-
-
     // ------------------------------------------------------------
     // LOAD METRIC DATA (PRIMARY + SECONDARY)
     // ------------------------------------------------------------
-    public async Task<(IEnumerable<HealthMetricData> Primary, IEnumerable<HealthMetricData> Secondary)> LoadMetricDataAsync(
-            string baseType,
-            string? primarySubtype,
-            string? secondarySubtype,
-            DateTime from,
-            DateTime to,
-            string tableName)
-        {
-            var dataFetcher = new DataFetcher(_connectionString);
+    public async Task<(IEnumerable<HealthMetricData> Primary, IEnumerable<HealthMetricData> Secondary)> LoadMetricDataAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
+    {
+        var dataFetcher = new DataFetcher(_connectionString);
 
-            // Calculate optimal max records for performance optimization (if enabled via config)
-            int? maxRecords = null;
-            var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
-            if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
-            {
-                maxRecords = DataVisualiser.Helper.MathHelper.CalculateOptimalMaxRecords(from, to);
-            }
+        // Calculate optimal max records for performance optimization (if enabled via config)
+        int? maxRecords = null;
+        var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
+        if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
+            maxRecords = MathHelper.CalculateOptimalMaxRecords(from, to);
 
-            var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(
-                baseType,
-                primarySubtype,
-                from,
-                to,
-                tableName,
-                maxRecords);
+        var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, maxRecords);
 
-            var secondaryTask = dataFetcher.GetHealthMetricsDataByBaseType(
-                baseType,
-                secondarySubtype,
-                from,
-                to,
-                tableName,
-                maxRecords);
+        var secondaryTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName, maxRecords);
 
-            await Task.WhenAll(primaryTask, secondaryTask);
+        await Task.WhenAll(primaryTask, secondaryTask);
 
-            return (primaryTask.Result, secondaryTask.Result);
-        }
+        return (primaryTask.Result, secondaryTask.Result);
+    }
 
-        // ------------------------------------------------------------
-        // LOAD METRIC TYPES (BASE METRIC TYPES)
-        // ------------------------------------------------------------
-        public async Task<List<string>> LoadMetricTypesAsync(string tableName)
-        {
-            var dataFetcher = new DataFetcher(_connectionString);
-            var baseMetricTypes = await dataFetcher.GetBaseMetricTypes(tableName);
+    // ------------------------------------------------------------
+    // LOAD METRIC TYPES (BASE METRIC TYPES)
+    // ------------------------------------------------------------
+    public async Task<List<string>> LoadMetricTypesAsync(string tableName)
+    {
+        var dataFetcher = new DataFetcher(_connectionString);
+        var baseMetricTypes = await dataFetcher.GetBaseMetricTypes(tableName);
 
-            return baseMetricTypes.ToList();
-        }
+        return baseMetricTypes.ToList();
+    }
 
-        // ------------------------------------------------------------
-        // LOAD SUBTYPES
-        // ------------------------------------------------------------
-        public async Task<List<string>> LoadSubtypesAsync(string metricType, string tableName)
-        {
-            var dataFetcher = new DataFetcher(_connectionString);
-            var subtypes = await dataFetcher.GetSubtypesForBaseType(metricType, tableName);
+    // ------------------------------------------------------------
+    // LOAD SUBTYPES
+    // ------------------------------------------------------------
+    public async Task<List<string>> LoadSubtypesAsync(string metricType, string tableName)
+    {
+        var dataFetcher = new DataFetcher(_connectionString);
+        var subtypes = await dataFetcher.GetSubtypesForBaseType(metricType, tableName);
 
-            return subtypes.ToList();
-        }
+        return subtypes.ToList();
+    }
 
-        // ------------------------------------------------------------
-        // LOAD DATE RANGE
-        // ------------------------------------------------------------
-        public async Task<(DateTime MinDate, DateTime MaxDate)?> LoadDateRangeAsync(
-            string metricType,
-            string? subtype,
-            string tableName)
-        {
-            var dataFetcher = new DataFetcher(_connectionString);
-            var dateRange = await dataFetcher.GetBaseTypeDateRange(metricType, subtype, tableName);
+    // ------------------------------------------------------------
+    // LOAD DATE RANGE
+    // ------------------------------------------------------------
+    public async Task<(DateTime MinDate, DateTime MaxDate)?> LoadDateRangeAsync(string metricType, string? subtype, string tableName)
+    {
+        var dataFetcher = new DataFetcher(_connectionString);
+        var dateRange = await dataFetcher.GetBaseTypeDateRange(metricType, subtype, tableName);
 
-            return dateRange;
-        }
+        return dateRange;
     }
 }

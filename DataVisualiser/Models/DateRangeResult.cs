@@ -1,11 +1,10 @@
-﻿namespace DataVisualiser.Models
+﻿namespace DataVisualiser.Models;
+
+/// <summary>
+///     Helper class for date range query results
+/// </summary>
+public class DateRangeResult
 {
-    /// <summary>
-    /// Helper class for date range query results
-    /// </summary>
-    public class DateRangeResult
-    {
-        public DateTime? MinDate { get; set; }
-        public DateTime? MaxDate { get; set; }
-    }
+    public DateTime? MinDate { get; set; }
+    public DateTime? MaxDate { get; set; }
 }

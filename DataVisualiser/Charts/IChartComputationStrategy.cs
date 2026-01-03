@@ -1,26 +1,25 @@
 using DataVisualiser.Charts.Computation;
 
-namespace DataVisualiser.Charts
+namespace DataVisualiser.Charts;
+
+public interface IChartComputationStrategy
 {
-    public interface IChartComputationStrategy
-    {
-        /// <summary>
-        /// Pure data computation: given inputs produce a ChartComputationResult.
-        /// Must be synchronous (invoked inside a Task.Run by the engine).
-        /// Returns null if no data is available or computation fails.
-        /// </summary>
-        ChartComputationResult? Compute();
+    /// <summary>
+    ///     Optional friendly name for series/default labels.
+    /// </summary>
+    string PrimaryLabel { get; }
 
-        /// <summary>
-        /// Optional friendly name for series/default labels.
-        /// </summary>
-        string PrimaryLabel { get; }
-        string SecondaryLabel { get; }
+    string SecondaryLabel { get; }
 
-        /// <summary>
-        /// Unit (optional) for Y-axis labeling.
-        /// </summary>
-        string? Unit { get; }
-    }
+    /// <summary>
+    ///     Unit (optional) for Y-axis labeling.
+    /// </summary>
+    string? Unit { get; }
+
+    /// <summary>
+    ///     Pure data computation: given inputs produce a ChartComputationResult.
+    ///     Must be synchronous (invoked inside a Task.Run by the engine).
+    ///     Returns null if no data is available or computation fails.
+    /// </summary>
+    ChartComputationResult? Compute();
 }
-

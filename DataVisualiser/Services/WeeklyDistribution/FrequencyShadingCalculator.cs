@@ -1,212 +1,187 @@
-using DataVisualiser.Models;
-using DataVisualiser.Services.Shading;
 using System.Diagnostics;
+using System.Windows.Media;
+using DataVisualiser.Services.Shading;
 
-namespace DataVisualiser.Services.WeeklyDistribution
+namespace DataVisualiser.Services.WeeklyDistribution;
+
+/// <summary>
+///     Calculates frequency shading data for weekly distribution charts.
+///     Extracted from WeeklyDistributionService to reduce complexity.
+/// </summary>
+public sealed class FrequencyShadingCalculator
 {
-    /// <summary>
-    /// Calculates frequency shading data for weekly distribution charts.
-    /// Extracted from WeeklyDistributionService to reduce complexity.
-    /// </summary>
-    public sealed class FrequencyShadingCalculator
+    private readonly IIntervalShadingStrategy _shadingStrategy;
+
+    public FrequencyShadingCalculator(IIntervalShadingStrategy shadingStrategy)
     {
-        private readonly IIntervalShadingStrategy _shadingStrategy;
+        _shadingStrategy = shadingStrategy ?? throw new ArgumentNullException(nameof(shadingStrategy));
+    }
 
-        public FrequencyShadingCalculator(IIntervalShadingStrategy shadingStrategy)
+    /// <summary>
+    ///     Builds frequency shading data from day values and global min/max.
+    /// </summary>
+    public FrequencyShadingData BuildFrequencyShadingData(Dictionary<int, List<double>> dayValues, double globalMin, double globalMax, int intervalCount)
+    {
+        var intervals = CreateUniformIntervals(globalMin, globalMax, intervalCount);
+        var frequencies = CountFrequenciesPerInterval(dayValues, intervals);
+
+        var context = new IntervalShadingContext
         {
-            _shadingStrategy = shadingStrategy ?? throw new ArgumentNullException(nameof(shadingStrategy));
-        }
+            Intervals = intervals,
+            FrequenciesPerDay = frequencies,
+            DayValues = dayValues,
+            GlobalMin = globalMin,
+            GlobalMax = globalMax
+        };
 
-        /// <summary>
-        /// Builds frequency shading data from day values and global min/max.
-        /// </summary>
-        public FrequencyShadingData BuildFrequencyShadingData(
-            Dictionary<int, List<double>> dayValues,
-            double globalMin,
-            double globalMax,
-            int intervalCount)
+        var colorMap = _shadingStrategy.CalculateColorMap(context);
+
+        return new FrequencyShadingData(intervals, frequencies, colorMap, dayValues);
+    }
+
+    /// <summary>
+    ///     Creates uniform partitions/intervals for the y-axis.
+    /// </summary>
+    public List<(double Min, double Max)> CreateUniformIntervals(double globalMin, double globalMax, int intervalCount)
+    {
+        var intervals = new List<(double Min, double Max)>();
+
+        if (globalMax <= globalMin || intervalCount <= 0)
         {
-            var intervals = CreateUniformIntervals(globalMin, globalMax, intervalCount);
-            var frequencies = CountFrequenciesPerInterval(dayValues, intervals);
-
-            var context = new IntervalShadingContext
-            {
-                Intervals = intervals,
-                FrequenciesPerDay = frequencies,
-                DayValues = dayValues,
-                GlobalMin = globalMin,
-                GlobalMax = globalMax
-            };
-
-            var colorMap = _shadingStrategy.CalculateColorMap(context);
-
-            return new FrequencyShadingData(intervals, frequencies, colorMap, dayValues);
-        }
-
-        /// <summary>
-        /// Creates uniform partitions/intervals for the y-axis.
-        /// </summary>
-        public List<(double Min, double Max)> CreateUniformIntervals(double globalMin, double globalMax, int intervalCount)
-        {
-            var intervals = new List<(double Min, double Max)>();
-
-            if (globalMax <= globalMin || intervalCount <= 0)
-            {
-                // Return a single interval if invalid input
-                intervals.Add((globalMin, globalMax));
-                return intervals;
-            }
-
-            double intervalSize = (globalMax - globalMin) / intervalCount;
-
-            Debug.WriteLine($"=== WeeklyDistribution: Creating Intervals ===");
-            Debug.WriteLine($"Interval Count: {intervalCount}, Interval Size: {intervalSize:F6}");
-
-            for (int i = 0; i < intervalCount; i++)
-            {
-                double min = globalMin + i * intervalSize;
-                // Last interval includes the max value to ensure we cover the full range
-                double max = (i == intervalCount - 1) ? globalMax : min + intervalSize;
-                intervals.Add((min, max));
-
-                // Log first 3, last 3, and every 5th interval
-                if (i < 3 || i >= intervalCount - 3 || i % 5 == 0)
-                {
-                    string intervalType = i == intervalCount - 1 ? "[inclusive]" : "[half-open)";
-                    Debug.WriteLine($"  Interval {i}: [{min:F6}, {max:F6}{intervalType}");
-                }
-            }
-
-            Debug.WriteLine($"Total intervals created: {intervals.Count}");
-
+            // Return a single interval if invalid input
+            intervals.Add((globalMin, globalMax));
             return intervals;
         }
 
-        /// <summary>
-        /// Counts the number of values that fall in each interval, for each separate day.
-        /// </summary>
-        public Dictionary<int, Dictionary<int, int>> CountFrequenciesPerInterval(
-            Dictionary<int, List<double>> dayValues,
-            List<(double Min, double Max)> intervals)
-        {
-            var result = new Dictionary<int, Dictionary<int, int>>();
+        var intervalSize = (globalMax - globalMin) / intervalCount;
 
-            foreach (var dayIndex in EnumerateDays())
+        Debug.WriteLine("=== WeeklyDistribution: Creating Intervals ===");
+        Debug.WriteLine($"Interval Count: {intervalCount}, Interval Size: {intervalSize:F6}");
+
+        for (var i = 0; i < intervalCount; i++)
+        {
+            var min = globalMin + i * intervalSize;
+            // Last interval includes the max value to ensure we cover the full range
+            var max = i == intervalCount - 1 ? globalMax : min + intervalSize;
+            intervals.Add((min, max));
+
+            // Log first 3, last 3, and every 5th interval
+            if (i < 3 || i >= intervalCount - 3 || i % 5 == 0)
             {
-                var frequencies = InitializeFrequencies(intervals.Count);
-
-                if (dayValues.TryGetValue(dayIndex, out var values))
-                {
-                    CountValuesIntoIntervals(values, intervals, frequencies);
-                }
-
-                result[dayIndex] = frequencies;
-                LogDaySummary(dayIndex, frequencies);
-            }
-
-            return result;
-        }
-
-        private static IEnumerable<int> EnumerateDays()
-        {
-            for (int day = 0; day < 7; day++)
-                yield return day;
-        }
-
-        private static Dictionary<int, int> InitializeFrequencies(int intervalCount)
-        {
-            var frequencies = new Dictionary<int, int>(intervalCount);
-
-            for (int i = 0; i < intervalCount; i++)
-                frequencies[i] = 0;
-
-            return frequencies;
-        }
-        private static void CountValuesIntoIntervals(
-    IEnumerable<double> values,
-    List<(double Min, double Max)> intervals,
-    Dictionary<int, int> frequencies)
-        {
-            foreach (var value in values)
-            {
-                if (!IsValidValue(value))
-                    continue;
-
-                int intervalIndex = FindIntervalIndex(value, intervals);
-                if (intervalIndex >= 0)
-                    frequencies[intervalIndex]++;
+                var intervalType = i == intervalCount - 1 ? "[inclusive]" : "[half-open)";
+                Debug.WriteLine($"  Interval {i}: [{min:F6}, {max:F6}{intervalType}");
             }
         }
-        private static bool IsValidValue(double value)
-        {
-            return !double.IsNaN(value) && !double.IsInfinity(value);
-        }
-        private static int FindIntervalIndex(
-    double value,
-    List<(double Min, double Max)> intervals)
-        {
-            for (int i = 0; i < intervals.Count; i++)
-            {
-                var interval = intervals[i];
-                bool isLast = (i == intervals.Count - 1);
 
-                if (IsValueInInterval(value, interval, isLast))
-                    return i;
-            }
+        Debug.WriteLine($"Total intervals created: {intervals.Count}");
 
-            return -1;
-        }
-        private static bool IsValueInInterval(
-    double value,
-    (double Min, double Max) interval,
-    bool inclusiveUpperBound)
-        {
-            return inclusiveUpperBound
-                ? value >= interval.Min && value <= interval.Max
-                : value >= interval.Min && value < interval.Max;
-        }
-        private static void LogDaySummary(
-    int dayIndex,
-    Dictionary<int, int> frequencies)
-        {
-            int totalValues = frequencies.Values.Sum();
-            int nonZeroIntervals = frequencies.Values.Count(f => f > 0);
-            int maxFreq = frequencies.Values.DefaultIfEmpty(0).Max();
-
-            Debug.WriteLine(
-                $"Day {dayIndex} frequencies: " +
-                $"Total values={totalValues}, " +
-                $"Non-zero intervals={nonZeroIntervals}, " +
-                $"Max frequency={maxFreq}");
-
-            if (frequencies.Count == 0)
-                return;
-
-            var ordered = frequencies.OrderBy(kvp => kvp.Key).ToList();
-
-            var firstFew = ordered.Take(3)
-                .Select(kvp => $"I{kvp.Key}={kvp.Value}");
-
-            var lastFew = ordered.Skip(Math.Max(0, ordered.Count - 3))
-                .Select(kvp => $"I{kvp.Key}={kvp.Value}");
-
-            Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
-            Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");
-        }
-
+        return intervals;
     }
 
     /// <summary>
-    /// Data structure for frequency shading calculations.
+    ///     Counts the number of values that fall in each interval, for each separate day.
     /// </summary>
-    public sealed record FrequencyShadingData(
-        List<(double Min, double Max)> Intervals,
-        Dictionary<int, Dictionary<int, int>> FrequenciesPerDay,
-        Dictionary<int, Dictionary<int, System.Windows.Media.Color>> ColorMap,
-        Dictionary<int, List<double>> DayValues)
+    public Dictionary<int, Dictionary<int, int>> CountFrequenciesPerInterval(Dictionary<int, List<double>> dayValues, List<(double Min, double Max)> intervals)
     {
-        public static readonly FrequencyShadingData Empty =
-            new(new(), new(), new(), new());
+        var result = new Dictionary<int, Dictionary<int, int>>();
+
+        foreach (var dayIndex in EnumerateDays())
+        {
+            var frequencies = InitializeFrequencies(intervals.Count);
+
+            if (dayValues.TryGetValue(dayIndex, out var values))
+                CountValuesIntoIntervals(values, intervals, frequencies);
+
+            result[dayIndex] = frequencies;
+            LogDaySummary(dayIndex, frequencies);
+        }
+
+        return result;
+    }
+
+    private static IEnumerable<int> EnumerateDays()
+    {
+        for (var day = 0; day < 7; day++)
+            yield return day;
+    }
+
+    private static Dictionary<int, int> InitializeFrequencies(int intervalCount)
+    {
+        var frequencies = new Dictionary<int, int>(intervalCount);
+
+        for (var i = 0; i < intervalCount; i++)
+            frequencies[i] = 0;
+
+        return frequencies;
+    }
+
+    private static void CountValuesIntoIntervals(IEnumerable<double> values, List<(double Min, double Max)> intervals, Dictionary<int, int> frequencies)
+    {
+        foreach (var value in values)
+        {
+            if (!IsValidValue(value))
+                continue;
+
+            var intervalIndex = FindIntervalIndex(value, intervals);
+            if (intervalIndex >= 0)
+                frequencies[intervalIndex]++;
+        }
+    }
+
+    private static bool IsValidValue(double value)
+    {
+        return !double.IsNaN(value) && !double.IsInfinity(value);
+    }
+
+    private static int FindIntervalIndex(double value, List<(double Min, double Max)> intervals)
+    {
+        for (var i = 0; i < intervals.Count; i++)
+        {
+            var interval = intervals[i];
+            var isLast = i == intervals.Count - 1;
+
+            if (IsValueInInterval(value, interval, isLast))
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static bool IsValueInInterval(double value, (double Min, double Max) interval, bool inclusiveUpperBound)
+    {
+        return inclusiveUpperBound ? value >= interval.Min && value <= interval.Max : value >= interval.Min && value < interval.Max;
+    }
+
+    private static void LogDaySummary(int dayIndex, Dictionary<int, int> frequencies)
+    {
+        var totalValues = frequencies.Values.Sum();
+        var nonZeroIntervals = frequencies.Values.Count(f => f > 0);
+        var maxFreq = frequencies.Values.DefaultIfEmpty(0).
+            Max();
+
+        Debug.WriteLine($"Day {dayIndex} frequencies: " + $"Total values={totalValues}, " + $"Non-zero intervals={nonZeroIntervals}, " + $"Max frequency={maxFreq}");
+
+        if (frequencies.Count == 0)
+            return;
+
+        var ordered = frequencies.OrderBy(kvp => kvp.Key).
+            ToList();
+
+        var firstFew = ordered.Take(3).
+            Select(kvp => $"I{kvp.Key}={kvp.Value}");
+
+        var lastFew = ordered.Skip(Math.Max(0, ordered.Count - 3)).
+            Select(kvp => $"I{kvp.Key}={kvp.Value}");
+
+        Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
+        Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");
     }
 }
 
+/// <summary>
+///     Data structure for frequency shading calculations.
+/// </summary>
+public sealed record FrequencyShadingData(List<(double Min, double Max)> Intervals, Dictionary<int, Dictionary<int, int>> FrequenciesPerDay, Dictionary<int, Dictionary<int, Color>> ColorMap, Dictionary<int, List<double>> DayValues)
+{
+    public static readonly FrequencyShadingData Empty = new(new List<(double Min, double Max)>(), new Dictionary<int, Dictionary<int, int>>(), new Dictionary<int, Dictionary<int, Color>>(), new Dictionary<int, List<double>>());
+}

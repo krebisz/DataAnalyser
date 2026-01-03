@@ -3,58 +3,61 @@ using System.Windows.Controls;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.UI
+namespace DataVisualiser.UI;
+
+/// <summary>
+///     Controller for the Main chart panel.
+///     This is the simplest chart panel - just title, toggle, and chart.
+/// </summary>
+public partial class MainChartController : UserControl
 {
-    /// <summary>
-    /// Controller for the Main chart panel.
-    /// This is the simplest chart panel - just title, toggle, and chart.
-    /// </summary>
-    public partial class MainChartController : UserControl
+    public MainChartController()
     {
-        private readonly CartesianChart _chart;
+        InitializeComponent();
 
-        public MainChartController()
+        // Set up the panel controller
+        PanelController.Title = "ChartMain";
+        PanelController.IsChartVisible = true;
+
+        // Create the chart
+        Chart = new CartesianChart
         {
-            InitializeComponent();
+            LegendLocation = LegendLocation.Right,
+            Zoom = ZoomingOptions.X,
+            Pan = PanningOptions.X,
+            Hoverable = true,
+            Margin = new Thickness(20, 5, 10, 20),
+            MinHeight = 500
+        };
+        Chart.AxisX.Add(new Axis
+        {
+            Title = "Time"
+        });
+        Chart.AxisY.Add(new Axis
+        {
+            Title = "Value",
+            ShowLabels = true
+        });
 
-            // Set up the panel controller
-            PanelController.Title = "ChartMain";
-            PanelController.IsChartVisible = true;
+        // Set the chart content
+        PanelController.SetChartContent(Chart);
 
-            // Create the chart
-            _chart = new CartesianChart
-            {
-                LegendLocation = LegendLocation.Right,
-                Zoom = ZoomingOptions.X,
-                Pan = PanningOptions.X,
-                Hoverable = true,
-                Margin = new Thickness(20, 5, 10, 20),
-                MinHeight = 500
-            };
-            _chart.AxisX.Add(new Axis { Title = "Time" });
-            _chart.AxisY.Add(new Axis { Title = "Value", ShowLabels = true });
-
-            // Set the chart content
-            PanelController.SetChartContent(_chart);
-
-            // Wire up toggle event
-            PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// Gets the chart control for external access (e.g., for tooltip management, rendering).
-        /// </summary>
-        public CartesianChart Chart => _chart;
-
-        /// <summary>
-        /// Gets the panel controller for external access.
-        /// </summary>
-        public ChartPanelController Panel => PanelController;
-
-        /// <summary>
-        /// Event raised when the toggle button is clicked.
-        /// </summary>
-        public event System.EventHandler? ToggleRequested;
+        // Wire up toggle event
+        PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
     }
-}
 
+    /// <summary>
+    ///     Gets the chart control for external access (e.g., for tooltip management, rendering).
+    /// </summary>
+    public CartesianChart Chart { get; }
+
+    /// <summary>
+    ///     Gets the panel controller for external access.
+    /// </summary>
+    public ChartPanelController Panel => PanelController;
+
+    /// <summary>
+    ///     Event raised when the toggle button is clicked.
+    /// </summary>
+    public event EventHandler? ToggleRequested;
+}

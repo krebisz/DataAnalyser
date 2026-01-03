@@ -1,14 +1,12 @@
-namespace DataVisualiser.Models
-{
-    public enum RecordToDayRatio
-    {
-        Second,
-        Minute,
-        Hour,
-        Day,
-        Week,
-        Month,
-        Year
-    }
-}
+namespace DataVisualiser.Models;
 
+public enum RecordToDayRatio
+{
+    Second,
+    Minute,
+    Hour,
+    Day,
+    Week,
+    Month,
+    Year
+}

@@ -1,22 +1,22 @@
-namespace DataVisualiser.Helper
-{
-    using DataVisualiser.Models;
+using DataVisualiser.Models;
 
+namespace DataVisualiser.Helper;
+
+/// <summary>
+///     Phase 4: Helper methods for transform data processing.
+/// </summary>
+public static class TransformDataHelper
+{
     /// <summary>
-    /// Phase 4: Helper methods for transform data processing.
+    ///     Creates result data objects for transform grid display.
     /// </summary>
-    public static class TransformDataHelper
+    public static List<object> CreateTransformResultData(List<HealthMetricData> dataList, List<double> results)
     {
-        /// <summary>
-        /// Creates result data objects for transform grid display.
-        /// </summary>
-        public static List<object> CreateTransformResultData(List<HealthMetricData> dataList, List<double> results)
-        {
-            return dataList.Zip(results, (d, r) => new
+        return dataList.Zip(results, (d, r) => new
             {
                 Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
                 Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
-            }).ToList<object>();
-        }
+            }).
+            ToList<object>();
     }
 }

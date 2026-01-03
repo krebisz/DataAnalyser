@@ -1,10 +1,10 @@
 using System.Windows.Media;
 
-namespace DataVisualiser.Charts
+namespace DataVisualiser.Charts;
+
+public static class ColourPalette
 {
-    public static class ColourPalette
-    {
-        private static readonly List<Color> _colors = new()
+    private static readonly List<Color> _colors = new()
     {
         Colors.SlateBlue,
         Colors.MediumSeaGreen,
@@ -20,25 +20,23 @@ namespace DataVisualiser.Charts
         Colors.SteelBlue
     };
 
-        private static readonly Dictionary<object, int> _chartColorIndex = new();
+    private static readonly Dictionary<object, int> _chartColorIndex = new();
 
-        public static Color Next(object chart)
-        {
-            if (!_chartColorIndex.ContainsKey(chart))
-                _chartColorIndex[chart] = 0;
+    public static Color Next(object chart)
+    {
+        if (!_chartColorIndex.ContainsKey(chart))
+            _chartColorIndex[chart] = 0;
 
-            int index = _chartColorIndex[chart];
-            Color color = _colors[index];
+        var index = _chartColorIndex[chart];
+        var color = _colors[index];
 
-            _chartColorIndex[chart] = (index + 1) % _colors.Count;
-            return color;
-        }
+        _chartColorIndex[chart] = (index + 1) % _colors.Count;
+        return color;
+    }
 
-        public static void Reset(object chart)
-        {
-            if (_chartColorIndex.ContainsKey(chart))
-                _chartColorIndex[chart] = 0;
-        }
+    public static void Reset(object chart)
+    {
+        if (_chartColorIndex.ContainsKey(chart))
+            _chartColorIndex[chart] = 0;
     }
 }
-

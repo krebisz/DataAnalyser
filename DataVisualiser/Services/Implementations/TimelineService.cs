@@ -1,70 +1,53 @@
 using DataVisualiser.Helper;
 using DataVisualiser.Services.Abstractions;
-using System.Linq;
 
-namespace DataVisualiser.Services.Implementations
+namespace DataVisualiser.Services.Implementations;
+
+/// <summary>
+///     Implementation of ITimelineService.
+///     Provides unified timeline and interval generation with caching.
+/// </summary>
+public sealed class TimelineService : ITimelineService
 {
-    /// <summary>
-    /// Implementation of ITimelineService.
-    /// Provides unified timeline and interval generation with caching.
-    /// </summary>
-    public sealed class TimelineService : ITimelineService
+    private readonly Dictionary<string, TimelineResult> _cache = new();
+
+    public TimelineResult GenerateTimeline(DateTime from, DateTime to, IReadOnlyList<DateTime>? dataTimestamps = null)
     {
-        private readonly Dictionary<string, TimelineResult> _cache = new();
+        // Create cache key based on date range
+        var cacheKey = $"{from:yyyyMMddHHmmss}_{to:yyyyMMddHHmmss}";
 
-        public TimelineResult GenerateTimeline(
-            DateTime from,
-            DateTime to,
-            IReadOnlyList<DateTime>? dataTimestamps = null)
+        if (_cache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
+        var dateRange = to - from;
+        var tickInterval = MathHelper.DetermineTickInterval(dateRange);
+        var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(from, to, tickInterval);
+
+        var result = new TimelineResult
         {
-            // Create cache key based on date range
-            var cacheKey = $"{from:yyyyMMddHHmmss}_{to:yyyyMMddHHmmss}";
+            DateRange = dateRange,
+            TickInterval = tickInterval,
+            NormalizedIntervals = normalizedIntervals,
+            From = from,
+            To = to
+        };
 
-            if (_cache.TryGetValue(cacheKey, out var cached))
-            {
-                return cached;
-            }
+        _cache[cacheKey] = result;
+        return result;
+    }
 
-            var dateRange = to - from;
-            var tickInterval = MathHelper.DetermineTickInterval(dateRange);
-            var normalizedIntervals = MathHelper.GenerateNormalizedIntervals(from, to, tickInterval);
+    public IReadOnlyList<int> MapToIntervals(IReadOnlyList<DateTime> timestamps, TimelineResult timeline)
+    {
+        if (timestamps == null || timestamps.Count == 0)
+            return Array.Empty<int>();
 
-            var result = new TimelineResult
-            {
-                DateRange = dateRange,
-                TickInterval = tickInterval,
-                NormalizedIntervals = normalizedIntervals,
-                From = from,
-                To = to
-            };
+        var intervalsList = timeline.NormalizedIntervals is List<DateTime> list ? list : timeline.NormalizedIntervals.ToList();
 
-            _cache[cacheKey] = result;
-            return result;
-        }
+        return timestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, intervalsList, timeline.TickInterval)).ToList();
+    }
 
-        public IReadOnlyList<int> MapToIntervals(
-            IReadOnlyList<DateTime> timestamps,
-            TimelineResult timeline)
-        {
-            if (timestamps == null || timestamps.Count == 0)
-                return Array.Empty<int>();
-
-            var intervalsList = timeline.NormalizedIntervals is List<DateTime> list 
-                ? list 
-                : timeline.NormalizedIntervals.ToList();
-
-            return timestamps
-                .Select(ts => MathHelper.MapTimestampToIntervalIndex(
-                    ts,
-                    intervalsList,
-                    timeline.TickInterval))
-                .ToList();
-        }
-
-        public void ClearCache()
-        {
-            _cache.Clear();
-        }
+    public void ClearCache()
+    {
+        _cache.Clear();
     }
 }
-
