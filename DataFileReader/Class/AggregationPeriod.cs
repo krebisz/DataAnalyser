@@ -1,10 +1,9 @@
-﻿namespace DataFileReader.Class
+﻿namespace DataFileReader.Class;
+
+public enum AggregationPeriod
 {
-    public enum AggregationPeriod
-    {
-        Week,
-        Month,
-        Quarter,
-        Year
-    }
+    Week,
+    Month,
+    Quarter,
+    Year
 }

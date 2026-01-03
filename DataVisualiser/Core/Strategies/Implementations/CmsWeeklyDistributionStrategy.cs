@@ -10,9 +10,9 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 
 public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
 {
-    private readonly DateTime _from;
+    private readonly DateTime               _from;
     private readonly ICanonicalMetricSeries _series;
-    private readonly DateTime _to;
+    private readonly DateTime               _to;
     private readonly IUnitResolutionService _unitResolutionService;
 
 
@@ -30,12 +30,12 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
     public Dictionary<int, Dictionary<int, int>> FrequenciesPerDay { get; } = new();
 
     public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerDay { get; } = new();
-    public WeeklyDistributionResult? ExtendedResult { get; private set; }
+    public WeeklyDistributionResult?                ExtendedResult              { get; private set; }
 
     public string PrimaryLabel { get; }
 
-    public string SecondaryLabel => string.Empty;
-    public string? Unit => _unitResolutionService.ResolveUnit(_series);
+    public string  SecondaryLabel => string.Empty;
+    public string? Unit           => _unitResolutionService.ResolveUnit(_series);
 
 
     public ChartComputationResult? Compute()
@@ -61,8 +61,8 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         var binCount = (int)Math.Ceiling((globalMax - globalMin) / binSize);
 
         Bins = Enumerable.Range(0, binCount).
-            Select(_ => new object()).
-            ToList();
+                          Select(_ => new object()).
+                          ToList();
 
         FrequenciesPerDay.Clear();
         NormalizedFrequenciesPerDay.Clear();
@@ -83,12 +83,12 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
             FrequenciesPerDay[day] = freq;
 
             var max = freq.Values.DefaultIfEmpty(0).
-                Max();
+                           Max();
             NormalizedFrequenciesPerDay[day] = freq.ToDictionary(kvp => kvp.Key, kvp => max == 0 ? 0d : (double)kvp.Value / max);
         }
     }
 
-    private static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> Normalized) PrepareFrequencyData(Dictionary<int, List<double>> dayValues, double globalMin, double globalMax)
+    private static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> Normalized) PrepareFrequencyData(Dictionary<int, List<double>> dayValues, double globalMin, double globalMax)
     {
         if (double.IsNaN(globalMin) || double.IsNaN(globalMax) || globalMax <= globalMin)
             return (new List<(double, double)>(), 0d, new Dictionary<int, Dictionary<int, int>>(), new Dictionary<int, Dictionary<int, double>>());
@@ -100,18 +100,18 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
     {
         return new WeeklyDistributionResult
         {
-            Mins = mins.ToList(),
-            Maxs = maxs.ToList(),
-            Ranges = ranges.ToList(),
-            Counts = counts.ToList(),
-            DayValues = dayValues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            GlobalMin = globalMin,
-            GlobalMax = globalMax,
-            BinSize = binSize,
-            Bins = bins,
-            FrequenciesPerDay = freqs,
-            NormalizedFrequenciesPerDay = norm,
-            Unit = _unitResolutionService.ResolveUnit(_series)
+                Mins = mins.ToList(),
+                Maxs = maxs.ToList(),
+                Ranges = ranges.ToList(),
+                Counts = counts.ToList(),
+                DayValues = dayValues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                GlobalMin = globalMin,
+                GlobalMax = globalMax,
+                BinSize = binSize,
+                Bins = bins,
+                FrequenciesPerDay = freqs,
+                NormalizedFrequenciesPerDay = norm,
+                Unit = _unitResolutionService.ResolveUnit(_series)
         };
     }
 
@@ -121,16 +121,16 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
 
         return new ChartComputationResult
         {
-            PrimaryRawValues = mins.ToList(),
-            PrimarySmoothed = ranges.ToList(),
-            SecondaryRawValues = null,
-            SecondarySmoothed = null,
-            Timestamps = new List<DateTime>(),
-            IntervalIndices = new List<int>(),
-            NormalizedIntervals = new List<DateTime>(),
-            TickInterval = TickInterval.Day,
-            DateRange = _to - _from,
-            Unit = resolvedUnit
+                PrimaryRawValues = mins.ToList(),
+                PrimarySmoothed = ranges.ToList(),
+                SecondaryRawValues = null,
+                SecondarySmoothed = null,
+                Timestamps = new List<DateTime>(),
+                IntervalIndices = new List<int>(),
+                NormalizedIntervals = new List<DateTime>(),
+                TickInterval = TickInterval.Day,
+                DateRange = _to - _from,
+                Unit = resolvedUnit
         };
     }
 
@@ -144,7 +144,7 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
                 continue;
 
             list.Add((sample.Timestamp.LocalDateTime, // local time
-                (double)sample.Value.Value, _series.Unit.Symbol));
+                      (double)sample.Value.Value, _series.Unit.Symbol));
         }
 
         return list;
@@ -153,8 +153,8 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
     private List<(DateTime Timestamp, double Value, string Unit)> ApplyRangeFilter(List<(DateTime Timestamp, double Value, string Unit)> source)
     {
         return source.Where(x => x.Timestamp >= _from && x.Timestamp <= _to).
-            OrderBy(x => x.Timestamp).
-            ToList();
+                      OrderBy(x => x.Timestamp).
+                      ToList();
     }
 
     private void ComputePerDayStatistics(Dictionary<int, List<double>> dayValues, out double[] mins, out double[] maxs, out double[] ranges, out int[] counts)
@@ -199,20 +199,20 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         // Monday = 0 ... Sunday = 6
         var buckets = new Dictionary<int, List<double>>(7)
         {
-            { 0, new List<double>() },
-            { 1, new List<double>() },
-            { 2, new List<double>() },
-            { 3, new List<double>() },
-            { 4, new List<double>() },
-            { 5, new List<double>() },
-            { 6, new List<double>() }
+                { 0, new List<double>() },
+                { 1, new List<double>() },
+                { 2, new List<double>() },
+                { 3, new List<double>() },
+                { 4, new List<double>() },
+                { 5, new List<double>() },
+                { 6, new List<double>() }
         };
 
         foreach (var (timestamp, value) in samples)
         {
             var weekdayIndex = ((int)timestamp.DayOfWeek + 6) % 7;
             buckets[weekdayIndex].
-                Add(value);
+                    Add(value);
         }
 
         return buckets;
@@ -234,7 +234,7 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         return filtered;
     }
 
-    internal (double[] Mins, double[] Maxs, double[] Ranges, int[] Counts) Debug_ComputePerDayStatistics()
+    internal(double[] Mins, double[] Maxs, double[] Ranges, int[] Counts) Debug_ComputePerDayStatistics()
     {
         var materialized = MaterializeSeries();
         var filteredSamples = ApplyRangeFilter(materialized);
@@ -263,7 +263,7 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         }
     }
 
-    internal (double GlobalMin, double GlobalMax) Debug_ComputeGlobalBounds()
+    internal(double GlobalMin, double GlobalMax) Debug_ComputeGlobalBounds()
     {
         var materialized = MaterializeSeries();
         var filteredSamples = ApplyRangeFilter(materialized);

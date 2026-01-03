@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Validation;
-using System.Diagnostics;
 
 namespace DataVisualiser.Core.Orchestration.Selection;
 
@@ -13,7 +13,7 @@ namespace DataVisualiser.Core.Orchestration.Selection;
 /// </summary>
 public sealed class StrategySelectionService
 {
-    private readonly string _connectionString;
+    private readonly string                  _connectionString;
     private readonly ParityValidationService _parityValidationService;
     private readonly IStrategyCutOverService _strategyCutOverService;
 
@@ -28,7 +28,7 @@ public sealed class StrategySelectionService
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    public (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<HealthMetricData>> series, List<string> labels, ChartDataContext ctx, DateTime from, DateTime to)
+    public(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<HealthMetricData>> series, List<string> labels, ChartDataContext ctx, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -98,10 +98,10 @@ public sealed class StrategySelectionService
     {
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data,
-            Label1 = label,
-            From = from,
-            To = to
+                LegacyData1 = data,
+                Label1 = label,
+                From = from,
+                To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
@@ -111,10 +111,10 @@ public sealed class StrategySelectionService
     {
         var parameters = new StrategyCreationParameters
         {
-            LegacySeries = series,
-            Labels = labels,
-            From = from,
-            To = to
+                LegacySeries = series,
+                Labels = labels,
+                From = from,
+                To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);

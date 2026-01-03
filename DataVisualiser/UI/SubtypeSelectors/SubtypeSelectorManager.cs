@@ -11,7 +11,7 @@ public class SubtypeSelectorManager
     private readonly List<ComboBox> _dynamicCombos = new();
 
     private readonly List<SubtypeControlPair> _dynamicControls = new();
-    private readonly Panel _parentPanel;
+    private readonly Panel                    _parentPanel;
 
     public SubtypeSelectorManager(Panel parentPanel, ComboBox primaryCombo)
     {
@@ -51,34 +51,36 @@ public class SubtypeSelectorManager
 
         return combo;
     }
+
     private static Label CreateSubtypeLabel(int index)
     {
         return new Label
         {
-            Content = $"Metric Subtype {index}:",
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(5, 0, 0, 0)
+                Content = $"Metric Subtype {index}:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(5, 0, 0, 0)
         };
     }
+
     private ComboBox CreateSubtypeCombo(IEnumerable<string> subtypeList)
     {
         var combo = new ComboBox
         {
-            Width = 250,
-            Margin = new Thickness(5),
-            IsEditable = false,
-            IsEnabled = true
+                Width = 250,
+                Margin = new Thickness(5),
+                IsEditable = false,
+                IsEnabled = true
         };
 
         foreach (var subtype in subtypeList)
             combo.Items.Add(subtype);
 
         combo.SelectedIndex = 0;
-        combo.SelectionChanged += (_, _) =>
-            SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
+        combo.SelectionChanged += (_, _) => SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
 
         return combo;
     }
+
     private void InsertControls(Label label, ComboBox combo)
     {
         var (button, index) = FindAddSubtypeButton();
@@ -94,20 +96,15 @@ public class SubtypeSelectorManager
             _parentPanel.Children.Add(combo);
         }
     }
-    private (Button? Button, int Index) FindAddSubtypeButton()
+
+    private(Button? Button, int Index) FindAddSubtypeButton()
     {
         for (var i = _parentPanel.Children.Count - 1; i >= 0; i--)
-        {
-            if (_parentPanel.Children[i] is Button btn &&
-                btn.Content?.ToString() == "Add Subtype")
-            {
+            if (_parentPanel.Children[i] is Button btn && btn.Content?.ToString() == "Add Subtype")
                 return (btn, i);
-            }
-        }
 
         return (null, -1);
     }
-
 
 
     // ============================================================
@@ -131,11 +128,12 @@ public class SubtypeSelectorManager
     // ============================================================
     public IReadOnlyList<ComboBox> GetActiveCombos()
     {
-        return new[] { PrimaryCombo }
-            .Concat(_dynamicControls.Select(p => p.Combo))
-            .ToList();
+        return new[]
+                {
+                        PrimaryCombo
+                }.Concat(_dynamicControls.Select(p => p.Combo)).
+                  ToList();
     }
-
 
 
     // ============================================================
@@ -149,7 +147,7 @@ public class SubtypeSelectorManager
     public string? GetSecondarySubtype()
     {
         return _dynamicCombos.Count > 0 ? _dynamicCombos[0].
-            SelectedItem?.ToString() : null;
+                                          SelectedItem?.ToString() : null;
     }
 
     public IEnumerable<string> GetAllSelectedSubtypes()

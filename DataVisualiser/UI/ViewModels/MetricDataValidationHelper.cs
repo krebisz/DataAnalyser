@@ -15,7 +15,7 @@ public static class MetricDataValidationHelper
         {
             errorHandler?.Invoke(null, new ErrorEventArgs
             {
-                Message = BuildNoDataMessage(metricType, primarySubtype, false)
+                    Message = BuildNoDataMessage(metricType, primarySubtype, false)
             });
             return false;
         }
@@ -29,7 +29,7 @@ public static class MetricDataValidationHelper
         {
             errorHandler?.Invoke(null, new ErrorEventArgs
             {
-                Message = BuildNoDataMessage(metricType, secondarySubtype, true)
+                    Message = BuildNoDataMessage(metricType, secondarySubtype, true)
             });
             return false;
         }

@@ -1,67 +1,92 @@
-﻿using System;
-using System.Collections.Generic;
-using DataVisualiser.Core.Transforms.Evaluators;
+﻿using DataVisualiser.Core.Transforms.Evaluators;
 using DataVisualiser.Shared.Models;
-using Xunit;
 
-namespace DataVisualiser.Tests.Transforms
+namespace DataVisualiser.Tests.Transforms;
+
+public sealed class TransformDataHelperTests
 {
-    public sealed class TransformDataHelperTests
+    [Fact]
+    public void CreateTransformResultData_ShouldCreateOneObjectPerInput()
     {
-        [Fact]
-        public void CreateTransformResultData_ShouldCreateOneObjectPerInput()
+        var data = new List<HealthMetricData>
         {
-            var data = new List<HealthMetricData>
-            {
-                new() { NormalizedTimestamp = new DateTime(2024, 1, 1), Value = 1m },
-                new() { NormalizedTimestamp = new DateTime(2024, 1, 2), Value = 2m },
-            };
+                new()
+                {
+                        NormalizedTimestamp = new DateTime(2024, 1, 1),
+                        Value = 1m
+                },
+                new()
+                {
+                        NormalizedTimestamp = new DateTime(2024, 1, 2),
+                        Value = 2m
+                }
+        };
 
-            var results = new List<double> { 10.123456, double.NaN };
-
-            var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
-
-            Assert.Equal(2, output.Count);
-        }
-
-        [Fact]
-        public void CreateTransformResultData_ShouldFormatTimestampAndValue()
+        var results = new List<double>
         {
-            var data = new List<HealthMetricData>
-            {
-                new() { NormalizedTimestamp = new DateTime(2024, 1, 1, 13, 5, 9), Value = 1m }
-            };
+                10.123456,
+                double.NaN
+        };
 
-            var results = new List<double> { 10.123456 };
+        var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
 
-            var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
+        Assert.Equal(2, output.Count);
+    }
 
-            Assert.Single(output);
-
-            var item = output[0]!;
-            var timestamp = item.GetType().GetProperty("Timestamp")!.GetValue(item) as string;
-            var value = item.GetType().GetProperty("Value")!.GetValue(item) as string;
-
-            Assert.Equal("2024-01-01 13:05:09", timestamp);
-            Assert.Equal("10.1235", value);
-        }
-
-        [Fact]
-        public void CreateTransformResultData_ShouldRenderNaNAsStringNaN()
+    [Fact]
+    public void CreateTransformResultData_ShouldFormatTimestampAndValue()
+    {
+        var data = new List<HealthMetricData>
         {
-            var data = new List<HealthMetricData>
-            {
-                new() { NormalizedTimestamp = new DateTime(2024, 1, 1), Value = 1m }
-            };
+                new()
+                {
+                        NormalizedTimestamp = new DateTime(2024, 1, 1, 13, 5, 9),
+                        Value = 1m
+                }
+        };
 
-            var results = new List<double> { double.NaN };
+        var results = new List<double>
+        {
+                10.123456
+        };
 
-            var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
+        var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
 
-            var item = output[0]!;
-            var value = item.GetType().GetProperty("Value")!.GetValue(item) as string;
+        Assert.Single(output);
 
-            Assert.Equal("NaN", value);
-        }
+        var item = output[0]!;
+        var timestamp = item.GetType().
+                             GetProperty("Timestamp")!.GetValue(item) as string;
+        var value = item.GetType().
+                         GetProperty("Value")!.GetValue(item) as string;
+
+        Assert.Equal("2024-01-01 13:05:09", timestamp);
+        Assert.Equal("10.1235", value);
+    }
+
+    [Fact]
+    public void CreateTransformResultData_ShouldRenderNaNAsStringNaN()
+    {
+        var data = new List<HealthMetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = new DateTime(2024, 1, 1),
+                        Value = 1m
+                }
+        };
+
+        var results = new List<double>
+        {
+                double.NaN
+        };
+
+        var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
+
+        var item = output[0]!;
+        var value = item.GetType().
+                         GetProperty("Value")!.GetValue(item) as string;
+
+        Assert.Equal("NaN", value);
     }
 }

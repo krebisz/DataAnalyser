@@ -1,5 +1,3 @@
-using LiveCharts;
-using LiveCharts.Wpf;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -7,6 +5,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using LiveCharts;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.Helpers;
 
@@ -16,26 +16,26 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public class WeeklyDistributionTooltip : IDisposable
 {
-    private const int HoverCheckIntervalMs = 100; // Check every 100ms
-    private const int HoverTimeoutMs = 300; // Hide if no valid hover for 300ms AND mouse moved away
-    private readonly CartesianChart _chart;
+    private const    int                                                                           HoverCheckIntervalMs = 100; // Check every 100ms
+    private const    int                                                                           HoverTimeoutMs       = 300; // Hide if no valid hover for 300ms AND mouse moved away
+    private readonly CartesianChart                                                                _chart;
     private readonly Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> _dayIntervalData;
 
     private readonly string[] _dayNames =
     {
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday"
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
     };
 
-    private readonly Popup _tooltipPopup;
-    private DispatcherTimer? _hoverCheckTimer;
-    private int _lastValidDayIndex = -1; // Track which day we last hovered over
-    private DateTime _lastValidHoverTime;
+    private readonly Popup            _tooltipPopup;
+    private          DispatcherTimer? _hoverCheckTimer;
+    private          int              _lastValidDayIndex = -1; // Track which day we last hovered over
+    private          DateTime         _lastValidHoverTime;
 
     public WeeklyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> dayIntervalData)
     {
@@ -54,11 +54,11 @@ public class WeeklyDistributionTooltip : IDisposable
         // Create popup for tooltip
         _tooltipPopup = new Popup
         {
-            Placement = PlacementMode.RelativePoint,
-            PlacementTarget = chart,
-            StaysOpen = false, // Close when focus is lost
-            AllowsTransparency = true,
-            PopupAnimation = PopupAnimation.Fade
+                Placement = PlacementMode.RelativePoint,
+                PlacementTarget = chart,
+                StaysOpen = false, // Close when focus is lost
+                AllowsTransparency = true,
+                PopupAnimation = PopupAnimation.Fade
         };
 
         // Subscribe to chart events
@@ -74,7 +74,7 @@ public class WeeklyDistributionTooltip : IDisposable
         // Start timer to periodically check if we're still hovering over valid data
         _hoverCheckTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(HoverCheckIntervalMs)
+                Interval = TimeSpan.FromMilliseconds(HoverCheckIntervalMs)
         };
         _hoverCheckTimer.Tick += OnHoverCheckTimerTick;
         _hoverCheckTimer.Start();
@@ -119,7 +119,7 @@ public class WeeklyDistributionTooltip : IDisposable
         var isOverChart = mousePos.X >= 0 && mousePos.Y >= 0 && mousePos.X <= _chart.ActualWidth && mousePos.Y <= _chart.ActualHeight;
 
         if (!isOverChart)
-            // Mouse has left the chart - hide immediately
+                // Mouse has left the chart - hide immediately
             HideTooltip();
 
         // Mouse is still over chart - check if we've received a valid hover recently
@@ -246,9 +246,9 @@ public class WeeklyDistributionTooltip : IDisposable
         if (intervals.Count > 15)
             stackPanel.Children.Add(new ScrollViewer
             {
-                Content = intervalPanel,
-                MaxHeight = 400,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+                    Content = intervalPanel,
+                    MaxHeight = 400,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto
             });
         else
             stackPanel.Children.Add(intervalPanel);
@@ -260,9 +260,9 @@ public class WeeklyDistributionTooltip : IDisposable
     {
         return new StackPanel
         {
-            Orientation = Orientation.Vertical,
-            Background = new SolidColorBrush(Color.FromRgb(245, 245, 245)),
-            Margin = new Thickness(8)
+                Orientation = Orientation.Vertical,
+                Background = new SolidColorBrush(Color.FromRgb(245, 245, 245)),
+                Margin = new Thickness(8)
         };
     }
 
@@ -270,11 +270,11 @@ public class WeeklyDistributionTooltip : IDisposable
     {
         return new TextBlock
         {
-            Text = _dayNames[dayIndex],
-            FontWeight = FontWeights.Bold,
-            FontSize = 14,
-            Margin = new Thickness(0, 0, 0, 8),
-            Foreground = new SolidColorBrush(Color.FromRgb(50, 50, 50))
+                Text = _dayNames[dayIndex],
+                FontWeight = FontWeights.Bold,
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 0, 8),
+                Foreground = new SolidColorBrush(Color.FromRgb(50, 50, 50))
         };
     }
 
@@ -283,11 +283,11 @@ public class WeeklyDistributionTooltip : IDisposable
         var totalCount = intervals.Sum(i => i.Count);
         return new TextBlock
         {
-            Text = $"Total Values: {totalCount}",
-            FontSize = 12,
-            FontWeight = FontWeights.SemiBold,
-            Margin = new Thickness(0, 0, 0, 6),
-            Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
+                Text = $"Total Values: {totalCount}",
+                FontSize = 12,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 6),
+                Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
         };
     }
 
@@ -295,9 +295,9 @@ public class WeeklyDistributionTooltip : IDisposable
     {
         return new Border
         {
-            Height = 1,
-            Background = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
-            Margin = new Thickness(0, 0, 0, 6)
+                Height = 1,
+                Background = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                Margin = new Thickness(0, 0, 0, 6)
         };
     }
 
@@ -305,8 +305,8 @@ public class WeeklyDistributionTooltip : IDisposable
     {
         var panel = new StackPanel
         {
-            Orientation = Orientation.Vertical,
-            MaxHeight = 400
+                Orientation = Orientation.Vertical,
+                MaxHeight = 400
         };
 
         foreach (var interval in intervals.OrderBy(i => i.Min))
@@ -324,35 +324,35 @@ public class WeeklyDistributionTooltip : IDisposable
     {
         var panel = new StackPanel
         {
-            Orientation = Orientation.Horizontal,
-            Margin = new Thickness(0, 2, 0, 2)
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 2, 0, 2)
         };
 
         panel.Children.Add(new TextBlock
         {
-            Text = $"[{interval.Min:F2} - {interval.Max:F2}]",
-            FontSize = 11,
-            FontFamily = new FontFamily("Consolas"),
-            Width = 120,
-            Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 60))
+                Text = $"[{interval.Min:F2} - {interval.Max:F2}]",
+                FontSize = 11,
+                FontFamily = new FontFamily("Consolas"),
+                Width = 120,
+                Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 60))
         });
 
         panel.Children.Add(new TextBlock
         {
-            Text = $"{interval.Percentage:F1}%",
-            FontSize = 11,
-            Width = 60,
-            TextAlignment = TextAlignment.Right,
-            Margin = new Thickness(8, 0, 0, 0),
-            Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
+                Text = $"{interval.Percentage:F1}%",
+                FontSize = 11,
+                Width = 60,
+                TextAlignment = TextAlignment.Right,
+                Margin = new Thickness(8, 0, 0, 0),
+                Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
         });
 
         panel.Children.Add(new TextBlock
         {
-            Text = $"Count: {interval.Count}",
-            FontSize = 11,
-            Margin = new Thickness(8, 0, 0, 0),
-            Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
+                Text = $"Count: {interval.Count}",
+                FontSize = 11,
+                Margin = new Thickness(8, 0, 0, 0),
+                Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
         });
 
         return panel;
@@ -362,19 +362,19 @@ public class WeeklyDistributionTooltip : IDisposable
     {
         return new Border
         {
-            Child = content,
-            Background = Brushes.White,
-            BorderBrush = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
-            Effect = new DropShadowEffect
-            {
-                Color = Colors.Black,
-                Direction = 315,
-                ShadowDepth = 4,
-                Opacity = 0.3,
-                BlurRadius = 5
-            }
+                Child = content,
+                Background = Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Effect = new DropShadowEffect
+                {
+                        Color = Colors.Black,
+                        Direction = 315,
+                        ShadowDepth = 4,
+                        Opacity = 0.3,
+                        BlurRadius = 5
+                }
         };
     }
 }

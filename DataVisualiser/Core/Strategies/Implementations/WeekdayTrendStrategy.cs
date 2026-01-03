@@ -23,9 +23,9 @@ public sealed class WeekdayTrendStrategy
 
         var result = new WeekdayTrendResult
         {
-            From = from,
-            To = to,
-            Unit = _unitResolutionService.ResolveUnit(filtered)
+                From = from,
+                To = to,
+                Unit = _unitResolutionService.ResolveUnit(filtered)
         };
 
         if (filtered.Count == 0)
@@ -49,7 +49,7 @@ public sealed class WeekdayTrendStrategy
         return StrategyComputationHelper.FilterAndOrderByRange(data, from, to);
     }
 
-    private (Dictionary<int, WeekdayTrendSeries> SeriesByDay, double GlobalMin, double GlobalMax) BuildWeekdaySeries(List<HealthMetricData> filtered)
+    private(Dictionary<int, WeekdayTrendSeries> SeriesByDay, double GlobalMin, double GlobalMax) BuildWeekdaySeries(List<HealthMetricData> filtered)
     {
         var seriesByDay = new Dictionary<int, WeekdayTrendSeries>();
 
@@ -64,27 +64,27 @@ public sealed class WeekdayTrendStrategy
             var dayOfWeek = IndexToDayOfWeek(dayIndex);
 
             var points = weekdayGroup.GroupBy(d => d.NormalizedTimestamp.Date).
-                OrderBy(g => g.Key).
-                Select(g =>
-                {
-                    var avg = g.Average(x => (double)x.Value!.Value);
+                                      OrderBy(g => g.Key).
+                                      Select(g =>
+                                      {
+                                          var avg = g.Average(x => (double)x.Value!.Value);
 
-                    globalMin = Math.Min(globalMin, avg);
-                    globalMax = Math.Max(globalMax, avg);
+                                          globalMin = Math.Min(globalMin, avg);
+                                          globalMax = Math.Max(globalMax, avg);
 
-                    return new WeekdayTrendPoint
-                    {
-                        Date = g.Key,
-                        Value = avg,
-                        SampleCount = g.Count()
-                    };
-                }).
-                ToList();
+                                          return new WeekdayTrendPoint
+                                          {
+                                                  Date = g.Key,
+                                                  Value = avg,
+                                                  SampleCount = g.Count()
+                                          };
+                                      }).
+                                      ToList();
 
             seriesByDay[dayIndex] = new WeekdayTrendSeries
             {
-                Day = dayOfWeek,
-                Points = points
+                    Day = dayOfWeek,
+                    Points = points
             };
         }
 

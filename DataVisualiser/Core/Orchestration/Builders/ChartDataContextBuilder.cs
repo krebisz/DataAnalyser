@@ -22,11 +22,11 @@ public sealed class ChartDataContextBuilder
     ///     - primarySubtype = first selected subtype
     ///     - secondarySubtype = second selected subtype
     /// </summary>
-    public ChartDataContext Build(string metricType, string? primarySubtype, // First selected subtype
-        string? secondarySubtype, // Second selected subtype
-        IEnumerable<HealthMetricData> data1, // First selected subtype data (primary)
-        IEnumerable<HealthMetricData>? data2, // Second selected subtype data (secondary)
-        DateTime from, DateTime to)
+    public ChartDataContext Build(string                         metricType,       string? primarySubtype, // First selected subtype
+                                  string?                        secondarySubtype, // Second selected subtype
+                                  IEnumerable<HealthMetricData>  data1,            // First selected subtype data (primary)
+                                  IEnumerable<HealthMetricData>? data2,            // Second selected subtype data (secondary)
+                                  DateTime                       from,             DateTime to)
     {
         // Normalize inputs - maintain ordering: list1 = first selected, list2 = second selected
         var list1 = data1?.ToList() ?? new List<HealthMetricData>(); // First selected subtype
@@ -55,32 +55,32 @@ public sealed class ChartDataContextBuilder
         // Construct full context
         return new ChartDataContext
         {
-            Data1 = list1,
-            Data2 = list2,
+                Data1 = list1,
+                Data2 = list2,
 
-            Timestamps = timestamps,
+                Timestamps = timestamps,
 
-            RawValues1 = raw1,
-            RawValues2 = raw2,
-            SmoothedValues1 = smooth1,
-            SmoothedValues2 = smooth2,
+                RawValues1 = raw1,
+                RawValues2 = raw2,
+                SmoothedValues1 = smooth1,
+                SmoothedValues2 = smooth2,
 
-            DifferenceValues = diff,
-            RatioValues = ratio,
-            NormalizedValues1 = norm1,
-            NormalizedValues2 = norm2,
+                DifferenceValues = diff,
+                RatioValues = ratio,
+                NormalizedValues1 = norm1,
+                NormalizedValues2 = norm2,
 
-            DisplayName1 = display1,
-            DisplayName2 = display2,
+                DisplayName1 = display1,
+                DisplayName2 = display2,
 
-            MetricType = metricType,
-            PrimarySubtype = primarySubtype,
-            SecondarySubtype = secondarySubtype,
+                MetricType = metricType,
+                PrimarySubtype = primarySubtype,
+                SecondarySubtype = secondarySubtype,
 
-            From = from,
-            To = to,
+                From = from,
+                To = to,
 
-            SemanticMetricCount = secondarySubtype == null ? 1 : 2
+                SemanticMetricCount = secondarySubtype == null ? 1 : 2
         };
     }
 
@@ -108,10 +108,10 @@ public sealed class ChartDataContextBuilder
     private static IReadOnlyList<DateTime> BuildUnifiedTimeline(List<HealthMetricData> list1, List<HealthMetricData> list2)
     {
         return list1.Select(d => d.NormalizedTimestamp.Date).
-            Concat(list2.Select(d => d.NormalizedTimestamp.Date)).
-            Distinct().
-            OrderBy(d => d).
-            ToList();
+                     Concat(list2.Select(d => d.NormalizedTimestamp.Date)).
+                     Distinct().
+                     OrderBy(d => d).
+                     ToList();
     }
 
     // ---------------------------------------------------------
@@ -121,8 +121,8 @@ public sealed class ChartDataContextBuilder
     {
         // Map: date -> numeric value
         var dict = source.GroupBy(d => d.NormalizedTimestamp.Date).
-            ToDictionary(g => g.Key, g => Convert.ToDouble(g.First().
-                Value ?? 0m));
+                          ToDictionary(g => g.Key, g => Convert.ToDouble(g.First().
+                                                                           Value ?? 0m));
 
         var lastValue = 0.0;
 
@@ -194,13 +194,13 @@ public sealed class ChartDataContextBuilder
         if (max <= 0)
             return values.ToList();
         return values.Select(v => v / max).
-            ToList();
+                      ToList();
     }
 
     // ---------------------------------------------------------
     // LABEL GENERATION
     // ---------------------------------------------------------
-    private static (string DisplayName1, string DisplayName2) BuildDisplayNames(string metricType, string? primarySubtype, string? secondarySubtype)
+    private static(string DisplayName1, string DisplayName2) BuildDisplayNames(string metricType, string? primarySubtype, string? secondarySubtype)
     {
         var display1 = !string.IsNullOrWhiteSpace(primarySubtype) && primarySubtype != "(All)" ? $"{metricType} - {primarySubtype}" : metricType;
 

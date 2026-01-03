@@ -14,12 +14,12 @@ using UnitResolutionService = UnitResolutionService;
 /// </summary>
 public sealed class TransformResultStrategy : IChartComputationStrategy
 {
-    private readonly List<double> _computedValues;
+    private readonly List<double>           _computedValues;
     private readonly List<HealthMetricData> _data;
-    private readonly DateTime _from;
-    private readonly ISmoothingService _smoothingService;
-    private readonly ITimelineService _timelineService;
-    private readonly DateTime _to;
+    private readonly DateTime               _from;
+    private readonly ISmoothingService      _smoothingService;
+    private readonly ITimelineService       _timelineService;
+    private readonly DateTime               _to;
     private readonly IUnitResolutionService _unitResolutionService;
 
     public TransformResultStrategy(List<HealthMetricData> data, List<double> computedValues, string label, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
@@ -36,8 +36,8 @@ public sealed class TransformResultStrategy : IChartComputationStrategy
 
     public string PrimaryLabel { get; }
 
-    public string SecondaryLabel => string.Empty;
-    public string? Unit { get; private set; }
+    public string  SecondaryLabel => string.Empty;
+    public string? Unit           { get; private set; }
 
     public ChartComputationResult? Compute()
     {
@@ -72,27 +72,27 @@ public sealed class TransformResultStrategy : IChartComputationStrategy
 
         // Convert computed values to HealthMetricData for smoothing
         var dataForSmoothing = _data.Zip(_computedValues, (d, v) => new HealthMetricData
-        {
-            NormalizedTimestamp = d.NormalizedTimestamp,
-            Value = (decimal)v,
-            Unit = d.Unit,
-            Provider = d.Provider
-        }).
-            ToList();
+                                     {
+                                             NormalizedTimestamp = d.NormalizedTimestamp,
+                                             Value = (decimal)v,
+                                             Unit = d.Unit,
+                                             Provider = d.Provider
+                                     }).
+                                     ToList();
 
         // Use unified smoothing service
         var smoothedValues = _smoothingService.SmoothSeries(dataForSmoothing, timestamps, _from, _to);
 
         return new ChartComputationResult
         {
-            Timestamps = timestamps,
-            IntervalIndices = intervalIndices.ToList(),
-            NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
-            PrimaryRawValues = rawValues,
-            PrimarySmoothed = smoothedValues.ToList(),
-            TickInterval = timeline.TickInterval,
-            DateRange = timeline.DateRange,
-            Unit = Unit
+                Timestamps = timestamps,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
+                PrimaryRawValues = rawValues,
+                PrimarySmoothed = smoothedValues.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
+                Unit = Unit
         };
     }
 }

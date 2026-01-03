@@ -1,7 +1,7 @@
+using System.Diagnostics;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Shared.Models;
-using System.Diagnostics;
 
 namespace DataVisualiser.Core.Transforms.Evaluators;
 
@@ -116,7 +116,7 @@ public static class TransformExpressionEvaluator
             return ResolveMetricLabel(expression, metricLabels);
 
         var operandLabels = expression.Operands.Select(op => ResolveOperandLabel(op, metricLabels)).
-            ToList();
+                                       ToList();
 
         var symbol = GetOperationSymbol(expression.Operation.Id);
         return string.Join($" {symbol} ", operandLabels);
@@ -155,11 +155,11 @@ public static class TransformExpressionEvaluator
     {
         return operationId switch
         {
-            "Log" => "log",
-            "Sqrt" => "√",
-            "Add" => "+",
-            "Subtract" => "-",
-            _ => operationId
+                "Log"      => "log",
+                "Sqrt"     => "√",
+                "Add"      => "+",
+                "Subtract" => "-",
+                _          => operationId
         };
     }
 
@@ -173,9 +173,9 @@ public static class TransformExpressionEvaluator
     public static string GenerateTransformLabel(string operation, IReadOnlyList<IReadOnlyList<HealthMetricData>> metrics, ChartDataContext? ctx)
     {
         var metricIndices = metrics.Count > 0 ? Enumerable.Range(0, metrics.Count).
-            ToArray() : new[]
+                                                           ToArray() : new[]
         {
-            0
+                0
         };
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, metricIndices);
 
@@ -225,11 +225,11 @@ public static class TransformExpressionEvaluator
     {
         return operationTag switch
         {
-            "Log" => "Log(Result)",
-            "Sqrt" => "√(Result)",
-            "Add" => "Result (Sum)",
-            "Subtract" => "Result (Difference)",
-            _ => "Transform Result"
+                "Log"      => "Log(Result)",
+                "Sqrt"     => "√(Result)",
+                "Add"      => "Result (Sum)",
+                "Subtract" => "Result (Difference)",
+                _          => "Transform Result"
         };
     }
 
@@ -237,7 +237,7 @@ public static class TransformExpressionEvaluator
     ///     Aligns two metric series by timestamp, keeping only points that exist in both.
     ///     Required for transform expression evaluation which expects aligned data.
     /// </summary>
-    public static (List<HealthMetricData>, List<HealthMetricData>) AlignMetricsByTimestamp(List<HealthMetricData> data1, List<HealthMetricData> data2)
+    public static(List<HealthMetricData>, List<HealthMetricData>) AlignMetricsByTimestamp(List<HealthMetricData> data1, List<HealthMetricData> data2)
     {
         var aligned1 = new List<HealthMetricData>();
         var aligned2 = new List<HealthMetricData>();
@@ -260,10 +260,10 @@ public static class TransformExpressionEvaluator
     public static List<object> CreateTransformResultData(List<HealthMetricData> dataList, List<double> results)
     {
         return dataList.Zip(results, (d, r) => new
-        {
-            Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-            Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
-        }).
-            ToList<object>();
+                        {
+                                Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
+                        }).
+                        ToList<object>();
     }
 }

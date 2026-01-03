@@ -4,14 +4,14 @@ using DataFileReader.Services;
 
 internal class Program
 {
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         var parsers = new IHealthFileParser[]
-            {
-            new SamsungJsonParser(),
-            new SamsungCsvParser(),
-            new LegacyJsonParser()
-            };
+        {
+                new SamsungJsonParser(),
+                new SamsungCsvParser(),
+                new LegacyJsonParser()
+        };
 
         var aggregator = new MetricAggregator();
         var fileProcessor = new FileProcessingService(parsers);

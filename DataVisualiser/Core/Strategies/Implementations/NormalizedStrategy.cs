@@ -11,16 +11,16 @@ using UnitResolutionService = UnitResolutionService;
 
 public sealed class NormalizedStrategy : IChartComputationStrategy
 {
-    private readonly DateTime _from;
-    private readonly string _labelLeft;
-    private readonly string _labelRight;
+    private readonly DateTime                      _from;
+    private readonly string                        _labelLeft;
+    private readonly string                        _labelRight;
     private readonly IEnumerable<HealthMetricData> _left;
-    private readonly NormalizationMode _mode;
+    private readonly NormalizationMode             _mode;
     private readonly IEnumerable<HealthMetricData> _right;
-    private readonly ISmoothingService _smoothingService;
-    private readonly ITimelineService _timelineService;
-    private readonly DateTime _to;
-    private readonly IUnitResolutionService _unitResolutionService;
+    private readonly ISmoothingService             _smoothingService;
+    private readonly ITimelineService              _timelineService;
+    private readonly DateTime                      _to;
+    private readonly IUnitResolutionService        _unitResolutionService;
 
     public NormalizedStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to) : this(left, right, labelLeft, labelRight, from, to, NormalizationMode.PercentageOfMax)
     {
@@ -66,9 +66,9 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
 
         // Use unified smoothing service
         var interpSmoothed1 = _smoothingService.SmoothSeries(ordered1, timestamps, _from, _to).
-            ToList();
+                                                ToList();
         var interpSmoothed2 = _smoothingService.SmoothSeries(ordered2, timestamps, _from, _to).
-            ToList();
+                                                ToList();
 
         var (rawValues1, rawValues2) = ExtractAlignedRawValues(ordered1, ordered2, timestamps);
         var normalization = NormalizeSeries(rawValues1, rawValues2, interpSmoothed1, interpSmoothed2);
@@ -82,26 +82,26 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
 
         return new ChartComputationResult
         {
-            Timestamps = timestamps,
-            IntervalIndices = intervalIndices.ToList(),
-            NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
-            PrimaryRawValues = raw1,
-            PrimarySmoothed = smooth1.ToList(),
-            SecondaryRawValues = raw2,
-            SecondarySmoothed = smooth2.ToList(),
-            TickInterval = timeline.TickInterval,
-            DateRange = timeline.DateRange,
-            Unit = Unit
+                Timestamps = timestamps,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
+                PrimaryRawValues = raw1,
+                PrimarySmoothed = smooth1.ToList(),
+                SecondaryRawValues = raw2,
+                SecondarySmoothed = smooth2.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
+                Unit = Unit
         };
     }
 
-    private static (List<double> Raw1, List<double> Raw2) ExtractAlignedRawValues(List<HealthMetricData> ordered1, List<HealthMetricData> ordered2, List<DateTime> timestamps)
+    private static(List<double> Raw1, List<double> Raw2) ExtractAlignedRawValues(List<HealthMetricData> ordered1, List<HealthMetricData> ordered2, List<DateTime> timestamps)
     {
         var (dict1, dict2) = StrategyComputationHelper.CreateTimestampValueDictionaries(ordered1, ordered2);
         return StrategyComputationHelper.ExtractAlignedRawValues(timestamps, dict1, dict2);
     }
 
-    private (List<double> Raw1, List<double> Raw2, List<double> Smoothed1, List<double> Smoothed2)? NormalizeSeries(List<double> raw1, List<double> raw2, List<double> smoothed1, List<double> smoothed2)
+    private(List<double> Raw1, List<double> Raw2, List<double> Smoothed1, List<double> Smoothed2)? NormalizeSeries(List<double> raw1, List<double> raw2, List<double> smoothed1, List<double> smoothed2)
     {
         if (_mode != NormalizationMode.RelativeToMax)
         {

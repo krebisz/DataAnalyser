@@ -10,22 +10,7 @@ namespace DataVisualiser.Core.Strategies.Factories;
 /// </summary>
 public sealed class CombinedMetricStrategyFactory : StrategyFactoryBase
 {
-    public CombinedMetricStrategyFactory()
-        : base(
-            cmsFactory: (ctx, p) => new CombinedMetricStrategy(
-                ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"),
-                ctx.SecondaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("SecondaryCms is null"),
-                p.Label1,
-                p.Label2,
-                p.From,
-                p.To),
-            legacyFactory: p => new CombinedMetricStrategy(
-                p.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                p.LegacyData2 ?? Array.Empty<HealthMetricData>(),
-                p.Label1,
-                p.Label2,
-                p.From,
-                p.To))
+    public CombinedMetricStrategyFactory() : base((ctx, p) => new CombinedMetricStrategy(ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"), ctx.SecondaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("SecondaryCms is null"), p.Label1, p.Label2, p.From, p.To), p => new CombinedMetricStrategy(p.LegacyData1 ?? Array.Empty<HealthMetricData>(), p.LegacyData2 ?? Array.Empty<HealthMetricData>(), p.Label1, p.Label2, p.From, p.To))
     {
     }
 }

@@ -16,23 +16,23 @@ public sealed class UnitResolutionService : IUnitResolutionService
             return null;
 
         return data.FirstOrDefault()?.
-            Unit;
+                    Unit;
     }
 
     public string? ResolveUnit(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right)
     {
         if (left == null || left.Count == 0)
             return right?.FirstOrDefault()?.
-                Unit;
+                          Unit;
 
         if (right == null || right.Count == 0)
             return left.FirstOrDefault()?.
-                Unit;
+                        Unit;
 
         var leftUnit = left.FirstOrDefault()?.
-            Unit;
+                            Unit;
         var rightUnit = right.FirstOrDefault()?.
-            Unit;
+                              Unit;
 
         // If both units match, return that unit
         if (leftUnit == rightUnit)
@@ -75,9 +75,9 @@ public sealed class UnitResolutionService : IUnitResolutionService
             return null;
 
         var unitLeft = left.FirstOrDefault()?.
-            Unit;
+                            Unit;
         var unitRight = right.FirstOrDefault()?.
-            Unit;
+                              Unit;
 
         // Return compound unit only if both are non-empty
         if (!string.IsNullOrEmpty(unitLeft) && !string.IsNullOrEmpty(unitRight))

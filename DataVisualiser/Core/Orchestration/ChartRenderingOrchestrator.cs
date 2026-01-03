@@ -21,10 +21,10 @@ namespace DataVisualiser.Core.Orchestration;
 /// </summary>
 public sealed class ChartRenderingOrchestrator
 {
-    private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
-    private readonly IStrategyCutOverService _strategyCutOverService;
+    private readonly ChartUpdateCoordinator    _chartUpdateCoordinator;
+    private readonly string?                   _connectionString;
+    private readonly IStrategyCutOverService   _strategyCutOverService;
     private readonly WeeklyDistributionService _weeklyDistributionService;
-    private readonly string? _connectionString;
 
     public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
     {
@@ -154,24 +154,26 @@ public sealed class ChartRenderingOrchestrator
 
         if (series.Count > 2)
         {
-            additionalSeries = series.Skip(2).ToList();
-            additionalLabels = labels.Skip(2).ToList();
+            additionalSeries = series.Skip(2).
+                                      ToList();
+            additionalLabels = labels.Skip(2).
+                                      ToList();
         }
 
         // Use existing RenderPrimaryChart method
         await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels);
     }
 
-    private static (List<IEnumerable<HealthMetricData>> Series, List<string> Labels) BuildSeriesAndLabels(ChartDataContext ctx, IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries, IReadOnlyList<string>? additionalLabels)
+    private static(List<IEnumerable<HealthMetricData>> Series, List<string> Labels) BuildSeriesAndLabels(ChartDataContext ctx, IReadOnlyList<IEnumerable<HealthMetricData>>? additionalSeries, IReadOnlyList<string>? additionalLabels)
     {
         var series = new List<IEnumerable<HealthMetricData>>
         {
-            ctx.Data1 ?? Array.Empty<HealthMetricData>()
+                ctx.Data1 ?? Array.Empty<HealthMetricData>()
         };
 
         var labels = new List<string>
         {
-            ctx.DisplayName1 ?? string.Empty
+                ctx.DisplayName1 ?? string.Empty
         };
 
         if (ctx.Data2 != null && ctx.Data2.Any())
@@ -183,7 +185,7 @@ public sealed class ChartRenderingOrchestrator
         if (additionalSeries != null && additionalLabels != null)
             for (var i = 0; i < Math.Min(additionalSeries.Count, additionalLabels.Count); i++)
                 if (additionalSeries[i] != null && additionalSeries[i].
-                        Any())
+                            Any())
                 {
                     series.Add(additionalSeries[i]);
                     labels.Add(additionalLabels[i]);
@@ -199,10 +201,10 @@ public sealed class ChartRenderingOrchestrator
         if (series.Count > 2)
             return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, new StrategyCreationParameters
             {
-                LegacySeries = series,
-                Labels = labels,
-                From = ctx.From,
-                To = ctx.To
+                    LegacySeries = series,
+                    Labels = labels,
+                    From = ctx.From,
+                    To = ctx.To
             });
 
         if (series.Count == 2)
@@ -211,21 +213,21 @@ public sealed class ChartRenderingOrchestrator
 
             return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, new StrategyCreationParameters
             {
-                LegacyData1 = series[0],
-                LegacyData2 = series[1],
-                Label1 = labels[0],
-                Label2 = labels[1],
-                From = ctx.From,
-                To = ctx.To
+                    LegacyData1 = series[0],
+                    LegacyData2 = series[1],
+                    Label1 = labels[0],
+                    Label2 = labels[1],
+                    From = ctx.From,
+                    To = ctx.To
             });
         }
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, new StrategyCreationParameters
         {
-            LegacyData1 = series[0],
-            Label1 = labels[0],
-            From = ctx.From,
-            To = ctx.To
+                LegacyData1 = series[0],
+                Label1 = labels[0],
+                From = ctx.From,
+                To = ctx.To
         });
     }
 
@@ -234,13 +236,13 @@ public sealed class ChartRenderingOrchestrator
     {
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = ctx.Data1,
-            LegacyData2 = ctx.Data2,
-            Label1 = ctx.DisplayName1,
-            Label2 = ctx.DisplayName2,
-            From = ctx.From,
-            To = ctx.To,
-            NormalizationMode = normalizationMode
+                LegacyData1 = ctx.Data1,
+                LegacyData2 = ctx.Data2,
+                Label1 = ctx.DisplayName1,
+                Label2 = ctx.DisplayName2,
+                From = ctx.From,
+                To = ctx.To,
+                NormalizationMode = normalizationMode
         };
 
         var strategy = _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
@@ -259,12 +261,12 @@ public sealed class ChartRenderingOrchestrator
 
         // Use transform infrastructure to compute the operation
         var allData1List = ctx.Data1.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+                               OrderBy(d => d.NormalizedTimestamp).
+                               ToList();
 
         var allData2List = ctx.Data2.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+                               OrderBy(d => d.NormalizedTimestamp).
+                               ToList();
 
         if (allData1List.Count == 0 || allData2List.Count == 0)
             return;
@@ -279,8 +281,8 @@ public sealed class ChartRenderingOrchestrator
         List<double> computedResults;
         var metricsList = new List<IReadOnlyList<HealthMetricData>>
         {
-            alignedData.Item1,
-            alignedData.Item2
+                alignedData.Item1,
+                alignedData.Item2
         };
 
         if (expression == null)
@@ -288,15 +290,15 @@ public sealed class ChartRenderingOrchestrator
             // Fallback to legacy approach
             var op = operation switch
             {
-                "Subtract" => BinaryOperators.Difference,
-                "Divide" => BinaryOperators.Ratio,
-                _ => (a, b) => a
+                    "Subtract" => BinaryOperators.Difference,
+                    "Divide"   => BinaryOperators.Ratio,
+                    _          => (a, b) => a
             };
 
             var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
-                ToList();
+                                         ToList();
             var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
-                ToList();
+                                         ToList();
             computedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
         }
         else
@@ -337,15 +339,15 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Builds the initial series list and labels from primary and secondary data.
     /// </summary>
-    private static (List<IEnumerable<HealthMetricData>> series, List<string> labels) BuildInitialSeriesList(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData>? data2, string displayName1, string displayName2)
+    private static(List<IEnumerable<HealthMetricData>> series, List<string> labels) BuildInitialSeriesList(IEnumerable<HealthMetricData> data1, IEnumerable<HealthMetricData>? data2, string displayName1, string displayName2)
     {
         var series = new List<IEnumerable<HealthMetricData>>
         {
-            data1
+                data1
         };
         var labels = new List<string>
         {
-            displayName1
+                displayName1
         };
 
         if (data2 != null && data2.Any())

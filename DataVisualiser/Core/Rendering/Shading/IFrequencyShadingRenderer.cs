@@ -1,5 +1,5 @@
-using LiveCharts.Wpf;
 using System.Windows.Media;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.Shading;
 

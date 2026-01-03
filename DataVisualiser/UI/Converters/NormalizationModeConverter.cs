@@ -1,6 +1,7 @@
-using DataVisualiser.Shared.Models;
 using System.Globalization;
 using System.Windows.Data;
+using DataVisualiser.Shared.Models;
+
 // where NormalizationMode is defined
 
 namespace DataVisualiser.UI.Converters;

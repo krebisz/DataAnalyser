@@ -9,18 +9,7 @@ namespace DataVisualiser.Core.Strategies.Factories;
 /// </summary>
 public sealed class WeeklyDistributionStrategyFactory : StrategyFactoryBase
 {
-    public WeeklyDistributionStrategyFactory()
-        : base(
-            cmsFactory: (ctx, p) => new CmsWeeklyDistributionStrategy(
-                ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"),
-                p.From,
-                p.To,
-                p.Label1),
-            legacyFactory: p => new WeeklyDistributionStrategy(
-                p.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-                p.Label1,
-                p.From,
-                p.To))
+    public WeeklyDistributionStrategyFactory() : base((ctx, p) => new CmsWeeklyDistributionStrategy(ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null"), p.From, p.To, p.Label1), p => new WeeklyDistributionStrategy(p.LegacyData1 ?? Array.Empty<HealthMetricData>(), p.Label1, p.From, p.To))
     {
     }
 }

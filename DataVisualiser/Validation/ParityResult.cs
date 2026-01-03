@@ -5,7 +5,7 @@ namespace DataVisualiser.Validation;
 /// </summary>
 public class ParityResult
 {
-    public bool Passed { get; init; }
-    public string? Message { get; init; }
+    public bool                        Passed  { get; init; }
+    public string?                     Message { get; init; }
     public Dictionary<string, object>? Details { get; init; }
 }

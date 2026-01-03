@@ -2,11 +2,11 @@ namespace DataVisualiser.UI.State;
 
 public class MetricState
 {
-    public string? SelectedMetricType { get; set; }
-    public List<string> SelectedSubtypes { get; } = new();
+    public string?      SelectedMetricType { get; set; }
+    public List<string> SelectedSubtypes   { get; } = new();
 
     public DateTime? FromDate { get; set; }
-    public DateTime? ToDate { get; set; }
+    public DateTime? ToDate   { get; set; }
 
     public string? ResolutionTableName { get; set; }
 

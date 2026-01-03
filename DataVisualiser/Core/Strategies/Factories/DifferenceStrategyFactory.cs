@@ -9,19 +9,13 @@ namespace DataVisualiser.Core.Strategies.Factories;
 /// </summary>
 public sealed class DifferenceStrategyFactory : StrategyFactoryBase
 {
-    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p) =>
-        new DifferenceStrategy(
-            p.LegacyData1 ?? Array.Empty<HealthMetricData>(),
-            p.LegacyData2 ?? Array.Empty<HealthMetricData>(),
-            p.Label1,
-            p.Label2,
-            p.From,
-            p.To);
-
-    public DifferenceStrategyFactory()
-        : base(
-            cmsFactory: (ctx, p) => CreateLegacy(p), // TODO: Implement CMS Difference strategy
-            legacyFactory: CreateLegacy)
+    public DifferenceStrategyFactory() : base((ctx, p) => CreateLegacy(p), // TODO: Implement CMS Difference strategy
+            CreateLegacy)
     {
+    }
+
+    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p)
+    {
+        return new DifferenceStrategy(p.LegacyData1 ?? Array.Empty<HealthMetricData>(), p.LegacyData2 ?? Array.Empty<HealthMetricData>(), p.Label1, p.Label2, p.From, p.To);
     }
 }

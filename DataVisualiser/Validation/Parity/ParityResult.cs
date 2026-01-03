@@ -2,14 +2,14 @@ namespace DataVisualiser.Validation.Parity;
 
 public sealed class ParityResult
 {
-    public bool Passed { get; init; }
+    public bool                         Passed   { get; init; }
     public IReadOnlyList<ParityFailure> Failures { get; init; } = Array.Empty<ParityFailure>();
 
     public static ParityResult Pass()
     {
         return new ParityResult
         {
-            Passed = true
+                Passed = true
         };
     }
 
@@ -17,8 +17,8 @@ public sealed class ParityResult
     {
         return new ParityResult
         {
-            Passed = false,
-            Failures = failures ?? Array.Empty<ParityFailure>()
+                Passed = false,
+                Failures = failures ?? Array.Empty<ParityFailure>()
         };
     }
 }

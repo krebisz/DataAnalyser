@@ -19,11 +19,11 @@ public static class CmsConfiguration
     /// </summary>
     public static bool UseCmsForSingleMetric { get; set; } = true; // ENABLED for testing
 
-    public static bool UseCmsForMultiMetric { get; set; }
+    public static bool UseCmsForMultiMetric    { get; set; }
     public static bool UseCmsForCombinedMetric { get; set; }
-    public static bool UseCmsForDifference { get; set; }
-    public static bool UseCmsForRatio { get; set; }
-    public static bool UseCmsForNormalized { get; set; }
+    public static bool UseCmsForDifference     { get; set; }
+    public static bool UseCmsForRatio          { get; set; }
+    public static bool UseCmsForNormalized     { get; set; }
 
     /// <summary>
     ///     Checks if CMS should be used for a specific strategy type.
@@ -35,27 +35,13 @@ public static class CmsConfiguration
 
         return strategyType switch
         {
-            "SingleMetricStrategy" => UseCmsForSingleMetric,
-            "MultiMetricStrategy" => UseCmsForMultiMetric,
-            "CombinedMetricStrategy" => UseCmsForCombinedMetric,
-            "DifferenceStrategy" => UseCmsForDifference,
-            "RatioStrategy" => UseCmsForRatio,
-            "NormalizedStrategy" => UseCmsForNormalized,
-            _ => false
+                "SingleMetricStrategy"   => UseCmsForSingleMetric,
+                "MultiMetricStrategy"    => UseCmsForMultiMetric,
+                "CombinedMetricStrategy" => UseCmsForCombinedMetric,
+                "DifferenceStrategy"     => UseCmsForDifference,
+                "RatioStrategy"          => UseCmsForRatio,
+                "NormalizedStrategy"     => UseCmsForNormalized,
+                _                        => false
         };
-    }
-
-    /// <summary>
-    ///     Resets all CMS flags to default (disabled).
-    /// </summary>
-    public static void ResetToDefaults()
-    {
-        UseCmsData = false;
-        UseCmsForSingleMetric = false;
-        UseCmsForMultiMetric = false;
-        UseCmsForCombinedMetric = false;
-        UseCmsForDifference = false;
-        UseCmsForRatio = false;
-        UseCmsForNormalized = false;
     }
 }

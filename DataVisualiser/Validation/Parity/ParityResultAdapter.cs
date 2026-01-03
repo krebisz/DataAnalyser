@@ -13,7 +13,7 @@ public static class ParityResultAdapter
         if (result == null)
             return new LegacyExecutionResult
             {
-                Series = new List<ParitySeries>()
+                    Series = new List<ParitySeries>()
             };
 
         var series = new List<ParitySeries>();
@@ -33,7 +33,7 @@ public static class ParityResultAdapter
 
         return new LegacyExecutionResult
         {
-            Series = series
+                Series = series
         };
     }
 
@@ -41,13 +41,13 @@ public static class ParityResultAdapter
     {
         return new ParitySeries
         {
-            SeriesKey = seriesKey,
-            Points = timestamps.Zip(rawValues, (t, v) => new ParityPoint
-            {
-                Time = t,
-                Value = v
-            }).
-                ToList()
+                SeriesKey = seriesKey,
+                Points = timestamps.Zip(rawValues, (t, v) => new ParityPoint
+                                    {
+                                            Time = t,
+                                            Value = v
+                                    }).
+                                    ToList()
         };
     }
 
@@ -56,8 +56,8 @@ public static class ParityResultAdapter
         // CMS and Legacy produce same ChartComputationResult structure
         return new CmsExecutionResult
         {
-            Series = ToLegacyExecutionResult(result).
-                Series
+                Series = ToLegacyExecutionResult(result).
+                        Series
         };
     }
 
@@ -67,15 +67,15 @@ public static class ParityResultAdapter
             return Array.Empty<ParitySeries>();
 
         return series.Select(s => new ParitySeries
-        {
-            SeriesKey = s.SeriesId,
-            Points = s.Timestamps.Zip(s.RawValues, (t, v) => new ParityPoint
-            {
-                Time = t,
-                Value = v
-            }).
-                    ToList()
-        }).
-            ToList();
+                      {
+                              SeriesKey = s.SeriesId,
+                              Points = s.Timestamps.Zip(s.RawValues, (t, v) => new ParityPoint
+                                         {
+                                                 Time = t,
+                                                 Value = v
+                                         }).
+                                         ToList()
+                      }).
+                      ToList();
     }
 }

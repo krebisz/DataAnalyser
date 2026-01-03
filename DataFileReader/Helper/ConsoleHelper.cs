@@ -1,6 +1,6 @@
-﻿using DataFileReader.Class;
-using System.Data;
+﻿using System.Data;
 using System.Text;
+using DataFileReader.Class;
 
 namespace DataFileReader.Helper;
 
@@ -13,20 +13,20 @@ public static class ConsoleHelper
         switch (variableType)
         {
             case "Container":
-                {
-                    consoleColor = ConsoleColor.Blue;
-                    break;
-                }
+            {
+                consoleColor = ConsoleColor.Blue;
+                break;
+            }
             case "Element":
-                {
-                    consoleColor = ConsoleColor.Green;
-                    break;
-                }
+            {
+                consoleColor = ConsoleColor.Green;
+                break;
+            }
             default:
-                {
-                    consoleColor = ConsoleColor.Red;
-                    break;
-                }
+            {
+                consoleColor = ConsoleColor.Red;
+                break;
+            }
         }
 
         return consoleColor;
@@ -37,9 +37,7 @@ public static class ConsoleHelper
         Console.ForegroundColor = ConsoleColor.White;
 
         if (hierarchyObject.ClassID == "Element")
-        {
             Console.WriteLine($"Path: {hierarchyObject.Path}, Value: {hierarchyObject.Value}");
-        }
     }
 
     public static void PrintHierarchyObject(string key, string Id, string level, string value, string parent, string metaId, string refVal, ConsoleColor colour)
@@ -136,10 +134,9 @@ public static class ConsoleHelper
         Console.WriteLine("FLATTENED DATA:");
         Console.ForegroundColor = ConsoleColor.White;
 
-        for (int i = 0; i < flattenedData.Columns.Count; i++)
-        {
-            Console.Write((flattenedData.Columns[i].ColumnName.PadRight(20)) + ", ");
-        }
+        for (var i = 0; i < flattenedData.Columns.Count; i++)
+            Console.Write(flattenedData.Columns[i].
+                                        ColumnName.PadRight(20) + ", ");
 
         Console.WriteLine();
 
@@ -151,11 +148,11 @@ public static class ConsoleHelper
 
         foreach (DataRow row in flattenedData.Rows)
         {
-            StringBuilder printedRow = new StringBuilder();
+            var printedRow = new StringBuilder();
 
-            foreach (object? field in row.ItemArray)
+            foreach (var field in row.ItemArray)
             {
-                string fieldValue = ((field?.ToString() ?? string.Empty)).PadRight(20) + ", ";
+                var fieldValue = (field?.ToString() ?? string.Empty).PadRight(20) + ", ";
                 printedRow.Append(fieldValue);
             }
 

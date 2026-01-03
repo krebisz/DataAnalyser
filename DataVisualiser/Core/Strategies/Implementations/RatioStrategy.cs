@@ -13,15 +13,15 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class RatioStrategy : IChartComputationStrategy
 {
-    private readonly DateTime _from;
-    private readonly string _labelLeft;
-    private readonly string _labelRight;
+    private readonly DateTime                      _from;
+    private readonly string                        _labelLeft;
+    private readonly string                        _labelRight;
     private readonly IEnumerable<HealthMetricData> _left;
     private readonly IEnumerable<HealthMetricData> _right;
-    private readonly ISmoothingService _smoothingService;
-    private readonly ITimelineService _timelineService;
-    private readonly DateTime _to;
-    private readonly IUnitResolutionService _unitResolutionService;
+    private readonly ISmoothingService             _smoothingService;
+    private readonly ITimelineService              _timelineService;
+    private readonly DateTime                      _to;
+    private readonly IUnitResolutionService        _unitResolutionService;
 
     public RatioStrategy(IEnumerable<HealthMetricData> left, IEnumerable<HealthMetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
@@ -36,9 +36,9 @@ public sealed class RatioStrategy : IChartComputationStrategy
         _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
     }
 
-    public string PrimaryLabel => $"{_labelLeft} / {_labelRight}";
-    public string SecondaryLabel => string.Empty;
-    public string? Unit { get; private set; }
+    public string  PrimaryLabel   => $"{_labelLeft} / {_labelRight}";
+    public string  SecondaryLabel => string.Empty;
+    public string? Unit           { get; private set; }
 
     public ChartComputationResult? Compute()
     {
@@ -62,14 +62,14 @@ public sealed class RatioStrategy : IChartComputationStrategy
 
         return new ChartComputationResult
         {
-            Timestamps = timestamps,
-            IntervalIndices = intervalIndices.ToList(),
-            NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
-            PrimaryRawValues = rawRatio,
-            PrimarySmoothed = smoothedValues.ToList(),
-            TickInterval = timeline.TickInterval,
-            DateRange = timeline.DateRange,
-            Unit = Unit
+                Timestamps = timestamps,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
+                PrimaryRawValues = rawRatio,
+                PrimarySmoothed = smoothedValues.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
+                Unit = Unit
         };
     }
 
@@ -78,7 +78,7 @@ public sealed class RatioStrategy : IChartComputationStrategy
         return StrategyComputationHelper.FilterAndOrderByRange(source, _from, _to);
     }
 
-    private static (List<DateTime> Timestamps, List<double> RawRatios) ComputeIndexAlignedRatios(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right, int count)
+    private static(List<DateTime> Timestamps, List<double> RawRatios) ComputeIndexAlignedRatios(IReadOnlyList<HealthMetricData> left, IReadOnlyList<HealthMetricData> right, int count)
     {
         var timestamps = new List<DateTime>(count);
         var ratios = new List<double>(count);
@@ -106,9 +106,9 @@ public sealed class RatioStrategy : IChartComputationStrategy
         for (var i = 0; i < timestamps.Count; i++)
             ratioData.Add(new HealthMetricData
             {
-                NormalizedTimestamp = timestamps[i],
-                Value = double.IsNaN(rawRatios[i]) ? null : (decimal)rawRatios[i],
-                Unit = null
+                    NormalizedTimestamp = timestamps[i],
+                    Value = double.IsNaN(rawRatios[i]) ? null : (decimal)rawRatios[i],
+                    Unit = null
             });
 
         // Use unified smoothing service

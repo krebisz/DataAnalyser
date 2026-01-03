@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Media;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Orchestration;
@@ -9,9 +12,6 @@ using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Media;
 using ChartHelper = DataVisualiser.Core.Rendering.Helpers.ChartHelper;
 
 namespace DataVisualiser.Core.Services;
@@ -22,19 +22,19 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public class WeeklyDistributionService
 {
-    private const double DefaultMinHeight = 400.0;
-    private const double YAxisRoundingStep = 5.0;
+    private const double DefaultMinHeight       = 400.0;
+    private const double YAxisRoundingStep      = 5.0;
     private const double YAxisPaddingPercentage = 0.05;
-    private const double MinYAxisPadding = 5.0;
-    private const double MaxColumnWidth = 40.0;
+    private const double MinYAxisPadding        = 5.0;
+    private const double MaxColumnWidth         = 40.0;
 
-    private const bool UseCmsWeeklyDistribution = false;
+    private const    bool                                       UseCmsWeeklyDistribution = false;
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
 
     private readonly IFrequencyShadingRenderer? _frequencyRenderer;
-    private readonly IStrategyCutOverService _strategyCutOverService;
-    private FrequencyShadingCalculator _frequencyShadingCalculator;
-    private IIntervalShadingStrategy _shadingStrategy;
+    private readonly IStrategyCutOverService    _strategyCutOverService;
+    private          FrequencyShadingCalculator _frequencyShadingCalculator;
+    private          IIntervalShadingStrategy   _shadingStrategy;
 
     public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null)
     {
@@ -65,17 +65,7 @@ public class WeeklyDistributionService
     /// <param name="minHeight">Minimum height for the chart</param>
     /// <param name="useFrequencyShading">Whether to use frequency shading or simple range view</param>
     /// <param name="intervalCount">Number of intervals to divide the value range into. Default is 10.</param>
-    public async Task UpdateWeeklyDistributionChartAsync(
-        CartesianChart targetChart,
-        IEnumerable<HealthMetricData> data,
-        string displayName,
-        DateTime from,
-        DateTime to,
-        double minHeight = DefaultMinHeight,
-        bool useFrequencyShading = true,
-        int intervalCount = 10,
-        ICanonicalMetricSeries? cmsSeries = null,
-        bool enableParity = false)
+    public async Task UpdateWeeklyDistributionChartAsync(CartesianChart targetChart, IEnumerable<HealthMetricData> data, string displayName, DateTime from, DateTime to, double minHeight = DefaultMinHeight, bool useFrequencyShading = true, int intervalCount = 10, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -88,15 +78,7 @@ public class WeeklyDistributionService
 
         var useCmsStrategy = cmsSeries != null;
 
-        var (result, frequencyResult) =
-            await ComputeWeeklyDistributionAsync(
-                data,
-                cmsSeries,
-                displayName,
-                from,
-                to,
-                useCmsStrategy,
-                enableParity);
+        var (result, frequencyResult) = await ComputeWeeklyDistributionAsync(data, cmsSeries, displayName, from, to, useCmsStrategy, enableParity);
 
         if (result == null || frequencyResult == null)
         {
@@ -109,40 +91,21 @@ public class WeeklyDistributionService
             // --- Render ---
             targetChart.Series.Clear();
 
-            RenderOriginalMinMaxChart(
-                targetChart,
-                result,
-                displayName,
-                minHeight,
-                frequencyResult,
-                useFrequencyShading,
-                intervalCount);
+            RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, frequencyResult, useFrequencyShading, intervalCount);
 
             // --- Tooltip / state ---
             _chartTimestamps[targetChart] = new List<DateTime>();
             targetChart.DataTooltip = null;
 
-            SetupWeeklyTooltip(
-                targetChart,
-                result,
-                frequencyResult,
-                useFrequencyShading,
-                intervalCount);
+            SetupWeeklyTooltip(targetChart, result, frequencyResult, useFrequencyShading, intervalCount);
 
-            ChartHelper.AdjustChartHeightBasedOnYAxis(
-                targetChart,
-                minHeight);
+            ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine(
-                $"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
+            Debug.WriteLine($"Weekly distribution chart error: {ex.Message}\n{ex.StackTrace}");
 
-            MessageBox.Show(
-                $"Error updating chart: {ex.Message}\n\nSee debug output for details.",
-                "Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
             ChartHelper.ClearChart(targetChart, _chartTimestamps);
         }
@@ -193,12 +156,12 @@ public class WeeklyDistributionService
         if (step > 0 && !double.IsNaN(step) && !double.IsInfinity(step))
             yAxis.Separator = new Separator
             {
-                Step = step
+                    Step = step
             };
 
         yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
         yAxis.ShowLabels = true; // Re-enable labels when rendering data
-        yAxis.Title = "Value"; // Ensure title is set
+        yAxis.Title = "Value";   // Ensure title is set
     }
 
     /// <summary>
@@ -230,20 +193,12 @@ public class WeeklyDistributionService
 
     // FrequencyShadingData moved to FrequencyShadingCalculator namespace
 
-    private bool TryExtractMinMax(
-        ChartComputationResult result,
-        CartesianChart chart,
-        out List<double> mins,
-        out List<double> ranges)
+    private bool TryExtractMinMax(ChartComputationResult result, CartesianChart chart, out List<double> mins, out List<double> ranges)
     {
         mins = result.PrimaryRawValues;
         ranges = result.PrimarySmoothed;
 
-        var isValid =
-            mins != null &&
-            ranges != null &&
-            mins.Count == 7 &&
-            ranges.Count == 7;
+        var isValid = mins != null && ranges != null && mins.Count == 7 && ranges.Count == 7;
 
         if (!isValid)
             ChartHelper.ClearChart(chart, _chartTimestamps);
@@ -252,16 +207,16 @@ public class WeeklyDistributionService
     }
 
 
-    private (double Min, double Max) CalculateGlobalMinMax(List<double> mins, List<double> ranges)
+    private(double Min, double Max) CalculateGlobalMinMax(List<double> mins, List<double> ranges)
     {
         var min = mins.Where(m => !double.IsNaN(m)).
-            DefaultIfEmpty(0).
-            Min();
+                       DefaultIfEmpty(0).
+                       Min();
 
         var max = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).
-            Where(v => !double.IsNaN(v)).
-            DefaultIfEmpty(min + 1).
-            Max();
+                       Where(v => !double.IsNaN(v)).
+                       DefaultIfEmpty(min + 1).
+                       Max();
 
         if (max <= min)
             max = min + 1;
@@ -297,11 +252,11 @@ public class WeeklyDistributionService
     {
         return new StackedColumnSeries
         {
-            Title = $"{displayName} baseline",
-            Values = new ChartValues<double>(),
-            Fill = Brushes.Transparent,
-            StrokeThickness = 0,
-            MaxColumnWidth = MaxColumnWidth
+                Title = $"{displayName} baseline",
+                Values = new ChartValues<double>(),
+                Fill = Brushes.Transparent,
+                StrokeThickness = 0,
+                MaxColumnWidth = MaxColumnWidth
         };
     }
 
@@ -309,12 +264,12 @@ public class WeeklyDistributionService
     {
         return new StackedColumnSeries
         {
-            Title = $"{displayName} range",
-            Values = new ChartValues<double>(),
-            Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
-            Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
-            StrokeThickness = 1,
-            MaxColumnWidth = MaxColumnWidth
+                Title = $"{displayName} range",
+                Values = new ChartValues<double>(),
+                Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
+                Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                StrokeThickness = 1,
+                MaxColumnWidth = MaxColumnWidth
         };
     }
 
@@ -322,11 +277,11 @@ public class WeeklyDistributionService
     {
         var context = new IntervalShadingContext
         {
-            Intervals = data.Intervals,
-            FrequenciesPerDay = data.FrequenciesPerDay,
-            DayValues = data.DayValues,
-            GlobalMin = globalMin,
-            GlobalMax = globalMax
+                Intervals = data.Intervals,
+                FrequenciesPerDay = data.FrequenciesPerDay,
+                DayValues = data.DayValues,
+                GlobalMin = globalMin,
+                GlobalMax = globalMax
         };
 
         _frequencyRenderer.Render(chart, mins, ranges, data.Intervals, data.FrequenciesPerDay, data.ColorMap, globalMin, globalMax, context);
@@ -340,20 +295,20 @@ public class WeeklyDistributionService
         var axis = chart.AxisX[0];
         axis.Labels = new[]
         {
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday"
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
         };
         axis.Title = "Day of Week";
         axis.ShowLabels = true;
         axis.Separator = new Separator
         {
-            Step = 1,
-            IsEnabled = false
+                Step = 1,
+                IsEnabled = false
         };
     }
 
@@ -384,16 +339,12 @@ public class WeeklyDistributionService
     /// <summary>
     ///     Gets day values from frequency data. Returns empty lists if not available.
     /// </summary>
-    private Dictionary<int, List<double>> GetDayValuesFromStrategy(
-        WeeklyDistributionResult? frequencyData)
+    private Dictionary<int, List<double>> GetDayValuesFromStrategy(WeeklyDistributionResult? frequencyData)
     {
         var dayValues = new Dictionary<int, List<double>>(7);
 
         for (var i = 0; i < 7; i++)
-            dayValues[i] =
-                frequencyData?.DayValues?.TryGetValue(i, out var values) == true
-                    ? values
-                    : new List<double>();
+            dayValues[i] = frequencyData?.DayValues?.TryGetValue(i, out var values) == true ? values : new List<double>();
 
         return dayValues;
     }
@@ -442,9 +393,9 @@ public class WeeklyDistributionService
         Debug.WriteLine($"Total series in chart: {targetChart.Series.Count}");
 
         var seriesTypes = targetChart.Series.GroupBy(s => s.GetType().
-                Name).
-            Select(g => $"{g.Key}:{g.Count()}").
-            ToList();
+                                                            Name).
+                                      Select(g => $"{g.Key}:{g.Count()}").
+                                      ToList();
 
         Debug.WriteLine($"Series breakdown: {string.Join(", ", seriesTypes)}");
     }
@@ -463,7 +414,7 @@ public class WeeklyDistributionService
     {
         // Backwards-compatible default (legacy-only)
         return await ComputeWeeklyDistributionAsync(data, null, displayName, from, to, false, false).
-            ConfigureAwait(true);
+                ConfigureAwait(true);
     }
 
     private async Task<(ChartComputationResult? Result, WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(IEnumerable<HealthMetricData> data, ICanonicalMetricSeries? cmsSeries, string displayName, DateTime from, DateTime to, bool useCmsStrategy, bool enableParity)
@@ -471,20 +422,20 @@ public class WeeklyDistributionService
         // Create minimal ChartDataContext for cut-over decision
         var ctx = new ChartDataContext
         {
-            PrimaryCms = cmsSeries,
-            Data1 = data?.ToList(),
-            DisplayName1 = displayName,
-            From = from,
-            To = to
+                PrimaryCms = cmsSeries,
+                Data1 = data?.ToList(),
+                DisplayName1 = displayName,
+                From = from,
+                To = to
         };
 
         // Create strategy using unified cut-over service
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data,
-            Label1 = displayName,
-            From = from,
-            To = to
+                LegacyData1 = data,
+                Label1 = displayName,
+                From = from,
+                To = to
         };
 
         var strategy = _strategyCutOverService.CreateStrategy(StrategyType.WeeklyDistribution, ctx, parameters);
@@ -507,32 +458,6 @@ public class WeeklyDistributionService
     ///// Calculates simple tooltip data for Simple Range mode (min, max, range, count per day).
     ///// </summary>
     ///// <summary>
-    ///// Computes weekly distribution on a background thread.
-    ///// </summary>
-    //private async Task<(Charts.Computation.ChartComputationResult? Result, Models.WeeklyDistributionResult? ExtendedResult)> ComputeWeeklyDistributionAsync(
-    //    IEnumerable<HealthMetricData> data,
-    //    string displayName,
-    //    DateTime from,
-    //    DateTime to)
-    //{
-    //    Models.WeeklyDistributionResult? extendedResult = null;
-    //    Charts.Computation.ChartComputationResult? result = null;
-
-    //    await Task.Run(() =>
-    //    {
-    //        var strategy = new Charts.Strategies.WeeklyDistributionStrategy(
-    //            data,
-    //            displayName,
-    //            from,
-    //            to);
-
-    //        result = strategy.Compute();
-    //        extendedResult = strategy.ExtendedResult;
-    //    }).ConfigureAwait(true);
-
-    //    return (result, extendedResult);
-    //}
-
     /// <summary>
     ///     Sets up tooltip for weekly distribution chart.
     /// </summary>
@@ -594,8 +519,8 @@ public class WeeklyDistributionService
             // Add interval if there's valid data (count > 0 and valid min)
             // Note: dayRange can be 0 (all values for the day are the same), which is valid
             if (count > 0)
-                // Single interval representing the entire day's range
-                // Percentage is 100% since this is the only interval for the day
+                    // Single interval representing the entire day's range
+                    // Percentage is 100% since this is the only interval for the day
                 dayIntervals.Add((dayMin, dayMax, count, 100.0));
 
             if (dayIntervals.Count > 0)
@@ -626,12 +551,12 @@ public class WeeklyDistributionService
 
         // Calculate global min/max
         var globalMin = mins.Where(m => !double.IsNaN(m)).
-            DefaultIfEmpty(0).
-            Min();
+                             DefaultIfEmpty(0).
+                             Min();
         var globalMax = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).
-            Where(v => !double.IsNaN(v)).
-            DefaultIfEmpty(1).
-            Max();
+                             Where(v => !double.IsNaN(v)).
+                             DefaultIfEmpty(1).
+                             Max();
 
         if (globalMax <= globalMin)
             globalMax = globalMin + 1;
@@ -721,12 +646,12 @@ public class WeeklyDistributionService
             _height = intervalHeight;
         }
 
-        public ChartValues<double> Baselines { get; } = new();
-        public ChartValues<double> WhiteHeights { get; } = new();
+        public ChartValues<double> Baselines      { get; } = new();
+        public ChartValues<double> WhiteHeights   { get; } = new();
         public ChartValues<double> ColoredHeights { get; } = new();
 
-        public bool HasData { get; private set; }
-        public bool HasZeroFreqDays { get; private set; }
+        public bool HasData            { get; private set; }
+        public bool HasZeroFreqDays    { get; private set; }
         public bool HasNonZeroFreqDays { get; private set; }
 
         public void Add(double baseline, int frequency)
@@ -765,7 +690,7 @@ public class WeeklyDistributionService
     private void RemoveExistingRangeSeries(CartesianChart chart)
     {
         var seriesToRemove = chart.Series.Where(s => s.Title?.Contains("range") == true).
-            ToList();
+                                   ToList();
         foreach (var series in seriesToRemove)
             chart.Series.Remove(series);
     }
@@ -803,12 +728,12 @@ public class WeeklyDistributionService
     {
         var simpleRangeSeries = new StackedColumnSeries
         {
-            Title = "range",
-            Values = new ChartValues<double>(),
-            Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
-            Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
-            StrokeThickness = 1,
-            MaxColumnWidth = MaxColumnWidth
+                Title = "range",
+                Values = new ChartValues<double>(),
+                Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
+                Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                StrokeThickness = 1,
+                MaxColumnWidth = MaxColumnWidth
         };
 
         for (var i = 0; i < 7; i++)
@@ -829,8 +754,8 @@ public class WeeklyDistributionService
     private int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerDay)
     {
         return frequenciesPerDay.Values.SelectMany(d => d.Values).
-            DefaultIfEmpty(1).
-            Max();
+                                 DefaultIfEmpty(1).
+                                 Max();
     }
 
     private double[] InitializeCumulativeStack(double globalMin)

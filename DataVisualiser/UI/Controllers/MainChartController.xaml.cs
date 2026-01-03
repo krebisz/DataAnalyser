@@ -1,7 +1,7 @@
-using LiveCharts;
-using LiveCharts.Wpf;
 using System.Windows;
 using System.Windows.Controls;
+using LiveCharts;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI;
 
@@ -22,21 +22,21 @@ public partial class MainChartController : UserControl
         // Create the chart
         Chart = new CartesianChart
         {
-            LegendLocation = LegendLocation.Right,
-            Zoom = ZoomingOptions.X,
-            Pan = PanningOptions.X,
-            Hoverable = true,
-            Margin = new Thickness(20, 5, 10, 20),
-            MinHeight = 500
+                LegendLocation = LegendLocation.Right,
+                Zoom = ZoomingOptions.X,
+                Pan = PanningOptions.X,
+                Hoverable = true,
+                Margin = new Thickness(20, 5, 10, 20),
+                MinHeight = 500
         };
         Chart.AxisX.Add(new Axis
         {
-            Title = "Time"
+                Title = "Time"
         });
         Chart.AxisY.Add(new Axis
         {
-            Title = "Value",
-            ShowLabels = true
+                Title = "Value",
+                ShowLabels = true
         });
 
         // Set the chart content

@@ -52,7 +52,7 @@ public sealed class WeeklyDistributionParityHarness : IStrategyParityHarness
     {
         return new LegacyExecutionResult
         {
-            Series = BuildParitySeries(ext)
+                Series = BuildParitySeries(ext)
         };
     }
 
@@ -60,7 +60,7 @@ public sealed class WeeklyDistributionParityHarness : IStrategyParityHarness
     {
         return new CmsExecutionResult
         {
-            Series = BuildParitySeries(ext)
+                Series = BuildParitySeries(ext)
         };
     }
 
@@ -85,20 +85,20 @@ public sealed class WeeklyDistributionParityHarness : IStrategyParityHarness
 
         series.Add(new ParitySeries
         {
-            SeriesKey = "GlobalMinMax",
-            Points = new List<ParityPoint>
-            {
-                new()
+                SeriesKey = "GlobalMinMax",
+                Points = new List<ParityPoint>
                 {
-                    Time = baseDate,
-                    Value = ext.GlobalMin
-                },
-                new()
-                {
-                    Time = baseDate.AddDays(1),
-                    Value = ext.GlobalMax
+                        new()
+                        {
+                                Time = baseDate,
+                                Value = ext.GlobalMin
+                        },
+                        new()
+                        {
+                                Time = baseDate.AddDays(1),
+                                Value = ext.GlobalMax
+                        }
                 }
-            }
         });
 
         return series;
@@ -111,13 +111,13 @@ public sealed class WeeklyDistributionParityHarness : IStrategyParityHarness
 
         series.Add(new ParitySeries
         {
-            SeriesKey = key,
-            Points = values.Select((v, i) => new ParityPoint
-            {
-                Time = timeAt(i),
-                Value = v
-            }).
-                ToList()
+                SeriesKey = key,
+                Points = values.Select((v, i) => new ParityPoint
+                                {
+                                        Time = timeAt(i),
+                                        Value = v
+                                }).
+                                ToList()
         });
     }
 
@@ -138,8 +138,8 @@ public sealed class WeeklyDistributionParityHarness : IStrategyParityHarness
     {
         var failure = new ParityFailure
         {
-            Layer = layer,
-            Message = message
+                Layer = layer,
+                Message = message
         };
 
         if (ctx.Mode == ParityMode.Strict)

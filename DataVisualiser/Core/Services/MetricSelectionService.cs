@@ -1,15 +1,15 @@
+using System.Configuration;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
-using System.Configuration;
 
 namespace DataVisualiser.Core.Services;
 
 public class MetricSelectionService
 {
     private readonly CmsDataService _cms; // <-- add
-    private readonly string _connectionString;
+    private readonly string         _connectionString;
 
     public MetricSelectionService(string connectionString)
     {

@@ -6,5 +6,5 @@ namespace DataVisualiser.Shared.Models;
 public class SmoothedDataPoint
 {
     public DateTime Timestamp { get; set; }
-    public double Value { get; set; }
+    public double   Value     { get; set; }
 }

@@ -23,7 +23,7 @@ public sealed class TransformOperand
     {
         return new TransformOperand
         {
-            MetricIndex = metricIndex
+                MetricIndex = metricIndex
         };
     }
 
@@ -34,7 +34,7 @@ public sealed class TransformOperand
     {
         return new TransformOperand
         {
-            Expression = expression
+                Expression = expression
         };
     }
 }

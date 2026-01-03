@@ -1,6 +1,6 @@
+using System.Windows.Media;
 using LiveCharts;
 using LiveCharts.Wpf;
-using System.Windows.Media;
 
 namespace DataVisualiser.Core.Rendering.Shading;
 
@@ -90,12 +90,12 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
             _height = height;
         }
 
-        public ChartValues<double> Baselines { get; } = new();
-        public ChartValues<double> WhiteHeights { get; } = new();
+        public ChartValues<double> Baselines      { get; } = new();
+        public ChartValues<double> WhiteHeights   { get; } = new();
         public ChartValues<double> ColoredHeights { get; } = new();
 
-        public bool HasData { get; private set; }
-        public bool HasZeroFreqDays { get; private set; }
+        public bool HasData            { get; private set; }
+        public bool HasZeroFreqDays    { get; private set; }
         public bool HasNonZeroFreqDays { get; private set; }
 
         public void Add(double baseline, int frequency)
@@ -170,7 +170,7 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
         return Color.FromRgb(173, 216, 230); // fallback
     }
 
-    private static (int Day, int Frequency) FindMostRepresentativeDay(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, int intervalIndex)
+    private static(int Day, int Frequency) FindMostRepresentativeDay(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, int intervalIndex)
     {
         var bestDay = -1;
         var bestFreq = 0;
@@ -193,10 +193,10 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
     {
         chart.Series.Add(new StackedColumnSeries
         {
-            Values = values,
-            Fill = Brushes.Transparent,
-            StrokeThickness = 0,
-            MaxColumnWidth = _maxColumnWidth
+                Values = values,
+                Fill = Brushes.Transparent,
+                StrokeThickness = 0,
+                MaxColumnWidth = _maxColumnWidth
         });
     }
 
@@ -204,11 +204,11 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
     {
         chart.Series.Add(new StackedColumnSeries
         {
-            Values = values,
-            Fill = Brushes.White,
-            Stroke = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
-            StrokeThickness = 1,
-            MaxColumnWidth = _maxColumnWidth
+                Values = values,
+                Fill = Brushes.White,
+                Stroke = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                StrokeThickness = 1,
+                MaxColumnWidth = _maxColumnWidth
         });
     }
 
@@ -216,11 +216,11 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
     {
         chart.Series.Add(new StackedColumnSeries
         {
-            Values = values,
-            Fill = new SolidColorBrush(color),
-            Stroke = Darken(color),
-            StrokeThickness = 1,
-            MaxColumnWidth = _maxColumnWidth
+                Values = values,
+                Fill = new SolidColorBrush(color),
+                Stroke = Darken(color),
+                StrokeThickness = 1,
+                MaxColumnWidth = _maxColumnWidth
         });
     }
 
@@ -231,7 +231,7 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
     private void RemoveExistingRangeSeries(CartesianChart chart)
     {
         var toRemove = chart.Series.Where(s => s.Title?.Contains("range") == true).
-            ToList();
+                             ToList();
         foreach (var s in toRemove)
             chart.Series.Remove(s);
     }
@@ -258,12 +258,12 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
     {
         var series = new StackedColumnSeries
         {
-            Title = "range",
-            Values = new ChartValues<double>(),
-            Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
-            Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
-            StrokeThickness = 1,
-            MaxColumnWidth = _maxColumnWidth
+                Title = "range",
+                Values = new ChartValues<double>(),
+                Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
+                Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
+                StrokeThickness = 1,
+                MaxColumnWidth = _maxColumnWidth
         };
 
         for (var i = 0; i < 7; i++)
@@ -287,8 +287,8 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
     private static int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> freq)
     {
         return freq.Values.SelectMany(v => v.Values).
-            DefaultIfEmpty(1).
-            Max();
+                    DefaultIfEmpty(1).
+                    Max();
     }
 
     private static double SafeMin(List<double> mins, int i)

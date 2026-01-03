@@ -25,11 +25,11 @@ public sealed class TimelineService : ITimelineService
 
         var result = new TimelineResult
         {
-            DateRange = dateRange,
-            TickInterval = tickInterval,
-            NormalizedIntervals = normalizedIntervals,
-            From = from,
-            To = to
+                DateRange = dateRange,
+                TickInterval = tickInterval,
+                NormalizedIntervals = normalizedIntervals,
+                From = from,
+                To = to
         };
 
         _cache[cacheKey] = result;
@@ -43,7 +43,8 @@ public sealed class TimelineService : ITimelineService
 
         var intervalsList = timeline.NormalizedIntervals is List<DateTime> list ? list : timeline.NormalizedIntervals.ToList();
 
-        return timestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, intervalsList, timeline.TickInterval)).ToList();
+        return timestamps.Select(ts => MathHelper.MapTimestampToIntervalIndex(ts, intervalsList, timeline.TickInterval)).
+                          ToList();
     }
 
     public void ClearCache()

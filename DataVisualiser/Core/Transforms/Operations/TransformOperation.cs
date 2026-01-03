@@ -32,10 +32,10 @@ public sealed class TransformOperation
     {
         return new TransformOperation
         {
-            Id = id,
-            DisplayName = displayName,
-            Arity = 1,
-            Execute = values => values.Count >= 1 ? operation(values[0]) : double.NaN
+                Id = id,
+                DisplayName = displayName,
+                Arity = 1,
+                Execute = values => values.Count >= 1 ? operation(values[0]) : double.NaN
         };
     }
 
@@ -46,10 +46,10 @@ public sealed class TransformOperation
     {
         return new TransformOperation
         {
-            Id = id,
-            DisplayName = displayName,
-            Arity = 2,
-            Execute = values => values.Count >= 2 ? operation(values[0], values[1]) : double.NaN
+                Id = id,
+                DisplayName = displayName,
+                Arity = 2,
+                Execute = values => values.Count >= 2 ? operation(values[0], values[1]) : double.NaN
         };
     }
 
@@ -60,10 +60,10 @@ public sealed class TransformOperation
     {
         return new TransformOperation
         {
-            Id = id,
-            DisplayName = displayName,
-            Arity = arity,
-            Execute = operation
+                Id = id,
+                DisplayName = displayName,
+                Arity = arity,
+                Execute = operation
         };
     }
 }

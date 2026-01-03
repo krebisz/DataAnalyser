@@ -2,7 +2,9 @@
 
 public class HierarchyObject
 {
-    public HierarchyObject() : this(0, string.Empty, string.Empty, 0, null, string.Empty) { }
+    public HierarchyObject() : this(0, string.Empty, string.Empty, 0, null, string.Empty)
+    {
+    }
 
     public HierarchyObject(int id, string name, string value, int? level, int? parentId, string classId)
     {
@@ -42,6 +44,7 @@ public class HierarchyObject
 
     public void GenerateMetaDataID()
     {
-        MetaDataID = Math.Abs(Fields.OrderBy(field => field.Key).Aggregate(0, (hash, field) => HashCode.Combine(hash, field.Key.GetHashCode(), field.Value.GetHashCode())));
+        MetaDataID = Math.Abs(Fields.OrderBy(field => field.Key).
+                                     Aggregate(0, (hash, field) => HashCode.Combine(hash, field.Key.GetHashCode(), field.Value.GetHashCode())));
     }
 }

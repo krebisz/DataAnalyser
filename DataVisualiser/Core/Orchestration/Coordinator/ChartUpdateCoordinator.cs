@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Media;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Engines;
@@ -6,9 +9,6 @@ using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using LiveCharts.Wpf;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Media;
 
 namespace DataVisualiser.Core.Orchestration.Coordinator;
 
@@ -18,10 +18,10 @@ namespace DataVisualiser.Core.Orchestration.Coordinator;
 public class ChartUpdateCoordinator
 {
     private readonly ChartComputationEngine _chartComputationEngine;
-    private readonly ChartRenderEngine _chartRenderEngine;
+    private readonly ChartRenderEngine      _chartRenderEngine;
 
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    private readonly ChartTooltipManager _tooltipManager;
+    private readonly ChartTooltipManager                        _tooltipManager;
 
     public ChartUpdateCoordinator(ChartComputationEngine computationEngine, ChartRenderEngine renderEngine, ChartTooltipManager tooltipManager, Dictionary<CartesianChart, List<DateTime>> chartTimestamps)
     {
@@ -41,17 +41,7 @@ public class ChartUpdateCoordinator
     ///     Runs the supplied strategy, then renders the result into the target chart.
     ///     If the strategy returns null, the chart is cleared.
     /// </summary>
-    public async Task UpdateChartUsingStrategyAsync(
-        CartesianChart targetChart,
-        IChartComputationStrategy strategy,
-        string primaryLabel,
-        string? secondaryLabel = null,
-        double minHeight = 400.0,
-        string? metricType = null,
-        string? primarySubtype = null,
-        string? secondarySubtype = null,
-        string? operationType = null,
-        bool isOperationChart = false)
+    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -72,17 +62,7 @@ public class ChartUpdateCoordinator
         // -------------------------
         // Phase 2: Build render model
         // -------------------------
-        var model = BuildChartRenderModel(
-            strategy,
-            result,
-            targetChart,
-            primaryLabel,
-            secondaryLabel,
-            metricType,
-            primarySubtype,
-            secondarySubtype,
-            operationType,
-            isOperationChart);
+        var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart);
 
         // -------------------------
         // Phase 3: Render + post-render sync
@@ -107,11 +87,7 @@ public class ChartUpdateCoordinator
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                $"Error rendering chart: {ex.Message}",
-                "Chart Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            MessageBox.Show($"Error rendering chart: {ex.Message}", "Chart Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
             ChartHelper.ClearChart(targetChart, _chartTimestamps);
         }
@@ -125,36 +101,36 @@ public class ChartUpdateCoordinator
     {
         return new ChartRenderModel
         {
-            PrimarySeriesName = strategy.PrimaryLabel ?? primaryLabel,
-            SecondarySeriesName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
+                PrimarySeriesName = strategy.PrimaryLabel ?? primaryLabel,
+                SecondarySeriesName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
 
-            PrimaryRaw = result.PrimaryRawValues ?? new List<double>(),
-            PrimarySmoothed = result.PrimarySmoothed ?? new List<double>(),
+                PrimaryRaw = result.PrimaryRawValues ?? new List<double>(),
+                PrimarySmoothed = result.PrimarySmoothed ?? new List<double>(),
 
-            SecondaryRaw = result.SecondaryRawValues,
-            SecondarySmoothed = result.SecondarySmoothed,
+                SecondaryRaw = result.SecondaryRawValues,
+                SecondarySmoothed = result.SecondarySmoothed,
 
-            PrimaryColor = ColourPalette.Next(targetChart),
-            SecondaryColor = result.SecondaryRawValues != null && result.SecondarySmoothed != null ? ColourPalette.Next(targetChart) : Colors.Red,
+                PrimaryColor = ColourPalette.Next(targetChart),
+                SecondaryColor = result.SecondaryRawValues != null && result.SecondarySmoothed != null ? ColourPalette.Next(targetChart) : Colors.Red,
 
-            Unit = result.Unit,
-            Timestamps = result.Timestamps ?? new List<DateTime>(),
-            IntervalIndices = result.IntervalIndices,
-            NormalizedIntervals = result.NormalizedIntervals,
-            TickInterval = result.TickInterval,
+                Unit = result.Unit,
+                Timestamps = result.Timestamps ?? new List<DateTime>(),
+                IntervalIndices = result.IntervalIndices,
+                NormalizedIntervals = result.NormalizedIntervals,
+                TickInterval = result.TickInterval,
 
-            // Pass through the coordinator's global mode
-            SeriesMode = SeriesMode,
+                // Pass through the coordinator's global mode
+                SeriesMode = SeriesMode,
 
-            // Metric information for label formatting
-            MetricType = metricType,
-            PrimarySubtype = primarySubtype,
-            SecondarySubtype = secondarySubtype,
-            OperationType = operationType,
-            IsOperationChart = isOperationChart,
+                // Metric information for label formatting
+                MetricType = metricType,
+                PrimarySubtype = primarySubtype,
+                SecondarySubtype = secondarySubtype,
+                OperationType = operationType,
+                IsOperationChart = isOperationChart,
 
-            // NEW: Multi-series support - when Series is present, it takes precedence
-            Series = result.Series
+                // NEW: Multi-series support - when Series is present, it takes precedence
+                Series = result.Series
         };
     }
 
@@ -165,17 +141,17 @@ public class ChartUpdateCoordinator
     private List<HealthMetricData> BuildSyntheticRawData(ChartRenderModel model)
     {
         return EnumerateRawPoints(model).
-            Select(p => CreateMetric(p.Timestamp, p.Value, model.Unit)).
-            ToList();
+               Select(p => CreateMetric(p.Timestamp, p.Value, model.Unit)).
+               ToList();
     }
 
     private static HealthMetricData CreateMetric(DateTime timestamp, double value, string unit)
     {
         return new HealthMetricData
         {
-            NormalizedTimestamp = timestamp,
-            Value = double.IsNaN(value) ? null : (decimal)value,
-            Unit = unit
+                NormalizedTimestamp = timestamp,
+                Value = double.IsNaN(value) ? null : (decimal)value,
+                Unit = unit
         };
     }
 

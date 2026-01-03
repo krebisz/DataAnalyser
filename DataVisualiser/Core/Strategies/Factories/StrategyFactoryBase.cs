@@ -11,7 +11,7 @@ namespace DataVisualiser.Core.Strategies.Factories;
 public abstract class StrategyFactoryBase : IStrategyFactory
 {
     private readonly Func<ChartDataContext, StrategyCreationParameters, IChartComputationStrategy>? _cmsFactory;
-    private readonly Func<StrategyCreationParameters, IChartComputationStrategy>? _legacyFactory;
+    private readonly Func<StrategyCreationParameters, IChartComputationStrategy>?                   _legacyFactory;
 
     /// <summary>
     ///     Constructor for factories that need custom logic (override methods).
@@ -23,9 +23,7 @@ public abstract class StrategyFactoryBase : IStrategyFactory
     /// <summary>
     ///     Constructor for factories with simple delegate-based creation.
     /// </summary>
-    protected StrategyFactoryBase(
-        Func<ChartDataContext, StrategyCreationParameters, IChartComputationStrategy>? cmsFactory,
-        Func<StrategyCreationParameters, IChartComputationStrategy>? legacyFactory)
+    protected StrategyFactoryBase(Func<ChartDataContext, StrategyCreationParameters, IChartComputationStrategy>? cmsFactory, Func<StrategyCreationParameters, IChartComputationStrategy>? legacyFactory)
     {
         _cmsFactory = cmsFactory;
         _legacyFactory = legacyFactory;
@@ -53,4 +51,3 @@ public abstract class StrategyFactoryBase : IStrategyFactory
         throw new NotImplementedException($"CreateLegacyStrategy is not implemented for {GetType().Name}");
     }
 }
-

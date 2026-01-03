@@ -12,14 +12,14 @@ using UnitResolutionService = UnitResolutionService;
 
 public sealed class SingleMetricStrategy : IChartComputationStrategy
 {
-    private readonly ICanonicalMetricSeries? _cmsData;
+    private readonly ICanonicalMetricSeries?        _cmsData;
     private readonly IEnumerable<HealthMetricData>? _data;
-    private readonly DateTime _from;
-    private readonly ISmoothingService _smoothingService;
-    private readonly ITimelineService _timelineService;
-    private readonly DateTime _to;
-    private readonly IUnitResolutionService _unitResolutionService;
-    private readonly bool _useCms;
+    private readonly DateTime                       _from;
+    private readonly ISmoothingService              _smoothingService;
+    private readonly ITimelineService               _timelineService;
+    private readonly DateTime                       _to;
+    private readonly IUnitResolutionService         _unitResolutionService;
+    private readonly bool                           _useCms;
 
     /// <summary>
     ///     Legacy constructor using HealthMetricData.
@@ -55,8 +55,8 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
 
     public string PrimaryLabel { get; }
 
-    public string SecondaryLabel => string.Empty;
-    public string? Unit { get; private set; }
+    public string  SecondaryLabel => string.Empty;
+    public string? Unit           { get; private set; }
 
     public ChartComputationResult? Compute()
     {
@@ -86,7 +86,7 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
 
         // Convert CMS samples to HealthMetricData for compatibility with existing smoothing logic
         var healthMetricData = CmsConversionHelper.ConvertSamplesToHealthMetricData(_cmsData, _from, _to).
-            ToList();
+                                                   ToList();
 
         if (!healthMetricData.Any())
             return null;
@@ -115,7 +115,7 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
         var dataList = orderedData is List<HealthMetricData> list ? list : orderedData.ToList();
 
         var rawTimestamps = dataList.Select(d => d.NormalizedTimestamp).
-            ToList();
+                                     ToList();
 
         // Use unified timeline service
         var timeline = _timelineService.GenerateTimeline(_from, _to, rawTimestamps);
@@ -129,15 +129,15 @@ public sealed class SingleMetricStrategy : IChartComputationStrategy
 
         return new ChartComputationResult
         {
-            Timestamps = rawTimestamps,
-            IntervalIndices = intervalIndices.ToList(),
-            NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
-            PrimaryRawValues = dataList.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).
-                ToList(),
-            PrimarySmoothed = smoothedValues.ToList(),
-            TickInterval = timeline.TickInterval,
-            DateRange = timeline.DateRange,
-            Unit = Unit
+                Timestamps = rawTimestamps,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
+                PrimaryRawValues = dataList.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).
+                                            ToList(),
+                PrimarySmoothed = smoothedValues.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
+                Unit = Unit
         };
     }
 }

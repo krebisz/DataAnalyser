@@ -1,74 +1,65 @@
-﻿using DataFileReader.Class;
+﻿using System.Text.Json;
+using DataFileReader.Class;
 using Newtonsoft.Json.Linq;
-using System.Text.Json;
 
-namespace DataFileReader.Helper
+namespace DataFileReader.Helper;
+
+public static class JsoonHelper
 {
-    public static class JsoonHelper
+    public static List<string> GetFieldList(JArray jsonArray)
     {
-        public static List<string> GetFieldList(JArray jsonArray)
+        var fieldList = new List<string>();
+
+        foreach (var jsonToken in jsonArray)
         {
-            List<string> fieldList = new List<string>();
+            var jsonString = DataHelper.RemoveEscapeCharacters(jsonToken.ToString());
 
-            foreach (var jsonToken in jsonArray)
-            {
-                string jsonString = DataHelper.RemoveEscapeCharacters(jsonToken.ToString());
+            dynamic? dynamicObject = new object();
+            dynamicObject = JsonSerializer.Deserialize<dynamic>(jsonString);
+            dynamicObject = "[" + dynamicObject + "]";
 
-                dynamic? dynamicObject = new object();
-                dynamicObject = JsonSerializer.Deserialize<dynamic>(jsonString);
-                dynamicObject = "[" + dynamicObject + "]";
+            var childJsonArray = JArray.Parse(dynamicObject.ToString());
 
-                var childJsonArray = JArray.Parse(dynamicObject.ToString());
-
-                if (childJsonArray != null && childJsonArray.Count > 0)
+            if (childJsonArray != null && childJsonArray.Count > 0)
+                foreach (JObject childJsonObject in childJsonArray)
                 {
-                    foreach (JObject childJsonObject in childJsonArray)
+                    var childJsonValues = childJsonObject.Values();
+
+                    foreach (var childJsonValue in childJsonValues)
                     {
-                        IJEnumerable<JToken> childJsonValues = childJsonObject.Values();
+                        fieldList.Add(childJsonValue.ToString());
 
-                        foreach (JToken? childJsonValue in childJsonValues)
+                        if (childJsonValue != null && childJsonValue.HasValues)
                         {
-                            fieldList.Add(childJsonValue.ToString());
+                            var subArray = new JArray(childJsonValue);
 
-                            if (childJsonValue != null && childJsonValue.HasValues)
-                            {
-                                var subArray = new JArray(childJsonValue);
-
-                                GetFieldList(subArray);
-                            }
+                            GetFieldList(subArray);
                         }
                     }
                 }
-            }
-
-            return fieldList;
         }
 
-        public static void CreateHierarchyObjectList(ref HierarchyObjectList hierarchyObjectList, JToken token, string path = "Root")
-        {
-            if (token is JObject obj)
+        return fieldList;
+    }
+
+    public static void CreateHierarchyObjectList(ref HierarchyObjectList hierarchyObjectList, JToken token, string path = "Root")
+    {
+        if (token is JObject obj)
+            foreach (var prop in obj.Properties())
             {
-                foreach (var prop in obj.Properties())
-                {
-                    string currentPath = string.IsNullOrEmpty(path) ? prop.Name : $"{path}.{prop.Name}";
-                    hierarchyObjectList.Add(path, token, "Container");
-                    CreateHierarchyObjectList(ref hierarchyObjectList, prop.Value, currentPath);
-                }
+                var currentPath = string.IsNullOrEmpty(path) ? prop.Name : $"{path}.{prop.Name}";
+                hierarchyObjectList.Add(path, token, "Container");
+                CreateHierarchyObjectList(ref hierarchyObjectList, prop.Value, currentPath);
             }
-            else if (token is JArray array)
+        else if (token is JArray array)
+            for (var i = 0; i < array.Count; i++)
             {
-                for (int i = 0; i < array.Count; i++)
-                {
-                    string currentPath = $"{path}[{i}]";
-                    hierarchyObjectList.Add(path, token, "Array");
-                    CreateHierarchyObjectList(ref hierarchyObjectList, array[i], currentPath);
-                }
+                var currentPath = $"{path}[{i}]";
+                hierarchyObjectList.Add(path, token, "Array");
+                CreateHierarchyObjectList(ref hierarchyObjectList, array[i], currentPath);
             }
-            else
-            {
+        else
                 // Primitive value (string, number, bool, etc.)
-                hierarchyObjectList.Add(path, token, "Element");
-            }
-        }
+            hierarchyObjectList.Add(path, token, "Element");
     }
 }

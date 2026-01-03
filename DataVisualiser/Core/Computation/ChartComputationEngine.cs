@@ -1,6 +1,6 @@
+using System.Diagnostics;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Strategies.Abstractions;
-using System.Diagnostics;
 
 namespace DataVisualiser.Core.Computation;
 

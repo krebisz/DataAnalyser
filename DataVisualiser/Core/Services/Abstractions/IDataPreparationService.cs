@@ -24,14 +24,4 @@ public interface IDataPreparationService
     ///     Should be avoided when possible - prefer using CMS directly.
     /// </summary>
     IReadOnlyList<HealthMetricData> ConvertCmsToLegacy(ICanonicalMetricSeries cms, DateTime from, DateTime to);
-
-    /// <summary>
-    ///     Validates legacy data.
-    /// </summary>
-    bool ValidateLegacyData(IReadOnlyList<HealthMetricData> data);
-
-    /// <summary>
-    ///     Validates CMS data.
-    /// </summary>
-    bool ValidateCmsData(ICanonicalMetricSeries cms);
 }

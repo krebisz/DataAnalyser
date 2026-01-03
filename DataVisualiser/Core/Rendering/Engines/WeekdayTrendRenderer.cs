@@ -1,11 +1,11 @@
+using System.Globalization;
+using System.Windows.Media;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using LiveCharts;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
-using System.Globalization;
-using System.Windows.Media;
 
 namespace DataVisualiser.Core.Rendering.Engines;
 
@@ -17,13 +17,13 @@ public sealed class WeekdayTrendRenderingService
 {
     private static readonly Brush[] WeekdayStrokes =
     {
-        Brushes.SteelBlue,
-        Brushes.CadetBlue,
-        Brushes.SeaGreen,
-        Brushes.OliveDrab,
-        Brushes.Goldenrod,
-        Brushes.OrangeRed,
-        Brushes.IndianRed
+            Brushes.SteelBlue,
+            Brushes.CadetBlue,
+            Brushes.SeaGreen,
+            Brushes.OliveDrab,
+            Brushes.Goldenrod,
+            Brushes.OrangeRed,
+            Brushes.IndianRed
     };
 
     /// <summary>
@@ -49,17 +49,17 @@ public sealed class WeekdayTrendRenderingService
 
         chart.AxisX.Add(new Axis
         {
-            Title = "Time",
-            MinValue = result.From.Ticks,
-            MaxValue = result.To.Ticks,
-            LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                Title = "Time",
+                MinValue = result.From.Ticks,
+                MaxValue = result.To.Ticks,
+                LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
         });
 
         chart.AxisY.Add(new Axis
         {
-            Title = result.Unit ?? "Value",
-            MinValue = result.GlobalMin,
-            MaxValue = result.GlobalMax
+                Title = result.Unit ?? "Value",
+                MinValue = result.GlobalMin,
+                MaxValue = result.GlobalMax
         });
 
         for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
@@ -76,13 +76,13 @@ public sealed class WeekdayTrendRenderingService
 
             chart.Series.Add(new LineSeries
             {
-                Title = series.Day.ToString(),
-                Values = values,
-                PointGeometry = null,
-                LineSmoothness = 0.3,
-                Fill = Brushes.Transparent,
-                StrokeThickness = 2,
-                Stroke = WeekdayStrokes[dayIndex]
+                    Title = series.Day.ToString(),
+                    Values = values,
+                    PointGeometry = null,
+                    LineSmoothness = 0.3,
+                    Fill = Brushes.Transparent,
+                    StrokeThickness = 2,
+                    Stroke = WeekdayStrokes[dayIndex]
             });
         }
     }
@@ -99,32 +99,32 @@ public sealed class WeekdayTrendRenderingService
         // Configure axes for polar-like display
         chart.AxisX.Add(new Axis
         {
-            Title = "Day of Week",
-            MinValue = 0,
-            MaxValue = 360,
-            LabelFormatter = v =>
-            {
-                // Convert angle (0-360) to day name
-                var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
-                return dayIndex switch
+                Title = "Day of Week",
+                MinValue = 0,
+                MaxValue = 360,
+                LabelFormatter = v =>
                 {
-                    0 => "Mon",
-                    1 => "Tue",
-                    2 => "Wed",
-                    3 => "Thu",
-                    4 => "Fri",
-                    5 => "Sat",
-                    6 => "Sun",
-                    _ => ""
-                };
-            }
+                    // Convert angle (0-360) to day name
+                    var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
+                    return dayIndex switch
+                    {
+                            0 => "Mon",
+                            1 => "Tue",
+                            2 => "Wed",
+                            3 => "Thu",
+                            4 => "Fri",
+                            5 => "Sat",
+                            6 => "Sun",
+                            _ => ""
+                    };
+                }
         });
 
         chart.AxisY.Add(new Axis
         {
-            Title = result.Unit ?? "Value",
-            MinValue = result.GlobalMin,
-            MaxValue = result.GlobalMax
+                Title = result.Unit ?? "Value",
+                MinValue = result.GlobalMin,
+                MaxValue = result.GlobalMax
         });
 
         // Convert each day's data to polar-like coordinates
@@ -148,14 +148,14 @@ public sealed class WeekdayTrendRenderingService
 
             chart.Series.Add(new LineSeries
             {
-                Title = series.Day.ToString(),
-                Values = values,
-                LineSmoothness = 0.3,
-                StrokeThickness = 2,
-                Stroke = WeekdayStrokes[dayIndex],
-                Fill = Brushes.Transparent,
-                PointGeometry = DefaultGeometries.Circle,
-                PointGeometrySize = 6
+                    Title = series.Day.ToString(),
+                    Values = values,
+                    LineSmoothness = 0.3,
+                    StrokeThickness = 2,
+                    Stroke = WeekdayStrokes[dayIndex],
+                    Fill = Brushes.Transparent,
+                    PointGeometry = DefaultGeometries.Circle,
+                    PointGeometrySize = 6
             });
         }
     }
@@ -164,14 +164,14 @@ public sealed class WeekdayTrendRenderingService
     {
         return dayIndex switch
         {
-            0 => chartState.ShowMonday,
-            1 => chartState.ShowTuesday,
-            2 => chartState.ShowWednesday,
-            3 => chartState.ShowThursday,
-            4 => chartState.ShowFriday,
-            5 => chartState.ShowSaturday,
-            6 => chartState.ShowSunday,
-            _ => false
+                0 => chartState.ShowMonday,
+                1 => chartState.ShowTuesday,
+                2 => chartState.ShowWednesday,
+                3 => chartState.ShowThursday,
+                4 => chartState.ShowFriday,
+                5 => chartState.ShowSaturday,
+                6 => chartState.ShowSunday,
+                _ => false
         };
     }
 }

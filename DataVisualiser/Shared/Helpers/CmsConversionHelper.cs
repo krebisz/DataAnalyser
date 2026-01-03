@@ -23,14 +23,14 @@ public static class CmsConversionHelper
             throw new ArgumentNullException(nameof(cms));
 
         return cms.Samples.Where(s => s.Value.HasValue && (!from.HasValue || s.Timestamp.DateTime >= from.Value) && (!to.HasValue || s.Timestamp.DateTime <= to.Value)).
-            Select(s => new HealthMetricData
-            {
-                NormalizedTimestamp = s.Timestamp.DateTime,
-                Value = s.Value,
-                Unit = cms.Unit.Symbol,
-                Provider = cms.Provenance.SourceProvider
-            }).
-            OrderBy(d => d.NormalizedTimestamp);
+                   Select(s => new HealthMetricData
+                   {
+                           NormalizedTimestamp = s.Timestamp.DateTime,
+                           Value = s.Value,
+                           Unit = cms.Unit.Symbol,
+                           Provider = cms.Provenance.SourceProvider
+                   }).
+                   OrderBy(d => d.NormalizedTimestamp);
     }
 
     /// <summary>

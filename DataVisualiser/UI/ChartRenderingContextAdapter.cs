@@ -9,7 +9,7 @@ namespace DataVisualiser.UI;
 /// </summary>
 public class ChartRenderingContextAdapter : IChartRenderingContext
 {
-    private readonly Func<ChartDataContext?> _getCurrentContext;
+    private readonly Func<ChartDataContext?>       _getCurrentContext;
     private readonly Func<ChartDataContext?, bool> _hasSecondaryData;
     private readonly Func<ChartDataContext?, bool> _shouldRenderCharts;
 
@@ -22,7 +22,7 @@ public class ChartRenderingContextAdapter : IChartRenderingContext
     }
 
     public ChartDataContext? CurrentDataContext => _getCurrentContext();
-    public ChartState ChartState { get; }
+    public ChartState        ChartState         { get; }
 
     public bool HasSecondaryData(ChartDataContext? ctx)
     {

@@ -1,4 +1,12 @@
-using DataFileReader.Canonical;
+using System.ComponentModel;
+using System.Configuration;
+using System.Diagnostics;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using System.Windows.Threading;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Orchestration;
@@ -22,44 +30,32 @@ using DataVisualiser.UI.ViewModels.Events;
 using LiveCharts;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
-using System.ComponentModel;
-using System.Configuration;
-using System.Diagnostics;
-using System.Globalization;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media;
-using System.Windows.Threading;
 using ChartHelper = DataVisualiser.Core.Rendering.Helpers.ChartHelper;
-using ParityValidationService = DataVisualiser.Validation.ParityValidationService;
 
 namespace DataVisualiser;
 
 public partial class MainWindow : Window
 {
-    private const bool EnableCombinedMetricParity = false;
-
-    private readonly ChartState _chartState = new();
-    private readonly MetricState _metricState = new();
-    private readonly UiState _uiState = new();
-    private ChartComputationEngine _chartComputationEngine;
-    private ChartRenderEngine _chartRenderEngine;
-    private ChartUpdateCoordinator _chartUpdateCoordinator;
+    private readonly ChartState                  _chartState  = new();
+    private readonly MetricState                 _metricState = new();
+    private readonly UiState                     _uiState     = new();
+    private          ChartComputationEngine      _chartComputationEngine;
+    private          ChartRenderEngine           _chartRenderEngine;
+    private          ChartRenderingOrchestrator? _chartRenderingOrchestrator;
+    private          ChartUpdateCoordinator      _chartUpdateCoordinator;
 
     private string _connectionString;
-    private bool _isChangingResolution;
+    private bool   _isChangingResolution;
 
     private bool _isInitializing = true;
 
-    private MetricSelectionService _metricSelectionService;
-    private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
-    private SubtypeSelectorManager _selectorManager;
-    private ChartTooltipManager? _tooltipManager;
-    private MainWindowViewModel _viewModel;
+    private MetricSelectionService    _metricSelectionService;
+    private SubtypeSelectorManager    _selectorManager;
+    private IStrategyCutOverService?  _strategyCutOverService;
+    private List<string>?             _subtypeList;
+    private ChartTooltipManager?      _tooltipManager;
+    private MainWindowViewModel       _viewModel;
     private WeeklyDistributionService _weeklyDistributionService;
-    private IStrategyCutOverService? _strategyCutOverService;
-    private List<string>? _subtypeList;
 
     public MainWindow()
     {
@@ -270,8 +266,8 @@ public partial class MainWindow : Window
             var data2 = ctx.Data2?.ToList() ?? new List<HealthMetricData>();
 
             var msg = $"Data1 count: {data1.Count}\n" + $"Data2 count: {data2.Count}\n" + $"First 3 timestamps (Data1):\n" + string.Join("\n", data1.Take(3).
-                Select(d => d.NormalizedTimestamp)) + "\n\nFirst 3 timestamps (Data2):\n" + string.Join("\n", data2.Take(3).
-                Select(d => d.NormalizedTimestamp));
+                                                                                                                                                     Select(d => d.NormalizedTimestamp)) + "\n\nFirst 3 timestamps (Data2):\n" + string.Join("\n", data2.Take(3).
+                                                                                                                                                                                                                                                         Select(d => d.NormalizedTimestamp));
 
             MessageBox.Show(msg, "DEBUG - LastContext contents");
         }
@@ -356,7 +352,7 @@ public partial class MainWindow : Window
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    private (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to)
+    private(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<HealthMetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -419,17 +415,17 @@ public partial class MainWindow : Window
 
         ChartWeekdayTrend.AxisX.Add(new Axis
         {
-            Title = "Time",
-            MinValue = result.From.Ticks,
-            MaxValue = result.To.Ticks,
-            LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                Title = "Time",
+                MinValue = result.From.Ticks,
+                MaxValue = result.To.Ticks,
+                LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
         });
 
         ChartWeekdayTrend.AxisY.Add(new Axis
         {
-            Title = result.Unit ?? "Value",
-            MinValue = result.GlobalMin,
-            MaxValue = result.GlobalMax
+                Title = result.Unit ?? "Value",
+                MinValue = result.GlobalMin,
+                MaxValue = result.GlobalMax
         });
 
         for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
@@ -446,13 +442,13 @@ public partial class MainWindow : Window
 
             ChartWeekdayTrend.Series.Add(new LineSeries
             {
-                Title = series.Day.ToString(),
-                Values = values,
-                PointGeometry = null,
-                LineSmoothness = 0.3,
-                Fill = Brushes.Transparent,
-                StrokeThickness = 2,
-                Stroke = weekdayStrokes[dayIndex]
+                    Title = series.Day.ToString(),
+                    Values = values,
+                    PointGeometry = null,
+                    LineSmoothness = 0.3,
+                    Fill = Brushes.Transparent,
+                    StrokeThickness = 2,
+                    Stroke = weekdayStrokes[dayIndex]
             });
         }
     }
@@ -471,32 +467,32 @@ public partial class MainWindow : Window
         // Configure axes for polar-like display
         ChartWeekdayTrendPolar.AxisX.Add(new Axis
         {
-            Title = "Day of Week",
-            MinValue = 0,
-            MaxValue = 360,
-            LabelFormatter = v =>
-            {
-                // Convert angle (0-360) to day name
-                var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
-                return dayIndex switch
+                Title = "Day of Week",
+                MinValue = 0,
+                MaxValue = 360,
+                LabelFormatter = v =>
                 {
-                    0 => "Mon",
-                    1 => "Tue",
-                    2 => "Wed",
-                    3 => "Thu",
-                    4 => "Fri",
-                    5 => "Sat",
-                    6 => "Sun",
-                    _ => ""
-                };
-            }
+                    // Convert angle (0-360) to day name
+                    var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
+                    return dayIndex switch
+                    {
+                            0 => "Mon",
+                            1 => "Tue",
+                            2 => "Wed",
+                            3 => "Thu",
+                            4 => "Fri",
+                            5 => "Sat",
+                            6 => "Sun",
+                            _ => ""
+                    };
+                }
         });
 
         ChartWeekdayTrendPolar.AxisY.Add(new Axis
         {
-            Title = result.Unit ?? "Value",
-            MinValue = result.GlobalMin,
-            MaxValue = result.GlobalMax
+                Title = result.Unit ?? "Value",
+                MinValue = result.GlobalMin,
+                MaxValue = result.GlobalMax
         });
 
         // Convert each day's data to polar-like coordinates
@@ -520,14 +516,14 @@ public partial class MainWindow : Window
 
             ChartWeekdayTrendPolar.Series.Add(new LineSeries
             {
-                Title = series.Day.ToString(),
-                Values = values,
-                LineSmoothness = 0.3,
-                StrokeThickness = 2,
-                Stroke = weekdayStrokes[dayIndex],
-                Fill = Brushes.Transparent,
-                PointGeometry = DefaultGeometries.Circle,
-                PointGeometrySize = 6
+                    Title = series.Day.ToString(),
+                    Values = values,
+                    LineSmoothness = 0.3,
+                    StrokeThickness = 2,
+                    Stroke = weekdayStrokes[dayIndex],
+                    Fill = Brushes.Transparent,
+                    PointGeometry = DefaultGeometries.Circle,
+                    PointGeometrySize = 6
             });
         }
     }
@@ -536,13 +532,13 @@ public partial class MainWindow : Window
     {
         return new[]
         {
-            Brushes.SteelBlue,
-            Brushes.CadetBlue,
-            Brushes.SeaGreen,
-            Brushes.OliveDrab,
-            Brushes.Goldenrod,
-            Brushes.OrangeRed,
-            Brushes.IndianRed
+                Brushes.SteelBlue,
+                Brushes.CadetBlue,
+                Brushes.SeaGreen,
+                Brushes.OliveDrab,
+                Brushes.Goldenrod,
+                Brushes.OrangeRed,
+                Brushes.IndianRed
         };
     }
 
@@ -550,14 +546,14 @@ public partial class MainWindow : Window
     {
         return dayIndex switch
         {
-            0 => _viewModel.ChartState.ShowMonday,
-            1 => _viewModel.ChartState.ShowTuesday,
-            2 => _viewModel.ChartState.ShowWednesday,
-            3 => _viewModel.ChartState.ShowThursday,
-            4 => _viewModel.ChartState.ShowFriday,
-            5 => _viewModel.ChartState.ShowSaturday,
-            6 => _viewModel.ChartState.ShowSunday,
-            _ => false
+                0 => _viewModel.ChartState.ShowMonday,
+                1 => _viewModel.ChartState.ShowTuesday,
+                2 => _viewModel.ChartState.ShowWednesday,
+                3 => _viewModel.ChartState.ShowThursday,
+                4 => _viewModel.ChartState.ShowFriday,
+                5 => _viewModel.ChartState.ShowSaturday,
+                6 => _viewModel.ChartState.ShowSunday,
+                _ => false
         };
     }
 
@@ -634,13 +630,13 @@ public partial class MainWindow : Window
             return;
 
         var rows = data?.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            Select(d => new
-            {
-                Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                Value = d.Value!.Value.ToString("F4")
-            }).
-            ToList();
+                         OrderBy(d => d.NormalizedTimestamp).
+                         Select(d => new
+                         {
+                                 Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                 Value = d.Value!.Value.ToString("F4")
+                         }).
+                         ToList();
 
         grid.ItemsSource = rows;
         title.Text = titleText;
@@ -655,7 +651,7 @@ public partial class MainWindow : Window
     private void SetBinaryTransformOperationsEnabled(bool enabled)
     {
         var binaryItems = TransformOperationCombo.Items.Cast<ComboBoxItem>().
-            Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
+                                                  Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
 
         foreach (var item in binaryItems)
             item.IsEnabled = enabled;
@@ -792,12 +788,12 @@ public partial class MainWindow : Window
 
         // Use transform infrastructure to compute the operation
         var allData1List = ctx.Data1.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+                               OrderBy(d => d.NormalizedTimestamp).
+                               ToList();
 
         var allData2List = ctx.Data2.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+                               OrderBy(d => d.NormalizedTimestamp).
+                               ToList();
 
         if (allData1List.Count == 0 || allData2List.Count == 0)
             return;
@@ -812,8 +808,8 @@ public partial class MainWindow : Window
         List<double> computedResults;
         var metricsList = new List<IReadOnlyList<HealthMetricData>>
         {
-            alignedData.Item1,
-            alignedData.Item2
+                alignedData.Item1,
+                alignedData.Item2
         };
 
         if (expression == null)
@@ -821,15 +817,15 @@ public partial class MainWindow : Window
             // Fallback to legacy approach
             var op = operation switch
             {
-                "Subtract" => BinaryOperators.Difference,
-                "Divide" => BinaryOperators.Ratio,
-                _ => (a, b) => a
+                    "Subtract" => BinaryOperators.Difference,
+                    "Divide"   => BinaryOperators.Ratio,
+                    _          => (a, b) => a
             };
 
             var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
-                ToList();
+                                         ToList();
             var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
-                ToList();
+                                         ToList();
             computedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
         }
         else
@@ -850,31 +846,13 @@ public partial class MainWindow : Window
     {
         return chartName switch
         {
-            "Norm" => ChartNormPanel,
-            "DiffRatio" => ChartDiffRatioPanel,
-            "Weekly" => ChartWeeklyPanel,
-            "WeeklyTrend" => ChartWeekdayTrendPanel,
-            _ => null
+                "Norm"        => ChartNormPanel,
+                "DiffRatio"   => ChartDiffRatioPanel,
+                "Weekly"      => ChartWeeklyPanel,
+                "WeeklyTrend" => ChartWeekdayTrendPanel,
+                _             => null
         };
     }
-
-    //private static IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
-    //{
-    //    //if (ctx.PrimaryCms != null)
-    //    //{
-    //        return new SingleMetricCmsStrategy(
-    //            (DataFileReader.Canonical.ICanonicalMetricSeries)ctx.PrimaryCms,
-    //            label,
-    //            from,
-    //            to);
-    //    //}
-
-    //    return new SingleMetricLegacyStrategy(
-    //        data,
-    //        label,
-    //        from,
-    //        to);
-    //}
 
     private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to)
     {
@@ -884,10 +862,10 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data,
-            Label1 = label,
-            From = from,
-            To = to
+                LegacyData1 = data,
+                Label1 = label,
+                From = from,
+                To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
@@ -901,11 +879,11 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacySeries = series,
-            Labels = labels,
-            From = from,
-            To = to,
-            Unit = unit
+                LegacySeries = series,
+                Labels = labels,
+                From = from,
+                To = to,
+                Unit = unit
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
@@ -919,12 +897,12 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data1,
-            LegacyData2 = data2,
-            Label1 = label1,
-            Label2 = label2,
-            From = from,
-            To = to
+                LegacyData1 = data1,
+                LegacyData2 = data2,
+                Label1 = label1,
+                Label2 = label2,
+                From = from,
+                To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
@@ -938,13 +916,13 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data1,
-            LegacyData2 = data2,
-            Label1 = label1,
-            Label2 = label2,
-            From = from,
-            To = to,
-            NormalizationMode = normalizationMode
+                LegacyData1 = data1,
+                LegacyData2 = data2,
+                Label1 = label1,
+                Label2 = label2,
+                From = from,
+                To = to,
+                NormalizationMode = normalizationMode
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
@@ -1176,10 +1154,10 @@ public partial class MainWindow : Window
     {
         var chartLabels = new Dictionary<CartesianChart, string>
         {
-            { MainChartController.Chart, "Main" },
-            { ChartNorm, "Norm" },
-            { ChartDiffRatio, "DiffRatio" },
-            { ChartTransformResult, "Transform" }
+                { MainChartController.Chart, "Main" },
+                { ChartNorm, "Norm" },
+                { ChartDiffRatio, "DiffRatio" },
+                { ChartTransformResult, "Transform" }
         };
 
         _tooltipManager = new ChartTooltipManager(this, chartLabels);
@@ -1625,8 +1603,8 @@ public partial class MainWindow : Window
     {
         // Use ALL data for chart computation (proper normalization)
         var allDataList = data.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+                               OrderBy(d => d.NormalizedTimestamp).
+                               ToList();
 
         if (allDataList.Count == 0)
             return;
@@ -1642,16 +1620,16 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                "Log" => UnaryOperators.Logarithm,
-                "Sqrt" => UnaryOperators.SquareRoot,
-                _ => x => x
+                    "Log"  => UnaryOperators.Logarithm,
+                    "Sqrt" => UnaryOperators.SquareRoot,
+                    _      => x => x
             };
             var allValues = allDataList.Select(d => (double)d.Value!.Value).
-                ToList();
+                                        ToList();
             computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
             metricsList = new List<IReadOnlyList<HealthMetricData>>
             {
-                allDataList
+                    allDataList
             };
         }
         else
@@ -1660,7 +1638,7 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] UNARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
             metricsList = new List<IReadOnlyList<HealthMetricData>>
             {
-                allDataList
+                    allDataList
             };
             computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
             Debug.WriteLine($"[Transform] UNARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
@@ -1818,12 +1796,12 @@ public partial class MainWindow : Window
     {
         // Use ALL data for chart computation (proper normalization)
         var allData1List = data1.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+                                 OrderBy(d => d.NormalizedTimestamp).
+                                 ToList();
 
         var allData2List = data2.Where(d => d.Value.HasValue).
-            OrderBy(d => d.NormalizedTimestamp).
-            ToList();
+                                 OrderBy(d => d.NormalizedTimestamp).
+                                 ToList();
 
         if (allData1List.Count == 0 || allData2List.Count == 0)
             return;
@@ -1844,20 +1822,20 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                "Add" => BinaryOperators.Sum,
-                "Subtract" => BinaryOperators.Difference,
-                _ => (a, b) => a
+                    "Add"      => BinaryOperators.Sum,
+                    "Subtract" => BinaryOperators.Difference,
+                    _          => (a, b) => a
             };
 
             var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
-                ToList();
+                                         ToList();
             var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
-                ToList();
+                                         ToList();
             binaryComputedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
             binaryMetricsList = new List<IReadOnlyList<HealthMetricData>>
             {
-                alignedData.Item1,
-                alignedData.Item2
+                    alignedData.Item1,
+                    alignedData.Item2
             };
             Debug.WriteLine($"[Transform] BINARY - Legacy computation completed: {binaryComputedResults.Count} results");
         }
@@ -1867,8 +1845,8 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] BINARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
             binaryMetricsList = new List<IReadOnlyList<HealthMetricData>>
             {
-                alignedData.Item1,
-                alignedData.Item2
+                    alignedData.Item1,
+                    alignedData.Item2
             };
             binaryComputedResults = TransformExpressionEvaluator.Evaluate(expression, binaryMetricsList);
             Debug.WriteLine($"[Transform] BINARY - Evaluated {binaryComputedResults.Count} results using TransformExpressionEvaluator");

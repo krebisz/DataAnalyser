@@ -1,5 +1,5 @@
-using DataVisualiser.Core.Rendering.Shading;
 using System.Diagnostics;
+using DataVisualiser.Core.Rendering.Shading;
 
 namespace DataVisualiser.Core.Services;
 
@@ -26,11 +26,11 @@ public sealed class FrequencyShadingCalculator
 
         var context = new IntervalShadingContext
         {
-            Intervals = intervals,
-            FrequenciesPerDay = frequencies,
-            DayValues = dayValues,
-            GlobalMin = globalMin,
-            GlobalMax = globalMax
+                Intervals = intervals,
+                FrequenciesPerDay = frequencies,
+                DayValues = dayValues,
+                GlobalMin = globalMin,
+                GlobalMax = globalMax
         };
 
         var colorMap = _shadingStrategy.CalculateColorMap(context);
@@ -156,7 +156,7 @@ public sealed class FrequencyShadingCalculator
         var totalValues = frequencies.Values.Sum();
         var nonZeroIntervals = frequencies.Values.Count(f => f > 0);
         var maxFreq = frequencies.Values.DefaultIfEmpty(0).
-            Max();
+                                  Max();
 
         Debug.WriteLine($"Day {dayIndex} frequencies: " + $"Total values={totalValues}, " + $"Non-zero intervals={nonZeroIntervals}, " + $"Max frequency={maxFreq}");
 
@@ -164,13 +164,13 @@ public sealed class FrequencyShadingCalculator
             return;
 
         var ordered = frequencies.OrderBy(kvp => kvp.Key).
-            ToList();
+                                  ToList();
 
         var firstFew = ordered.Take(3).
-            Select(kvp => $"I{kvp.Key}={kvp.Value}");
+                               Select(kvp => $"I{kvp.Key}={kvp.Value}");
 
         var lastFew = ordered.Skip(Math.Max(0, ordered.Count - 3)).
-            Select(kvp => $"I{kvp.Key}={kvp.Value}");
+                              Select(kvp => $"I{kvp.Key}={kvp.Value}");
 
         Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
         Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");

@@ -1,6 +1,6 @@
-﻿using DataFileReader.Helper;
+﻿using System.Diagnostics;
+using DataFileReader.Helper;
 using DataFileReader.Ingestion;
-using System.Diagnostics;
 
 public static class ShadowValidate_SamsungHealthCsv
 {
@@ -23,7 +23,7 @@ public static class ShadowValidate_SamsungHealthCsv
             throw new InvalidOperationException($"Count mismatch: metrics={metrics.Count}, raw={rawRecords.Count}");
 
         // Basic field parity checks (strict)
-        for (int i = 0; i < metrics.Count; i++)
+        for (var i = 0; i < metrics.Count; i++)
         {
             var m = metrics[i];
             var r = rawRecords[i];

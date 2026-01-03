@@ -1,10 +1,10 @@
+using System.Diagnostics;
+using System.Windows.Media;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Shared.Helpers;
 using LiveCharts.Wpf;
-using System.Diagnostics;
-using System.Windows.Media;
 
 namespace DataVisualiser.Core.Rendering.Engines;
 
@@ -106,12 +106,12 @@ public sealed class ChartRenderEngine
     {
         var mainTimeline = model.Timestamps;
         if (mainTimeline == null || mainTimeline.Count == 0)
-            // Fallback: use union of all series timestamps
+                // Fallback: use union of all series timestamps
             if (model.Series != null)
                 mainTimeline = model.Series.SelectMany(s => s.Timestamps).
-                    Distinct().
-                    OrderBy(t => t).
-                    ToList();
+                                     Distinct().
+                                     OrderBy(t => t).
+                                     ToList();
 
         return mainTimeline ?? new List<DateTime>();
     }
@@ -315,7 +315,7 @@ public sealed class ChartRenderEngine
 
         xAxis.Separator = new Separator
         {
-            Step = step
+                Step = step
         };
 
         // These three settings ensure LiveCharts does NOT compress or stretch based on time
@@ -354,7 +354,7 @@ public sealed class ChartRenderEngine
                 var operation = model.OperationType;
 
                 if (isPrimary)
-                    // Primary series shows: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth/raw)"
+                        // Primary series shows: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth/raw)"
                     return $"{model.MetricType}:{primarySubtype} ({operation}) {model.MetricType}:{secondarySubtype} ({smoothRaw})";
 
                 // Secondary series (shouldn't happen for operation charts, but handle it)
@@ -384,11 +384,11 @@ public sealed class ChartRenderEngine
     {
         if (seriesTimestamps.Count == 0 || seriesValues.Count == 0)
             return mainTimeline.Select(_ => double.NaN).
-                ToList();
+                                ToList();
 
         if (seriesTimestamps.Count != seriesValues.Count)
             return mainTimeline.Select(_ => double.NaN).
-                ToList();
+                                ToList();
 
         // Create a dictionary for quick lookup
         var valueMap = new Dictionary<DateTime, double>();
@@ -404,7 +404,7 @@ public sealed class ChartRenderEngine
         var lastValue = double.NaN;
 
         foreach (var timestamp in mainTimeline)
-            // Try exact match first
+                // Try exact match first
             if (valueMap.TryGetValue(timestamp, out var exactValue))
             {
                 aligned.Add(exactValue);

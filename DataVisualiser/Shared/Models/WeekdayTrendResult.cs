@@ -6,7 +6,7 @@ public sealed class WeekdayTrendResult
     public Dictionary<int, WeekdayTrendSeries> SeriesByDay { get; } = new();
 
     public DateTime From { get; set; }
-    public DateTime To { get; set; }
+    public DateTime To   { get; set; }
 
     // For uniform Y-axis scaling
     public double GlobalMin { get; set; }

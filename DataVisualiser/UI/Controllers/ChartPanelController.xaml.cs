@@ -1,7 +1,7 @@
-using DataVisualiser.Core.Orchestration;
-using DataVisualiser.UI.State;
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.Core.Orchestration;
+using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI;
 
@@ -68,7 +68,6 @@ public partial class ChartPanelController : UserControl
     public Panel ChartContentPanel => ContentPanel;
 
     public event EventHandler? ToggleRequested;
-    public event EventHandler<ChartDataContext>? RenderRequested;
 
     /// <summary>
     ///     Sets the header controls (e.g., operation toggle button for DiffRatio chart).

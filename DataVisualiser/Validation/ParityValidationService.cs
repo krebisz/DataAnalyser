@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Validation.Parity;
-using System.Diagnostics;
 
 namespace DataVisualiser.Validation;
 
@@ -28,9 +28,9 @@ public class ParityValidationService
         var harness = new CombinedMetricParityHarness();
         var parityResult = harness.Validate(new StrategyParityContext
         {
-            StrategyName = "CombinedMetric",
-            MetricIdentity = $"{labelLeft}|{labelRight}",
-            Mode = ParityMode.Diagnostic
+                StrategyName = "CombinedMetric",
+                MetricIdentity = $"{labelLeft}|{labelRight}",
+                Mode = ParityMode.Diagnostic
         }, () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()), () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
 
         Debug.WriteLine(parityResult.Passed ? "[PARITY] CombinedMetric PASSED" : "[PARITY] CombinedMetric FAILED");

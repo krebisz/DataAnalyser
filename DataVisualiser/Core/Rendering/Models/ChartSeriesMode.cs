@@ -5,7 +5,7 @@ namespace DataVisualiser.Core.Rendering.Models;
 /// </summary>
 public enum ChartSeriesMode
 {
-    SmoothedOnly = 0,
-    RawOnly = 1,
+    SmoothedOnly   = 0,
+    RawOnly        = 1,
     RawAndSmoothed = 2
 }

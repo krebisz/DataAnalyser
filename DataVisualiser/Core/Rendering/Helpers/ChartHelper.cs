@@ -1,12 +1,12 @@
-using DataVisualiser.Shared.Helpers;
-using DataVisualiser.Shared.Models;
-using LiveCharts;
-using LiveCharts.Wpf;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Shared.Models;
+using LiveCharts;
+using LiveCharts.Wpf;
 using Separator = LiveCharts.Wpf.Separator;
 
 namespace DataVisualiser.Core.Rendering.Helpers;
@@ -20,11 +20,11 @@ public static class ChartHelper
     {
         return interval switch
         {
-            TickInterval.Month => dateTime.ToString("MMM yyyy"),
-            TickInterval.Week => dateTime.ToString("MMM dd"),
-            TickInterval.Day => dateTime.ToString("MM/dd"),
-            TickInterval.Hour => dateTime.ToString("MM/dd HH:mm"),
-            _ => dateTime.ToString("MM/dd HH:mm")
+                TickInterval.Month => dateTime.ToString("MMM yyyy"),
+                TickInterval.Week  => dateTime.ToString("MMM dd"),
+                TickInterval.Day   => dateTime.ToString("MM/dd"),
+                TickInterval.Hour  => dateTime.ToString("MM/dd HH:mm"),
+                _                  => dateTime.ToString("MM/dd HH:mm")
         };
     }
 
@@ -36,12 +36,12 @@ public static class ChartHelper
         var selectedResolution = ResolutionCombo.SelectedItem?.ToString() ?? "All";
         return selectedResolution switch
         {
-            "Hourly" => "HealthMetricsHour",
-            "Daily" => "HealthMetricsDay",
-            "Weekly" => "HealthMetricsWeek",
-            "Monthly" => "HealthMetricsMonth",
-            "Yearly" => "HealthMetricsYear",
-            _ => "HealthMetrics" // Default to "All" which uses HealthMetrics
+                "Hourly"  => "HealthMetricsHour",
+                "Daily"   => "HealthMetricsDay",
+                "Weekly"  => "HealthMetricsWeek",
+                "Monthly" => "HealthMetricsMonth",
+                "Yearly"  => "HealthMetricsYear",
+                _         => "HealthMetrics" // Default to "All" which uses HealthMetrics
         };
     }
 
@@ -55,8 +55,8 @@ public static class ChartHelper
         var display2 = SubtypeCombo2 != null ? GetDisplayNameFromCombo(SubtypeCombo2, baseMetric) : baseMetric;
         return new[]
         {
-            display1,
-            display2
+                display1,
+                display2
         };
     }
 
@@ -64,13 +64,13 @@ public static class ChartHelper
     {
         var smoothedSeries = new LineSeries
         {
-            Title = title,
-            Values = new ChartValues<double>(),
-            PointGeometrySize = pointSize,
-            StrokeThickness = lineThickness,
-            Fill = Brushes.Transparent,
-            Stroke = new SolidColorBrush(colour),
-            DataLabels = dataLabels
+                Title = title,
+                Values = new ChartValues<double>(),
+                PointGeometrySize = pointSize,
+                StrokeThickness = lineThickness,
+                Fill = Brushes.Transparent,
+                Stroke = new SolidColorBrush(colour),
+                DataLabels = dataLabels
         };
 
         return smoothedSeries;
@@ -121,7 +121,7 @@ public static class ChartHelper
     /// <summary>
     ///     Extracts the base name from a series title, removing "(Raw)" or "(smooth)" suffixes.
     /// </summary>
-    private static (string BaseName, bool IsRaw, bool IsSmoothed) ParseSeriesTitle(string title)
+    private static(string BaseName, bool IsRaw, bool IsSmoothed) ParseSeriesTitle(string title)
     {
         if (title.EndsWith(" (Raw)"))
             return (title.Substring(0, title.Length - 6), true, false);
@@ -135,7 +135,7 @@ public static class ChartHelper
     /// <summary>
     ///     Identifies primary and secondary series names from chart series.
     /// </summary>
-    private static (string? Primary, string? Secondary) IdentifySeriesNames(CartesianChart chart)
+    private static(string? Primary, string? Secondary) IdentifySeriesNames(CartesianChart chart)
     {
         var seenBaseNames = new HashSet<string>();
         string? primary = null;
@@ -272,11 +272,11 @@ public static class ChartHelper
         {
             var line = new AxisSection
             {
-                Value = index,
-                SectionWidth = 0,
-                Stroke = Brushes.Black,
-                StrokeThickness = 1,
-                Fill = Brushes.Transparent
+                    Value = index,
+                    SectionWidth = 0,
+                    Stroke = Brushes.Black,
+                    StrokeThickness = 1,
+                    Fill = Brushes.Transparent
             };
 
             axis.Sections.Add(line);
@@ -308,13 +308,13 @@ public static class ChartHelper
     {
         var border = new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(220, 30, 30, 30)),
-            CornerRadius = new CornerRadius(4),
-            BorderThickness = new Thickness(1),
-            BorderBrush = Brushes.Black,
-            Padding = new Thickness(4),
-            Child = stack,
-            MaxWidth = 600
+                Background = new SolidColorBrush(Color.FromArgb(220, 30, 30, 30)),
+                CornerRadius = new CornerRadius(4),
+                BorderThickness = new Thickness(1),
+                BorderBrush = Brushes.Black,
+                Padding = new Thickness(4),
+                Child = stack,
+                MaxWidth = 600
         };
 
         return border;
@@ -327,9 +327,9 @@ public static class ChartHelper
     {
         var _hoverTimestampText = new TextBlock
         {
-            Foreground = Brushes.White,
-            FontWeight = isBold ? FontWeights.Bold : FontWeights.Normal,
-            Margin = new Thickness(6, 2, 6, 4)
+                Foreground = Brushes.White,
+                FontWeight = isBold ? FontWeights.Bold : FontWeights.Normal,
+                Margin = new Thickness(6, 2, 6, 4)
         };
 
         return _hoverTimestampText;
@@ -441,7 +441,7 @@ public static class ChartHelper
         foreach (var chart in charts)
             if (chartTimestamps.TryGetValue(chart, out var list) && index >= 0 && index < list.Count)
                 return list[index].
-                    ToString("yyyy-MM-dd HH:mm:ss");
+                        ToString("yyyy-MM-dd HH:mm:ss");
 
         return "Timestamp: N/A";
     }
@@ -493,7 +493,7 @@ public static class ChartHelper
     /// <summary>
     ///     Applies padding to min/max values based on data range.
     /// </summary>
-    private static (double MinValue, double MaxValue) ApplyPadding(double dataMin, double dataMax, double range)
+    private static(double MinValue, double MaxValue) ApplyPadding(double dataMin, double dataMax, double range)
     {
         var minValue = dataMin;
         var maxValue = dataMax;
@@ -549,10 +549,10 @@ public static class ChartHelper
         var normalizedInterval = rawTickInterval / magnitude;
         var niceInterval = normalizedInterval switch
         {
-            <= 1 => 1 * magnitude,
-            <= 2 => 2 * magnitude,
-            <= 5 => 5 * magnitude,
-            _ => 10 * magnitude
+                <= 1 => 1 * magnitude,
+                <= 2 => 2 * magnitude,
+                <= 5 => 5 * magnitude,
+                _    => 10 * magnitude
         };
 
         niceInterval = MathHelper.RoundToThreeSignificantDigits(niceInterval);
@@ -562,7 +562,7 @@ public static class ChartHelper
     /// <summary>
     ///     Calculates nice min/max values aligned to the tick interval.
     /// </summary>
-    private static (double NiceMin, double NiceMax) CalculateNiceBounds(double minValue, double maxValue, double niceInterval, double dataMin)
+    private static(double NiceMin, double NiceMax) CalculateNiceBounds(double minValue, double maxValue, double niceInterval, double dataMin)
     {
         var niceMin = Math.Floor(minValue / niceInterval) * niceInterval;
         var niceMax = Math.Ceiling(maxValue / niceInterval) * niceInterval;
@@ -630,7 +630,7 @@ public static class ChartHelper
         return true;
     }
 
-    private static (double Min, double Max, double Range) CalculatePaddedRange(double dataMin, double dataMax)
+    private static(double Min, double Max, double Range) CalculatePaddedRange(double dataMin, double dataMax)
     {
         var range = dataMax - dataMin;
         var (minValue, maxValue) = ApplyPadding(dataMin, dataMax, range);
@@ -652,7 +652,7 @@ public static class ChartHelper
 
         yAxis.Separator = fallbackStep > 0 ? new Separator
         {
-            Step = fallbackStep
+                Step = fallbackStep
         } : new Separator();
 
         yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
@@ -683,7 +683,7 @@ public static class ChartHelper
 
         yAxis.Separator = new Separator
         {
-            Step = step
+                Step = step
         };
 
         yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);

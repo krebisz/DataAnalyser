@@ -31,14 +31,14 @@ public sealed class TransformExpression
     {
         return new TransformExpression
         {
-            Operation = null,
-            Operands = new List<TransformOperand>
-            {
-                new()
+                Operation = null,
+                Operands = new List<TransformOperand>
                 {
-                    MetricIndex = metricIndex
+                        new()
+                        {
+                                MetricIndex = metricIndex
+                        }
                 }
-            }
         };
     }
 
@@ -49,8 +49,8 @@ public sealed class TransformExpression
     {
         return new TransformExpression
         {
-            Operation = operation,
-            Operands = operands.ToList()
+                Operation = operation,
+                Operands = operands.ToList()
         };
     }
 
@@ -61,11 +61,11 @@ public sealed class TransformExpression
     {
         return new TransformExpression
         {
-            Operation = operation,
-            Operands = new List<TransformOperand>
-            {
-                operand
-            }
+                Operation = operation,
+                Operands = new List<TransformOperand>
+                {
+                        operand
+                }
         };
     }
 
@@ -76,12 +76,12 @@ public sealed class TransformExpression
     {
         return new TransformExpression
         {
-            Operation = operation,
-            Operands = new List<TransformOperand>
-            {
-                left,
-                right
-            }
+                Operation = operation,
+                Operands = new List<TransformOperand>
+                {
+                        left,
+                        right
+                }
         };
     }
 }

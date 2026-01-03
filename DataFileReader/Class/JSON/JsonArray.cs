@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 
-
 public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
 {
-    public bool IsArray => false;
+    public List<IJson> Elements { get; set; }
+    public bool        IsArray  => false;
 
     public bool IsObject => true;
 
@@ -17,12 +17,14 @@ public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
 
     public IJson Parent { get; set; }
 
-    public List<IJson> Elements { get; set; }
-
     public IJson this[int index]
     {
-        get { return (index < 0 || index > Count ? null : Elements[index]); }
-        set { if (index >= 0 && index < Count) Elements[index] = value; }
+        get => index < 0 || index > Count ? null : Elements[index];
+        set
+        {
+            if (index >= 0 && index < Count)
+                Elements[index] = value;
+        }
     }
 
     public IEnumerator<IJson> GetEnumerator()
@@ -51,23 +53,20 @@ public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
     {
         return new JsonArray
         {
-            Name = rename,
-            Parent = this.Parent,
-            Elements = new List<IJson>(this.Elements)
+                Name = rename,
+                Parent = Parent,
+                Elements = new List<IJson>(Elements)
         };
     }
 
     public bool Contains(string text)
     {
         if (!string.IsNullOrWhiteSpace(text))
-        {
-            for (int index = 0; index < Elements.Count; index++)
-                if (text.Equals(Elements[index].ToString(), StringComparison.InvariantCultureIgnoreCase))
+            for (var index = 0; index < Elements.Count; index++)
+                if (text.Equals(Elements[index].
+                            ToString(), StringComparison.InvariantCultureIgnoreCase))
                     return true;
-        }
 
         return false;
     }
-
 }
-

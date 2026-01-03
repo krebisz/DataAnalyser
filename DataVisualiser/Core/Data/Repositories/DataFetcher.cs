@@ -1,8 +1,8 @@
+using System.Text;
 using Dapper;
 using DataVisualiser.Core.Data.QueryBuilders;
 using DataVisualiser.Shared.Models;
 using Microsoft.Data.SqlClient;
-using System.Text;
 
 namespace DataVisualiser.Core.Data.Repositories;
 
@@ -43,8 +43,8 @@ public class DataFetcher
 
         return await conn.QueryAsync<dynamic>(sql, new
         {
-            from,
-            to
+                from,
+                to
         });
     }
 
@@ -84,7 +84,7 @@ public class DataFetcher
 
         var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql, new
         {
-            MetricType = metricType
+                MetricType = metricType
         });
 
         if (result != null && result.MinDate.HasValue && result.MaxDate.HasValue)
@@ -123,9 +123,9 @@ public class DataFetcher
 
         var results = await conn.QueryAsync<HealthMetricData>(sql, new
         {
-            MetricType = metricType,
-            FromDate = from,
-            ToDate = to
+                MetricType = metricType,
+                FromDate = from,
+                ToDate = to
         });
 
         return results;
@@ -195,7 +195,7 @@ public class DataFetcher
 
             var subtypes = await conn.QueryAsync<string>(sql, new
             {
-                BaseType = baseType
+                    BaseType = baseType
             });
             return subtypes;
         }
@@ -212,7 +212,7 @@ public class DataFetcher
 
             var subtypes = await conn.QueryAsync<string>(sql, new
             {
-                BaseType = baseType
+                    BaseType = baseType
             });
             return subtypes;
         }
@@ -237,11 +237,11 @@ public class DataFetcher
         var results = await conn.QueryAsync<(string MetricType, string MetricSubtype)>(sql);
 
         var grouped = results.GroupBy(r => r.MetricType).
-            ToDictionary(g => g.Key, g => g.Select(r => r.MetricSubtype).
-                Where(st => !string.IsNullOrEmpty(st)).
-                Distinct().
-                OrderBy(st => st).
-                ToList());
+                              ToDictionary(g => g.Key, g => g.Select(r => r.MetricSubtype).
+                                                              Where(st => !string.IsNullOrEmpty(st)).
+                                                              Distinct().
+                                                              OrderBy(st => st).
+                                                              ToList());
 
         return grouped;
     }
@@ -359,8 +359,8 @@ public class DataFetcher
 
         var result = await conn.QuerySingleOrDefaultAsync<long?>(sql, new
         {
-            MetricType = metricType,
-            MetricSubtype = metricSubtype ?? string.Empty
+                MetricType = metricType,
+                MetricSubtype = metricSubtype ?? string.Empty
         });
 
         return result ?? 0;
@@ -425,7 +425,7 @@ public class DataFetcher
 
         var results = await conn.QueryAsync<(string MetricSubtype, long RecordCount)>(sql, new
         {
-            MetricType = metricType
+                MetricType = metricType
         });
 
         return results.ToDictionary(r => r.MetricSubtype, r => r.RecordCount);

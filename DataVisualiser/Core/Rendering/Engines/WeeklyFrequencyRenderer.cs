@@ -1,8 +1,8 @@
+using System.Windows.Media;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
-using System.Windows.Media;
 
 namespace DataVisualiser.Core.Rendering.Engines;
 
@@ -22,8 +22,8 @@ public class WeeklyFrequencyRenderer
     ///     Step 1 & 2: Normalize y-values and create bins with frequency counts per day.
     ///     Returns a tuple with bins and frequency data.
     /// </summary>
-    public static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerDay, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerDay) PrepareBinsAndFrequencies(Dictionary<int, List<double>> dayValues, // dayIndex -> values for that day
-        double globalMin, double globalMax)
+    public static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerDay, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerDay) PrepareBinsAndFrequencies(Dictionary<int, List<double>> dayValues, // dayIndex -> values for that day
+                                                                                                                                                                                                                                double                        globalMin, double globalMax)
     {
         // Step 1: Calculate bin size based on range
         var binSize = FrequencyBinningHelper.CalculateBinSize(globalMin, globalMax);
@@ -73,10 +73,7 @@ public class WeeklyFrequencyRenderer
     ///     Step 4 & 5: Assign color shade to each y-interval for each day and draw the chart.
     ///     Creates stacked column series where each bin is a segment, colored by frequency.
     /// </summary>
-    public static void RenderChart(
-        CartesianChart targetChart,
-        WeeklyDistributionResult result,
-        double minHeight)
+    public static void RenderChart(CartesianChart targetChart, WeeklyDistributionResult result, double minHeight)
     {
         if (result?.Bins == null || result.Bins.Count == 0)
             return;
@@ -87,51 +84,24 @@ public class WeeklyFrequencyRenderer
         Array.Fill(cumulativeBaseline, 0.0);
 
         for (var binIndex = 0; binIndex < result.Bins.Count; binIndex++)
-        {
-            RenderBin(
-                seriesCollection,
-                result,
-                binIndex,
-                cumulativeBaseline);
-        }
+            RenderBin(seriesCollection, result, binIndex, cumulativeBaseline);
 
         targetChart.Series = seriesCollection;
         targetChart.LegendLocation = LegendLocation.None;
     }
-    private static void RenderBin(
-    SeriesCollection seriesCollection,
-    WeeklyDistributionResult result,
-    int binIndex,
-    double[] cumulativeBaseline)
+
+    private static void RenderBin(SeriesCollection seriesCollection, WeeklyDistributionResult result, int binIndex, double[] cumulativeBaseline)
     {
         var bin = result.Bins[binIndex];
         var binHeight = bin.Max - bin.Min;
 
         for (var dayIndex = 0; dayIndex < 7; dayIndex++)
-        {
-            RenderBinForDay(
-                seriesCollection,
-                result,
-                binIndex,
-                dayIndex,
-                binHeight,
-                cumulativeBaseline);
-        }
+            RenderBinForDay(seriesCollection, result, binIndex, dayIndex, binHeight, cumulativeBaseline);
     }
-    private static void RenderBinForDay(
-    SeriesCollection seriesCollection,
-    WeeklyDistributionResult result,
-    int binIndex,
-    int dayIndex,
-    double binHeight,
-    double[] cumulativeBaseline)
+
+    private static void RenderBinForDay(SeriesCollection seriesCollection, WeeklyDistributionResult result, int binIndex, int dayIndex, double binHeight, double[] cumulativeBaseline)
     {
-        if (!TryGetNormalizedFrequency(
-                result,
-                dayIndex,
-                binIndex,
-                out var normalizedFreq) ||
-            normalizedFreq <= 0.0)
+        if (!TryGetNormalizedFrequency(result, dayIndex, binIndex, out var normalizedFreq) || normalizedFreq <= 0.0)
             return;
 
         var color = MapFrequencyToColor(normalizedFreq);
@@ -145,20 +115,15 @@ public class WeeklyFrequencyRenderer
 
         cumulativeBaseline[dayIndex] += binHeight;
     }
-    private static bool TryGetNormalizedFrequency(
-    WeeklyDistributionResult result,
-    int dayIndex,
-    int binIndex,
-    out double normalizedFreq)
+
+    private static bool TryGetNormalizedFrequency(WeeklyDistributionResult result, int dayIndex, int binIndex, out double normalizedFreq)
     {
         normalizedFreq = 0.0;
 
-        return result.NormalizedFrequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs)
-               && dayFreqs.TryGetValue(binIndex, out normalizedFreq);
+        return result.NormalizedFrequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) && dayFreqs.TryGetValue(binIndex, out normalizedFreq);
     }
-    private static ChartValues<double> BuildValues(
-    int activeDayIndex,
-    double value)
+
+    private static ChartValues<double> BuildValues(int activeDayIndex, double value)
     {
         var values = new ChartValues<double>();
 
@@ -167,22 +132,21 @@ public class WeeklyFrequencyRenderer
 
         return values;
     }
-    private static StackedColumnSeries CreateBaselineSeries(
-    ChartValues<double> baselineValues)
+
+    private static StackedColumnSeries CreateBaselineSeries(ChartValues<double> baselineValues)
     {
         return new StackedColumnSeries
         {
-            Title = null,
-            Values = baselineValues,
-            Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-            StrokeThickness = 0,
-            MaxColumnWidth = MaxColumnWidth,
-            DataLabels = false
+                Title = null,
+                Values = baselineValues,
+                Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+                StrokeThickness = 0,
+                MaxColumnWidth = MaxColumnWidth,
+                DataLabels = false
         };
     }
-    private static StackedColumnSeries CreateColoredSeries(
-    ChartValues<double> heightValues,
-    Color color)
+
+    private static StackedColumnSeries CreateColoredSeries(ChartValues<double> heightValues, Color color)
     {
         var fillBrush = new SolidColorBrush(color);
         fillBrush.Freeze();
@@ -192,14 +156,13 @@ public class WeeklyFrequencyRenderer
 
         return new StackedColumnSeries
         {
-            Title = null,
-            Values = heightValues,
-            Fill = fillBrush,
-            Stroke = strokeBrush,
-            StrokeThickness = 0.5,
-            MaxColumnWidth = MaxColumnWidth,
-            DataLabels = false
+                Title = null,
+                Values = heightValues,
+                Fill = fillBrush,
+                Stroke = strokeBrush,
+                StrokeThickness = 0.5,
+                MaxColumnWidth = MaxColumnWidth,
+                DataLabels = false
         };
     }
-
 }

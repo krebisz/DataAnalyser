@@ -15,14 +15,14 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class MultiMetricStrategy : IChartComputationStrategy
 {
-    private readonly DateTime _from;
-    private readonly IReadOnlyList<string> _labels;
+    private readonly DateTime                                     _from;
+    private readonly IReadOnlyList<string>                        _labels;
     private readonly IReadOnlyList<IEnumerable<HealthMetricData>> _series;
-    private readonly ISmoothingService _smoothingService;
-    private readonly ITimelineService _timelineService;
-    private readonly DateTime _to;
-    private readonly string? _unit;
-    private readonly IUnitResolutionService _unitResolutionService;
+    private readonly ISmoothingService                            _smoothingService;
+    private readonly ITimelineService                             _timelineService;
+    private readonly DateTime                                     _to;
+    private readonly string?                                      _unit;
+    private readonly IUnitResolutionService                       _unitResolutionService;
 
     /// <summary>
     ///     Legacy constructor using HealthMetricData collections.
@@ -57,8 +57,8 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
 
         // Validate compatibility before processing
         var canonicalIds = cmsSeries.Where(cms => cms != null && cms.MetricId != null).
-            Select(cms => cms.MetricId.Value).
-            ToList();
+                                     Select(cms => cms.MetricId.Value).
+                                     ToList();
 
         if (canonicalIds.Count != cmsSeries.Count)
             throw new ArgumentException("All CMS series must have valid metric identities.", nameof(cmsSeries));
@@ -71,8 +71,8 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
 
         // Convert each CMS to HealthMetricData using helper
         var series = cmsSeries.Select(cms => CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).
-                ToList()).
-            ToList();
+                                                                 ToList()).
+                               ToList();
 
         _series = series;
         _labels = labels;
@@ -86,9 +86,9 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
         _unitResolutionService = unitResolutionService;
     }
 
-    public string PrimaryLabel => _labels.Count > 0 ? _labels[0] : "Multi-Metric";
-    public string SecondaryLabel => string.Empty;
-    public string? Unit { get; private set; }
+    public string  PrimaryLabel   => _labels.Count > 0 ? _labels[0] : "Multi-Metric";
+    public string  SecondaryLabel => string.Empty;
+    public string? Unit           { get; private set; }
 
     public ChartComputationResult? Compute()
     {
@@ -125,9 +125,9 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
             return null;
 
         var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).
-            ToList();
+                                        ToList();
         var rawValues = orderedData.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).
-            ToList();
+                                    ToList();
 
         var smoothedValues = _smoothingService.SmoothSeries(orderedData, rawTimestamps, _from, _to);
 
@@ -145,11 +145,11 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
     {
         return new SeriesResult
         {
-            SeriesId = $"series_{seriesIndex}",
-            DisplayName = label,
-            Timestamps = rawTimestamps,
-            RawValues = rawValues,
-            Smoothed = smoothedValues
+                SeriesId = $"series_{seriesIndex}",
+                DisplayName = label,
+                Timestamps = rawTimestamps,
+                RawValues = rawValues,
+                Smoothed = smoothedValues
         };
     }
 
@@ -159,9 +159,9 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
     private List<DateTime> CollectAllTimestamps(List<SeriesResult> seriesResults)
     {
         return seriesResults.SelectMany(s => s.Timestamps).
-            Distinct().
-            OrderBy(t => t).
-            ToList();
+                             Distinct().
+                             OrderBy(t => t).
+                             ToList();
     }
 
     /// <summary>
@@ -178,14 +178,14 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
 
         return new ChartComputationResult
         {
-            Timestamps = allTimestamps,
-            IntervalIndices = intervalIndices.ToList(),
-            NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
-            TickInterval = timeline.TickInterval,
-            DateRange = timeline.DateRange,
-            Unit = Unit ?? _unit,
-            // Populate Series array with one result per sub-metric
-            Series = seriesResults
+                Timestamps = allTimestamps,
+                IntervalIndices = intervalIndices.ToList(),
+                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
+                TickInterval = timeline.TickInterval,
+                DateRange = timeline.DateRange,
+                Unit = Unit ?? _unit,
+                // Populate Series array with one result per sub-metric
+                Series = seriesResults
         };
     }
 }

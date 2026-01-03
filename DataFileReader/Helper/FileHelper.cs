@@ -4,11 +4,12 @@ public static class FileHelper
 {
     public static List<string> GetFileList(string directory)
     {
-        List<string> fileList = new List<string>();
+        var fileList = new List<string>();
 
-        string[] files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+        var files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-        foreach (var file in files) fileList.Add(file);
+        foreach (var file in files)
+            fileList.Add(file);
 
         //string[] subDirectories = Directory.GetDirectories(directory);
 
@@ -21,12 +22,19 @@ public static class FileHelper
     {
         var fileName = string.Empty;
 
-        char[] separator = { '/', '\\' };
-        string[] fileParts = file.Split(separator);
+        char[] separator =
+        {
+                '/',
+                '\\'
+        };
+        var fileParts = file.Split(separator);
 
         var filePartsLength = fileParts.Length;
 
-        if (filePartsLength > 0) fileName = fileParts[filePartsLength - 1].Trim().ToLower();
+        if (filePartsLength > 0)
+            fileName = fileParts[filePartsLength - 1].
+                       Trim().
+                       ToLower();
 
         fileName = DataHelper.RemoveSpecialCharacters(fileName);
 
@@ -37,13 +45,15 @@ public static class FileHelper
     {
         var fileExtension = string.Empty;
 
-        string[] fileParts = file.Split('.');
+        var fileParts = file.Split('.');
 
         var filePartsLength = fileParts.Length;
 
-        if (filePartsLength > 0) fileExtension = fileParts[filePartsLength - 1].Trim().ToLower();
+        if (filePartsLength > 0)
+            fileExtension = fileParts[filePartsLength - 1].
+                            Trim().
+                            ToLower();
 
         return fileExtension;
     }
-
 }

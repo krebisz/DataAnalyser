@@ -2,31 +2,28 @@
 using DataFileReader.Ingestion;
 using DataFileReader.Normalization.Canonical;
 
-namespace DataFileReader.Normalization
+namespace DataFileReader.Normalization;
+
+/// <summary>
+///     Optional diagnostics wiring for normalization components.
+///     Disabled by default.
+/// </summary>
+public static class NormalizationDiagnostics
 {
+    public static Action<RawRecord>?                     OnRawRecordObserved    { get; set; }
+    public static Action<CanonicalMetricSeries<object>>? OnMetricSeriesProduced { get; set; }
+
     /// <summary>
-    /// Optional diagnostics wiring for normalization components.
-    /// Disabled by default.
+    ///     Records the outcome of canonical metric identity resolution.
+    ///     Informational only; does not alter normalization behavior.
     /// </summary>
-    public static class NormalizationDiagnostics
+    internal static void OnMetricIdentityResolutionEvaluated(RawRecord record, MetricIdentityResolutionResult result)
     {
-        public static Action<RawRecord>? OnRawRecordObserved { get; set; }
-        public static Action<CanonicalMetricSeries<object>>? OnMetricSeriesProduced { get; set; }
+        // Intentionally minimal.
+        // This exists to make identity resolution observable
+        // without promoting or mutating any data.
 
-        /// <summary>
-        /// Records the outcome of canonical metric identity resolution.
-        /// Informational only; does not alter normalization behavior.
-        /// </summary>
-        internal static void OnMetricIdentityResolutionEvaluated(
-            RawRecord record,
-            MetricIdentityResolutionResult result)
-        {
-            // Intentionally minimal.
-            // This exists to make identity resolution observable
-            // without promoting or mutating any data.
-
-            // You may later route this to logging, persistence,
-            // or in-memory inspection.
-        }
+        // You may later route this to logging, persistence,
+        // or in-memory inspection.
     }
 }

@@ -1,15 +1,15 @@
-using DataFileReader.Class;
-using Newtonsoft.Json;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Text;
+using DataFileReader.Class;
+using Newtonsoft.Json;
 
 namespace DataFileReader.Helper;
 
 public static class SQLHelper
 {
     /// <summary>
-    /// Creates the standardized HealthMetrics table if it doesn't exist
+    ///     Creates the standardized HealthMetrics table if it doesn't exist
     /// </summary>
     public static void EnsureHealthMetricsTableExists()
     {
@@ -86,30 +86,30 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Ensures the per-resolution HealthMetrics tables exist (Second, Minute, Hour, Day, Week, Month, Year)
-    /// These tables are lightweight versions of HealthMetrics containing only:
-    /// Id, MetricType, MetricSubtype, NormalizedTimestamp, Value, Unit
-    /// Column names are consistent with the main HealthMetrics table.
+    ///     Ensures the per-resolution HealthMetrics tables exist (Second, Minute, Hour, Day, Week, Month, Year)
+    ///     These tables are lightweight versions of HealthMetrics containing only:
+    ///     Id, MetricType, MetricSubtype, NormalizedTimestamp, Value, Unit
+    ///     Column names are consistent with the main HealthMetrics table.
     /// </summary>
     private static void EnsureHealthMetricsResolutionTablesExist(string connectionString)
     {
-        if (string.IsNullOrEmpty(connectionString)) return;
+        if (string.IsNullOrEmpty(connectionString))
+            return;
 
         var tableNames = new[]
         {
-            "HealthMetricsSecond",
-            "HealthMetricsMinute",
-            "HealthMetricsHour",
-            "HealthMetricsDay",
-            "HealthMetricsWeek",
-            "HealthMetricsMonth",
-            "HealthMetricsYear"
+                "HealthMetricsSecond",
+                "HealthMetricsMinute",
+                "HealthMetricsHour",
+                "HealthMetricsDay",
+                "HealthMetricsWeek",
+                "HealthMetricsMonth",
+                "HealthMetricsYear"
         };
 
         var sb = new StringBuilder();
 
         foreach (var table in tableNames)
-        {
             sb.Append($@"
                 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[{table}]') AND type in (N'U'))
                 BEGIN
@@ -166,7 +166,6 @@ public static class SQLHelper
                     END
                 END
             ");
-        }
 
         try
         {
@@ -188,13 +187,14 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Optimizes existing HealthMetrics table by replacing old indexes with optimized composite indexes
-    /// This should be called after table creation or when optimizing an existing large table
+    ///     Optimizes existing HealthMetrics table by replacing old indexes with optimized composite indexes
+    ///     This should be called after table creation or when optimizing an existing large table
     /// </summary>
     public static void OptimizeHealthMetricsIndexes()
     {
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
-        if (string.IsNullOrEmpty(connectionString)) return;
+        if (string.IsNullOrEmpty(connectionString))
+            return;
 
         var optimizeIndexesQuery = @"
             -- Check if table exists
@@ -278,8 +278,8 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Creates the HealthMetricsCounts summary table if it doesn't exist
-    /// This table stores the count of records for each MetricType/MetricSubtype combination
+    ///     Creates the HealthMetricsCounts summary table if it doesn't exist
+    ///     This table stores the count of records for each MetricType/MetricSubtype combination
     /// </summary>
     private static void EnsureHealthMetricsCountsTableExists(string connectionString)
     {
@@ -358,13 +358,14 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Initializes the HealthMetricsCounts table by calculating counts from existing HealthMetrics data
-    /// This should be called once to populate the summary table from existing data
+    ///     Initializes the HealthMetricsCounts table by calculating counts from existing HealthMetrics data
+    ///     This should be called once to populate the summary table from existing data
     /// </summary>
     public static void InitializeHealthMetricsCounts()
     {
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
-        if (string.IsNullOrEmpty(connectionString)) return;
+        if (string.IsNullOrEmpty(connectionString))
+            return;
 
         try
         {
@@ -458,7 +459,7 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Adds MetricSubtype column to existing HealthMetrics table if it doesn't exist
+    ///     Adds MetricSubtype column to existing HealthMetrics table if it doesn't exist
     /// </summary>
     private static void EnsureMetricSubtypeColumnExists(string connectionString)
     {
@@ -500,7 +501,7 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Updates existing records to populate MetricSubtype by parsing MetricType
+    ///     Updates existing records to populate MetricSubtype by parsing MetricType
     /// </summary>
     private static void UpdateExistingMetricSubtypes(string connectionString)
     {
@@ -525,8 +526,10 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var metricType = reader["MetricType"]?.ToString();
-                            var existingSubtype = reader["MetricSubtype"]?.ToString();
+                            var metricType = reader["MetricType"]?.
+                                    ToString();
+                            var existingSubtype = reader["MetricSubtype"]?.
+                                    ToString();
 
                             if (!string.IsNullOrEmpty(metricType))
                             {
@@ -575,7 +578,7 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Gets distinct SourceFile values from HealthMetrics table (files that have already been processed)
+    ///     Gets distinct SourceFile values from HealthMetrics table (files that have already been processed)
     /// </summary>
     public static HashSet<string> GetProcessedFiles()
     {
@@ -595,11 +598,10 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var sourceFile = reader["SourceFile"]?.ToString();
+                            var sourceFile = reader["SourceFile"]?.
+                                    ToString();
                             if (!string.IsNullOrEmpty(sourceFile))
-                            {
                                 processedFiles.Add(sourceFile);
-                            }
                         }
                     }
                 }
@@ -615,11 +617,12 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Marks a file as processed by inserting a minimal record (used for empty files)
+    ///     Marks a file as processed by inserting a minimal record (used for empty files)
     /// </summary>
     public static void MarkFileAsProcessed(string filePath)
     {
-        if (string.IsNullOrEmpty(filePath)) return;
+        if (string.IsNullOrEmpty(filePath))
+            return;
 
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
 
@@ -636,10 +639,8 @@ public static class SQLHelper
                     checkCommand.Parameters.AddWithValue("@SourceFile", filePath);
                     var count = (int)checkCommand.ExecuteScalar();
                     if (count > 0)
-                    {
-                        // File already marked as processed
+                            // File already marked as processed
                         return;
-                    }
                 }
 
                 // Insert minimal record to mark file as processed
@@ -673,12 +674,13 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Inserts health metrics into the database using bulk insert for performance
-    /// Also updates the HealthMetricsCounts summary table incrementally
+    ///     Inserts health metrics into the database using bulk insert for performance
+    ///     Also updates the HealthMetricsCounts summary table incrementally
     /// </summary>
     public static void InsertHealthMetrics(List<HealthMetric> metrics)
     {
-        if (metrics == null || metrics.Count == 0) return;
+        if (metrics == null || metrics.Count == 0)
+            return;
 
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
 
@@ -702,30 +704,25 @@ public static class SQLHelper
                 foreach (var metric in metrics)
                 {
                     // Parse MetricType to extract base type and subtype
-                    string baseType = metric.MetricType ?? string.Empty;
-                    string subtype = metric.MetricSubtype ?? string.Empty;
+                    var baseType = metric.MetricType ?? string.Empty;
+                    var subtype = metric.MetricSubtype ?? string.Empty;
 
                     if (!string.IsNullOrEmpty(metric.MetricType))
                     {
                         // If subtype not already set, parse it from MetricType
                         if (string.IsNullOrEmpty(subtype))
-                        {
                             subtype = MetricTypeParser.GetSubtypeString(metric.MetricType) ?? string.Empty;
-                        }
 
                         // If a subtype exists, update MetricType to be just the base type
                         if (!string.IsNullOrEmpty(subtype))
-                        {
                             baseType = MetricTypeParser.GetBaseType(metric.MetricType);
-                        }
                     }
 
                     // Only track counts for records with MetricType AND a valid timestamp
                     // Valid timestamp means: NormalizedTimestamp is not null, OR RawTimestamp is not null and not empty
                     if (!string.IsNullOrEmpty(baseType))
                     {
-                        bool hasValidTimestamp = (metric.NormalizedTimestamp.HasValue) ||
-                                                 (!string.IsNullOrEmpty(metric.RawTimestamp));
+                        var hasValidTimestamp = metric.NormalizedTimestamp.HasValue || !string.IsNullOrEmpty(metric.RawTimestamp);
 
                         if (hasValidTimestamp && metric.NormalizedTimestamp.HasValue)
                         {
@@ -733,35 +730,27 @@ public static class SQLHelper
                             var timestamp = metric.NormalizedTimestamp.Value;
 
                             if (!typeSubtypeData.ContainsKey(key))
-                            {
                                 typeSubtypeData[key] = (Count: 0, MinTimestamp: timestamp, MaxTimestamp: timestamp);
-                            }
 
                             var current = typeSubtypeData[key];
-                            typeSubtypeData[key] = (
-                                Count: current.Count + 1,
-                                MinTimestamp: timestamp < current.MinTimestamp ? timestamp : current.MinTimestamp,
-                                MaxTimestamp: timestamp > current.MaxTimestamp ? timestamp : current.MaxTimestamp
-                            );
+                            typeSubtypeData[key] = (Count: current.Count + 1, MinTimestamp: timestamp < current.MinTimestamp ? timestamp : current.MinTimestamp, MaxTimestamp: timestamp > current.MaxTimestamp ? timestamp : current.MaxTimestamp);
                         }
                         else if (hasValidTimestamp)
                         {
                             // Has RawTimestamp but no NormalizedTimestamp - count it but don't track timestamp
                             var key = (MetricType: baseType, MetricSubtype: subtype ?? string.Empty);
                             if (!typeSubtypeData.ContainsKey(key))
-                            {
                                 typeSubtypeData[key] = (Count: 0, MinTimestamp: null, MaxTimestamp: null);
-                            }
                             var current = typeSubtypeData[key];
-                            typeSubtypeData[key] = (Count: current.Count + 1, MinTimestamp: current.MinTimestamp, MaxTimestamp: current.MaxTimestamp);
+                            typeSubtypeData[key] = (Count: current.Count + 1, current.MinTimestamp, current.MaxTimestamp);
                         }
                     }
 
                     using (var sqlCommand = new SqlCommand(insertQuery, sqlConnection))
                     {
                         sqlCommand.Parameters.AddWithValue("@Provider", (object)metric.Provider ?? DBNull.Value);
-                        sqlCommand.Parameters.AddWithValue("@MetricType", string.IsNullOrEmpty(baseType) ? DBNull.Value : (object)baseType);
-                        sqlCommand.Parameters.AddWithValue("@MetricSubtype", string.IsNullOrEmpty(subtype) ? DBNull.Value : (object)subtype);
+                        sqlCommand.Parameters.AddWithValue("@MetricType", string.IsNullOrEmpty(baseType) ? DBNull.Value : baseType);
+                        sqlCommand.Parameters.AddWithValue("@MetricSubtype", string.IsNullOrEmpty(subtype) ? DBNull.Value : subtype);
                         sqlCommand.Parameters.AddWithValue("@SourceFile", (object)metric.SourceFile ?? DBNull.Value);
                         sqlCommand.Parameters.AddWithValue("@NormalizedTimestamp", (object)metric.NormalizedTimestamp ?? DBNull.Value);
                         sqlCommand.Parameters.AddWithValue("@RawTimestamp", (object)metric.RawTimestamp ?? DBNull.Value);
@@ -769,9 +758,7 @@ public static class SQLHelper
                         sqlCommand.Parameters.AddWithValue("@Unit", (object)metric.Unit ?? DBNull.Value);
 
                         // Serialize additional fields to JSON
-                        var metadataJson = metric.AdditionalFields.Count > 0
-                            ? JsonConvert.SerializeObject(metric.AdditionalFields)
-                            : (object)DBNull.Value;
+                        var metadataJson = metric.AdditionalFields.Count > 0 ? JsonConvert.SerializeObject(metric.AdditionalFields) : (object)DBNull.Value;
                         sqlCommand.Parameters.AddWithValue("@Metadata", metadataJson);
 
                         sqlCommand.ExecuteNonQuery();
@@ -780,9 +767,7 @@ public static class SQLHelper
 
                 // Update the summary counts table for all MetricType/Subtype combinations in this batch
                 if (typeSubtypeData.Count > 0)
-                {
                     UpdateHealthMetricsCounts(sqlConnection, typeSubtypeData);
-                }
             }
         }
         catch (Exception ex)
@@ -793,8 +778,8 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Updates the HealthMetricsCounts summary table with new record counts and timestamp ranges
-    /// Uses MERGE to efficiently handle inserts and updates in a single operation
+    ///     Updates the HealthMetricsCounts summary table with new record counts and timestamp ranges
+    ///     Uses MERGE to efficiently handle inserts and updates in a single operation
     /// </summary>
     private static void UpdateHealthMetricsCounts(SqlConnection connection, Dictionary<(string MetricType, string MetricSubtype), (int Count, DateTime? MinTimestamp, DateTime? MaxTimestamp)> typeSubtypeData)
     {
@@ -830,7 +815,7 @@ public static class SQLHelper
             // Build the VALUES clause for all combinations
             var valuesList = new List<string>();
             var parameters = new List<SqlParameter>();
-            int paramIndex = 0;
+            var paramIndex = 0;
 
             foreach (var kvp in typeSubtypeData)
             {
@@ -867,7 +852,7 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Creates the HealthMetricsCounts summary table if it doesn't exist (overload that uses existing connection)
+    ///     Creates the HealthMetricsCounts summary table if it doesn't exist (overload that uses existing connection)
     /// </summary>
     private static void EnsureHealthMetricsCountsTableExists(SqlConnection connection)
     {
@@ -933,6 +918,7 @@ public static class SQLHelper
             // Don't throw - this is a helper table, shouldn't block main operations
         }
     }
+
     public static void CreateSQLTable(MetaData metaData)
     {
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
@@ -1001,10 +987,6 @@ public static class SQLHelper
             using var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.ExecuteNonQuery();
         }
-        catch (Exception ex)
-        {
-            throw; // Re-throw the exception instead of just logging it
-        }
         finally
         {
             sqlConnection.Close();
@@ -1012,18 +994,14 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Retrieves health metrics data from the HealthMetricsWeek table
+    ///     Retrieves health metrics data from the HealthMetricsWeek table
     /// </summary>
     /// <param name="metricType">Optional filter by MetricType</param>
     /// <param name="metricSubtype">Optional filter by MetricSubtype</param>
     /// <param name="fromDate">Optional start date filter</param>
     /// <param name="toDate">Optional end date filter</param>
     /// <returns>List of weekly aggregated health metrics</returns>
-    public static List<HealthMetric> GetHealthMetricsWeek(
-        string? metricType = null,
-        string? metricSubtype = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null)
+    public static List<HealthMetric> GetHealthMetricsWeek(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null)
     {
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
         var results = new List<HealthMetric>();
@@ -1082,16 +1060,17 @@ public static class SQLHelper
                         {
                             var metric = new HealthMetric
                             {
-                                MetricType = reader["MetricType"]?.ToString() ?? string.Empty,
-                                MetricSubtype = reader["MetricSubtype"]?.ToString() ?? string.Empty,
-                                Value = reader["Value"] != DBNull.Value ? (decimal?)Convert.ToDecimal(reader["Value"]) : null,
-                                Unit = reader["Unit"]?.ToString() ?? string.Empty
+                                    MetricType = reader["MetricType"]?.
+                                            ToString() ?? string.Empty,
+                                    MetricSubtype = reader["MetricSubtype"]?.
+                                            ToString() ?? string.Empty,
+                                    Value = reader["Value"] != DBNull.Value ? Convert.ToDecimal(reader["Value"]) : null,
+                                    Unit = reader["Unit"]?.
+                                            ToString() ?? string.Empty
                             };
 
                             if (reader["NormalizedTimestamp"] != DBNull.Value)
-                            {
                                 metric.NormalizedTimestamp = Convert.ToDateTime(reader["NormalizedTimestamp"]);
-                            }
 
                             results.Add(metric);
                         }
@@ -1108,49 +1087,19 @@ public static class SQLHelper
         return results;
     }
 
-    public static void InsertHealthMetricsWeek(
-        string? metricType = null,
-        string? metricSubtype = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        bool overwriteExisting = false)
+    public static void InsertHealthMetricsWeek(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null, bool overwriteExisting = false)
     {
-        ExecuteHealthMetricsAggregation(
-            targetTable: "[dbo].[HealthMetricsWeek]",
-            timeGroupingExpression: @"
+        ExecuteHealthMetricsAggregation("[dbo].[HealthMetricsWeek]", @"
             DATEADD(day, -(DATEPART(weekday, CAST(CAST(NormalizedTimestamp AS DATE) AS DATETIME2)) 
-            + @@DATEFIRST - 2) % 7, CAST(CAST(NormalizedTimestamp AS DATE) AS DATETIME2))",
-            timestampColumnAlias: "WeekStart",
-            metricType, metricSubtype,
-            fromDate, toDate,
-            overwriteExisting);
+            + @@DATEFIRST - 2) % 7, CAST(CAST(NormalizedTimestamp AS DATE) AS DATETIME2))", "WeekStart", metricType, metricSubtype, fromDate, toDate, overwriteExisting);
     }
 
-    public static void InsertHealthMetricsMonth(
-        string? metricType = null,
-        string? metricSubtype = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null,
-        bool overwriteExisting = false)
+    public static void InsertHealthMetricsMonth(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null, bool overwriteExisting = false)
     {
-        ExecuteHealthMetricsAggregation(
-            targetTable: "[dbo].[HealthMetricsMonth]",
-            timeGroupingExpression: "DATEADD(MONTH, DATEDIFF(MONTH, 0, NormalizedTimestamp), 0)",
-            timestampColumnAlias: "MonthStart",
-            metricType, metricSubtype,
-            fromDate, toDate,
-            overwriteExisting);
+        ExecuteHealthMetricsAggregation("[dbo].[HealthMetricsMonth]", "DATEADD(MONTH, DATEDIFF(MONTH, 0, NormalizedTimestamp), 0)", "MonthStart", metricType, metricSubtype, fromDate, toDate, overwriteExisting);
     }
 
-    private static void ExecuteHealthMetricsAggregation(
-    string targetTable,
-    string timeGroupingExpression,
-    string timestampColumnAlias,
-    string? metricType,
-    string? metricSubtype,
-    DateTime? fromDate,
-    DateTime? toDate,
-    bool overwriteExisting)
+    private static void ExecuteHealthMetricsAggregation(string targetTable, string timeGroupingExpression, string timestampColumnAlias, string? metricType, string? metricSubtype, DateTime? fromDate, DateTime? toDate, bool overwriteExisting)
     {
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
 
@@ -1173,15 +1122,13 @@ public static class SQLHelper
 
                 AppendOptionalFilter(deleteSql, deleteParams, "MetricType", metricType, "DeleteMetricType");
                 AppendOptionalFilter(deleteSql, deleteParams, "ISNULL(MetricSubtype, '')", metricSubtype, "DeleteMetricSubtype");
-                AppendOptionalDateRange(deleteSql, deleteParams, fromDate, toDate, prefix: "Delete");
+                AppendOptionalDateRange(deleteSql, deleteParams, fromDate, toDate, "Delete");
 
                 using var deleteCmd = new SqlCommand(deleteSql.ToString(), sqlConnection);
                 deleteCmd.Parameters.AddRange(deleteParams.ToArray());
                 var deletedRows = deleteCmd.ExecuteNonQuery();
                 if (deletedRows > 0)
-                {
                     Console.WriteLine($"Deleted {deletedRows} existing records from {targetTable} (overwrite mode).");
-                }
             }
 
             // -------------------------------------------------------
@@ -1242,12 +1189,8 @@ public static class SQLHelper
             throw;
         }
     }
-    private static void AppendOptionalFilter(
-    StringBuilder sql,
-    List<SqlParameter> parameters,
-    string columnExpression,
-    string? value,
-    string parameterName)
+
+    private static void AppendOptionalFilter(StringBuilder sql, List<SqlParameter> parameters, string columnExpression, string? value, string parameterName)
     {
         if (!string.IsNullOrEmpty(value))
         {
@@ -1256,12 +1199,7 @@ public static class SQLHelper
         }
     }
 
-    private static void AppendOptionalDateRange(
-        StringBuilder sql,
-        List<SqlParameter> parameters,
-        DateTime? fromDate,
-        DateTime? toDate,
-        string prefix = "")
+    private static void AppendOptionalDateRange(StringBuilder sql, List<SqlParameter> parameters, DateTime? fromDate, DateTime? toDate, string prefix = "")
     {
         if (fromDate.HasValue && toDate.HasValue)
         {
@@ -1282,12 +1220,12 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Gets the date range (min and max timestamps) for a specific MetricType and MetricSubtype combination
+    ///     Gets the date range (min and max timestamps) for a specific MetricType and MetricSubtype combination
     /// </summary>
     /// <param name="metricType">The MetricType to query</param>
     /// <param name="metricSubtype">The MetricSubtype to query (null or empty string for records without subtype)</param>
     /// <returns>Tuple with MinDate and MaxDate, or null if no records found</returns>
-    public static (DateTime MinDate, DateTime MaxDate)? GetDateRangeForMetric(string metricType, string? metricSubtype = null)
+    public static(DateTime MinDate, DateTime MaxDate)? GetDateRangeForMetric(string metricType, string? metricSubtype = null)
     {
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
 
@@ -1307,7 +1245,7 @@ public static class SQLHelper
 
                 var parameters = new List<SqlParameter>
                 {
-                    new SqlParameter("@MetricType", metricType)
+                        new("@MetricType", metricType)
                 };
 
                 if (!string.IsNullOrEmpty(metricSubtype))
@@ -1327,14 +1265,12 @@ public static class SQLHelper
                     using (var reader = sqlCommand.ExecuteReader())
                     {
                         if (reader.Read())
-                        {
                             if (reader["MinDate"] != DBNull.Value && reader["MaxDate"] != DBNull.Value)
                             {
                                 var minDate = Convert.ToDateTime(reader["MinDate"]);
                                 var maxDate = Convert.ToDateTime(reader["MaxDate"]);
                                 return (minDate, maxDate);
                             }
-                        }
                     }
                 }
             }
@@ -1349,7 +1285,7 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Gets all distinct metric types from the HealthMetrics table.
+    ///     Gets all distinct metric types from the HealthMetrics table.
     /// </summary>
     public static List<string> GetAllMetricTypes()
     {
@@ -1374,11 +1310,10 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var metricType = reader["MetricType"]?.ToString();
+                            var metricType = reader["MetricType"]?.
+                                    ToString();
                             if (!string.IsNullOrEmpty(metricType))
-                            {
                                 metricTypes.Add(metricType);
-                            }
                         }
                     }
                 }
@@ -1394,8 +1329,8 @@ public static class SQLHelper
     }
 
     /// <summary>
-    /// Gets all distinct subtypes for a given metric type from the HealthMetrics table.
-    /// Returns a list that includes null/empty for metrics without subtypes.
+    ///     Gets all distinct subtypes for a given metric type from the HealthMetrics table.
+    ///     Returns a list that includes null/empty for metrics without subtypes.
     /// </summary>
     public static List<string?> GetSubtypesForMetricType(string metricType)
     {
@@ -1425,7 +1360,8 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var subtype = reader["MetricSubtype"]?.ToString();
+                            var subtype = reader["MetricSubtype"]?.
+                                    ToString();
                             // Normalize empty strings to null for consistency
                             subtypes.Add(string.IsNullOrEmpty(subtype) ? null : subtype);
                         }

@@ -1,9 +1,9 @@
-using LiveCharts;
-using LiveCharts.Wpf;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using LiveCharts;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.Helpers;
 
@@ -13,13 +13,13 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public class ChartTooltipManager : IDisposable
 {
-    private readonly Dictionary<CartesianChart, string> _chartLabels;
-    private readonly Dictionary<CartesianChart, TextBlock> _chartTextBlocks;
+    private readonly Dictionary<CartesianChart, string>         _chartLabels;
+    private readonly Dictionary<CartesianChart, TextBlock>      _chartTextBlocks;
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    private readonly Dictionary<CartesianChart, AxisSection?> _chartVerticalLines;
-    private readonly Popup _hoverPopup;
-    private readonly Window _parentWindow;
-    private readonly TextBlock _timestampText;
+    private readonly Dictionary<CartesianChart, AxisSection?>   _chartVerticalLines;
+    private readonly Popup                                      _hoverPopup;
+    private readonly Window                                     _parentWindow;
+    private readonly TextBlock                                  _timestampText;
 
     /// <summary>
     ///     Initializes a new instance of ChartTooltipManager.
@@ -41,11 +41,11 @@ public class ChartTooltipManager : IDisposable
         _timestampText = ChartHelper.SetHoverText(true);
         var stack = new StackPanel
         {
-            Orientation = Orientation.Vertical,
-            Children =
-            {
-                _timestampText
-            }
+                Orientation = Orientation.Vertical,
+                Children =
+                {
+                        _timestampText
+                }
         };
 
         var border = ChartHelper.CreateBorder(stack);
@@ -297,7 +297,7 @@ public class ChartTooltipManager : IDisposable
             var timestamps = kvp.Value;
             if (index >= 0 && index < timestamps.Count)
                 return timestamps[index].
-                    ToString("yyyy-MM-dd HH:mm:ss");
+                        ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         return "Timestamp: N/A";
@@ -310,11 +310,11 @@ public class ChartTooltipManager : IDisposable
     {
         var popup = new Popup
         {
-            Child = border,
-            Placement = PlacementMode.Mouse,
-            StaysOpen = true,
-            AllowsTransparency = true,
-            PlacementTarget = _parentWindow
+                Child = border,
+                Placement = PlacementMode.Mouse,
+                StaysOpen = true,
+                AllowsTransparency = true,
+                PlacementTarget = _parentWindow
         };
 
         return popup;

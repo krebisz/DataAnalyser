@@ -1,43 +1,34 @@
 ﻿using DataFileReader.Canonical;
 using DataFileReader.Ingestion;
 
-namespace DataFileReader.Normalization.Stages
+namespace DataFileReader.Normalization.Stages;
+
+public sealed class MetricIdentityResolutionStage : INormalizationStage
 {
-    public sealed class MetricIdentityResolutionStage : INormalizationStage
+    private readonly CanonicalMetricIdentityResolver _resolver = new();
+
+    public IReadOnlyCollection<RawRecord> Process(IReadOnlyCollection<RawRecord> input, NormalizationContext context)
     {
-        private readonly CanonicalMetricIdentityResolver _resolver =
-            new CanonicalMetricIdentityResolver();
+        if (input == null)
+            throw new ArgumentNullException(nameof(input));
 
-        public IReadOnlyCollection<RawRecord> Process(
-            IReadOnlyCollection<RawRecord> input,
-            NormalizationContext context)
+        if (context == null)
+            throw new ArgumentNullException(nameof(context));
+
+        foreach (var record in input)
         {
-            if (input == null)
-                throw new ArgumentNullException(nameof(input));
+            if (record == null)
+                continue;
 
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
+            var provider = record.SourceGroup;
+            var metricType = record.SourceId;
+            string? metricSubtype = null;
 
-            foreach (var record in input)
-            {
-                if (record == null)
-                    continue;
+            var result = _resolver.Resolve(provider, metricType, metricSubtype);
 
-                var provider = record.SourceGroup;
-                var metricType = record.SourceId;
-                string? metricSubtype = null;
-
-                var result = _resolver.Resolve(
-                    provider,
-                    metricType,
-                    metricSubtype);
-
-                NormalizationDiagnostics.OnMetricIdentityResolutionEvaluated(
-                    record,
-                    result);
-            }
-
-            return input;
+            NormalizationDiagnostics.OnMetricIdentityResolutionEvaluated(record, result);
         }
+
+        return input;
     }
 }

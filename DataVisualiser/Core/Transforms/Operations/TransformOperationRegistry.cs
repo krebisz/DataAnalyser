@@ -57,7 +57,7 @@ public static class TransformOperationRegistry
     public static IReadOnlyList<TransformOperation> GetUnaryOperations()
     {
         return _operations.Values.Where(op => op.Arity == 1).
-            ToList();
+                           ToList();
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public static class TransformOperationRegistry
     public static IReadOnlyList<TransformOperation> GetBinaryOperations()
     {
         return _operations.Values.Where(op => op.Arity == 2).
-            ToList();
+                           ToList();
     }
 
     /// <summary>
@@ -75,6 +75,6 @@ public static class TransformOperationRegistry
     public static IReadOnlyList<TransformOperation> GetNaryOperations()
     {
         return _operations.Values.Where(op => op.Arity > 2 || op.Arity < 0).
-            ToList();
+                           ToList();
     }
 }

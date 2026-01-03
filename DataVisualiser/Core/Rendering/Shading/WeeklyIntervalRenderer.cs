@@ -1,7 +1,7 @@
-using LiveCharts;
-using LiveCharts.Wpf;
 using System.Diagnostics;
 using System.Windows.Media;
+using LiveCharts;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.Shading;
 
@@ -16,66 +16,39 @@ public sealed class WeeklyIntervalRenderer
     /// <summary>
     ///     Renders interval series on the chart.
     /// </summary>
-    public int RenderIntervals(
-        CartesianChart chart,
-        List<double> mins,
-        List<double> ranges,
-        List<(double Min, double Max)> intervals,
-        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
-        Dictionary<int, Dictionary<int, Color>> colorMap,
-        double uniformIntervalHeight,
-        double[] cumulativeStackHeight,
-        int globalMaxFreq)
+    public int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
     {
         var seriesCreated = 0;
 
         for (var intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
         {
-            var state = BuildIntervalState(
-                intervalIndex,
-                intervals[intervalIndex],
-                mins,
-                ranges,
-                frequenciesPerDay,
-                uniformIntervalHeight,
-                cumulativeStackHeight);
+            var state = BuildIntervalState(intervalIndex, intervals[intervalIndex], mins, ranges, frequenciesPerDay, uniformIntervalHeight, cumulativeStackHeight);
 
             if (!state.HasData)
                 continue;
 
             EmitBaseline(chart, state);
 
-            seriesCreated += EmitIntervalSeries(
-                chart,
-                intervalIndex,
-                state,
-                frequenciesPerDay,
-                colorMap);
+            seriesCreated += EmitIntervalSeries(chart, intervalIndex, state, frequenciesPerDay, colorMap);
         }
 
         return seriesCreated;
     }
 
-    private static void EmitBaseline(
-        CartesianChart chart,
-        IntervalRenderState state)
+    private static void EmitBaseline(CartesianChart chart, IntervalRenderState state)
     {
         chart.Series.Add(new StackedColumnSeries
         {
-            Title = null,
-            Values = state.Baselines,
-            Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-            StrokeThickness = 0,
-            MaxColumnWidth = MaxColumnWidth,
-            DataLabels = false
+                Title = null,
+                Values = state.Baselines,
+                Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+                StrokeThickness = 0,
+                MaxColumnWidth = MaxColumnWidth,
+                DataLabels = false
         });
     }
-    private int EmitIntervalSeries(
-        CartesianChart chart,
-        int intervalIndex,
-        IntervalRenderState state,
-        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
-        Dictionary<int, Dictionary<int, Color>> colorMap)
+
+    private int EmitIntervalSeries(CartesianChart chart, int intervalIndex, IntervalRenderState state, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap)
     {
         var created = 0;
 
@@ -87,10 +60,7 @@ public sealed class WeeklyIntervalRenderer
 
         if (state.HasNonZeroFreqDays)
         {
-            var color = ResolveIntervalColor(
-                frequenciesPerDay,
-                colorMap,
-                intervalIndex);
+            var color = ResolveIntervalColor(frequenciesPerDay, colorMap, intervalIndex);
 
             AddColoredSeries(chart, state.ColoredHeights, color);
             created++;
@@ -99,82 +69,46 @@ public sealed class WeeklyIntervalRenderer
         return created;
     }
 
-    private IntervalRenderState BuildIntervalState(
-        int intervalIndex,
-        (double Min, double Max) interval,
-        List<double> mins,
-        List<double> ranges,
-        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
-        double uniformIntervalHeight,
-        double[] cumulativeStackHeight)
+    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, double uniformIntervalHeight, double[] cumulativeStackHeight)
     {
         var state = new IntervalRenderState(uniformIntervalHeight);
 
         for (var dayIndex = 0; dayIndex < 7; dayIndex++)
         {
-            if (!TryComputeDayIntervalOverlap(
-                    dayIndex,
-                    interval,
-                    mins,
-                    ranges,
-                    out var dayMin,
-                    out var dayMax))
+            if (!TryComputeDayIntervalOverlap(dayIndex, interval, mins, ranges, out var dayMin, out var dayMax))
             {
                 state.AddEmpty();
                 continue;
             }
 
-            var frequency =
-                ResolveFrequency(
-                    frequenciesPerDay,
-                    dayIndex,
-                    intervalIndex);
+            var frequency = ResolveFrequency(frequenciesPerDay, dayIndex, intervalIndex);
 
-            var baseline =
-                ComputeBaseline(
-                    interval.Min,
-                    uniformIntervalHeight,
-                    ref cumulativeStackHeight[dayIndex]);
+            var baseline = ComputeBaseline(interval.Min, uniformIntervalHeight, ref cumulativeStackHeight[dayIndex]);
 
             state.Add(baseline, frequency);
 
             if (dayIndex == 1)
-                Debug.WriteLine(
-                    $"  Interval {intervalIndex} [{interval.Min:F4}, {interval.Max:F4}] Tue: Baseline={baseline:F4}, Height={uniformIntervalHeight:F6}, Freq={frequency}");
+                Debug.WriteLine($"  Interval {intervalIndex} [{interval.Min:F4}, {interval.Max:F4}] Tue: Baseline={baseline:F4}, Height={uniformIntervalHeight:F6}, Freq={frequency}");
         }
 
         return state;
     }
-    private static bool TryComputeDayIntervalOverlap(
-        int dayIndex,
-        (double Min, double Max) interval,
-        List<double> mins,
-        List<double> ranges,
-        out double dayMin,
-        out double dayMax)
+
+    private static bool TryComputeDayIntervalOverlap(int dayIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, out double dayMin, out double dayMax)
     {
         dayMin = SafeValue(mins, dayIndex);
         var dayRange = SafePositive(ranges, dayIndex);
         dayMax = dayMin + dayRange;
 
-        return dayRange > 0 &&
-               interval.Min < dayMax &&
-               interval.Max > dayMin;
+        return dayRange > 0 && interval.Min < dayMax && interval.Max > dayMin;
     }
-    private static int ResolveFrequency(
-        Dictionary<int, Dictionary<int, int>> frequenciesPerDay,
-        int dayIndex,
-        int intervalIndex)
+
+    private static int ResolveFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, int dayIndex, int intervalIndex)
     {
-        return frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) &&
-               dayFreqs.TryGetValue(intervalIndex, out var freq)
-            ? freq
-            : 0;
+        return frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq) ? freq : 0;
     }
-    private static double ComputeBaseline(
-        double intervalMin,
-        double intervalHeight,
-        ref double cumulativeStack)
+
+    private static double ComputeBaseline(double intervalMin, double intervalHeight, ref double cumulativeStack)
     {
         var baseline = intervalMin - cumulativeStack;
 
@@ -190,6 +124,7 @@ public sealed class WeeklyIntervalRenderer
 
         return baseline;
     }
+
     private static double SafeValue(List<double> values, int index)
     {
         var v = values[index];
@@ -207,12 +142,12 @@ public sealed class WeeklyIntervalRenderer
     {
         chart.Series.Add(new StackedColumnSeries
         {
-            Title = null,
-            Values = baselineValues,
-            Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
-            StrokeThickness = 0,
-            MaxColumnWidth = MaxColumnWidth,
-            DataLabels = false
+                Title = null,
+                Values = baselineValues,
+                Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
+                StrokeThickness = 0,
+                MaxColumnWidth = MaxColumnWidth,
+                DataLabels = false
         });
     }
 
@@ -226,13 +161,13 @@ public sealed class WeeklyIntervalRenderer
 
         chart.Series.Add(new StackedColumnSeries
         {
-            Title = null,
-            Values = whiteValues,
-            Fill = whiteBrush,
-            Stroke = strokeBrush,
-            StrokeThickness = 1.0,
-            MaxColumnWidth = MaxColumnWidth,
-            DataLabels = false
+                Title = null,
+                Values = whiteValues,
+                Fill = whiteBrush,
+                Stroke = strokeBrush,
+                StrokeThickness = 1.0,
+                MaxColumnWidth = MaxColumnWidth,
+                DataLabels = false
         });
     }
 
@@ -246,13 +181,13 @@ public sealed class WeeklyIntervalRenderer
 
         chart.Series.Add(new StackedColumnSeries
         {
-            Title = null,
-            Values = coloredValues,
-            Fill = fillBrush,
-            Stroke = strokeBrush,
-            StrokeThickness = 1.0,
-            MaxColumnWidth = MaxColumnWidth,
-            DataLabels = false
+                Title = null,
+                Values = coloredValues,
+                Fill = fillBrush,
+                Stroke = strokeBrush,
+                StrokeThickness = 1.0,
+                MaxColumnWidth = MaxColumnWidth,
+                DataLabels = false
         });
     }
 
@@ -304,12 +239,12 @@ public sealed class WeeklyIntervalRenderer
             _uniformIntervalHeight = uniformIntervalHeight;
         }
 
-        public ChartValues<double> Baselines { get; } = new();
-        public ChartValues<double> WhiteHeights { get; } = new();
-        public ChartValues<double> ColoredHeights { get; } = new();
-        public bool HasData { get; private set; }
-        public bool HasZeroFreqDays { get; private set; }
-        public bool HasNonZeroFreqDays { get; private set; }
+        public ChartValues<double> Baselines          { get; } = new();
+        public ChartValues<double> WhiteHeights       { get; } = new();
+        public ChartValues<double> ColoredHeights     { get; } = new();
+        public bool                HasData            { get; private set; }
+        public bool                HasZeroFreqDays    { get; private set; }
+        public bool                HasNonZeroFreqDays { get; private set; }
 
         public void AddEmpty()
         {

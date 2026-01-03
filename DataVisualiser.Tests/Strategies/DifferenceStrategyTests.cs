@@ -1,183 +1,236 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DataVisualiser.Core.Strategies.Implementations;
+﻿using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
-using Xunit;
 
-namespace DataVisualiser.Tests.Strategies
+namespace DataVisualiser.Tests.Strategies;
+
+public sealed class DifferenceStrategyTests
 {
-    public sealed class DifferenceStrategyTests
+    private static readonly DateTime From = new(2024, 01, 01);
+    private static readonly DateTime To   = new(2024, 01, 10);
+
+    [Fact]
+    public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
     {
-        private static readonly DateTime From = new(2024, 01, 01);
-        private static readonly DateTime To = new(2024, 01, 10);
+        var left = Enumerable.Empty<HealthMetricData>();
+        var right = Enumerable.Empty<HealthMetricData>();
 
-        [Fact]
-        public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
-        {
-            var left = Enumerable.Empty<HealthMetricData>();
-            var right = Enumerable.Empty<HealthMetricData>();
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+        var result = strategy.Compute();
 
-            var result = strategy.Compute();
+        Assert.Null(result);
+    }
 
-            Assert.Null(result);
-        }
-
-        [Fact]
-        public void Compute_ShouldReturnNull_WhenOneSeriesEmpty()
-        {
-            var left = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(5, TimeSpan.FromDays(1));
-
-            var right = Enumerable.Empty<HealthMetricData>();
-
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
-
-            var result = strategy.Compute();
-
-            Assert.Null(result);
-        }
-
-        [Fact]
-        public void Compute_ShouldAlignByIndex_UsingShortestSeries()
-        {
-            var left = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(8, TimeSpan.FromDays(1));
-
-            var right = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(5, TimeSpan.FromDays(1));
-
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
-
-            var result = strategy.Compute();
-
-            Assert.NotNull(result);
-            Assert.Equal(5, result!.PrimaryRawValues.Count);
-            Assert.Equal(5, result.Timestamps.Count);
-        }
-
-        [Fact]
-        public void Compute_ShouldCalculateLeftMinusRight()
-        {
-            var left = new List<HealthMetricData>
-            {
-                new() { NormalizedTimestamp = From, Value = 10m, Unit = "kg" },
-                new() { NormalizedTimestamp = From.AddDays(1), Value = 20m, Unit = "kg" }
-            };
-
-            var right = new List<HealthMetricData>
-            {
-                new() { NormalizedTimestamp = From, Value = 3m, Unit = "kg" },
-                new() { NormalizedTimestamp = From.AddDays(1), Value = 5m, Unit = "kg" }
-            };
-
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
-
-            var result = strategy.Compute();
-
-            Assert.NotNull(result);
-            Assert.Equal(new[] { 7.0, 15.0 }, result!.PrimaryRawValues);
-        }
-
-        [Fact]
-        public void Compute_ShouldIgnoreNullValues_WhenFilteringAndAligning()
-        {
-            var left = new List<HealthMetricData>
+    [Fact]
+    public void Compute_ShouldReturnNull_WhenOneSeriesEmpty()
     {
-        new() { NormalizedTimestamp = From, Value = 10m, Unit = "kg" },
-        new() { NormalizedTimestamp = From.AddDays(1), Value = null, Unit = "kg" },
-        new() { NormalizedTimestamp = From.AddDays(2), Value = 20m, Unit = "kg" }
-    };
+        var left = TestDataBuilders.HealthMetricData().
+                                    WithTimestamp(From).
+                                    WithUnit("kg").
+                                    BuildSeries(5, TimeSpan.FromDays(1));
 
-            var right = new List<HealthMetricData>
+        var right = Enumerable.Empty<HealthMetricData>();
+
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+
+        var result = strategy.Compute();
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void Compute_ShouldAlignByIndex_UsingShortestSeries()
     {
-        new() { NormalizedTimestamp = From, Value = 3m, Unit = "kg" },
-        new() { NormalizedTimestamp = From.AddDays(1), Value = 5m, Unit = "kg" },
-        new() { NormalizedTimestamp = From.AddDays(2), Value = 7m, Unit = "kg" }
-    };
+        var left = TestDataBuilders.HealthMetricData().
+                                    WithTimestamp(From).
+                                    WithUnit("kg").
+                                    BuildSeries(8, TimeSpan.FromDays(1));
 
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+        var right = TestDataBuilders.HealthMetricData().
+                                     WithTimestamp(From).
+                                     WithUnit("kg").
+                                     BuildSeries(5, TimeSpan.FromDays(1));
 
-            var result = strategy.Compute();
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 
-            Assert.NotNull(result);
-            Assert.Equal(2, result!.PrimaryRawValues.Count);
-            Assert.Equal(new[] { 7.0, 15.0 }, result.PrimaryRawValues);
-            Assert.DoesNotContain(result.PrimaryRawValues, double.IsNaN);
-        }
+        var result = strategy.Compute();
 
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.PrimaryRawValues.Count);
+        Assert.Equal(5, result.Timestamps.Count);
+    }
 
-        [Fact]
-        public void Compute_ShouldGenerateSmoothedValues()
+    [Fact]
+    public void Compute_ShouldCalculateLeftMinusRight()
+    {
+        var left = new List<HealthMetricData>
         {
-            var left = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(10, TimeSpan.FromDays(1));
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = 10m,
+                        Unit = "kg"
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = 20m,
+                        Unit = "kg"
+                }
+        };
 
-            var right = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(10, TimeSpan.FromDays(1));
-
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
-
-            var result = strategy.Compute();
-
-            Assert.NotNull(result);
-            Assert.NotNull(result!.PrimarySmoothed);
-            Assert.Equal(result.PrimaryRawValues.Count, result.PrimarySmoothed.Count);
-        }
-
-        [Fact]
-        public void Compute_ShouldResolveUnit_WhenUnitsMatch()
+        var right = new List<HealthMetricData>
         {
-            var left = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(5, TimeSpan.FromDays(1));
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = 3m,
+                        Unit = "kg"
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = 5m,
+                        Unit = "kg"
+                }
+        };
 
-            var right = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(5, TimeSpan.FromDays(1));
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+        var result = strategy.Compute();
 
-            var result = strategy.Compute();
-
-            Assert.NotNull(result);
-            Assert.Equal("kg", result!.Unit);
-        }
-
-        [Fact]
-        public void Compute_ShouldPreferLeftUnit_WhenUnitsDiffer()
+        Assert.NotNull(result);
+        Assert.Equal(new[]
         {
-            var left = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("kg")
-                .BuildSeries(5, TimeSpan.FromDays(1));
+                7.0,
+                15.0
+        }, result!.PrimaryRawValues);
+    }
 
-            var right = TestDataBuilders.HealthMetricData()
-                .WithTimestamp(From)
-                .WithUnit("lb")
-                .BuildSeries(5, TimeSpan.FromDays(1));
+    [Fact]
+    public void Compute_ShouldIgnoreNullValues_WhenFilteringAndAligning()
+    {
+        var left = new List<HealthMetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = 10m,
+                        Unit = "kg"
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = null,
+                        Unit = "kg"
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(2),
+                        Value = 20m,
+                        Unit = "kg"
+                }
+        };
 
-            var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+        var right = new List<HealthMetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = 3m,
+                        Unit = "kg"
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = 5m,
+                        Unit = "kg"
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(2),
+                        Value = 7m,
+                        Unit = "kg"
+                }
+        };
 
-            var result = strategy.Compute();
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 
-            Assert.NotNull(result);
-            Assert.Equal("kg", result!.Unit);
-        }
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.PrimaryRawValues.Count);
+        Assert.Equal(new[]
+        {
+                7.0,
+                15.0
+        }, result.PrimaryRawValues);
+        Assert.DoesNotContain(result.PrimaryRawValues, double.IsNaN);
+    }
+
+
+    [Fact]
+    public void Compute_ShouldGenerateSmoothedValues()
+    {
+        var left = TestDataBuilders.HealthMetricData().
+                                    WithTimestamp(From).
+                                    WithUnit("kg").
+                                    BuildSeries(10, TimeSpan.FromDays(1));
+
+        var right = TestDataBuilders.HealthMetricData().
+                                     WithTimestamp(From).
+                                     WithUnit("kg").
+                                     BuildSeries(10, TimeSpan.FromDays(1));
+
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.NotNull(result!.PrimarySmoothed);
+        Assert.Equal(result.PrimaryRawValues.Count, result.PrimarySmoothed.Count);
+    }
+
+    [Fact]
+    public void Compute_ShouldResolveUnit_WhenUnitsMatch()
+    {
+        var left = TestDataBuilders.HealthMetricData().
+                                    WithTimestamp(From).
+                                    WithUnit("kg").
+                                    BuildSeries(5, TimeSpan.FromDays(1));
+
+        var right = TestDataBuilders.HealthMetricData().
+                                     WithTimestamp(From).
+                                     WithUnit("kg").
+                                     BuildSeries(5, TimeSpan.FromDays(1));
+
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal("kg", result!.Unit);
+    }
+
+    [Fact]
+    public void Compute_ShouldPreferLeftUnit_WhenUnitsDiffer()
+    {
+        var left = TestDataBuilders.HealthMetricData().
+                                    WithTimestamp(From).
+                                    WithUnit("kg").
+                                    BuildSeries(5, TimeSpan.FromDays(1));
+
+        var right = TestDataBuilders.HealthMetricData().
+                                     WithTimestamp(From).
+                                     WithUnit("lb").
+                                     BuildSeries(5, TimeSpan.FromDays(1));
+
+        var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal("kg", result!.Unit);
     }
 }

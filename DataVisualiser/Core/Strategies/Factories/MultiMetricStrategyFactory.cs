@@ -9,18 +9,13 @@ namespace DataVisualiser.Core.Strategies.Factories;
 /// </summary>
 public sealed class MultiMetricStrategyFactory : StrategyFactoryBase
 {
-    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p) =>
-        new MultiMetricStrategy(
-            p.LegacySeries ?? Array.Empty<IEnumerable<HealthMetricData>>(),
-            p.Labels ?? Array.Empty<string>(),
-            p.From,
-            p.To,
-            p.Unit);
-
-    public MultiMetricStrategyFactory()
-        : base(
-            cmsFactory: (ctx, p) => CreateLegacy(p), // TODO: Implement CMS MultiMetric strategy
-            legacyFactory: CreateLegacy)
+    public MultiMetricStrategyFactory() : base((ctx, p) => CreateLegacy(p), // TODO: Implement CMS MultiMetric strategy
+            CreateLegacy)
     {
+    }
+
+    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p)
+    {
+        return new MultiMetricStrategy(p.LegacySeries ?? Array.Empty<IEnumerable<HealthMetricData>>(), p.Labels ?? Array.Empty<string>(), p.From, p.To, p.Unit);
     }
 }

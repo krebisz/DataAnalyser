@@ -1,3 +1,7 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using DataVisualiser.Core.Orchestration.Builders;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Services;
@@ -5,10 +9,6 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels.Commands;
 using DataVisualiser.UI.ViewModels.Events;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
 
 namespace DataVisualiser.UI.ViewModels;
 
@@ -20,7 +20,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
     // SERVICES (injected)
     // ======================
 
-    private readonly MetricSelectionService _metricService;
+    private readonly MetricSelectionService    _metricService;
     private readonly WeeklyDistributionService _weeklyDistService;
 
     private bool _isInitializing = true;
@@ -48,21 +48,21 @@ public class MainWindowViewModel : INotifyPropertyChanged
     // STATE OBJECTS
     // ======================
 
-    public ChartState ChartState { get; }
+    public ChartState  ChartState  { get; }
     public MetricState MetricState { get; }
-    public UiState UiState { get; }
+    public UiState     UiState     { get; }
 
     // ======================
     // COMMANDS
     // ======================
 
-    public ICommand LoadMetricsCommand { get; }
-    public ICommand LoadSubtypesCommand { get; }
-    public ICommand LoadDataCommand { get; }
-    public ICommand ToggleNormCommand { get; }
-    public ICommand ToggleDiffRatioCommand { get; }
+    public ICommand LoadMetricsCommand              { get; }
+    public ICommand LoadSubtypesCommand             { get; }
+    public ICommand LoadDataCommand                 { get; }
+    public ICommand ToggleNormCommand               { get; }
+    public ICommand ToggleDiffRatioCommand          { get; }
     public ICommand ToggleDiffRatioOperationCommand { get; }
-    public ICommand ToggleWeeklyCommand { get; }
+    public ICommand ToggleWeeklyCommand             { get; }
 
     // ======================
     // INotifyPropertyChanged
@@ -73,13 +73,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
     // UI → VM Event Surface
     // ======================
 
-    public event EventHandler<MetricTypesLoadedEventArgs>? MetricTypesLoaded;
-    public event EventHandler<SubtypesLoadedEventArgs>? SubtypesLoaded;
-    public event EventHandler<DateRangeLoadedEventArgs>? DateRangeLoaded;
-    public event EventHandler<DataLoadedEventArgs>? DataLoaded;
+    public event EventHandler<MetricTypesLoadedEventArgs>?      MetricTypesLoaded;
+    public event EventHandler<SubtypesLoadedEventArgs>?         SubtypesLoaded;
+    public event EventHandler<DateRangeLoadedEventArgs>?        DateRangeLoaded;
+    public event EventHandler<DataLoadedEventArgs>?             DataLoaded;
     public event EventHandler<ChartVisibilityChangedEventArgs>? ChartVisibilityChanged;
-    public event EventHandler<ErrorEventArgs>? ErrorOccured;
-    public event EventHandler<ChartUpdateRequestedEventArgs>? ChartUpdateRequested;
+    public event EventHandler<ErrorEventArgs>?                  ErrorOccured;
+    public event EventHandler<ChartUpdateRequestedEventArgs>?   ChartUpdateRequested;
 
     // Secondary string-based error channel (kept for compatibility)
     public event EventHandler<string>? ErrorOccurred;
@@ -109,7 +109,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             MetricTypesLoaded?.Invoke(this, new MetricTypesLoadedEventArgs
             {
-                MetricTypes = metricTypes
+                    MetricTypes = metricTypes
             });
         }
         catch (Exception ex)
@@ -150,7 +150,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             SubtypesLoaded?.Invoke(this, new SubtypesLoadedEventArgs
             {
-                Subtypes = subtypes
+                    Subtypes = subtypes
             });
         }
         catch (Exception ex)
@@ -202,7 +202,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             ErrorOccured?.Invoke(this, new ErrorEventArgs
             {
-                Message = FormatDatabaseError(ex)
+                    Message = FormatDatabaseError(ex)
             });
             ChartState.LastContext = null;
             return false;
@@ -226,7 +226,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             ErrorOccured?.Invoke(this, new ErrorEventArgs
             {
-                Message = validationError
+                    Message = validationError
             });
             return false;
         }
@@ -236,7 +236,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             validationError = "Please select a valid date range before loading data.";
             ErrorOccured?.Invoke(this, new ErrorEventArgs
             {
-                Message = validationError
+                    Message = validationError
             });
             return false;
         }
@@ -249,13 +249,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
     ///     IMPORTANT: First selected subtype is always primary (data1),
     ///     second selected subtype is always secondary (data2).
     /// </summary>
-    private (string? primarySubtype, string? secondarySubtype) ExtractPrimaryAndSecondarySubtypes()
+    private(string? primarySubtype, string? secondarySubtype) ExtractPrimaryAndSecondarySubtypes()
     {
         var primarySubtype = MetricState.SelectedSubtypes.Count > 0 ? MetricState.SelectedSubtypes[0] // First selected subtype = primary
-            : null;
+                : null;
 
         var secondarySubtype = MetricState.SelectedSubtypes.Count > 1 ? MetricState.SelectedSubtypes[1] // Second selected subtype = secondary
-            : null;
+                : null;
 
         return (primarySubtype, secondarySubtype);
     }
@@ -305,7 +305,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Basic guard: we must have a selected metric type
             // But don't show error if we're in a transitional state (e.g., resolution change)
             if (!ValidateMetricTypeSelected())
-                // Silently return without showing error - this prevents popups during resolution changes
+                    // Silently return without showing error - this prevents popups during resolution changes
                 return;
 
             var metricType = MetricState.SelectedMetricType!;
@@ -314,7 +314,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             {
                 ErrorOccured?.Invoke(this, new ErrorEventArgs
                 {
-                    Message = "Resolution table name is missing – cannot load date range."
+                        Message = "Resolution table name is missing – cannot load date range."
                 });
                 return;
             }
@@ -335,7 +335,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             {
                 ErrorOccured?.Invoke(this, new ErrorEventArgs
                 {
-                    Message = "No date range could be determined for the current selection."
+                        Message = "No date range could be determined for the current selection."
                 });
                 return;
             }
@@ -347,15 +347,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
             // Notify the view so it can update the DatePicker controls
             DateRangeLoaded?.Invoke(this, new DateRangeLoadedEventArgs
             {
-                MinDate = dateRange.Value.MinDate,
-                MaxDate = dateRange.Value.MaxDate
+                    MinDate = dateRange.Value.MinDate,
+                    MaxDate = dateRange.Value.MaxDate
             });
         }
         catch (Exception ex)
         {
             ErrorOccured?.Invoke(this, new ErrorEventArgs
             {
-                Message = FormatDatabaseError(ex)
+                    Message = FormatDatabaseError(ex)
             });
         }
     }
@@ -391,7 +391,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
             DataLoaded?.Invoke(this, new DataLoadedEventArgs
             {
-                DataContext = ctx
+                    DataContext = ctx
             });
 
             // After data is confirmed, request charts to update.
@@ -425,8 +425,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         ChartVisibilityChanged?.Invoke(this, new ChartVisibilityChangedEventArgs
         {
-            ChartName = chartName,
-            IsVisible = newVisibility
+                ChartName = chartName,
+                IsVisible = newVisibility
         });
 
         RequestChartUpdate(true, chartName);
@@ -648,7 +648,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         return true;
     }
 
-    public (bool IsValid, string? ErrorMessage) ValidateDataLoadRequirements()
+    public(bool IsValid, string? ErrorMessage) ValidateDataLoadRequirements()
     {
         if (!ValidateDataLoadRequirements(out var message))
             return (false, message);
@@ -680,7 +680,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         // Primary, structured error path
         ErrorOccured?.Invoke(this, new ErrorEventArgs
         {
-            Message = errorMessage
+                Message = errorMessage
         });
 
         // Secondary, string-only path retained for compatibility
@@ -702,15 +702,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         ChartUpdateRequested?.Invoke(this, new ChartUpdateRequestedEventArgs
         {
-            ShowMain = ChartState.IsMainVisible,
-            ShowNormalized = ChartState.IsNormalizedVisible,
-            ShowDiffRatio = ChartState.IsDiffRatioVisible,
-            ShowWeekly = ChartState.IsWeeklyVisible,
-            ShowWeeklyTrend = ChartState.IsWeeklyTrendVisible,
-            ShowTransformPanel = ChartState.IsTransformPanelVisible,
-            ShouldRenderCharts = ChartState.LastContext != null,
-            IsVisibilityOnlyToggle = isVisibilityOnlyToggle,
-            ToggledChartName = toggledChartName
+                ShowMain = ChartState.IsMainVisible,
+                ShowNormalized = ChartState.IsNormalizedVisible,
+                ShowDiffRatio = ChartState.IsDiffRatioVisible,
+                ShowWeekly = ChartState.IsWeeklyVisible,
+                ShowWeeklyTrend = ChartState.IsWeeklyTrendVisible,
+                ShowTransformPanel = ChartState.IsTransformPanelVisible,
+                ShouldRenderCharts = ChartState.LastContext != null,
+                IsVisibilityOnlyToggle = isVisibilityOnlyToggle,
+                ToggledChartName = toggledChartName
         });
     }
 

@@ -6,8 +6,8 @@ namespace DataFileReader.Services;
 
 public class FileProcessingService
 {
+    private readonly ILogger<MetricAggregator>      _logger;
     private readonly IEnumerable<IHealthFileParser> _parsers;
-    private readonly ILogger<MetricAggregator> _logger;
 
     public FileProcessingService(IEnumerable<IHealthFileParser> parsers)
     {
@@ -20,7 +20,6 @@ public class FileProcessingService
         var metricsInserted = 0;
 
         foreach (var file in fileList)
-        {
             try
             {
                 var fileInfo = new FileInfo(file);
@@ -37,9 +36,7 @@ public class FileProcessingService
 
                 // Only run shadow validation for CSV files
                 if (fileInfo.Extension.Equals(".csv", StringComparison.OrdinalIgnoreCase))
-                {
                     ShadowValidate_SamsungHealthCsv.Run(file, content);
-                }
 
                 if (metrics.Count > 0)
                 {
@@ -60,7 +57,6 @@ public class FileProcessingService
             {
                 Console.WriteLine($"Error processing {file}: {ex.Message}");
             }
-        }
 
         return new FileProcessingResult(processed, metricsInserted);
     }

@@ -15,9 +15,9 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
 {
     private readonly IEnumerable<HealthMetricData> _data;
-    private readonly DateTime _from;
-    private readonly DateTime _to;
-    private readonly IUnitResolutionService _unitResolutionService;
+    private readonly DateTime                      _from;
+    private readonly DateTime                      _to;
+    private readonly IUnitResolutionService        _unitResolutionService;
 
     public WeeklyDistributionStrategy(IEnumerable<HealthMetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null)
     {
@@ -36,8 +36,8 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
     // friendly name for chart title/legend (not used as series name here)
     public string PrimaryLabel { get; }
 
-    public string SecondaryLabel => string.Empty;
-    public string? Unit { get; private set; }
+    public string  SecondaryLabel => string.Empty;
+    public string? Unit           { get; private set; }
 
     /// <summary>
     ///     Result contains arrays for mins, maxes and counts in Monday->Sunday order.
@@ -75,8 +75,8 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
     private static List<List<double>> BucketByWeekday(IEnumerable<HealthMetricData> ordered)
     {
         var buckets = Enumerable.Range(0, 7).
-            Select(_ => new List<double>()).
-            ToList();
+                                 Select(_ => new List<double>()).
+                                 ToList();
 
         foreach (var d in ordered)
         {
@@ -89,13 +89,13 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
                 idx = 0;
 
             buckets[idx].
-                Add((double)d.Value!.Value);
+                    Add((double)d.Value!.Value);
         }
 
         return buckets;
     }
 
-    private static (List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) ComputeDailyStatistics(List<List<double>> buckets)
+    private static(List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) ComputeDailyStatistics(List<List<double>> buckets)
     {
         var mins = new List<double>();
         var maxs = new List<double>();
@@ -136,7 +136,7 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
         return (mins, maxs, ranges, counts, globalMin, globalMax);
     }
 
-    private static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) ComputeFrequencyDistributions(List<List<double>> buckets, double globalMin, double globalMax)
+    private static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) ComputeFrequencyDistributions(List<List<double>> buckets, double globalMin, double globalMax)
     {
         var dayValuesDict = BuildDayValuesDictionary(buckets);
 
@@ -162,18 +162,18 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
 
         return new WeeklyDistributionResult
         {
-            Mins = stats.Mins,
-            Maxs = stats.Maxs,
-            Ranges = stats.Ranges,
-            Counts = stats.Counts,
-            DayValues = dayValuesDict,
-            GlobalMin = double.IsNaN(stats.GlobalMin) ? 0.0 : stats.GlobalMin,
-            GlobalMax = double.IsNaN(stats.GlobalMax) ? 1.0 : stats.GlobalMax,
-            BinSize = frequencyData.BinSize,
-            Bins = frequencyData.Bins,
-            FrequenciesPerDay = frequencyData.Frequencies,
-            NormalizedFrequenciesPerDay = frequencyData.NormalizedFrequencies,
-            Unit = unit
+                Mins = stats.Mins,
+                Maxs = stats.Maxs,
+                Ranges = stats.Ranges,
+                Counts = stats.Counts,
+                DayValues = dayValuesDict,
+                GlobalMin = double.IsNaN(stats.GlobalMin) ? 0.0 : stats.GlobalMin,
+                GlobalMax = double.IsNaN(stats.GlobalMax) ? 1.0 : stats.GlobalMax,
+                BinSize = frequencyData.BinSize,
+                Bins = frequencyData.Bins,
+                FrequenciesPerDay = frequencyData.Frequencies,
+                NormalizedFrequenciesPerDay = frequencyData.NormalizedFrequencies,
+                Unit = unit
         };
     }
 
@@ -181,16 +181,16 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
     {
         return new ChartComputationResult
         {
-            PrimaryRawValues = stats.Mins,
-            PrimarySmoothed = stats.Ranges,
-            SecondaryRawValues = null,
-            SecondarySmoothed = null,
-            Timestamps = new List<DateTime>(),
-            IntervalIndices = new List<int>(),
-            NormalizedIntervals = new List<DateTime>(),
-            TickInterval = TickInterval.Day,
-            DateRange = to - from,
-            Unit = unit
+                PrimaryRawValues = stats.Mins,
+                PrimarySmoothed = stats.Ranges,
+                SecondaryRawValues = null,
+                SecondarySmoothed = null,
+                Timestamps = new List<DateTime>(),
+                IntervalIndices = new List<int>(),
+                NormalizedIntervals = new List<DateTime>(),
+                TickInterval = TickInterval.Day,
+                DateRange = to - from,
+                Unit = unit
         };
     }
 }

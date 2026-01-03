@@ -14,24 +14,23 @@ namespace DataVisualiser.Core.Strategies;
 /// </summary>
 public sealed class StrategyCutOverService : IStrategyCutOverService
 {
-    private readonly IDataPreparationService _dataPreparation;
     private readonly Dictionary<StrategyType, IStrategyFactory> _factories;
 
     public StrategyCutOverService(IDataPreparationService dataPreparation)
     {
-        _dataPreparation = dataPreparation ?? throw new ArgumentNullException(nameof(dataPreparation));
+        _ = dataPreparation ?? throw new ArgumentNullException(nameof(dataPreparation));
 
         // Initialize factories
         _factories = new Dictionary<StrategyType, IStrategyFactory>
         {
-            { StrategyType.SingleMetric, new SingleMetricStrategyFactory() },
-            { StrategyType.CombinedMetric, new CombinedMetricStrategyFactory() },
-            { StrategyType.MultiMetric, new MultiMetricStrategyFactory() },
-            { StrategyType.Difference, new DifferenceStrategyFactory() },
-            { StrategyType.Ratio, new RatioStrategyFactory() },
-            { StrategyType.Normalized, new NormalizedStrategyFactory() },
-            { StrategyType.WeeklyDistribution, new WeeklyDistributionStrategyFactory() },
-            { StrategyType.WeekdayTrend, new WeekdayTrendStrategyFactory() }
+                { StrategyType.SingleMetric, new SingleMetricStrategyFactory() },
+                { StrategyType.CombinedMetric, new CombinedMetricStrategyFactory() },
+                { StrategyType.MultiMetric, new MultiMetricStrategyFactory() },
+                { StrategyType.Difference, new DifferenceStrategyFactory() },
+                { StrategyType.Ratio, new RatioStrategyFactory() },
+                { StrategyType.Normalized, new NormalizedStrategyFactory() },
+                { StrategyType.WeeklyDistribution, new WeeklyDistributionStrategyFactory() },
+                { StrategyType.WeekdayTrend, new WeekdayTrendStrategyFactory() }
         };
     }
 
@@ -44,13 +43,13 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         // Check strategy-specific configuration
         var strategyName = strategyType switch
         {
-            StrategyType.SingleMetric => "SingleMetricStrategy",
-            StrategyType.CombinedMetric => "CombinedMetricStrategy",
-            StrategyType.MultiMetric => "MultiMetricStrategy",
-            StrategyType.Difference => "DifferenceStrategy",
-            StrategyType.Ratio => "RatioStrategy",
-            StrategyType.Normalized => "NormalizedStrategy",
-            _ => null
+                StrategyType.SingleMetric   => "SingleMetricStrategy",
+                StrategyType.CombinedMetric => "CombinedMetricStrategy",
+                StrategyType.MultiMetric    => "MultiMetricStrategy",
+                StrategyType.Difference     => "DifferenceStrategy",
+                StrategyType.Ratio          => "RatioStrategy",
+                StrategyType.Normalized     => "NormalizedStrategy",
+                _                           => null
         };
 
         if (strategyName != null && !CmsConfiguration.ShouldUseCms(strategyName))
@@ -59,15 +58,15 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         // Check if CMS data is available
         return strategyType switch
         {
-            StrategyType.SingleMetric => ctx.PrimaryCms != null,
-            StrategyType.CombinedMetric => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
-            StrategyType.MultiMetric => ctx.PrimaryCms != null, // At least primary
-            StrategyType.Difference => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
-            StrategyType.Ratio => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
-            StrategyType.Normalized => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
-            StrategyType.WeeklyDistribution => ctx.PrimaryCms != null,
-            StrategyType.WeekdayTrend => ctx.PrimaryCms != null,
-            _ => false
+                StrategyType.SingleMetric       => ctx.PrimaryCms != null,
+                StrategyType.CombinedMetric     => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
+                StrategyType.MultiMetric        => ctx.PrimaryCms != null, // At least primary
+                StrategyType.Difference         => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
+                StrategyType.Ratio              => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
+                StrategyType.Normalized         => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
+                StrategyType.WeeklyDistribution => ctx.PrimaryCms != null,
+                StrategyType.WeekdayTrend       => ctx.PrimaryCms != null,
+                _                               => false
         };
     }
 
@@ -84,8 +83,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         if (legacyStrategy == null || cmsStrategy == null)
             return new ParityResult
             {
-                Passed = false,
-                Message = "One or both strategies are null"
+                    Passed = false,
+                    Message = "One or both strategies are null"
             };
 
         // Determine strategy type from strategy instances
@@ -94,15 +93,15 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         // Get appropriate parity harness
         var harness = GetParityHarness(strategyType);
         if (harness == null)
-            // Fallback to basic validation if no harness available
+                // Fallback to basic validation if no harness available
             return PerformBasicValidation(legacyStrategy, cmsStrategy);
 
         // Use parity harness for full validation
         var context = new StrategyParityContext
         {
-            StrategyName = strategyType?.ToString() ?? "Unknown",
-            MetricIdentity = "ParityValidation",
-            Mode = ParityMode.Diagnostic
+                StrategyName = strategyType?.ToString() ?? "Unknown",
+                MetricIdentity = "ParityValidation",
+                Mode = ParityMode.Diagnostic
         };
 
         var harnessResult = harness.Validate(context, () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()), () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
@@ -115,9 +114,9 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
     {
         // Determine strategy type from strategy class names
         var legacyTypeName = legacyStrategy.GetType().
-            Name;
+                                            Name;
         var cmsTypeName = cmsStrategy.GetType().
-            Name;
+                                      Name;
 
         // Map strategy class names to StrategyType enum
         if (legacyTypeName.Contains("SingleMetric") || cmsTypeName.Contains("SingleMetric"))
@@ -144,10 +143,10 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
     {
         return strategyType switch
         {
-            StrategyType.CombinedMetric => new CombinedMetricParityHarness(),
-            StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
-            // TODO: Add harnesses for other strategy types as they become available
-            _ => null
+                StrategyType.CombinedMetric     => new CombinedMetricParityHarness(),
+                StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
+                // TODO: Add harnesses for other strategy types as they become available
+                _ => null
         };
     }
 
@@ -160,15 +159,15 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         if (legacyResult == null && cmsResult == null)
             return new ParityResult
             {
-                Passed = true,
-                Message = "Both strategies returned null"
+                    Passed = true,
+                    Message = "Both strategies returned null"
             };
 
         if (legacyResult == null || cmsResult == null)
             return new ParityResult
             {
-                Passed = false,
-                Message = $"One strategy returned null: legacy={legacyResult == null}, cms={cmsResult == null}"
+                    Passed = false,
+                    Message = $"One strategy returned null: legacy={legacyResult == null}, cms={cmsResult == null}"
             };
 
         var timestampsMatch = legacyResult.Timestamps.Count == cmsResult.Timestamps.Count;
@@ -177,14 +176,14 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         if (!timestampsMatch || !valuesMatch)
             return new ParityResult
             {
-                Passed = false,
-                Message = $"Result counts differ: timestamps={timestampsMatch}, values={valuesMatch}"
+                    Passed = false,
+                    Message = $"Result counts differ: timestamps={timestampsMatch}, values={valuesMatch}"
             };
 
         return new ParityResult
         {
-            Passed = true,
-            Message = "Basic validation passed"
+                Passed = true,
+                Message = "Basic validation passed"
         };
     }
 
@@ -193,28 +192,28 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         if (harnessResult.Passed)
             return new ParityResult
             {
-                Passed = true,
-                Message = "Parity validation passed"
+                    Passed = true,
+                    Message = "Parity validation passed"
             };
 
         var failureMessages = harnessResult.Failures.Select(f => $"[{f.Layer}] {f.Message}").
-            ToList();
+                                            ToList();
 
         return new ParityResult
         {
-            Passed = false,
-            Message = string.Join("; ", failureMessages),
-            Details = new Dictionary<string, object>
-            {
-                { "FailureCount", harnessResult.Failures.Count },
+                Passed = false,
+                Message = string.Join("; ", failureMessages),
+                Details = new Dictionary<string, object>
                 {
-                    "Failures", harnessResult.Failures.Select(f => new
-                    {
-                        f.Layer,
-                        f.Message
-                    })
+                        { "FailureCount", harnessResult.Failures.Count },
+                        {
+                                "Failures", harnessResult.Failures.Select(f => new
+                                {
+                                        f.Layer,
+                                        f.Message
+                                })
+                        }
                 }
-            }
         };
     }
 
