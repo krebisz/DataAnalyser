@@ -1,5 +1,3 @@
-using DataVisualiser.Models;
-
 namespace DataVisualiser.Services.Abstractions;
 
 /// <summary>
@@ -22,16 +20,4 @@ public interface ITimelineService
     ///     Clears cached timeline calculations.
     /// </summary>
     void ClearCache();
-}
-
-/// <summary>
-///     Result of timeline generation.
-/// </summary>
-public class TimelineResult
-{
-    public TimeSpan DateRange { get; init; }
-    public TickInterval TickInterval { get; init; }
-    public IReadOnlyList<DateTime> NormalizedIntervals { get; init; } = Array.Empty<DateTime>();
-    public DateTime From { get; init; }
-    public DateTime To { get; init; }
 }

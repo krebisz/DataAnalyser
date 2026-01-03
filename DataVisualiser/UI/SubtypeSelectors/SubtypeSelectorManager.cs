@@ -146,15 +146,3 @@ public class SubtypeSelectorManager
             yield return combo.SelectedItem?.ToString() ?? string.Empty;
     }
 }
-
-public class SubtypeControlPair
-{
-    public SubtypeControlPair(Label label, ComboBox combo)
-    {
-        Label = label;
-        Combo = combo;
-    }
-
-    public Label Label { get; }
-    public ComboBox Combo { get; }
-}
