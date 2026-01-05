@@ -22,8 +22,7 @@ public class HourlyFrequencyRenderer
     ///     Step 1 & 2: Normalize y-values and create bins with frequency counts per bucket.
     ///     Returns a tuple with bins and frequency data.
     /// </summary>
-    public static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, // bucketIndex -> values for that bucket
-                                                                                                                                                                                                                                    double                        globalMin, double globalMax)
+    public static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax)
     {
         // Step 1: Calculate bin size based on range
         var binSize = FrequencyBinningHelper.CalculateBinSize(globalMin, globalMax);

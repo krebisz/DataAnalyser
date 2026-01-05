@@ -785,7 +785,7 @@ public partial class MainWindow : Window
         var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
 
         if (isWeekly)
-            await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+            await _weeklyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
         else
             await _hourlyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
@@ -2045,7 +2045,7 @@ public partial class MainWindow : Window
                 Debug.WriteLine($"On{chartType}DisplayModeChanged: Refreshing chart with useFrequencyShading={useFrequencyShadingState}");
 
                 if (isWeekly)
-                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
+                    await _weeklyDistributionService.UpdateDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
                 else
                     await _hourlyDistributionService.UpdateDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
             }
@@ -2080,7 +2080,7 @@ public partial class MainWindow : Window
             {
                 var ctx = _viewModel.ChartState.LastContext;
                 if (isWeekly)
-                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+                    await _weeklyDistributionService.UpdateDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
                 else
                     await _hourlyDistributionService.UpdateDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
             }

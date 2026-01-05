@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows.Media;
+using DataVisualiser.Core.Services;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -9,7 +10,7 @@ namespace DataVisualiser.Core.Rendering.Shading;
 ///     Renders interval series for hourly distribution charts.
 ///     Extracted from HourlyDistributionService to improve testability and maintainability.
 /// </summary>
-public sealed class HourlyIntervalRenderer
+public sealed class HourlyIntervalRenderer : IIntervalRenderer
 {
     private const double MaxColumnWidth = 40.0;
     private const int BucketCount = 24;

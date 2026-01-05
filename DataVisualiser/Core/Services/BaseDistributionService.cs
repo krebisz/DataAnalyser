@@ -119,7 +119,7 @@ public abstract class BaseDistributionService
     }
 
     // Abstract methods that must be implemented by derived classes
-    protected abstract Task<(ChartComputationResult? Result, object? ExtendedResult)> ComputeDistributionAsync(
+    protected abstract Task<(ChartComputationResult? Result, BucketDistributionResult? ExtendedResult)> ComputeDistributionAsync(
         IEnumerable<MetricData> data,
         ICanonicalMetricSeries? cmsSeries,
         string displayName,
@@ -128,12 +128,12 @@ public abstract class BaseDistributionService
         bool useCmsStrategy,
         bool enableParity);
 
-    protected abstract Dictionary<int, List<double>> GetBucketValuesFromResult(object? frequencyData);
+    protected abstract Dictionary<int, List<double>> GetBucketValuesFromResult(BucketDistributionResult? frequencyData);
 
     protected abstract void SetupTooltip(
         CartesianChart targetChart,
         ChartComputationResult result,
-        object extendedResult,
+        BucketDistributionResult extendedResult,
         bool useFrequencyShading,
         int intervalCount);
 
@@ -197,7 +197,7 @@ public abstract class BaseDistributionService
         ChartComputationResult result,
         string displayName,
         double minHeight,
-        object? frequencyData,
+        BucketDistributionResult? frequencyData,
         bool useFrequencyShading = true,
         int intervalCount = 25)
     {
@@ -376,7 +376,7 @@ public abstract class BaseDistributionService
 
     protected int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket)
     {
-        return frequenciesPerBucket.Values.SelectMany(d => d.Values).
+        return frequenciesPerBucket.Values.SelectMany(b => b.Values).
                                  DefaultIfEmpty(1).
                                  Max();
     }

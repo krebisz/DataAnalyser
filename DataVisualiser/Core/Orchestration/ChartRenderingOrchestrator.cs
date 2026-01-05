@@ -319,7 +319,7 @@ public sealed class ChartRenderingOrchestrator
 
     private async Task RenderWeeklyDistribution(ChartDataContext ctx, CartesianChart chartWeekly, ChartState chartState)
     {
-        await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(chartWeekly, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, chartState.UseFrequencyShading, chartState.WeeklyIntervalCount);
+        await _weeklyDistributionService.UpdateDistributionChartAsync(chartWeekly, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, chartState.UseFrequencyShading, chartState.WeeklyIntervalCount);
     }
 
     private void RenderWeeklyTrend(ChartDataContext ctx)

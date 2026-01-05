@@ -42,7 +42,7 @@ public class WeeklyDistributionParityHarnessTests
 
         var legacyStrategy = new WeeklyDistributionStrategy(legacy, "weight", from, to);
         var cmsStrategy = new CmsWeeklyDistributionStrategy(cms, from, to, "weight");
-
+                
         legacyStrategy.Compute();
         cmsStrategy.Compute();
 
@@ -51,15 +51,17 @@ public class WeeklyDistributionParityHarnessTests
         // Act
         var parity = harness.Validate(new StrategyParityContext
         {
-                StrategyName = "WeeklyDistribution",
-                MetricIdentity = "weight",
-                Mode = ParityMode.Strict,
-                Tolerance = new ParityTolerance
-                {
-                        AllowFloatingPointDrift = true,
-                        ValueEpsilon = 1e-9
-                }
-        }, () => WeeklyDistributionParityHarness.ToLegacyExecutionResult(legacyStrategy.ExtendedResult), () => WeeklyDistributionParityHarness.ToCmsExecutionResult(cmsStrategy.ExtendedResult));
+            StrategyName = "WeeklyDistribution",
+            MetricIdentity = "weight",
+            Mode = ParityMode.Strict,
+            Tolerance = new ParityTolerance
+            {
+                AllowFloatingPointDrift = true,
+                ValueEpsilon = 1e-9
+            }
+        }, 
+        () => harness.ToLegacyExecutionResult(legacyStrategy.ExtendedResult), 
+        () => harness.ToCmsExecutionResult(cmsStrategy.ExtendedResult));
 
         // Assert
         Assert.True(parity.Passed);

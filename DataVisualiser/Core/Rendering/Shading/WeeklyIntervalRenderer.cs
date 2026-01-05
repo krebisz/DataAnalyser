@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows.Media;
+using DataVisualiser.Core.Services;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -9,7 +10,7 @@ namespace DataVisualiser.Core.Rendering.Shading;
 ///     Renders interval series for weekly distribution charts.
 ///     Extracted from WeeklyDistributionService to improve testability and maintainability.
 /// </summary>
-public sealed class WeeklyIntervalRenderer
+public sealed class WeeklyIntervalRenderer : IIntervalRenderer
 {
     private const double MaxColumnWidth = 40.0;
     private const int    BucketCount    = 7;
@@ -217,7 +218,7 @@ public sealed class WeeklyIntervalRenderer
                 bestBucket = bucketIndex;
             }
 
-        if (bestBucket >= 0 && colorMap.TryGetValue(bestBucket, out var bucketColorMap) && bucketColorMap.TryGetValue(intervalIndex, out var color))
+        if (bestBucket >= 0 && colorMap.TryGetValue(bestBucket, out var bucketColourMap) && bucketColourMap.TryGetValue(intervalIndex, out var color))
             return color;
 
         return Colors.Gray; // Fallback
