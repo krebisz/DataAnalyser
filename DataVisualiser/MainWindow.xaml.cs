@@ -36,26 +36,27 @@ namespace DataVisualiser;
 
 public partial class MainWindow : Window
 {
-    private readonly ChartState                  _chartState  = new();
-    private readonly MetricState                 _metricState = new();
-    private readonly UiState                     _uiState     = new();
-    private          ChartComputationEngine      _chartComputationEngine;
-    private          ChartRenderEngine           _chartRenderEngine;
-    private          ChartRenderingOrchestrator? _chartRenderingOrchestrator;
-    private          ChartUpdateCoordinator      _chartUpdateCoordinator;
+    private readonly ChartState _chartState = new();
+    private readonly MetricState _metricState = new();
+    private readonly UiState _uiState = new();
+    private ChartComputationEngine _chartComputationEngine;
+    private ChartRenderEngine _chartRenderEngine;
+    private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
+    private ChartUpdateCoordinator _chartUpdateCoordinator;
 
     private string _connectionString;
-    private bool   _isChangingResolution;
+    private bool _isChangingResolution;
 
     private bool _isInitializing = true;
 
-    private MetricSelectionService    _metricSelectionService;
-    private SubtypeSelectorManager    _selectorManager;
-    private IStrategyCutOverService?  _strategyCutOverService;
-    private List<string>?             _subtypeList;
-    private ChartTooltipManager?      _tooltipManager;
-    private MainWindowViewModel       _viewModel;
+    private MetricSelectionService _metricSelectionService;
+    private SubtypeSelectorManager _selectorManager;
+    private IStrategyCutOverService? _strategyCutOverService;
+    private List<string>? _subtypeList;
+    private ChartTooltipManager? _tooltipManager;
+    private MainWindowViewModel _viewModel;
     private WeeklyDistributionService _weeklyDistributionService;
+    private HourlyDistributionService _hourlyDistributionService;
 
     public MainWindow()
     {
@@ -288,6 +289,7 @@ public partial class MainWindow : Window
         UpdateChartVisibility(ChartNormPanel, ChartNormToggleButton, e.ShowNormalized);
         UpdateChartVisibility(ChartDiffRatioPanel, ChartDiffRatioToggleButton, e.ShowDiffRatio);
         UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
+        UpdateChartVisibility(ChartHourlyPanel, ChartHourlyToggleButton, e.ShowHourly);
         UpdateChartVisibility(ChartWeekdayTrendPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
         UpdateWeekdayTrendChartTypeVisibility();
         UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
@@ -352,7 +354,7 @@ public partial class MainWindow : Window
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    private(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
+    private (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -415,17 +417,17 @@ public partial class MainWindow : Window
 
         ChartWeekdayTrend.AxisX.Add(new Axis
         {
-                Title = "Time",
-                MinValue = result.From.Ticks,
-                MaxValue = result.To.Ticks,
-                LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+            Title = "Time",
+            MinValue = result.From.Ticks,
+            MaxValue = result.To.Ticks,
+            LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
         });
 
         ChartWeekdayTrend.AxisY.Add(new Axis
         {
-                Title = result.Unit ?? "Value",
-                MinValue = result.GlobalMin,
-                MaxValue = result.GlobalMax
+            Title = result.Unit ?? "Value",
+            MinValue = result.GlobalMin,
+            MaxValue = result.GlobalMax
         });
 
         for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
@@ -442,13 +444,13 @@ public partial class MainWindow : Window
 
             ChartWeekdayTrend.Series.Add(new LineSeries
             {
-                    Title = series.Day.ToString(),
-                    Values = values,
-                    PointGeometry = null,
-                    LineSmoothness = 0.3,
-                    Fill = Brushes.Transparent,
-                    StrokeThickness = 2,
-                    Stroke = weekdayStrokes[dayIndex]
+                Title = series.Day.ToString(),
+                Values = values,
+                PointGeometry = null,
+                LineSmoothness = 0.3,
+                Fill = Brushes.Transparent,
+                StrokeThickness = 2,
+                Stroke = weekdayStrokes[dayIndex]
             });
         }
     }
@@ -467,32 +469,32 @@ public partial class MainWindow : Window
         // Configure axes for polar-like display
         ChartWeekdayTrendPolar.AxisX.Add(new Axis
         {
-                Title = "Day of Week",
-                MinValue = 0,
-                MaxValue = 360,
-                LabelFormatter = v =>
+            Title = "Day of Week",
+            MinValue = 0,
+            MaxValue = 360,
+            LabelFormatter = v =>
+            {
+                // Convert angle (0-360) to day name
+                var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
+                return dayIndex switch
                 {
-                    // Convert angle (0-360) to day name
-                    var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
-                    return dayIndex switch
-                    {
-                            0 => "Mon",
-                            1 => "Tue",
-                            2 => "Wed",
-                            3 => "Thu",
-                            4 => "Fri",
-                            5 => "Sat",
-                            6 => "Sun",
-                            _ => ""
-                    };
-                }
+                    0 => "Mon",
+                    1 => "Tue",
+                    2 => "Wed",
+                    3 => "Thu",
+                    4 => "Fri",
+                    5 => "Sat",
+                    6 => "Sun",
+                    _ => ""
+                };
+            }
         });
 
         ChartWeekdayTrendPolar.AxisY.Add(new Axis
         {
-                Title = result.Unit ?? "Value",
-                MinValue = result.GlobalMin,
-                MaxValue = result.GlobalMax
+            Title = result.Unit ?? "Value",
+            MinValue = result.GlobalMin,
+            MaxValue = result.GlobalMax
         });
 
         // Convert each day's data to polar-like coordinates
@@ -516,14 +518,14 @@ public partial class MainWindow : Window
 
             ChartWeekdayTrendPolar.Series.Add(new LineSeries
             {
-                    Title = series.Day.ToString(),
-                    Values = values,
-                    LineSmoothness = 0.3,
-                    StrokeThickness = 2,
-                    Stroke = weekdayStrokes[dayIndex],
-                    Fill = Brushes.Transparent,
-                    PointGeometry = DefaultGeometries.Circle,
-                    PointGeometrySize = 6
+                Title = series.Day.ToString(),
+                Values = values,
+                LineSmoothness = 0.3,
+                StrokeThickness = 2,
+                Stroke = weekdayStrokes[dayIndex],
+                Fill = Brushes.Transparent,
+                PointGeometry = DefaultGeometries.Circle,
+                PointGeometrySize = 6
             });
         }
     }
@@ -546,14 +548,14 @@ public partial class MainWindow : Window
     {
         return dayIndex switch
         {
-                0 => _viewModel.ChartState.ShowMonday,
-                1 => _viewModel.ChartState.ShowTuesday,
-                2 => _viewModel.ChartState.ShowWednesday,
-                3 => _viewModel.ChartState.ShowThursday,
-                4 => _viewModel.ChartState.ShowFriday,
-                5 => _viewModel.ChartState.ShowSaturday,
-                6 => _viewModel.ChartState.ShowSunday,
-                _ => false
+            0 => _viewModel.ChartState.ShowMonday,
+            1 => _viewModel.ChartState.ShowTuesday,
+            2 => _viewModel.ChartState.ShowWednesday,
+            3 => _viewModel.ChartState.ShowThursday,
+            4 => _viewModel.ChartState.ShowFriday,
+            5 => _viewModel.ChartState.ShowSaturday,
+            6 => _viewModel.ChartState.ShowSunday,
+            _ => false
         };
     }
 
@@ -595,6 +597,9 @@ public partial class MainWindow : Window
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
             RenderWeeklyTrend(ctx);
 
+        if (_viewModel.ChartState.IsHourlyVisible)
+            await RenderHourlyDistribution(ctx);
+
         // Populate transform panel grids if visible
         if (_viewModel.ChartState.IsTransformPanelVisible)
             PopulateTransformGrids(ctx);
@@ -633,8 +638,8 @@ public partial class MainWindow : Window
                          OrderBy(d => d.NormalizedTimestamp).
                          Select(d => new
                          {
-                                 Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                                 Value = d.Value!.Value.ToString("F4")
+                             Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                             Value = d.Value!.Value.ToString("F4")
                          }).
                          ToList();
 
@@ -724,6 +729,11 @@ public partial class MainWindow : Window
                     await RenderWeeklyDistribution(ctx);
                 break;
 
+            case "Hourly":
+                if (_viewModel.ChartState.IsHourlyVisible)
+                    await RenderHourlyDistribution(ctx);
+                break;
+
             case "WeeklyTrend":
                 if (_viewModel.ChartState.IsWeeklyTrendVisible)
                     RenderWeeklyTrend(ctx);
@@ -750,7 +760,7 @@ public partial class MainWindow : Window
     {
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+        ClearDistributionChart(ChartWeekly);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
     }
@@ -761,13 +771,35 @@ public partial class MainWindow : Window
         return RenderOrClearChart(ChartNorm, _viewModel.ChartState.IsNormalizedVisible, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true);
     }
 
-    private async Task RenderWeeklyDistribution(ChartDataContext ctx)
+    /// <summary>
+    ///     Common method to render distribution charts (weekly or hourly).
+    /// </summary>
+    private async Task RenderDistributionChart(ChartDataContext ctx, bool isWeekly)
     {
-        if (_viewModel.ChartState.IsWeeklyVisible)
-            await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, _viewModel.ChartState.UseFrequencyShading, _viewModel.ChartState.WeeklyIntervalCount);
+        var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
+        if (!isVisible)
+            return;
+
+        var chart = isWeekly ? ChartWeekly : ChartHourly;
+        var useFrequencyShading = _viewModel.ChartState.UseFrequencyShading;
+        var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
+
+        if (isWeekly)
+            await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+        else
+            await _hourlyDistributionService.UpdateHourlyDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
+    private async Task RenderWeeklyDistribution(ChartDataContext ctx)
+    {
+        await RenderDistributionChart(ctx, isWeekly: true);
+    }
+
+    private async Task RenderHourlyDistribution(ChartDataContext ctx)
+    {
+        await RenderDistributionChart(ctx, isWeekly: false);
+    }
     private void RenderWeeklyTrend(ChartDataContext ctx)
     {
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
@@ -817,9 +849,9 @@ public partial class MainWindow : Window
             // Fallback to legacy approach
             var op = operation switch
             {
-                    "Subtract" => BinaryOperators.Difference,
-                    "Divide"   => BinaryOperators.Ratio,
-                    _          => (a, b) => a
+                "Subtract" => BinaryOperators.Difference,
+                "Divide" => BinaryOperators.Ratio,
+                _ => (a, b) => a
             };
 
             var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
@@ -846,11 +878,12 @@ public partial class MainWindow : Window
     {
         return chartName switch
         {
-                "Norm"        => ChartNormPanel,
-                "DiffRatio"   => ChartDiffRatioPanel,
-                "Weekly"      => ChartWeeklyPanel,
-                "WeeklyTrend" => ChartWeekdayTrendPanel,
-                _             => null
+            "Norm" => ChartNormPanel,
+            "DiffRatio" => ChartDiffRatioPanel,
+            "Weekly" => ChartWeeklyPanel,
+            "Hourly" => ChartHourlyPanel,
+            "WeeklyTrend" => ChartWeekdayTrendPanel,
+            _ => null
         };
     }
 
@@ -862,10 +895,10 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = data,
-                Label1 = label,
-                From = from,
-                To = to
+            LegacyData1 = data,
+            Label1 = label,
+            From = from,
+            To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
@@ -879,11 +912,11 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacySeries = series,
-                Labels = labels,
-                From = from,
-                To = to,
-                Unit = unit
+            LegacySeries = series,
+            Labels = labels,
+            From = from,
+            To = to,
+            Unit = unit
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
@@ -897,12 +930,12 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = data1,
-                LegacyData2 = data2,
-                Label1 = label1,
-                Label2 = label2,
-                From = from,
-                To = to
+            LegacyData1 = data1,
+            LegacyData2 = data2,
+            Label1 = label1,
+            Label2 = label2,
+            From = from,
+            To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
@@ -916,13 +949,13 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = data1,
-                LegacyData2 = data2,
-                Label1 = label1,
-                Label2 = label2,
-                From = from,
-                To = to,
-                NormalizationMode = normalizationMode
+            LegacyData1 = data1,
+            LegacyData2 = data2,
+            Label1 = label1,
+            Label2 = label2,
+            From = from,
+            To = to,
+            NormalizationMode = normalizationMode
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
@@ -982,7 +1015,8 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+        ClearDistributionChart(ChartWeekly);
+        ClearDistributionChart(ChartHourly);
         ChartHelper.ClearChart(ChartWeekdayTrend, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartWeekdayTrendPolar, _viewModel.ChartState.ChartTimestamps);
         _viewModel.ChartState.LastContext = null;
@@ -1028,12 +1062,13 @@ public partial class MainWindow : Window
     {
         _chartUpdateCoordinator = CreateChartUpdateCoordinator();
         _weeklyDistributionService = CreateWeeklyDistributionService();
+        _hourlyDistributionService = CreateHourlyDistributionService();
         _chartRenderingOrchestrator = CreateChartRenderingOrchestrator();
     }
 
     private void InitializeViewModel()
     {
-        _viewModel = new MainWindowViewModel(_chartState, _metricState, _uiState, _metricSelectionService, _chartUpdateCoordinator, _weeklyDistributionService);
+        _viewModel = new MainWindowViewModel(_chartState, _metricState, _uiState, _metricSelectionService, _chartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService);
 
         DataContext = _viewModel;
     }
@@ -1093,12 +1128,20 @@ public partial class MainWindow : Window
         return new WeeklyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
     }
 
+    private HourlyDistributionService CreateHourlyDistributionService()
+    {
+        var dataPreparationService = new DataPreparationService();
+        var strategyCutOverService = new StrategyCutOverService(dataPreparationService);
+
+        return new HourlyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
+    }
+
     private ChartRenderingOrchestrator CreateChartRenderingOrchestrator()
     {
         var dataPreparationService = new DataPreparationService();
         _strategyCutOverService = new StrategyCutOverService(dataPreparationService);
 
-        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, _strategyCutOverService, _connectionString);
+        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService, _strategyCutOverService, _connectionString);
     }
 
     #endregion
@@ -1219,9 +1262,18 @@ public partial class MainWindow : Window
     private void InitializeChartBehavior()
     {
         ChartHelper.InitializeChartBehavior(MainChartController.Chart);
-        ChartHelper.InitializeChartBehavior(ChartWeekly);
+        InitializeDistributionChartBehavior(ChartWeekly);
+        InitializeDistributionChartBehavior(ChartHourly);
         ChartHelper.InitializeChartBehavior(ChartNorm);
         ChartHelper.InitializeChartBehavior(ChartDiffRatio);
+    }
+
+    /// <summary>
+    ///     Common method to initialize distribution chart behavior.
+    /// </summary>
+    private void InitializeDistributionChartBehavior(CartesianChart chart)
+    {
+        ChartHelper.InitializeChartBehavior(chart);
     }
 
     private void ClearChartsOnStartup()
@@ -1230,7 +1282,16 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartWeekly, _viewModel.ChartState.ChartTimestamps);
+        ClearDistributionChart(ChartWeekly);
+        ClearDistributionChart(ChartHourly);
+    }
+
+    /// <summary>
+    ///     Common method to clear distribution charts.
+    /// </summary>
+    private void ClearDistributionChart(CartesianChart chart)
+    {
+        ChartHelper.ClearChart(chart, _viewModel.ChartState.ChartTimestamps);
     }
 
     private void DisableAxisLabelsWhenNoData()
@@ -1238,7 +1299,16 @@ public partial class MainWindow : Window
         DisableAxisLabels(MainChartController.Chart);
         DisableAxisLabels(ChartNorm);
         DisableAxisLabels(ChartDiffRatio);
-        DisableAxisLabels(ChartWeekly);
+        DisableDistributionAxisLabels(ChartWeekly);
+        DisableDistributionAxisLabels(ChartHourly);
+    }
+
+    /// <summary>
+    ///     Common method to disable axis labels for distribution charts.
+    /// </summary>
+    private void DisableDistributionAxisLabels(CartesianChart chart)
+    {
+        DisableAxisLabels(chart);
     }
 
     private static void DisableAxisLabels(CartesianChart chart)
@@ -1450,11 +1520,26 @@ public partial class MainWindow : Window
         _viewModel.ToggleNorm();
     }
 
-    private void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
+    /// <summary>
+    ///     Common handler for distribution chart toggles (weekly or hourly).
+    /// </summary>
+    private void HandleDistributionChartToggle(bool isWeekly)
     {
-        _viewModel.ToggleWeekly();
+        if (isWeekly)
+            _viewModel.ToggleWeekly();
+        else
+            _viewModel.ToggleHourly();
     }
 
+    private void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
+    {
+        HandleDistributionChartToggle(isWeekly: true);
+    }
+
+    private void OnChartHourlyToggle(object sender, RoutedEventArgs e)
+    {
+        HandleDistributionChartToggle(isWeekly: false);
+    }
     private void OnChartWeekdayTrendToggle(object sender, RoutedEventArgs e)
     {
         _viewModel.ToggleWeeklyTrend();
@@ -1620,9 +1705,9 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                    "Log"  => UnaryOperators.Logarithm,
-                    "Sqrt" => UnaryOperators.SquareRoot,
-                    _      => x => x
+                "Log" => UnaryOperators.Logarithm,
+                "Sqrt" => UnaryOperators.SquareRoot,
+                _ => x => x
             };
             var allValues = allDataList.Select(d => (double)d.Value!.Value).
                                         ToList();
@@ -1822,9 +1907,9 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                    "Add"      => BinaryOperators.Sum,
-                    "Subtract" => BinaryOperators.Difference,
-                    _          => (a, b) => a
+                "Add" => BinaryOperators.Sum,
+                "Subtract" => BinaryOperators.Difference,
+                _ => (a, b) => a
             };
 
             var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
@@ -1866,7 +1951,16 @@ public partial class MainWindow : Window
         ChartHelper.ResetZoom(ref mainChart);
         ChartHelper.ResetZoom(ref ChartNorm);
         ChartHelper.ResetZoom(ref ChartDiffRatio);
-        ChartHelper.ResetZoom(ref ChartWeekly);
+        ResetDistributionChartZoom(ChartWeekly);
+        ResetDistributionChartZoom(ChartHourly);
+    }
+
+    /// <summary>
+    ///     Common method to reset zoom for distribution charts.
+    /// </summary>
+    private void ResetDistributionChartZoom(CartesianChart chart)
+    {
+        ChartHelper.ResetZoom(ref chart);
     }
 
     private void SetChartTitles(string leftName, string rightName)
@@ -1918,61 +2012,108 @@ public partial class MainWindow : Window
 
     #endregion
 
-    #region Weekly distribution display mode UI handling
+    #region Distribution chart display mode UI handling (common for weekly and hourly)
 
-    private async void OnWeeklyDisplayModeChanged(object sender, RoutedEventArgs e)
+    /// <summary>
+    ///     Common handler for display mode changes (frequency shading vs simple range).
+    ///     Works for both weekly and hourly distribution charts.
+    /// </summary>
+    private async Task HandleDistributionDisplayModeChanged(bool isWeekly, bool useFrequencyShading)
     {
         if (_isInitializing)
             return;
 
         try
         {
-            var newValue = WeeklyFrequencyShadingRadio.IsChecked == true;
-            Debug.WriteLine($"OnWeeklyDisplayModeChanged: Setting UseFrequencyShading to {newValue}");
+            var chartType = isWeekly ? "Weekly" : "Hourly";
+            Debug.WriteLine($"On{chartType}DisplayModeChanged: Setting UseFrequencyShading to {useFrequencyShading}");
 
-            if (WeeklyFrequencyShadingRadio.IsChecked == true)
-                _viewModel.SetWeeklyFrequencyShading(true);
-            else if (WeeklySimpleRangeRadio.IsChecked == true)
-                _viewModel.SetWeeklyFrequencyShading(false);
+            if (isWeekly)
+                _viewModel.SetWeeklyFrequencyShading(useFrequencyShading);
+            else
+                _viewModel.SetHourlyFrequencyShading(useFrequencyShading);
 
-            Debug.WriteLine($"OnWeeklyDisplayModeChanged: ChartState.UseFrequencyShading = {_viewModel.ChartState.UseFrequencyShading}");
+            var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
+            var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
+            var useFrequencyShadingState = isWeekly ? _viewModel.ChartState.UseFrequencyShading : _viewModel.ChartState.UseFrequencyShading;
 
-            if (_viewModel.ChartState.IsWeeklyVisible && _viewModel.ChartState.LastContext?.Data1 != null)
+            Debug.WriteLine($"On{chartType}DisplayModeChanged: ChartState.UseFrequencyShading = {useFrequencyShadingState}");
+
+            if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
             {
                 var ctx = _viewModel.ChartState.LastContext;
-                Debug.WriteLine($"OnWeeklyDisplayModeChanged: Refreshing chart with useFrequencyShading={_viewModel.ChartState.UseFrequencyShading}");
+                Debug.WriteLine($"On{chartType}DisplayModeChanged: Refreshing chart with useFrequencyShading={useFrequencyShadingState}");
 
-                await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, _viewModel.ChartState.UseFrequencyShading, _viewModel.ChartState.WeeklyIntervalCount);
+                if (isWeekly)
+                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
+                else
+                    await _hourlyDistributionService.UpdateHourlyDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"OnWeeklyDisplayModeChanged error: {ex.Message}");
+            var chartType = isWeekly ? "Weekly" : "Hourly";
+            Debug.WriteLine($"On{chartType}DisplayModeChanged error: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    ///     Common handler for interval count changes.
+    ///     Works for both weekly and hourly distribution charts.
+    /// </summary>
+    private async Task HandleDistributionIntervalCountChanged(bool isWeekly, int intervalCount)
+    {
+        if (_isInitializing)
+            return;
+
+        try
+        {
+            if (isWeekly)
+                _viewModel.SetWeeklyIntervalCount(intervalCount);
+            else
+                _viewModel.SetHourlyIntervalCount(intervalCount);
+
+            var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
+            var useFrequencyShading = _viewModel.ChartState.UseFrequencyShading;
+
+            if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
+            {
+                var ctx = _viewModel.ChartState.LastContext;
+                if (isWeekly)
+                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+                else
+                    await _hourlyDistributionService.UpdateHourlyDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+            }
+        }
+        catch (Exception ex)
+        {
+            var chartType = isWeekly ? "Weekly" : "Hourly";
+            Debug.WriteLine($"On{chartType}IntervalCountChanged error: {ex.Message}");
+        }
+    }
+
+    private async void OnWeeklyDisplayModeChanged(object sender, RoutedEventArgs e)
+    {
+        var useFrequencyShading = WeeklyFrequencyShadingRadio.IsChecked == true;
+        await HandleDistributionDisplayModeChanged(true, useFrequencyShading);
+    }
+
+    private async void OnHourlyDisplayModeChanged(object sender, RoutedEventArgs e)
+    {
+        var useFrequencyShading = HourlyFrequencyShadingRadio.IsChecked == true;
+        await HandleDistributionDisplayModeChanged(false, useFrequencyShading);
     }
 
     private async void OnWeeklyIntervalCountChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing)
-            return;
+        if (WeeklyIntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tagValue && int.TryParse(tagValue, out var intervalCount))
+            await HandleDistributionIntervalCountChanged(true, intervalCount);
+    }
 
-        try
-        {
-            if (WeeklyIntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tagValue && int.TryParse(tagValue, out var intervalCount))
-            {
-                _viewModel.SetWeeklyIntervalCount(intervalCount);
-
-                if (_viewModel.ChartState.IsWeeklyVisible && _viewModel.ChartState.LastContext?.Data1 != null)
-                {
-                    var ctx = _viewModel.ChartState.LastContext;
-                    await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, _viewModel.ChartState.UseFrequencyShading, _viewModel.ChartState.WeeklyIntervalCount);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"OnWeeklyIntervalCountChanged error: {ex.Message}");
-        }
+    private async void OnHourlyIntervalCountChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (HourlyIntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tagValue && int.TryParse(tagValue, out var intervalCount))
+            await HandleDistributionIntervalCountChanged(false, intervalCount);
     }
 
     #endregion

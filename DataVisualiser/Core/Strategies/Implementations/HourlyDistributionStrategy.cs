@@ -1,3 +1,4 @@
+using System.DirectoryServices.ActiveDirectory;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Services.Abstractions;
@@ -9,18 +10,18 @@ using UnitResolutionService = DataVisualiser.Core.Services.UnitResolutionService
 namespace DataVisualiser.Core.Strategies.Implementations;
 
 /// <summary>
-///     Computes per-day-of-week min, max, counts, and frequency bins for a single metric series.
-///     Monday -> Sunday ordering.
+///     Computes per-day-of-hour min, max, counts, and frequency bins for a single metric series.
+///     (0 - n) ordering.
 /// </summary>
-public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
+public sealed class HourlyDistributionStrategy : IChartComputationStrategy
 {
-    private static readonly int                     BucketCount = 7;
+    private static readonly int                     BucketCount = 24;
     private readonly        IEnumerable<MetricData> _data;
     private readonly        DateTime                _from;
     private readonly        DateTime                _to;
     private readonly        IUnitResolutionService  _unitResolutionService;
 
-    public WeeklyDistributionStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null)
+    public HourlyDistributionStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null)
     {
         _data = data ?? Array.Empty<MetricData>();
         PrimaryLabel = label ?? "Metric";
@@ -32,7 +33,7 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
     /// <summary>
     ///     Extended result containing frequency binning data.
     /// </summary>
-    public WeeklyDistributionResult? ExtendedResult { get; private set; }
+    public HourlyDistributionResult? ExtendedResult { get; private set; }
 
     // friendly name for chart title/legend (not used as series name here)
     public string PrimaryLabel { get; }
@@ -41,7 +42,7 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
     public string? Unit           { get; private set; }
 
     /// <summary>
-    ///     Result contains arrays for mins, maxes and counts in Monday->Sunday order.
+    ///     Result contains arrays for mins, maxes and counts in (0 - n) order.
     ///     Uses ChartComputationResult.PrimaryRawValues = mins
     ///     and PrimarySmoothed = ranges (max - min).
     /// </summary>
@@ -54,7 +55,7 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
         if (ordered.Count == 0)
             return null;
 
-        var buckets = BucketByWeekday(ordered);
+        var buckets = BucketByHourday(ordered);
 
         var stats = ComputeDailyStatistics(buckets);
 
@@ -73,7 +74,7 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
         return StrategyComputationHelper.FilterAndOrderByRange(data, from, to);
     }
 
-    private static List<List<double>> BucketByWeekday(IEnumerable<MetricData> ordered)
+    private static List<List<double>> BucketByHourday(IEnumerable<MetricData> ordered)
     {
         var buckets = Enumerable.Range(0, BucketCount).
                                  Select(_ => new List<double>()).
@@ -81,12 +82,12 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
 
         foreach (var d in ordered)
         {
-            var dow = d.NormalizedTimestamp.DayOfWeek;
+            var dow = d.NormalizedTimestamp.Hour;
 
-            // Monday = 0 … Sunday = 6
-            var idx = dow == DayOfWeek.Sunday ? BucketCount - 1 : (int)dow - 1;
+            //12AM = 0 … 11PM = 23
+            var idx = (int)dow == (int)HourOfDay.TwentyThree ? (BucketCount - 1) : (int)dow - 1;
 
-            if (idx < 0 || idx > BucketCount - 1)
+            if (idx < 0 || idx > (BucketCount - 1))
                 idx = 0;
 
             buckets[idx].
@@ -144,7 +145,7 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
         if (double.IsNaN(globalMin) || double.IsNaN(globalMax) || globalMax <= globalMin)
             return (new List<(double, double)>(), 1.0, new Dictionary<int, Dictionary<int, int>>(), new Dictionary<int, Dictionary<int, double>>());
 
-        return WeeklyFrequencyRenderer.PrepareBinsAndFrequencies(dayValuesDict, globalMin, globalMax);
+        return HourlyFrequencyRenderer.PrepareBinsAndFrequencies(dayValuesDict, globalMin, globalMax);
     }
 
     private static Dictionary<int, List<double>> BuildDayValuesDictionary(List<List<double>> buckets)
@@ -155,25 +156,25 @@ public sealed class WeeklyDistributionStrategy : IChartComputationStrategy
         return dict;
     }
 
-    private static WeeklyDistributionResult BuildExtendedResult((List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) stats, List<List<double>> buckets, (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) frequencyData, string? unit)
+    private static HourlyDistributionResult BuildExtendedResult((List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) stats, List<List<double>> buckets, (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) frequencyData, string? unit)
     {
         var dayValuesDict = new Dictionary<int, List<double>>();
         for (var i = 0; i < BucketCount; i++)
             dayValuesDict[i] = buckets[i];
 
-        return new WeeklyDistributionResult
+        return new HourlyDistributionResult
         {
                 Mins = stats.Mins,
                 Maxs = stats.Maxs,
                 Ranges = stats.Ranges,
                 Counts = stats.Counts,
-                DayValues = dayValuesDict,
+                HourValues = dayValuesDict,
                 GlobalMin = double.IsNaN(stats.GlobalMin) ? 0.0 : stats.GlobalMin,
                 GlobalMax = double.IsNaN(stats.GlobalMax) ? 1.0 : stats.GlobalMax,
                 BinSize = frequencyData.BinSize,
                 Bins = frequencyData.Bins,
-                FrequenciesPerDay = frequencyData.Frequencies,
-                NormalizedFrequenciesPerBucket = frequencyData.NormalizedFrequencies,
+                FrequenciesPerHour = frequencyData.Frequencies,
+                NormalizedFrequenciesPerHour = frequencyData.NormalizedFrequencies,
                 Unit = unit
         };
     }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Windows.Input;
 using DataVisualiser.Core.Rendering.Shading;
 
 namespace DataVisualiser.Core.Services;
@@ -10,10 +11,12 @@ namespace DataVisualiser.Core.Services;
 public sealed class FrequencyShadingCalculator
 {
     private readonly IIntervalShadingStrategy _shadingStrategy;
+    private static   int                      _bucketCount = 0;
 
-    public FrequencyShadingCalculator(IIntervalShadingStrategy shadingStrategy)
+    public FrequencyShadingCalculator(IIntervalShadingStrategy shadingStrategy, int bucketCount)
     {
         _shadingStrategy = shadingStrategy ?? throw new ArgumentNullException(nameof(shadingStrategy));
+        _bucketCount = bucketCount;
     }
 
     /// <summary>
@@ -27,8 +30,8 @@ public sealed class FrequencyShadingCalculator
         var context = new IntervalShadingContext
         {
                 Intervals = intervals,
-                FrequenciesPerDay = frequencies,
-                DayValues = dayValues,
+                FrequenciesPerBucket = frequencies,
+                BucketValues = dayValues,
                 GlobalMin = globalMin,
                 GlobalMax = globalMax
         };
@@ -80,28 +83,28 @@ public sealed class FrequencyShadingCalculator
     /// <summary>
     ///     Counts the number of values that fall in each interval, for each separate day.
     /// </summary>
-    public Dictionary<int, Dictionary<int, int>> CountFrequenciesPerInterval(Dictionary<int, List<double>> dayValues, List<(double Min, double Max)> intervals)
+    public Dictionary<int, Dictionary<int, int>> CountFrequenciesPerInterval(Dictionary<int, List<double>> bucketValues, List<(double Min, double Max)> intervals)
     {
         var result = new Dictionary<int, Dictionary<int, int>>();
 
-        foreach (var dayIndex in EnumerateDays())
+        foreach (var bucketIndex in EnumerateBuckets(_bucketCount))
         {
             var frequencies = InitializeFrequencies(intervals.Count);
 
-            if (dayValues.TryGetValue(dayIndex, out var values))
+            if (bucketValues.TryGetValue(bucketIndex, out var values))
                 CountValuesIntoIntervals(values, intervals, frequencies);
 
-            result[dayIndex] = frequencies;
-            LogDaySummary(dayIndex, frequencies);
+            result[bucketIndex] = frequencies;
+            LogDaySummary(bucketIndex, frequencies);
         }
 
         return result;
     }
 
-    private static IEnumerable<int> EnumerateDays()
+    private static IEnumerable<int> EnumerateBuckets(int bucketCount)
     {
-        for (var day = 0; day < 7; day++)
-            yield return day;
+        for (var bucket = 0; bucket < bucketCount; bucket++)
+            yield return bucket;
     }
 
     private static Dictionary<int, int> InitializeFrequencies(int intervalCount)
@@ -151,14 +154,13 @@ public sealed class FrequencyShadingCalculator
         return inclusiveUpperBound ? value >= interval.Min && value <= interval.Max : value >= interval.Min && value < interval.Max;
     }
 
-    private static void LogDaySummary(int dayIndex, Dictionary<int, int> frequencies)
+    private static void LogDaySummary(int bucketIndex, Dictionary<int, int> frequencies)
     {
         var totalValues = frequencies.Values.Sum();
         var nonZeroIntervals = frequencies.Values.Count(f => f > 0);
-        var maxFreq = frequencies.Values.DefaultIfEmpty(0).
-                                  Max();
+        var maxFreq = frequencies.Values.DefaultIfEmpty(0).Max();
 
-        Debug.WriteLine($"Day {dayIndex} frequencies: " + $"Total values={totalValues}, " + $"Non-zero intervals={nonZeroIntervals}, " + $"Max frequency={maxFreq}");
+        Debug.WriteLine($"Day {bucketIndex} frequencies: " + $"Total values={totalValues}, " + $"Non-zero intervals={nonZeroIntervals}, " + $"Max frequency={maxFreq}");
 
         if (frequencies.Count == 0)
             return;

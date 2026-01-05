@@ -12,6 +12,7 @@ public class ChartState
     public bool IsDiffRatioVisible        { get; set; }         // Unified Diff/Ratio chart
     public bool IsDiffRatioDifferenceMode { get; set; } = true; // true = Difference (-), false = Ratio (/)
     public bool IsWeeklyVisible           { get; set; }
+    public bool IsHourlyVisible           { get; set; }
     public bool IsWeeklyTrendVisible      { get; set; }
     public bool IsTransformPanelVisible   { get; set; }
     public bool IsWeekdayTrendPolarMode   { get; set; } = false; // Default to Cartesian
@@ -32,7 +33,7 @@ public class ChartState
     // Weekly distribution chart options
     public bool UseFrequencyShading { get; set; } = true; // Default to frequency shading enabled
     public int  WeeklyIntervalCount { get; set; } = 25;   // Default interval count for frequency shading
-
+    public int  HourlyIntervalCount { get; set; } = 15;   // Default interval count for frequency shading
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }
 

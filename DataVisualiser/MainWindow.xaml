@@ -391,6 +391,87 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ========== CHART HOURLY DISTRIBUTION ========== -->
+                <Border BorderBrush="#FF444444"
+                        BorderThickness="1"
+                        Margin="0,0,0,10">
+
+                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+
+                        <Border Background="#BB131313"
+                                BorderBrush="#FF444444"
+                                BorderThickness="1"
+                                Padding="10,5">
+
+                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                                <TextBlock x:Name="ChartHourlyTitle"
+                                           Text="Hourly Distribution"
+                                           FontWeight="Bold"
+                                           FontSize="14"
+                                           VerticalAlignment="Center" />
+
+                                <Button x:Name="ChartHourlyToggleButton"
+                                        Content="Show"
+                                        Margin="10,0,0,0"
+                                        Padding="10,3"
+                                        Click="OnChartHourlyToggle" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                            <TextBlock Text="Display Mode:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,10,0" />
+
+                            <RadioButton x:Name="HourlyFrequencyShadingRadio"
+                                         Content="Frequency Shading"
+                                         GroupName="HourlyDisplayModes"
+                                         IsChecked="True"
+                                         Checked="OnHourlyDisplayModeChanged" />
+
+                            <RadioButton x:Name="HourlySimpleRangeRadio"
+                                         Content="Simple Range"
+                                         GroupName="HourlyDisplayModes"
+                                         Checked="OnHourlyDisplayModeChanged" />
+
+                            <TextBlock Text="Interval Count:"
+                                       VerticalAlignment="Center"
+                                       Margin="20,0,10,0" />
+
+                            <ComboBox x:Name="HourlyIntervalCountCombo"
+                                      Width="80"
+                                      VerticalAlignment="Center"
+                                      SelectionChanged="OnHourlyIntervalCountChanged">
+                                <ComboBoxItem Content="3" Tag="3" />
+                                <ComboBoxItem Content="5" Tag="5" />
+                                <ComboBoxItem Content="15" Tag="15" IsSelected="True" />
+                                <ComboBoxItem Content="25" Tag="25" />
+                                <ComboBoxItem Content="50" Tag="50" />
+                                <ComboBoxItem Content="100" Tag="100" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel x:Name="ChartHourlyPanel" Orientation="Vertical">
+                            <lvc:CartesianChart x:Name="ChartHourly"
+                                                LegendLocation="Right"
+                                                Zoom="X"
+                                                Pan="X"
+                                                Hoverable="True"
+                                                Margin="20,5,10,20"
+                                                MinHeight="400">
+                                <lvc:CartesianChart.AxisX>
+                                    <lvc:Axis Title="Hours of Day"
+                                              Labels="12AM,1AM,2AM,3AM,4AM,5AM,6AM,7AM,8AM,9AM,10AM,11AM,12PM,1PM,2PM,3PM,4PM,5PM,6PM,7PM,8PM,9PM,10PM,11PM" />
+                                </lvc:CartesianChart.AxisX>
+                                <lvc:CartesianChart.AxisY>
+                                    <lvc:Axis Title="Value"
+                                              ShowLabels="True" />
+                                </lvc:CartesianChart.AxisY>
+                            </lvc:CartesianChart>
+                        </StackPanel>
+
+                    </StackPanel>
+                </Border>
 
                 <!-- ========== TRANSFORM DATA PANEL ========== -->
                 <Border BorderBrush="#FF444444"

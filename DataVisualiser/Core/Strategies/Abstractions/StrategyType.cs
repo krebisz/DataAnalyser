@@ -12,5 +12,6 @@ public enum StrategyType
     Ratio,
     Normalized,
     WeeklyDistribution,
-    WeekdayTrend
+    WeekdayTrend,
+    HourlyDistribution
 }

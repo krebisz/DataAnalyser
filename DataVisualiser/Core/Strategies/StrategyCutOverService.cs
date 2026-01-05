@@ -30,7 +30,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
                 { StrategyType.Ratio, new RatioStrategyFactory() },
                 { StrategyType.Normalized, new NormalizedStrategyFactory() },
                 { StrategyType.WeeklyDistribution, new WeeklyDistributionStrategyFactory() },
-                { StrategyType.WeekdayTrend, new WeekdayTrendStrategyFactory() }
+                { StrategyType.WeekdayTrend, new WeekdayTrendStrategyFactory() },
+                { StrategyType.HourlyDistribution, new HourlyDistributionStrategyFactory() }
         };
     }
 
@@ -65,7 +66,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
                 StrategyType.Ratio              => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
                 StrategyType.Normalized         => ctx.PrimaryCms != null && ctx.SecondaryCms != null,
                 StrategyType.WeeklyDistribution => ctx.PrimaryCms != null,
-                StrategyType.WeekdayTrend       => ctx.PrimaryCms != null,
+                StrategyType.HourlyDistribution => ctx.PrimaryCms != null,
+                StrategyType.WeekdayTrend           => ctx.PrimaryCms != null,
                 _                               => false
         };
     }
@@ -113,10 +115,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
     private StrategyType? DetermineStrategyType(IChartComputationStrategy legacyStrategy, IChartComputationStrategy cmsStrategy)
     {
         // Determine strategy type from strategy class names
-        var legacyTypeName = legacyStrategy.GetType().
-                                            Name;
-        var cmsTypeName = cmsStrategy.GetType().
-                                      Name;
+        var legacyTypeName = legacyStrategy.GetType().Name;
+        var cmsTypeName = cmsStrategy.GetType().Name;
 
         // Map strategy class names to StrategyType enum
         if (legacyTypeName.Contains("SingleMetric") || cmsTypeName.Contains("SingleMetric"))
@@ -133,6 +133,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
             return StrategyType.Normalized;
         if (legacyTypeName.Contains("WeeklyDistribution") || cmsTypeName.Contains("WeeklyDistribution"))
             return StrategyType.WeeklyDistribution;
+        if (legacyTypeName.Contains("HourlyDistribution") || cmsTypeName.Contains("HourlyDistribution"))
+            return StrategyType.HourlyDistribution;
         if (legacyTypeName.Contains("WeekdayTrend") || cmsTypeName.Contains("WeekdayTrend"))
             return StrategyType.WeekdayTrend;
 
@@ -145,8 +147,9 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         {
                 StrategyType.CombinedMetric     => new CombinedMetricParityHarness(),
                 StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
-                // TODO: Add harnesses for other strategy types as they become available
-                _ => null
+                StrategyType.HourlyDistribution => new HourlyDistributionParityHarness(),
+            // TODO: Add harnesses for other strategy types as they become available
+            _ => null
         };
     }
 

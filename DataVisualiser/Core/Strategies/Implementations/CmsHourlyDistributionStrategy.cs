@@ -8,16 +8,16 @@ using UnitResolutionService = DataVisualiser.Core.Services.UnitResolutionService
 
 namespace DataVisualiser.Core.Strategies.Implementations;
 
-public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
+public sealed class CmsHourlyDistributionStrategy : IChartComputationStrategy
 {
-    private static readonly int                    BucketCount = 7;
+    private static readonly int                    BucketCount = 24;
     private readonly        DateTime               _from;
     private readonly        ICanonicalMetricSeries _series;
     private readonly        DateTime               _to;
     private readonly        IUnitResolutionService _unitResolutionService;
 
 
-    public CmsWeeklyDistributionStrategy(ICanonicalMetricSeries series, DateTime from, DateTime to, string label, IUnitResolutionService? unitResolutionService = null)
+    public CmsHourlyDistributionStrategy(ICanonicalMetricSeries series, DateTime from, DateTime to, string label, IUnitResolutionService? unitResolutionService = null)
     {
         _series = series ?? throw new ArgumentNullException(nameof(series));
         _from = from;
@@ -31,7 +31,7 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
     public Dictionary<int, Dictionary<int, int>> FrequenciesPerDay { get; } = new();
 
     public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerDay { get; } = new();
-    public WeeklyDistributionResult?                ExtendedResult              { get; private set; }
+    public HourlyDistributionResult?                ExtendedResult              { get; private set; }
 
     public string PrimaryLabel { get; }
 
@@ -44,7 +44,7 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         var materialized = MaterializeSeries();
         var filteredSamples = ApplyRangeFilter(materialized);
 
-        var dayValues = BucketByWeekday(filteredSamples.Select(x => (x.Timestamp, x.Value)));
+        var dayValues = BucketByHour(filteredSamples.Select(x => (x.Timestamp, x.Value)));
 
         ComputePerDayStatistics(dayValues, out var mins, out var maxs, out var ranges, out var counts);
 
@@ -94,24 +94,24 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         if (double.IsNaN(globalMin) || double.IsNaN(globalMax) || globalMax <= globalMin)
             return (new List<(double, double)>(), 0d, new Dictionary<int, Dictionary<int, int>>(), new Dictionary<int, Dictionary<int, double>>());
 
-        return WeeklyFrequencyRenderer.PrepareBinsAndFrequencies(dayValues, globalMin, globalMax);
+        return HourlyFrequencyRenderer.PrepareBinsAndFrequencies(dayValues, globalMin, globalMax);
     }
 
-    private WeeklyDistributionResult BuildExtendedResult(double[] mins, double[] maxs, double[] ranges, int[] counts, Dictionary<int, List<double>> dayValues, double globalMin, double globalMax, double binSize, List<(double Min, double Max)> bins, Dictionary<int, Dictionary<int, int>> freqs, Dictionary<int, Dictionary<int, double>> norm)
+    private HourlyDistributionResult BuildExtendedResult(double[] mins, double[] maxs, double[] ranges, int[] counts, Dictionary<int, List<double>> dayValues, double globalMin, double globalMax, double binSize, List<(double Min, double Max)> bins, Dictionary<int, Dictionary<int, int>> freqs, Dictionary<int, Dictionary<int, double>> norm)
     {
-        return new WeeklyDistributionResult
+        return new HourlyDistributionResult
         {
                 Mins = mins.ToList(),
                 Maxs = maxs.ToList(),
                 Ranges = ranges.ToList(),
                 Counts = counts.ToList(),
-                DayValues = dayValues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                HourValues = dayValues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 GlobalMin = globalMin,
                 GlobalMax = globalMax,
                 BinSize = binSize,
                 Bins = bins,
-                FrequenciesPerDay = freqs,
-                NormalizedFrequenciesPerBucket = norm,
+                FrequenciesPerHour = freqs,
+                NormalizedFrequenciesPerHour = norm,
                 Unit = _unitResolutionService.ResolveUnit(_series)
         };
     }
@@ -195,10 +195,10 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         return filtered.Count;
     }
 
-    private static Dictionary<int, List<double>> BucketByWeekday(IEnumerable<(DateTime Timestamp, double Value)> samples)
+    private static Dictionary<int, List<double>> BucketByHour(IEnumerable<(DateTime Timestamp, double Value)> samples)
     {
-        // Monday = 0 ... Sunday = 6
-        var buckets = new Dictionary<int, List<double>>(BucketCount)
+        // 12AM = 0 ... 11PM = 23
+        var buckets = new Dictionary<int, List<double>>(BucketCount - 1)
         {
                 { 0, new List<double>() },
                 { 1, new List<double>() },
@@ -206,13 +206,30 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
                 { 3, new List<double>() },
                 { 4, new List<double>() },
                 { 5, new List<double>() },
-                { 6, new List<double>() }
+                { 6, new List<double>() },
+                { 7, new List<double>() },
+                { 8, new List<double>() },
+                { 9, new List<double>() },
+                { 10, new List<double>() },
+                { 11, new List<double>() },
+                { 12, new List<double>() },
+                { 13, new List<double>() },
+                { 14, new List<double>() },
+                { 15, new List<double>() },
+                { 16, new List<double>() },
+                { 17, new List<double>() },
+                { 18, new List<double>() },
+                { 19, new List<double>() },
+                { 20, new List<double>() },
+                { 21, new List<double>() },
+                { 22, new List<double>() },
+                { 23, new List<double>() }
         };
 
         foreach (var (timestamp, value) in samples)
         {
-            var weekdayIndex = ((int)timestamp.DayOfWeek + (BucketCount - 1)) % BucketCount;
-            buckets[weekdayIndex].
+            var hourIndex = ((int)timestamp.Hour + (BucketCount - 1)) % BucketCount;
+            buckets[hourIndex].
                     Add(value);
         }
 
@@ -239,7 +256,7 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
     {
         var materialized = MaterializeSeries();
         var filteredSamples = ApplyRangeFilter(materialized);
-        var dayValues = BucketByWeekday(filteredSamples.Select(x => (x.Timestamp, x.Value)));
+        var dayValues = BucketByHour(filteredSamples.Select(x => (x.Timestamp, x.Value)));
 
         ComputePerDayStatistics(dayValues, out var mins, out var maxs, out var ranges, out var counts);
 
@@ -269,7 +286,7 @@ public sealed class CmsWeeklyDistributionStrategy : IChartComputationStrategy
         var materialized = MaterializeSeries();
         var filteredSamples = ApplyRangeFilter(materialized);
 
-        var dayValues = BucketByWeekday(filteredSamples.Select(x => (x.Timestamp, x.Value)));
+        var dayValues = BucketByHour(filteredSamples.Select(x => (x.Timestamp, x.Value)));
 
         ComputePerDayStatistics(dayValues, out var mins, out var maxs, out _, out _);
 

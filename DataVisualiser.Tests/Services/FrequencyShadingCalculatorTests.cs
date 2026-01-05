@@ -17,7 +17,7 @@ public sealed class FrequencyShadingCalculatorTests
     public FrequencyShadingCalculatorTests()
     {
         _mockShadingStrategy = new Mock<IIntervalShadingStrategy>();
-        _calculator = new FrequencyShadingCalculator(_mockShadingStrategy.Object);
+        _calculator = new FrequencyShadingCalculator(_mockShadingStrategy.Object, 7);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public sealed class FrequencyShadingCalculatorTests
         Assert.NotNull(result);
         Assert.Equal(intervalCount, result.Intervals.Count);
         Assert.True(result.FrequenciesPerDay.ContainsKey(0));
-        _mockShadingStrategy.Verify(s => s.CalculateColorMap(It.Is<IntervalShadingContext>(ctx => ctx.GlobalMin == globalMin && ctx.GlobalMax == globalMax && ctx.DayValues == dayValues)), Times.Once);
+        _mockShadingStrategy.Verify(s => s.CalculateColorMap(It.Is<IntervalShadingContext>(ctx => ctx.GlobalMin == globalMin && ctx.GlobalMax == globalMax && ctx.BucketValues == dayValues)), Times.Once);
     }
 
     [Fact]

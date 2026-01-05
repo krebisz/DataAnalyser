@@ -25,11 +25,13 @@ public sealed class ChartRenderingOrchestrator
     private readonly string?                   _connectionString;
     private readonly IStrategyCutOverService   _strategyCutOverService;
     private readonly WeeklyDistributionService _weeklyDistributionService;
+    private readonly HourlyDistributionService _hourlyDistributionService;
 
-    public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
+    public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
     {
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
         _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));
+        _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));  
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _connectionString = connectionString;
     }

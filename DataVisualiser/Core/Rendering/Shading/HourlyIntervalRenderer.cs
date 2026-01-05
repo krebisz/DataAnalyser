@@ -6,31 +6,31 @@ using LiveCharts.Wpf;
 namespace DataVisualiser.Core.Rendering.Shading;
 
 /// <summary>
-///     Renders interval series for weekly distribution charts.
-///     Extracted from WeeklyDistributionService to improve testability and maintainability.
+///     Renders interval series for hourly distribution charts.
+///     Extracted from HourlyDistributionService to improve testability and maintainability.
 /// </summary>
-public sealed class WeeklyIntervalRenderer
+public sealed class HourlyIntervalRenderer
 {
     private const double MaxColumnWidth = 40.0;
-    private const int    BucketCount    = 7;
+    private const int BucketCount = 24;
 
     /// <summary>
     ///     Renders interval series on the chart.
     /// </summary>
-    public int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
+    public int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerHour, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
     {
         var seriesCreated = 0;
 
         for (var intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
         {
-            var state = BuildIntervalState(intervalIndex, intervals[intervalIndex], mins, ranges, frequenciesPerBucket, uniformIntervalHeight, cumulativeStackHeight);
+            var state = BuildIntervalState(intervalIndex, intervals[intervalIndex], mins, ranges, frequenciesPerHour, uniformIntervalHeight, cumulativeStackHeight);
 
             if (!state.HasData)
                 continue;
 
             EmitBaseline(chart, state);
 
-            seriesCreated += EmitIntervalSeries(chart, intervalIndex, state, frequenciesPerBucket, colorMap);
+            seriesCreated += EmitIntervalSeries(chart, intervalIndex, state, frequenciesPerHour, colorMap);
         }
 
         return seriesCreated;
@@ -49,7 +49,7 @@ public sealed class WeeklyIntervalRenderer
         });
     }
 
-    private int EmitIntervalSeries(CartesianChart chart, int intervalIndex, IntervalRenderState state, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap)
+    private int EmitIntervalSeries(CartesianChart chart, int intervalIndex, IntervalRenderState state, Dictionary<int, Dictionary<int, int>> frequenciesPerHour, Dictionary<int, Dictionary<int, Color>> colorMap)
     {
         var created = 0;
 
@@ -61,7 +61,7 @@ public sealed class WeeklyIntervalRenderer
 
         if (state.HasNonZeroFreqBuckets)
         {
-            var color = ResolveIntervalColor(frequenciesPerBucket, colorMap, intervalIndex);
+            var color = ResolveIntervalColor(frequenciesPerHour, colorMap, intervalIndex);
 
             AddColoredSeries(chart, state.ColoredHeights, color);
             created++;
@@ -70,43 +70,43 @@ public sealed class WeeklyIntervalRenderer
         return created;
     }
 
-    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, double uniformIntervalHeight, double[] cumulativeStackHeight)
+    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerHour, double uniformIntervalHeight, double[] cumulativeStackHeight)
     {
         var state = new IntervalRenderState(uniformIntervalHeight);
 
-        for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
+        for (var hourIndex = 0; hourIndex < BucketCount; hourIndex++)
         {
-            if (!TryComputeDayIntervalOverlap(bucketIndex, interval, mins, ranges, out var dayMin, out var dayMax))
+            if (!TryComputeHourIntervalOverlap(hourIndex, interval, mins, ranges, out var hourMin, out var hourMax))
             {
                 state.AddEmpty();
                 continue;
             }
 
-            var frequency = ResolveFrequency(frequenciesPerDay, bucketIndex, intervalIndex);
+            var frequency = ResolveFrequency(frequenciesPerHour, hourIndex, intervalIndex);
 
-            var baseline = ComputeBaseline(interval.Min, uniformIntervalHeight, ref cumulativeStackHeight[bucketIndex]);
+            var baseline = ComputeBaseline(interval.Min, uniformIntervalHeight, ref cumulativeStackHeight[hourIndex]);
 
             state.Add(baseline, frequency);
 
-            if (bucketIndex == 1)
-                Debug.WriteLine($"  Interval {intervalIndex} [{interval.Min:F4}, {interval.Max:F4}] Tue: Baseline={baseline:F4}, Height={uniformIntervalHeight:F6}, Freq={frequency}");
+            if (hourIndex == 1)
+                Debug.WriteLine($"  Interval {intervalIndex} [{interval.Min:F4}, {interval.Max:F4}] 1AM: Baseline={baseline:F4}, Height={uniformIntervalHeight:F6}, Freq={frequency}");
         }
 
         return state;
     }
 
-    private static bool TryComputeDayIntervalOverlap(int dayIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, out double dayMin, out double dayMax)
+    private static bool TryComputeHourIntervalOverlap(int hourIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, out double hourMin, out double hourMax)
     {
-        dayMin = SafeValue(mins, dayIndex);
-        var dayRange = SafePositive(ranges, dayIndex);
-        dayMax = dayMin + dayRange;
+        hourMin = SafeValue(mins, hourIndex);
+        var hourRange = SafePositive(ranges, hourIndex);
+        hourMax = hourMin + hourRange;
 
-        return dayRange > 0 && interval.Min < dayMax && interval.Max > dayMin;
+        return hourRange > 0 && interval.Min < hourMax && interval.Max > hourMin;
     }
 
-    private static int ResolveFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, int dayIndex, int intervalIndex)
+    private static int ResolveFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerHour, int hourIndex, int intervalIndex)
     {
-        return frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq) ? freq : 0;
+        return frequenciesPerHour.TryGetValue(hourIndex, out var hourFreqs) && hourFreqs.TryGetValue(intervalIndex, out var freq) ? freq : 0;
     }
 
     private static double ComputeBaseline(double intervalMin, double intervalHeight, ref double cumulativeStack)
@@ -204,20 +204,20 @@ public sealed class WeeklyIntervalRenderer
         return double.IsNaN(v) || v < 0 ? 0.0 : v;
     }
 
-    private Color ResolveIntervalColor(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, int intervalIndex)
+    private Color ResolveIntervalColor(Dictionary<int, Dictionary<int, int>> frequenciesPerHour, Dictionary<int, Dictionary<int, Color>> colorMap, int intervalIndex)
     {
-        // Pick the day with the highest frequency for this interval (most representative color).
-        var bestDay = -1;
+        // Pick the hour with the highest frequency for this interval (most representative color).
+        var bestHour = -1;
         var bestFreq = 0;
 
-        for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
-            if (frequenciesPerBucket.TryGetValue(bucketIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
+        for (var hourIndex = 0; hourIndex < BucketCount; hourIndex++)
+            if (frequenciesPerHour.TryGetValue(hourIndex, out var hourFreqs) && hourFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
             {
                 bestFreq = freq;
-                bestDay = bucketIndex;
+                bestHour = hourIndex;
             }
 
-        if (bestDay >= 0 && colorMap.TryGetValue(bestDay, out var dayColorMap) && dayColorMap.TryGetValue(intervalIndex, out var color))
+        if (bestHour >= 0 && colorMap.TryGetValue(bestHour, out var hourColorMap) && hourColorMap.TryGetValue(intervalIndex, out var color))
             return color;
 
         return Colors.Gray; // Fallback

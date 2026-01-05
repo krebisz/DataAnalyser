@@ -11,16 +11,16 @@ public class IntervalShadingContext
     public List<(double Min, double Max)> Intervals { get; set; } = new();
 
     /// <summary>
-    ///     Raw frequency counts per day per interval.
-    ///     Key: dayIndex (0=Monday, 6=Sunday), Value: Dictionary of intervalIndex -> frequency count
+    ///     Raw frequency counts per bucket per interval.
+    ///     Key: bucketIndex (0 - n), Value: Dictionary of intervalIndex -> frequency count
     /// </summary>
-    public Dictionary<int, Dictionary<int, int>> FrequenciesPerDay { get; set; } = new();
+    public Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket { get; set; } = new();
 
     /// <summary>
-    ///     Raw values per day for additional calculations.
-    ///     Key: dayIndex (0=Monday, 6=Sunday), Value: List of values for that day
+    ///     Raw values per bucket for additional calculations.
+    ///     Key: bucketIndex (0 - n), Value: List of values for that bucket
     /// </summary>
-    public Dictionary<int, List<double>> DayValues { get; set; } = new();
+    public Dictionary<int, List<double>> BucketValues { get; set; } = new();
 
     /// <summary>
     ///     Global minimum value across all data.

@@ -7,17 +7,19 @@ namespace DataVisualiser.Core.Rendering.Shading;
 public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 {
     private readonly double _maxColumnWidth;
+    private readonly int _bucketCount;
 
-    public FrequencyShadingRenderer(double maxColumnWidth)
+    public FrequencyShadingRenderer(double maxColumnWidth, int bucketCount)
     {
         _maxColumnWidth = maxColumnWidth;
+        _bucketCount = bucketCount;
     }
 
-    public void Render(CartesianChart targetChart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, double globalMin, double globalMax, IntervalShadingContext shadingContext)
+    public void Render(CartesianChart targetChart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double globalMin, double globalMax, IntervalShadingContext shadingContext)
     {
         RemoveExistingRangeSeries(targetChart);
 
-        if (!CanApplyFrequencyShading(intervals, frequenciesPerDay, mins, ranges))
+        if (!CanApplyFrequencyShading(intervals, frequenciesPerBucket, mins, ranges))
         {
             RestoreSimpleRangeSeries(targetChart, ranges);
             return;
@@ -25,11 +27,11 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 
         var uniformIntervalHeight = CalculateUniformIntervalHeight(globalMin, globalMax, intervals.Count);
 
-        var globalMaxFreq = CalculateGlobalMaxFrequency(frequenciesPerDay);
+        var globalMaxFreq = CalculateGlobalMaxFrequency(frequenciesPerBucket);
 
-        var cumulativeStackHeight = InitializeCumulativeStack(globalMin);
+        var cumulativeStackHeight = InitializeCumulativeStack(globalMin, _bucketCount);
 
-        var seriesCreated = RenderIntervals(targetChart, mins, ranges, intervals, frequenciesPerDay, colorMap, uniformIntervalHeight, cumulativeStackHeight, globalMaxFreq);
+        var seriesCreated = RenderIntervals(targetChart, mins, ranges, intervals, frequenciesPerBucket, colorMap, uniformIntervalHeight, cumulativeStackHeight, globalMaxFreq);
 
         if (seriesCreated == 0)
             RestoreSimpleRangeSeries(targetChart, ranges);
@@ -37,17 +39,17 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 
     #region Interval state
 
-    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, double uniformIntervalHeight, double[] cumulativeStackHeight)
+    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, double uniformIntervalHeight, double[] cumulativeStackHeight)
     {
         var state = new IntervalRenderState(uniformIntervalHeight);
 
-        for (var dayIndex = 0; dayIndex < 7; dayIndex++)
+        for (var bucketIndex = 0; bucketIndex < _bucketCount; bucketIndex++)
         {
-            var dayMin = SafeMin(mins, dayIndex);
-            var dayRange = SafeRange(ranges, dayIndex);
-            var dayMax = dayMin + dayRange;
+            var bucketMin = SafeMin(mins, bucketIndex);
+            var bucketRange = SafeRange(ranges, bucketIndex);
+            var bucketMax = bucketMin + bucketRange;
 
-            var overlaps = dayRange > 0 && interval.Min < dayMax && interval.Max > dayMin;
+            var overlaps = bucketRange > 0 && interval.Min < bucketMax && interval.Max > bucketMin;
 
             if (!overlaps)
             {
@@ -55,20 +57,20 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
                 continue;
             }
 
-            var frequency = frequenciesPerDay.TryGetValue(dayIndex, out var df) && df.TryGetValue(intervalIndex, out var f) ? f : 0;
+            var frequency = frequenciesPerBucket.TryGetValue(bucketIndex, out var df) && df.TryGetValue(intervalIndex, out var f) ? f : 0;
 
             var desiredPosition = interval.Min;
-            var currentStack = cumulativeStackHeight[dayIndex];
+            var currentStack = cumulativeStackHeight[bucketIndex];
             var baseline = desiredPosition - currentStack;
 
             if (baseline < 0)
             {
                 baseline = 0;
-                cumulativeStackHeight[dayIndex] = currentStack + uniformIntervalHeight;
+                cumulativeStackHeight[bucketIndex] = currentStack + uniformIntervalHeight;
             }
             else
             {
-                cumulativeStackHeight[dayIndex] = interval.Min + uniformIntervalHeight;
+                cumulativeStackHeight[bucketIndex] = interval.Min + uniformIntervalHeight;
             }
 
             state.Add(baseline, frequency);
@@ -95,8 +97,8 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
         public ChartValues<double> ColoredHeights { get; } = new();
 
         public bool HasData            { get; private set; }
-        public bool HasZeroFreqDays    { get; private set; }
-        public bool HasNonZeroFreqDays { get; private set; }
+        public bool HasZeroFreqBuckets    { get; private set; }
+        public bool HasNonZeroFreqBuckets { get; private set; }
 
         public void Add(double baseline, int frequency)
         {
@@ -107,13 +109,13 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
             {
                 WhiteHeights.Add(_height);
                 ColoredHeights.Add(0);
-                HasZeroFreqDays = true;
+                HasZeroFreqBuckets = true;
             }
             else
             {
                 WhiteHeights.Add(0);
                 ColoredHeights.Add(_height);
-                HasNonZeroFreqDays = true;
+                HasNonZeroFreqBuckets = true;
             }
         }
 
@@ -130,28 +132,28 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 
     #region Core rendering
 
-    private int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
+    private int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
     {
         var seriesCreated = 0;
 
         for (var intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
         {
-            var intervalState = BuildIntervalState(intervalIndex, intervals[intervalIndex], mins, ranges, frequenciesPerDay, uniformIntervalHeight, cumulativeStackHeight);
+            var intervalState = BuildIntervalState(intervalIndex, intervals[intervalIndex], mins, ranges, frequenciesPerBucket, uniformIntervalHeight, cumulativeStackHeight);
 
             if (!intervalState.HasData)
                 continue;
 
             AddBaselineSeries(chart, intervalState.Baselines);
 
-            if (intervalState.HasZeroFreqDays)
+            if (intervalState.HasZeroFreqBuckets)
             {
                 AddWhiteSeries(chart, intervalState.WhiteHeights);
                 seriesCreated++;
             }
 
-            if (intervalState.HasNonZeroFreqDays)
+            if (intervalState.HasNonZeroFreqBuckets)
             {
-                var color = ResolveIntervalColor(frequenciesPerDay, colorMap, intervalIndex);
+                var color = ResolveIntervalColor(frequenciesPerBucket, colorMap, intervalIndex, _bucketCount);
                 AddColoredSeries(chart, intervalState.ColoredHeights, color);
                 seriesCreated++;
             }
@@ -160,29 +162,29 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
         return seriesCreated;
     }
 
-    private Color ResolveIntervalColor(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, int intervalIndex)
+    private Color ResolveIntervalColor(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, int intervalIndex, int bucketCount)
     {
-        var (bestDay, bestFreq) = FindMostRepresentativeDay(frequenciesPerDay, intervalIndex);
+        var (bestBucket, bestFreq) = FindMostRepresentativeBucket(frequenciesPerBucket, intervalIndex, bucketCount);
 
-        if (bestDay >= 0 && colorMap.TryGetValue(bestDay, out var dayColorMap) && dayColorMap.TryGetValue(intervalIndex, out var chosen))
+        if (bestBucket >= 0 && colorMap.TryGetValue(bestBucket, out var bucketColourMap) && bucketColourMap.TryGetValue(intervalIndex, out var chosen))
             return chosen;
 
         return Color.FromRgb(173, 216, 230); // fallback
     }
 
-    private static(int Day, int Frequency) FindMostRepresentativeDay(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, int intervalIndex)
+    private static(int Bucket, int Frequency) FindMostRepresentativeBucket(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, int intervalIndex, int bucketCount)
     {
-        var bestDay = -1;
+        var bestBucket = -1;
         var bestFreq = 0;
 
-        for (var dayIndex = 0; dayIndex < 7; dayIndex++)
-            if (frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
+        for (var bucketIndex = 0; bucketIndex < bucketCount; bucketIndex++)
+            if (frequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
             {
                 bestFreq = freq;
-                bestDay = dayIndex;
+                bestBucket = bucketIndex;
             }
 
-        return (bestDay, bestFreq);
+        return (bestBucket, bestFreq);
     }
 
     #endregion
@@ -241,13 +243,13 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
         if (intervals.Count == 0 || frequencies.Count == 0)
             return false;
 
-        for (var day = 0; day < 7; day++)
+        for (var bucket = 0; bucket < _bucketCount; bucket++)
         {
-            var dayMin = SafeMin(mins, day);
-            var dayMax = dayMin + SafeRange(ranges, day);
+            var bucketMin = SafeMin(mins, bucket);
+            var bucketMax = bucketMin + SafeRange(ranges, bucket);
 
             foreach (var iv in intervals)
-                if (iv.Min < dayMax && iv.Max > dayMin && ranges[day] > 0)
+                if (iv.Min < bucketMax && iv.Max > bucketMin && ranges[bucket] > 0)
                     return true;
         }
 
@@ -266,15 +268,15 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
                 MaxColumnWidth = _maxColumnWidth
         };
 
-        for (var i = 0; i < 7; i++)
+        for (var i = 0; i < _bucketCount; i++)
             series.Values.Add(SafeRange(ranges, i));
 
         chart.Series.Add(series);
     }
 
-    private static double[] InitializeCumulativeStack(double globalMin)
+    private static double[] InitializeCumulativeStack(double globalMin, int bucketCount)
     {
-        var arr = new double[7];
+        var arr = new double[bucketCount];
         Array.Fill(arr, globalMin);
         return arr;
     }

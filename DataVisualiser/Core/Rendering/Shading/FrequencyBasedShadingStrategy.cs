@@ -10,6 +10,13 @@ namespace DataVisualiser.Core.Rendering.Shading;
 /// </summary>
 public class FrequencyBasedShadingStrategy : IIntervalShadingStrategy
 {
+    private int _bucketCount = 0;
+
+    public FrequencyBasedShadingStrategy(int bucketCount)
+    {
+        _bucketCount = bucketCount;
+    }
+
     /// <summary>
     ///     Calculates color map using global frequency normalization.
     ///     Finds the maximum frequency across all days and intervals, then normalizes each frequency
@@ -19,26 +26,27 @@ public class FrequencyBasedShadingStrategy : IIntervalShadingStrategy
     {
         // Find global maximum frequency across all days and intervals
         var maxFreq = 0;
-        foreach (var dayFreqs in context.FrequenciesPerDay.Values)
-            foreach (var freq in dayFreqs.Values)
+
+        foreach (var bucketFreqs in context.FrequenciesPerBucket.Values)
+            foreach (var freq in bucketFreqs.Values)
                 if (freq > maxFreq)
                     maxFreq = freq;
 
         if (maxFreq == 0)
             maxFreq = 1; // Avoid division by zero
 
-        Debug.WriteLine("=== WeeklyDistribution: Color Mapping (Frequency-Based) ===");
+        Debug.WriteLine("=== Distribution: Color Mapping (Frequency-Based) ===");
         Debug.WriteLine($"Global max frequency: {maxFreq}");
 
         // Map each non-zero frequency to a color (light blue to dark blue/near-black)
         var colorMap = new Dictionary<int, Dictionary<int, Color>>();
 
-        for (var dayIndex = 0; dayIndex < 7; dayIndex++)
+        for (var bucketIndex = 0; bucketIndex < _bucketCount; bucketIndex++)
         {
-            var dayColorMap = new Dictionary<int, Color>();
+            var bucketColourMap = new Dictionary<int, Color>();
 
-            if (context.FrequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs))
-                foreach (var kvp in dayFreqs)
+            if (context.FrequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs))
+                foreach (var kvp in bucketFreqs)
                 {
                     var intervalIndex = kvp.Key;
                     var frequency = kvp.Value;
@@ -52,13 +60,13 @@ public class FrequencyBasedShadingStrategy : IIntervalShadingStrategy
 
                         // Map to color (light blue = low frequency, dark blue/near-black = high frequency)
                         var color = MapNormalizedValueToColor(normalizedFreq);
-                        dayColorMap[intervalIndex] = color;
+                        bucketColourMap[intervalIndex] = color;
                     }
                     // Note: frequency = 0 is not added to dayColorMap here
                     // It will be handled separately based on whether interval overlaps day's range
                 }
 
-            colorMap[dayIndex] = dayColorMap;
+            colorMap[bucketIndex] = bucketColourMap;
         }
 
         return colorMap;
@@ -69,11 +77,11 @@ public class FrequencyBasedShadingStrategy : IIntervalShadingStrategy
     ///     This ensures consistent shading across all intervals - a frequency of 1 will always be
     ///     lighter than a frequency of 10, regardless of which interval they're in.
     /// </summary>
-    public Color? CalculateIntervalColor(IntervalShadingContext context, int dayIndex, int intervalIndex, int intervalMaxFrequency, int globalMaxFrequency)
+    public Color? CalculateIntervalColor(IntervalShadingContext context, int bucketIndex, int intervalIndex, int intervalMaxFrequency, int globalMaxFrequency)
     {
         // Get frequency for this day/interval
         var frequency = 0;
-        if (context.FrequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq))
+        if (context.FrequenciesPerBucket.TryGetValue(bucketIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq))
             frequency = freq;
 
         // Zero frequency intervals should be white (handled separately)

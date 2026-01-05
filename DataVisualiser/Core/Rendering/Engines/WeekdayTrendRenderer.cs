@@ -15,6 +15,8 @@ namespace DataVisualiser.Core.Rendering.Engines;
 /// </summary>
 public sealed class WeekdayTrendRenderingService
 {
+    public const int BucketCount = 7;
+
     private static readonly Brush[] WeekdayStrokes =
     {
             Brushes.SteelBlue,
@@ -62,7 +64,7 @@ public sealed class WeekdayTrendRenderingService
                 MaxValue = result.GlobalMax
         });
 
-        for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
+        for (var dayIndex = 0; dayIndex <= BucketCount - 1; dayIndex++)
         {
             if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
                 continue;
@@ -105,7 +107,7 @@ public sealed class WeekdayTrendRenderingService
                 LabelFormatter = v =>
                 {
                     // Convert angle (0-360) to day name
-                    var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
+                    var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % BucketCount;
                     return dayIndex switch
                     {
                             0 => "Mon",
@@ -130,7 +132,7 @@ public sealed class WeekdayTrendRenderingService
         // Convert each day's data to polar-like coordinates
         // X (angle): 0° = Monday, 51.43° = Tuesday, ... 308.57° = Sunday (360/7 per day)
         // Y (radius): value
-        for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
+        for (var dayIndex = 0; dayIndex <= BucketCount - 1; dayIndex++)
         {
             if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
                 continue;

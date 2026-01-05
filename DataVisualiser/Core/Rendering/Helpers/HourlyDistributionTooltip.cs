@@ -11,34 +11,51 @@ using LiveCharts.Wpf;
 namespace DataVisualiser.Core.Rendering.Helpers;
 
 /// <summary>
-///     Custom tooltip manager for Weekly Distribution Chart that shows interval breakdown with percentages and counts.
+///     Custom tooltip manager for Hourly Distribution Chart that shows interval breakdown with percentages and counts.
 ///     Uses DataHover event to display custom popup tooltip.
 /// </summary>
-public class WeeklyDistributionTooltip : IDisposable
+public class HourlyDistributionTooltip : IDisposable
 {
     private const    int                                                                           HoverCheckIntervalMs = 100; // Check every 100ms
     private const    int                                                                           HoverTimeoutMs       = 300; // Hide if no valid hover for 300ms AND mouse moved away
     private readonly CartesianChart                                                                _chart;
     private readonly Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> _bucketIntervalData;
-    private const    int                                                                           BucketCount = 7;
+    private const int BucketCount = 24;
 
     private readonly string[] _bucketNames =
     {
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday"
+            "12AM",
+            "1AM",
+            "2AM",
+            "3AM",
+            "4AM",
+            "5AM",
+            "6AM",
+            "7AM",
+            "8AM",
+            "9AM",
+            "10AM",
+            "11AM",
+            "12PM",
+            "1PM",
+            "2PM",
+            "3PM",
+            "4PM",
+            "5PM",
+            "6PM",
+            "7PM",
+            "8PM",
+            "9PM",
+            "10PM",
+            "11PM"
     };
 
     private readonly Popup            _tooltipPopup;
     private          DispatcherTimer? _hoverCheckTimer;
-    private          int              _lastValidBucketIndex = -1; // Track which day we last hovered over
+    private          int              _lastValidDayIndex = -1; // Track which day we last hovered over
     private          DateTime         _lastValidHoverTime;
 
-    public WeeklyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData)
+    public HourlyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData)
     {
         _chart = chart ?? throw new ArgumentNullException(nameof(chart));
         _bucketIntervalData = bucketIntervalData ?? new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
@@ -141,14 +158,14 @@ public class WeeklyDistributionTooltip : IDisposable
 
     private void OnChartDataHover(object? sender, ChartPoint chartPoint)
     {
-        if (!TryResolveHoverContext(chartPoint, out var bucketIndex, out var intervals))
+        if (!TryResolveHoverContext(chartPoint, out var dayIndex, out var intervals))
         {
             HideTooltip();
             return;
         }
 
-        UpdateHoverState(bucketIndex);
-        ShowTooltip(bucketIndex, intervals);
+        UpdateHoverState(dayIndex);
+        ShowTooltip(dayIndex, intervals);
     }
 
     private bool TryResolveHoverContext(ChartPoint chartPoint, out int bucketIndex, out List<(double Min, double Max, int Count, double Percentage)> intervals)
@@ -169,15 +186,15 @@ public class WeeklyDistributionTooltip : IDisposable
         return true;
     }
 
-    private void UpdateHoverState(int bucketIndex)
+    private void UpdateHoverState(int dayIndex)
     {
         _lastValidHoverTime = DateTime.Now;
-        _lastValidBucketIndex = bucketIndex;
+        _lastValidDayIndex = dayIndex;
     }
 
-    private void ShowTooltip(int bucketIndex, List<(double Min, double Max, int Count, double Percentage)> intervals)
+    private void ShowTooltip(int dayIndex, List<(double Min, double Max, int Count, double Percentage)> intervals)
     {
-        _tooltipPopup.Child = CreateTooltipContent(bucketIndex, intervals);
+        _tooltipPopup.Child = CreateTooltipContent(dayIndex, intervals);
 
         var mousePos = Mouse.GetPosition(_chart);
         _tooltipPopup.HorizontalOffset = mousePos.X + 10;
@@ -230,15 +247,15 @@ public class WeeklyDistributionTooltip : IDisposable
             _tooltipPopup.IsOpen = false;
 
         _lastValidHoverTime = DateTime.MinValue;
-        _lastValidBucketIndex = -1;
+        _lastValidDayIndex = -1;
     }
 
 
-    private FrameworkElement CreateTooltipContent(int bucketIndex, List<(double Min, double Max, int Count, double Percentage)> intervals)
+    private FrameworkElement CreateTooltipContent(int dayIndex, List<(double Min, double Max, int Count, double Percentage)> intervals)
     {
         var stackPanel = CreateTooltipRoot();
 
-        stackPanel.Children.Add(CreateBucketHeader(bucketIndex));
+        stackPanel.Children.Add(CreateDayHeader(dayIndex));
         stackPanel.Children.Add(CreateTotalHeader(intervals));
         stackPanel.Children.Add(CreateSeparator());
 
@@ -267,11 +284,11 @@ public class WeeklyDistributionTooltip : IDisposable
         };
     }
 
-    private TextBlock CreateBucketHeader(int bucketIndex)
+    private TextBlock CreateDayHeader(int dayIndex)
     {
         return new TextBlock
         {
-                Text = _bucketNames[bucketIndex],
+                Text = _bucketNames[dayIndex],
                 FontWeight = FontWeights.Bold,
                 FontSize = 14,
                 Margin = new Thickness(0, 0, 0, 8),

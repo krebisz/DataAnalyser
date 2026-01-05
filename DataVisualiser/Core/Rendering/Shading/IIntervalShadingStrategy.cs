@@ -25,10 +25,10 @@ public interface IIntervalShadingStrategy
     ///     (e.g., per-interval max frequency vs global max frequency).
     /// </summary>
     /// <param name="context">Context containing intervals, frequencies, and other data</param>
-    /// <param name="dayIndex">Day index (0=Monday, 6=Sunday)</param>
+    /// <param name="bucketIndex">Bucket index (0 - n)</param>
     /// <param name="intervalIndex">Interval index within the intervals list</param>
     /// <param name="intervalMaxFrequency">Maximum frequency for this specific interval across all days</param>
     /// <param name="globalMaxFrequency">Global maximum frequency across all days and intervals</param>
     /// <returns>The color to use for this interval on this day, or null if it should be white (zero frequency)</returns>
-    Color? CalculateIntervalColor(IntervalShadingContext context, int dayIndex, int intervalIndex, int intervalMaxFrequency, int globalMaxFrequency);
+    Color? CalculateIntervalColor(IntervalShadingContext context, int bucketIndex, int intervalIndex, int intervalMaxFrequency, int globalMaxFrequency);
 }
