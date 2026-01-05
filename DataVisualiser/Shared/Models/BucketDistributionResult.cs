@@ -3,7 +3,7 @@ namespace DataVisualiser.Shared.Models;
 /// <summary>
 ///     Contains the results of weekly distribution computation including frequency binning data.
 /// </summary>
-public class HourlyDistributionResult
+public class BucketDistributionResult
 {
     // Basic min/max data (existing)
     public List<double> Mins   { get; init; } = new();
@@ -13,7 +13,7 @@ public class HourlyDistributionResult
 
     // Raw data values per hour (needed for frequency counting)
     // hourIndex: 0=12AM, 1=1AM, ..., 23=11PM
-    public Dictionary<int, List<double>> HourValues { get; init; } = new();
+    public Dictionary<int, List<double>> BucketValues { get; init; } = new();
 
     // Frequency binning data (new)
     public double                         GlobalMin { get; init; }
@@ -24,10 +24,10 @@ public class HourlyDistributionResult
     // Frequency counts per hour per bin: [hourIndex][binIndex] = frequency
     // hourIndex: 0=12AM, 1=1AM, ..., 23=11PM
     // binIndex: index into Bins list
-    public Dictionary<int, Dictionary<int, int>> FrequenciesPerHour { get; init; } = new();
+    public Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket { get; init; } = new();
 
     // Normalized frequencies: [hourIndex][binIndex] = normalized frequency [0.0, 1.0]
-    public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerHour { get; init; } = new();
+    public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerBucket { get; init; } = new();
 
     public string? Unit { get; init; }
 }

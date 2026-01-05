@@ -19,7 +19,7 @@ public class HourlyFrequencyRenderer
     private const double MaxColumnWidth = 40.0;
     private const int    BucketCount    = 24;
     /// <summary>
-    ///     Step 1 & 2: Normalize y-values and create bins with frequency counts per hour.
+    ///     Step 1 & 2: Normalize y-values and create bins with frequency counts per bucket.
     ///     Returns a tuple with bins and frequency data.
     /// </summary>
     public static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, // bucketIndex -> values for that bucket
@@ -73,7 +73,7 @@ public class HourlyFrequencyRenderer
     ///     Step 4 & 5: Assign color shade to each y-interval for each bucket and draw the chart.
     ///     Creates stacked column series where each bin is a segment, colored by frequency.
     /// </summary>
-    public static void RenderChart(CartesianChart targetChart, HourlyDistributionResult result, double minHeight)
+    public static void RenderChart(CartesianChart targetChart, BucketDistributionResult result, double minHeight)
     {
         if (result?.Bins == null || result.Bins.Count == 0)
             return;
@@ -90,16 +90,16 @@ public class HourlyFrequencyRenderer
         targetChart.LegendLocation = LegendLocation.None;
     }
 
-    private static void RenderBin(SeriesCollection seriesCollection, HourlyDistributionResult result, int binIndex, double[] cumulativeBaseline)
+    private static void RenderBin(SeriesCollection seriesCollection, BucketDistributionResult result, int binIndex, double[] cumulativeBaseline)
     {
         var bin = result.Bins[binIndex];
         var binHeight = bin.Max - bin.Min;
 
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
-            RenderBinForbucket(seriesCollection, result, binIndex, bucketIndex, binHeight, cumulativeBaseline);
+            RenderBinForBucket(seriesCollection, result, binIndex, bucketIndex, binHeight, cumulativeBaseline);
     }
 
-    private static void RenderBinForbucket(SeriesCollection seriesCollection, HourlyDistributionResult result, int binIndex, int bucketIndex, double binHeight, double[] cumulativeBaseline)
+    private static void RenderBinForBucket(SeriesCollection seriesCollection, BucketDistributionResult result, int binIndex, int bucketIndex, double binHeight, double[] cumulativeBaseline)
     {
         if (!TryGetNormalizedFrequency(result, bucketIndex, binIndex, out var normalizedFreq) || normalizedFreq <= 0.0)
             return;
@@ -116,19 +116,19 @@ public class HourlyFrequencyRenderer
         cumulativeBaseline[bucketIndex] += binHeight;
     }
 
-    private static bool TryGetNormalizedFrequency(HourlyDistributionResult result, int bucketIndex, int binIndex, out double normalizedFreq)
+    private static bool TryGetNormalizedFrequency(BucketDistributionResult result, int bucketIndex, int binIndex, out double normalizedFreq)
     {
         normalizedFreq = 0.0;
 
-        return result.NormalizedFrequenciesPerHour.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(binIndex, out normalizedFreq);
+        return result.NormalizedFrequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(binIndex, out normalizedFreq);
     }
 
-    private static ChartValues<double> BuildValues(int activebucketIndex, double value)
+    private static ChartValues<double> BuildValues(int activeBucketIndex, double value)
     {
         var values = new ChartValues<double>();
 
-        for (var d = 0; d < BucketCount; d++)
-            values.Add(d == activebucketIndex ? value : 0.0);
+        for (var b = 0; b < BucketCount; b++)
+            values.Add(b == activeBucketIndex ? value : 0.0);
 
         return values;
     }

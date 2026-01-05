@@ -247,7 +247,7 @@ public sealed class FrequencyShadingCalculatorTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(intervalCount, result.Intervals.Count);
-        Assert.True(result.FrequenciesPerDay.ContainsKey(0));
+        Assert.True(result.FrequenciesPerBucket.ContainsKey(0));
         _mockShadingStrategy.Verify(s => s.CalculateColorMap(It.Is<IntervalShadingContext>(ctx => ctx.GlobalMin == globalMin && ctx.GlobalMax == globalMax && ctx.BucketValues == dayValues)), Times.Once);
     }
 
@@ -284,8 +284,8 @@ public sealed class FrequencyShadingCalculatorTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(intervalCount, result.Intervals.Count);
-        Assert.NotNull(result.FrequenciesPerDay);
+        Assert.NotNull(result.FrequenciesPerBucket);
         Assert.NotNull(result.ColorMap);
-        Assert.Equal(dayValues, result.DayValues);
+        Assert.Equal(dayValues, result.BucketValues);
     }
 }

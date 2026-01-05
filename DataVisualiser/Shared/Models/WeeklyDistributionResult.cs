@@ -13,7 +13,7 @@ public class WeeklyDistributionResult
 
     // Raw data values per day (needed for frequency counting)
     // dayIndex: 0=Monday, 1=Tuesday, ..., 6=Sunday
-    public Dictionary<int, List<double>> DayValues { get; init; } = new();
+    public Dictionary<int, List<double>> BucketValues { get; init; } = new();
 
     // Frequency binning data (new)
     public double                         GlobalMin { get; init; }
@@ -24,7 +24,7 @@ public class WeeklyDistributionResult
     // Frequency counts per day per bin: [dayIndex][binIndex] = frequency
     // dayIndex: 0=Monday, 1=Tuesday, ..., 6=Sunday
     // binIndex: index into Bins list
-    public Dictionary<int, Dictionary<int, int>> FrequenciesPerDay { get; init; } = new();
+    public Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket { get; init; } = new();
 
     // Normalized frequencies: [dayIndex][binIndex] = normalized frequency [0.0, 1.0]
     public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerBucket { get; init; } = new();

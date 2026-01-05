@@ -306,13 +306,13 @@ public abstract class BaseDistributionService
         var context = new IntervalShadingContext
         {
                 Intervals = data.Intervals,
-                FrequenciesPerBucket = data.FrequenciesPerDay,
-                BucketValues = data.DayValues,
+                FrequenciesPerBucket = data.FrequenciesPerBucket,
+                BucketValues = data.BucketValues,
                 GlobalMin = globalMin,
                 GlobalMax = globalMax
         };
 
-        _frequencyRenderer.Render(chart, mins, ranges, data.Intervals, data.FrequenciesPerDay, data.ColorMap, globalMin, globalMax, context);
+        _frequencyRenderer.Render(chart, mins, ranges, data.Intervals, data.FrequenciesPerBucket, data.ColorMap, globalMin, globalMax, context);
     }
 
     protected void ConfigureXAxis(CartesianChart chart)

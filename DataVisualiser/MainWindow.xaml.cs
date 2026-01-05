@@ -787,7 +787,7 @@ public partial class MainWindow : Window
         if (isWeekly)
             await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
         else
-            await _hourlyDistributionService.UpdateHourlyDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+            await _hourlyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
@@ -2047,7 +2047,7 @@ public partial class MainWindow : Window
                 if (isWeekly)
                     await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
                 else
-                    await _hourlyDistributionService.UpdateHourlyDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
+                    await _hourlyDistributionService.UpdateDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
             }
         }
         catch (Exception ex)
@@ -2082,7 +2082,7 @@ public partial class MainWindow : Window
                 if (isWeekly)
                     await _weeklyDistributionService.UpdateWeeklyDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
                 else
-                    await _hourlyDistributionService.UpdateHourlyDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+                    await _hourlyDistributionService.UpdateDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
             }
         }
         catch (Exception ex)

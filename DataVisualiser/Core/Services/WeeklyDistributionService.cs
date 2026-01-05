@@ -174,13 +174,13 @@ public class WeeklyDistributionService
         if (!TryExtractMinMax(result, targetChart, out var mins, out var ranges))
             return;
 
-        var dayValues = GetDayValuesFromStrategy(frequencyData);
+        var bucketValues = GetBucketValuesFromStrategy(frequencyData);
 
         var (globalMin, globalMax) = CalculateGlobalMinMax(mins, ranges);
 
-        LogWeeklySummary(mins, ranges, dayValues, globalMin, globalMax);
+        LogWeeklySummary(mins, ranges, bucketValues, globalMin, globalMax);
 
-        var shadingData = useFrequencyShading ? BuildFrequencyShadingData(dayValues, globalMin, globalMax, intervalCount) : FrequencyShadingData.Empty;
+        var shadingData = useFrequencyShading ? BuildFrequencyShadingData(bucketValues, globalMin, globalMax, intervalCount) : FrequencyShadingData.Empty;
 
         AddBaselineAndRangeSeries(targetChart, mins, ranges, globalMin, displayName, useFrequencyShading);
 
@@ -225,9 +225,9 @@ public class WeeklyDistributionService
         return (min, max);
     }
 
-    private FrequencyShadingData BuildFrequencyShadingData(Dictionary<int, List<double>> dayValues, double globalMin, double globalMax, int intervalCount)
+    private FrequencyShadingData BuildFrequencyShadingData(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax, int intervalCount)
     {
-        return _frequencyShadingCalculator.BuildFrequencyShadingData(dayValues, globalMin, globalMax, intervalCount);
+        return _frequencyShadingCalculator.BuildFrequencyShadingData(bucketValues, globalMin, globalMax, intervalCount);
     }
 
     private void AddBaselineAndRangeSeries(CartesianChart chart, List<double> mins, List<double> ranges, double globalMin, string displayName, bool useFrequencyShading)
@@ -279,13 +279,13 @@ public class WeeklyDistributionService
         var context = new IntervalShadingContext
         {
                 Intervals = data.Intervals,
-                FrequenciesPerBucket = data.FrequenciesPerDay,
-                BucketValues = data.DayValues,
+                FrequenciesPerBucket = data.FrequenciesPerBucket,
+                BucketValues = data.BucketValues,
                 GlobalMin = globalMin,
                 GlobalMax = globalMax
         };
 
-        _frequencyRenderer.Render(chart, mins, ranges, data.Intervals, data.FrequenciesPerDay, data.ColorMap, globalMin, globalMax, context);
+        _frequencyRenderer.Render(chart, mins, ranges, data.Intervals, data.FrequenciesPerBucket, data.ColorMap, globalMin, globalMax, context);
     }
 
     private void ConfigureXAxis(CartesianChart chart)
@@ -313,39 +313,39 @@ public class WeeklyDistributionService
         };
     }
 
-    private void LogWeeklySummary(List<double> mins, List<double> ranges, Dictionary<int, List<double>> dayValues, double globalMin, double globalMax)
+    private void LogWeeklySummary(List<double> mins, List<double> ranges, Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax)
     {
         Debug.WriteLine("=== WeeklyDistribution: Data Summary ===");
         Debug.WriteLine($"Global Min: {globalMin:F4}, Global Max: {globalMax:F4}, Range: {globalMax - globalMin:F4}");
-        Debug.WriteLine("Day Min/Max values:");
+        Debug.WriteLine("Bucket Min/Max values:");
 
         for (var i = 0; i < BucketCount; i++)
         {
-            var dayMin = double.IsNaN(mins[i]) ? 0.0 : mins[i];
-            var dayMax = dayMin + (double.IsNaN(ranges[i]) ? 0.0 : ranges[i]);
-            Debug.WriteLine($"  Day {i}: Min={dayMin:F4}, Max={dayMax:F4}, Range={ranges[i]:F4}");
+            var bucketMin = double.IsNaN(mins[i]) ? 0.0 : mins[i];
+            var bucketMax = bucketMin + (double.IsNaN(ranges[i]) ? 0.0 : ranges[i]);
+            Debug.WriteLine($"  Bucket {i}: Min={bucketMin:F4}, Max={bucketMax:F4}, Range={ranges[i]:F4}");
         }
 
-        // Log sample raw values for first day with data
+        // Log sample raw values for first bucket with data
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
-            if (dayValues.TryGetValue(bucketIndex, out var values) && values.Count > 0)
+            if (bucketValues.TryGetValue(bucketIndex, out var values) && values.Count > 0)
             {
-                Debug.WriteLine($"Day {bucketIndex} raw values (first 10): {string.Join(", ", values.Take(10).Select(v => v.ToString("F4")))}");
-                Debug.WriteLine($"Day {bucketIndex} total value count: {values.Count}");
+                Debug.WriteLine($"Bucket {bucketIndex} raw values (first 10): {string.Join(", ", values.Take(10).Select(v => v.ToString("F4")))}");
+                Debug.WriteLine($"Bucket {bucketIndex} total value count: {values.Count}");
                 break;
             }
     }
 
 
     /// <summary>
-    ///     Gets day values from frequency data. Returns empty lists if not available.
+    ///     Gets bucket values from frequency data. Returns empty lists if not available.
     /// </summary>
-    private Dictionary<int, List<double>> GetDayValuesFromStrategy(WeeklyDistributionResult? frequencyData)
+    private Dictionary<int, List<double>> GetBucketValuesFromStrategy(WeeklyDistributionResult? frequencyData)
     {
         var bucketValues = new Dictionary<int, List<double>>(BucketCount);
 
         for (var i = 0; i < BucketCount; i++)
-            bucketValues[i] = frequencyData?.DayValues?.TryGetValue(i, out var values) == true ? values : new List<double>();
+            bucketValues[i] = frequencyData?.BucketValues?.TryGetValue(i, out var values) == true ? values : new List<double>();
 
         return bucketValues;
     }
@@ -353,33 +353,33 @@ public class WeeklyDistributionService
 
     // Frequency shading calculation methods moved to FrequencyShadingCalculator
 
-    private void ApplyFrequencyShading(CartesianChart targetChart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, double globalMin, double globalMax, IntervalShadingContext shadingContext)
+    private void ApplyFrequencyShading(CartesianChart targetChart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double globalMin, double globalMax, IntervalShadingContext shadingContext)
     {
         RemoveExistingRangeSeries(targetChart);
 
         Debug.WriteLine("=== WeeklyDistribution: ApplyFrequencyShading ===");
-        Debug.WriteLine($"Intervals count: {intervals.Count}, Frequencies count: {frequenciesPerDay.Count}");
+        Debug.WriteLine($"Intervals count: {intervals.Count}, Frequencies count: {frequenciesPerBucket.Count}");
 
         // Guard: if no intervals or frequencies, restore simple range series.
-        if (!CanApplyFrequencyShading(intervals, frequenciesPerDay, mins, ranges))
+        if (!CanApplyFrequencyShading(intervals, frequenciesPerBucket, mins, ranges))
         {
             RestoreSimpleRangeSeries(targetChart, ranges);
             return;
         }
 
-        // Uniform interval height across all days.
+        // Uniform interval height across all buckets.
         var uniformIntervalHeight = CalculateUniformIntervalHeight(globalMin, globalMax, intervals.Count);
         Debug.WriteLine($"Uniform interval height: {uniformIntervalHeight:F6}");
         Debug.WriteLine($"Global range: {globalMin:F4} to {globalMax:F4}");
 
         // Used only for logging / diagnostics, but keep it for parity with original behavior.
-        var globalMaxFreq = CalculateGlobalMaxFrequency(frequenciesPerDay);
+        var globalMaxFreq = CalculateGlobalMaxFrequency(frequenciesPerBucket);
         Debug.WriteLine($"Global max frequency for normalization: {globalMaxFreq}");
 
-        // Track cumulative stack height per day (needed because StackedColumnSeries stacks across series).
+        // Track cumulative stack height per bucket (needed because StackedColumnSeries stacks across series).
         var cumulativeStackHeight = InitializeCumulativeStack(globalMin);
 
-        var seriesCreated = RenderIntervals(targetChart, mins, ranges, intervals, frequenciesPerDay, colorMap, uniformIntervalHeight, cumulativeStackHeight, globalMaxFreq);
+        var seriesCreated = RenderIntervals(targetChart, mins, ranges, intervals, frequenciesPerBucket, colorMap, uniformIntervalHeight, cumulativeStackHeight, globalMaxFreq);
 
         // Safety: If nothing was created, restore a visible range series.
         if (seriesCreated == 0)
@@ -403,10 +403,10 @@ public class WeeklyDistributionService
 
     #region Core pipeline
 
-    private int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
+    private int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
     {
         var renderer = new WeeklyIntervalRenderer();
-        return renderer.RenderIntervals(chart, mins, ranges, intervals, frequenciesPerDay, colorMap, uniformIntervalHeight, cumulativeStackHeight, globalMaxFreq);
+        return renderer.RenderIntervals(chart, mins, ranges, intervals, frequenciesPerBucket, colorMap, uniformIntervalHeight, cumulativeStackHeight, globalMaxFreq);
     }
 
     #endregion
@@ -499,40 +499,40 @@ public class WeeklyDistributionService
         if (mins == null || ranges == null || mins.Count != BucketCount || ranges.Count != BucketCount)
             return tooltipData;
 
-        // For each day, create a single "interval" representing the entire day's range
+        // For each bucket, create a single "interval" representing the entire bucket's range
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
         {
-            var dayIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
+            var bucketIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
 
             // Check if we have valid min value (not NaN)
             if (double.IsNaN(mins[bucketIndex]))
-                continue; // Skip days with invalid min values
+                continue; // Skip buckets with invalid min values
 
-            var dayMin = mins[bucketIndex];
-            var dayRange = double.IsNaN(ranges[bucketIndex]) ? 0.0 : ranges[bucketIndex];
-            var dayMax = dayMin + dayRange;
+            var bucketMin = mins[bucketIndex];
+            var bucketRange = double.IsNaN(ranges[bucketIndex]) ? 0.0 : ranges[bucketIndex];
+            var bucketMax = bucketMin + bucketRange;
 
-            // Get count for this day
+            // Get count for this bucket
             var count = 0;
             if (bucketIndex < extendedResult.Counts.Count)
                 count = extendedResult.Counts[bucketIndex];
 
             // Add interval if there's valid data (count > 0 and valid min)
-            // Note: dayRange can be 0 (all values for the day are the same), which is valid
+            // Note: bucketRange can be 0 (all values for the bucket are the same), which is valid
             if (count > 0)
-                    // Single interval representing the entire day's range
-                    // Percentage is 100% since this is the only interval for the day
-                dayIntervals.Add((dayMin, dayMax, count, 100.0));
+                    // Single interval representing the entire bucket's range
+                    // Percentage is 100% since this is the only interval for the bucket
+                bucketIntervals.Add((bucketMin, bucketMax, count, 100.0));
 
-            if (dayIntervals.Count > 0)
-                tooltipData[bucketIndex] = dayIntervals;
+            if (bucketIntervals.Count > 0)
+                tooltipData[bucketIndex] = bucketIntervals;
         }
 
         return tooltipData;
     }
 
     /// <summary>
-    ///     Calculates tooltip data with interval breakdown, percentages, and counts for each day.
+    ///     Calculates tooltip data with interval breakdown, percentages, and counts for each bucket.
     /// </summary>
     private Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> CalculateTooltipData(ChartComputationResult result, WeeklyDistributionResult? frequencyData, int intervalCount = 25)
     {
@@ -547,8 +547,8 @@ public class WeeklyDistributionService
         if (mins == null || ranges == null || mins.Count != BucketCount || ranges.Count != BucketCount)
             return tooltipData;
 
-        // Get day values
-        var dayValues = GetDayValuesFromStrategy(frequencyData);
+        // Get bucket values
+        var bucketValues = GetBucketValuesFromStrategy(frequencyData);
 
         // Calculate global min/max
         var globalMin = mins.Where(m => !double.IsNaN(m)).
@@ -565,46 +565,46 @@ public class WeeklyDistributionService
         // Create intervals (same as in RenderOriginalMinMaxChart)
         var intervals = _frequencyShadingCalculator.CreateUniformIntervals(globalMin, globalMax, intervalCount);
 
-        // Count frequencies per interval per day
-        var frequenciesPerDay = _frequencyShadingCalculator.CountFrequenciesPerInterval(dayValues, intervals);
+        // Count frequencies per interval per bucket
+        var frequenciesPerBucket = _frequencyShadingCalculator.CountFrequenciesPerInterval(bucketValues, intervals);
 
-        // Calculate percentages for each day
+        // Calculate percentages for each bucket
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
         {
-            var dayIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
+            var bucketIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
 
-            // Get total count for this day
+            // Get total count for this bucket
             var totalCount = 0;
-            if (dayValues.TryGetValue(bucketIndex, out var values))
+            if (bucketValues.TryGetValue(bucketIndex, out var values))
                 totalCount = values.Count;
 
-            // Calculate day min/max to determine which intervals are within the day's range
-            var dayMin = double.IsNaN(mins[bucketIndex]) ? 0.0 : mins[bucketIndex];
-            var dayMax = dayMin + (double.IsNaN(ranges[bucketIndex]) ? 0.0 : ranges[bucketIndex]);
+            // Calculate bucket min/max to determine which intervals are within the bucket's range
+            var bucketMin = double.IsNaN(mins[bucketIndex]) ? 0.0 : mins[bucketIndex];
+            var bucketMax = bucketMin + (double.IsNaN(ranges[bucketIndex]) ? 0.0 : ranges[bucketIndex]);
 
             // For each interval, calculate count and percentage
             for (var intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
             {
                 var interval = intervals[intervalIndex];
 
-                // Check if interval overlaps with day's range
-                var intervalOverlapsDayRange = interval.Min < dayMax && interval.Max > dayMin;
+                // Check if interval overlaps with bucket's range
+                var intervalOverlapsBucketRange = interval.Min < bucketMax && interval.Max > bucketMin;
 
-                if (intervalOverlapsDayRange && ranges[bucketIndex] > 0 && !double.IsNaN(ranges[bucketIndex]))
+                if (intervalOverlapsBucketRange && ranges[bucketIndex] > 0 && !double.IsNaN(ranges[bucketIndex]))
                 {
                     // Get frequency for this interval
                     var count = 0;
-                    if (frequenciesPerDay.TryGetValue(bucketIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq))
+                    if (frequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(intervalIndex, out var freq))
                         count = freq;
 
-                    // Calculate percentage (percentage of total values for this day)
+                    // Calculate percentage (percentage of total values for this bucket)
                     var percentage = totalCount > 0 ? (double)count / totalCount * 100.0 : 0.0;
 
-                    dayIntervals.Add((interval.Min, interval.Max, count, percentage));
+                    bucketIntervals.Add((interval.Min, interval.Max, count, percentage));
                 }
             }
 
-            tooltipData[bucketIndex] = dayIntervals;
+            tooltipData[bucketIndex] = bucketIntervals;
         }
 
         return tooltipData;
@@ -652,8 +652,8 @@ public class WeeklyDistributionService
         public ChartValues<double> ColoredHeights { get; } = new();
 
         public bool HasData            { get; private set; }
-        public bool HasZeroFreqDays    { get; private set; }
-        public bool HasNonZeroFreqDays { get; private set; }
+        public bool HasZeroFreqBuckets    { get; private set; }
+        public bool HasNonZeroFreqBuckets { get; private set; }
 
         public void Add(double baseline, int frequency)
         {
@@ -665,13 +665,13 @@ public class WeeklyDistributionService
             {
                 WhiteHeights.Add(_height);
                 ColoredHeights.Add(0.0);
-                HasZeroFreqDays = true;
+                HasZeroFreqBuckets = true;
             }
             else
             {
                 WhiteHeights.Add(0.0);
                 ColoredHeights.Add(_height);
-                HasNonZeroFreqDays = true;
+                HasNonZeroFreqBuckets = true;
             }
         }
 
@@ -696,12 +696,12 @@ public class WeeklyDistributionService
             chart.Series.Remove(series);
     }
 
-    private bool CanApplyFrequencyShading(List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, List<double> mins, List<double> ranges)
+    private bool CanApplyFrequencyShading(List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, List<double> mins, List<double> ranges)
     {
-        if (intervals == null || frequenciesPerDay == null || mins == null || ranges == null)
+        if (intervals == null || frequenciesPerBucket == null || mins == null || ranges == null)
             return false;
 
-        if (intervals.Count == 0 || frequenciesPerDay.Count == 0)
+        if (intervals.Count == 0 || frequenciesPerBucket.Count == 0)
             return false;
 
         return HasAnyIntervalOverlap(intervals, mins, ranges);
@@ -711,13 +711,13 @@ public class WeeklyDistributionService
     {
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
         {
-            var dayMin = SafeMin(mins, bucketIndex);
-            var dayMax = dayMin + SafeRange(ranges, bucketIndex);
+            var bucketMin = SafeMin(mins, bucketIndex);
+            var bucketMax = bucketMin + SafeRange(ranges, bucketIndex);
 
             for (var intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
             {
                 var iv = intervals[intervalIndex];
-                if (iv.Min < dayMax && iv.Max > dayMin && ranges[bucketIndex] > 0)
+                if (iv.Min < bucketMax && iv.Max > bucketMin && ranges[bucketIndex] > 0)
                     return true;
             }
         }
@@ -752,9 +752,9 @@ public class WeeklyDistributionService
         return intervalCount > 0 ? (globalMax - globalMin) / intervalCount : 1.0;
     }
 
-    private int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerDay)
+    private int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket)
     {
-        return frequenciesPerDay.Values.SelectMany(d => d.Values).
+        return frequenciesPerBucket.Values.SelectMany(d => d.Values).
                                  DefaultIfEmpty(1).
                                  Max();
     }
@@ -778,20 +778,20 @@ public class WeeklyDistributionService
         return double.IsNaN(v) || v < 0 ? 0.0 : v;
     }
 
-    private Color ResolveIntervalColor(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, Dictionary<int, Dictionary<int, Color>> colorMap, int intervalIndex)
+    private Color ResolveIntervalColor(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, int intervalIndex)
     {
-        // Pick the day with the highest frequency for this interval (most representative color).
-        var bestDay = -1;
+        // Pick the bucket with the highest frequency for this interval (most representative color).
+        var bestBucket = -1;
         var bestFreq = 0;
 
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
-            if (frequenciesPerDay.TryGetValue(bucketIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
+            if (frequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
             {
                 bestFreq = freq;
-                bestDay = bucketIndex;
+                bestBucket = bucketIndex;
             }
 
-        if (bestDay >= 0 && colorMap.TryGetValue(bestDay, out var dayColorMap) && dayColorMap.TryGetValue(intervalIndex, out var chosen))
+        if (bestBucket >= 0 && colorMap.TryGetValue(bestBucket, out var bucketColourMap) && bucketColourMap.TryGetValue(intervalIndex, out var chosen))
             return chosen;
 
         return Color.FromRgb(173, 216, 230); // fallback

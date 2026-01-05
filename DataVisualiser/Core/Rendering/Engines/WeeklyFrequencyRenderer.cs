@@ -20,10 +20,10 @@ public class WeeklyFrequencyRenderer
     private const int    BucketCount    = 7;
 
     /// <summary>
-    ///     Step 1 & 2: Normalize y-values and create bins with frequency counts per day.
+    ///     Step 1 & 2: Normalize y-values and create bins with frequency counts per bucket.
     ///     Returns a tuple with bins and frequency data.
     /// </summary>
-    public static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerBucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, // dayIndex -> values for that day
+    public static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerBucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, // bucketIndex -> values for that bucket
                                                                                                                                                                                                                                       double                        globalMin,    double globalMax)
     {
         // Step 1: Calculate bin size based on range
@@ -32,7 +32,7 @@ public class WeeklyFrequencyRenderer
         // Step 2: Create bins
         var bins = FrequencyBinningHelper.CreateBins(globalMin, globalMax, binSize);
 
-        // Step 2: Bin values and count frequencies for each day
+        // Step 2: Bin values and count frequencies for each bucket
         var frequenciesPerBucket = new Dictionary<int, Dictionary<int, int>>();
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
         {
@@ -41,7 +41,7 @@ public class WeeklyFrequencyRenderer
             frequenciesPerBucket[bucketIndex] = bucketFrequencies;
         }
 
-        // Step 3: Normalize frequencies across all days
+        // Step 3: Normalize frequencies across all buckets
         var normalizedFrequenciesPerBucket = FrequencyBinningHelper.NormalizeFrequencies(frequenciesPerBucket);
 
         return (bins, binSize, frequenciesPerBucket, normalizedFrequenciesPerBucket);
@@ -71,7 +71,7 @@ public class WeeklyFrequencyRenderer
     }
 
     /// <summary>
-    ///     Step 4 & 5: Assign color shade to each y-interval for each day and draw the chart.
+    ///     Step 4 & 5: Assign color shade to each y-interval for each bucket and draw the chart.
     ///     Creates stacked column series where each bin is a segment, colored by frequency.
     /// </summary>
     public static void RenderChart(CartesianChart targetChart, WeeklyDistributionResult result, double minHeight)
@@ -128,8 +128,8 @@ public class WeeklyFrequencyRenderer
     {
         var values = new ChartValues<double>();
 
-        for (var d = 0; d < BucketCount; d++)
-            values.Add(d == activeBucketIndex ? value : 0.0);
+        for (var b = 0; b < BucketCount; b++)
+            values.Add(b == activeBucketIndex ? value : 0.0);
 
         return values;
     }

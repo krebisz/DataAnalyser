@@ -33,7 +33,7 @@ public sealed class HourlyDistributionStrategy : IChartComputationStrategy
     /// <summary>
     ///     Extended result containing frequency binning data.
     /// </summary>
-    public HourlyDistributionResult? ExtendedResult { get; private set; }
+    public BucketDistributionResult? ExtendedResult { get; private set; }
 
     // friendly name for chart title/legend (not used as series name here)
     public string PrimaryLabel { get; }
@@ -55,9 +55,9 @@ public sealed class HourlyDistributionStrategy : IChartComputationStrategy
         if (ordered.Count == 0)
             return null;
 
-        var buckets = BucketByHourday(ordered);
+        var buckets = BucketByType(ordered);
 
-        var stats = ComputeDailyStatistics(buckets);
+        var stats = ComputeBucketStatistics(buckets);
 
         Unit = _unitResolutionService.ResolveUnit(ordered);
 
@@ -74,7 +74,7 @@ public sealed class HourlyDistributionStrategy : IChartComputationStrategy
         return StrategyComputationHelper.FilterAndOrderByRange(data, from, to);
     }
 
-    private static List<List<double>> BucketByHourday(IEnumerable<MetricData> ordered)
+    private static List<List<double>> BucketByType(IEnumerable<MetricData> ordered)
     {
         var buckets = Enumerable.Range(0, BucketCount).
                                  Select(_ => new List<double>()).
@@ -97,7 +97,7 @@ public sealed class HourlyDistributionStrategy : IChartComputationStrategy
         return buckets;
     }
 
-    private static(List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) ComputeDailyStatistics(List<List<double>> buckets)
+    private static(List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) ComputeBucketStatistics(List<List<double>> buckets)
     {
         var mins = new List<double>();
         var maxs = new List<double>();
@@ -140,15 +140,15 @@ public sealed class HourlyDistributionStrategy : IChartComputationStrategy
 
     private static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) ComputeFrequencyDistributions(List<List<double>> buckets, double globalMin, double globalMax)
     {
-        var dayValuesDict = BuildDayValuesDictionary(buckets);
+        var bucketValuesDictionary = BuildBucketValuesDictionary(buckets);
 
         if (double.IsNaN(globalMin) || double.IsNaN(globalMax) || globalMax <= globalMin)
             return (new List<(double, double)>(), 1.0, new Dictionary<int, Dictionary<int, int>>(), new Dictionary<int, Dictionary<int, double>>());
 
-        return HourlyFrequencyRenderer.PrepareBinsAndFrequencies(dayValuesDict, globalMin, globalMax);
+        return HourlyFrequencyRenderer.PrepareBinsAndFrequencies(bucketValuesDictionary, globalMin, globalMax);
     }
 
-    private static Dictionary<int, List<double>> BuildDayValuesDictionary(List<List<double>> buckets)
+    private static Dictionary<int, List<double>> BuildBucketValuesDictionary(List<List<double>> buckets)
     {
         var dict = new Dictionary<int, List<double>>(BucketCount);
         for (var i = 0; i < BucketCount; i++)
@@ -156,25 +156,25 @@ public sealed class HourlyDistributionStrategy : IChartComputationStrategy
         return dict;
     }
 
-    private static HourlyDistributionResult BuildExtendedResult((List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) stats, List<List<double>> buckets, (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) frequencyData, string? unit)
+    private static BucketDistributionResult BuildExtendedResult((List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) stats, List<List<double>> buckets, (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) frequencyData, string? unit)
     {
-        var dayValuesDict = new Dictionary<int, List<double>>();
+        var bucketValuesDictionary = new Dictionary<int, List<double>>();
         for (var i = 0; i < BucketCount; i++)
-            dayValuesDict[i] = buckets[i];
+            bucketValuesDictionary[i] = buckets[i];
 
-        return new HourlyDistributionResult
+        return new BucketDistributionResult
         {
                 Mins = stats.Mins,
                 Maxs = stats.Maxs,
                 Ranges = stats.Ranges,
                 Counts = stats.Counts,
-                HourValues = dayValuesDict,
+                BucketValues = bucketValuesDictionary,
                 GlobalMin = double.IsNaN(stats.GlobalMin) ? 0.0 : stats.GlobalMin,
                 GlobalMax = double.IsNaN(stats.GlobalMax) ? 1.0 : stats.GlobalMax,
                 BinSize = frequencyData.BinSize,
                 Bins = frequencyData.Bins,
-                FrequenciesPerHour = frequencyData.Frequencies,
-                NormalizedFrequenciesPerHour = frequencyData.NormalizedFrequencies,
+                FrequenciesPerBucket = frequencyData.Frequencies,
+                NormalizedFrequenciesPerBucket = frequencyData.NormalizedFrequencies,
                 Unit = unit
         };
     }

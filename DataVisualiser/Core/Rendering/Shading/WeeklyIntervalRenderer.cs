@@ -70,19 +70,19 @@ public sealed class WeeklyIntervalRenderer
         return created;
     }
 
-    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerDay, double uniformIntervalHeight, double[] cumulativeStackHeight)
+    private IntervalRenderState BuildIntervalState(int intervalIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, double uniformIntervalHeight, double[] cumulativeStackHeight)
     {
         var state = new IntervalRenderState(uniformIntervalHeight);
 
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
         {
-            if (!TryComputeDayIntervalOverlap(bucketIndex, interval, mins, ranges, out var dayMin, out var dayMax))
+            if (!TryComputeBucketIntervalOverlap(bucketIndex, interval, mins, ranges, out var bucketMin, out var bucketMax))
             {
                 state.AddEmpty();
                 continue;
             }
 
-            var frequency = ResolveFrequency(frequenciesPerDay, bucketIndex, intervalIndex);
+            var frequency = ResolveFrequency(frequenciesPerBucket, bucketIndex, intervalIndex);
 
             var baseline = ComputeBaseline(interval.Min, uniformIntervalHeight, ref cumulativeStackHeight[bucketIndex]);
 
@@ -95,18 +95,18 @@ public sealed class WeeklyIntervalRenderer
         return state;
     }
 
-    private static bool TryComputeDayIntervalOverlap(int dayIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, out double dayMin, out double dayMax)
+    private static bool TryComputeBucketIntervalOverlap(int bucketIndex, (double Min, double Max) interval, List<double> mins, List<double> ranges, out double bucketMin, out double bucketMax)
     {
-        dayMin = SafeValue(mins, dayIndex);
-        var dayRange = SafePositive(ranges, dayIndex);
-        dayMax = dayMin + dayRange;
+        bucketMin = SafeValue(mins, bucketIndex);
+        var bucketRange = SafePositive(ranges, bucketIndex);
+        bucketMax = bucketMin + bucketRange;
 
-        return dayRange > 0 && interval.Min < dayMax && interval.Max > dayMin;
+        return bucketRange > 0 && interval.Min < bucketMax && interval.Max > bucketMin;
     }
 
-    private static int ResolveFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerDay, int dayIndex, int intervalIndex)
+    private static int ResolveFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, int bucketIndex, int intervalIndex)
     {
-        return frequenciesPerDay.TryGetValue(dayIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq) ? freq : 0;
+        return frequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(intervalIndex, out var freq) ? freq : 0;
     }
 
     private static double ComputeBaseline(double intervalMin, double intervalHeight, ref double cumulativeStack)
@@ -206,18 +206,18 @@ public sealed class WeeklyIntervalRenderer
 
     private Color ResolveIntervalColor(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, int intervalIndex)
     {
-        // Pick the day with the highest frequency for this interval (most representative color).
-        var bestDay = -1;
+        // Pick the bucket with the highest frequency for this interval (most representative color).
+        var bestBucket = -1;
         var bestFreq = 0;
 
         for (var bucketIndex = 0; bucketIndex < BucketCount; bucketIndex++)
-            if (frequenciesPerBucket.TryGetValue(bucketIndex, out var dayFreqs) && dayFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
+            if (frequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(intervalIndex, out var freq) && freq > bestFreq)
             {
                 bestFreq = freq;
-                bestDay = bucketIndex;
+                bestBucket = bucketIndex;
             }
 
-        if (bestDay >= 0 && colorMap.TryGetValue(bestDay, out var dayColorMap) && dayColorMap.TryGetValue(intervalIndex, out var color))
+        if (bestBucket >= 0 && colorMap.TryGetValue(bestBucket, out var bucketColorMap) && bucketColorMap.TryGetValue(intervalIndex, out var color))
             return color;
 
         return Colors.Gray; // Fallback

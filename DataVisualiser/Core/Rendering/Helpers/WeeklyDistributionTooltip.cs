@@ -35,7 +35,7 @@ public class WeeklyDistributionTooltip : IDisposable
 
     private readonly Popup            _tooltipPopup;
     private          DispatcherTimer? _hoverCheckTimer;
-    private          int              _lastValidBucketIndex = -1; // Track which day we last hovered over
+    private          int              _lastValidBucketIndex = -1; // Track which bucket we last hovered over
     private          DateTime         _lastValidHoverTime;
 
     public WeeklyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData)

@@ -46,9 +46,9 @@ public sealed class HourlyDistributionParityHarness : IStrategyParityHarness
         return ParityResult.Pass();
     }
 
-    // ---------- adapters (HourlyDistributionResult -> execution result) ----------
+    // ---------- adapters (BucketDistributionResult -> execution result) ----------
 
-    public static LegacyExecutionResult ToLegacyExecutionResult(HourlyDistributionResult? ext)
+    public static LegacyExecutionResult ToLegacyExecutionResult(BucketDistributionResult? ext)
     {
         return new LegacyExecutionResult
         {
@@ -56,7 +56,7 @@ public sealed class HourlyDistributionParityHarness : IStrategyParityHarness
         };
     }
 
-    public static CmsExecutionResult ToCmsExecutionResult(HourlyDistributionResult? ext)
+    public static CmsExecutionResult ToCmsExecutionResult(BucketDistributionResult? ext)
     {
         return new CmsExecutionResult
         {
@@ -64,7 +64,7 @@ public sealed class HourlyDistributionParityHarness : IStrategyParityHarness
         };
     }
 
-    private static IReadOnlyList<ParitySeries> BuildParitySeries(HourlyDistributionResult? ext)
+    private static IReadOnlyList<ParitySeries> BuildParitySeries(BucketDistributionResult? ext)
     {
         if (ext == null)
             return Array.Empty<ParitySeries>();
@@ -74,7 +74,7 @@ public sealed class HourlyDistributionParityHarness : IStrategyParityHarness
 
         DateTime T(int idx)
         {
-            return baseDate.AddDays(idx);
+            return baseDate.AddHours(idx);
         }
 
         var series = new List<ParitySeries>();
