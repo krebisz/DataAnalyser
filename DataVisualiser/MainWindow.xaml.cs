@@ -39,24 +39,24 @@ public partial class MainWindow : Window
     private readonly ChartState _chartState = new();
     private readonly MetricState _metricState = new();
     private readonly UiState _uiState = new();
-    private ChartComputationEngine _chartComputationEngine;
-    private ChartRenderEngine _chartRenderEngine;
+    private ChartComputationEngine _chartComputationEngine = null!;
+    private ChartRenderEngine _chartRenderEngine = null!;
     private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
-    private ChartUpdateCoordinator _chartUpdateCoordinator;
+    private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
 
-    private string _connectionString;
+    private string _connectionString = null!;
     private bool _isChangingResolution;
 
     private bool _isInitializing = true;
 
-    private MetricSelectionService _metricSelectionService;
-    private SubtypeSelectorManager _selectorManager;
+    private MetricSelectionService _metricSelectionService = null!;
+    private SubtypeSelectorManager _selectorManager = null!;
     private IStrategyCutOverService? _strategyCutOverService;
     private List<string>? _subtypeList;
     private ChartTooltipManager? _tooltipManager;
-    private MainWindowViewModel _viewModel;
-    private WeeklyDistributionService _weeklyDistributionService;
-    private HourlyDistributionService _hourlyDistributionService;
+    private MainWindowViewModel _viewModel = null!;
+    private WeeklyDistributionService _weeklyDistributionService = null!;
+    private HourlyDistributionService _hourlyDistributionService = null!;
 
     public MainWindow()
     {
@@ -286,13 +286,13 @@ public partial class MainWindow : Window
     {
         // Update visibility for all charts (just UI state, doesn't clear data)
         MainChartController.Panel.IsChartVisible = e.ShowMain;
-        UpdateChartVisibility(ChartNormPanel, ChartNormToggleButton, e.ShowNormalized);
-        UpdateChartVisibility(ChartDiffRatioPanel, ChartDiffRatioToggleButton, e.ShowDiffRatio);
-        UpdateChartVisibility(ChartWeeklyPanel, ChartWeeklyToggleButton, e.ShowWeekly);
-        UpdateChartVisibility(ChartHourlyPanel, ChartHourlyToggleButton, e.ShowHourly);
-        UpdateChartVisibility(ChartWeekdayTrendPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
+        UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
+        UpdateChartVisibility(ChartDiffRatioContentPanel, ChartDiffRatioToggleButton, e.ShowDiffRatio);
+        UpdateChartVisibility(ChartWeeklyContentPanel, ChartWeeklyToggleButton, e.ShowWeekly);
+        UpdateChartVisibility(ChartHourlyContentPanel, ChartHourlyToggleButton, e.ShowHourly);
+        UpdateChartVisibility(ChartWeekdayTrendContentPanel, ChartWeekdayTrendToggleButton, e.ShowWeeklyTrend);
         UpdateWeekdayTrendChartTypeVisibility();
-        UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
+        UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
 
         // If a specific chart was identified (visibility toggle or chart-specific config change), only render that chart
         if (!string.IsNullOrEmpty(e.ToggledChartName))
@@ -565,23 +565,24 @@ public partial class MainWindow : Window
         if (!ShouldRenderCharts(ctx))
             return;
 
-        var hasSecondaryData = HasSecondaryData(ctx);
-        var metricType = ctx.MetricType;
-        var primarySubtype = ctx.PrimarySubtype;
-        var secondarySubtype = ctx.SecondarySubtype;
+        var safeCtx = ctx!;
+        var hasSecondaryData = HasSecondaryData(safeCtx);
+        var metricType = safeCtx.MetricType;
+        var primarySubtype = safeCtx.PrimarySubtype;
+        var secondarySubtype = safeCtx.SecondarySubtype;
 
         // Only render charts that are visible - skip computation entirely for hidden charts
         if (_viewModel.ChartState.IsMainVisible)
-            await RenderPrimaryChart(ctx);
+            await RenderPrimaryChart(safeCtx);
 
         // Charts that require secondary data - only render if visible AND secondary data exists
         if (hasSecondaryData)
         {
             if (_viewModel.ChartState.IsNormalizedVisible)
-                await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
+                await RenderNormalized(safeCtx, metricType, primarySubtype, secondarySubtype);
 
             if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
-                await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
+                await RenderDiffRatio(safeCtx, metricType, primarySubtype, secondarySubtype);
         }
         else
         {
@@ -592,17 +593,17 @@ public partial class MainWindow : Window
 
         // Charts that don't require secondary data - only render if visible
         if (_viewModel.ChartState.IsWeeklyVisible)
-            await RenderWeeklyDistribution(ctx);
+            await RenderWeeklyDistribution(safeCtx);
 
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
-            RenderWeeklyTrend(ctx);
+            RenderWeeklyTrend(safeCtx);
 
         if (_viewModel.ChartState.IsHourlyVisible)
-            await RenderHourlyDistribution(ctx);
+            await RenderHourlyDistribution(safeCtx);
 
         // Populate transform panel grids if visible
         if (_viewModel.ChartState.IsTransformPanelVisible)
-            PopulateTransformGrids(ctx);
+            PopulateTransformGrids(safeCtx);
     }
 
     private void PopulateTransformGrids(ChartDataContext ctx)
@@ -665,7 +666,7 @@ public partial class MainWindow : Window
     private void ResetTransformResultState()
     {
         TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        TransformChartPanel.Visibility = Visibility.Collapsed;
+        TransformChartContentPanel.Visibility = Visibility.Collapsed;
         TransformGrid3.ItemsSource = null;
         TransformComputeButton.IsEnabled = false;
     }
@@ -829,11 +830,11 @@ public partial class MainWindow : Window
     {
         return chartName switch
         {
-            "Norm" => ChartNormPanel,
-            "DiffRatio" => ChartDiffRatioPanel,
-            "Weekly" => ChartWeeklyPanel,
-            "Hourly" => ChartHourlyPanel,
-            "WeeklyTrend" => ChartWeekdayTrendPanel,
+            "Norm" => ChartNormContentPanel,
+            "DiffRatio" => ChartDiffRatioContentPanel,
+            "Weekly" => ChartWeeklyContentPanel,
+            "Hourly" => ChartHourlyContentPanel,
+            "WeeklyTrend" => ChartWeekdayTrendContentPanel,
             _ => null
         };
     }
@@ -983,7 +984,7 @@ public partial class MainWindow : Window
         TransformGrid3.ItemsSource = null;
         TransformGrid2Panel.Visibility = Visibility.Collapsed;
         TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        TransformChartPanel.Visibility = Visibility.Collapsed;
+        TransformChartContentPanel.Visibility = Visibility.Collapsed;
         TransformComputeButton.IsEnabled = false;
         ChartHelper.ClearChart(ChartTransformResult, _viewModel.ChartState.ChartTimestamps);
     }
@@ -1064,6 +1065,9 @@ public partial class MainWindow : Window
 
     private ChartUpdateCoordinator CreateChartUpdateCoordinator()
     {
+        if (_tooltipManager == null)
+            throw new InvalidOperationException("Tooltip manager is not initialized. Ensure InitializeInfrastructure() is called before creating the chart update coordinator.");
+
         var coordinator = new ChartUpdateCoordinator(_chartComputationEngine, _chartRenderEngine, _tooltipManager, _chartState.ChartTimestamps);
 
         coordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
@@ -1137,7 +1141,7 @@ public partial class MainWindow : Window
         // Sync main chart button text with initial state
         MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
 
-        UpdateChartVisibility(TransformPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
+        UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
     }
 
     #endregion
@@ -1191,7 +1195,7 @@ public partial class MainWindow : Window
 
     private void InitializeSubtypeSelector()
     {
-        _selectorManager = new SubtypeSelectorManager(MetricSubtypePanel, SubtypeCombo);
+        _selectorManager = new SubtypeSelectorManager(TopControlMetricSubtypePanel, SubtypeCombo);
 
         _selectorManager.SubtypeSelectionChanged += (s, e) =>
         {
@@ -1721,7 +1725,7 @@ public partial class MainWindow : Window
     private void ShowTransformResultPanels()
     {
         TransformGrid3Panel.Visibility = Visibility.Visible;
-        TransformChartPanel.Visibility = Visibility.Visible;
+        TransformChartContentPanel.Visibility = Visibility.Visible;
     }
 
     /// <summary>
@@ -1729,12 +1733,12 @@ public partial class MainWindow : Window
     /// </summary>
     private async Task PrepareTransformChartLayout()
     {
-        TransformChartPanel.UpdateLayout();
+        TransformChartContentPanel.UpdateLayout();
         await Dispatcher.InvokeAsync(() =>
         {
         }, DispatcherPriority.Render);
         await CalculateAndSetTransformChartWidth();
-        Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartPanel.Visibility}");
+        Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartContentPanel.Visibility}");
     }
 
     /// <summary>
@@ -1743,7 +1747,7 @@ public partial class MainWindow : Window
     private async Task FinalizeTransformChartRendering()
     {
         ChartTransformResult.Update(true, true);
-        TransformChartPanel.UpdateLayout();
+        TransformChartContentPanel.UpdateLayout();
         await Dispatcher.InvokeAsync(() =>
         {
             ChartTransformResult.InvalidateVisual();
@@ -2069,3 +2073,4 @@ public partial class MainWindow : Window
 
     #endregion
 }
+

@@ -13,9 +13,9 @@
 
         <!-- ====== TOP CONTROL AREA (Two Rows) ====== -->
         <Border DockPanel.Dock="Top" Background="#FF747171" Padding="5">
-            <StackPanel Orientation="Vertical">
+            <StackPanel x:Name="TopControlAreaPanel" Orientation="Vertical">
                 <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <StackPanel x:Name="TopControlBarPanel" Orientation="Horizontal" Margin="0,0,0,5">
                     <Label Content="Resolution:" VerticalAlignment="Center" Margin="5,0" />
                     <ComboBox x:Name="ResolutionCombo" Width="120" Margin="5"
                               IsEditable="False"
@@ -53,7 +53,7 @@
 
                 <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
                 <StackPanel Orientation="Horizontal"
-                            Name="MetricSubtypePanel"
+                            Name="TopControlMetricSubtypePanel"
                             Margin="5">
 
                     <Label Content="Metric Subtype 1:"
@@ -80,7 +80,7 @@
                       HorizontalScrollBarVisibility="Disabled">
 
             <!-- ========= STACKPANEL MAIN ========= -->
-            <StackPanel x:Name="StackPanelMain"
+            <StackPanel x:Name="MainContentPanel"
                         Orientation="Vertical">
 
                 <!-- ========== CHART MAIN ========== -->
@@ -91,14 +91,14 @@
                         BorderThickness="1"
                         Margin="0,0,0,10">
 
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel x:Name="ChartNormSectionPanel" Orientation="Vertical" Margin="0,0,0,10">
 
                         <Border Background="#BB131313"
                                 BorderBrush="#FF444444"
                                 BorderThickness="1"
                                 Padding="10,5">
 
-                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                            <StackPanel x:Name="ChartNormHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartNormTitle"
                                            Text="ChartNorm"
                                            FontWeight="Bold"
@@ -113,7 +113,7 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                        <StackPanel x:Name="ChartNormOptionsPanel" Orientation="Horizontal" Margin="40,5,10,0">
                             <TextBlock Text="Normalization:"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0" />
@@ -138,7 +138,7 @@
                                          Checked="OnNormalizationModeChanged" />
                         </StackPanel>
 
-                        <StackPanel x:Name="ChartNormPanel" Orientation="Vertical">
+                        <StackPanel x:Name="ChartNormContentPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartNorm"
                                                 LegendLocation="Right"
                                                 Zoom="X"
@@ -164,14 +164,14 @@
                         BorderThickness="1"
                         Margin="0,0,0,10">
 
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel x:Name="ChartDiffRatioSectionPanel" Orientation="Vertical" Margin="0,0,0,10">
 
                         <Border Background="#BB131313"
                                 BorderBrush="#FF444444"
                                 BorderThickness="1"
                                 Padding="10,5">
 
-                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                            <StackPanel x:Name="ChartDiffRatioHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartDiffRatioTitle"
                                            Text="Difference / Ratio"
                                            FontWeight="Bold"
@@ -194,7 +194,7 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel x:Name="ChartDiffRatioPanel" Orientation="Vertical">
+                        <StackPanel x:Name="ChartDiffRatioContentPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartDiffRatio"
                                                 LegendLocation="Right"
                                                 Zoom="X"
@@ -221,14 +221,14 @@
                         BorderThickness="1"
                         Margin="0,0,0,10">
 
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel x:Name="ChartWeekdayTrendSectionPanel" Orientation="Vertical" Margin="0,0,0,10">
 
                         <Border Background="#BB131313"
                                 BorderBrush="#FF444444"
                                 BorderThickness="1"
                                 Padding="10,5">
 
-                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                            <StackPanel x:Name="ChartWeekdayTrendHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartWeekdayTrendTitle"
                                            Text="Weekday Trends"
                                            FontWeight="Bold"
@@ -243,7 +243,7 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                        <StackPanel x:Name="ChartWeekdayTrendOptionsPanel" Orientation="Horizontal" Margin="40,5,10,0">
                             <TextBlock Text="Days:"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0" />
@@ -272,7 +272,7 @@
                                     ToolTip="Toggle between Cartesian and Polar chart" />
                         </StackPanel>
 
-                        <StackPanel x:Name="ChartWeekdayTrendPanel" Orientation="Vertical">
+                        <StackPanel x:Name="ChartWeekdayTrendContentPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartWeekdayTrend"
                                                 LegendLocation="Right"
                                                 Zoom="X"
@@ -314,14 +314,14 @@
                         BorderThickness="1"
                         Margin="0,0,0,10">
 
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel x:Name="ChartWeeklySectionPanel" Orientation="Vertical" Margin="0,0,0,10">
 
                         <Border Background="#BB131313"
                                 BorderBrush="#FF444444"
                                 BorderThickness="1"
                                 Padding="10,5">
 
-                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                            <StackPanel x:Name="ChartWeeklyHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartWeeklyTitle"
                                            Text="Weekly Distribution"
                                            FontWeight="Bold"
@@ -336,7 +336,7 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                        <StackPanel x:Name="ChartWeeklyOptionsPanel" Orientation="Horizontal" Margin="40,5,10,0">
                             <TextBlock Text="Display Mode:"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0" />
@@ -369,7 +369,7 @@
                             </ComboBox>
                         </StackPanel>
 
-                        <StackPanel x:Name="ChartWeeklyPanel" Orientation="Vertical">
+                        <StackPanel x:Name="ChartWeeklyContentPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartWeekly"
                                                 LegendLocation="Right"
                                                 Zoom="X"
@@ -396,14 +396,14 @@
                         BorderThickness="1"
                         Margin="0,0,0,10">
 
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel x:Name="ChartHourlySectionPanel" Orientation="Vertical" Margin="0,0,0,10">
 
                         <Border Background="#BB131313"
                                 BorderBrush="#FF444444"
                                 BorderThickness="1"
                                 Padding="10,5">
 
-                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                            <StackPanel x:Name="ChartHourlyHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="ChartHourlyTitle"
                                            Text="Hourly Distribution"
                                            FontWeight="Bold"
@@ -418,7 +418,7 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Orientation="Horizontal" Margin="40,5,10,0">
+                        <StackPanel x:Name="ChartHourlyOptionsPanel" Orientation="Horizontal" Margin="40,5,10,0">
                             <TextBlock Text="Display Mode:"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0" />
@@ -451,7 +451,7 @@
                             </ComboBox>
                         </StackPanel>
 
-                        <StackPanel x:Name="ChartHourlyPanel" Orientation="Vertical">
+                        <StackPanel x:Name="ChartHourlyContentPanel" Orientation="Vertical">
                             <lvc:CartesianChart x:Name="ChartHourly"
                                                 LegendLocation="Right"
                                                 Zoom="X"
@@ -478,14 +478,14 @@
                         BorderThickness="1"
                         Margin="0,0,0,10">
 
-                    <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel x:Name="TransformSectionPanel" Orientation="Vertical" Margin="0,0,0,10">
 
                         <Border Background="#BB131313"
                                 BorderBrush="#FF444444"
                                 BorderThickness="1"
                                 Padding="10,5">
 
-                            <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                            <StackPanel x:Name="TransformHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
                                 <TextBlock x:Name="TransformPanelTitle"
                                            Text="Data Transform"
                                            FontWeight="Bold"
@@ -500,10 +500,10 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel x:Name="TransformPanel" Orientation="Vertical" Visibility="Collapsed">
-                            <StackPanel Orientation="Horizontal" Margin="20,10">
+                        <StackPanel x:Name="TransformContentPanel" Orientation="Vertical" Visibility="Collapsed">
+                            <StackPanel x:Name="TransformOperationRowPanel" Orientation="Horizontal" Margin="20,10">
                                 <!-- Operation Selection -->
-                                <StackPanel Orientation="Vertical" Margin="0,0,20,0" MinWidth="150">
+                                <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical" Margin="0,0,20,0" MinWidth="150">
                                     <TextBlock Text="Operation:" FontWeight="Bold" Margin="0,0,0,5" />
                                     <ComboBox x:Name="TransformOperationCombo"
                                               SelectionChanged="OnTransformOperationChanged"
@@ -527,9 +527,9 @@
                             </StackPanel>
 
                             <!-- Data Grids -->
-                            <StackPanel Orientation="Horizontal" Margin="20,10">
+                            <StackPanel x:Name="TransformDataGridsPanel" Orientation="Horizontal" Margin="20,10">
                                 <!-- Grid 1: Primary Data -->
-                                <StackPanel Orientation="Vertical" Margin="0,0,10,0" MinWidth="250">
+                                <StackPanel x:Name="TransformGrid1Panel" Orientation="Vertical" Margin="0,0,10,0" MinWidth="250">
                                     <TextBlock x:Name="TransformGrid1Title"
                                                Text="Primary Data"
                                                FontWeight="Bold"
@@ -607,7 +607,7 @@
                                 <!-- Chart: Transform Result -->
                                 <Grid x:Name="TransformChartContainer" Margin="10,0,0,0" HorizontalAlignment="Stretch"
                                       MinWidth="400">
-                                    <StackPanel x:Name="TransformChartPanel"
+                                    <StackPanel x:Name="TransformChartContentPanel"
                                                 Orientation="Vertical"
                                                 Visibility="Collapsed">
                                         <lvc:CartesianChart x:Name="ChartTransformResult"
@@ -638,3 +638,4 @@
 
     </DockPanel>
 </Window>
+
