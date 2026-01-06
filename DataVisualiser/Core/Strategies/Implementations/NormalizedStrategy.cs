@@ -110,7 +110,7 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
             var nSmooth1 = MathHelper.ReturnValueNormalized(smoothed1, _mode);
             var nSmooth2 = MathHelper.ReturnValueNormalized(smoothed2, _mode);
 
-            if (nRaw1 == null || nSmooth1 == null)
+            if (nRaw1 == null || nRaw2 == null || nSmooth1 == null || nSmooth2 == null)
                 return null;
 
             return (nRaw1, nRaw2, nSmooth1, nSmooth2);
@@ -119,6 +119,9 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
         // RelativeToMax mode
         var rawNorm = MathHelper.ReturnValueNormalized(raw1, raw2, _mode);
         var smoothNorm = MathHelper.ReturnValueNormalized(smoothed1, smoothed2, _mode);
+
+        if (rawNorm.FirstNormalized == null || rawNorm.SecondNormalized == null || smoothNorm.FirstNormalized == null || smoothNorm.SecondNormalized == null)
+            return null;
 
         return (rawNorm.FirstNormalized, rawNorm.SecondNormalized, smoothNorm.FirstNormalized, smoothNorm.SecondNormalized);
     }

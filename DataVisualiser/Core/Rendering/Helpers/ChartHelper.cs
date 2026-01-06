@@ -338,7 +338,7 @@ public static class ChartHelper
     /// <summary>
     ///     Safely removes an axis section from a chart, handling potential disposal issues.
     /// </summary>
-    public static void RemoveAxisSection(ref CartesianChart? chart, AxisSection? axisSection)
+    public static void RemoveAxisSection(CartesianChart? chart, AxisSection? axisSection)
     {
         if (axisSection == null)
             return;
@@ -385,6 +385,14 @@ public static class ChartHelper
         }
 
         return baseType;
+    }
+
+    public static void ResetZoom(CartesianChart? chart)
+    {
+        if (chart == null)
+            return;
+
+        ResetZoom(ref chart);
     }
 
     public static void ResetZoom(ref CartesianChart chart)

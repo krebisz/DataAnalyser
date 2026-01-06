@@ -11,7 +11,7 @@ public static class DataHelper
         var fieldTotal = 0;
 
         for (var j = 0; j < dataRow.ItemArray.Length; j++)
-            if (!string.IsNullOrEmpty(dataRow[j].
+            if (!string.IsNullOrEmpty(dataRow[j]?.
                         ToString()))
                 fieldTotal++;
 
@@ -23,7 +23,7 @@ public static class DataHelper
         var fieldTotal = 0;
 
         for (var j = 0; j < rowArray.Length; j++)
-            if (!string.IsNullOrEmpty(rowArray[j].
+            if (!string.IsNullOrEmpty(rowArray[j]?.
                         ToString()))
                 fieldTotal++;
 
@@ -54,9 +54,9 @@ public static class DataHelper
 
 
     // Custom comparer to treat nulls and empty strings as equal
-    public class RowComparer : IEqualityComparer<object[]>
+    public class RowComparer : IEqualityComparer<object?[]>
     {
-        public bool Equals(object[] x, object[] y)
+        public bool Equals(object?[]? x, object?[]? y)
         {
             if (x == null || y == null)
                 return x == y; // Both are null, so they're equal
@@ -77,7 +77,7 @@ public static class DataHelper
             return true;
         }
 
-        public int GetHashCode(object[] obj)
+        public int GetHashCode(object?[] obj)
         {
             // A simple hash code implementation, ensuring that rows with null or empty values have the same hash code
             var hash = 0;
@@ -93,7 +93,7 @@ public static class DataHelper
 
     public static string RemoveFaultyCharacterSequences(object stringObject)
     {
-        var objectString = stringObject.ToString().
+        var objectString = (stringObject?.ToString() ?? string.Empty).
                                         Trim();
 
         objectString = objectString.Replace(",}", "}");
@@ -110,7 +110,7 @@ public static class DataHelper
                 '.'
         };
         var fileParts = name.Split(separator);
-        name = fileParts.FirstOrDefault();
+        name = fileParts.FirstOrDefault() ?? string.Empty;
 
         var normalizedString = string.Empty;
 
@@ -128,7 +128,7 @@ public static class DataHelper
 
     public static string RemoveEscapeCharacters(object stringObject)
     {
-        var objectString = stringObject.ToString().
+        var objectString = (stringObject?.ToString() ?? string.Empty).
                                         Trim();
 
         objectString = objectString.Replace("\r", "");

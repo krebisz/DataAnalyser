@@ -1,12 +1,10 @@
 using DataFileReader.Helper;
 using DataFileReader.Parsers;
-using Microsoft.Extensions.Logging;
 
 namespace DataFileReader.Services;
 
 public class FileProcessingService
 {
-    private readonly ILogger<MetricAggregator>      _logger;
     private readonly IEnumerable<IHealthFileParser> _parsers;
 
     public FileProcessingService(IEnumerable<IHealthFileParser> parsers)

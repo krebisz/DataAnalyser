@@ -78,7 +78,15 @@ public class LegacyJsonParser : IHealthFileParser
         //HierarchyObjectList.HierarchyObjects = HierarchyObjectList.HierarchyObjects.OrderBy(h => (Convert.ToDecimal(h.ReferenceValue))).OrderBy(h => h.MetaDataID).ToList();
 
         foreach (var hierarchyObject in HierarchyObjectList.HierarchyObjects)
-            ConsoleHelper.PrintHierarchyObject(hierarchyObject.Name, hierarchyObject.ID.ToString(), hierarchyObject.Level.ToString(), hierarchyObject.Value, hierarchyObject.ParentID.ToString(), hierarchyObject.MetaDataID.ToString(), hierarchyObject.ReferenceValue, ConsoleHelper.ConsoleOutputColour(hierarchyObject.ClassID));
+            ConsoleHelper.PrintHierarchyObject(
+                hierarchyObject.Name,
+                hierarchyObject.ID.ToString(),
+                hierarchyObject.Level?.ToString() ?? string.Empty,
+                hierarchyObject.Value,
+                hierarchyObject.ParentID?.ToString() ?? string.Empty,
+                hierarchyObject.MetaDataID?.ToString() ?? string.Empty,
+                hierarchyObject.ReferenceValue,
+                ConsoleHelper.ConsoleOutputColour(hierarchyObject.ClassID));
     }
 
     public static void PrintMetaDataList(MetaDataList metaDataList)

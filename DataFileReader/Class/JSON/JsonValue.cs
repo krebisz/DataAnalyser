@@ -5,91 +5,91 @@
         return TypeCode;
     }
 
-    public bool ToBoolean(IFormatProvider provider)
+    public bool ToBoolean(IFormatProvider? provider)
     {
         return Convert.ToBoolean(Value, provider);
     }
 
-    public byte ToByte(IFormatProvider provider)
+    public byte ToByte(IFormatProvider? provider)
     {
         return Convert.ToByte(Value, provider);
     }
 
-    public char ToChar(IFormatProvider provider)
+    public char ToChar(IFormatProvider? provider)
     {
         return Convert.ToChar(Value, provider);
     }
 
-    public DateTime ToDateTime(IFormatProvider provider)
+    public DateTime ToDateTime(IFormatProvider? provider)
     {
         return Convert.ToDateTime(Value, provider);
     }
 
-    public decimal ToDecimal(IFormatProvider provider)
+    public decimal ToDecimal(IFormatProvider? provider)
     {
         return Convert.ToDecimal(Value, provider);
     }
 
-    public double ToDouble(IFormatProvider provider)
+    public double ToDouble(IFormatProvider? provider)
     {
         return Convert.ToDouble(Value, provider);
     }
 
-    public short ToInt16(IFormatProvider provider)
+    public short ToInt16(IFormatProvider? provider)
     {
         return Convert.ToInt16(Value, provider);
     }
 
-    public int ToInt32(IFormatProvider provider)
+    public int ToInt32(IFormatProvider? provider)
     {
         return Convert.ToInt32(Value, provider);
     }
 
-    public long ToInt64(IFormatProvider provider)
+    public long ToInt64(IFormatProvider? provider)
     {
         return Convert.ToInt64(Value, provider);
     }
 
-    public sbyte ToSByte(IFormatProvider provider)
+    public sbyte ToSByte(IFormatProvider? provider)
     {
         return Convert.ToSByte(Value, provider);
     }
 
-    public float ToSingle(IFormatProvider provider)
+    public float ToSingle(IFormatProvider? provider)
     {
         return Convert.ToSingle(Value, provider);
     }
 
-    public string ToString(IFormatProvider provider)
+    public string ToString(IFormatProvider? provider)
     {
-        return Convert.ToString(Value, provider);
+        return Convert.ToString(Value, provider)!;
     }
 
-    public object ToType(Type conversionType, IFormatProvider provider)
+    public object ToType(Type conversionType, IFormatProvider? provider)
     {
-        return Value == null ? null : Convert.ChangeType(Value, conversionType, provider);
+        return Value == null ? null! : Convert.ChangeType(Value, conversionType, provider)!;
     }
 
-    public ushort ToUInt16(IFormatProvider provider)
+    public ushort ToUInt16(IFormatProvider? provider)
     {
         return Convert.ToUInt16(Value, provider);
     }
 
-    public uint ToUInt32(IFormatProvider provider)
+    public uint ToUInt32(IFormatProvider? provider)
     {
         return Convert.ToUInt32(Value, provider);
     }
 
-    public ulong ToUInt64(IFormatProvider provider)
+    public ulong ToUInt64(IFormatProvider? provider)
     {
         return Convert.ToUInt64(Value, provider);
     }
 
     public TypeCode TypeCode { get; internal set; }
-    public Type     Type     { get; internal set; }
-    public string   Name     { get; set; }
-    public IJson    Parent   { get; set; }
-    public object   Value    { get; set; }
+    public Type     Type     { get; internal set; } = typeof(void);
+    public string?  Name     { get; set; }
+    public IJson?   Parent   { get; set; }
+    public object?  Value    { get; set; }
     public bool     IsArray  => false;
     public bool     IsObject => false;
     public bool     IsValue  => true;
@@ -106,7 +106,7 @@
         };
     }
 
-    internal static JsonValue Create(string name, object value)
+    internal static JsonValue? Create(string? name, object? value)
     {
         if (value is JsonValue json)
             return new JsonValue
@@ -119,7 +119,7 @@
         return Create(name, value?.GetType() ?? typeof(void), value);
     }
 
-    internal static JsonValue Create(string name, Type type, object value)
+    internal static JsonValue? Create(string? name, Type? type, object? value)
     {
         var typeCode = TypeCode.Empty;
         if (type == null && string.IsNullOrWhiteSpace(name) && value == null)
@@ -161,7 +161,7 @@
         return new JsonValue
         {
                 TypeCode = typeCode,
-                Type = type,
+                Type = type ?? typeof(void),
                 Name = name,
                 Value = value
         };
@@ -228,12 +228,12 @@
 
     public override string ToString()
     {
-        return Value?.ToString();
+        return Value?.ToString()!;
     }
 
     public static explicit operator string(JsonValue value)
     {
-        return Convert.ToString(value.Value);
+        return Convert.ToString(value.Value)!;
     }
 
     public static explicit operator ushort(JsonValue value)
@@ -253,17 +253,17 @@
 
     public byte[] ToByteArray()
     {
-        return Value is string ? Convert.FromBase64String((string)Value) : (byte[])Value;
+        return Value is string text ? Convert.FromBase64String(text) : (byte[])Value!;
     }
 
-    public byte[] ToByteArray(IFormatProvider provider)
+    public byte[] ToByteArray(IFormatProvider? provider)
     {
-        return Value is string ? Convert.FromBase64String((string)Value) : (byte[])Value;
+        return Value is string text ? Convert.FromBase64String(text) : (byte[])Value!;
     }
 
     public static explicit operator byte[](JsonValue value)
     {
-        return value.Value is string ? Convert.FromBase64String((string)value.Value) : (byte[])value.Value;
+        return value.Value is string text ? Convert.FromBase64String(text) : (byte[])value.Value!;
     }
 }
 

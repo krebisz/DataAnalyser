@@ -62,10 +62,11 @@ public static class TransformExpressionEvaluator
 
     private static double ResolveLeafValue(TransformExpression expression, IReadOnlyList<IReadOnlyList<MetricData>> metrics, int index)
     {
-        if (expression.Operands.Count != 1 || !expression.Operands[0].MetricIndex.HasValue)
+        var metricIndex = expression.Operands[0].MetricIndex;
+        if (expression.Operands.Count != 1 || metricIndex == null)
             return double.NaN;
 
-        return ResolveMetricValue(metrics, expression.Operands[0].MetricIndex.Value, index);
+        return ResolveMetricValue(metrics, metricIndex.Value, index);
     }
 
     private static List<double> EvaluateOperands(TransformExpression expression, IReadOnlyList<IReadOnlyList<MetricData>> metrics, int index)
@@ -138,9 +139,10 @@ public static class TransformExpressionEvaluator
 
     private static string ResolveMetricLabel(TransformExpression expression, IReadOnlyList<string> metricLabels)
     {
-        if (expression.Operands.Count == 1 && expression.Operands[0].MetricIndex.HasValue)
+        var metricIndex = expression.Operands[0].MetricIndex;
+        if (expression.Operands.Count == 1 && metricIndex.HasValue)
         {
-            var idx = expression.Operands[0].MetricIndex.Value;
+            var idx = metricIndex.Value;
             return idx >= 0 && idx < metricLabels.Count ? metricLabels[idx] : $"Metric[{idx}]";
         }
 

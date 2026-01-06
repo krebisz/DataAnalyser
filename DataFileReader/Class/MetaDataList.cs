@@ -99,8 +99,8 @@ public class MetaDataList
         {
             for (var j = 0; j < flattenedData.Columns.Count; j++)
             {
-                currentDataFields[j] = flattenedData.Rows[i][j].
-                                                     ToString();
+                currentDataFields[j] = flattenedData.Rows[i][j]?.
+                                                     ToString() ?? string.Empty;
 
                 if (!string.IsNullOrEmpty(currentDataFields[j]))
                 {
@@ -147,7 +147,7 @@ public class MetaDataList
 
         if (hierarchyObjectParent != null && hierarchyObjectParent.ReferenceValue != null)
             reference.Append(hierarchyObjectParent.ReferenceValue);
-        if (hierarchyObject != null && hierarchyObject.ID != null)
+        if (hierarchyObject != null)
             reference.Append(hierarchyObject.ID);
 
         return reference.ToString();

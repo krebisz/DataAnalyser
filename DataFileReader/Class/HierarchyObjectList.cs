@@ -78,7 +78,7 @@ public class HierarchyObjectList
         if (parentName is null)
             return null; // No parent name found
 
-        return HierarchyObjects.FirstOrDefault(h => h.Name == parentName).
+        return HierarchyObjects.FirstOrDefault(h => h.Name == parentName)?.
                                 ID;
     }
 
@@ -87,8 +87,11 @@ public class HierarchyObjectList
         var level = 0;
 
         if (parentID != null)
-            level = (int)HierarchyObjects.FirstOrDefault(h => h.ID == parentID).
-                                          Level + 1;
+        {
+            var parent = HierarchyObjects.FirstOrDefault(h => h.ID == parentID);
+            if (parent?.Level != null)
+                level = parent.Level.Value + 1;
+        }
 
         return level;
     }

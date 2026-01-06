@@ -181,7 +181,7 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
     private List<CmsPoint> FilterAndOrderCms(ICanonicalMetricSeries cms)
     {
         return cms.Samples.Where(s => s.Value.HasValue).
-                   Select(s => new CmsPoint(s.Timestamp.UtcDateTime, s.Value.Value)).
+                   Select(s => new CmsPoint(s.Timestamp.UtcDateTime, s.Value!.Value)).
                    Where(p => p.Timestamp >= _from && p.Timestamp <= _to).
                    OrderBy(p => p.Timestamp).
                    ToList();

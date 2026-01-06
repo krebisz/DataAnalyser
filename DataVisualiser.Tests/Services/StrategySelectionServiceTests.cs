@@ -153,7 +153,7 @@ public sealed class StrategySelectionServiceTests
     }
 
     [Fact]
-    public void LoadAdditionalSubtypesAsync_ShouldReturnEarly_WhenSubtypesCountIsTwoOrLess()
+    public async Task LoadAdditionalSubtypesAsync_ShouldReturnEarly_WhenSubtypesCountIsTwoOrLess()
     {
         // Arrange
         var series = new List<IEnumerable<MetricData>>();
@@ -165,16 +165,15 @@ public sealed class StrategySelectionServiceTests
         };
 
         // Act
-        var task = _service.LoadAdditionalSubtypesAsync(series, labels, "Weight", "HealthMetrics", DateTime.UtcNow.AddDays(-10), DateTime.UtcNow, selectedSubtypes);
-        task.Wait();
+        await _service.LoadAdditionalSubtypesAsync(series, labels, "Weight", "HealthMetrics", DateTime.UtcNow.AddDays(-10), DateTime.UtcNow, selectedSubtypes);
 
         // Assert
-        Assert.Equal(0, series.Count);
-        Assert.Equal(0, labels.Count);
+        Assert.Empty(series);
+        Assert.Empty(labels);
     }
 
     [Fact]
-    public void LoadAdditionalSubtypesAsync_ShouldReturnEarly_WhenMetricTypeIsNullOrEmpty()
+    public async Task LoadAdditionalSubtypesAsync_ShouldReturnEarly_WhenMetricTypeIsNullOrEmpty()
     {
         // Arrange
         var series = new List<IEnumerable<MetricData>>();
@@ -187,14 +186,12 @@ public sealed class StrategySelectionServiceTests
         };
 
         // Act
-        var task1 = _service.LoadAdditionalSubtypesAsync(series, labels, null, "HealthMetrics", DateTime.UtcNow.AddDays(-10), DateTime.UtcNow, selectedSubtypes);
-        task1.Wait();
+        await _service.LoadAdditionalSubtypesAsync(series, labels, null, "HealthMetrics", DateTime.UtcNow.AddDays(-10), DateTime.UtcNow, selectedSubtypes);
 
-        var task2 = _service.LoadAdditionalSubtypesAsync(series, labels, string.Empty, "HealthMetrics", DateTime.UtcNow.AddDays(-10), DateTime.UtcNow, selectedSubtypes);
-        task2.Wait();
+        await _service.LoadAdditionalSubtypesAsync(series, labels, string.Empty, "HealthMetrics", DateTime.UtcNow.AddDays(-10), DateTime.UtcNow, selectedSubtypes);
 
         // Assert
-        Assert.Equal(0, series.Count);
-        Assert.Equal(0, labels.Count);
+        Assert.Empty(series);
+        Assert.Empty(labels);
     }
 }

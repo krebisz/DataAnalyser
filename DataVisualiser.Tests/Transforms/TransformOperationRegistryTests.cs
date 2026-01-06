@@ -65,6 +65,6 @@ public sealed class TransformOperationRegistryTests
     {
         var all = TransformOperationRegistry.GetAllOperations();
         Assert.NotEmpty(all);
-        Assert.True(all.Any(o => o.Id == "Add"));
+        Assert.Contains(all, o => o.Id == "Add");
     }
 }

@@ -2,7 +2,6 @@ using System.Configuration;
 using DataFileReader.Class;
 using DataFileReader.Helper;
 using DataFileReader.Services;
-using Microsoft.Extensions.Logging;
 
 namespace DataFileReader.App;
 
@@ -10,8 +9,6 @@ public class HealthDataApp
 {
     private readonly MetricAggregator          _aggregator;
     private readonly FileProcessingService     _fileProcessor;
-    private readonly ILogger<MetricAggregator> _logger;
-
     public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor)
     {
         _aggregator = aggregator;
@@ -52,6 +49,12 @@ public class HealthDataApp
         }
 
         var rootDirectory = ConfigurationManager.AppSettings["RootDirectory"];
+        if (string.IsNullOrWhiteSpace(rootDirectory))
+        {
+            Console.WriteLine("RootDirectory is not configured. Skipping file processing.");
+            return;
+        }
+
         var allFiles = FileHelper.GetFileList(rootDirectory);
 
         // Get list of already processed files to avoid duplicates

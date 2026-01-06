@@ -56,7 +56,7 @@ public static class MetricTypeParser
     ///     Gets a combined subtype string (all subtypes joined with the original delimiter pattern)
     ///     Returns null if no subtypes exist
     /// </summary>
-    public static string GetSubtypeString(string metricType)
+    public static string? GetSubtypeString(string metricType)
     {
         var (_, subtypes) = ParseMetricType(metricType);
         if (subtypes == null || subtypes.Count == 0)

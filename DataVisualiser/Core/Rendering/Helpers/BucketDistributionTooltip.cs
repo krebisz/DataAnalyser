@@ -151,9 +151,10 @@ namespace DataVisualiser.Core.Rendering.Helpers
             if (bucketIndex < 0 || bucketIndex > (BucketCount - 1))
                 return false;
 
-            if (!_bucketIntervalData.TryGetValue(bucketIndex, out intervals) || intervals == null || intervals.Count == 0)
+            if (!_bucketIntervalData.TryGetValue(bucketIndex, out var resolvedIntervals) || resolvedIntervals == null || resolvedIntervals.Count == 0)
                 return false;
 
+            intervals = resolvedIntervals;
             return true;
         }
 

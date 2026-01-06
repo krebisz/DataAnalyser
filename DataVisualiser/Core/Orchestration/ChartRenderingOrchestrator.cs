@@ -62,12 +62,12 @@ public sealed class ChartRenderingOrchestrator
             await RenderPrimaryChart(ctx, chartMain);
     }
 
-    private async Task RenderSecondaryChartsIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartNorm, CartesianChart chartDiffRatio)
+    private async Task RenderSecondaryChartsIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartNorm, CartesianChart? chartDiffRatio)
     {
         if (chartState.IsNormalizedVisible)
             await RenderNormalized(ctx, chartNorm, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype, chartState.SelectedNormalizationMode);
 
-        if (chartState.IsDiffRatioVisible)
+        if (chartState.IsDiffRatioVisible && chartDiffRatio != null)
             await RenderDiffRatio(ctx, chartDiffRatio, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype, chartState);
     }
 

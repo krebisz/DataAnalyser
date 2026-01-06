@@ -15,6 +15,7 @@ public class HierarchyObject
         ParentID = parentId;
         ClassID = classId;
         MetaDataID = null;
+        ReferenceValue = string.Empty;
         Fields = new Dictionary<string, Type>();
         Element = new KeyValuePair<string, JsonNode?>(string.Empty, null);
     }

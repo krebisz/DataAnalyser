@@ -158,7 +158,7 @@ public class ChartTooltipManager : IDisposable
     private void RemoveVerticalLine(CartesianChart chart)
     {
         if (_chartVerticalLines.TryGetValue(chart, out var verticalLine) && verticalLine != null)
-            ChartHelper.RemoveAxisSection(ref chart, verticalLine);
+            ChartHelper.RemoveAxisSection(chart, verticalLine);
     }
 
     private void SubscribeChartEvents(CartesianChart chart)

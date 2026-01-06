@@ -12,9 +12,9 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
             DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate
     };
 
-    public List<IJson> Properties { get; set; }
+    public List<IJson> Properties { get; set; } = new();
 
-    public IJson this[string name]
+    public IJson? this[string name]
     {
         get
         {
@@ -28,7 +28,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
         {
             if (!string.IsNullOrWhiteSpace(name))
                 for (var index = 0; index < Count; index++)
-                    if (name.Equals(Properties[index].Name, StringComparison.InvariantCultureIgnoreCase))
+                    if (name.Equals(Properties[index].Name, StringComparison.InvariantCultureIgnoreCase) && value != null)
                         Properties[index] = value;
         }
     }
@@ -43,16 +43,16 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
 
     public int Count => Properties.Count;
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
-    public IJson Parent { get; set; }
+    public IJson? Parent { get; set; }
 
-    public IJson this[int index]
+    public IJson? this[int index]
     {
-        get => index < 0 || index > Count ? null : Properties[index];
+        get => index < 0 || index >= Count ? null : Properties[index];
         set
         {
-            if (index >= 0 && index < Count)
+            if (index >= 0 && index < Count && value != null)
                 Properties[index] = value;
         }
     }
@@ -99,8 +99,8 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
 
     public static IJson Create(string text)
     {
-        string name = null;
-        IJson json = null;
+        string? name = null;
+        IJson? json = null;
 
         try
         {
@@ -127,7 +127,8 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         ((IJsonComplex)json.Parent).Add(json);
                     break;
                 case JsonToken.EndObject:
-                    json = json.Parent ?? json;
+                    if (json != null)
+                        json = json.Parent ?? json;
                     break;
                 case JsonToken.StartArray:
                     json = new JsonArray
@@ -140,52 +141,80 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         ((IJsonComplex)json.Parent).Add(json);
                     break;
                 case JsonToken.EndArray:
-                    json = json.Parent ?? json;
+                    if (json != null)
+                        json = json.Parent ?? json;
                     break;
                 case JsonToken.PropertyName:
-                    name = (string)reader.Value;
+                    name = reader.Value as string;
                     break;
                 case JsonToken.Boolean:
                     if (json is IJsonComplex)
-                        ((IJsonComplex)json).Add(JsonValue.Create(name, Convert.ToBoolean(reader.Value)));
+                    {
+                        var created = JsonValue.Create(name, Convert.ToBoolean(reader.Value));
+                        if (created != null)
+                            ((IJsonComplex)json).Add(created);
+                    }
                     break;
                 case JsonToken.Integer:
                     if (json is IJsonComplex)
-                        ((IJsonComplex)json).Add(JsonValue.Create(name, Convert.ToInt64(reader.Value)));
+                    {
+                        var created = JsonValue.Create(name, Convert.ToInt64(reader.Value));
+                        if (created != null)
+                            ((IJsonComplex)json).Add(created);
+                    }
                     break;
                 case JsonToken.Float:
                     if (json is IJsonComplex)
-                        ((IJsonComplex)json).Add(JsonValue.Create(name, Convert.ToDecimal(reader.Value)));
+                    {
+                        var created = JsonValue.Create(name, Convert.ToDecimal(reader.Value));
+                        if (created != null)
+                            ((IJsonComplex)json).Add(created);
+                    }
                     break;
                 case JsonToken.String:
                     if (json is IJsonComplex)
-                        ((IJsonComplex)json).Add(JsonValue.Create(name, Convert.ToString(reader.Value)));
+                    {
+                        var created = JsonValue.Create(name, Convert.ToString(reader.Value));
+                        if (created != null)
+                            ((IJsonComplex)json).Add(created);
+                    }
                     break;
                 case JsonToken.Null:
                     if (json is IJsonComplex)
-                        ((IJsonComplex)json).Add(JsonValue.Create(name, reader.Value));
+                    {
+                        var created = JsonValue.Create(name, reader.Value);
+                        if (created != null)
+                            ((IJsonComplex)json).Add(created);
+                    }
                     break;
                 case JsonToken.Date:
                     if (json is IJsonComplex)
-                        ((IJsonComplex)json).Add(JsonValue.Create(name, Convert.ToDateTime(reader.Value)));
+                    {
+                        var created = JsonValue.Create(name, Convert.ToDateTime(reader.Value));
+                        if (created != null)
+                            ((IJsonComplex)json).Add(created);
+                    }
                     break;
                 case JsonToken.Bytes:
                     if (json is IJsonComplex)
-                        ((IJsonComplex)json).Add(JsonValue.Create(name, reader.Value is byte[] bytes ? bytes : reader.Value is string base64 ? Convert.FromBase64String(base64) : reader.Value));
+                    {
+                        var value = reader.Value is byte[] bytes ? bytes : reader.Value is string base64 ? Convert.FromBase64String(base64) : reader.Value;
+                        var created = JsonValue.Create(name, value);
+                        if (created != null)
+                            ((IJsonComplex)json).Add(created);
+                    }
                     break;
             }
 
-        while (json.Parent != null)
+        while (json?.Parent != null)
             json = json.Parent;
 
-        if (json is JsonArray array)
-            if (array.Count == 1)
-                json = array[0];
-        if (json is JsonObject obj)
-            if (obj.Count == 1 && obj[0].IsObject)
-                json = obj[0];
+        if (json is JsonArray array && array.Count == 1)
+            json = array[0] ?? json;
+        if (json is JsonObject obj && obj.Count == 1 && obj[0]?.IsObject == true)
+            json = obj[0];
 
-        return json;
+        return json!;
     }
 
     public static string Serialize(dynamic @object)

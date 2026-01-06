@@ -2,7 +2,7 @@
 
 public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
 {
-    public List<IJson> Elements { get; set; }
+    public List<IJson> Elements { get; set; } = new();
     public bool        IsArray  => false;
 
     public bool IsObject => true;
@@ -13,16 +13,16 @@ public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
 
     public int Count => Elements.Count;
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
-    public IJson Parent { get; set; }
+    public IJson? Parent { get; set; }
 
-    public IJson this[int index]
+    public IJson? this[int index]
     {
-        get => index < 0 || index > Count ? null : Elements[index];
+        get => index < 0 || index >= Count ? null : Elements[index];
         set
         {
-            if (index >= 0 && index < Count)
+            if (index >= 0 && index < Count && value != null)
                 Elements[index] = value;
         }
     }

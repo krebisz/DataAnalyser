@@ -4,6 +4,9 @@ using System.Text;
 using DataFileReader.Class;
 using Newtonsoft.Json;
 
+#pragma warning disable CS0618
+#pragma warning disable CS8600
+
 namespace DataFileReader.Helper;
 
 public static class SQLHelper
@@ -1378,3 +1381,6 @@ public static class SQLHelper
         return subtypes;
     }
 }
+
+#pragma warning restore CS8600
+#pragma warning restore CS0618

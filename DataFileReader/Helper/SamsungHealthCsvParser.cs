@@ -144,7 +144,7 @@ public static class SamsungHealthCsvParser
     /// </summary>
     private static string ExtractMetricIdentifierForCsvFields(string identifier, string filePath)
     {
-        string metricPart = null;
+        string? metricPart = null;
 
         if (!string.IsNullOrEmpty(identifier) && identifier.Contains("com.samsung"))
         {

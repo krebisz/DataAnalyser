@@ -96,6 +96,9 @@ public sealed class MultiMetricParityTests
             return;
         }
 
+        Assert.NotNull(legacyResult.Series);
+        Assert.NotNull(cmsResult.Series);
+
         Assert.Equal(legacyResult.Series.Count, cmsResult.Series.Count);
 
         for (var i = 0; i < legacyResult.Series.Count; i++)

@@ -145,7 +145,7 @@ public class ChartUpdateCoordinator
                ToList();
     }
 
-    private static MetricData CreateMetric(DateTime timestamp, double value, string unit)
+    private static MetricData CreateMetric(DateTime timestamp, double value, string? unit)
     {
         return new MetricData
         {

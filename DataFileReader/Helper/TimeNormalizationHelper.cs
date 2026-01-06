@@ -32,7 +32,7 @@ public static class TimeNormalizationHelper
     /// <summary>
     ///     Attempts to parse various timestamp formats and convert to DateTime UTC
     /// </summary>
-    public static DateTime? ParseTimestamp(object timestampValue)
+    public static DateTime? ParseTimestamp(object? timestampValue)
     {
         if (timestampValue == null)
             return null;

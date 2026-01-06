@@ -14,13 +14,13 @@ public static class JsoonHelper
         {
             var jsonString = DataHelper.RemoveEscapeCharacters(jsonToken.ToString());
 
-            dynamic? dynamicObject = new object();
-            dynamicObject = JsonSerializer.Deserialize<dynamic>(jsonString);
-            dynamicObject = "[" + dynamicObject + "]";
+            var dynamicObject = JsonSerializer.Deserialize<dynamic>(jsonString);
+            var dynamicText = dynamicObject?.ToString() ?? string.Empty;
+            dynamicText = "[" + dynamicText + "]";
 
-            var childJsonArray = JArray.Parse(dynamicObject.ToString());
+            var childJsonArray = JArray.Parse(dynamicText) ?? new JArray();
 
-            if (childJsonArray != null && childJsonArray.Count > 0)
+            if (childJsonArray.Count > 0)
                 foreach (JObject childJsonObject in childJsonArray)
                 {
                     var childJsonValues = childJsonObject.Values();

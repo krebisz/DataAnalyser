@@ -20,9 +20,9 @@ public sealed class MetricIdentityResolutionStage : INormalizationStage
             if (record == null)
                 continue;
 
-            var provider = record.SourceGroup;
-            var metricType = record.SourceId;
-            string? metricSubtype = null;
+            var provider = record.SourceGroup ?? string.Empty;
+            var metricType = record.SourceId ?? string.Empty;
+            var metricSubtype = string.Empty;
 
             var result = _resolver.Resolve(provider, metricType, metricSubtype);
 

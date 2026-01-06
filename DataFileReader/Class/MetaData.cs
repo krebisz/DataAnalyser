@@ -6,6 +6,8 @@ public class MetaData
     {
         ID = 0;
         Name = string.Empty;
+        ReferenceValue = string.Empty;
+        Type = string.Empty;
         Fields = new Dictionary<string, Type>();
     }
 

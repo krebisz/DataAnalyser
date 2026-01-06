@@ -29,7 +29,7 @@ public abstract class BaseDistributionService
     protected const double MaxColumnWidth          = 40.0;
 
     protected readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    protected readonly IFrequencyShadingRenderer?                   _frequencyRenderer;
+    protected readonly IFrequencyShadingRenderer                    _frequencyRenderer;
     protected readonly IStrategyCutOverService                      _strategyCutOverService;
     protected          FrequencyShadingCalculator                   _frequencyShadingCalculator;
     protected          IIntervalShadingStrategy                      _shadingStrategy;

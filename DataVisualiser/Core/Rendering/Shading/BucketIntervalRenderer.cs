@@ -2,14 +2,9 @@
 using System.Windows.Media;
 using DataVisualiser.Core.Services;
 using LiveCharts;
-using LiveCharts.Wpf;using DataVisualiser.Core.Services;
-using LiveCharts;
 using LiveCharts.Wpf;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Windows.Media;
 
 namespace DataVisualiser.Core.Rendering.Shading
 {
