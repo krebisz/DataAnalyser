@@ -118,6 +118,24 @@ public sealed class ChartRenderingOrchestrator
         }
     }
 
+    public Task RenderNormalizedChartAsync(ChartDataContext ctx, CartesianChart chartNorm, ChartState chartState)
+    {
+        return RenderNormalized(ctx, chartNorm, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype, chartState.SelectedNormalizationMode);
+    }
+
+    public Task RenderDiffRatioChartAsync(ChartDataContext ctx, CartesianChart chartDiffRatio, ChartState chartState)
+    {
+        if (!chartState.IsDiffRatioVisible)
+            return Task.CompletedTask;
+
+        return RenderDiffRatio(ctx, chartDiffRatio, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype, chartState);
+    }
+
+    public Task RenderWeeklyDistributionChartAsync(ChartDataContext ctx, CartesianChart chartWeekly, ChartState chartState)
+    {
+        return RenderWeeklyDistribution(ctx, chartWeekly, chartState);
+    }
+
 
     /// <summary>
     ///     Renders the primary (main) chart using StrategyCutOverService.

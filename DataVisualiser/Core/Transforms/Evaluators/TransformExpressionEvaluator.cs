@@ -104,7 +104,7 @@ public static class TransformExpressionEvaluator
             return "Transform Result";
 
         var label = BuildLabel(expression, metricLabels);
-        return $"[Transform] {label}";
+        return expression.Operation == null ? label : $"[Transform] {label}";
     }
 
     /// <summary>

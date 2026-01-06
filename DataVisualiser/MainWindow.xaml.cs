@@ -767,8 +767,10 @@ public partial class MainWindow : Window
 
     private Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
     {
-        var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1!, ctx.Data2!, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
-        return RenderOrClearChart(ChartNorm, _viewModel.ChartState.IsNormalizedVisible, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true);
+        if (_chartRenderingOrchestrator == null)
+            return Task.CompletedTask;
+
+        return _chartRenderingOrchestrator.RenderNormalizedChartAsync(ctx, ChartNorm, _viewModel.ChartState);
     }
 
     /// <summary>
@@ -785,7 +787,12 @@ public partial class MainWindow : Window
         var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
 
         if (isWeekly)
-            await _weeklyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+        {
+            if (_chartRenderingOrchestrator != null)
+                await _chartRenderingOrchestrator.RenderWeeklyDistributionChartAsync(ctx, chart, _viewModel.ChartState);
+            else
+                await _weeklyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+        }
         else
             await _hourlyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
@@ -812,66 +819,10 @@ public partial class MainWindow : Window
 
     private async Task RenderDiffRatio(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
     {
-        if (!_viewModel.ChartState.IsDiffRatioVisible || ctx.Data1 == null || ctx.Data2 == null)
+        if (_chartRenderingOrchestrator == null)
             return;
 
-        var operation = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "Subtract" : "Divide";
-        var operationSymbol = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/";
-
-        // Use transform infrastructure to compute the operation
-        var allData1List = ctx.Data1.Where(d => d.Value.HasValue).
-                               OrderBy(d => d.NormalizedTimestamp).
-                               ToList();
-
-        var allData2List = ctx.Data2.Where(d => d.Value.HasValue).
-                               OrderBy(d => d.NormalizedTimestamp).
-                               ToList();
-
-        if (allData1List.Count == 0 || allData2List.Count == 0)
-            return;
-
-        // Align data by timestamp
-        var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
-        if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
-            return;
-
-        // Build expression and evaluate
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
-        List<double> computedResults;
-        var metricsList = new List<IReadOnlyList<MetricData>>
-        {
-                alignedData.Item1,
-                alignedData.Item2
-        };
-
-        if (expression == null)
-        {
-            // Fallback to legacy approach
-            var op = operation switch
-            {
-                "Subtract" => BinaryOperators.Difference,
-                "Divide" => BinaryOperators.Ratio,
-                _ => (a, b) => a
-            };
-
-            var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
-                                         ToList();
-            var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
-                                         ToList();
-            computedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
-        }
-        else
-        {
-            computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-        }
-
-        // Generate label
-        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metricsList, ctx);
-
-        // Create strategy and render
-        var strategy = new TransformResultStrategy(alignedData.Item1, computedResults, label, ctx.From, ctx.To);
-
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true);
+        await _chartRenderingOrchestrator.RenderDiffRatioChartAsync(ctx, ChartDiffRatio, _viewModel.ChartState);
     }
 
     private Panel? GetChartPanel(string chartName)
