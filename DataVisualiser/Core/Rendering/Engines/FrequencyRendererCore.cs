@@ -10,7 +10,7 @@ internal static class FrequencyRendererCore
 {
     private const double MaxColumnWidth = 40.0;
 
-    public static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax, int bucketCount)
+    public static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax, int bucketCount)
     {
         // Step 1: Calculate bin size based on range
         var binSize = FrequencyBinningHelper.CalculateBinSize(globalMin, globalMax);

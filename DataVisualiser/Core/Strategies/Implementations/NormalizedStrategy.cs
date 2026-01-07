@@ -11,16 +11,16 @@ using UnitResolutionService = UnitResolutionService;
 
 public sealed class NormalizedStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                      _from;
-    private readonly string                        _labelLeft;
-    private readonly string                        _labelRight;
+    private readonly DateTime                _from;
+    private readonly string                  _labelLeft;
+    private readonly string                  _labelRight;
     private readonly IEnumerable<MetricData> _left;
-    private readonly NormalizationMode             _mode;
+    private readonly NormalizationMode       _mode;
     private readonly IEnumerable<MetricData> _right;
-    private readonly ISmoothingService             _smoothingService;
-    private readonly ITimelineService              _timelineService;
-    private readonly DateTime                      _to;
-    private readonly IUnitResolutionService        _unitResolutionService;
+    private readonly ISmoothingService       _smoothingService;
+    private readonly ITimelineService        _timelineService;
+    private readonly DateTime                _to;
+    private readonly IUnitResolutionService  _unitResolutionService;
 
     public NormalizedStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to) : this(left, right, labelLeft, labelRight, from, to, NormalizationMode.PercentageOfMax)
     {

@@ -2,7 +2,8 @@ namespace DataVisualiser.Core.Services.Abstractions;
 
 /// <summary>
 ///     Interface for extracting bucket values from distribution results.
-///     Allows the base service to work with different result types (WeeklyDistributionResult, BucketDistributionResult, etc.)
+///     Allows the base service to work with different result types (WeeklyDistributionResult, BucketDistributionResult,
+///     etc.)
 /// </summary>
 public interface IDistributionResultExtractor
 {
@@ -12,4 +13,3 @@ public interface IDistributionResultExtractor
     /// </summary>
     Dictionary<int, List<double>> ExtractBucketValues(object result);
 }
-

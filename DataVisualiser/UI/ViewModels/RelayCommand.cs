@@ -1,6 +1,6 @@
 using System.Windows.Input;
 
-namespace DataVisualiser.UI.ViewModels.Commands;
+namespace DataVisualiser.UI.ViewModels;
 
 public class RelayCommand : ICommand
 {

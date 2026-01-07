@@ -20,7 +20,7 @@ public class WeeklyFrequencyRenderer
     ///     Step 1 & 2: Normalize y-values and create bins with frequency counts per bucket.
     ///     Returns a tuple with bins and frequency data.
     /// </summary>
-    public static (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax)
+    public static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax)
     {
         return FrequencyRendererCore.PrepareBinsAndFrequencies(bucketValues, globalMin, globalMax, BucketCount);
     }

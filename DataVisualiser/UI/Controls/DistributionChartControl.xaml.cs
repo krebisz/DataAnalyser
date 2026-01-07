@@ -10,37 +10,13 @@ namespace DataVisualiser.UI.Controls;
 /// </summary>
 public partial class DistributionChartControl : UserControl
 {
-    public static readonly DependencyProperty ChartTitleTextProperty =
-        DependencyProperty.Register(
-            nameof(ChartTitleText),
-            typeof(string),
-            typeof(DistributionChartControl),
-            new PropertyMetadata(string.Empty, OnChartTitleTextChanged));
+    public static readonly DependencyProperty ChartTitleTextProperty = DependencyProperty.Register(nameof(ChartTitleText), typeof(string), typeof(DistributionChartControl), new PropertyMetadata(string.Empty, OnChartTitleTextChanged));
 
-    public static readonly DependencyProperty XAxisLabelsProperty =
-        DependencyProperty.Register(
-            nameof(XAxisLabels),
-            typeof(string),
-            typeof(DistributionChartControl),
-            new PropertyMetadata(string.Empty, OnXAxisLabelsChanged));
+    public static readonly DependencyProperty XAxisLabelsProperty = DependencyProperty.Register(nameof(XAxisLabels), typeof(string), typeof(DistributionChartControl), new PropertyMetadata(string.Empty, OnXAxisLabelsChanged));
 
-    public static readonly DependencyProperty XAxisTitleProperty =
-        DependencyProperty.Register(
-            nameof(XAxisTitle),
-            typeof(string),
-            typeof(DistributionChartControl),
-            new PropertyMetadata("Time", OnXAxisTitleChanged));
+    public static readonly DependencyProperty XAxisTitleProperty = DependencyProperty.Register(nameof(XAxisTitle), typeof(string), typeof(DistributionChartControl), new PropertyMetadata("Time", OnXAxisTitleChanged));
 
-    public static readonly DependencyProperty DefaultIntervalCountProperty =
-        DependencyProperty.Register(
-            nameof(DefaultIntervalCount),
-            typeof(int),
-            typeof(DistributionChartControl),
-            new PropertyMetadata(25, OnDefaultIntervalCountChanged));
-
-    public event EventHandler? ToggleRequested;
-    public event EventHandler? DisplayModeChanged;
-    public event EventHandler<int>? IntervalCountChanged;
+    public static readonly DependencyProperty DefaultIntervalCountProperty = DependencyProperty.Register(nameof(DefaultIntervalCount), typeof(int), typeof(DistributionChartControl), new PropertyMetadata(25, OnDefaultIntervalCountChanged));
 
     public DistributionChartControl()
     {
@@ -88,6 +64,10 @@ public partial class DistributionChartControl : UserControl
             return DefaultIntervalCount;
         }
     }
+
+    public event EventHandler?      ToggleRequested;
+    public event EventHandler?      DisplayModeChanged;
+    public event EventHandler<int>? IntervalCountChanged;
 
     public void SetVisibility(bool isVisible)
     {
@@ -154,4 +134,3 @@ public partial class DistributionChartControl : UserControl
             IntervalCountChanged?.Invoke(this, intervalCount);
     }
 }
-

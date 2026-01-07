@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.State;
 
-namespace DataVisualiser.UI;
+namespace DataVisualiser.UI.Controllers;
 
 /// <summary>
 ///     Reusable composite controller for chart panels.

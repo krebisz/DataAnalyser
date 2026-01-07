@@ -1,10 +1,9 @@
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.UI;
+namespace DataVisualiser.UI.Controllers;
 
 /// <summary>
 ///     Controller for the weekday trend chart panel, including day filters and chart type toggle.
@@ -13,7 +12,6 @@ public partial class WeekdayTrendChartController : UserControl
 {
     private readonly CartesianChart _cartesianChart;
     private readonly CartesianChart _polarChart;
-    private Button _chartTypeToggleButton = null!;
 
     public WeekdayTrendChartController()
     {
@@ -35,7 +33,7 @@ public partial class WeekdayTrendChartController : UserControl
 
     public ChartPanelController Panel => PanelController;
 
-    public Button ChartTypeToggleButton => _chartTypeToggleButton;
+    public Button ChartTypeToggleButton { get; private set; } = null!;
 
     public event EventHandler? ToggleRequested;
 
@@ -47,15 +45,15 @@ public partial class WeekdayTrendChartController : UserControl
     {
         var panel = new StackPanel
         {
-            Orientation = Orientation.Horizontal,
-            Margin = new Thickness(40, 5, 10, 0)
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(40, 5, 10, 0)
         };
 
         panel.Children.Add(new TextBlock
         {
-            Text = "Days:",
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 10, 0)
+                Text = "Days:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
         });
 
         AddDayCheckBox(panel, "Mon", DayOfWeek.Monday);
@@ -66,16 +64,16 @@ public partial class WeekdayTrendChartController : UserControl
         AddDayCheckBox(panel, "Sat", DayOfWeek.Saturday);
         AddDayCheckBox(panel, "Sun", DayOfWeek.Sunday);
 
-        _chartTypeToggleButton = new Button
+        ChartTypeToggleButton = new Button
         {
-            Content = "Polar",
-            Margin = new Thickness(20, 0, 0, 0),
-            Padding = new Thickness(10, 3, 10, 3),
-            VerticalAlignment = VerticalAlignment.Center,
-            ToolTip = "Toggle between Cartesian and Polar chart"
+                Content = "Polar",
+                Margin = new Thickness(20, 0, 0, 0),
+                Padding = new Thickness(10, 3, 10, 3),
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip = "Toggle between Cartesian and Polar chart"
         };
-        _chartTypeToggleButton.Click += (s, e) => ChartTypeToggleRequested?.Invoke(this, EventArgs.Empty);
-        panel.Children.Add(_chartTypeToggleButton);
+        ChartTypeToggleButton.Click += (s, e) => ChartTypeToggleRequested?.Invoke(this, EventArgs.Empty);
+        panel.Children.Add(ChartTypeToggleButton);
 
         return panel;
     }
@@ -84,9 +82,9 @@ public partial class WeekdayTrendChartController : UserControl
     {
         var checkbox = new CheckBox
         {
-            Content = label,
-            IsChecked = true,
-            Margin = new Thickness(5, 0, 0, 0)
+                Content = label,
+                IsChecked = true,
+                Margin = new Thickness(5, 0, 0, 0)
         };
 
         checkbox.Click += (s, e) => DayToggled?.Invoke(this, new WeekdayTrendDayToggleEventArgs(day, checkbox.IsChecked == true));
@@ -97,65 +95,52 @@ public partial class WeekdayTrendChartController : UserControl
     {
         var panel = new StackPanel
         {
-            Orientation = Orientation.Vertical
+                Orientation = Orientation.Vertical
         };
 
         cartesianChart = new CartesianChart
         {
-            LegendLocation = LegendLocation.Right,
-            Zoom = ZoomingOptions.X,
-            Pan = PanningOptions.X,
-            Hoverable = true,
-            Margin = new Thickness(20, 5, 10, 20),
-            MinHeight = 400
+                LegendLocation = LegendLocation.Right,
+                Zoom = ZoomingOptions.X,
+                Pan = PanningOptions.X,
+                Hoverable = true,
+                Margin = new Thickness(20, 5, 10, 20),
+                MinHeight = 400
         };
         cartesianChart.AxisX.Add(new Axis
         {
-            Title = "Time"
+                Title = "Time"
         });
         cartesianChart.AxisY.Add(new Axis
         {
-            Title = "Value",
-            ShowLabels = true
+                Title = "Value",
+                ShowLabels = true
         });
         panel.Children.Add(cartesianChart);
 
         polarChart = new CartesianChart
         {
-            LegendLocation = LegendLocation.Right,
-            Zoom = ZoomingOptions.X,
-            Pan = PanningOptions.X,
-            Hoverable = true,
-            Margin = new Thickness(20, 5, 10, 20),
-            MinHeight = 400,
-            Visibility = Visibility.Collapsed
+                LegendLocation = LegendLocation.Right,
+                Zoom = ZoomingOptions.X,
+                Pan = PanningOptions.X,
+                Hoverable = true,
+                Margin = new Thickness(20, 5, 10, 20),
+                MinHeight = 400,
+                Visibility = Visibility.Collapsed
         };
         polarChart.AxisX.Add(new Axis
         {
-            Title = "Day of Week",
-            MinValue = 0,
-            MaxValue = 360
+                Title = "Day of Week",
+                MinValue = 0,
+                MaxValue = 360
         });
         polarChart.AxisY.Add(new Axis
         {
-            Title = "Value",
-            ShowLabels = true
+                Title = "Value",
+                ShowLabels = true
         });
         panel.Children.Add(polarChart);
 
         return panel;
     }
-}
-
-public sealed class WeekdayTrendDayToggleEventArgs : EventArgs
-{
-    public WeekdayTrendDayToggleEventArgs(DayOfWeek day, bool isChecked)
-    {
-        Day = day;
-        IsChecked = isChecked;
-    }
-
-    public DayOfWeek Day { get; }
-
-    public bool IsChecked { get; }
 }

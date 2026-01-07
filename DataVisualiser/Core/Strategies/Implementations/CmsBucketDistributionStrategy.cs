@@ -1,6 +1,5 @@
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -14,8 +13,6 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
 {
-    protected abstract int BucketCount { get; }
-
     private readonly DateTime               _from;
     private readonly ICanonicalMetricSeries _series;
     private readonly DateTime               _to;
@@ -30,12 +27,14 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
         _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
     }
 
+    protected abstract int BucketCount { get; }
+
     public IReadOnlyList<object> Bins { get; private set; } = Array.Empty<object>();
 
     public Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket { get; } = new();
 
     public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerBucket { get; } = new();
-    public BucketDistributionResult?                ExtendedResult              { get; protected set; }
+    public BucketDistributionResult?                ExtendedResult                 { get; protected set; }
 
     public string PrimaryLabel { get; }
 
@@ -70,7 +69,7 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
     /// <summary>
     ///     Prepares frequency data using the appropriate frequency renderer.
     /// </summary>
-    protected abstract (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> Normalized) PrepareFrequencyData(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax);
+    protected abstract(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> Normalized) PrepareFrequencyData(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax);
 
     // ---------- common implementation methods ----------
 
@@ -100,21 +99,20 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
     private Dictionary<int, List<double>> BucketByType(IEnumerable<(DateTime Timestamp, double Value)> samples)
     {
         var buckets = new Dictionary<int, List<double>>(BucketCount);
-        
+
         // Initialize all buckets
         for (var i = 0; i < BucketCount; i++)
-        {
             buckets[i] = new List<double>();
-        }
 
         foreach (var (timestamp, value) in samples)
         {
             var bucketIndex = GetBucketIndex(timestamp);
-            
+
             if (bucketIndex < 0 || bucketIndex >= BucketCount)
                 bucketIndex = 0;
 
-            buckets[bucketIndex].Add(value);
+            buckets[bucketIndex].
+                    Add(value);
         }
 
         return buckets;
@@ -214,7 +212,7 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
         return filtered.Count;
     }
 
-    internal (double[] Mins, double[] Maxs, double[] Ranges, int[] Counts) Debug_ComputePerBucketStatistics()
+    internal(double[] Mins, double[] Maxs, double[] Ranges, int[] Counts) Debug_ComputePerBucketStatistics()
     {
         var materialized = MaterializeSeries();
         var filteredSamples = ApplyRangeFilter(materialized);
@@ -225,7 +223,7 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
         return (mins, maxs, ranges, counts);
     }
 
-    internal (double GlobalMin, double GlobalMax) Debug_ComputeGlobalBounds()
+    internal(double GlobalMin, double GlobalMax) Debug_ComputeGlobalBounds()
     {
         var materialized = MaterializeSeries();
         var filteredSamples = ApplyRangeFilter(materialized);
@@ -239,4 +237,3 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
         return (globalMin, globalMax);
     }
 }
-

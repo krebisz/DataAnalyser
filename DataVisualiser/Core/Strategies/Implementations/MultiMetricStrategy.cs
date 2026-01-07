@@ -15,14 +15,14 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class MultiMetricStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                                     _from;
-    private readonly IReadOnlyList<string>                        _labels;
+    private readonly DateTime                               _from;
+    private readonly IReadOnlyList<string>                  _labels;
     private readonly IReadOnlyList<IEnumerable<MetricData>> _series;
-    private readonly ISmoothingService                            _smoothingService;
-    private readonly ITimelineService                             _timelineService;
-    private readonly DateTime                                     _to;
-    private readonly string?                                      _unit;
-    private readonly IUnitResolutionService                       _unitResolutionService;
+    private readonly ISmoothingService                      _smoothingService;
+    private readonly ITimelineService                       _timelineService;
+    private readonly DateTime                               _to;
+    private readonly string?                                _unit;
+    private readonly IUnitResolutionService                 _unitResolutionService;
 
     /// <summary>
     ///     Legacy constructor using MetricData collections.

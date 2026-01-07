@@ -12,14 +12,14 @@ using UnitResolutionService = UnitResolutionService;
 
 public sealed class SingleMetricStrategy : IChartComputationStrategy
 {
-    private readonly ICanonicalMetricSeries?        _cmsData;
+    private readonly ICanonicalMetricSeries?  _cmsData;
     private readonly IEnumerable<MetricData>? _data;
-    private readonly DateTime                       _from;
-    private readonly ISmoothingService              _smoothingService;
-    private readonly ITimelineService               _timelineService;
-    private readonly DateTime                       _to;
-    private readonly IUnitResolutionService         _unitResolutionService;
-    private readonly bool                           _useCms;
+    private readonly DateTime                 _from;
+    private readonly ISmoothingService        _smoothingService;
+    private readonly ITimelineService         _timelineService;
+    private readonly DateTime                 _to;
+    private readonly IUnitResolutionService   _unitResolutionService;
+    private readonly bool                     _useCms;
 
     /// <summary>
     ///     Legacy constructor using MetricData.

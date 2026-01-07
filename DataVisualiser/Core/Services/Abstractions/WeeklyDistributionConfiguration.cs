@@ -30,4 +30,3 @@ public sealed class WeeklyDistributionConfiguration : IDistributionConfiguration
 
     public string BucketVariableName => "day";
 }
-

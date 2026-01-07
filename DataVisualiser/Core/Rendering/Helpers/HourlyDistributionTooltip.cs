@@ -8,6 +8,10 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public class HourlyDistributionTooltip : BucketDistributionTooltip
 {
+    public HourlyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData) : base(chart, bucketIntervalData)
+    {
+    }
+
     protected override int BucketCount => 24;
 
     protected override string[] BucketNames { get; } =
@@ -37,9 +41,4 @@ public class HourlyDistributionTooltip : BucketDistributionTooltip
             "10PM",
             "11PM"
     };
-
-    public HourlyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData)
-        : base(chart, bucketIntervalData)
-    {
-    }
 }

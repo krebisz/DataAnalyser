@@ -1,5 +1,4 @@
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.ViewModels.Events;
 
 namespace DataVisualiser.UI.ViewModels;
 

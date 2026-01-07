@@ -49,16 +49,16 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         // Check strategy-specific configuration
         var strategyName = strategyType switch
         {
-            StrategyType.SingleMetric => "SingleMetricStrategy",
-            StrategyType.CombinedMetric => "CombinedMetricStrategy",
-            StrategyType.MultiMetric => "MultiMetricStrategy",
-            StrategyType.Difference => "DifferenceStrategy",
-            StrategyType.Ratio => "RatioStrategy",
-            StrategyType.Normalized => "NormalizedStrategy",
-            StrategyType.WeeklyDistribution => "WeeklyDistributionStrategy",
-            StrategyType.WeekdayTrend => "WeekdayTrendStrategy",
-            StrategyType.HourlyDistribution => "HourlyDistributionStrategy",
-            _ => null
+                StrategyType.SingleMetric       => "SingleMetricStrategy",
+                StrategyType.CombinedMetric     => "CombinedMetricStrategy",
+                StrategyType.MultiMetric        => "MultiMetricStrategy",
+                StrategyType.Difference         => "DifferenceStrategy",
+                StrategyType.Ratio              => "RatioStrategy",
+                StrategyType.Normalized         => "NormalizedStrategy",
+                StrategyType.WeeklyDistribution => "WeeklyDistributionStrategy",
+                StrategyType.WeekdayTrend       => "WeekdayTrendStrategy",
+                StrategyType.HourlyDistribution => "HourlyDistributionStrategy",
+                _                               => null
         };
 
         if (strategyName != null && !CmsConfiguration.ShouldUseCms(strategyName))
@@ -70,30 +70,90 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         // Check if CMS data is available (filtered by date range)
         return strategyType switch
         {
-            StrategyType.SingleMetric => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-            StrategyType.CombinedMetric => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-            StrategyType.MultiMetric => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To), // At least primary
-            StrategyType.Difference => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-            StrategyType.Ratio => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-            StrategyType.Normalized => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-            StrategyType.WeeklyDistribution => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-            StrategyType.HourlyDistribution => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-            StrategyType.WeekdayTrend => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-            _ => false
+                StrategyType.SingleMetric       => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
+                StrategyType.CombinedMetric     => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
+                StrategyType.MultiMetric        => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To), // At least primary
+                StrategyType.Difference         => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
+                StrategyType.Ratio              => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
+                StrategyType.Normalized         => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
+                StrategyType.WeeklyDistribution => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
+                StrategyType.HourlyDistribution => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
+                StrategyType.WeekdayTrend       => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
+                _                               => false
         };
+    }
+
+    public IChartComputationStrategy CreateStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
+    {
+        var useCms = ShouldUseCms(strategyType, ctx);
+        Debug.WriteLine($"[CMS] {strategyType}: PrimarySamples={GetSampleCount(ctx.PrimaryCms, ctx.From, ctx.To)} (filtered), TotalPrimarySamples={GetSampleCount(ctx.PrimaryCms)}, SecondarySamples={GetSampleCount(ctx.SecondaryCms, ctx.From, ctx.To)} (filtered), TotalSecondarySamples={GetSampleCount(ctx.SecondaryCms)}");
+        Debug.WriteLine($"[CutOver] Strategy={strategyType}, UseCms={useCms}, PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}, DateRange=[{ctx.From:yyyy-MM-dd} to {ctx.To:yyyy-MM-dd}]");
+
+        if (useCms)
+            return CreateCmsStrategy(strategyType, ctx, parameters);
+
+        return CreateLegacyStrategy(strategyType, parameters);
+    }
+
+    public ParityResult ValidateParity(IChartComputationStrategy legacyStrategy, IChartComputationStrategy cmsStrategy)
+    {
+        if (legacyStrategy == null || cmsStrategy == null)
+            return new ParityResult
+            {
+                    Passed = false,
+                    Message = "One or both strategies are null"
+            };
+
+        // Determine strategy type from strategy instances
+        var strategyType = DetermineStrategyType(legacyStrategy, cmsStrategy);
+
+        // Get appropriate parity harness
+        var harness = GetParityHarness(strategyType);
+        if (harness == null)
+                // Fallback to basic validation if no harness available
+            return PerformBasicValidation(legacyStrategy, cmsStrategy);
+
+        // Use parity harness for full validation
+        var context = new StrategyParityContext
+        {
+                StrategyName = strategyType?.ToString() ?? "Unknown",
+                MetricIdentity = "ParityValidation",
+                Mode = ParityMode.Diagnostic
+        };
+
+        var harnessResult = harness.Validate(context, () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()), () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
+
+        // Convert Validation.Parity.ParityResult to Validation.ParityResult
+        return ConvertParityResult(harnessResult);
+    }
+
+    public IChartComputationStrategy CreateCmsStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
+    {
+        if (!_factories.TryGetValue(strategyType, out var factory))
+            throw new NotSupportedException($"Strategy type {strategyType} is not supported");
+
+        return factory.CreateCmsStrategy(ctx, parameters);
+    }
+
+    public IChartComputationStrategy CreateLegacyStrategy(StrategyType strategyType, StrategyCreationParameters parameters)
+    {
+        if (!_factories.TryGetValue(strategyType, out var factory))
+            throw new NotSupportedException($"Strategy type {strategyType} is not supported");
+
+        return factory.CreateLegacyStrategy(parameters);
     }
 
     private static bool HasSufficientCmsSamples(object? series, DateTime from, DateTime to, int minSamples = 1)
     {
         if (series is not ICanonicalMetricSeries cmsSeries)
         {
-            Debug.WriteLine($"[HasSufficientCmsSamples] series is not ICanonicalMetricSeries");
+            Debug.WriteLine("[HasSufficientCmsSamples] series is not ICanonicalMetricSeries");
             return false;
         }
 
         if (cmsSeries.Samples == null)
         {
-            Debug.WriteLine($"[HasSufficientCmsSamples] Samples is null");
+            Debug.WriteLine("[HasSufficientCmsSamples] Samples is null");
             return false;
         }
 
@@ -101,7 +161,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         var validValueSamples = cmsSeries.Samples.Count(s => s.Value.HasValue);
 
         // Extend 'to' to end of day to include all samples on that date
-        var toEndOfDay = to.Date.AddDays(1).AddTicks(-1);
+        var toEndOfDay = to.Date.AddDays(1).
+                            AddTicks(-1);
         var fromStartOfDay = from.Date;
 
         // Count samples within the date range (compare dates, not times)
@@ -112,7 +173,9 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         {
             var firstSample = cmsSeries.Samples.First();
             var lastSample = cmsSeries.Samples.Last();
-            var samplesInRange = cmsSeries.Samples.Where(s => s.Value.HasValue && s.Timestamp.DateTime >= fromStartOfDay && s.Timestamp.DateTime <= toEndOfDay).Take(5).ToList();
+            var samplesInRange = cmsSeries.Samples.Where(s => s.Value.HasValue && s.Timestamp.DateTime >= fromStartOfDay && s.Timestamp.DateTime <= toEndOfDay).
+                                           Take(5).
+                                           ToList();
             Debug.WriteLine($"[HasSufficientCmsSamples] Total={totalSamples}, ValidValues={validValueSamples}, Filtered={filteredCount}, Range=[{fromStartOfDay:yyyy-MM-dd} to {toEndOfDay:yyyy-MM-dd HH:mm:ss}], FirstSample={firstSample.Timestamp.DateTime:yyyy-MM-dd HH:mm:ss}, LastSample={lastSample.Timestamp.DateTime:yyyy-MM-dd HH:mm:ss}");
             if (samplesInRange.Any())
                 Debug.WriteLine($"[HasSufficientCmsSamples] Sample timestamps in range: {string.Join(", ", samplesInRange.Select(s => s.Timestamp.DateTime.ToString("yyyy-MM-dd HH:mm:ss")))}");
@@ -133,7 +196,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         // Extend 'to' to end of day to include all samples on that date
         if (from.HasValue && to.HasValue)
         {
-            var toEndOfDay = to.Value.Date.AddDays(1).AddTicks(-1);
+            var toEndOfDay = to.Value.Date.AddDays(1).
+                                AddTicks(-1);
             var fromStartOfDay = from.Value.Date;
             return cmsSeries.Samples.Count(s => s.Value.HasValue && s.Timestamp.DateTime >= fromStartOfDay && s.Timestamp.DateTime <= toEndOfDay);
         }
@@ -141,55 +205,13 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         return cmsSeries.Samples.Count;
     }
 
-    public IChartComputationStrategy CreateStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
-    {
-        var useCms = ShouldUseCms(strategyType, ctx);
-        Debug.WriteLine($"[CMS] {strategyType}: PrimarySamples={GetSampleCount(ctx.PrimaryCms, ctx.From, ctx.To)} (filtered), TotalPrimarySamples={GetSampleCount(ctx.PrimaryCms)}, SecondarySamples={GetSampleCount(ctx.SecondaryCms, ctx.From, ctx.To)} (filtered), TotalSecondarySamples={GetSampleCount(ctx.SecondaryCms)}");
-        Debug.WriteLine($"[CutOver] Strategy={strategyType}, UseCms={useCms}, PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}, DateRange=[{ctx.From:yyyy-MM-dd} to {ctx.To:yyyy-MM-dd}]");
-
-        if (useCms)
-            return CreateCmsStrategy(strategyType, ctx, parameters);
-
-        return CreateLegacyStrategy(strategyType, parameters);
-    }
-
-    public ParityResult ValidateParity(IChartComputationStrategy legacyStrategy, IChartComputationStrategy cmsStrategy)
-    {
-        if (legacyStrategy == null || cmsStrategy == null)
-            return new ParityResult
-            {
-                Passed = false,
-                Message = "One or both strategies are null"
-            };
-
-        // Determine strategy type from strategy instances
-        var strategyType = DetermineStrategyType(legacyStrategy, cmsStrategy);
-
-        // Get appropriate parity harness
-        var harness = GetParityHarness(strategyType);
-        if (harness == null)
-            // Fallback to basic validation if no harness available
-            return PerformBasicValidation(legacyStrategy, cmsStrategy);
-
-        // Use parity harness for full validation
-        var context = new StrategyParityContext
-        {
-            StrategyName = strategyType?.ToString() ?? "Unknown",
-            MetricIdentity = "ParityValidation",
-            Mode = ParityMode.Diagnostic
-        };
-
-        var harnessResult = harness.Validate(context, () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()), () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
-
-        // Convert Validation.Parity.ParityResult to Validation.ParityResult
-        return ConvertParityResult(harnessResult);
-    }
-
     private StrategyType? DetermineStrategyType(IChartComputationStrategy legacyStrategy, IChartComputationStrategy cmsStrategy)
     {
         // Determine strategy type from strategy class names
-        var legacyTypeName = legacyStrategy.GetType().Name;
-        var cmsTypeName = cmsStrategy.GetType().Name;
+        var legacyTypeName = legacyStrategy.GetType().
+                                            Name;
+        var cmsTypeName = cmsStrategy.GetType().
+                                      Name;
 
         // Map strategy class names to StrategyType enum
         if (legacyTypeName.Contains("SingleMetric") || cmsTypeName.Contains("SingleMetric"))
@@ -218,11 +240,11 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
     {
         return strategyType switch
         {
-            StrategyType.CombinedMetric => new CombinedMetricParityHarness(),
-            StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
-            StrategyType.HourlyDistribution => new HourlyDistributionParityHarness(),
-            // TODO: Add harnesses for other strategy types as they become available
-            _ => null
+                StrategyType.CombinedMetric     => new CombinedMetricParityHarness(),
+                StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
+                StrategyType.HourlyDistribution => new HourlyDistributionParityHarness(),
+                // TODO: Add harnesses for other strategy types as they become available
+                _ => null
         };
     }
 
@@ -235,15 +257,15 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         if (legacyResult == null && cmsResult == null)
             return new ParityResult
             {
-                Passed = true,
-                Message = "Both strategies returned null"
+                    Passed = true,
+                    Message = "Both strategies returned null"
             };
 
         if (legacyResult == null || cmsResult == null)
             return new ParityResult
             {
-                Passed = false,
-                Message = $"One strategy returned null: legacy={legacyResult == null}, cms={cmsResult == null}"
+                    Passed = false,
+                    Message = $"One strategy returned null: legacy={legacyResult == null}, cms={cmsResult == null}"
             };
 
         var timestampsMatch = legacyResult.Timestamps.Count == cmsResult.Timestamps.Count;
@@ -252,14 +274,14 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         if (!timestampsMatch || !valuesMatch)
             return new ParityResult
             {
-                Passed = false,
-                Message = $"Result counts differ: timestamps={timestampsMatch}, values={valuesMatch}"
+                    Passed = false,
+                    Message = $"Result counts differ: timestamps={timestampsMatch}, values={valuesMatch}"
             };
 
         return new ParityResult
         {
-            Passed = true,
-            Message = "Basic validation passed"
+                Passed = true,
+                Message = "Basic validation passed"
         };
     }
 
@@ -268,8 +290,8 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         if (harnessResult.Passed)
             return new ParityResult
             {
-                Passed = true,
-                Message = "Parity validation passed"
+                    Passed = true,
+                    Message = "Parity validation passed"
             };
 
         var failureMessages = harnessResult.Failures.Select(f => $"[{f.Layer}] {f.Message}").
@@ -277,9 +299,9 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
 
         return new ParityResult
         {
-            Passed = false,
-            Message = string.Join("; ", failureMessages),
-            Details = new Dictionary<string, object>
+                Passed = false,
+                Message = string.Join("; ", failureMessages),
+                Details = new Dictionary<string, object>
                 {
                         { "FailureCount", harnessResult.Failures.Count },
                         {
@@ -291,21 +313,5 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
                         }
                 }
         };
-    }
-
-    public IChartComputationStrategy CreateCmsStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
-    {
-        if (!_factories.TryGetValue(strategyType, out var factory))
-            throw new NotSupportedException($"Strategy type {strategyType} is not supported");
-
-        return factory.CreateCmsStrategy(ctx, parameters);
-    }
-
-    public IChartComputationStrategy CreateLegacyStrategy(StrategyType strategyType, StrategyCreationParameters parameters)
-    {
-        if (!_factories.TryGetValue(strategyType, out var factory))
-            throw new NotSupportedException($"Strategy type {strategyType} is not supported");
-
-        return factory.CreateLegacyStrategy(parameters);
     }
 }

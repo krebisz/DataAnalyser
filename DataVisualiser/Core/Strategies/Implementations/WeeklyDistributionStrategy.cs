@@ -1,8 +1,6 @@
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Services.Abstractions;
-using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
-using UnitResolutionService = DataVisualiser.Core.Services.UnitResolutionService;
 
 namespace DataVisualiser.Core.Strategies.Implementations;
 
@@ -12,12 +10,11 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class WeeklyDistributionStrategy : BucketDistributionStrategy
 {
-    protected override int BucketCount => 7;
-
-    public WeeklyDistributionStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null)
-        : base(data, label, from, to, unitResolutionService)
+    public WeeklyDistributionStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null) : base(data, label, from, to, unitResolutionService)
     {
     }
+
+    protected override int BucketCount => 7;
 
     protected override int GetBucketIndex(MetricData data)
     {
@@ -29,7 +26,7 @@ public sealed class WeeklyDistributionStrategy : BucketDistributionStrategy
         return idx;
     }
 
-    protected override (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax)
+    protected override(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax)
     {
         return WeeklyFrequencyRenderer.PrepareBinsAndFrequencies(bucketValues, globalMin, globalMax);
     }

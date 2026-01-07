@@ -1,6 +1,4 @@
-using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services.Abstractions;
@@ -17,8 +15,7 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public class HourlyDistributionService : BaseDistributionService
 {
-    public HourlyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null)
-        : base(new HourlyDistributionConfiguration(), chartTimestamps, strategyCutOverService, shadingStrategy)
+    public HourlyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null) : base(new HourlyDistributionConfiguration(), chartTimestamps, strategyCutOverService, shadingStrategy)
     {
     }
 
@@ -32,12 +29,7 @@ public class HourlyDistributionService : BaseDistributionService
         };
     }
 
-    protected override void SetupTooltip(
-        CartesianChart targetChart,
-        ChartComputationResult result,
-        BucketDistributionResult extendedResult,
-        bool useFrequencyShading,
-        int intervalCount)
+    protected override void SetupTooltip(CartesianChart targetChart, ChartComputationResult result, BucketDistributionResult extendedResult, bool useFrequencyShading, int intervalCount)
     {
         Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> tooltipData;
         if (useFrequencyShading)

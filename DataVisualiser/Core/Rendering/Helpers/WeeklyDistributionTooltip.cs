@@ -8,6 +8,10 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public class WeeklyDistributionTooltip : BucketDistributionTooltip
 {
+    public WeeklyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData) : base(chart, bucketIntervalData)
+    {
+    }
+
     protected override int BucketCount => 7;
 
     protected override string[] BucketNames { get; } =
@@ -20,9 +24,4 @@ public class WeeklyDistributionTooltip : BucketDistributionTooltip
             "Saturday",
             "Sunday"
     };
-
-    public WeeklyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData)
-        : base(chart, bucketIntervalData)
-    {
-    }
 }

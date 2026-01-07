@@ -1,7 +1,5 @@
 // File: DataVisualiser/Charts/Parity/WeeklyDistributionParityHarness.cs
 
-using DataVisualiser.Shared.Models;
-
 namespace DataVisualiser.Validation.Parity;
 
 /// <summary>

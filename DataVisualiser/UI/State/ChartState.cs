@@ -33,7 +33,9 @@ public class ChartState
     // Weekly distribution chart options
     public bool UseFrequencyShading { get; set; } = true; // Default to frequency shading enabled
     public int  WeeklyIntervalCount { get; set; } = 25;   // Default interval count for frequency shading
-    public int  HourlyIntervalCount { get; set; } = 15;   // Default interval count for frequency shading
+
+    public int HourlyIntervalCount { get; set; } = 15; // Default interval count for frequency shading
+
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }
 

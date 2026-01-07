@@ -19,11 +19,11 @@ public static class CmsConfiguration
     /// </summary>
     public static bool UseCmsForSingleMetric { get; set; } = true; // ENABLED for testing
 
-    public static bool UseCmsForMultiMetric    { get; set; }
-    public static bool UseCmsForCombinedMetric { get; set; }
-    public static bool UseCmsForDifference     { get; set; }
-    public static bool UseCmsForRatio          { get; set; }
-    public static bool UseCmsForNormalized     { get; set; }
+    public static bool UseCmsForMultiMetric        { get; set; }
+    public static bool UseCmsForCombinedMetric     { get; set; }
+    public static bool UseCmsForDifference         { get; set; }
+    public static bool UseCmsForRatio              { get; set; }
+    public static bool UseCmsForNormalized         { get; set; }
     public static bool UseCmsForWeeklyDistribution { get; set; }
     public static bool UseCmsForWeekdayTrend       { get; set; }
     public static bool UseCmsForHourlyDistribution { get; set; }
@@ -38,16 +38,16 @@ public static class CmsConfiguration
 
         return strategyType switch
         {
-                "SingleMetricStrategy"   => UseCmsForSingleMetric,
-                "MultiMetricStrategy"    => UseCmsForMultiMetric,
-                "CombinedMetricStrategy" => UseCmsForCombinedMetric,
-                "DifferenceStrategy"     => UseCmsForDifference,
-                "RatioStrategy"          => UseCmsForRatio,
-                "NormalizedStrategy"     => UseCmsForNormalized,
+                "SingleMetricStrategy"       => UseCmsForSingleMetric,
+                "MultiMetricStrategy"        => UseCmsForMultiMetric,
+                "CombinedMetricStrategy"     => UseCmsForCombinedMetric,
+                "DifferenceStrategy"         => UseCmsForDifference,
+                "RatioStrategy"              => UseCmsForRatio,
+                "NormalizedStrategy"         => UseCmsForNormalized,
                 "WeeklyDistributionStrategy" => UseCmsForWeeklyDistribution,
                 "WeekdayTrendStrategy"       => UseCmsForWeekdayTrend,
                 "HourlyDistributionStrategy" => UseCmsForHourlyDistribution,
-                _                        => false
+                _                            => false
         };
     }
 }

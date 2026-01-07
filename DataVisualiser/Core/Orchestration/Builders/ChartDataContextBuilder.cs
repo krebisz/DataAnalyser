@@ -22,11 +22,11 @@ public sealed class ChartDataContextBuilder
     ///     - primarySubtype = first selected subtype
     ///     - secondarySubtype = second selected subtype
     /// </summary>
-    public ChartDataContext Build(string                         metricType,       string? primarySubtype, // First selected subtype
-                                  string?                        secondarySubtype, // Second selected subtype
+    public ChartDataContext Build(string                   metricType,       string? primarySubtype, // First selected subtype
+                                  string?                  secondarySubtype, // Second selected subtype
                                   IEnumerable<MetricData>  data1,            // First selected subtype data (primary)
                                   IEnumerable<MetricData>? data2,            // Second selected subtype data (secondary)
-                                  DateTime                       from,             DateTime to)
+                                  DateTime                 from,             DateTime to)
     {
         // Normalize inputs - maintain ordering: list1 = first selected, list2 = second selected
         var list1 = data1?.ToList() ?? new List<MetricData>(); // First selected subtype

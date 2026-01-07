@@ -13,15 +13,15 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class DifferenceStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                      _from;
-    private readonly string                        _labelLeft;
-    private readonly string                        _labelRight;
+    private readonly DateTime                _from;
+    private readonly string                  _labelLeft;
+    private readonly string                  _labelRight;
     private readonly IEnumerable<MetricData> _left;
     private readonly IEnumerable<MetricData> _right;
-    private readonly ISmoothingService             _smoothingService;
-    private readonly ITimelineService              _timelineService;
-    private readonly DateTime                      _to;
-    private readonly IUnitResolutionService        _unitResolutionService;
+    private readonly ISmoothingService       _smoothingService;
+    private readonly ITimelineService        _timelineService;
+    private readonly DateTime                _to;
+    private readonly IUnitResolutionService  _unitResolutionService;
 
     public DifferenceStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {

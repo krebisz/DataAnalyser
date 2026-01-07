@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Models;
@@ -15,12 +13,12 @@ namespace DataVisualiser.Core.Orchestration.Coordinator;
 public sealed class WeekdayTrendChartUpdateCoordinator
 {
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    private readonly ChartRenderGate _renderGate = new();
-    private readonly WeekdayTrendRenderingService _renderingService;
-    private CartesianChart? _cartesianChart;
-    private CartesianChart? _polarChart;
-    private ChartState? _chartState;
-    private WeekdayTrendResult? _lastResult;
+    private readonly ChartRenderGate                            _renderGate = new();
+    private readonly WeekdayTrendRenderingService               _renderingService;
+    private          CartesianChart?                            _cartesianChart;
+    private          ChartState?                                _chartState;
+    private          WeekdayTrendResult?                        _lastResult;
+    private          CartesianChart?                            _polarChart;
 
     public WeekdayTrendChartUpdateCoordinator(WeekdayTrendRenderingService renderingService, Dictionary<CartesianChart, List<DateTime>> chartTimestamps)
     {

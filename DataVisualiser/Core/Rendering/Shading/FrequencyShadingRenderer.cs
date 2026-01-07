@@ -6,8 +6,8 @@ namespace DataVisualiser.Core.Rendering.Shading;
 
 public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 {
+    private readonly int    _bucketCount;
     private readonly double _maxColumnWidth;
-    private readonly int _bucketCount;
 
     public FrequencyShadingRenderer(double maxColumnWidth, int bucketCount)
     {
@@ -96,7 +96,7 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
         public ChartValues<double> WhiteHeights   { get; } = new();
         public ChartValues<double> ColoredHeights { get; } = new();
 
-        public bool HasData            { get; private set; }
+        public bool HasData               { get; private set; }
         public bool HasZeroFreqBuckets    { get; private set; }
         public bool HasNonZeroFreqBuckets { get; private set; }
 

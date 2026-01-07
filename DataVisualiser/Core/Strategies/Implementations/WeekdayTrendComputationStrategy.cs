@@ -8,10 +8,10 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 
 public sealed class WeekdayTrendComputationStrategy : IChartComputationStrategy, IWeekdayTrendResultProvider
 {
+    private readonly ICanonicalMetricSeries?  _cmsData;
+    private readonly DateTime                 _from;
     private readonly IEnumerable<MetricData>? _legacyData;
-    private readonly ICanonicalMetricSeries? _cmsData;
-    private readonly DateTime _from;
-    private readonly DateTime _to;
+    private readonly DateTime                 _to;
 
     public WeekdayTrendComputationStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to)
     {
@@ -35,13 +35,9 @@ public sealed class WeekdayTrendComputationStrategy : IChartComputationStrategy,
 
     public string? Unit { get; private set; }
 
-    public WeekdayTrendResult? ExtendedResult { get; private set; }
-
     public ChartComputationResult? Compute()
     {
-        var data = _cmsData != null
-            ? CmsConversionHelper.ConvertSamplesToHealthMetricData(_cmsData, _from, _to)
-            : _legacyData ?? Array.Empty<MetricData>();
+        var data = _cmsData != null ? CmsConversionHelper.ConvertSamplesToHealthMetricData(_cmsData, _from, _to) : _legacyData ?? Array.Empty<MetricData>();
 
         var strategy = new WeekdayTrendStrategy();
         ExtendedResult = strategy.Compute(data, _from, _to);
@@ -52,14 +48,16 @@ public sealed class WeekdayTrendComputationStrategy : IChartComputationStrategy,
 
         return new ChartComputationResult
         {
-            Timestamps = new List<DateTime>(),
-            IntervalIndices = new List<int>(),
-            NormalizedIntervals = new List<DateTime>(),
-            PrimaryRawValues = new List<double>(),
-            PrimarySmoothed = new List<double>(),
-            TickInterval = TickInterval.Day,
-            DateRange = _to - _from,
-            Unit = Unit
+                Timestamps = new List<DateTime>(),
+                IntervalIndices = new List<int>(),
+                NormalizedIntervals = new List<DateTime>(),
+                PrimaryRawValues = new List<double>(),
+                PrimarySmoothed = new List<double>(),
+                TickInterval = TickInterval.Day,
+                DateRange = _to - _from,
+                Unit = Unit
         };
     }
+
+    public WeekdayTrendResult? ExtendedResult { get; private set; }
 }

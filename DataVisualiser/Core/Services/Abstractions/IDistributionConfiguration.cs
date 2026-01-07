@@ -43,4 +43,3 @@ public interface IDistributionConfiguration
     /// </summary>
     string BucketVariableName { get; }
 }
-

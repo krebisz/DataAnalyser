@@ -15,7 +15,7 @@ using UnitResolutionService = UnitResolutionService;
 public sealed class TransformResultStrategy : IChartComputationStrategy
 {
     private readonly List<double>           _computedValues;
-    private readonly List<MetricData> _data;
+    private readonly List<MetricData>       _data;
     private readonly DateTime               _from;
     private readonly ISmoothingService      _smoothingService;
     private readonly ITimelineService       _timelineService;

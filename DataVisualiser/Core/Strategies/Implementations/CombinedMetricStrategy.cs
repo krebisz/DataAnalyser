@@ -17,16 +17,16 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class CombinedMetricStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                       _from;
+    private readonly DateTime                 _from;
     private readonly IEnumerable<MetricData>? _left;
-    private readonly ICanonicalMetricSeries?        _leftCms;
+    private readonly ICanonicalMetricSeries?  _leftCms;
     private readonly IEnumerable<MetricData>? _right;
-    private readonly ICanonicalMetricSeries?        _rightCms;
-    private readonly ISmoothingService              _smoothingService;
-    private readonly ITimelineService               _timelineService;
-    private readonly DateTime                       _to;
-    private readonly IUnitResolutionService         _unitResolutionService;
-    private readonly bool                           _useCms;
+    private readonly ICanonicalMetricSeries?  _rightCms;
+    private readonly ISmoothingService        _smoothingService;
+    private readonly ITimelineService         _timelineService;
+    private readonly DateTime                 _to;
+    private readonly IUnitResolutionService   _unitResolutionService;
+    private readonly bool                     _useCms;
 
     /// <summary>
     ///     Legacy constructor using MetricData.

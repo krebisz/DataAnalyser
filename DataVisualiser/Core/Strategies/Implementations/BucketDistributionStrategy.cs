@@ -13,8 +13,6 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public abstract class BucketDistributionStrategy : IChartComputationStrategy
 {
-    protected abstract int BucketCount { get; }
-
     private readonly IEnumerable<MetricData> _data;
     private readonly DateTime                _from;
     private readonly DateTime                _to;
@@ -28,6 +26,8 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
         _to = to;
         _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
     }
+
+    protected abstract int BucketCount { get; }
 
     /// <summary>
     ///     Extended result containing frequency binning data.
@@ -94,13 +94,14 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
             if (idx < 0 || idx >= BucketCount)
                 idx = 0;
 
-            buckets[idx].Add((double)d.Value!.Value);
+            buckets[idx].
+                    Add((double)d.Value!.Value);
         }
 
         return buckets;
     }
 
-    private (List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) ComputeBucketStatistics(List<List<double>> buckets)
+    private(List<double> Mins, List<double> Maxs, List<double> Ranges, List<int> Counts, double GlobalMin, double GlobalMax) ComputeBucketStatistics(List<List<double>> buckets)
     {
         var mins = new List<double>();
         var maxs = new List<double>();
@@ -141,7 +142,7 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
         return (mins, maxs, ranges, counts, globalMin, globalMax);
     }
 
-    private (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) ComputeFrequencyDistributions(List<List<double>> buckets, double globalMin, double globalMax)
+    private(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) ComputeFrequencyDistributions(List<List<double>> buckets, double globalMin, double globalMax)
     {
         var bucketValuesDictionary = BuildBucketValuesDictionary(buckets);
 
@@ -155,7 +156,7 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
     ///     Prepares bins and frequencies for the distribution.
     ///     Delegates to the appropriate frequency renderer based on bucket count.
     /// </summary>
-    protected abstract (List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax);
+    protected abstract(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> Frequencies, Dictionary<int, Dictionary<int, double>> NormalizedFrequencies) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax);
 
     private Dictionary<int, List<double>> BuildBucketValuesDictionary(List<List<double>> buckets)
     {
@@ -205,4 +206,3 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
         };
     }
 }
-

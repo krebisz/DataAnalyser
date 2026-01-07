@@ -159,4 +159,3 @@ public abstract class BucketDistributionParityHarness : IStrategyParityHarness
         return ParityResult.Fail(failure);
     }
 }
-

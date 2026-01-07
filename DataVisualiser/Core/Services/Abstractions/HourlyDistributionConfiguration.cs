@@ -47,4 +47,3 @@ public sealed class HourlyDistributionConfiguration : IDistributionConfiguration
 
     public string BucketVariableName => "hour";
 }
-

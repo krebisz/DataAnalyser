@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:ui="clr-namespace:DataVisualiser.UI"
+        xmlns:controllers="clr-namespace:DataVisualiser.UI.Controllers"
         Title="Health Data Viz"
         SizeToContent="Height"
         Width="1800"
@@ -131,7 +132,7 @@
                         Orientation="Vertical">
 
                 <!-- ========== CHART MAIN ========== -->
-                <ui:MainChartController x:Name="MainChartController" />
+                <controllers:MainChartController x:Name="MainChartController" />
 
                 <!-- ========== CHART NORMALIZED ========== -->
                 <Border BorderBrush="#FF444444"
@@ -207,10 +208,10 @@
                 </Border>
 
                 <!-- ========== CHART DIFFERENCE / RATIO (UNIFIED) ========== -->
-                <ui:DiffRatioChartController x:Name="DiffRatioChartController" />
+                <controllers:DiffRatioChartController x:Name="DiffRatioChartController" />
 
                 <!-- ========== CHART WEEKDAY TREND ========== -->
-                <ui:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />
+                <controllers:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />
 
                 <!-- ========== CHART WEEKLY DISTRIBUTION ========== -->
                 <Border BorderBrush="#FF444444"
@@ -406,7 +407,8 @@
                         <StackPanel x:Name="TransformContentPanel" Orientation="Vertical" Visibility="Collapsed">
                             <StackPanel x:Name="TransformOperationRowPanel" Orientation="Horizontal" Margin="20,10">
                                 <!-- Operation Selection -->
-                                <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical" Margin="0,0,20,0" MinWidth="150">
+                                <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical" Margin="0,0,20,0"
+                                            MinWidth="150">
                                     <TextBlock Text="Operation:" FontWeight="Bold" Margin="0,0,0,5" />
                                     <ComboBox x:Name="TransformOperationCombo"
                                               SelectionChanged="OnTransformOperationChanged"
@@ -432,7 +434,8 @@
                             <!-- Data Grids -->
                             <StackPanel x:Name="TransformDataGridsPanel" Orientation="Horizontal" Margin="20,10">
                                 <!-- Grid 1: Primary Data -->
-                                <StackPanel x:Name="TransformGrid1Panel" Orientation="Vertical" Margin="0,0,10,0" MinWidth="250">
+                                <StackPanel x:Name="TransformGrid1Panel" Orientation="Vertical" Margin="0,0,10,0"
+                                            MinWidth="250">
                                     <TextBlock x:Name="TransformGrid1Title"
                                                Text="Primary Data"
                                                FontWeight="Bold"
@@ -541,4 +544,3 @@
 
     </DockPanel>
 </Window>
-

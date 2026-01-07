@@ -1,9 +1,3 @@
-using System.Diagnostics;
-using System.Windows.Media;
-using DataVisualiser.Core.Services;
-using LiveCharts;
-using LiveCharts.Wpf;
-
 namespace DataVisualiser.Core.Rendering.Shading;
 
 /// <summary>

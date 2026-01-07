@@ -19,9 +19,9 @@ public class ChartUpdateCoordinator
 {
     private readonly ChartComputationEngine _chartComputationEngine;
     private readonly ChartRenderEngine      _chartRenderEngine;
-    private readonly ChartRenderGate        _renderGate = new();
 
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
+    private readonly ChartRenderGate                            _renderGate = new();
     private readonly ChartTooltipManager                        _tooltipManager;
 
     public ChartUpdateCoordinator(ChartComputationEngine computationEngine, ChartRenderEngine renderEngine, ChartTooltipManager tooltipManager, Dictionary<CartesianChart, List<DateTime>> chartTimestamps)

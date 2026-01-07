@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.UI;
+namespace DataVisualiser.UI.Controllers;
 
 /// <summary>
 ///     Controller for the Main chart panel.

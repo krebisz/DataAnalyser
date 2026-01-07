@@ -10,7 +10,7 @@ namespace DataVisualiser.Core.Rendering.Shading;
 /// </summary>
 public class FrequencyBasedShadingStrategy : IIntervalShadingStrategy
 {
-    private int _bucketCount = 0;
+    private readonly int _bucketCount;
 
     public FrequencyBasedShadingStrategy(int bucketCount)
     {

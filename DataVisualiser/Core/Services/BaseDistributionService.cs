@@ -22,26 +22,22 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public abstract class BaseDistributionService
 {
-    protected const double DefaultMinHeight         = 400.0;
-    protected const double YAxisRoundingStep        = 5.0;
-    protected const double YAxisPaddingPercentage   = 0.05;
-    protected const double MinYAxisPadding          = 5.0;
-    protected const double MaxColumnWidth          = 40.0;
+    protected const double DefaultMinHeight       = 400.0;
+    protected const double YAxisRoundingStep      = 5.0;
+    protected const double YAxisPaddingPercentage = 0.05;
+    protected const double MinYAxisPadding        = 5.0;
+    protected const double MaxColumnWidth         = 40.0;
 
     protected readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    protected readonly IFrequencyShadingRenderer                    _frequencyRenderer;
-    protected readonly IStrategyCutOverService                      _strategyCutOverService;
-    protected          FrequencyShadingCalculator                   _frequencyShadingCalculator;
-    protected          IIntervalShadingStrategy                      _shadingStrategy;
-    protected readonly ChartRenderGate                              _renderGate = new();
+    protected readonly IFrequencyShadingRenderer                  _frequencyRenderer;
+    protected readonly ChartRenderGate                            _renderGate = new();
+    protected readonly IStrategyCutOverService                    _strategyCutOverService;
 
     protected readonly IDistributionConfiguration Configuration;
+    protected          FrequencyShadingCalculator _frequencyShadingCalculator;
+    protected          IIntervalShadingStrategy   _shadingStrategy;
 
-    protected BaseDistributionService(
-        IDistributionConfiguration configuration,
-        Dictionary<CartesianChart, List<DateTime>> chartTimestamps,
-        IStrategyCutOverService strategyCutOverService,
-        IIntervalShadingStrategy? shadingStrategy = null)
+    protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
@@ -63,17 +59,7 @@ public abstract class BaseDistributionService
     /// <summary>
     ///     Updates the distribution chart with the provided data.
     /// </summary>
-    public async Task UpdateDistributionChartAsync(
-        CartesianChart targetChart,
-        IEnumerable<MetricData> data,
-        string displayName,
-        DateTime from,
-        DateTime to,
-        double minHeight = DefaultMinHeight,
-        bool useFrequencyShading = true,
-        int intervalCount = 10,
-        ICanonicalMetricSeries? cmsSeries = null,
-        bool enableParity = false)
+    public async Task UpdateDistributionChartAsync(CartesianChart targetChart, IEnumerable<MetricData> data, string displayName, DateTime from, DateTime to, double minHeight = DefaultMinHeight, bool useFrequencyShading = true, int intervalCount = 10, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -138,22 +124,12 @@ public abstract class BaseDistributionService
 
     protected abstract BucketDistributionResult? ExtractExtendedResult(object strategy);
 
-    private IChartComputationStrategy CreateStrategy(
-            ChartDataContext           ctx,
-            StrategyCreationParameters parameters)
+    private IChartComputationStrategy CreateStrategy(ChartDataContext ctx, StrategyCreationParameters parameters)
     {
-        return _strategyCutOverService.CreateStrategy(
-                Configuration.StrategyType,
-                ctx,
-                parameters);
+        return _strategyCutOverService.CreateStrategy(Configuration.StrategyType, ctx, parameters);
     }
 
-    private ChartDataContext BuildContext(
-            IEnumerable<MetricData> data,
-            ICanonicalMetricSeries? cmsSeries,
-            string                  displayName,
-            DateTime                from,
-            DateTime                to)
+    private ChartDataContext BuildContext(IEnumerable<MetricData> data, ICanonicalMetricSeries? cmsSeries, string displayName, DateTime from, DateTime to)
     {
         return new ChartDataContext
         {
@@ -164,11 +140,8 @@ public abstract class BaseDistributionService
                 To = to
         };
     }
-    private StrategyCreationParameters BuildParameters(
-            IEnumerable<MetricData> data,
-            string                  displayName,
-            DateTime                from,
-            DateTime                to)
+
+    private StrategyCreationParameters BuildParameters(IEnumerable<MetricData> data, string displayName, DateTime from, DateTime to)
     {
         return new StrategyCreationParameters
         {
@@ -189,12 +162,7 @@ public abstract class BaseDistributionService
         return bucketValues;
     }
 
-    protected abstract void SetupTooltip(
-        CartesianChart targetChart,
-        ChartComputationResult result,
-        BucketDistributionResult extendedResult,
-        bool useFrequencyShading,
-        int intervalCount);
+    protected abstract void SetupTooltip(CartesianChart targetChart, ChartComputationResult result, BucketDistributionResult extendedResult, bool useFrequencyShading, int intervalCount);
 
     protected abstract IIntervalRenderer CreateIntervalRenderer();
 
@@ -251,14 +219,7 @@ public abstract class BaseDistributionService
         yAxis.Title = "Value";   // Ensure title is set
     }
 
-    protected void RenderOriginalMinMaxChart(
-        CartesianChart targetChart,
-        ChartComputationResult result,
-        string displayName,
-        double minHeight,
-        BucketDistributionResult? frequencyData,
-        bool useFrequencyShading = true,
-        int intervalCount = 25)
+    protected void RenderOriginalMinMaxChart(CartesianChart targetChart, ChartComputationResult result, string displayName, double minHeight, BucketDistributionResult? frequencyData, bool useFrequencyShading = true, int intervalCount = 25)
     {
         if (!TryExtractMinMax(result, targetChart, out var mins, out var ranges))
             return;
@@ -294,7 +255,7 @@ public abstract class BaseDistributionService
         return isValid;
     }
 
-    protected (double Min, double Max) CalculateGlobalMinMax(List<double> mins, List<double> ranges)
+    protected(double Min, double Max) CalculateGlobalMinMax(List<double> mins, List<double> ranges)
     {
         var min = mins.Where(m => !double.IsNaN(m)).
                        DefaultIfEmpty(0).
@@ -413,16 +374,7 @@ public abstract class BaseDistributionService
             }
     }
 
-    protected int RenderIntervals(
-        CartesianChart chart,
-        List<double> mins,
-        List<double> ranges,
-        List<(double Min, double Max)> intervals,
-        Dictionary<int, Dictionary<int, int>> frequenciesPerBucket,
-        Dictionary<int, Dictionary<int, Color>> colorMap,
-        double uniformIntervalHeight,
-        double[] cumulativeStackHeight,
-        int globalMaxFreq)
+    protected int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
     {
         var renderer = CreateIntervalRenderer();
         return renderer.RenderIntervals(chart, mins, ranges, intervals, frequenciesPerBucket, colorMap, uniformIntervalHeight, cumulativeStackHeight, globalMaxFreq);
@@ -436,8 +388,8 @@ public abstract class BaseDistributionService
     protected int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket)
     {
         return frequenciesPerBucket.Values.SelectMany(b => b.Values).
-                                 DefaultIfEmpty(1).
-                                 Max();
+                                    DefaultIfEmpty(1).
+                                    Max();
     }
 
     protected double[] InitializeCumulativeStack(double globalMin)
@@ -572,8 +524,8 @@ public abstract class BaseDistributionService
             // Add interval if there's valid data (count > 0 and valid min)
             // Note: bucketRange can be 0 (all values for the bucket are the same), which is valid
             if (count > 0)
-                // Single interval representing the entire bucket's range
-                // Percentage is 100% since this is the only interval for the bucket
+                    // Single interval representing the entire bucket's range
+                    // Percentage is 100% since this is the only interval for the bucket
                 bucketIntervals.Add((bucketMin, bucketMax, count, 100.0));
 
             if (bucketIntervals.Count > 0)
@@ -582,23 +534,4 @@ public abstract class BaseDistributionService
 
         return tooltipData;
     }
-
 }
-
-/// <summary>
-///     Interface for interval renderers (weekly, hourly, etc.)
-/// </summary>
-public interface IIntervalRenderer
-{
-    int RenderIntervals(
-        CartesianChart chart,
-        List<double> mins,
-        List<double> ranges,
-        List<(double Min, double Max)> intervals,
-        Dictionary<int, Dictionary<int, int>> frequenciesPerBucket,
-        Dictionary<int, Dictionary<int, Color>> colorMap,
-        double uniformIntervalHeight,
-        double[] cumulativeStackHeight,
-        int globalMaxFreq);
-}
-

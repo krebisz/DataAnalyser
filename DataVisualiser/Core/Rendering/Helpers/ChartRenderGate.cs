@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Windows;
 using LiveCharts.Wpf;
 
@@ -11,8 +9,8 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public sealed class ChartRenderGate
 {
+    private readonly HashSet<CartesianChart>            _attachedCharts = new();
     private readonly Dictionary<CartesianChart, Action> _pendingRenders = new();
-    private readonly HashSet<CartesianChart> _attachedCharts = new();
 
     public void ExecuteWhenReady(CartesianChart chart, Action render)
     {

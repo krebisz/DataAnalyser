@@ -1,11 +1,9 @@
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Media;
 using System.Windows.Threading;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
@@ -24,12 +22,10 @@ using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI;
+using DataVisualiser.UI.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.SubtypeSelectors;
 using DataVisualiser.UI.ViewModels;
-using DataVisualiser.UI.ViewModels.Events;
-using LiveCharts;
-using LiveCharts.Defaults;
 using LiveCharts.Wpf;
 using ChartHelper = DataVisualiser.Core.Rendering.Helpers.ChartHelper;
 
@@ -37,28 +33,28 @@ namespace DataVisualiser;
 
 public partial class MainWindow : Window
 {
-    private readonly ChartState _chartState = new();
-    private readonly MetricState _metricState = new();
-    private readonly UiState _uiState = new();
-    private ChartComputationEngine _chartComputationEngine = null!;
-    private ChartRenderEngine _chartRenderEngine = null!;
-    private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
-    private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
-    private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
+    private readonly ChartState                  _chartState             = new();
+    private readonly MetricState                 _metricState            = new();
+    private readonly UiState                     _uiState                = new();
+    private          ChartComputationEngine      _chartComputationEngine = null!;
+    private          ChartRenderEngine           _chartRenderEngine      = null!;
+    private          ChartRenderingOrchestrator? _chartRenderingOrchestrator;
+    private          ChartUpdateCoordinator      _chartUpdateCoordinator = null!;
 
-    private string _connectionString = null!;
-    private bool _isChangingResolution;
+    private string                    _connectionString          = null!;
+    private HourlyDistributionService _hourlyDistributionService = null!;
+    private bool                      _isChangingResolution;
 
     private bool _isInitializing = true;
 
-    private MetricSelectionService _metricSelectionService = null!;
-    private SubtypeSelectorManager _selectorManager = null!;
-    private IStrategyCutOverService? _strategyCutOverService;
-    private List<string>? _subtypeList;
-    private ChartTooltipManager? _tooltipManager;
-    private MainWindowViewModel _viewModel = null!;
-    private WeeklyDistributionService _weeklyDistributionService = null!;
-    private HourlyDistributionService _hourlyDistributionService = null!;
+    private MetricSelectionService             _metricSelectionService = null!;
+    private SubtypeSelectorManager             _selectorManager        = null!;
+    private IStrategyCutOverService?           _strategyCutOverService;
+    private List<string>?                      _subtypeList;
+    private ChartTooltipManager?               _tooltipManager;
+    private MainWindowViewModel                _viewModel                          = null!;
+    private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
+    private WeeklyDistributionService          _weeklyDistributionService          = null!;
 
     public MainWindow()
     {
@@ -356,7 +352,7 @@ public partial class MainWindow : Window
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    private (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
+    private(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -483,8 +479,8 @@ public partial class MainWindow : Window
                          OrderBy(d => d.NormalizedTimestamp).
                          Select(d => new
                          {
-                             Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                             Value = d.Value!.Value.ToString("F4")
+                                 Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                 Value = d.Value!.Value.ToString("F4")
                          }).
                          ToList();
 
@@ -639,19 +635,22 @@ public partial class MainWindow : Window
                 await _weeklyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
         }
         else
+        {
             await _hourlyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+        }
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
     private async Task RenderWeeklyDistribution(ChartDataContext ctx)
     {
-        await RenderDistributionChart(ctx, isWeekly: true);
+        await RenderDistributionChart(ctx, true);
     }
 
     private async Task RenderHourlyDistribution(ChartDataContext ctx)
     {
-        await RenderDistributionChart(ctx, isWeekly: false);
+        await RenderDistributionChart(ctx, false);
     }
+
     private void RenderWeeklyTrend(ChartDataContext ctx)
     {
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
@@ -675,12 +674,12 @@ public partial class MainWindow : Window
     {
         return chartName switch
         {
-            "Norm" => ChartNormContentPanel,
-            "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
-            "Weekly" => ChartWeeklyContentPanel,
-            "Hourly" => ChartHourlyContentPanel,
-            "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
-            _ => null
+                "Norm"        => ChartNormContentPanel,
+                "DiffRatio"   => DiffRatioChartController.Panel.ChartContentPanel,
+                "Weekly"      => ChartWeeklyContentPanel,
+                "Hourly"      => ChartHourlyContentPanel,
+                "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
+                _             => null
         };
     }
 
@@ -692,10 +691,10 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data,
-            Label1 = label,
-            From = from,
-            To = to
+                LegacyData1 = data,
+                Label1 = label,
+                From = from,
+                To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
@@ -709,11 +708,11 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacySeries = series,
-            Labels = labels,
-            From = from,
-            To = to,
-            Unit = unit
+                LegacySeries = series,
+                Labels = labels,
+                From = from,
+                To = to,
+                Unit = unit
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
@@ -727,12 +726,12 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data1,
-            LegacyData2 = data2,
-            Label1 = label1,
-            Label2 = label2,
-            From = from,
-            To = to
+                LegacyData1 = data1,
+                LegacyData2 = data2,
+                Label1 = label1,
+                Label2 = label2,
+                From = from,
+                To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
@@ -746,13 +745,13 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data1,
-            LegacyData2 = data2,
-            Label1 = label1,
-            Label2 = label2,
-            From = from,
-            To = to,
-            NormalizationMode = normalizationMode
+                LegacyData1 = data1,
+                LegacyData2 = data2,
+                Label1 = label1,
+                Label2 = label2,
+                From = from,
+                To = to,
+                NormalizationMode = normalizationMode
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
@@ -765,10 +764,10 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
-            Label1 = ctx.DisplayName1,
-            From = ctx.From,
-            To = ctx.To
+                LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
+                Label1 = ctx.DisplayName1,
+                From = ctx.From,
+                To = ctx.To
         };
 
         var strategy = _strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
@@ -1415,13 +1414,14 @@ public partial class MainWindow : Window
 
     private void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
     {
-        HandleDistributionChartToggle(isWeekly: true);
+        HandleDistributionChartToggle(true);
     }
 
     private void OnChartHourlyToggle(object sender, RoutedEventArgs e)
     {
-        HandleDistributionChartToggle(isWeekly: false);
+        HandleDistributionChartToggle(false);
     }
+
     private void OnWeekdayTrendToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleWeeklyTrend();
@@ -1586,9 +1586,9 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                "Log" => UnaryOperators.Logarithm,
-                "Sqrt" => UnaryOperators.SquareRoot,
-                _ => x => x
+                    "Log"  => UnaryOperators.Logarithm,
+                    "Sqrt" => UnaryOperators.SquareRoot,
+                    _      => x => x
             };
             var allValues = allDataList.Select(d => (double)d.Value!.Value).
                                         ToList();
@@ -1788,9 +1788,9 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                "Add" => BinaryOperators.Sum,
-                "Subtract" => BinaryOperators.Difference,
-                _ => (a, b) => a
+                    "Add"      => BinaryOperators.Sum,
+                    "Subtract" => BinaryOperators.Difference,
+                    _          => (a, b) => a
             };
 
             var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
@@ -2003,4 +2003,3 @@ public partial class MainWindow : Window
 
     #endregion
 }
-

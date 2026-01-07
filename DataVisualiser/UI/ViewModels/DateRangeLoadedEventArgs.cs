@@ -1,4 +1,4 @@
-namespace DataVisualiser.UI.ViewModels.Events;
+namespace DataVisualiser.UI.ViewModels;
 
 public class DateRangeLoadedEventArgs : EventArgs
 {
