@@ -1,4 +1,5 @@
 using System.Windows.Media;
+using DataVisualiser.Core.Rendering;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
@@ -8,8 +9,6 @@ namespace DataVisualiser.Core.Rendering.Engines;
 
 internal static class FrequencyRendererCore
 {
-    private const double MaxColumnWidth = 40.0;
-
     public static(List<(double Min, double Max)> Bins, double BinSize, Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket, Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerbucket) PrepareBinsAndFrequencies(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax, int bucketCount)
     {
         // Step 1: Calculate bin size based on range
@@ -39,10 +38,10 @@ internal static class FrequencyRendererCore
         normalizedFrequency = Math.Max(0.0, Math.Min(1.0, normalizedFrequency));
 
         // Start color: light blue (when frequency = 0)
-        byte r0 = 173, g0 = 216, b0 = 230;
+        byte r0 = FrequencyShadingDefaults.StartR, g0 = FrequencyShadingDefaults.StartG, b0 = FrequencyShadingDefaults.StartB;
 
         // End color: near-black/dark blue (when frequency = 1.0)
-        byte r1 = 8, g1 = 10, b1 = 25;
+        byte r1 = FrequencyShadingDefaults.EndR, g1 = FrequencyShadingDefaults.EndG, b1 = FrequencyShadingDefaults.EndB;
 
         // Interpolate based on normalized frequency
         var r = (byte)Math.Round(r0 + (r1 - r0) * normalizedFrequency);
@@ -120,7 +119,7 @@ internal static class FrequencyRendererCore
                 Values = baselineValues,
                 Fill = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0)),
                 StrokeThickness = 0,
-                MaxColumnWidth = MaxColumnWidth,
+                MaxColumnWidth = RenderingDefaults.MaxColumnWidth,
                 DataLabels = false
         };
     }
@@ -140,7 +139,7 @@ internal static class FrequencyRendererCore
                 Fill = fillBrush,
                 Stroke = strokeBrush,
                 StrokeThickness = 0.5,
-                MaxColumnWidth = MaxColumnWidth,
+                MaxColumnWidth = RenderingDefaults.MaxColumnWidth,
                 DataLabels = false
         };
     }

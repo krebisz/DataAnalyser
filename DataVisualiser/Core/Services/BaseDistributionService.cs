@@ -4,6 +4,7 @@ using System.Windows.Media;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services.Abstractions;
@@ -22,12 +23,6 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public abstract class BaseDistributionService
 {
-    protected const double DefaultMinHeight       = 400.0;
-    protected const double YAxisRoundingStep      = 5.0;
-    protected const double YAxisPaddingPercentage = 0.05;
-    protected const double MinYAxisPadding        = 5.0;
-    protected const double MaxColumnWidth         = 40.0;
-
     protected readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
     protected readonly IFrequencyShadingRenderer                  _frequencyRenderer;
     protected readonly ChartRenderGate                            _renderGate = new();
@@ -43,7 +38,7 @@ public abstract class BaseDistributionService
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _shadingStrategy = shadingStrategy ?? new FrequencyBasedShadingStrategy(Configuration.BucketCount);
-        _frequencyRenderer = new FrequencyShadingRenderer(MaxColumnWidth, Configuration.BucketCount);
+        _frequencyRenderer = new FrequencyShadingRenderer(RenderingDefaults.MaxColumnWidth, Configuration.BucketCount);
         _frequencyShadingCalculator = new FrequencyShadingCalculator(_shadingStrategy, Configuration.BucketCount);
     }
 
@@ -59,7 +54,7 @@ public abstract class BaseDistributionService
     /// <summary>
     ///     Updates the distribution chart with the provided data.
     /// </summary>
-    public async Task UpdateDistributionChartAsync(CartesianChart targetChart, IEnumerable<MetricData> data, string displayName, DateTime from, DateTime to, double minHeight = DefaultMinHeight, bool useFrequencyShading = true, int intervalCount = 10, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
+    public async Task UpdateDistributionChartAsync(CartesianChart targetChart, IEnumerable<MetricData> data, string displayName, DateTime from, DateTime to, double minHeight = DistributionDefaults.DefaultMinHeight, bool useFrequencyShading = true, int intervalCount = 10, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -194,11 +189,11 @@ public abstract class BaseDistributionService
         }
 
         // Round to nearest YAxisRoundingStep and apply padding
-        var min = Math.Floor(allValues.Min() / YAxisRoundingStep) * YAxisRoundingStep;
-        var max = Math.Ceiling(allValues.Max() / YAxisRoundingStep) * YAxisRoundingStep;
+        var min = Math.Floor(allValues.Min() / DistributionDefaults.YAxisRoundingStep) * DistributionDefaults.YAxisRoundingStep;
+        var max = Math.Ceiling(allValues.Max() / DistributionDefaults.YAxisRoundingStep) * DistributionDefaults.YAxisRoundingStep;
 
         var rawRange = max - min;
-        var pad = Math.Max(MinYAxisPadding, rawRange * YAxisPaddingPercentage);
+        var pad = Math.Max(DistributionDefaults.MinYAxisPadding, rawRange * DistributionDefaults.YAxisPaddingPercentage);
         var yMin = Math.Max(0, min - pad);
         var yMax = max + pad;
 
@@ -304,7 +299,7 @@ public abstract class BaseDistributionService
                 Values = new ChartValues<double>(),
                 Fill = Brushes.Transparent,
                 StrokeThickness = 0,
-                MaxColumnWidth = MaxColumnWidth
+                MaxColumnWidth = RenderingDefaults.MaxColumnWidth
         };
     }
 
@@ -317,7 +312,7 @@ public abstract class BaseDistributionService
                 Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
                 Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
                 StrokeThickness = 1,
-                MaxColumnWidth = MaxColumnWidth
+                MaxColumnWidth = RenderingDefaults.MaxColumnWidth
         };
     }
 

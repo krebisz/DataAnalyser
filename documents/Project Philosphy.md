@@ -104,6 +104,19 @@ Such evolution is:
 
 ---
 
+### 3.6 Declarative Configuration Over Static Lists
+
+Static or hardcoded mappings are treated as temporary scaffolding only.
+
+The preferred pattern is:
+- declarative sources of truth (tables, configuration, contracts)
+- runtime resolution from authoritative stores
+- minimal manual upkeep as the system evolves
+
+Hardcoded lists must be explicitly marked as temporary and removed when a declarative source is available.
+
+---
+
 ## 4. Explicit Boundaries
 
 ### 4.1 Hard Boundaries (Current)

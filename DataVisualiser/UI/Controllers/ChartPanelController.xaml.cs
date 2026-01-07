@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.UI;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.Controllers;
@@ -12,7 +13,7 @@ namespace DataVisualiser.UI.Controllers;
 /// </summary>
 public partial class ChartPanelController : UserControl
 {
-    public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(ChartPanelController), new PropertyMetadata("Chart", OnTitleChanged));
+    public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(ChartPanelController), new PropertyMetadata(UiDefaults.ChartTitleDefault, OnTitleChanged));
 
     public static readonly DependencyProperty IsChartVisibleProperty = DependencyProperty.Register(nameof(IsChartVisible), typeof(bool), typeof(ChartPanelController), new PropertyMetadata(false, OnVisibilityChanged));
 
@@ -124,7 +125,7 @@ public partial class ChartPanelController : UserControl
     private static void OnTitleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is ChartPanelController controller)
-            controller.TitleTextBlock.Text = e.NewValue?.ToString() ?? "Chart";
+            controller.TitleTextBlock.Text = e.NewValue?.ToString() ?? UiDefaults.ChartTitleDefault;
     }
 
     private static void OnVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -133,7 +134,7 @@ public partial class ChartPanelController : UserControl
         {
             var isVisible = (bool)e.NewValue;
             controller.ContentPanel.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
-            controller.ToggleButton.Content = isVisible ? "Hide" : "Show";
+            controller.ToggleButton.Content = isVisible ? UiDefaults.ToggleHideLabel : UiDefaults.ToggleShowLabel;
         }
     }
 

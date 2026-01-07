@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows.Media;
+using DataVisualiser.Core.Rendering;
 
 namespace DataVisualiser.Core.Rendering.Shading;
 
@@ -104,10 +105,10 @@ public class FrequencyBasedShadingStrategy : IIntervalShadingStrategy
         normalizedValue = Math.Max(0.0, Math.Min(1.0, normalizedValue));
 
         // Start color: light blue (when value = 0)
-        byte r0 = 173, g0 = 216, b0 = 230;
+        byte r0 = FrequencyShadingDefaults.StartR, g0 = FrequencyShadingDefaults.StartG, b0 = FrequencyShadingDefaults.StartB;
 
         // End color: near-black/dark blue (when value = 1.0)
-        byte r1 = 8, g1 = 10, b1 = 25;
+        byte r1 = FrequencyShadingDefaults.EndR, g1 = FrequencyShadingDefaults.EndG, b1 = FrequencyShadingDefaults.EndB;
 
         // Interpolate based on normalized value
         var r = (byte)Math.Round(r0 + (r1 - r0) * normalizedValue);

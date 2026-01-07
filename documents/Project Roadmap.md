@@ -226,6 +226,7 @@ Phase 3 migrated strategies in isolation, but the orchestration layer was never 
    - Legacy data still available for derived calculations
 4. ✅ **WeeklyDistributionService** - Migrated to use StrategyCutOverService
 5. ✅ **ChartUpdateCoordinator** - Handles strategies generically (works with both CMS and legacy)
+6. ✅ **Declarative Mapping Source** - Canonical identity mapping sourced from a runtime mapping table (no hardcoded lists as steady-state)
 
 **Remaining Work:**
 
@@ -233,6 +234,12 @@ Phase 3 migrated strategies in isolation, but the orchestration layer was never 
    - Minor cleanup: Replace with StrategyCutOverService call
 2. ⏳ **Verification** - Verify all code paths use StrategyCutOverService
    - Search for any remaining direct strategy instantiations
+
+
+**Additive Clarification: Declarative Mapping Requirement**
+
+- Canonical identity mapping must resolve from a dynamic, authoritative source (mapping table).
+- Hardcoded mappings are acceptable only as temporary scaffolding and must be retired.
 
 **Includes:**
 

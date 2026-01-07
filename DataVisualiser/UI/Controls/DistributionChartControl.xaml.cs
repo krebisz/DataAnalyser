@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
@@ -14,7 +15,7 @@ public partial class DistributionChartControl : UserControl
 
     public static readonly DependencyProperty XAxisLabelsProperty = DependencyProperty.Register(nameof(XAxisLabels), typeof(string), typeof(DistributionChartControl), new PropertyMetadata(string.Empty, OnXAxisLabelsChanged));
 
-    public static readonly DependencyProperty XAxisTitleProperty = DependencyProperty.Register(nameof(XAxisTitle), typeof(string), typeof(DistributionChartControl), new PropertyMetadata("Time", OnXAxisTitleChanged));
+    public static readonly DependencyProperty XAxisTitleProperty = DependencyProperty.Register(nameof(XAxisTitle), typeof(string), typeof(DistributionChartControl), new PropertyMetadata(UiDefaults.XAxisTitleDefault, OnXAxisTitleChanged));
 
     public static readonly DependencyProperty DefaultIntervalCountProperty = DependencyProperty.Register(nameof(DefaultIntervalCount), typeof(int), typeof(DistributionChartControl), new PropertyMetadata(25, OnDefaultIntervalCountChanged));
 
@@ -72,7 +73,7 @@ public partial class DistributionChartControl : UserControl
     public void SetVisibility(bool isVisible)
     {
         ChartPanel.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
-        ChartToggleButton.Content = isVisible ? "Hide" : "Show";
+        ChartToggleButton.Content = isVisible ? UiDefaults.ToggleHideLabel : UiDefaults.ToggleShowLabel;
     }
 
     public void SetDisplayMode(bool useFrequencyShading)

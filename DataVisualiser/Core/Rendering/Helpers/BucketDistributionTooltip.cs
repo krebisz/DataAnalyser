@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
+using DataVisualiser.Core.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -12,8 +13,8 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 
 public abstract class BucketDistributionTooltip : IDisposable
 {
-    private const    int                                                                           HoverCheckIntervalMs = 100; // Check every 100ms
-    private const    int                                                                           HoverTimeoutMs       = 300; // Hide if no valid hover for 300ms AND mouse moved away
+    private const    int                                                                           HoverCheckIntervalMs = RenderingDefaults.TooltipHoverCheckIntervalMs; // Check every 100ms
+    private const    int                                                                           HoverTimeoutMs       = RenderingDefaults.TooltipHoverTimeoutMs; // Hide if no valid hover for 300ms AND mouse moved away
     private readonly Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> _bucketIntervalData;
     private readonly CartesianChart                                                                _chart;
 
@@ -237,7 +238,7 @@ public abstract class BucketDistributionTooltip : IDisposable
             stackPanel.Children.Add(new ScrollViewer
             {
                     Content = intervalPanel,
-                    MaxHeight = 400,
+                    MaxHeight = RenderingDefaults.TooltipMaxHeightPx,
                     VerticalScrollBarVisibility = ScrollBarVisibility.Auto
             });
         else
@@ -262,7 +263,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         {
                 Text = BucketNames[bucketIndex],
                 FontWeight = FontWeights.Bold,
-                FontSize = 14,
+                FontSize = RenderingDefaults.TooltipHeaderFontSize,
                 Margin = new Thickness(0, 0, 0, 8),
                 Foreground = new SolidColorBrush(Color.FromRgb(50, 50, 50))
         };
@@ -274,7 +275,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         return new TextBlock
         {
                 Text = $"Total Values: {totalCount}",
-                FontSize = 12,
+                FontSize = RenderingDefaults.TooltipSubHeaderFontSize,
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 6),
                 Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
@@ -296,7 +297,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         var panel = new StackPanel
         {
                 Orientation = Orientation.Vertical,
-                MaxHeight = 400
+                MaxHeight = RenderingDefaults.TooltipMaxHeightPx
         };
 
         foreach (var interval in intervals.OrderBy(i => i.Min))
@@ -321,7 +322,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         panel.Children.Add(new TextBlock
         {
                 Text = $"[{interval.Min:F2} - {interval.Max:F2}]",
-                FontSize = 11,
+                FontSize = RenderingDefaults.TooltipRowFontSize,
                 FontFamily = new FontFamily("Consolas"),
                 Width = 120,
                 Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 60))
@@ -330,7 +331,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         panel.Children.Add(new TextBlock
         {
                 Text = $"{interval.Percentage:F1}%",
-                FontSize = 11,
+                FontSize = RenderingDefaults.TooltipRowFontSize,
                 Width = 60,
                 TextAlignment = TextAlignment.Right,
                 Margin = new Thickness(8, 0, 0, 0),
@@ -340,7 +341,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         panel.Children.Add(new TextBlock
         {
                 Text = $"Count: {interval.Count}",
-                FontSize = 11,
+                FontSize = RenderingDefaults.TooltipRowFontSize,
                 Margin = new Thickness(8, 0, 0, 0),
                 Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
         });

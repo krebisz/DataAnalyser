@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media;
+using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
@@ -16,18 +17,7 @@ namespace DataVisualiser.Core.Rendering.Engines;
 /// </summary>
 public sealed class WeekdayTrendRenderingService
 {
-    public const int BucketCount = 7;
-
-    private static readonly Brush[] WeekdayStrokes =
-    {
-            Brushes.SteelBlue,
-            Brushes.CadetBlue,
-            Brushes.SeaGreen,
-            Brushes.OliveDrab,
-            Brushes.Goldenrod,
-            Brushes.OrangeRed,
-            Brushes.IndianRed
-    };
+    public const int BucketCount = WeekdayTrendDefaults.BucketCount;
 
     /// <summary>
     ///     Renders a weekday trend chart based on the chart state mode (Cartesian or Polar).
@@ -89,7 +79,7 @@ public sealed class WeekdayTrendRenderingService
                     LineSmoothness = 0.3,
                     Fill = Brushes.Transparent,
                     StrokeThickness = 2,
-                    Stroke = WeekdayStrokes[dayIndex]
+                    Stroke = WeekdayTrendDefaults.WeekdayStrokes[dayIndex]
             });
         }
     }
@@ -112,7 +102,7 @@ public sealed class WeekdayTrendRenderingService
                 LabelFormatter = v =>
                 {
                     // Convert angle (0-360) to day name
-                    var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % BucketCount;
+                    var dayIndex = (int)Math.Round(v / (360.0 / BucketCount)) % BucketCount;
                     return dayIndex switch
                     {
                             0 => "Mon",
@@ -147,7 +137,7 @@ public sealed class WeekdayTrendRenderingService
 
             var values = new ChartValues<ObservablePoint>();
             // Base angle for this day (in degrees)
-            var baseAngleDegrees = dayIndex * 360.0 / 7.0;
+            var baseAngleDegrees = dayIndex * 360.0 / BucketCount;
 
             // For each time point in the series, plot at the day's angle with the value as radius
             foreach (var point in series.Points)
@@ -159,7 +149,7 @@ public sealed class WeekdayTrendRenderingService
                     Values = values,
                     LineSmoothness = 0.3,
                     StrokeThickness = 2,
-                    Stroke = WeekdayStrokes[dayIndex],
+                    Stroke = WeekdayTrendDefaults.WeekdayStrokes[dayIndex],
                     Fill = Brushes.Transparent,
                     PointGeometry = DefaultGeometries.Circle,
                     PointGeometrySize = 6

@@ -239,6 +239,29 @@ Violation constitutes architectural breach.
 
 ---
 
+## 13. Declarative Mapping & Non-Static Semantics Rule (Additive · Binding)
+
+Additive Section - Prevents static, manual semantic bottlenecks.
+
+Canonical identity and semantic mappings MUST be:
+
+- declarative
+- centralized
+- dynamically resolved at runtime
+- stored in authoritative data sources (e.g., mapping tables)
+
+The system MUST NOT rely on hardcoded or manually curated mappings as a steady-state mechanism.
+
+Temporary static mappings are permitted **only** as short-lived migration scaffolding and MUST:
+
+- be explicitly marked as temporary
+- be replaced by declarative sources as soon as feasible
+- not become a hidden dependency
+
+This rule applies to all legacy-to-canonical identity bridges.
+
+---
+
 ## Appendix A. Architectural Rationale (Non-Binding)
 
 Explanatory only — not architectural law.

@@ -1,4 +1,5 @@
 using System.Windows.Media;
+using DataVisualiser.Core.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -169,7 +170,7 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
         if (bestBucket >= 0 && colorMap.TryGetValue(bestBucket, out var bucketColourMap) && bucketColourMap.TryGetValue(intervalIndex, out var chosen))
             return chosen;
 
-        return Color.FromRgb(173, 216, 230); // fallback
+        return FrequencyShadingDefaults.FallbackColor; // fallback
     }
 
     private static(int Bucket, int Frequency) FindMostRepresentativeBucket(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, int intervalIndex, int bucketCount)
@@ -262,7 +263,7 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
         {
                 Title = "range",
                 Values = new ChartValues<double>(),
-                Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
+                Fill = new SolidColorBrush(FrequencyShadingDefaults.FallbackColor),
                 Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
                 StrokeThickness = 1,
                 MaxColumnWidth = _maxColumnWidth

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using DataVisualiser.Core.Rendering;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
@@ -457,7 +458,7 @@ public static class ChartHelper
     /// <summary>
     ///     Positions a hover popup with standard offsets.
     /// </summary>
-    public static void PositionHoverPopup(Popup popup, double horizontalOffset = 10, double verticalOffset = 10)
+    public static void PositionHoverPopup(Popup popup, double horizontalOffset = RenderingDefaults.HoverPopupOffsetPx, double verticalOffset = RenderingDefaults.HoverPopupOffsetPx)
     {
         if (popup == null)
             return;
@@ -742,14 +743,14 @@ public static class ChartHelper
 
         tickCount = Math.Max(2, tickCount);
 
-        const double tickSpacingPx = 30.0;
-        const double paddingPx = 100.0;
+        const double tickSpacingPx = RenderingDefaults.ChartTickSpacingPx;
+        const double paddingPx = RenderingDefaults.ChartPaddingPx;
 
         var calculatedHeight = tickCount * tickSpacingPx + paddingPx;
 
         calculatedHeight = Math.Max(minHeight, calculatedHeight);
 
-        const double maxHeight = 2000.0;
+        const double maxHeight = RenderingDefaults.ChartMaxHeightPx;
         calculatedHeight = Math.Min(maxHeight, calculatedHeight);
 
         chart.Height = calculatedHeight;

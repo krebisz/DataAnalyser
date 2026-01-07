@@ -99,6 +99,16 @@ This stage is declarative, stable, and explainable.
 
 ---
 
+## 5.4 Declarative Mapping Source (Additive · Binding)
+
+Additive clarification - prevents static semantic bottlenecks.
+
+Metric identity resolution MUST source legacy-to-canonical mappings from a declarative, authoritative store (e.g., a mapping table).
+
+Hardcoded or manually curated mappings are permitted only as temporary migration scaffolding and MUST be retired once a declarative source exists.
+
+---
+
 ## 6. Canonical Metric Series (CMS)
 
 CMS represents trusted, semantically-resolved metrics.

@@ -40,6 +40,20 @@ Downstream consumers are designed to **trust semantics, not reinterpret them**.
 
 ---
 
+## 3A. Declarative Mapping Policy (Additive - Descriptive)
+
+Additive clarification aligned with Project Bible and SYSTEM_MAP.
+
+Canonical identity mapping is treated as declarative infrastructure:
+
+- Mapping sources are authoritative and dynamic (e.g., mapping tables).
+- Hardcoded lists are permitted only as short-lived migration scaffolding.
+- Manual upkeep is avoided once a declarative source exists.
+
+This preserves determinism and avoids long-term semantic bottlenecks.
+
+---
+
 ## 4. Historical Context & Design Evolution
 
 > Contextual section — explanatory only.
