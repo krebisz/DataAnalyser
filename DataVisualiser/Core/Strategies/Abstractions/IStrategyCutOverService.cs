@@ -15,6 +15,16 @@ public interface IStrategyCutOverService
     IChartComputationStrategy CreateStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters);
 
     /// <summary>
+    ///     Creates a CMS strategy without applying cut-over decision logic.
+    /// </summary>
+    IChartComputationStrategy CreateCmsStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters);
+
+    /// <summary>
+    ///     Creates a legacy strategy without applying cut-over decision logic.
+    /// </summary>
+    IChartComputationStrategy CreateLegacyStrategy(StrategyType strategyType, StrategyCreationParameters parameters);
+
+    /// <summary>
     ///     Determines if CMS should be used for a strategy.
     /// </summary>
     bool ShouldUseCms(StrategyType strategyType, ChartDataContext ctx);

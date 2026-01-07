@@ -33,6 +33,7 @@ public abstract class BaseDistributionService
     protected readonly IStrategyCutOverService                      _strategyCutOverService;
     protected          FrequencyShadingCalculator                   _frequencyShadingCalculator;
     protected          IIntervalShadingStrategy                      _shadingStrategy;
+    protected readonly ChartRenderGate                              _renderGate = new();
 
     protected readonly IDistributionConfiguration Configuration;
 
@@ -93,29 +94,33 @@ public abstract class BaseDistributionService
             return;
         }
 
-        try
+        _renderGate.ExecuteWhenReady(targetChart, () =>
         {
-            // --- Render ---
-            targetChart.Series.Clear();
+            try
+            {
+                // --- Render ---
+                targetChart.Series.Clear();
 
-            RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, frequencyResult, useFrequencyShading, intervalCount);
+                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, frequencyResult, useFrequencyShading, intervalCount);
 
-            // --- Tooltip / state ---
-            _chartTimestamps[targetChart] = new List<DateTime>();
-            targetChart.DataTooltip = null;
+                // --- Tooltip / state ---
+                _chartTimestamps[targetChart] = new List<DateTime>();
+                targetChart.DataTooltip = null;
 
-            SetupTooltip(targetChart, result, frequencyResult, useFrequencyShading, intervalCount);
+                SetupTooltip(targetChart, result, frequencyResult, useFrequencyShading, intervalCount);
 
-            ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"{Configuration.LogPrefix}: Chart error: {ex.Message}\n{ex.StackTrace}");
+                ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
+                targetChart.Update(true, true);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{Configuration.LogPrefix}: Chart error: {ex.Message}\n{ex.StackTrace}");
 
-            MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            ChartHelper.ClearChart(targetChart, _chartTimestamps);
-        }
+                ChartHelper.ClearChart(targetChart, _chartTimestamps);
+            }
+        });
     }
 
     // Abstract methods that must be implemented by derived classes

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media;
 using DataVisualiser.Core.Rendering.Helpers;
@@ -72,15 +73,19 @@ public sealed class WeekdayTrendRenderingService
             if (!IsDayEnabled(dayIndex, chartState))
                 continue;
 
+            Debug.WriteLine($"[WeekdayTrend] Day={series.Day}, Points={series.Points.Count}");
             var values = new ChartValues<ObservablePoint>();
             foreach (var point in series.Points)
                 values.Add(new ObservablePoint(point.Date.Ticks, point.Value));
+
+            var showPoints = values.Count <= 1;
 
             chart.Series.Add(new LineSeries
             {
                     Title = series.Day.ToString(),
                     Values = values,
-                    PointGeometry = null,
+                    PointGeometry = showPoints ? DefaultGeometries.Circle : null,
+                    PointGeometrySize = showPoints ? 6 : 0,
                     LineSmoothness = 0.3,
                     Fill = Brushes.Transparent,
                     StrokeThickness = 2,

@@ -1,9 +1,7 @@
 using System.Diagnostics;
-using DataFileReader.Canonical;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.Validation;
 
 namespace DataVisualiser.Core.Orchestration.Selection;
 
@@ -13,14 +11,12 @@ namespace DataVisualiser.Core.Orchestration.Selection;
 /// </summary>
 public sealed class StrategySelectionService
 {
-    private readonly string                  _connectionString;
-    private readonly ParityValidationService _parityValidationService;
+    private readonly string _connectionString;
     private readonly IStrategyCutOverService _strategyCutOverService;
 
-    public StrategySelectionService(IStrategyCutOverService strategyCutOverService, ParityValidationService parityValidationService, string connectionString)
+    public StrategySelectionService(IStrategyCutOverService strategyCutOverService, string connectionString)
     {
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
-        _parityValidationService = parityValidationService ?? throw new ArgumentNullException(nameof(parityValidationService));
         _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
     }
 
@@ -28,7 +24,7 @@ public sealed class StrategySelectionService
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    public(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, ChartDataContext ctx, DateTime from, DateTime to)
+    public (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, ChartDataContext ctx, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -98,10 +94,10 @@ public sealed class StrategySelectionService
     {
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = data,
-                Label1 = label,
-                From = from,
-                To = to
+            LegacyData1 = data,
+            Label1 = label,
+            From = from,
+            To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
@@ -111,10 +107,10 @@ public sealed class StrategySelectionService
     {
         var parameters = new StrategyCreationParameters
         {
-                LegacySeries = series,
-                Labels = labels,
-                From = from,
-                To = to
+            LegacySeries = series,
+            Labels = labels,
+            From = from,
+            To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
@@ -122,9 +118,17 @@ public sealed class StrategySelectionService
 
     private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
-        var leftCms = ctx.PrimaryCms as ICanonicalMetricSeries;
-        var rightCms = ctx.SecondaryCms as ICanonicalMetricSeries;
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = series[0],
+            LegacyData2 = series[1],
+            Label1 = labels[0],
+            Label2 = labels[1],
+            From = from,
+            To = to
+        };
 
-        return _parityValidationService.ExecuteCombinedMetricParityIfEnabled(leftCms, rightCms, series[0], series[1], labels[0], labels[1], from, to);
+        // Use the cut-over service to create the strategy, which respects toggle settings
+        return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
     }
 }

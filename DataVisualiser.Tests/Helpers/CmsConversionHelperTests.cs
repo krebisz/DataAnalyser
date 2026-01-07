@@ -1,0 +1,50 @@
+using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Tests.Helpers;
+
+namespace DataVisualiser.Tests.Helpers;
+
+public sealed class CmsConversionHelperTests
+{
+    private static readonly DateTimeOffset Start = new(new DateTime(2024, 01, 01), TimeSpan.Zero);
+
+    [Fact]
+    public void ConvertSamplesToHealthMetricData_ShouldFilterByDateRange()
+    {
+        var cms = TestDataBuilders.CanonicalMetricSeries().
+                                   WithStartTime(Start).
+                                   WithInterval(TimeSpan.FromDays(1)).
+                                   WithSampleCount(3).
+                                   WithUnit("kg").
+                                   Build();
+
+        var from = Start.UtcDateTime.AddDays(1);
+        var to = Start.UtcDateTime.AddDays(1);
+
+        var result = CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).ToList();
+
+        Assert.Single(result);
+        Assert.Equal(from, result[0].NormalizedTimestamp);
+        Assert.Equal("kg", result[0].Unit);
+    }
+
+    [Fact]
+    public void ConvertMultipleCmsToHealthMetricData_ShouldMergeAndOrder()
+    {
+        var cms1 = TestDataBuilders.CanonicalMetricSeries().
+                                    WithStartTime(Start).
+                                    WithInterval(TimeSpan.FromDays(1)).
+                                    WithSampleCount(2).
+                                    Build();
+
+        var cms2 = TestDataBuilders.CanonicalMetricSeries().
+                                    WithStartTime(Start.AddDays(3)).
+                                    WithInterval(TimeSpan.FromDays(1)).
+                                    WithSampleCount(2).
+                                    Build();
+
+        var result = CmsConversionHelper.ConvertMultipleCmsToHealthMetricData(new[] { cms2, cms1 }).ToList();
+
+        Assert.Equal(4, result.Count);
+        Assert.True(result.SequenceEqual(result.OrderBy(r => r.NormalizedTimestamp)));
+    }
+}

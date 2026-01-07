@@ -1,8 +1,5 @@
 using System.Diagnostics;
-using DataFileReader.Canonical;
 using DataVisualiser.Core.Strategies.Abstractions;
-using DataVisualiser.Core.Strategies.Implementations;
-using DataVisualiser.Shared.Models;
 using DataVisualiser.Validation.Parity;
 
 namespace DataVisualiser.Validation;
@@ -17,19 +14,17 @@ public class ParityValidationService
     ///     Executes parity validation for CombinedMetric strategies if enabled.
     ///     Returns the validated strategy (CMS if parity passes, legacy otherwise).
     /// </summary>
-    public IChartComputationStrategy ExecuteCombinedMetricParityIfEnabled(ICanonicalMetricSeries? leftCms, ICanonicalMetricSeries? rightCms, IEnumerable<MetricData> leftLegacy, IEnumerable<MetricData> rightLegacy, string labelLeft, string labelRight, DateTime from, DateTime to, bool enableParity = false)
+    public IChartComputationStrategy ExecuteCombinedMetricParityIfEnabled(IChartComputationStrategy legacyStrategy, IChartComputationStrategy? cmsStrategy, bool enableParity = false)
     {
-        if (!enableParity || leftCms == null || rightCms == null)
-            return new CombinedMetricStrategy(leftLegacy, rightLegacy, labelLeft, labelRight, from, to);
-
-        var legacyStrategy = new CombinedMetricStrategy(leftLegacy, rightLegacy, labelLeft, labelRight, from, to);
-        var cmsStrategy = new CombinedMetricStrategy(leftCms, rightCms, labelLeft, labelRight, from, to);
+        if (!enableParity || cmsStrategy == null)
+            return legacyStrategy;
 
         var harness = new CombinedMetricParityHarness();
+        var metricIdentity = $"{legacyStrategy.PrimaryLabel}|{legacyStrategy.SecondaryLabel}";
         var parityResult = harness.Validate(new StrategyParityContext
         {
                 StrategyName = "CombinedMetric",
-                MetricIdentity = $"{labelLeft}|{labelRight}",
+                MetricIdentity = metricIdentity,
                 Mode = ParityMode.Diagnostic
         }, () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()), () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
 

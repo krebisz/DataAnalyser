@@ -71,6 +71,53 @@
                             Margin="5"
                             Padding="10,5" />
                 </StackPanel>
+
+                <!-- ====== CMS TOGGLES (Row 3) ====== -->
+                <Expander Header="CMS" Margin="5,0,5,0" IsExpanded="False">
+                    <WrapPanel x:Name="CmsTogglePanel" Margin="5,5,5,0">
+                        <CheckBox x:Name="CmsEnableCheckBox"
+                                  Content="Enable CMS"
+                                  Margin="5,0"
+                                  Checked="OnCmsToggleChanged"
+                                  Unchecked="OnCmsToggleChanged" />
+                        <Separator Width="10" />
+                        <CheckBox x:Name="CmsSingleCheckBox"
+                                  Content="Single"
+                                  Margin="5,0"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
+                        <CheckBox x:Name="CmsCombinedCheckBox"
+                                  Content="Combined"
+                                  Margin="5,0"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
+                        <CheckBox x:Name="CmsMultiCheckBox"
+                                  Content="Multi"
+                                  Margin="5,0"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
+                        <CheckBox x:Name="CmsNormalizedCheckBox"
+                                  Content="Normalized"
+                                  Margin="5,0"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
+                        <CheckBox x:Name="CmsWeeklyCheckBox"
+                                  Content="Weekly"
+                                  Margin="5,0"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
+                        <CheckBox x:Name="CmsWeekdayTrendCheckBox"
+                                  Content="Weekday Trend"
+                                  Margin="5,0"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
+                        <CheckBox x:Name="CmsHourlyCheckBox"
+                                  Content="Hourly"
+                                  Margin="5,0"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
+                    </WrapPanel>
+                </Expander>
             </StackPanel>
         </Border>
 
@@ -160,61 +207,7 @@
                 </Border>
 
                 <!-- ========== CHART DIFFERENCE / RATIO (UNIFIED) ========== -->
-                <Border BorderBrush="#FF444444"
-                        BorderThickness="1"
-                        Margin="0,0,0,10">
-
-                    <StackPanel x:Name="ChartDiffRatioSectionPanel" Orientation="Vertical" Margin="0,0,0,10">
-
-                        <Border Background="#BB131313"
-                                BorderBrush="#FF444444"
-                                BorderThickness="1"
-                                Padding="10,5">
-
-                            <StackPanel x:Name="ChartDiffRatioHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
-                                <TextBlock x:Name="ChartDiffRatioTitle"
-                                           Text="Difference / Ratio"
-                                           FontWeight="Bold"
-                                           FontSize="14"
-                                           VerticalAlignment="Center" />
-
-                                <Button x:Name="ChartDiffRatioToggleButton"
-                                        Content="Show"
-                                        Margin="10,0,0,0"
-                                        Padding="10,3"
-                                        Click="OnChartDiffRatioToggle" />
-
-                                <Button x:Name="ChartDiffRatioOperationToggleButton"
-                                        Content="/"
-                                        Margin="20,0,0,0"
-                                        Padding="10,3"
-                                        VerticalAlignment="Center"
-                                        Click="OnChartDiffRatioOperationToggle"
-                                        ToolTip="Toggle between Difference (-) and Ratio (/)" />
-                            </StackPanel>
-                        </Border>
-
-                        <StackPanel x:Name="ChartDiffRatioContentPanel" Orientation="Vertical">
-                            <lvc:CartesianChart x:Name="ChartDiffRatio"
-                                                LegendLocation="Right"
-                                                Zoom="X"
-                                                Pan="X"
-                                                Hoverable="True"
-                                                Margin="20,5,10,20"
-                                                MinHeight="400">
-                                <lvc:CartesianChart.AxisX>
-                                    <lvc:Axis Title="Time" />
-                                </lvc:CartesianChart.AxisX>
-                                <lvc:CartesianChart.AxisY>
-                                    <lvc:Axis x:Name="ChartDiffRatioAxisY"
-                                              Title="Difference"
-                                              ShowLabels="True" />
-                                </lvc:CartesianChart.AxisY>
-                            </lvc:CartesianChart>
-                        </StackPanel>
-
-                    </StackPanel>
-                </Border>
+                <ui:DiffRatioChartController x:Name="DiffRatioChartController" />
 
                 <!-- ========== CHART WEEKDAY TREND ========== -->
                 <ui:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />

@@ -80,12 +80,19 @@ public class CmsDataService
     /// </summary>
     public async Task<bool> IsCmsAvailableAsync(string canonicalMetricId)
     {
-        var (metricType, _) = CanonicalMetricMapping.ToLegacyFields(canonicalMetricId);
+        var (metricType, subtype) = CanonicalMetricMapping.ToLegacyFields(canonicalMetricId);
         if (metricType == null)
             return false;
 
-        // Check if data exists in legacy table
-        var count = await _legacyFetcher.GetRecordCount(metricType);
+        // Check if data exists in legacy table.
+        // If subtype is null (canonical "(all)"), fall back to total count for the metric type.
+        if (string.IsNullOrWhiteSpace(subtype))
+        {
+            var countsByType = await _legacyFetcher.GetRecordCountsByMetricType();
+            return countsByType.TryGetValue(metricType, out var total) && total > 0;
+        }
+
+        var count = await _legacyFetcher.GetRecordCount(metricType, subtype);
         return count > 0;
     }
 }

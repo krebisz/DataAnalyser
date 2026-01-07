@@ -1,4 +1,8 @@
+using DataFileReader.Canonical;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Strategies.Factories;
 
@@ -7,14 +11,14 @@ namespace DataVisualiser.Core.Strategies.Factories;
 /// </summary>
 public sealed class WeekdayTrendStrategyFactory : StrategyFactoryBase
 {
-    public WeekdayTrendStrategyFactory() : base((ctx, p) => CreateLegacy(p), // TODO: Implement CMS WeekdayTrend strategy
-            CreateLegacy)
+    public override IChartComputationStrategy CreateCmsStrategy(ChartDataContext ctx, StrategyCreationParameters parameters)
     {
+        var cms = ctx.PrimaryCms as ICanonicalMetricSeries ?? throw new InvalidOperationException("PrimaryCms is null");
+        return new WeekdayTrendComputationStrategy(cms, parameters.Label1, parameters.From, parameters.To);
     }
 
-    private static IChartComputationStrategy CreateLegacy(StrategyCreationParameters p)
+    public override IChartComputationStrategy CreateLegacyStrategy(StrategyCreationParameters parameters)
     {
-        throw new NotSupportedException("WeekdayTrend strategy is not yet implemented");
-        // TODO: Implement WeekdayTrend strategy creation
+        return new WeekdayTrendComputationStrategy(parameters.LegacyData1 ?? Array.Empty<MetricData>(), parameters.Label1, parameters.From, parameters.To);
     }
 }

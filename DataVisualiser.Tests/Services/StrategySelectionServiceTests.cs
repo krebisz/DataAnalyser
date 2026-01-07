@@ -1,10 +1,8 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Selection;
 using DataVisualiser.Core.Strategies.Abstractions;
-using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.Validation;
 using Moq;
 
 namespace DataVisualiser.Tests.Services;
@@ -17,14 +15,12 @@ public sealed class StrategySelectionServiceTests
 {
     private const    string                        ConnectionString = "TestConnectionString";
     private readonly Mock<IStrategyCutOverService> _mockCutOverService;
-    private readonly Mock<ParityValidationService> _mockParityService;
     private readonly StrategySelectionService      _service;
 
     public StrategySelectionServiceTests()
     {
         _mockCutOverService = new Mock<IStrategyCutOverService>();
-        _mockParityService = new Mock<ParityValidationService>();
-        _service = new StrategySelectionService(_mockCutOverService.Object, _mockParityService.Object, ConnectionString);
+        _service = new StrategySelectionService(_mockCutOverService.Object, ConnectionString);
     }
 
     [Fact]
@@ -84,14 +80,18 @@ public sealed class StrategySelectionServiceTests
         var from = DateTime.UtcNow.AddDays(-10);
         var to = DateTime.UtcNow;
 
+        var mockStrategy = new Mock<IChartComputationStrategy>().Object;
+
+        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.CombinedMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).
+                            Returns(mockStrategy);
         // Act
         var (strategy, secondaryLabel) = _service.SelectComputationStrategy(series, labels, ctx, from, to);
 
         // Assert
         Assert.NotNull(strategy);
         Assert.Equal("Series2", secondaryLabel);
-        // Verify it's a CombinedMetricStrategy (created via parity service)
-        Assert.IsType<CombinedMetricStrategy>(strategy);
+        Assert.Same(mockStrategy, strategy);
+        _mockCutOverService.Verify(s => s.CreateStrategy(StrategyType.CombinedMetric, ctx, It.Is<StrategyCreationParameters>(p => p.LegacyData1 == series[0] && p.LegacyData2 == series[1] && p.Label1 == "Series1" && p.Label2 == "Series2" && p.From == from && p.To == to)), Times.Once);
     }
 
     [Fact]

@@ -67,6 +67,11 @@ public partial class ChartPanelController : UserControl
     /// </summary>
     public Panel ChartContentPanel => ContentPanel;
 
+    /// <summary>
+    ///     Gets the toggle button for enabling/disabling the chart panel.
+    /// </summary>
+    public Button ToggleButtonControl => ToggleButton;
+
     public event EventHandler? ToggleRequested;
 
     /// <summary>

@@ -19,6 +19,7 @@ public class ChartUpdateCoordinator
 {
     private readonly ChartComputationEngine _chartComputationEngine;
     private readonly ChartRenderEngine      _chartRenderEngine;
+    private readonly ChartRenderGate        _renderGate = new();
 
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
     private readonly ChartTooltipManager                        _tooltipManager;
@@ -67,30 +68,33 @@ public class ChartUpdateCoordinator
         // -------------------------
         // Phase 3: Render + post-render sync
         // -------------------------
-        try
+        _renderGate.ExecuteWhenReady(targetChart, () =>
         {
-            // Render series (sync render engine)
-            _chartRenderEngine.Render(targetChart, model, minHeight);
+            try
+            {
+                // Render series (sync render engine)
+                _chartRenderEngine.Render(targetChart, model, minHeight);
 
-            // Track timestamps for tooltips / hover sync
-            _chartTimestamps[targetChart] = model.Timestamps;
+                // Track timestamps for tooltips / hover sync
+                _chartTimestamps[targetChart] = model.Timestamps;
 
-            // Keep tooltip manager in sync (timestamps only in this coordinator)
-            _tooltipManager?.UpdateChartTimestamps(targetChart, model.Timestamps);
+                // Keep tooltip manager in sync (timestamps only in this coordinator)
+                _tooltipManager?.UpdateChartTimestamps(targetChart, model.Timestamps);
 
-            // Normalise Y-axis and adjust chart height based on rendered data
-            if (targetChart.AxisY.Count > 0)
-                NormalizeYAxisForChart(targetChart, model, minHeight);
+                // Normalise Y-axis and adjust chart height based on rendered data
+                if (targetChart.AxisY.Count > 0)
+                    NormalizeYAxisForChart(targetChart, model, minHeight);
 
-            // Force chart update (important if chart was hidden when rendered)
-            targetChart.Update(true, true);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Error rendering chart: {ex.Message}", "Chart Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Force chart update (important if chart was hidden when rendered)
+                targetChart.Update(true, true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error rendering chart: {ex.Message}", "Chart Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            ChartHelper.ClearChart(targetChart, _chartTimestamps);
-        }
+                ChartHelper.ClearChart(targetChart, _chartTimestamps);
+            }
+        });
     }
 
 

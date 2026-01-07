@@ -30,17 +30,12 @@ public sealed class CanonicalMetricIdentityResolver
         var normalizedMetricType = metricType.Trim();
 
         // ----------------------------
-        // Canonical Weight Rule
+        // Canonical Mapping Rule
         // ----------------------------
 
-        if (normalizedProvider.Equals("Samsung", StringComparison.OrdinalIgnoreCase) && normalizedMetricType.Equals("weight", StringComparison.OrdinalIgnoreCase))
-            return MetricIdentityResolutionResult.Succeeded(new CanonicalMetricId(MetricIdentity.BodyWeight.Id));
-
-        // ----------------------------
-        // Canonical Sleep Rule
-        // ----------------------------
-        if (normalizedProvider.Equals("Samsung", StringComparison.OrdinalIgnoreCase) && normalizedMetricType.Equals("com.samsung.shealth.sleep", StringComparison.OrdinalIgnoreCase))
-            return MetricIdentityResolutionResult.Succeeded(new CanonicalMetricId(MetricIdentity.Sleep.Id));
+        var canonicalId = CanonicalMetricMapping.FromLegacyFields(metricType, metricSubtype);
+        if (!string.IsNullOrWhiteSpace(canonicalId))
+            return MetricIdentityResolutionResult.Succeeded(new CanonicalMetricId(canonicalId));
         // ----------------------------
         // Explicit non-match
         // ----------------------------

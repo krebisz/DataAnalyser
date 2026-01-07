@@ -44,6 +44,7 @@ public partial class MainWindow : Window
     private ChartRenderEngine _chartRenderEngine = null!;
     private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
     private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
+    private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
 
     private string _connectionString = null!;
     private bool _isChangingResolution;
@@ -184,7 +185,7 @@ public partial class MainWindow : Window
 
         // Update button enabled states (this is UI-only, not part of the rendering pipeline)
         ChartNormToggleButton.IsEnabled = hasSecondaryData;
-        ChartDiffRatioToggleButton.IsEnabled = hasSecondaryData;
+        DiffRatioChartController.ToggleButton.IsEnabled = hasSecondaryData;
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -288,7 +289,7 @@ public partial class MainWindow : Window
         // Update visibility for all charts (just UI state, doesn't clear data)
         MainChartController.Panel.IsChartVisible = e.ShowMain;
         UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
-        UpdateChartVisibility(ChartDiffRatioContentPanel, ChartDiffRatioToggleButton, e.ShowDiffRatio);
+        DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
         UpdateChartVisibility(ChartWeeklyContentPanel, ChartWeeklyToggleButton, e.ShowWeekly);
         UpdateChartVisibility(ChartHourlyContentPanel, ChartHourlyToggleButton, e.ShowHourly);
         WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
@@ -399,165 +400,7 @@ public partial class MainWindow : Window
 
     private void RenderWeekdayTrendChart(WeekdayTrendResult result)
     {
-        if (_viewModel.ChartState.IsWeekdayTrendPolarMode)
-            RenderWeekdayTrendPolarChart(result);
-        else
-            RenderWeekdayTrendCartesianChart(result);
-    }
-
-    private void RenderWeekdayTrendCartesianChart(WeekdayTrendResult result)
-    {
-        var weekdayStrokes = GetWeekdayStrokes();
-
-        WeekdayTrendChartController.Chart.Series.Clear();
-        WeekdayTrendChartController.Chart.AxisX.Clear();
-        WeekdayTrendChartController.Chart.AxisY.Clear();
-
-        if (result == null || result.SeriesByDay.Count == 0)
-            return;
-
-        WeekdayTrendChartController.Chart.AxisX.Add(new Axis
-        {
-            Title = "Time",
-            MinValue = result.From.Ticks,
-            MaxValue = result.To.Ticks,
-            LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
-        });
-
-        WeekdayTrendChartController.Chart.AxisY.Add(new Axis
-        {
-            Title = result.Unit ?? "Value",
-            MinValue = result.GlobalMin,
-            MaxValue = result.GlobalMax
-        });
-
-        for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
-        {
-            if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
-                continue;
-
-            if (!IsDayEnabled(dayIndex))
-                continue;
-
-            var values = new ChartValues<ObservablePoint>();
-            foreach (var point in series.Points)
-                values.Add(new ObservablePoint(point.Date.Ticks, point.Value));
-
-            WeekdayTrendChartController.Chart.Series.Add(new LineSeries
-            {
-                Title = series.Day.ToString(),
-                Values = values,
-                PointGeometry = null,
-                LineSmoothness = 0.3,
-                Fill = Brushes.Transparent,
-                StrokeThickness = 2,
-                Stroke = weekdayStrokes[dayIndex]
-            });
-        }
-    }
-
-    private void RenderWeekdayTrendPolarChart(WeekdayTrendResult result)
-    {
-        var weekdayStrokes = GetWeekdayStrokes();
-
-        WeekdayTrendChartController.PolarChart.Series.Clear();
-        WeekdayTrendChartController.PolarChart.AxisX.Clear();
-        WeekdayTrendChartController.PolarChart.AxisY.Clear();
-
-        if (result == null || result.SeriesByDay.Count == 0)
-            return;
-
-        // Configure axes for polar-like display
-        WeekdayTrendChartController.PolarChart.AxisX.Add(new Axis
-        {
-            Title = "Day of Week",
-            MinValue = 0,
-            MaxValue = 360,
-            LabelFormatter = v =>
-            {
-                // Convert angle (0-360) to day name
-                var dayIndex = (int)Math.Round(v / (360.0 / 7.0)) % 7;
-                return dayIndex switch
-                {
-                    0 => "Mon",
-                    1 => "Tue",
-                    2 => "Wed",
-                    3 => "Thu",
-                    4 => "Fri",
-                    5 => "Sat",
-                    6 => "Sun",
-                    _ => ""
-                };
-            }
-        });
-
-        WeekdayTrendChartController.PolarChart.AxisY.Add(new Axis
-        {
-            Title = result.Unit ?? "Value",
-            MinValue = result.GlobalMin,
-            MaxValue = result.GlobalMax
-        });
-
-        // Convert each day's data to polar-like coordinates
-        // X (angle): 0° = Monday, 51.43° = Tuesday, ... 308.57° = Sunday (360/7 per day)
-        // Y (radius): value
-        for (var dayIndex = 0; dayIndex <= 6; dayIndex++)
-        {
-            if (!result.SeriesByDay.TryGetValue(dayIndex, out var series))
-                continue;
-
-            if (!IsDayEnabled(dayIndex))
-                continue;
-
-            var values = new ChartValues<ObservablePoint>();
-            // Base angle for this day (in degrees)
-            var baseAngleDegrees = dayIndex * 360.0 / 7.0;
-
-            // For each time point in the series, plot at the day's angle with the value as radius
-            foreach (var point in series.Points)
-                values.Add(new ObservablePoint(baseAngleDegrees, point.Value));
-
-            WeekdayTrendChartController.PolarChart.Series.Add(new LineSeries
-            {
-                Title = series.Day.ToString(),
-                Values = values,
-                LineSmoothness = 0.3,
-                StrokeThickness = 2,
-                Stroke = weekdayStrokes[dayIndex],
-                Fill = Brushes.Transparent,
-                PointGeometry = DefaultGeometries.Circle,
-                PointGeometrySize = 6
-            });
-        }
-    }
-
-    private Brush[] GetWeekdayStrokes()
-    {
-        return new[]
-        {
-                Brushes.SteelBlue,
-                Brushes.CadetBlue,
-                Brushes.SeaGreen,
-                Brushes.OliveDrab,
-                Brushes.Goldenrod,
-                Brushes.OrangeRed,
-                Brushes.IndianRed
-        };
-    }
-
-    private bool IsDayEnabled(int dayIndex)
-    {
-        return dayIndex switch
-        {
-            0 => _viewModel.ChartState.ShowMonday,
-            1 => _viewModel.ChartState.ShowTuesday,
-            2 => _viewModel.ChartState.ShowWednesday,
-            3 => _viewModel.ChartState.ShowThursday,
-            4 => _viewModel.ChartState.ShowFriday,
-            5 => _viewModel.ChartState.ShowSaturday,
-            6 => _viewModel.ChartState.ShowSunday,
-            _ => false
-        };
+        _weekdayTrendChartUpdateCoordinator.UpdateChart(result, _viewModel.ChartState, WeekdayTrendChartController.Chart, WeekdayTrendChartController.PolarChart);
     }
 
     private async Task RenderChartsFromLastContext()
@@ -589,7 +432,7 @@ public partial class MainWindow : Window
         {
             // Clear charts that require secondary data when no secondary data exists
             ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-            ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         }
 
         // Charts that don't require secondary data - only render if visible
@@ -761,7 +604,7 @@ public partial class MainWindow : Window
     private void ClearSecondaryChartsAndReturn()
     {
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
+        ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(ChartWeekly);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
@@ -813,8 +656,9 @@ public partial class MainWindow : Window
     {
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
         {
-            var result = new WeekdayTrendStrategy().Compute(ctx.Data1!, ctx.From, ctx.To);
-            RenderWeekdayTrendChart(result);
+            var result = ComputeWeekdayTrend(ctx);
+            if (result != null)
+                RenderWeekdayTrendChart(result);
         }
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
@@ -824,7 +668,7 @@ public partial class MainWindow : Window
         if (_chartRenderingOrchestrator == null)
             return;
 
-        await _chartRenderingOrchestrator.RenderDiffRatioChartAsync(ctx, ChartDiffRatio, _viewModel.ChartState);
+        await _chartRenderingOrchestrator.RenderDiffRatioChartAsync(ctx, DiffRatioChartController.Chart, _viewModel.ChartState);
     }
 
     private Panel? GetChartPanel(string chartName)
@@ -832,7 +676,7 @@ public partial class MainWindow : Window
         return chartName switch
         {
             "Norm" => ChartNormContentPanel,
-            "DiffRatio" => ChartDiffRatioContentPanel,
+            "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
             "Weekly" => ChartWeeklyContentPanel,
             "Hourly" => ChartHourlyContentPanel,
             "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
@@ -914,6 +758,25 @@ public partial class MainWindow : Window
         return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
     }
 
+    private WeekdayTrendResult? ComputeWeekdayTrend(ChartDataContext ctx)
+    {
+        if (_strategyCutOverService == null)
+            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
+            Label1 = ctx.DisplayName1,
+            From = ctx.From,
+            To = ctx.To
+        };
+
+        var strategy = _strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
+        strategy.Compute();
+
+        return strategy is IWeekdayTrendResultProvider provider ? provider.ExtendedResult : null;
+    }
+
 
     private void OnWeekdayTrendDayToggled(object? sender, WeekdayTrendDayToggleEventArgs e)
     {
@@ -960,7 +823,7 @@ public partial class MainWindow : Window
     {
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
+        ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(ChartWeekly);
         ClearDistributionChart(ChartHourly);
         ChartHelper.ClearChart(WeekdayTrendChartController.Chart, _viewModel.ChartState.ChartTimestamps);
@@ -1010,6 +873,7 @@ public partial class MainWindow : Window
         _weeklyDistributionService = CreateWeeklyDistributionService();
         _hourlyDistributionService = CreateHourlyDistributionService();
         _chartRenderingOrchestrator = CreateChartRenderingOrchestrator();
+        _weekdayTrendChartUpdateCoordinator = CreateWeekdayTrendChartUpdateCoordinator();
     }
 
     private void InitializeViewModel()
@@ -1028,6 +892,8 @@ public partial class MainWindow : Window
         WeekdayTrendChartController.ToggleRequested += OnWeekdayTrendToggleRequested;
         WeekdayTrendChartController.ChartTypeToggleRequested += OnWeekdayTrendChartTypeToggleRequested;
         WeekdayTrendChartController.DayToggled += OnWeekdayTrendDayToggled;
+        DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
+        DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
     }
 
     private void ExecuteStartupSequence()
@@ -1041,6 +907,7 @@ public partial class MainWindow : Window
         _viewModel.RequestChartUpdate();
 
         // Mark initialization as complete
+        SyncCmsToggleStates();
         _isInitializing = false;
 
         SyncInitialButtonStates();
@@ -1049,6 +916,62 @@ public partial class MainWindow : Window
     private void RegisterLifecycleEvents()
     {
         Closing += MainWindow_Closing;
+    }
+
+    #endregion
+
+    #region CMS toggle handling
+
+    private void SyncCmsToggleStates()
+    {
+        CmsEnableCheckBox.IsChecked = CmsConfiguration.UseCmsData;
+        CmsSingleCheckBox.IsChecked = CmsConfiguration.UseCmsForSingleMetric;
+        CmsCombinedCheckBox.IsChecked = CmsConfiguration.UseCmsForCombinedMetric;
+        CmsMultiCheckBox.IsChecked = CmsConfiguration.UseCmsForMultiMetric;
+        CmsNormalizedCheckBox.IsChecked = CmsConfiguration.UseCmsForNormalized;
+        CmsWeeklyCheckBox.IsChecked = CmsConfiguration.UseCmsForWeeklyDistribution;
+        CmsWeekdayTrendCheckBox.IsChecked = CmsConfiguration.UseCmsForWeekdayTrend;
+        CmsHourlyCheckBox.IsChecked = CmsConfiguration.UseCmsForHourlyDistribution;
+
+        UpdateCmsToggleEnablement();
+    }
+
+    private void UpdateCmsToggleEnablement()
+    {
+        var enabled = CmsEnableCheckBox.IsChecked == true;
+        CmsSingleCheckBox.IsEnabled = enabled;
+        CmsCombinedCheckBox.IsEnabled = enabled;
+        CmsMultiCheckBox.IsEnabled = enabled;
+        CmsNormalizedCheckBox.IsEnabled = enabled;
+        CmsWeeklyCheckBox.IsEnabled = enabled;
+        CmsWeekdayTrendCheckBox.IsEnabled = enabled;
+        CmsHourlyCheckBox.IsEnabled = enabled;
+    }
+
+    private void OnCmsToggleChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing)
+            return;
+
+        CmsConfiguration.UseCmsData = CmsEnableCheckBox.IsChecked == true;
+        UpdateCmsToggleEnablement();
+        Debug.WriteLine($"[CMS] Enabled={CmsConfiguration.UseCmsData}");
+    }
+
+    private void OnCmsStrategyToggled(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing)
+            return;
+
+        CmsConfiguration.UseCmsForSingleMetric = CmsSingleCheckBox.IsChecked == true;
+        CmsConfiguration.UseCmsForCombinedMetric = CmsCombinedCheckBox.IsChecked == true;
+        CmsConfiguration.UseCmsForMultiMetric = CmsMultiCheckBox.IsChecked == true;
+        CmsConfiguration.UseCmsForNormalized = CmsNormalizedCheckBox.IsChecked == true;
+        CmsConfiguration.UseCmsForWeeklyDistribution = CmsWeeklyCheckBox.IsChecked == true;
+        CmsConfiguration.UseCmsForWeekdayTrend = CmsWeekdayTrendCheckBox.IsChecked == true;
+        CmsConfiguration.UseCmsForHourlyDistribution = CmsHourlyCheckBox.IsChecked == true;
+
+        Debug.WriteLine($"[CMS] Enabled={CmsConfiguration.UseCmsData}, Single={CmsConfiguration.UseCmsForSingleMetric}, Combined={CmsConfiguration.UseCmsForCombinedMetric}, Multi={CmsConfiguration.UseCmsForMultiMetric}, Normalized={CmsConfiguration.UseCmsForNormalized}, Weekly={CmsConfiguration.UseCmsForWeeklyDistribution}, WeekdayTrend={CmsConfiguration.UseCmsForWeekdayTrend}, Hourly={CmsConfiguration.UseCmsForHourlyDistribution}");
     }
 
     #endregion
@@ -1070,6 +993,13 @@ public partial class MainWindow : Window
         coordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
 
         return coordinator;
+    }
+
+    private WeekdayTrendChartUpdateCoordinator CreateWeekdayTrendChartUpdateCoordinator()
+    {
+        var renderingService = new WeekdayTrendRenderingService();
+
+        return new WeekdayTrendChartUpdateCoordinator(renderingService, _chartState.ChartTimestamps);
     }
 
     private WeeklyDistributionService CreateWeeklyDistributionService()
@@ -1151,14 +1081,14 @@ public partial class MainWindow : Window
         {
                 { MainChartController.Chart, "Main" },
                 { ChartNorm, "Norm" },
-                { ChartDiffRatio, "DiffRatio" },
+                { DiffRatioChartController.Chart, "DiffRatio" },
                 { ChartTransformResult, "Transform" }
         };
 
         _tooltipManager = new ChartTooltipManager(this, chartLabels);
         _tooltipManager.AttachChart(MainChartController.Chart, "Main");
         _tooltipManager.AttachChart(ChartNorm, "Norm");
-        _tooltipManager.AttachChart(ChartDiffRatio, "DiffRatio");
+        _tooltipManager.AttachChart(DiffRatioChartController.Chart, "DiffRatio");
         _tooltipManager.AttachChart(ChartTransformResult, "Transform");
     }
 
@@ -1217,7 +1147,7 @@ public partial class MainWindow : Window
         InitializeDistributionChartBehavior(ChartWeekly);
         InitializeDistributionChartBehavior(ChartHourly);
         ChartHelper.InitializeChartBehavior(ChartNorm);
-        ChartHelper.InitializeChartBehavior(ChartDiffRatio);
+        ChartHelper.InitializeChartBehavior(DiffRatioChartController.Chart);
     }
 
     /// <summary>
@@ -1233,7 +1163,7 @@ public partial class MainWindow : Window
         // Clear charts on startup to prevent gibberish tick labels
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartDiffRatio, _viewModel.ChartState.ChartTimestamps);
+        ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(ChartWeekly);
         ClearDistributionChart(ChartHourly);
     }
@@ -1250,7 +1180,7 @@ public partial class MainWindow : Window
     {
         DisableAxisLabels(MainChartController.Chart);
         DisableAxisLabels(ChartNorm);
-        DisableAxisLabels(ChartDiffRatio);
+        DisableAxisLabels(DiffRatioChartController.Chart);
         DisableDistributionAxisLabels(ChartWeekly);
         DisableDistributionAxisLabels(ChartHourly);
     }
@@ -1275,7 +1205,7 @@ public partial class MainWindow : Window
     {
         MainChartController.Panel.Title = "Metrics: Total";
         ChartNormTitle.Text = "Metrics: Normalized";
-        ChartDiffRatioTitle.Text = "Difference / Ratio";
+        DiffRatioChartController.Panel.Title = "Difference / Ratio";
         UpdateDiffRatioOperationButton(); // Initialize button state
     }
 
@@ -1505,8 +1435,9 @@ public partial class MainWindow : Window
         // Re-render the chart with current data if visible
         if (_viewModel.ChartState.IsWeeklyTrendVisible && _viewModel.ChartState.LastContext != null)
         {
-            var result = new WeekdayTrendStrategy().Compute(_viewModel.ChartState.LastContext.Data1!, _viewModel.ChartState.LastContext.From, _viewModel.ChartState.LastContext.To);
-            RenderWeekdayTrendChart(result);
+            var result = ComputeWeekdayTrend(_viewModel.ChartState.LastContext);
+            if (result != null)
+                RenderWeekdayTrendChart(result);
         }
     }
 
@@ -1534,12 +1465,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnChartDiffRatioToggle(object sender, RoutedEventArgs e)
+    private void OnDiffRatioToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleDiffRatio();
     }
 
-    private async void OnChartDiffRatioOperationToggle(object sender, RoutedEventArgs e)
+    private async void OnDiffRatioOperationToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleDiffRatioOperation();
         UpdateDiffRatioOperationButton();
@@ -1558,14 +1489,12 @@ public partial class MainWindow : Window
     {
         var isDifference = _viewModel.ChartState.IsDiffRatioDifferenceMode;
 
-        if (ChartDiffRatioOperationToggleButton != null)
-        {
-            ChartDiffRatioOperationToggleButton.Content = isDifference ? "/" : "-";
-            ChartDiffRatioOperationToggleButton.ToolTip = isDifference ? "Switch to Ratio (/)" : "Switch to Difference (-)";
-        }
+        var operationButton = DiffRatioChartController.OperationToggleButton;
+        operationButton.Content = isDifference ? "/" : "-";
+        operationButton.ToolTip = isDifference ? "Switch to Ratio (/)" : "Switch to Difference (-)";
 
-        if (ChartDiffRatioAxisY != null)
-            ChartDiffRatioAxisY.Title = isDifference ? "Difference" : "Ratio";
+        if (DiffRatioChartController.Chart.AxisY.Count > 0)
+            DiffRatioChartController.Chart.AxisY[0].Title = isDifference ? "Difference" : "Ratio";
     }
 
 
@@ -1902,7 +1831,7 @@ public partial class MainWindow : Window
         var mainChart = MainChartController.Chart;
         ChartHelper.ResetZoom(mainChart);
         ChartHelper.ResetZoom(ChartNorm);
-        ChartHelper.ResetZoom(ChartDiffRatio);
+        ChartHelper.ResetZoom(DiffRatioChartController.Chart);
         ResetDistributionChartZoom(ChartWeekly);
         ResetDistributionChartZoom(ChartHourly);
         var weekdayChart = WeekdayTrendChartController.Chart;
@@ -1929,7 +1858,7 @@ public partial class MainWindow : Window
 
         MainChartController.Panel.Title = $"{leftName} vs. {rightName}";
         ChartNormTitle.Text = $"{leftName} ~ {rightName}";
-        ChartDiffRatioTitle.Text = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
+        DiffRatioChartController.Panel.Title = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
     }
 
     private void UpdateChartLabels(string subtype1, string subtype2)
@@ -1949,7 +1878,7 @@ public partial class MainWindow : Window
         _tooltipManager.UpdateChartLabel(MainChartController.Chart, chartMainLabel);
 
         var chartDiffRatioLabel = !string.IsNullOrEmpty(label2) ? $"{label1} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {label2}" : label1;
-        _tooltipManager.UpdateChartLabel(ChartDiffRatio, chartDiffRatioLabel);
+        _tooltipManager.UpdateChartLabel(DiffRatioChartController.Chart, chartDiffRatioLabel);
     }
 
     private void UpdateChartTitlesFromCombos()
