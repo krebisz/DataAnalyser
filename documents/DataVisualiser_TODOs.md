@@ -12,10 +12,10 @@
 - [x] Centralize common UI layout sizes (default widths, margins) where reused
 
 ## Group 3 - Computation Defaults (medium)
-- [ ] Centralize smoothing window size and smoothing strategy
-- [ ] Centralize missing-value fill strategy and defaults
-- [ ] Centralize ratio/divide-by-zero and normalization policies
+- [x] Centralize smoothing window size and smoothing strategy
+- [x] Centralize missing-value fill strategy and defaults
+- [x] Centralize ratio/divide-by-zero and normalization policies
 
 ## Group 4 - Data Access Defaults (medium)
-- [ ] Centralize table name mappings and defaults
-- [ ] Centralize SQL limiting thresholds and sampling policy
+- [x] Centralize table name mappings and defaults
+- [x] Centralize SQL limiting thresholds and sampling policy

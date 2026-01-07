@@ -1,5 +1,6 @@
 using System.Text;
 using Dapper;
+using DataVisualiser.Core.Data;
 
 namespace DataVisualiser.Core.Data.QueryBuilders;
 
@@ -52,13 +53,13 @@ public static class SqlQueryBuilder
     /// </summary>
     public static string GetProviderColumn(string tableName)
     {
-        return tableName == "HealthMetrics" ? "Provider" : "NULL AS Provider";
+        return tableName == DataAccessDefaults.DefaultTableName ? "Provider" : "NULL AS Provider";
     }
 
     /// <summary>
     ///     Validates and normalizes table name, returning default if invalid.
     /// </summary>
-    public static string NormalizeTableName(string? tableName, string defaultValue = "HealthMetrics")
+    public static string NormalizeTableName(string? tableName, string defaultValue = DataAccessDefaults.DefaultTableName)
     {
         return string.IsNullOrWhiteSpace(tableName) ? defaultValue : tableName;
     }

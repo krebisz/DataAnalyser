@@ -12,7 +12,7 @@ namespace DataVisualiser.Core.Orchestration.Builders;
 public sealed class ChartDataContextBuilder
 {
     // Configurable smoothing radius for moving average
-    private const int SmoothWindow = 3;
+    private const int SmoothWindow = ComputationDefaults.SmoothingWindow;
 
     /// <summary>
     ///     Builds a ChartDataContext from metric data.
@@ -124,7 +124,7 @@ public sealed class ChartDataContextBuilder
                           ToDictionary(g => g.Key, g => Convert.ToDouble(g.First().
                                                                            Value ?? 0m));
 
-        var lastValue = 0.0;
+        var lastValue = ComputationDefaults.ForwardFillSeedValue;
 
         var aligned = new List<double>(timeline.Count);
 
@@ -184,7 +184,7 @@ public sealed class ChartDataContextBuilder
     {
         var result = new double[a.Count];
         for (var i = 0; i < a.Count; i++)
-            result[i] = b[i] == 0 ? 0 : a[i] / b[i];
+            result[i] = b[i] == 0 ? ComputationDefaults.RatioDivideByZeroValue : a[i] / b[i];
         return result.ToList();
     }
 

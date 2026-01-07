@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Orchestration.Builders;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Services;
@@ -182,7 +183,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return false;
 
         var metricType = MetricState.SelectedMetricType!;
-        var tableName = MetricState.ResolutionTableName ?? "HealthMetrics";
+        var tableName = MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
 
         // IMPORTANT: Ensure consistent ordering - first selected subtype is always primary (data1),
         // second selected subtype is always secondary (data2). This ordering is maintained

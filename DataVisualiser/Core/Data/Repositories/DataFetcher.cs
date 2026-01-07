@@ -1,5 +1,6 @@
 using System.Text;
 using Dapper;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Data.QueryBuilders;
 using DataVisualiser.Shared.Models;
 using Microsoft.Data.SqlClient;
@@ -53,10 +54,10 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetMetricTypes
                 SELECT DISTINCT MetricType 
-                FROM HealthMetricsCounts 
+                FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                 WHERE MetricType IS NOT NULL 
                   AND RecordCount > 0
                 ORDER BY MetricType";
@@ -73,12 +74,12 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetMetricTypeDateRange
                 SELECT 
                     MIN(NormalizedTimestamp) AS MinDate,
                     MAX(NormalizedTimestamp) AS MaxDate
-                FROM HealthMetrics
+                FROM {DataAccessDefaults.DefaultTableName}
                 WHERE MetricType = @MetricType
                     AND NormalizedTimestamp IS NOT NULL";
 
@@ -107,14 +108,14 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetHealthMetricsData
                 SELECT 
                     NormalizedTimestamp,
                     Value,
                     Unit,
                     Provider
-                FROM HealthMetrics
+                FROM {DataAccessDefaults.DefaultTableName}
                 WHERE MetricType = @MetricType
                     AND NormalizedTimestamp >= @FromDate
                     AND NormalizedTimestamp <= @ToDate
@@ -134,19 +135,19 @@ public class DataFetcher
     /// <summary>
     ///     Gets distinct base metric types from the specified table.
     /// </summary>
-    public async Task<IEnumerable<string>> GetBaseMetricTypes(string tableName = "HealthMetrics")
+    public async Task<IEnumerable<string>> GetBaseMetricTypes(string tableName = DataAccessDefaults.DefaultTableName)
     {
         tableName = SqlQueryBuilder.NormalizeTableName(tableName);
 
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        if (tableName == "HealthMetrics")
+        if (tableName == DataAccessDefaults.DefaultTableName)
         {
-            var sql = @"
+            var sql = $@"
                     -- DataFetcher.GetBaseMetricTypes (HealthMetrics)
                     SELECT DISTINCT MetricType 
-                    FROM HealthMetricsCounts 
+                    FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                     WHERE MetricType IS NOT NULL 
                       AND RecordCount > 0
                     ORDER BY MetricType";
@@ -171,7 +172,7 @@ public class DataFetcher
     /// <summary>
     ///     Gets distinct subtypes for a given base metric type from the specified table.
     /// </summary>
-    public async Task<IEnumerable<string>> GetSubtypesForBaseType(string baseType, string tableName = "HealthMetrics")
+    public async Task<IEnumerable<string>> GetSubtypesForBaseType(string baseType, string tableName = DataAccessDefaults.DefaultTableName)
     {
         if (string.IsNullOrWhiteSpace(baseType))
             throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
@@ -181,12 +182,12 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        if (tableName == "HealthMetrics")
+        if (tableName == DataAccessDefaults.DefaultTableName)
         {
-            var sql = @"
+            var sql = $@"
                     -- DataFetcher.GetSubtypesForBaseType (HealthMetrics)
                     SELECT DISTINCT MetricSubtype 
-                    FROM HealthMetricsCounts 
+                    FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                     WHERE MetricType = @BaseType
                       AND MetricSubtype IS NOT NULL
                       AND MetricSubtype != ''
@@ -227,10 +228,10 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetMetricTypesByBaseType
                 SELECT MetricType, MetricSubtype
-                FROM HealthMetricsCounts 
+                FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                 WHERE MetricType IS NOT NULL 
                   AND RecordCount > 0";
 
@@ -253,7 +254,7 @@ public class DataFetcher
     ///     Maximum number of records to return. If null, returns all records. Used for performance
     ///     optimization with large datasets.
     /// </param>
-    public async Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype = null, DateTime? from = null, DateTime? to = null, string tableName = "HealthMetrics", int? maxRecords = null)
+    public async Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype = null, DateTime? from = null, DateTime? to = null, string tableName = DataAccessDefaults.DefaultTableName, int? maxRecords = null)
     {
         if (string.IsNullOrWhiteSpace(baseType))
             throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
@@ -308,7 +309,7 @@ public class DataFetcher
     /// <summary>
     ///     Gets date range for a base metric type and optional subtype from the specified table.
     /// </summary>
-    public async Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype = null, string tableName = "HealthMetrics")
+    public async Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype = null, string tableName = DataAccessDefaults.DefaultTableName)
     {
         if (string.IsNullOrWhiteSpace(baseType))
             throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
@@ -350,10 +351,10 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetRecordCount
                 SELECT RecordCount
-                FROM HealthMetricsCounts
+                FROM {DataAccessDefaults.HealthMetricsCountsTable}
                 WHERE MetricType = @MetricType
                   AND MetricSubtype = @MetricSubtype";
 
@@ -374,10 +375,10 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetAllRecordCounts
                 SELECT MetricType, MetricSubtype, RecordCount
-                FROM HealthMetricsCounts
+                FROM {DataAccessDefaults.HealthMetricsCountsTable}
                 ORDER BY MetricType, MetricSubtype";
 
         var results = await conn.QueryAsync<(string MetricType, string MetricSubtype, long RecordCount)>(sql);
@@ -393,10 +394,10 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetRecordCountsByMetricType
                 SELECT MetricType, SUM(RecordCount) AS TotalCount
-                FROM HealthMetricsCounts
+                FROM {DataAccessDefaults.HealthMetricsCountsTable}
                 GROUP BY MetricType
                 ORDER BY MetricType";
 
@@ -416,10 +417,10 @@ public class DataFetcher
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        var sql = @"
+        var sql = $@"
                 -- DataFetcher.GetRecordCountsBySubtype
                 SELECT MetricSubtype, RecordCount
-                FROM HealthMetricsCounts
+                FROM {DataAccessDefaults.HealthMetricsCountsTable}
                 WHERE MetricType = @MetricType
                 ORDER BY MetricSubtype";
 

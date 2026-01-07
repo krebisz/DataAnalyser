@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -64,7 +65,7 @@ public sealed class StrategySelectionService
             return;
 
         var dataFetcher = new DataFetcher(_connectionString);
-        var tableName = resolutionTableName ?? "HealthMetrics";
+        var tableName = resolutionTableName ?? DataAccessDefaults.DefaultTableName;
 
         // Load data for subtypes 3, 4, etc.
         for (var i = 2; i < selectedSubtypes.Count; i++)

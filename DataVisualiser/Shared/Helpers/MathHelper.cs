@@ -40,19 +40,19 @@ public static class MathHelper
         var totalHours = dateRange.TotalHours;
 
         // For very short ranges (< 1 day), no limit needed
-        if (totalDays < 1)
+        if (totalDays < ComputationDefaults.SqlLimitingMinDaysNoLimit)
             return null; // No limit
 
         // For daily data: ~1 record per day
         // 2 years = ~730 records (acceptable)
         // 10 years = ~3,650 records (should limit)
-        if (totalDays <= 730) // ~2 years
+        if (totalDays <= ComputationDefaults.SqlLimitingMaxDailyDaysNoLimit) // ~2 years
             return null;      // No limit for reasonable daily data
 
         // For hourly data: ~24 records per day
         // 2 years = ~17,520 records (should limit to ~10,000)
         // 1 year = ~8,760 records (acceptable)
-        if (totalDays <= 365) // ~1 year
+        if (totalDays <= ComputationDefaults.SqlLimitingMaxHourlyDaysNoLimit) // ~1 year
             return null;      // No limit for 1 year of hourly data
 
         // For longer ranges, apply intelligent limits
@@ -62,16 +62,16 @@ public static class MathHelper
         {
             // Estimate records per day based on resolution
             // Assume hourly data for long ranges (worst case)
-            var estimatedRecordsPerDay = 24.0; // Hourly
+            var estimatedRecordsPerDay = ComputationDefaults.SqlLimitingEstimatedRecordsPerDay; // Hourly
             var estimatedTotalRecords = totalDays * estimatedRecordsPerDay;
 
-            if (estimatedTotalRecords > 10000)
+            if (estimatedTotalRecords > ComputationDefaults.SqlLimitingMaxRecords)
             {
                 // Calculate sample rate to get ~10,000 records
-                var sampleRate = (int)Math.Ceiling(estimatedTotalRecords / 10000.0);
+                var sampleRate = (int)Math.Ceiling(estimatedTotalRecords / ComputationDefaults.SqlLimitingMaxRecords);
                 // Return null and let client-side handle it, or use SQL sampling
                 // For now, use SQL TOP limit
-                return 10000;
+                return ComputationDefaults.SqlLimitingMaxRecords;
             }
         }
 

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Rendering;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -37,12 +38,12 @@ public static class ChartHelper
         var selectedResolution = ResolutionCombo.SelectedItem?.ToString() ?? "All";
         return selectedResolution switch
         {
-                "Hourly"  => "HealthMetricsHour",
-                "Daily"   => "HealthMetricsDay",
-                "Weekly"  => "HealthMetricsWeek",
-                "Monthly" => "HealthMetricsMonth",
-                "Yearly"  => "HealthMetricsYear",
-                _         => "HealthMetrics" // Default to "All" which uses HealthMetrics
+                "Hourly"  => DataAccessDefaults.HealthMetricsHourTable,
+                "Daily"   => DataAccessDefaults.HealthMetricsDayTable,
+                "Weekly"  => DataAccessDefaults.HealthMetricsWeekTable,
+                "Monthly" => DataAccessDefaults.HealthMetricsMonthTable,
+                "Yearly"  => DataAccessDefaults.HealthMetricsYearTable,
+                _         => DataAccessDefaults.DefaultTableName // Default to "All" which uses HealthMetrics
         };
     }
 
