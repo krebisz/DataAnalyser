@@ -6,7 +6,7 @@ namespace DataVisualiser.Shared.Models;
 public class MetricData
 {
     public DateTime NormalizedTimestamp { get; set; }
-    public decimal? Value               { get; set; }
-    public string?  Unit                { get; set; }
-    public string?  Provider            { get; set; }
+    public decimal? Value { get; set; }
+    public string? Unit { get; set; }
+    public string? Provider { get; set; }
 }

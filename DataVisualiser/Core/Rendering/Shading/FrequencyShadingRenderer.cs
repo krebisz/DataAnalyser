@@ -1,5 +1,4 @@
 using System.Windows.Media;
-using DataVisualiser.Core.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -7,7 +6,7 @@ namespace DataVisualiser.Core.Rendering.Shading;
 
 public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 {
-    private readonly int    _bucketCount;
+    private readonly int _bucketCount;
     private readonly double _maxColumnWidth;
 
     public FrequencyShadingRenderer(double maxColumnWidth, int bucketCount)
@@ -93,12 +92,12 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
             _height = height;
         }
 
-        public ChartValues<double> Baselines      { get; } = new();
-        public ChartValues<double> WhiteHeights   { get; } = new();
+        public ChartValues<double> Baselines { get; } = new();
+        public ChartValues<double> WhiteHeights { get; } = new();
         public ChartValues<double> ColoredHeights { get; } = new();
 
-        public bool HasData               { get; private set; }
-        public bool HasZeroFreqBuckets    { get; private set; }
+        public bool HasData { get; private set; }
+        public bool HasZeroFreqBuckets { get; private set; }
         public bool HasNonZeroFreqBuckets { get; private set; }
 
         public void Add(double baseline, int frequency)
@@ -233,8 +232,7 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 
     private void RemoveExistingRangeSeries(CartesianChart chart)
     {
-        var toRemove = chart.Series.Where(s => s.Title?.Contains("range") == true).
-                             ToList();
+        var toRemove = chart.Series.Where(s => s.Title?.Contains("range") == true).ToList();
         foreach (var s in toRemove)
             chart.Series.Remove(s);
     }
@@ -289,9 +287,7 @@ public sealed class FrequencyShadingRenderer : IFrequencyShadingRenderer
 
     private static int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> freq)
     {
-        return freq.Values.SelectMany(v => v.Values).
-                    DefaultIfEmpty(1).
-                    Max();
+        return freq.Values.SelectMany(v => v.Values).DefaultIfEmpty(1).Max();
     }
 
     private static double SafeMin(List<double> mins, int i)

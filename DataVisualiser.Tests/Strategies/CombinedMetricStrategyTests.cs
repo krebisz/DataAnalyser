@@ -7,7 +7,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class CombinedMetricStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
@@ -25,10 +25,7 @@ public sealed class CombinedMetricStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenOneSeriesEmpty()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var right = Enumerable.Empty<MetricData>();
 
@@ -42,15 +39,9 @@ public sealed class CombinedMetricStrategyTests
     [Fact]
     public void Compute_ShouldAlignByIndex_UsingShortestSeries()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(10, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(6, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(6, TimeSpan.FromDays(1));
 
         var strategy = new CombinedMetricStrategy(left, right, "L", "R", From, To);
 
@@ -120,15 +111,9 @@ public sealed class CombinedMetricStrategyTests
     [Fact]
     public void Compute_ShouldGenerateSmoothedSeries_ForBothMetrics()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(10, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(10, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
         var strategy = new CombinedMetricStrategy(left, right, "L", "R", From, To);
 
@@ -144,15 +129,9 @@ public sealed class CombinedMetricStrategyTests
     [Fact]
     public void Compute_ShouldResolveUnit_WhenUnitsMatch()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new CombinedMetricStrategy(left, right, "L", "R", From, To);
 
@@ -165,15 +144,9 @@ public sealed class CombinedMetricStrategyTests
     [Fact]
     public void Compute_ShouldPreferLeftUnit_WhenUnitsDiffer()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("lb").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("lb").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new CombinedMetricStrategy(left, right, "L", "R", From, To);
 

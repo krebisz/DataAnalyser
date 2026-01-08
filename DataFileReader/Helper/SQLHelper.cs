@@ -529,10 +529,8 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var metricType = reader["MetricType"]?.
-                                    ToString();
-                            var existingSubtype = reader["MetricSubtype"]?.
-                                    ToString();
+                            var metricType = reader["MetricType"]?.ToString();
+                            var existingSubtype = reader["MetricSubtype"]?.ToString();
 
                             if (!string.IsNullOrEmpty(metricType))
                             {
@@ -601,8 +599,7 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var sourceFile = reader["SourceFile"]?.
-                                    ToString();
+                            var sourceFile = reader["SourceFile"]?.ToString();
                             if (!string.IsNullOrEmpty(sourceFile))
                                 processedFiles.Add(sourceFile);
                         }
@@ -1063,13 +1060,10 @@ public static class SQLHelper
                         {
                             var metric = new HealthMetric
                             {
-                                    MetricType = reader["MetricType"]?.
-                                            ToString() ?? string.Empty,
-                                    MetricSubtype = reader["MetricSubtype"]?.
-                                            ToString() ?? string.Empty,
+                                    MetricType = reader["MetricType"]?.ToString() ?? string.Empty,
+                                    MetricSubtype = reader["MetricSubtype"]?.ToString() ?? string.Empty,
                                     Value = reader["Value"] != DBNull.Value ? Convert.ToDecimal(reader["Value"]) : null,
-                                    Unit = reader["Unit"]?.
-                                            ToString() ?? string.Empty
+                                    Unit = reader["Unit"]?.ToString() ?? string.Empty
                             };
 
                             if (reader["NormalizedTimestamp"] != DBNull.Value)
@@ -1092,9 +1086,16 @@ public static class SQLHelper
 
     public static void InsertHealthMetricsWeek(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null, bool overwriteExisting = false)
     {
-        ExecuteHealthMetricsAggregation("[dbo].[HealthMetricsWeek]", @"
+        ExecuteHealthMetricsAggregation("[dbo].[HealthMetricsWeek]",
+                @"
             DATEADD(day, -(DATEPART(weekday, CAST(CAST(NormalizedTimestamp AS DATE) AS DATETIME2)) 
-            + @@DATEFIRST - 2) % 7, CAST(CAST(NormalizedTimestamp AS DATE) AS DATETIME2))", "WeekStart", metricType, metricSubtype, fromDate, toDate, overwriteExisting);
+            + @@DATEFIRST - 2) % 7, CAST(CAST(NormalizedTimestamp AS DATE) AS DATETIME2))",
+                "WeekStart",
+                metricType,
+                metricSubtype,
+                fromDate,
+                toDate,
+                overwriteExisting);
     }
 
     public static void InsertHealthMetricsMonth(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null, bool overwriteExisting = false)
@@ -1313,8 +1314,7 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var metricType = reader["MetricType"]?.
-                                    ToString();
+                            var metricType = reader["MetricType"]?.ToString();
                             if (!string.IsNullOrEmpty(metricType))
                                 metricTypes.Add(metricType);
                         }
@@ -1363,8 +1363,7 @@ public static class SQLHelper
                     {
                         while (reader.Read())
                         {
-                            var subtype = reader["MetricSubtype"]?.
-                                    ToString();
+                            var subtype = reader["MetricSubtype"]?.ToString();
                             // Normalize empty strings to null for consistency
                             subtypes.Add(string.IsNullOrEmpty(subtype) ? null : subtype);
                         }

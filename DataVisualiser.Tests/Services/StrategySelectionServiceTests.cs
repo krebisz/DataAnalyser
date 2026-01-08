@@ -13,9 +13,9 @@ namespace DataVisualiser.Tests.Services;
 /// </summary>
 public sealed class StrategySelectionServiceTests
 {
-    private const    string                        ConnectionString = "TestConnectionString";
+    private const string ConnectionString = "TestConnectionString";
     private readonly Mock<IStrategyCutOverService> _mockCutOverService;
-    private readonly StrategySelectionService      _service;
+    private readonly StrategySelectionService _service;
 
     public StrategySelectionServiceTests()
     {
@@ -29,8 +29,7 @@ public sealed class StrategySelectionServiceTests
         // Arrange
         var series = new List<IEnumerable<MetricData>>
         {
-                TestDataBuilders.HealthMetricData().
-                                 BuildSeries(5, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().BuildSeries(5, TimeSpan.FromDays(1))
         };
         var labels = new List<string>
         {
@@ -44,8 +43,7 @@ public sealed class StrategySelectionServiceTests
         var to = DateTime.UtcNow;
 
         var mockStrategy = new Mock<IChartComputationStrategy>();
-        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.SingleMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).
-                            Returns(mockStrategy.Object);
+        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.SingleMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).Returns(mockStrategy.Object);
 
         // Act
         var (strategy, secondaryLabel) = _service.SelectComputationStrategy(series, labels, ctx, from, to);
@@ -62,11 +60,8 @@ public sealed class StrategySelectionServiceTests
         // Arrange
         var series = new List<IEnumerable<MetricData>>
         {
-                TestDataBuilders.HealthMetricData().
-                                 BuildSeries(5, TimeSpan.FromDays(1)),
-                TestDataBuilders.HealthMetricData().
-                                 WithValue(50m).
-                                 BuildSeries(5, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithValue(50m).BuildSeries(5, TimeSpan.FromDays(1))
         };
         var labels = new List<string>
         {
@@ -82,8 +77,7 @@ public sealed class StrategySelectionServiceTests
 
         var mockStrategy = new Mock<IChartComputationStrategy>().Object;
 
-        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.CombinedMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).
-                            Returns(mockStrategy);
+        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.CombinedMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).Returns(mockStrategy);
         // Act
         var (strategy, secondaryLabel) = _service.SelectComputationStrategy(series, labels, ctx, from, to);
 
@@ -100,14 +94,9 @@ public sealed class StrategySelectionServiceTests
         // Arrange
         var series = new List<IEnumerable<MetricData>>
         {
-                TestDataBuilders.HealthMetricData().
-                                 BuildSeries(5, TimeSpan.FromDays(1)),
-                TestDataBuilders.HealthMetricData().
-                                 WithValue(50m).
-                                 BuildSeries(5, TimeSpan.FromDays(1)),
-                TestDataBuilders.HealthMetricData().
-                                 WithValue(75m).
-                                 BuildSeries(5, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithValue(50m).BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithValue(75m).BuildSeries(5, TimeSpan.FromDays(1))
         };
         var labels = new List<string>
         {
@@ -123,8 +112,7 @@ public sealed class StrategySelectionServiceTests
         var to = DateTime.UtcNow;
 
         var mockStrategy = new Mock<IChartComputationStrategy>();
-        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.MultiMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).
-                            Returns(mockStrategy.Object);
+        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.MultiMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).Returns(mockStrategy.Object);
 
         // Act
         var (strategy, secondaryLabel) = _service.SelectComputationStrategy(series, labels, ctx, from, to);

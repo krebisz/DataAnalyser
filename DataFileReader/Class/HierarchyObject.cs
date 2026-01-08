@@ -45,7 +45,6 @@ public class HierarchyObject
 
     public void GenerateMetaDataID()
     {
-        MetaDataID = Math.Abs(Fields.OrderBy(field => field.Key).
-                                     Aggregate(0, (hash, field) => HashCode.Combine(hash, field.Key.GetHashCode(), field.Value.GetHashCode())));
+        MetaDataID = Math.Abs(Fields.OrderBy(field => field.Key).Aggregate(0, (hash, field) => HashCode.Combine(hash, field.Key.GetHashCode(), field.Value.GetHashCode())));
     }
 }

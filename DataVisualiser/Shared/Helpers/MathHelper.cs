@@ -47,13 +47,13 @@ public static class MathHelper
         // 2 years = ~730 records (acceptable)
         // 10 years = ~3,650 records (should limit)
         if (totalDays <= ComputationDefaults.SqlLimitingMaxDailyDaysNoLimit) // ~2 years
-            return null;      // No limit for reasonable daily data
+            return null;                                                     // No limit for reasonable daily data
 
         // For hourly data: ~24 records per day
         // 2 years = ~17,520 records (should limit to ~10,000)
         // 1 year = ~8,760 records (acceptable)
         if (totalDays <= ComputationDefaults.SqlLimitingMaxHourlyDaysNoLimit) // ~1 year
-            return null;      // No limit for 1 year of hourly data
+            return null;                                                      // No limit for 1 year of hourly data
 
         // For longer ranges, apply intelligent limits
         // Target: ~10,000 records max for good performance
@@ -103,10 +103,10 @@ public static class MathHelper
         var intervalsToShow = interval switch
         {
                 TickInterval.Month => Math.Max(6, Math.Min(12, dateRange.TotalDays / 30.0)), // 6-12 months
-                TickInterval.Week  => Math.Max(4, Math.Min(8, dateRange.TotalDays / 7.0)),   // 4-8 weeks
-                TickInterval.Day   => Math.Max(7, Math.Min(14, dateRange.TotalDays)),        // 7-14 days
-                TickInterval.Hour  => Math.Max(12, Math.Min(24, dateRange.TotalHours)),      // 12-24 hours
-                _                  => 10
+                TickInterval.Week => Math.Max(4, Math.Min(8, dateRange.TotalDays / 7.0)),    // 4-8 weeks
+                TickInterval.Day => Math.Max(7, Math.Min(14, dateRange.TotalDays)),          // 7-14 days
+                TickInterval.Hour => Math.Max(12, Math.Min(24, dateRange.TotalHours)),       // 12-24 hours
+                _ => 10
         };
 
         // Calculate step to achieve desired number of intervals
@@ -151,10 +151,10 @@ public static class MathHelper
         return interval switch
         {
                 TickInterval.Month => new DateTime(dateTime.Year, dateTime.Month, 1),
-                TickInterval.Week  => dateTime.Date.AddDays(-(int)dateTime.DayOfWeek), // Start of week (Sunday)
-                TickInterval.Day   => dateTime.Date,
-                TickInterval.Hour  => new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, 0, 0),
-                _                  => dateTime.Date
+                TickInterval.Week => dateTime.Date.AddDays(-(int)dateTime.DayOfWeek), // Start of week (Sunday)
+                TickInterval.Day => dateTime.Date,
+                TickInterval.Hour => new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, 0, 0),
+                _ => dateTime.Date
         };
     }
 
@@ -166,10 +166,10 @@ public static class MathHelper
         return interval switch
         {
                 TickInterval.Month => dateTime.AddMonths(1),
-                TickInterval.Week  => dateTime.AddDays(7),
-                TickInterval.Day   => dateTime.AddDays(1),
-                TickInterval.Hour  => dateTime.AddHours(1),
-                _                  => dateTime.AddDays(1)
+                TickInterval.Week => dateTime.AddDays(7),
+                TickInterval.Day => dateTime.AddDays(1),
+                TickInterval.Hour => dateTime.AddHours(1),
+                _ => dateTime.AddDays(1)
         };
     }
 
@@ -221,9 +221,7 @@ public static class MathHelper
 
         for (var i = 0; i < data.Count; i += pointsPerBin)
         {
-            var bin = data.Skip(i).
-                           Take(pointsPerBin).
-                           ToList();
+            var bin = data.Skip(i).Take(pointsPerBin).ToList();
             if (bin.Any())
                 bins.Add(bin);
         }
@@ -231,17 +229,14 @@ public static class MathHelper
         // Calculate average for each bin
         foreach (var bin in bins)
         {
-            var pointsInBin = bin.Where(p => p.Value.HasValue).
-                                  ToList();
+            var pointsInBin = bin.Where(p => p.Value.HasValue).ToList();
             if (pointsInBin.Any())
             {
                 // Calculate average value
-                var avgValue = pointsInBin.Select(p => (double)p.Value!.Value).
-                                           Average();
+                var avgValue = pointsInBin.Select(p => (double)p.Value!.Value).Average();
 
                 // Use middle timestamp of the bin
-                var sortedBin = pointsInBin.OrderBy(p => p.NormalizedTimestamp).
-                                            ToList();
+                var sortedBin = pointsInBin.OrderBy(p => p.NormalizedTimestamp).ToList();
                 var timestamp = sortedBin[sortedBin.Count / 2].NormalizedTimestamp;
 
                 smoothedPoints.Add(new SmoothedDataPoint
@@ -252,8 +247,7 @@ public static class MathHelper
             }
         }
 
-        return smoothedPoints.OrderBy(p => p.Timestamp).
-                              ToList();
+        return smoothedPoints.OrderBy(p => p.Timestamp).ToList();
     }
 
     /// <summary>
@@ -273,8 +267,7 @@ public static class MathHelper
         var bins = BinDataByTime(data, fromDate, numberOfBins, binSizeTicks);
         var smoothedPoints = CreateAveragedPointsFromBins(bins);
 
-        return smoothedPoints.OrderBy(p => p.Timestamp).
-                              ToList();
+        return smoothedPoints.OrderBy(p => p.Timestamp).ToList();
     }
 
     /// <summary>
@@ -385,8 +378,7 @@ public static class MathHelper
             // Remove trailing zeros
             var formatted = rounded.ToString($"F{decimalPlaces}", CultureInfo.InvariantCulture);
             if (formatted.Contains('.'))
-                formatted = formatted.TrimEnd('0').
-                                      TrimEnd('.');
+                formatted = formatted.TrimEnd('0').TrimEnd('.');
             return formatted;
         }
 
@@ -420,20 +412,14 @@ public static class MathHelper
         if (values == null || values.Count == 0)
             return null;
 
-        var min = values.Where(v => !double.IsNaN(v)).
-                         DefaultIfEmpty(double.NaN).
-                         Min();
-        var max = values.Where(v => !double.IsNaN(v)).
-                         DefaultIfEmpty(double.NaN).
-                         Max();
+        var min = values.Where(v => !double.IsNaN(v)).DefaultIfEmpty(double.NaN).Min();
+        var max = values.Where(v => !double.IsNaN(v)).DefaultIfEmpty(double.NaN).Max();
 
         // Avoid zero-range situations (all values identical)
         if (double.IsNaN(min) || double.IsNaN(max) || min == max)
-            return values.Select(v => double.NaN).
-                          ToList();
+            return values.Select(v => double.NaN).ToList();
 
-        return values.Select(v => double.IsNaN(v) ? double.NaN : (v - min) / (max - min)).
-                      ToList();
+        return values.Select(v => double.IsNaN(v) ? double.NaN : (v - min) / (max - min)).ToList();
     }
 
     public static List<double>? ReturnValueNormalized(List<double>? values, NormalizationMode mode = NormalizationMode.ZeroToOne)
@@ -444,27 +430,22 @@ public static class MathHelper
         if (values == null || values.Count == 0)
             return null;
 
-        var valid = values.Where(v => !double.IsNaN(v)).
-                           ToList();
+        var valid = values.Where(v => !double.IsNaN(v)).ToList();
 
         if (valid.Count == 0)
-            return values.Select(_ => double.NaN).
-                          ToList();
+            return values.Select(_ => double.NaN).ToList();
 
         var min = valid.Min();
         var max = valid.Max();
 
         if (double.IsNaN(min) || double.IsNaN(max) || min == max)
-            return values.Select(_ => double.NaN).
-                          ToList();
+            return values.Select(_ => double.NaN).ToList();
 
         return mode switch
         {
-                NormalizationMode.ZeroToOne => values.Select(v => double.IsNaN(v) ? double.NaN : (v - min) / (max - min)).
-                                                      ToList(),
+                NormalizationMode.ZeroToOne => values.Select(v => double.IsNaN(v) ? double.NaN : (v - min) / (max - min)).ToList(),
 
-                NormalizationMode.PercentageOfMax => values.Select(v => double.IsNaN(v) ? double.NaN : v / max * 100.0).
-                                                            ToList(),
+                NormalizationMode.PercentageOfMax => values.Select(v => double.IsNaN(v) ? double.NaN : v / max * 100.0).ToList(),
 
                 _ => throw new NotSupportedException()
         };
@@ -507,8 +488,7 @@ public static class MathHelper
         }
 
         // Second list is always a straight 100% line
-        var straight100 = Enumerable.Repeat(100.0, count).
-                                     ToList();
+        var straight100 = Enumerable.Repeat(100.0, count).ToList();
 
         return (relative, straight100);
     }
@@ -530,12 +510,14 @@ public static class MathHelper
         if (valueList1 == null || valueList2 == null)
             return null;
 
-        return ApplyBinaryOperation(valueList1, valueList2, (a, b) =>
-        {
-            if (b == 0.0)
-                return double.NaN;
-            return a / b;
-        });
+        return ApplyBinaryOperation(valueList1,
+                valueList2,
+                (a, b) =>
+                {
+                    if (b == 0.0)
+                        return double.NaN;
+                    return a / b;
+                });
     }
 
     public static List<double> ApplyBinaryOperation(List<double>? list1, List<double>? list2, Func<double, double, double> operation)
@@ -701,8 +683,7 @@ public static class MathHelper
         if (points == null || points.Count == 0)
             return null;
 
-        var validValues = points.Where(p => p.Value.HasValue).
-                                 ToList();
+        var validValues = points.Where(p => p.Value.HasValue).ToList();
 
         if (validValues.Count == 0)
             return null;
@@ -727,14 +708,12 @@ public static class MathHelper
 
     private static List<SmoothedDataPoint> SortSmoothedData(List<SmoothedDataPoint> smoothedData)
     {
-        return smoothedData.OrderBy(p => p.Timestamp).
-                            ToList();
+        return smoothedData.OrderBy(p => p.Timestamp).ToList();
     }
 
     private static List<double> CreateNaNResults(List<DateTime> timestamps)
     {
-        return timestamps == null ? new List<double>() : timestamps.Select(_ => double.NaN).
-                                                                    ToList();
+        return timestamps == null ? new List<double>() : timestamps.Select(_ => double.NaN).ToList();
     }
 
     #endregion

@@ -55,10 +55,8 @@ public sealed class TransformDataHelperTests
         Assert.Single(output);
 
         var item = output[0]!;
-        var timestamp = item.GetType().
-                             GetProperty("Timestamp")!.GetValue(item) as string;
-        var value = item.GetType().
-                         GetProperty("Value")!.GetValue(item) as string;
+        var timestamp = item.GetType().GetProperty("Timestamp")!.GetValue(item) as string;
+        var value = item.GetType().GetProperty("Value")!.GetValue(item) as string;
 
         Assert.Equal("2024-01-01 13:05:09", timestamp);
         Assert.Equal("10.1235", value);
@@ -84,8 +82,7 @@ public sealed class TransformDataHelperTests
         var output = TransformExpressionEvaluator.CreateTransformResultData(data, results);
 
         var item = output[0]!;
-        var value = item.GetType().
-                         GetProperty("Value")!.GetValue(item) as string;
+        var value = item.GetType().GetProperty("Value")!.GetValue(item) as string;
 
         Assert.Equal("NaN", value);
     }

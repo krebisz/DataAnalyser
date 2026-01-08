@@ -21,7 +21,6 @@ using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI;
 using DataVisualiser.UI.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.SubtypeSelectors;
@@ -33,28 +32,28 @@ namespace DataVisualiser;
 
 public partial class MainWindow : Window
 {
-    private readonly ChartState                  _chartState             = new();
-    private readonly MetricState                 _metricState            = new();
-    private readonly UiState                     _uiState                = new();
-    private          ChartComputationEngine      _chartComputationEngine = null!;
-    private          ChartRenderEngine           _chartRenderEngine      = null!;
-    private          ChartRenderingOrchestrator? _chartRenderingOrchestrator;
-    private          ChartUpdateCoordinator      _chartUpdateCoordinator = null!;
+    private readonly ChartState _chartState = new();
+    private readonly MetricState _metricState = new();
+    private readonly UiState _uiState = new();
+    private ChartComputationEngine _chartComputationEngine = null!;
+    private ChartRenderEngine _chartRenderEngine = null!;
+    private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
+    private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
 
-    private string                    _connectionString          = null!;
+    private string _connectionString = null!;
     private HourlyDistributionService _hourlyDistributionService = null!;
-    private bool                      _isChangingResolution;
+    private bool _isChangingResolution;
 
     private bool _isInitializing = true;
 
-    private MetricSelectionService             _metricSelectionService = null!;
-    private SubtypeSelectorManager             _selectorManager        = null!;
-    private IStrategyCutOverService?           _strategyCutOverService;
-    private List<string>?                      _subtypeList;
-    private ChartTooltipManager?               _tooltipManager;
-    private MainWindowViewModel                _viewModel                          = null!;
+    private MetricSelectionService _metricSelectionService = null!;
+    private SubtypeSelectorManager _selectorManager = null!;
+    private IStrategyCutOverService? _strategyCutOverService;
+    private List<string>? _subtypeList;
+    private ChartTooltipManager? _tooltipManager;
+    private MainWindowViewModel _viewModel = null!;
     private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
-    private WeeklyDistributionService          _weeklyDistributionService          = null!;
+    private WeeklyDistributionService _weeklyDistributionService = null!;
 
     public MainWindow()
     {
@@ -264,9 +263,7 @@ public partial class MainWindow : Window
             var data1 = ctx.Data1.ToList();
             var data2 = ctx.Data2?.ToList() ?? new List<MetricData>();
 
-            var msg = $"Data1 count: {data1.Count}\n" + $"Data2 count: {data2.Count}\n" + $"First 3 timestamps (Data1):\n" + string.Join("\n", data1.Take(3).
-                                                                                                                                                     Select(d => d.NormalizedTimestamp)) + "\n\nFirst 3 timestamps (Data2):\n" + string.Join("\n", data2.Take(3).
-                                                                                                                                                                                                                                                         Select(d => d.NormalizedTimestamp));
+            var msg = $"Data1 count: {data1.Count}\n" + $"Data2 count: {data2.Count}\n" + $"First 3 timestamps (Data1):\n" + string.Join("\n", data1.Take(3).Select(d => d.NormalizedTimestamp)) + "\n\nFirst 3 timestamps (Data2):\n" + string.Join("\n", data2.Take(3).Select(d => d.NormalizedTimestamp));
 
             MessageBox.Show(msg, "DEBUG - LastContext contents");
         }
@@ -475,14 +472,14 @@ public partial class MainWindow : Window
         if (data == null && !alwaysVisible)
             return;
 
-        var rows = data?.Where(d => d.Value.HasValue).
-                         OrderBy(d => d.NormalizedTimestamp).
-                         Select(d => new
-                         {
-                                 Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                                 Value = d.Value!.Value.ToString("F4")
-                         }).
-                         ToList();
+        var rows = data?.Where(d => d.Value.HasValue)
+                       .OrderBy(d => d.NormalizedTimestamp)
+                       .Select(d => new
+                       {
+                               Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                               Value = d.Value!.Value.ToString("F4")
+                       })
+                       .ToList();
 
         grid.ItemsSource = rows;
         title.Text = titleText;
@@ -496,8 +493,7 @@ public partial class MainWindow : Window
 
     private void SetBinaryTransformOperationsEnabled(bool enabled)
     {
-        var binaryItems = TransformOperationCombo.Items.Cast<ComboBoxItem>().
-                                                  Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
+        var binaryItems = TransformOperationCombo.Items.Cast<ComboBoxItem>().Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
 
         foreach (var item in binaryItems)
             item.IsEnabled = enabled;
@@ -624,7 +620,7 @@ public partial class MainWindow : Window
             return;
 
         var chart = isWeekly ? ChartWeekly : ChartHourly;
-        var useFrequencyShading = _viewModel.ChartState.UseFrequencyShading;
+        var useFrequencyShading = isWeekly ? _viewModel.ChartState.UseWeeklyFrequencyShading : _viewModel.ChartState.UseHourlyFrequencyShading;
         var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
 
         if (isWeekly)
@@ -674,12 +670,12 @@ public partial class MainWindow : Window
     {
         return chartName switch
         {
-                "Norm"        => ChartNormContentPanel,
-                "DiffRatio"   => DiffRatioChartController.Panel.ChartContentPanel,
-                "Weekly"      => ChartWeeklyContentPanel,
-                "Hourly"      => ChartHourlyContentPanel,
+                "Norm" => ChartNormContentPanel,
+                "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
+                "Weekly" => ChartWeeklyContentPanel,
+                "Hourly" => ChartHourlyContentPanel,
                 "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
-                _             => null
+                _ => null
         };
     }
 
@@ -877,7 +873,7 @@ public partial class MainWindow : Window
 
     private void InitializeViewModel()
     {
-        _viewModel = new MainWindowViewModel(_chartState, _metricState, _uiState, _metricSelectionService, _chartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService);
+        _viewModel = new MainWindowViewModel(_chartState, _metricState, _uiState, _metricSelectionService);
 
         DataContext = _viewModel;
     }
@@ -1568,9 +1564,7 @@ public partial class MainWindow : Window
     private async Task ComputeUnaryTransform(IEnumerable<MetricData> data, string operation)
     {
         // Use ALL data for chart computation (proper normalization)
-        var allDataList = data.Where(d => d.Value.HasValue).
-                               OrderBy(d => d.NormalizedTimestamp).
-                               ToList();
+        var allDataList = data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
         if (allDataList.Count == 0)
             return;
@@ -1586,12 +1580,11 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                    "Log"  => UnaryOperators.Logarithm,
+                    "Log" => UnaryOperators.Logarithm,
                     "Sqrt" => UnaryOperators.SquareRoot,
-                    _      => x => x
+                    _ => x => x
             };
-            var allValues = allDataList.Select(d => (double)d.Value!.Value).
-                                        ToList();
+            var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
             computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
             metricsList = new List<IReadOnlyList<MetricData>>
             {
@@ -1661,8 +1654,9 @@ public partial class MainWindow : Window
     {
         TransformChartContentPanel.UpdateLayout();
         await Dispatcher.InvokeAsync(() =>
-        {
-        }, DispatcherPriority.Render);
+                {
+                },
+                DispatcherPriority.Render);
         await CalculateAndSetTransformChartWidth();
         Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartContentPanel.Visibility}");
     }
@@ -1675,10 +1669,11 @@ public partial class MainWindow : Window
         ChartTransformResult.Update(true, true);
         TransformChartContentPanel.UpdateLayout();
         await Dispatcher.InvokeAsync(() =>
-        {
-            ChartTransformResult.InvalidateVisual();
-            ChartTransformResult.Update(true, true);
-        }, DispatcherPriority.Render);
+                {
+                    ChartTransformResult.InvalidateVisual();
+                    ChartTransformResult.Update(true, true);
+                },
+                DispatcherPriority.Render);
         Debug.WriteLine($"[TransformChart] After render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, SeriesCount={ChartTransformResult.Series?.Count ?? 0}");
     }
 
@@ -1688,23 +1683,24 @@ public partial class MainWindow : Window
     private async Task CalculateAndSetTransformChartWidth()
     {
         await Dispatcher.InvokeAsync(() =>
-        {
-            if (TransformChartContainer == null)
-                return;
+                {
+                    if (TransformChartContainer == null)
+                        return;
 
-            var parentStackPanel = TransformChartContainer.Parent as FrameworkElement;
-            if (parentStackPanel?.Parent is not FrameworkElement parentContainer)
-                return;
+                    var parentStackPanel = TransformChartContainer.Parent as FrameworkElement;
+                    if (parentStackPanel?.Parent is not FrameworkElement parentContainer)
+                        return;
 
-            var usedWidth = CalculateUsedWidthForTransformGrids();
-            usedWidth += 40; // Margins and spacing (20px left + 10px between grids + 10px before chart)
+                    var usedWidth = CalculateUsedWidthForTransformGrids();
+                    usedWidth += 40; // Margins and spacing (20px left + 10px between grids + 10px before chart)
 
-            var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
-            var chartWidth = Math.Max(400, availableWidth - usedWidth - 40); // 40px for window padding
-            TransformChartContainer.Width = chartWidth;
+                    var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
+                    var chartWidth = Math.Max(400, availableWidth - usedWidth - 40); // 40px for window padding
+                    TransformChartContainer.Width = chartWidth;
 
-            Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
-        }, DispatcherPriority.Render);
+                    Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
+                },
+                DispatcherPriority.Render);
     }
 
     /// <summary>
@@ -1761,13 +1757,9 @@ public partial class MainWindow : Window
     private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation)
     {
         // Use ALL data for chart computation (proper normalization)
-        var allData1List = data1.Where(d => d.Value.HasValue).
-                                 OrderBy(d => d.NormalizedTimestamp).
-                                 ToList();
+        var allData1List = data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
-        var allData2List = data2.Where(d => d.Value.HasValue).
-                                 OrderBy(d => d.NormalizedTimestamp).
-                                 ToList();
+        var allData2List = data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
         if (allData1List.Count == 0 || allData2List.Count == 0)
             return;
@@ -1788,15 +1780,13 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                    "Add"      => BinaryOperators.Sum,
+                    "Add" => BinaryOperators.Sum,
                     "Subtract" => BinaryOperators.Difference,
-                    _          => (a, b) => a
+                    _ => (a, b) => a
             };
 
-            var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
-                                         ToList();
-            var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
-                                         ToList();
+            var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
+            var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
             binaryComputedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
             binaryMetricsList = new List<IReadOnlyList<MetricData>>
             {
@@ -1834,6 +1824,7 @@ public partial class MainWindow : Window
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
         ResetDistributionChartZoom(ChartWeekly);
         ResetDistributionChartZoom(ChartHourly);
+        ChartHelper.ResetZoom(ChartTransformResult);
         var weekdayChart = WeekdayTrendChartController.Chart;
         ChartHelper.ResetZoom(ref weekdayChart);
         var weekdayPolarChart = WeekdayTrendChartController.PolarChart;
@@ -1911,7 +1902,7 @@ public partial class MainWindow : Window
         try
         {
             var chartType = isWeekly ? "Weekly" : "Hourly";
-            Debug.WriteLine($"On{chartType}DisplayModeChanged: Setting UseFrequencyShading to {useFrequencyShading}");
+            Debug.WriteLine($"On{chartType}DisplayModeChanged: Setting Use{chartType}FrequencyShading to {useFrequencyShading}");
 
             if (isWeekly)
                 _viewModel.SetWeeklyFrequencyShading(useFrequencyShading);
@@ -1920,9 +1911,9 @@ public partial class MainWindow : Window
 
             var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
             var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
-            var useFrequencyShadingState = isWeekly ? _viewModel.ChartState.UseFrequencyShading : _viewModel.ChartState.UseFrequencyShading;
+            var useFrequencyShadingState = isWeekly ? _viewModel.ChartState.UseWeeklyFrequencyShading : _viewModel.ChartState.UseHourlyFrequencyShading;
 
-            Debug.WriteLine($"On{chartType}DisplayModeChanged: ChartState.UseFrequencyShading = {useFrequencyShadingState}");
+            Debug.WriteLine($"On{chartType}DisplayModeChanged: ChartState.Use{chartType}FrequencyShading = {useFrequencyShadingState}");
 
             if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
             {
@@ -1959,7 +1950,7 @@ public partial class MainWindow : Window
                 _viewModel.SetHourlyIntervalCount(intervalCount);
 
             var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
-            var useFrequencyShading = _viewModel.ChartState.UseFrequencyShading;
+            var useFrequencyShading = isWeekly ? _viewModel.ChartState.UseWeeklyFrequencyShading : _viewModel.ChartState.UseHourlyFrequencyShading;
 
             if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
             {

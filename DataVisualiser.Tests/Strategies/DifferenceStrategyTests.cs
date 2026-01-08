@@ -7,7 +7,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class DifferenceStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
@@ -25,10 +25,7 @@ public sealed class DifferenceStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenOneSeriesEmpty()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var right = Enumerable.Empty<MetricData>();
 
@@ -42,15 +39,9 @@ public sealed class DifferenceStrategyTests
     [Fact]
     public void Compute_ShouldAlignByIndex_UsingShortestSeries()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(8, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(8, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 
@@ -102,10 +93,11 @@ public sealed class DifferenceStrategyTests
 
         Assert.NotNull(result);
         Assert.Equal(new[]
-        {
-                7.0,
-                15.0
-        }, result!.PrimaryRawValues);
+                {
+                        7.0,
+                        15.0
+                },
+                result!.PrimaryRawValues);
     }
 
     [Fact]
@@ -162,10 +154,11 @@ public sealed class DifferenceStrategyTests
         Assert.NotNull(result);
         Assert.Equal(2, result!.PrimaryRawValues.Count);
         Assert.Equal(new[]
-        {
-                7.0,
-                15.0
-        }, result.PrimaryRawValues);
+                {
+                        7.0,
+                        15.0
+                },
+                result.PrimaryRawValues);
         Assert.DoesNotContain(result.PrimaryRawValues, double.IsNaN);
     }
 
@@ -173,15 +166,9 @@ public sealed class DifferenceStrategyTests
     [Fact]
     public void Compute_ShouldGenerateSmoothedValues()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(10, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(10, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
         var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 
@@ -195,15 +182,9 @@ public sealed class DifferenceStrategyTests
     [Fact]
     public void Compute_ShouldResolveUnit_WhenUnitsMatch()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 
@@ -216,15 +197,9 @@ public sealed class DifferenceStrategyTests
     [Fact]
     public void Compute_ShouldPreferLeftUnit_WhenUnitsDiffer()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("lb").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("lb").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new DifferenceStrategy(left, right, "L", "R", From, To);
 

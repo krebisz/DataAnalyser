@@ -135,8 +135,7 @@ public static class ConsoleHelper
         Console.ForegroundColor = ConsoleColor.White;
 
         for (var i = 0; i < flattenedData.Columns.Count; i++)
-            Console.Write(flattenedData.Columns[i].
-                                        ColumnName.PadRight(20) + ", ");
+            Console.Write(flattenedData.Columns[i].ColumnName.PadRight(20) + ", ");
 
         Console.WriteLine();
 

@@ -11,16 +11,16 @@ using UnitResolutionService = UnitResolutionService;
 
 public sealed class NormalizedStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                _from;
-    private readonly string                  _labelLeft;
-    private readonly string                  _labelRight;
+    private readonly DateTime _from;
+    private readonly string _labelLeft;
+    private readonly string _labelRight;
     private readonly IEnumerable<MetricData> _left;
-    private readonly NormalizationMode       _mode;
+    private readonly NormalizationMode _mode;
     private readonly IEnumerable<MetricData> _right;
-    private readonly ISmoothingService       _smoothingService;
-    private readonly ITimelineService        _timelineService;
-    private readonly DateTime                _to;
-    private readonly IUnitResolutionService  _unitResolutionService;
+    private readonly ISmoothingService _smoothingService;
+    private readonly ITimelineService _timelineService;
+    private readonly DateTime _to;
+    private readonly IUnitResolutionService _unitResolutionService;
 
     public NormalizedStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to) : this(left, right, labelLeft, labelRight, from, to, NormalizationMode.PercentageOfMax)
     {
@@ -65,10 +65,8 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
         var intervalIndices = _timelineService.MapToIntervals(timestamps, timeline);
 
         // Use unified smoothing service
-        var interpSmoothed1 = _smoothingService.SmoothSeries(ordered1, timestamps, _from, _to).
-                                                ToList();
-        var interpSmoothed2 = _smoothingService.SmoothSeries(ordered2, timestamps, _from, _to).
-                                                ToList();
+        var interpSmoothed1 = _smoothingService.SmoothSeries(ordered1, timestamps, _from, _to).ToList();
+        var interpSmoothed2 = _smoothingService.SmoothSeries(ordered2, timestamps, _from, _to).ToList();
 
         var (rawValues1, rawValues2) = ExtractAlignedRawValues(ordered1, ordered2, timestamps);
         var normalization = NormalizeSeries(rawValues1, rawValues2, interpSmoothed1, interpSmoothed2);

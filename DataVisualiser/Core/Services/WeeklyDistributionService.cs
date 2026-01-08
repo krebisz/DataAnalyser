@@ -25,7 +25,7 @@ public class WeeklyDistributionService : BaseDistributionService
         {
                 WeeklyDistributionStrategy legacy => legacy.ExtendedResult,
                 CmsWeeklyDistributionStrategy cms => cms.ExtendedResult,
-                _                                 => null
+                _ => null
         };
     }
 

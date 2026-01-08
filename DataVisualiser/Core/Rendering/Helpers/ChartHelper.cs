@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using DataVisualiser.Core.Data;
-using DataVisualiser.Core.Rendering;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
@@ -23,10 +22,10 @@ public static class ChartHelper
         return interval switch
         {
                 TickInterval.Month => dateTime.ToString("MMM yyyy"),
-                TickInterval.Week  => dateTime.ToString("MMM dd"),
-                TickInterval.Day   => dateTime.ToString("MM/dd"),
-                TickInterval.Hour  => dateTime.ToString("MM/dd HH:mm"),
-                _                  => dateTime.ToString("MM/dd HH:mm")
+                TickInterval.Week => dateTime.ToString("MMM dd"),
+                TickInterval.Day => dateTime.ToString("MM/dd"),
+                TickInterval.Hour => dateTime.ToString("MM/dd HH:mm"),
+                _ => dateTime.ToString("MM/dd HH:mm")
         };
     }
 
@@ -38,12 +37,12 @@ public static class ChartHelper
         var selectedResolution = ResolutionCombo.SelectedItem?.ToString() ?? "All";
         return selectedResolution switch
         {
-                "Hourly"  => DataAccessDefaults.HealthMetricsHourTable,
-                "Daily"   => DataAccessDefaults.HealthMetricsDayTable,
-                "Weekly"  => DataAccessDefaults.HealthMetricsWeekTable,
+                "Hourly" => DataAccessDefaults.HealthMetricsHourTable,
+                "Daily" => DataAccessDefaults.HealthMetricsDayTable,
+                "Weekly" => DataAccessDefaults.HealthMetricsWeekTable,
                 "Monthly" => DataAccessDefaults.HealthMetricsMonthTable,
-                "Yearly"  => DataAccessDefaults.HealthMetricsYearTable,
-                _         => DataAccessDefaults.DefaultTableName // Default to "All" which uses HealthMetrics
+                "Yearly" => DataAccessDefaults.HealthMetricsYearTable,
+                _ => DataAccessDefaults.DefaultTableName // Default to "All" which uses HealthMetrics
         };
     }
 
@@ -450,8 +449,7 @@ public static class ChartHelper
     {
         foreach (var chart in charts)
             if (chartTimestamps.TryGetValue(chart, out var list) && index >= 0 && index < list.Count)
-                return list[index].
-                        ToString("yyyy-MM-dd HH:mm:ss");
+                return list[index].ToString("yyyy-MM-dd HH:mm:ss");
 
         return "Timestamp: N/A";
     }
@@ -562,7 +560,7 @@ public static class ChartHelper
                 <= 1 => 1 * magnitude,
                 <= 2 => 2 * magnitude,
                 <= 5 => 5 * magnitude,
-                _    => 10 * magnitude
+                _ => 10 * magnitude
         };
 
         niceInterval = MathHelper.RoundToThreeSignificantDigits(niceInterval);
@@ -660,10 +658,12 @@ public static class ChartHelper
 
         var fallbackStep = MathHelper.RoundToThreeSignificantDigits(padded.Range / targetTicks);
 
-        yAxis.Separator = fallbackStep > 0 ? new Separator
-        {
-                Step = fallbackStep
-        } : new Separator();
+        yAxis.Separator = fallbackStep > 0 ?
+                new Separator
+                {
+                        Step = fallbackStep
+                } :
+                new Separator();
 
         yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
 

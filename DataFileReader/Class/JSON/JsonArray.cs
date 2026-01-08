@@ -3,7 +3,7 @@
 public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
 {
     public List<IJson> Elements { get; set; } = new();
-    public bool        IsArray  => false;
+    public bool IsArray => false;
 
     public bool IsObject => true;
 
@@ -63,8 +63,7 @@ public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
     {
         if (!string.IsNullOrWhiteSpace(text))
             for (var index = 0; index < Elements.Count; index++)
-                if (text.Equals(Elements[index].
-                            ToString(), StringComparison.InvariantCultureIgnoreCase))
+                if (text.Equals(Elements[index].ToString(), StringComparison.InvariantCultureIgnoreCase))
                     return true;
 
         return false;

@@ -13,12 +13,12 @@ namespace DataVisualiser.Core.Orchestration.Coordinator;
 public sealed class WeekdayTrendChartUpdateCoordinator
 {
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    private readonly ChartRenderGate                            _renderGate = new();
-    private readonly WeekdayTrendRenderingService               _renderingService;
-    private          CartesianChart?                            _cartesianChart;
-    private          ChartState?                                _chartState;
-    private          WeekdayTrendResult?                        _lastResult;
-    private          CartesianChart?                            _polarChart;
+    private readonly ChartRenderGate _renderGate = new();
+    private readonly WeekdayTrendRenderingService _renderingService;
+    private CartesianChart? _cartesianChart;
+    private ChartState? _chartState;
+    private WeekdayTrendResult? _lastResult;
+    private CartesianChart? _polarChart;
 
     public WeekdayTrendChartUpdateCoordinator(WeekdayTrendRenderingService renderingService, Dictionary<CartesianChart, List<DateTime>> chartTimestamps)
     {
@@ -56,12 +56,13 @@ public sealed class WeekdayTrendChartUpdateCoordinator
 
         var targetChart = _chartState.IsWeekdayTrendPolarMode ? _polarChart : _cartesianChart;
 
-        _renderGate.ExecuteWhenReady(targetChart, () =>
-        {
-            _renderingService.RenderWeekdayTrendChart(_lastResult, _chartState, _cartesianChart, _polarChart);
+        _renderGate.ExecuteWhenReady(targetChart,
+                () =>
+                {
+                    _renderingService.RenderWeekdayTrendChart(_lastResult, _chartState, _cartesianChart, _polarChart);
 
-            FinalizeChart(_cartesianChart);
-            FinalizeChart(_polarChart);
-        });
+                    FinalizeChart(_cartesianChart);
+                    FinalizeChart(_polarChart);
+                });
     }
 }

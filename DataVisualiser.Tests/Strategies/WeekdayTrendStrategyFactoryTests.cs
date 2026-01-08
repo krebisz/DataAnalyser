@@ -9,7 +9,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class WeekdayTrendStrategyFactoryTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 08);
+    private static readonly DateTime To = new(2024, 01, 08);
 
     [Fact]
     public void CreateLegacyStrategy_ShouldReturnComputationStrategy()
@@ -17,18 +17,18 @@ public sealed class WeekdayTrendStrategyFactoryTests
         var factory = new WeekdayTrendStrategyFactory();
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = new List<MetricData>
-            {
-                new()
+                LegacyData1 = new List<MetricData>
                 {
-                    NormalizedTimestamp = From,
-                    Value = 10m,
-                    Unit = "kg"
-                }
-            },
-            Label1 = "Test",
-            From = From,
-            To = To
+                        new()
+                        {
+                                NormalizedTimestamp = From,
+                                Value = 10m,
+                                Unit = "kg"
+                        }
+                },
+                Label1 = "Test",
+                From = From,
+                To = To
         };
 
         var strategy = factory.CreateLegacyStrategy(parameters);
@@ -41,26 +41,20 @@ public sealed class WeekdayTrendStrategyFactoryTests
     [Fact]
     public void CreateCmsStrategy_ShouldReturnComputationStrategy()
     {
-        var cms = TestDataBuilders.CanonicalMetricSeries().
-                                   WithMetricId("metric.test.weekday").
-                                   WithUnit("kg").
-                                   WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).
-                                   WithInterval(TimeSpan.FromDays(1)).
-                                   WithSampleCount(5).
-                                   Build();
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.weekday").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build();
 
         var ctx = new ChartDataContext
         {
-            PrimaryCms = cms,
-            From = From,
-            To = To
+                PrimaryCms = cms,
+                From = From,
+                To = To
         };
 
         var parameters = new StrategyCreationParameters
         {
-            Label1 = "Test",
-            From = From,
-            To = To
+                Label1 = "Test",
+                From = From,
+                To = To
         };
 
         var factory = new WeekdayTrendStrategyFactory();

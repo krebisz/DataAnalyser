@@ -7,10 +7,10 @@ using Newtonsoft.Json.Linq;
 
 public class LegacyJsonParser : IHealthFileParser
 {
-    public static List<string>        fileList            = new();
-    public static MetaDataList        metaDataList        = new();
+    public static List<string> fileList = new();
+    public static MetaDataList metaDataList = new();
     public static HierarchyObjectList hierarchyObjectList = new();
-    public static DataTable           flattenedData       = new();
+    public static DataTable flattenedData = new();
 
     public bool CanParse(FileInfo file)
     {
@@ -78,15 +78,7 @@ public class LegacyJsonParser : IHealthFileParser
         //HierarchyObjectList.HierarchyObjects = HierarchyObjectList.HierarchyObjects.OrderBy(h => (Convert.ToDecimal(h.ReferenceValue))).OrderBy(h => h.MetaDataID).ToList();
 
         foreach (var hierarchyObject in HierarchyObjectList.HierarchyObjects)
-            ConsoleHelper.PrintHierarchyObject(
-                hierarchyObject.Name,
-                hierarchyObject.ID.ToString(),
-                hierarchyObject.Level?.ToString() ?? string.Empty,
-                hierarchyObject.Value,
-                hierarchyObject.ParentID?.ToString() ?? string.Empty,
-                hierarchyObject.MetaDataID?.ToString() ?? string.Empty,
-                hierarchyObject.ReferenceValue,
-                ConsoleHelper.ConsoleOutputColour(hierarchyObject.ClassID));
+            ConsoleHelper.PrintHierarchyObject(hierarchyObject.Name, hierarchyObject.ID.ToString(), hierarchyObject.Level?.ToString() ?? string.Empty, hierarchyObject.Value, hierarchyObject.ParentID?.ToString() ?? string.Empty, hierarchyObject.MetaDataID?.ToString() ?? string.Empty, hierarchyObject.ReferenceValue, ConsoleHelper.ConsoleOutputColour(hierarchyObject.ClassID));
     }
 
     public static void PrintMetaDataList(MetaDataList metaDataList)

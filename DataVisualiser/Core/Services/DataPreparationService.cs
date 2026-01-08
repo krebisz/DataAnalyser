@@ -17,9 +17,7 @@ public sealed class DataPreparationService : IDataPreparationService
         if (source == null)
             return Array.Empty<MetricData>();
 
-        return source.Where(d => d != null && d.Value.HasValue && d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to).
-                      OrderBy(d => d.NormalizedTimestamp).
-                      ToList();
+        return source.Where(d => d != null && d.Value.HasValue && d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to).OrderBy(d => d.NormalizedTimestamp).ToList();
     }
 
     public IReadOnlyList<MetricSample> PrepareCmsData(ICanonicalMetricSeries? cms, DateTime from, DateTime to)
@@ -27,9 +25,7 @@ public sealed class DataPreparationService : IDataPreparationService
         if (cms == null || cms.Samples.Count == 0)
             return Array.Empty<MetricSample>();
 
-        return cms.Samples.Where(s => s.Value.HasValue && s.Timestamp.DateTime >= from && s.Timestamp.DateTime <= to).
-                   OrderBy(s => s.Timestamp).
-                   ToList();
+        return cms.Samples.Where(s => s.Value.HasValue && s.Timestamp.DateTime >= from && s.Timestamp.DateTime <= to).OrderBy(s => s.Timestamp).ToList();
     }
 
     public IReadOnlyList<MetricData> ConvertCmsToLegacy(ICanonicalMetricSeries cms, DateTime from, DateTime to)
@@ -38,7 +34,6 @@ public sealed class DataPreparationService : IDataPreparationService
             throw new ArgumentNullException(nameof(cms));
 
         // Use existing helper for consistency
-        return CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).
-                                   ToList();
+        return CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).ToList();
     }
 }

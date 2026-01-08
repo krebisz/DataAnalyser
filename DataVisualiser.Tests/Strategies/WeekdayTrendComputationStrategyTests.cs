@@ -8,25 +8,25 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class WeekdayTrendComputationStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 08);
+    private static readonly DateTime To = new(2024, 01, 08);
 
     [Fact]
     public void Compute_ShouldPopulateExtendedResult_ForLegacyData()
     {
         var data = new List<MetricData>
         {
-            new()
-            {
-                NormalizedTimestamp = From,
-                Value = 10m,
-                Unit = "kg"
-            },
-            new()
-            {
-                NormalizedTimestamp = From.AddDays(1),
-                Value = 20m,
-                Unit = "kg"
-            }
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = 10m,
+                        Unit = "kg"
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = 20m,
+                        Unit = "kg"
+                }
         };
 
         var strategy = new WeekdayTrendComputationStrategy(data, "Test", From, To);
@@ -42,13 +42,7 @@ public sealed class WeekdayTrendComputationStrategyTests
     [Fact]
     public void Compute_ShouldPopulateExtendedResult_ForCmsData()
     {
-        var cms = TestDataBuilders.CanonicalMetricSeries().
-                                   WithMetricId("metric.test.weekday").
-                                   WithUnit("kg").
-                                   WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).
-                                   WithInterval(TimeSpan.FromDays(1)).
-                                   WithSampleCount(5).
-                                   Build();
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.weekday").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build();
 
         var strategy = new WeekdayTrendComputationStrategy(cms, "Test", From, To);
 
@@ -63,11 +57,7 @@ public sealed class WeekdayTrendComputationStrategyTests
     [Fact]
     public void Compute_ShouldExposeExtendedResultViaInterface()
     {
-        var data = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    WithValue(5m).
-                                    BuildSeries(3, TimeSpan.FromDays(1));
+        var data = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").WithValue(5m).BuildSeries(3, TimeSpan.FromDays(1));
 
         IChartComputationStrategy strategy = new WeekdayTrendComputationStrategy(data, "Test", From, To);
 

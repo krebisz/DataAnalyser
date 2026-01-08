@@ -24,7 +24,6 @@ public class MetaData
     public void GenerateID()
     {
         //ID = Fields.OrderBy(field => field.Key).Aggregate(0, (hash, field) => HashCode.Combine(hash, field.Key.GetHashCode(), field.Value.GetHashCode()));
-        ID = Math.Abs(Fields.OrderBy(field => field.Key).
-                             Aggregate(0, (hash, field) => HashCode.Combine(hash, field.Key.GetHashCode(), field.Value.GetHashCode())));
+        ID = Math.Abs(Fields.OrderBy(field => field.Key).Aggregate(0, (hash, field) => HashCode.Combine(hash, field.Key.GetHashCode(), field.Value.GetHashCode())));
     }
 }

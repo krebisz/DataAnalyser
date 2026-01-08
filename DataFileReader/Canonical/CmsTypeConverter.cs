@@ -93,7 +93,6 @@ public static class CmsTypeConverter
         if (internalCmsList == null)
             throw new ArgumentNullException(nameof(internalCmsList));
 
-        return internalCmsList.Select(ToConsumerCms).
-                               ToList();
+        return internalCmsList.Select(ToConsumerCms).ToList();
     }
 }

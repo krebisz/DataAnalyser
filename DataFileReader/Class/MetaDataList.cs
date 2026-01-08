@@ -24,8 +24,7 @@ public class MetaDataList
             //hierarchyObject.ReferenceValue = GetMetaDataObjectReferenceValue(HierarchyObjectList.HierarchyObjects, hierarchyObject.ID, ref referenceValue).ToString();
             hierarchyObject.ReferenceValue = GetMetaDataObjectReferenceValue(HierarchyObjectList.HierarchyObjects, hierarchyObject.ID);
             if (string.IsNullOrEmpty(hierarchyObject.Name))
-                hierarchyObject.Name = Guid.NewGuid().
-                                            ToString();
+                hierarchyObject.Name = Guid.NewGuid().ToString();
 
             var metaData = new MetaData();
 
@@ -85,8 +84,7 @@ public class MetaDataList
 
             if (hierarchyObject.ClassID == "Element")
             {
-                var flattenedDataColumn = flattenedData.Columns.Cast<DataColumn>().
-                                                        SingleOrDefault(col => col.ColumnName == hierarchyObject.Name);
+                var flattenedDataColumn = flattenedData.Columns.Cast<DataColumn>().SingleOrDefault(col => col.ColumnName == hierarchyObject.Name);
 
                 if (flattenedDataColumn != null)
                     flattenedDataRow[flattenedDataColumn] = hierarchyObject.Value;
@@ -99,8 +97,7 @@ public class MetaDataList
         {
             for (var j = 0; j < flattenedData.Columns.Count; j++)
             {
-                currentDataFields[j] = flattenedData.Rows[i][j]?.
-                                                     ToString() ?? string.Empty;
+                currentDataFields[j] = flattenedData.Rows[i][j]?.ToString() ?? string.Empty;
 
                 if (!string.IsNullOrEmpty(currentDataFields[j]))
                 {

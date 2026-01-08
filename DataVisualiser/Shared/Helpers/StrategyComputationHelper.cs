@@ -16,9 +16,7 @@ public static class StrategyComputationHelper
         if (source == null)
             return new List<MetricData>();
 
-        return source.Where(d => d != null && d.Value.HasValue).
-                      OrderBy(d => d!.NormalizedTimestamp).
-                      ToList();
+        return source.Where(d => d != null && d.Value.HasValue).OrderBy(d => d!.NormalizedTimestamp).ToList();
     }
 
     /// <summary>
@@ -30,9 +28,7 @@ public static class StrategyComputationHelper
         if (source == null)
             return new List<MetricData>();
 
-        return source.Where(d => d != null && d.Value.HasValue && d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to).
-                      OrderBy(d => d!.NormalizedTimestamp).
-                      ToList();
+        return source.Where(d => d != null && d.Value.HasValue && d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to).OrderBy(d => d!.NormalizedTimestamp).ToList();
     }
 
     /// <summary>
@@ -43,12 +39,8 @@ public static class StrategyComputationHelper
         if (left == null && right == null)
             return null;
 
-        var ordered1 = left?.Where(d => d.Value.HasValue).
-                             OrderBy(d => d.NormalizedTimestamp).
-                             ToList() ?? new List<MetricData>();
-        var ordered2 = right?.Where(d => d.Value.HasValue).
-                              OrderBy(d => d.NormalizedTimestamp).
-                              ToList() ?? new List<MetricData>();
+        var ordered1 = left?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<MetricData>();
+        var ordered2 = right?.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList() ?? new List<MetricData>();
 
         if (!ordered1.Any() && !ordered2.Any())
             return null;
@@ -70,10 +62,7 @@ public static class StrategyComputationHelper
     /// </summary>
     public static List<DateTime> CombineTimestamps(IEnumerable<MetricData> ordered1, IEnumerable<MetricData> ordered2)
     {
-        return ordered1.Select(d => d.NormalizedTimestamp).
-                        Union(ordered2.Select(d => d.NormalizedTimestamp)).
-                        OrderBy(dt => dt).
-                        ToList();
+        return ordered1.Select(d => d.NormalizedTimestamp).Union(ordered2.Select(d => d.NormalizedTimestamp)).OrderBy(dt => dt).ToList();
     }
 
     /// <summary>
@@ -81,13 +70,9 @@ public static class StrategyComputationHelper
     /// </summary>
     public static(Dictionary<DateTime, double> Dict1, Dictionary<DateTime, double> Dict2) CreateTimestampValueDictionaries(List<MetricData> ordered1, List<MetricData> ordered2)
     {
-        var dict1 = ordered1.GroupBy(d => d.NormalizedTimestamp).
-                             ToDictionary(g => g.Key, g => (double)g.First().
-                                                                     Value!.Value);
+        var dict1 = ordered1.GroupBy(d => d.NormalizedTimestamp).ToDictionary(g => g.Key, g => (double)g.First().Value!.Value);
 
-        var dict2 = ordered2.GroupBy(d => d.NormalizedTimestamp).
-                             ToDictionary(g => g.Key, g => (double)g.First().
-                                                                     Value!.Value);
+        var dict2 = ordered2.GroupBy(d => d.NormalizedTimestamp).ToDictionary(g => g.Key, g => (double)g.First().Value!.Value);
 
         return (dict1, dict2);
     }
@@ -97,11 +82,9 @@ public static class StrategyComputationHelper
     /// </summary>
     public static(List<double> RawValues1, List<double> RawValues2) ExtractAlignedRawValues(List<DateTime> combinedTimestamps, Dictionary<DateTime, double> dict1, Dictionary<DateTime, double> dict2)
     {
-        var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).
-                                            ToList();
+        var rawValues1 = combinedTimestamps.Select(ts => dict1.TryGetValue(ts, out var v1) ? v1 : double.NaN).ToList();
 
-        var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).
-                                            ToList();
+        var rawValues2 = combinedTimestamps.Select(ts => dict2.TryGetValue(ts, out var v2) ? v2 : double.NaN).ToList();
 
         return (rawValues1, rawValues2);
     }
@@ -124,9 +107,7 @@ public static class StrategyComputationHelper
     /// </summary>
     public static string? GetUnit(List<MetricData> ordered1, List<MetricData> ordered2)
     {
-        return ordered1.FirstOrDefault()?.
-                        Unit ?? ordered2.FirstOrDefault()?.
-                                         Unit;
+        return ordered1.FirstOrDefault()?.Unit ?? ordered2.FirstOrDefault()?.Unit;
     }
 
     /// <summary>

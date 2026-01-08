@@ -108,10 +108,7 @@ public sealed class ChartRenderEngine
         if (mainTimeline == null || mainTimeline.Count == 0)
                 // Fallback: use union of all series timestamps
             if (model.Series != null)
-                mainTimeline = model.Series.SelectMany(s => s.Timestamps).
-                                     Distinct().
-                                     OrderBy(t => t).
-                                     ToList();
+                mainTimeline = model.Series.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
 
         return mainTimeline ?? new List<DateTime>();
     }
@@ -383,12 +380,10 @@ public sealed class ChartRenderEngine
     private static List<double> AlignSeriesToTimeline(List<DateTime> seriesTimestamps, List<double> seriesValues, List<DateTime> mainTimeline)
     {
         if (seriesTimestamps.Count == 0 || seriesValues.Count == 0)
-            return mainTimeline.Select(_ => double.NaN).
-                                ToList();
+            return mainTimeline.Select(_ => double.NaN).ToList();
 
         if (seriesTimestamps.Count != seriesValues.Count)
-            return mainTimeline.Select(_ => double.NaN).
-                                ToList();
+            return mainTimeline.Select(_ => double.NaN).ToList();
 
         // Create a dictionary for quick lookup
         var valueMap = new Dictionary<DateTime, double>();

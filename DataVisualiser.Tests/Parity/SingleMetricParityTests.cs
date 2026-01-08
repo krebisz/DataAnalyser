@@ -19,20 +19,10 @@ public class SingleMetricParityTests
         var interval = TimeSpan.FromDays(1);
 
         // Create matching legacy data
-        var legacyData = TestDataBuilders.HealthMetricData().
-                                          WithTimestamp(from).
-                                          WithValue(100m).
-                                          WithUnit("kg").
-                                          BuildSeries(10, interval);
+        var legacyData = TestDataBuilders.HealthMetricData().WithTimestamp(from).WithValue(100m).WithUnit("kg").BuildSeries(10, interval);
 
         // Create matching CMS data
-        var cmsData = TestDataBuilders.CanonicalMetricSeries().
-                                       WithStartTime(new DateTimeOffset(from)).
-                                       WithInterval(interval).
-                                       WithValue(100m).
-                                       WithUnit("kg").
-                                       WithSampleCount(10).
-                                       Build();
+        var cmsData = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(from)).WithInterval(interval).WithValue(100m).WithUnit("kg").WithSampleCount(10).Build();
 
         // Act - Execute both strategies
         var legacyStrategy = new SingleMetricStrategy(legacyData, "Test", from, to);
@@ -75,9 +65,7 @@ public class SingleMetricParityTests
         var legacyStrategy = new SingleMetricStrategy(Array.Empty<MetricData>(), "Test", from, to);
         var legacyResult = legacyStrategy.Compute();
 
-        var cmsData = TestDataBuilders.CanonicalMetricSeries().
-                                       WithSampleCount(0).
-                                       Build();
+        var cmsData = TestDataBuilders.CanonicalMetricSeries().WithSampleCount(0).Build();
         var cmsStrategy = new SingleMetricStrategy(cmsData, "Test", from, to);
         var cmsResult = cmsStrategy.Compute();
 
@@ -117,12 +105,7 @@ public class SingleMetricParityTests
                 }
         };
 
-        var cmsData = TestDataBuilders.CanonicalMetricSeries().
-                                       WithStartTime(new DateTimeOffset(from)).
-                                       WithInterval(interval).
-                                       WithValue(100m).
-                                       WithSampleCount(1).
-                                       Build();
+        var cmsData = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(from)).WithInterval(interval).WithValue(100m).WithSampleCount(1).Build();
 
         // Note: CMS builder doesn't support null values easily, so this test
         // validates that null handling is consistent

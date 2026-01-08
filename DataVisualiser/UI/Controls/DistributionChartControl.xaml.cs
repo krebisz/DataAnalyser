@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.UI;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
@@ -66,8 +65,8 @@ public partial class DistributionChartControl : UserControl
         }
     }
 
-    public event EventHandler?      ToggleRequested;
-    public event EventHandler?      DisplayModeChanged;
+    public event EventHandler? ToggleRequested;
+    public event EventHandler? DisplayModeChanged;
     public event EventHandler<int>? IntervalCountChanged;
 
     public void SetVisibility(bool isVisible)

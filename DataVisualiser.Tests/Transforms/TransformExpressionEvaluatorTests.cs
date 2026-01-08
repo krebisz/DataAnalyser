@@ -10,21 +10,22 @@ public sealed class TransformExpressionEvaluatorTests
     private static List<MetricData> Series(params(DateTime ts, decimal? v)[] points)
     {
         return points.Select(p => new MetricData
-                      {
-                              NormalizedTimestamp = p.ts,
-                              Value = p.v,
-                              Unit = "u"
-                      }).
-                      ToList();
+                     {
+                             NormalizedTimestamp = p.ts,
+                             Value = p.v,
+                             Unit = "u"
+                     })
+                     .ToList();
     }
 
     [Fact]
     public void Evaluate_ShouldThrow_WhenExpressionNull()
     {
-        Assert.Throws<ArgumentNullException>(() => TransformExpressionEvaluator.Evaluate(null!, new List<IReadOnlyList<MetricData>>
-        {
-                new List<MetricData>()
-        }));
+        Assert.Throws<ArgumentNullException>(() => TransformExpressionEvaluator.Evaluate(null!,
+                new List<IReadOnlyList<MetricData>>
+                {
+                        new List<MetricData>()
+                }));
     }
 
     [Fact]
@@ -44,11 +45,12 @@ public sealed class TransformExpressionEvaluatorTests
         var m0 = Series((new DateTime(2024, 1, 1), 1m));
         var m1 = Series((new DateTime(2024, 1, 1), 2m), (new DateTime(2024, 1, 2), 3m));
 
-        Assert.Throws<ArgumentException>(() => TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
-        {
-                m0,
-                m1
-        }));
+        Assert.Throws<ArgumentException>(() => TransformExpressionEvaluator.Evaluate(expr,
+                new List<IReadOnlyList<MetricData>>
+                {
+                        m0,
+                        m1
+                }));
     }
 
     [Fact]
@@ -58,10 +60,11 @@ public sealed class TransformExpressionEvaluatorTests
 
         var m0 = Series((new DateTime(2024, 1, 1), 10m), (new DateTime(2024, 1, 2), null), (new DateTime(2024, 1, 3), 30m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
-        {
-                m0
-        });
+        var res = TransformExpressionEvaluator.Evaluate(expr,
+                new List<IReadOnlyList<MetricData>>
+                {
+                        m0
+                });
 
         Assert.Equal(3, res.Count);
         Assert.Equal(10.0, res[0]);
@@ -79,10 +82,11 @@ public sealed class TransformExpressionEvaluatorTests
 
         var m0 = Series((new DateTime(2024, 1, 1), 9m), (new DateTime(2024, 1, 2), 16m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
-        {
-                m0
-        });
+        var res = TransformExpressionEvaluator.Evaluate(expr,
+                new List<IReadOnlyList<MetricData>>
+                {
+                        m0
+                });
 
         Assert.Equal(2, res.Count);
         Assert.Equal(3.0, res[0], 10);
@@ -100,17 +104,19 @@ public sealed class TransformExpressionEvaluatorTests
         var m0 = Series((new DateTime(2024, 1, 1), 10m), (new DateTime(2024, 1, 2), 20m));
         var m1 = Series((new DateTime(2024, 1, 1), 1m), (new DateTime(2024, 1, 2), 2m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
-        {
-                m0,
-                m1
-        });
+        var res = TransformExpressionEvaluator.Evaluate(expr,
+                new List<IReadOnlyList<MetricData>>
+                {
+                        m0,
+                        m1
+                });
 
         Assert.Equal(new[]
-        {
-                11.0,
-                22.0
-        }, res);
+                {
+                        11.0,
+                        22.0
+                },
+                res);
     }
 
     [Fact]
@@ -128,11 +134,12 @@ public sealed class TransformExpressionEvaluatorTests
         var m0 = Series((new DateTime(2024, 1, 1), 9m));
         var m1 = Series((new DateTime(2024, 1, 1), 1m));
 
-        var res = TransformExpressionEvaluator.Evaluate(expr, new List<IReadOnlyList<MetricData>>
-        {
-                m0,
-                m1
-        });
+        var res = TransformExpressionEvaluator.Evaluate(expr,
+                new List<IReadOnlyList<MetricData>>
+                {
+                        m0,
+                        m1
+                });
 
         Assert.Single(res);
         Assert.False(double.IsNaN(res[0]));
@@ -142,10 +149,11 @@ public sealed class TransformExpressionEvaluatorTests
     public void GenerateLabel_ShouldReturnMetricLabel_ForLeaf()
     {
         var expr = TransformExpression.Metric(0);
-        var label = TransformExpressionEvaluator.GenerateLabel(expr, new List<string>
-        {
-                "A"
-        });
+        var label = TransformExpressionEvaluator.GenerateLabel(expr,
+                new List<string>
+                {
+                        "A"
+                });
 
         Assert.Equal("A", label);
     }
@@ -157,11 +165,12 @@ public sealed class TransformExpressionEvaluatorTests
         Assert.NotNull(add);
 
         var expr = TransformExpression.Binary(add!, TransformOperand.Metric(0), TransformOperand.Metric(1));
-        var label = TransformExpressionEvaluator.GenerateLabel(expr, new List<string>
-        {
-                "A",
-                "B"
-        });
+        var label = TransformExpressionEvaluator.GenerateLabel(expr,
+                new List<string>
+                {
+                        "A",
+                        "B"
+                });
 
         Assert.Contains("[Transform]", label);
         Assert.Contains("A", label);

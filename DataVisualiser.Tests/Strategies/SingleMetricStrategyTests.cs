@@ -7,7 +7,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class SingleMetricStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void Compute_ShouldReturnNull_WhenDataIsEmpty()
@@ -117,9 +117,7 @@ public sealed class SingleMetricStrategyTests
     [Fact]
     public void Compute_ShouldGenerateSmoothedData()
     {
-        var data = TestDataBuilders.HealthMetricData().
-                                    WithUnit("kg").
-                                    BuildSeries(10, TimeSpan.FromDays(1));
+        var data = TestDataBuilders.HealthMetricData().WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
         var strategy = new SingleMetricStrategy(data, "Test", From, To);
 
@@ -133,9 +131,7 @@ public sealed class SingleMetricStrategyTests
     [Fact]
     public void Compute_ShouldSetUnit_FromFirstDataPoint()
     {
-        var data = TestDataBuilders.HealthMetricData().
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var data = TestDataBuilders.HealthMetricData().WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new SingleMetricStrategy(data, "Test", From, To);
 
@@ -148,13 +144,7 @@ public sealed class SingleMetricStrategyTests
     [Fact]
     public void Compute_ShouldHandleCmsData_WhenCmsConstructorUsed()
     {
-        var cms = TestDataBuilders.CanonicalMetricSeries().
-                                   WithMetricId("metric.test.single").
-                                   WithUnit("kg").
-                                   WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).
-                                   WithInterval(TimeSpan.FromDays(1)).
-                                   WithSampleCount(10).
-                                   Build();
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.single").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(10).Build();
 
         var strategy = new SingleMetricStrategy(cms, "Test", From, To);
 

@@ -1,7 +1,6 @@
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Collections.Generic;
 
 namespace DataFileReader.Canonical;
 

@@ -11,7 +11,7 @@ namespace DataVisualiser.Tests.Services;
 /// </summary>
 public sealed class FrequencyShadingCalculatorTests
 {
-    private readonly FrequencyShadingCalculator     _calculator;
+    private readonly FrequencyShadingCalculator _calculator;
     private readonly Mock<IIntervalShadingStrategy> _mockShadingStrategy;
 
     public FrequencyShadingCalculatorTests()
@@ -238,8 +238,7 @@ public sealed class FrequencyShadingCalculatorTests
                 }
         };
 
-        _mockShadingStrategy.Setup(s => s.CalculateColorMap(It.IsAny<IntervalShadingContext>())).
-                             Returns(mockColorMap);
+        _mockShadingStrategy.Setup(s => s.CalculateColorMap(It.IsAny<IntervalShadingContext>())).Returns(mockColorMap);
 
         // Act
         var result = _calculator.BuildFrequencyShadingData(dayValues, globalMin, globalMax, intervalCount);
@@ -275,8 +274,7 @@ public sealed class FrequencyShadingCalculatorTests
                 }
         };
 
-        _mockShadingStrategy.Setup(s => s.CalculateColorMap(It.IsAny<IntervalShadingContext>())).
-                             Returns(mockColorMap);
+        _mockShadingStrategy.Setup(s => s.CalculateColorMap(It.IsAny<IntervalShadingContext>())).Returns(mockColorMap);
 
         // Act
         var result = _calculator.BuildFrequencyShadingData(dayValues, globalMin, globalMax, intervalCount);

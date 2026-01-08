@@ -24,13 +24,13 @@ namespace DataVisualiser.Core.Services;
 public abstract class BaseDistributionService
 {
     protected readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    protected readonly IFrequencyShadingRenderer                  _frequencyRenderer;
-    protected readonly ChartRenderGate                            _renderGate = new();
-    protected readonly IStrategyCutOverService                    _strategyCutOverService;
+    protected readonly IFrequencyShadingRenderer _frequencyRenderer;
+    protected readonly ChartRenderGate _renderGate = new();
+    protected readonly IStrategyCutOverService _strategyCutOverService;
 
     protected readonly IDistributionConfiguration Configuration;
-    protected          FrequencyShadingCalculator _frequencyShadingCalculator;
-    protected          IIntervalShadingStrategy   _shadingStrategy;
+    protected FrequencyShadingCalculator _frequencyShadingCalculator;
+    protected IIntervalShadingStrategy _shadingStrategy;
 
     protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null)
     {
@@ -75,33 +75,34 @@ public abstract class BaseDistributionService
             return;
         }
 
-        _renderGate.ExecuteWhenReady(targetChart, () =>
-        {
-            try
-            {
-                // --- Render ---
-                targetChart.Series.Clear();
+        _renderGate.ExecuteWhenReady(targetChart,
+                () =>
+                {
+                    try
+                    {
+                        // --- Render ---
+                        targetChart.Series.Clear();
 
-                RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, frequencyResult, useFrequencyShading, intervalCount);
+                        RenderOriginalMinMaxChart(targetChart, result, displayName, minHeight, frequencyResult, useFrequencyShading, intervalCount);
 
-                // --- Tooltip / state ---
-                _chartTimestamps[targetChart] = new List<DateTime>();
-                targetChart.DataTooltip = null;
+                        // --- Tooltip / state ---
+                        _chartTimestamps[targetChart] = new List<DateTime>();
+                        targetChart.DataTooltip = null;
 
-                SetupTooltip(targetChart, result, frequencyResult, useFrequencyShading, intervalCount);
+                        SetupTooltip(targetChart, result, frequencyResult, useFrequencyShading, intervalCount);
 
-                ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
-                targetChart.Update(true, true);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"{Configuration.LogPrefix}: Chart error: {ex.Message}\n{ex.StackTrace}");
+                        ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
+                        targetChart.Update(true, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"{Configuration.LogPrefix}: Chart error: {ex.Message}\n{ex.StackTrace}");
 
-                MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-                ChartHelper.ClearChart(targetChart, _chartTimestamps);
-            }
-        });
+                        ChartHelper.ClearChart(targetChart, _chartTimestamps);
+                    }
+                });
     }
 
     // Abstract methods that must be implemented by derived classes
@@ -252,14 +253,9 @@ public abstract class BaseDistributionService
 
     protected(double Min, double Max) CalculateGlobalMinMax(List<double> mins, List<double> ranges)
     {
-        var min = mins.Where(m => !double.IsNaN(m)).
-                       DefaultIfEmpty(0).
-                       Min();
+        var min = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0).Min();
 
-        var max = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).
-                       Where(v => !double.IsNaN(v)).
-                       DefaultIfEmpty(min + 1).
-                       Max();
+        var max = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).Where(v => !double.IsNaN(v)).DefaultIfEmpty(min + 1).Max();
 
         if (max <= min)
             max = min + 1;
@@ -382,9 +378,7 @@ public abstract class BaseDistributionService
 
     protected int CalculateGlobalMaxFrequency(Dictionary<int, Dictionary<int, int>> frequenciesPerBucket)
     {
-        return frequenciesPerBucket.Values.SelectMany(b => b.Values).
-                                    DefaultIfEmpty(1).
-                                    Max();
+        return frequenciesPerBucket.Values.SelectMany(b => b.Values).DefaultIfEmpty(1).Max();
     }
 
     protected double[] InitializeCumulativeStack(double globalMin)
@@ -426,13 +420,8 @@ public abstract class BaseDistributionService
         var bucketValues = GetBucketValuesFromResult(frequencyData);
 
         // Calculate global min/max
-        var globalMin = mins.Where(m => !double.IsNaN(m)).
-                             DefaultIfEmpty(0).
-                             Min();
-        var globalMax = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).
-                             Where(v => !double.IsNaN(v)).
-                             DefaultIfEmpty(1).
-                             Max();
+        var globalMin = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0).Min();
+        var globalMax = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).Where(v => !double.IsNaN(v)).DefaultIfEmpty(1).Max();
 
         if (globalMax <= globalMin)
             globalMax = globalMin + 1;

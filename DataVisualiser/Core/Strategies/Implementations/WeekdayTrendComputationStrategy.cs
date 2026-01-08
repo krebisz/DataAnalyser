@@ -8,10 +8,10 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 
 public sealed class WeekdayTrendComputationStrategy : IChartComputationStrategy, IWeekdayTrendResultProvider
 {
-    private readonly ICanonicalMetricSeries?  _cmsData;
-    private readonly DateTime                 _from;
+    private readonly ICanonicalMetricSeries? _cmsData;
+    private readonly DateTime _from;
     private readonly IEnumerable<MetricData>? _legacyData;
-    private readonly DateTime                 _to;
+    private readonly DateTime _to;
 
     public WeekdayTrendComputationStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to)
     {

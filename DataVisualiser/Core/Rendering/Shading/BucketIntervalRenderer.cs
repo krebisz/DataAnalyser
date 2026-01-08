@@ -9,7 +9,7 @@ namespace DataVisualiser.Core.Rendering.Shading;
 public abstract class BucketIntervalRenderer : IIntervalRenderer
 {
     protected abstract double MaxColumnWidth { get; }
-    protected abstract int    BucketCount    { get; }
+    protected abstract int BucketCount { get; }
 
     /// <summary>
     ///     Renders interval series on the chart.
@@ -237,12 +237,12 @@ public abstract class BucketIntervalRenderer : IIntervalRenderer
             _uniformIntervalHeight = uniformIntervalHeight;
         }
 
-        public ChartValues<double> Baselines             { get; } = new();
-        public ChartValues<double> WhiteHeights          { get; } = new();
-        public ChartValues<double> ColoredHeights        { get; } = new();
-        public bool                HasData               { get; private set; }
-        public bool                HasZeroFreqBuckets    { get; private set; }
-        public bool                HasNonZeroFreqBuckets { get; private set; }
+        public ChartValues<double> Baselines { get; } = new();
+        public ChartValues<double> WhiteHeights { get; } = new();
+        public ChartValues<double> ColoredHeights { get; } = new();
+        public bool HasData { get; private set; }
+        public bool HasZeroFreqBuckets { get; private set; }
+        public bool HasNonZeroFreqBuckets { get; private set; }
 
         public void AddEmpty()
         {

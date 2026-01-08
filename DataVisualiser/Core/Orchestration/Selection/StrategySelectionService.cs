@@ -12,7 +12,7 @@ namespace DataVisualiser.Core.Orchestration.Selection;
 /// </summary>
 public sealed class StrategySelectionService
 {
-    private readonly string                  _connectionString;
+    private readonly string _connectionString;
     private readonly IStrategyCutOverService _strategyCutOverService;
 
     public StrategySelectionService(IStrategyCutOverService strategyCutOverService, string connectionString)

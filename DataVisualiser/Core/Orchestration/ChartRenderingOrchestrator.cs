@@ -22,10 +22,10 @@ namespace DataVisualiser.Core.Orchestration;
 /// </summary>
 public sealed class ChartRenderingOrchestrator
 {
-    private readonly ChartUpdateCoordinator    _chartUpdateCoordinator;
-    private readonly string?                   _connectionString;
+    private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
+    private readonly string? _connectionString;
     private readonly HourlyDistributionService _hourlyDistributionService;
-    private readonly IStrategyCutOverService   _strategyCutOverService;
+    private readonly IStrategyCutOverService _strategyCutOverService;
     private readonly WeeklyDistributionService _weeklyDistributionService;
 
     public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
@@ -175,10 +175,8 @@ public sealed class ChartRenderingOrchestrator
 
         if (series.Count > 2)
         {
-            additionalSeries = series.Skip(2).
-                                      ToList();
-            additionalLabels = labels.Skip(2).
-                                      ToList();
+            additionalSeries = series.Skip(2).ToList();
+            additionalLabels = labels.Skip(2).ToList();
         }
 
         // Use existing RenderPrimaryChart method
@@ -205,8 +203,7 @@ public sealed class ChartRenderingOrchestrator
 
         if (additionalSeries != null && additionalLabels != null)
             for (var i = 0; i < Math.Min(additionalSeries.Count, additionalLabels.Count); i++)
-                if (additionalSeries[i] != null && additionalSeries[i].
-                            Any())
+                if (additionalSeries[i] != null && additionalSeries[i].Any())
                 {
                     series.Add(additionalSeries[i]);
                     labels.Add(additionalLabels[i]);
@@ -220,36 +217,42 @@ public sealed class ChartRenderingOrchestrator
         secondaryLabel = null;
 
         if (series.Count > 2)
-            return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, new StrategyCreationParameters
-            {
-                    LegacySeries = series,
-                    Labels = labels,
-                    From = ctx.From,
-                    To = ctx.To
-            });
+            return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric,
+                    ctx,
+                    new StrategyCreationParameters
+                    {
+                            LegacySeries = series,
+                            Labels = labels,
+                            From = ctx.From,
+                            To = ctx.To
+                    });
 
         if (series.Count == 2)
         {
             secondaryLabel = labels[1];
 
-            return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, new StrategyCreationParameters
-            {
-                    LegacyData1 = series[0],
-                    LegacyData2 = series[1],
-                    Label1 = labels[0],
-                    Label2 = labels[1],
-                    From = ctx.From,
-                    To = ctx.To
-            });
+            return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric,
+                    ctx,
+                    new StrategyCreationParameters
+                    {
+                            LegacyData1 = series[0],
+                            LegacyData2 = series[1],
+                            Label1 = labels[0],
+                            Label2 = labels[1],
+                            From = ctx.From,
+                            To = ctx.To
+                    });
         }
 
-        return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, new StrategyCreationParameters
-        {
-                LegacyData1 = series[0],
-                Label1 = labels[0],
-                From = ctx.From,
-                To = ctx.To
-        });
+        return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric,
+                ctx,
+                new StrategyCreationParameters
+                {
+                        LegacyData1 = series[0],
+                        Label1 = labels[0],
+                        From = ctx.From,
+                        To = ctx.To
+                });
     }
 
 
@@ -281,13 +284,9 @@ public sealed class ChartRenderingOrchestrator
         var operationSymbol = isDifferenceMode ? "-" : "/";
 
         // Use transform infrastructure to compute the operation
-        var allData1List = ctx.Data1.Where(d => d.Value.HasValue).
-                               OrderBy(d => d.NormalizedTimestamp).
-                               ToList();
+        var allData1List = ctx.Data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
-        var allData2List = ctx.Data2.Where(d => d.Value.HasValue).
-                               OrderBy(d => d.NormalizedTimestamp).
-                               ToList();
+        var allData2List = ctx.Data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
         if (allData1List.Count == 0 || allData2List.Count == 0)
             return;
@@ -312,14 +311,12 @@ public sealed class ChartRenderingOrchestrator
             var op = operation switch
             {
                     "Subtract" => BinaryOperators.Difference,
-                    "Divide"   => BinaryOperators.Ratio,
-                    _          => (a, b) => a
+                    "Divide" => BinaryOperators.Ratio,
+                    _ => (a, b) => a
             };
 
-            var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).
-                                         ToList();
-            var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).
-                                         ToList();
+            var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
+            var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
             computedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
         }
         else
@@ -338,7 +335,7 @@ public sealed class ChartRenderingOrchestrator
 
     private async Task RenderWeeklyDistribution(ChartDataContext ctx, CartesianChart chartWeekly, ChartState chartState)
     {
-        await _weeklyDistributionService.UpdateDistributionChartAsync(chartWeekly, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, chartState.UseFrequencyShading, chartState.WeeklyIntervalCount);
+        await _weeklyDistributionService.UpdateDistributionChartAsync(chartWeekly, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, chartState.UseWeeklyFrequencyShading, chartState.WeeklyIntervalCount);
     }
 
     private void RenderWeeklyTrend(ChartDataContext ctx)

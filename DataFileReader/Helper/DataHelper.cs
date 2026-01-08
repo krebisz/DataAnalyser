@@ -11,8 +11,7 @@ public static class DataHelper
         var fieldTotal = 0;
 
         for (var j = 0; j < dataRow.ItemArray.Length; j++)
-            if (!string.IsNullOrEmpty(dataRow[j]?.
-                        ToString()))
+            if (!string.IsNullOrEmpty(dataRow[j]?.ToString()))
                 fieldTotal++;
 
         return fieldTotal;
@@ -23,8 +22,7 @@ public static class DataHelper
         var fieldTotal = 0;
 
         for (var j = 0; j < rowArray.Length; j++)
-            if (!string.IsNullOrEmpty(rowArray[j]?.
-                        ToString()))
+            if (!string.IsNullOrEmpty(rowArray[j]?.ToString()))
                 fieldTotal++;
 
         return fieldTotal;
@@ -36,10 +34,7 @@ public static class DataHelper
 
         var newTable = sourceTable.Clone();
 
-        var distinctRows = sourceTable.AsEnumerable().
-                                       Select(row => row.ItemArray).
-                                       Distinct(new RowComparer()).
-                                       ToList(); // Apply the custom comparer
+        var distinctRows = sourceTable.AsEnumerable().Select(row => row.ItemArray).Distinct(new RowComparer()).ToList(); // Apply the custom comparer
 
         foreach (var rowArray in distinctRows)
         {
@@ -65,9 +60,7 @@ public static class DataHelper
             for (var i = 0; i < x.Length; i++)
             {
                 // Treat null and empty strings as equal
-                if (string.IsNullOrEmpty(x[i]?.
-                            ToString()) && string.IsNullOrEmpty(y[i]?.
-                            ToString()))
+                if (string.IsNullOrEmpty(x[i]?.ToString()) && string.IsNullOrEmpty(y[i]?.ToString()))
                     continue;
 
                 if (!Equals(x[i], y[i]))
@@ -93,8 +86,7 @@ public static class DataHelper
 
     public static string RemoveFaultyCharacterSequences(object stringObject)
     {
-        var objectString = (stringObject?.ToString() ?? string.Empty).
-                                        Trim();
+        var objectString = (stringObject?.ToString() ?? string.Empty).Trim();
 
         objectString = objectString.Replace(",}", "}");
         objectString = objectString.Replace(",]", "]");
@@ -128,8 +120,7 @@ public static class DataHelper
 
     public static string RemoveEscapeCharacters(object stringObject)
     {
-        var objectString = (stringObject?.ToString() ?? string.Empty).
-                                        Trim();
+        var objectString = (stringObject?.ToString() ?? string.Empty).Trim();
 
         objectString = objectString.Replace("\r", "");
         objectString = objectString.Replace("\n", "");

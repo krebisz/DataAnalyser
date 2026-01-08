@@ -22,11 +22,13 @@ public class ParityValidationService
         var harness = new CombinedMetricParityHarness();
         var metricIdentity = $"{legacyStrategy.PrimaryLabel}|{legacyStrategy.SecondaryLabel}";
         var parityResult = harness.Validate(new StrategyParityContext
-        {
-                StrategyName = "CombinedMetric",
-                MetricIdentity = metricIdentity,
-                Mode = ParityMode.Diagnostic
-        }, () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()), () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
+                {
+                        StrategyName = "CombinedMetric",
+                        MetricIdentity = metricIdentity,
+                        Mode = ParityMode.Diagnostic
+                },
+                () => ParityResultAdapter.ToLegacyExecutionResult(legacyStrategy.Compute()),
+                () => ParityResultAdapter.ToCmsExecutionResult(cmsStrategy.Compute()));
 
         Debug.WriteLine(parityResult.Passed ? "[PARITY] CombinedMetric PASSED" : "[PARITY] CombinedMetric FAILED");
 

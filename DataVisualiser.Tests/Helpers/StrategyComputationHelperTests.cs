@@ -6,7 +6,7 @@ namespace DataVisualiser.Tests.Helpers;
 public sealed class StrategyComputationHelperTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 05);
+    private static readonly DateTime To = new(2024, 01, 05);
 
     [Fact]
     public void PrepareDataForComputation_ShouldReturnNull_WhenBothInputsEmpty()
@@ -61,9 +61,7 @@ public sealed class StrategyComputationHelperTests
 
         Assert.Equal(2, ordered1.Count);
         Assert.Equal(2, ordered2.Count);
-        Assert.True(ordered1.Select(x => x.NormalizedTimestamp).
-                             SequenceEqual(ordered1.Select(x => x.NormalizedTimestamp).
-                                                    OrderBy(t => t)));
+        Assert.True(ordered1.Select(x => x.NormalizedTimestamp).SequenceEqual(ordered1.Select(x => x.NormalizedTimestamp).OrderBy(t => t)));
     }
 
     [Fact]

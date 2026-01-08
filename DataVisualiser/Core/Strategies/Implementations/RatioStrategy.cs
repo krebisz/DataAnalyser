@@ -13,15 +13,15 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class RatioStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                _from;
-    private readonly string                  _labelLeft;
-    private readonly string                  _labelRight;
+    private readonly DateTime _from;
+    private readonly string _labelLeft;
+    private readonly string _labelRight;
     private readonly IEnumerable<MetricData> _left;
     private readonly IEnumerable<MetricData> _right;
-    private readonly ISmoothingService       _smoothingService;
-    private readonly ITimelineService        _timelineService;
-    private readonly DateTime                _to;
-    private readonly IUnitResolutionService  _unitResolutionService;
+    private readonly ISmoothingService _smoothingService;
+    private readonly ITimelineService _timelineService;
+    private readonly DateTime _to;
+    private readonly IUnitResolutionService _unitResolutionService;
 
     public RatioStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
     {
@@ -36,9 +36,9 @@ public sealed class RatioStrategy : IChartComputationStrategy
         _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
     }
 
-    public string  PrimaryLabel   => $"{_labelLeft} / {_labelRight}";
-    public string  SecondaryLabel => string.Empty;
-    public string? Unit           { get; private set; }
+    public string PrimaryLabel => $"{_labelLeft} / {_labelRight}";
+    public string SecondaryLabel => string.Empty;
+    public string? Unit { get; private set; }
 
     public ChartComputationResult? Compute()
     {

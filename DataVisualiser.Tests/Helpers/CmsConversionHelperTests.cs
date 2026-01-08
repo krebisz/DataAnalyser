@@ -1,5 +1,4 @@
 using DataVisualiser.Shared.Helpers;
-using DataVisualiser.Tests.Helpers;
 
 namespace DataVisualiser.Tests.Helpers;
 
@@ -10,12 +9,7 @@ public sealed class CmsConversionHelperTests
     [Fact]
     public void ConvertSamplesToHealthMetricData_ShouldFilterByDateRange()
     {
-        var cms = TestDataBuilders.CanonicalMetricSeries().
-                                   WithStartTime(Start).
-                                   WithInterval(TimeSpan.FromDays(1)).
-                                   WithSampleCount(3).
-                                   WithUnit("kg").
-                                   Build();
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(Start).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(3).WithUnit("kg").Build();
 
         var from = Start.UtcDateTime.AddDays(1);
         var to = Start.UtcDateTime.AddDays(1);
@@ -30,19 +24,16 @@ public sealed class CmsConversionHelperTests
     [Fact]
     public void ConvertMultipleCmsToHealthMetricData_ShouldMergeAndOrder()
     {
-        var cms1 = TestDataBuilders.CanonicalMetricSeries().
-                                    WithStartTime(Start).
-                                    WithInterval(TimeSpan.FromDays(1)).
-                                    WithSampleCount(2).
-                                    Build();
+        var cms1 = TestDataBuilders.CanonicalMetricSeries().WithStartTime(Start).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(2).Build();
 
-        var cms2 = TestDataBuilders.CanonicalMetricSeries().
-                                    WithStartTime(Start.AddDays(3)).
-                                    WithInterval(TimeSpan.FromDays(1)).
-                                    WithSampleCount(2).
-                                    Build();
+        var cms2 = TestDataBuilders.CanonicalMetricSeries().WithStartTime(Start.AddDays(3)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(2).Build();
 
-        var result = CmsConversionHelper.ConvertMultipleCmsToHealthMetricData(new[] { cms2, cms1 }).ToList();
+        var result = CmsConversionHelper.ConvertMultipleCmsToHealthMetricData(new[]
+                                        {
+                                                cms2,
+                                                cms1
+                                        })
+                                        .ToList();
 
         Assert.Equal(4, result.Count);
         Assert.True(result.SequenceEqual(result.OrderBy(r => r.NormalizedTimestamp)));

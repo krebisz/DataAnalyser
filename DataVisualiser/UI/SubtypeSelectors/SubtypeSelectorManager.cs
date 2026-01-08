@@ -11,7 +11,7 @@ public class SubtypeSelectorManager
     private readonly List<ComboBox> _dynamicCombos = new();
 
     private readonly List<SubtypeControlPair> _dynamicControls = new();
-    private readonly Panel                    _parentPanel;
+    private readonly Panel _parentPanel;
 
     public SubtypeSelectorManager(Panel parentPanel, ComboBox primaryCombo)
     {
@@ -131,8 +131,8 @@ public class SubtypeSelectorManager
         return new[]
                 {
                         PrimaryCombo
-                }.Concat(_dynamicControls.Select(p => p.Combo)).
-                  ToList();
+                }.Concat(_dynamicControls.Select(p => p.Combo))
+                 .ToList();
     }
 
 
@@ -146,8 +146,7 @@ public class SubtypeSelectorManager
 
     public string? GetSecondarySubtype()
     {
-        return _dynamicCombos.Count > 0 ? _dynamicCombos[0].
-                                          SelectedItem?.ToString() : null;
+        return _dynamicCombos.Count > 0 ? _dynamicCombos[0].SelectedItem?.ToString() : null;
     }
 
     public IEnumerable<string> GetAllSelectedSubtypes()

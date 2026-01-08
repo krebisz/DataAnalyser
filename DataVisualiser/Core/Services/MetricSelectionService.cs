@@ -9,7 +9,7 @@ namespace DataVisualiser.Core.Services;
 public class MetricSelectionService
 {
     private readonly CmsDataService _cms; // <-- add
-    private readonly string         _connectionString;
+    private readonly string _connectionString;
 
     public MetricSelectionService(string connectionString)
     {

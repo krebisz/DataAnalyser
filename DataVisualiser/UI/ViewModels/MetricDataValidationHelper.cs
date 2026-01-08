@@ -12,10 +12,11 @@ public static class MetricDataValidationHelper
     {
         if (primaryCms == null && (data1 == null || !data1.Any()))
         {
-            errorHandler?.Invoke(null, new ErrorEventArgs
-            {
-                    Message = BuildNoDataMessage(metricType, primarySubtype, false)
-            });
+            errorHandler?.Invoke(null,
+                    new ErrorEventArgs
+                    {
+                            Message = BuildNoDataMessage(metricType, primarySubtype, false)
+                    });
             return false;
         }
 
@@ -26,10 +27,11 @@ public static class MetricDataValidationHelper
     {
         if (secondarySubtype != null && secondaryCms == null && (data2 == null || !data2.Any()))
         {
-            errorHandler?.Invoke(null, new ErrorEventArgs
-            {
-                    Message = BuildNoDataMessage(metricType, secondarySubtype, true)
-            });
+            errorHandler?.Invoke(null,
+                    new ErrorEventArgs
+                    {
+                            Message = BuildNoDataMessage(metricType, secondarySubtype, true)
+                    });
             return false;
         }
 

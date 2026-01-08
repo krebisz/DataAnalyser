@@ -154,6 +154,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         if (created != null)
                             ((IJsonComplex)json).Add(created);
                     }
+
                     break;
                 case JsonToken.Integer:
                     if (json is IJsonComplex)
@@ -162,6 +163,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         if (created != null)
                             ((IJsonComplex)json).Add(created);
                     }
+
                     break;
                 case JsonToken.Float:
                     if (json is IJsonComplex)
@@ -170,6 +172,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         if (created != null)
                             ((IJsonComplex)json).Add(created);
                     }
+
                     break;
                 case JsonToken.String:
                     if (json is IJsonComplex)
@@ -178,6 +181,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         if (created != null)
                             ((IJsonComplex)json).Add(created);
                     }
+
                     break;
                 case JsonToken.Null:
                     if (json is IJsonComplex)
@@ -186,6 +190,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         if (created != null)
                             ((IJsonComplex)json).Add(created);
                     }
+
                     break;
                 case JsonToken.Date:
                     if (json is IJsonComplex)
@@ -194,6 +199,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         if (created != null)
                             ((IJsonComplex)json).Add(created);
                     }
+
                     break;
                 case JsonToken.Bytes:
                     if (json is IJsonComplex)
@@ -203,6 +209,7 @@ public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
                         if (created != null)
                             ((IJsonComplex)json).Add(created);
                     }
+
                     break;
             }
 

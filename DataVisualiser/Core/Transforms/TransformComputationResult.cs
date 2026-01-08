@@ -7,11 +7,11 @@ namespace DataVisualiser.Core.Transforms;
 /// </summary>
 public sealed class TransformComputationResult
 {
-    public List<MetricData>                DataList        { get; init; } = new();
-    public List<double>                    ComputedResults { get; init; } = new();
-    public string                          Operation       { get; init; } = string.Empty;
-    public List<IReadOnlyList<MetricData>> MetricsList     { get; init; } = new();
-    public bool                            IsSuccess       { get; init; }
+    public List<MetricData> DataList { get; init; } = new();
+    public List<double> ComputedResults { get; init; } = new();
+    public string Operation { get; init; } = string.Empty;
+    public List<IReadOnlyList<MetricData>> MetricsList { get; init; } = new();
+    public bool IsSuccess { get; init; }
 
     public static TransformComputationResult Empty => new()
     {

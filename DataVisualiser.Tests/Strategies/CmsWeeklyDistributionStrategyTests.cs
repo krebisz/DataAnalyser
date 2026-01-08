@@ -10,13 +10,7 @@ public class CmsWeeklyDistributionStrategyTests
     {
         // Arrange: 2 samples on Monday+Tuesday, all other weekdays empty
         var start = new DateTimeOffset(2024, 01, 01, 0, 0, 0, TimeSpan.Zero); // Monday
-        var cms = TestDataBuilders.CanonicalMetricSeries().
-                                   WithMetricId("weight.test").
-                                   WithStartTime(start).
-                                   WithInterval(TimeSpan.FromDays(1)).
-                                   WithValue(100m).
-                                   WithSampleCount(2).
-                                   Build();
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.test").WithStartTime(start).WithInterval(TimeSpan.FromDays(1)).WithValue(100m).WithSampleCount(2).Build();
 
         var from = new DateTime(2024, 01, 01);
         var to = new DateTime(2024, 01, 07);

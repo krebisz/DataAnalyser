@@ -17,16 +17,16 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class CombinedMetricStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                 _from;
+    private readonly DateTime _from;
     private readonly IEnumerable<MetricData>? _left;
-    private readonly ICanonicalMetricSeries?  _leftCms;
+    private readonly ICanonicalMetricSeries? _leftCms;
     private readonly IEnumerable<MetricData>? _right;
-    private readonly ICanonicalMetricSeries?  _rightCms;
-    private readonly ISmoothingService        _smoothingService;
-    private readonly ITimelineService         _timelineService;
-    private readonly DateTime                 _to;
-    private readonly IUnitResolutionService   _unitResolutionService;
-    private readonly bool                     _useCms;
+    private readonly ICanonicalMetricSeries? _rightCms;
+    private readonly ISmoothingService _smoothingService;
+    private readonly ITimelineService _timelineService;
+    private readonly DateTime _to;
+    private readonly IUnitResolutionService _unitResolutionService;
+    private readonly bool _useCms;
 
     /// <summary>
     ///     Legacy constructor using MetricData.
@@ -180,19 +180,13 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
 
     private List<CmsPoint> FilterAndOrderCms(ICanonicalMetricSeries cms)
     {
-        return cms.Samples.Where(s => s.Value.HasValue).
-                   Select(s => new CmsPoint(s.Timestamp.UtcDateTime, s.Value!.Value)).
-                   Where(p => p.Timestamp >= _from && p.Timestamp <= _to).
-                   OrderBy(p => p.Timestamp).
-                   ToList();
+        return cms.Samples.Where(s => s.Value.HasValue).Select(s => new CmsPoint(s.Timestamp.UtcDateTime, s.Value!.Value)).Where(p => p.Timestamp >= _from && p.Timestamp <= _to).OrderBy(p => p.Timestamp).ToList();
     }
 
     private(List<DateTime> Timestamps, List<double> Primary, List<double> Secondary) AlignSeriesCms(List<CmsPoint> left, List<CmsPoint> right, int count)
     {
-        var leftTuples = left.Select(p => (p.Timestamp, (decimal?)p.ValueDecimal)).
-                              ToList();
-        var rightTuples = right.Select(p => (p.Timestamp, (decimal?)p.ValueDecimal)).
-                                ToList();
+        var leftTuples = left.Select(p => (p.Timestamp, (decimal?)p.ValueDecimal)).ToList();
+        var rightTuples = right.Select(p => (p.Timestamp, (decimal?)p.ValueDecimal)).ToList();
 
         var (timestamps, primaryRaw, secondaryRaw) = StrategyComputationHelper.AlignByIndex(leftTuples, rightTuples, count);
 
@@ -202,20 +196,20 @@ public sealed class CombinedMetricStrategy : IChartComputationStrategy
     private(List<double> Primary, List<double> Secondary) SmoothSeriesCms(List<CmsPoint> left, List<CmsPoint> right, List<DateTime> timestamps)
     {
         var leftSynthetic = left.Select(p => new MetricData
-                                 {
-                                         NormalizedTimestamp = p.Timestamp,
-                                         Value = p.ValueDecimal,
-                                         Unit = _leftCms!.Unit.Symbol
-                                 }).
-                                 ToList();
+                                {
+                                        NormalizedTimestamp = p.Timestamp,
+                                        Value = p.ValueDecimal,
+                                        Unit = _leftCms!.Unit.Symbol
+                                })
+                                .ToList();
 
         var rightSynthetic = right.Select(p => new MetricData
-                                   {
-                                           NormalizedTimestamp = p.Timestamp,
-                                           Value = p.ValueDecimal,
-                                           Unit = _rightCms!.Unit.Symbol
-                                   }).
-                                   ToList();
+                                  {
+                                          NormalizedTimestamp = p.Timestamp,
+                                          Value = p.ValueDecimal,
+                                          Unit = _rightCms!.Unit.Symbol
+                                  })
+                                  .ToList();
 
         var primarySmoothed = _smoothingService.SmoothSeries(leftSynthetic, timestamps, _from, _to);
         var secondarySmoothed = _smoothingService.SmoothSeries(rightSynthetic, timestamps, _from, _to);

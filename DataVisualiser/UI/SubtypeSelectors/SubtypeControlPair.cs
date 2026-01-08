@@ -10,6 +10,6 @@ public class SubtypeControlPair
         Combo = combo;
     }
 
-    public Label    Label { get; }
+    public Label Label { get; }
     public ComboBox Combo { get; }
 }

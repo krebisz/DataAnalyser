@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
-using DataVisualiser.Core.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -13,15 +12,15 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 
 public abstract class BucketDistributionTooltip : IDisposable
 {
-    private const    int                                                                           HoverCheckIntervalMs = RenderingDefaults.TooltipHoverCheckIntervalMs; // Check every 100ms
-    private const    int                                                                           HoverTimeoutMs       = RenderingDefaults.TooltipHoverTimeoutMs; // Hide if no valid hover for 300ms AND mouse moved away
+    private const int HoverCheckIntervalMs = RenderingDefaults.TooltipHoverCheckIntervalMs; // Check every 100ms
+    private const int HoverTimeoutMs = RenderingDefaults.TooltipHoverTimeoutMs;             // Hide if no valid hover for 300ms AND mouse moved away
     private readonly Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> _bucketIntervalData;
-    private readonly CartesianChart                                                                _chart;
+    private readonly CartesianChart _chart;
 
-    private readonly Popup            _tooltipPopup;
-    private          DispatcherTimer? _hoverCheckTimer;
-    private          int              _lastValidBucketIndex = -1; // Track which bucket we last hovered over
-    private          DateTime         _lastValidHoverTime;
+    private readonly Popup _tooltipPopup;
+    private DispatcherTimer? _hoverCheckTimer;
+    private int _lastValidBucketIndex = -1; // Track which bucket we last hovered over
+    private DateTime _lastValidHoverTime;
 
     public BucketDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData)
     {
@@ -69,7 +68,7 @@ public abstract class BucketDistributionTooltip : IDisposable
     }
 
     // Abstract properties that derived classes must provide
-    protected abstract int      BucketCount { get; }
+    protected abstract int BucketCount { get; }
     protected abstract string[] BucketNames { get; }
 
 

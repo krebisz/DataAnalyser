@@ -1,6 +1,5 @@
 using System.Text;
 using Dapper;
-using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Data.QueryBuilders;
 using DataVisualiser.Shared.Models;
 using Microsoft.Data.SqlClient;
@@ -42,11 +41,12 @@ public class DataFetcher
 
         sql += "WHERE t0.[datetime] BETWEEN @from AND @to ORDER BY t0.[datetime]";
 
-        return await conn.QueryAsync<dynamic>(sql, new
-        {
-                from,
-                to
-        });
+        return await conn.QueryAsync<dynamic>(sql,
+                new
+                {
+                        from,
+                        to
+                });
     }
 
     public async Task<IEnumerable<string>> GetMetricTypes()
@@ -83,10 +83,11 @@ public class DataFetcher
                 WHERE MetricType = @MetricType
                     AND NormalizedTimestamp IS NOT NULL";
 
-        var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql, new
-        {
-                MetricType = metricType
-        });
+        var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql,
+                new
+                {
+                        MetricType = metricType
+                });
 
         if (result != null && result.MinDate.HasValue && result.MaxDate.HasValue)
             return (result.MinDate.Value, result.MaxDate.Value);
@@ -122,12 +123,13 @@ public class DataFetcher
                     AND Value IS NOT NULL
                 ORDER BY NormalizedTimestamp";
 
-        var results = await conn.QueryAsync<MetricData>(sql, new
-        {
-                MetricType = metricType,
-                FromDate = from,
-                ToDate = to
-        });
+        var results = await conn.QueryAsync<MetricData>(sql,
+                new
+                {
+                        MetricType = metricType,
+                        FromDate = from,
+                        ToDate = to
+                });
 
         return results;
     }
@@ -194,10 +196,11 @@ public class DataFetcher
                       AND RecordCount > 0
                     ORDER BY MetricSubtype";
 
-            var subtypes = await conn.QueryAsync<string>(sql, new
-            {
-                    BaseType = baseType
-            });
+            var subtypes = await conn.QueryAsync<string>(sql,
+                    new
+                    {
+                            BaseType = baseType
+                    });
             return subtypes;
         }
         else
@@ -211,10 +214,11 @@ public class DataFetcher
                       AND MetricSubtype != ''
                     ORDER BY MetricSubtype";
 
-            var subtypes = await conn.QueryAsync<string>(sql, new
-            {
-                    BaseType = baseType
-            });
+            var subtypes = await conn.QueryAsync<string>(sql,
+                    new
+                    {
+                            BaseType = baseType
+                    });
             return subtypes;
         }
     }
@@ -237,12 +241,7 @@ public class DataFetcher
 
         var results = await conn.QueryAsync<(string MetricType, string MetricSubtype)>(sql);
 
-        var grouped = results.GroupBy(r => r.MetricType).
-                              ToDictionary(g => g.Key, g => g.Select(r => r.MetricSubtype).
-                                                              Where(st => !string.IsNullOrEmpty(st)).
-                                                              Distinct().
-                                                              OrderBy(st => st).
-                                                              ToList());
+        var grouped = results.GroupBy(r => r.MetricType).ToDictionary(g => g.Key, g => g.Select(r => r.MetricSubtype).Where(st => !string.IsNullOrEmpty(st)).Distinct().OrderBy(st => st).ToList());
 
         return grouped;
     }
@@ -358,11 +357,12 @@ public class DataFetcher
                 WHERE MetricType = @MetricType
                   AND MetricSubtype = @MetricSubtype";
 
-        var result = await conn.QuerySingleOrDefaultAsync<long?>(sql, new
-        {
-                MetricType = metricType,
-                MetricSubtype = metricSubtype ?? string.Empty
-        });
+        var result = await conn.QuerySingleOrDefaultAsync<long?>(sql,
+                new
+                {
+                        MetricType = metricType,
+                        MetricSubtype = metricSubtype ?? string.Empty
+                });
 
         return result ?? 0;
     }
@@ -424,10 +424,11 @@ public class DataFetcher
                 WHERE MetricType = @MetricType
                 ORDER BY MetricSubtype";
 
-        var results = await conn.QueryAsync<(string MetricSubtype, long RecordCount)>(sql, new
-        {
-                MetricType = metricType
-        });
+        var results = await conn.QueryAsync<(string MetricSubtype, long RecordCount)>(sql,
+                new
+                {
+                        MetricType = metricType
+                });
 
         return results.ToDictionary(r => r.MetricSubtype, r => r.RecordCount);
     }

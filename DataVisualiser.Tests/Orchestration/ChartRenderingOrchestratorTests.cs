@@ -12,7 +12,11 @@ public sealed class ChartRenderingOrchestratorTests
     {
         var method = GetPrivateStaticMethod("ShouldRenderCharts");
 
-        var result = (bool)method.Invoke(null, new object?[] { null })!;
+        var result = (bool)method.Invoke(null,
+                new object?[]
+                {
+                        null
+                })!;
 
         Assert.False(result);
     }
@@ -24,13 +28,17 @@ public sealed class ChartRenderingOrchestratorTests
 
         var ctx = new ChartDataContext
         {
-            Data2 = new List<MetricData>
-            {
-                TestDataBuilders.HealthMetricData().Build()
-            }
+                Data2 = new List<MetricData>
+                {
+                        TestDataBuilders.HealthMetricData().Build()
+                }
         };
 
-        var result = (bool)method.Invoke(null, new object?[] { ctx })!;
+        var result = (bool)method.Invoke(null,
+                new object?[]
+                {
+                        ctx
+                })!;
 
         Assert.True(result);
     }
@@ -43,11 +51,23 @@ public sealed class ChartRenderingOrchestratorTests
         var data1 = TestDataBuilders.HealthMetricData().BuildSeries(1, TimeSpan.FromDays(1));
         var data2 = TestDataBuilders.HealthMetricData().BuildSeries(1, TimeSpan.FromDays(1));
 
-        var result = method.Invoke(null, new object?[] { data1, data2, "A", "B" })!;
+        var result = method.Invoke(null,
+                new object?[]
+                {
+                        data1,
+                        data2,
+                        "A",
+                        "B"
+                })!;
         var typed = ((List<IEnumerable<MetricData>> series, List<string> labels))result;
 
         Assert.Equal(2, typed.series.Count);
-        Assert.Equal(new[] { "A", "B" }, typed.labels);
+        Assert.Equal(new[]
+                {
+                        "A",
+                        "B"
+                },
+                typed.labels);
     }
 
     [Fact]
@@ -57,21 +77,34 @@ public sealed class ChartRenderingOrchestratorTests
 
         var ctx = new ChartDataContext
         {
-            Data1 = TestDataBuilders.HealthMetricData().BuildSeries(1, TimeSpan.FromDays(1)),
-            DisplayName1 = "A"
+                Data1 = TestDataBuilders.HealthMetricData().BuildSeries(1, TimeSpan.FromDays(1)),
+                DisplayName1 = "A"
         };
 
         var additionalSeries = new List<IEnumerable<MetricData>>
         {
-            new List<MetricData>()
+                new List<MetricData>()
         };
-        var additionalLabels = new List<string> { "C" };
+        var additionalLabels = new List<string>
+        {
+                "C"
+        };
 
-        var result = method.Invoke(null, new object?[] { ctx, additionalSeries, additionalLabels })!;
+        var result = method.Invoke(null,
+                new object?[]
+                {
+                        ctx,
+                        additionalSeries,
+                        additionalLabels
+                })!;
         var typed = ((List<IEnumerable<MetricData>> series, List<string> labels))result;
 
         Assert.Single(typed.series);
-        Assert.Equal(new[] { "A" }, typed.labels);
+        Assert.Equal(new[]
+                {
+                        "A"
+                },
+                typed.labels);
     }
 
     private static MethodInfo GetPrivateStaticMethod(string name)

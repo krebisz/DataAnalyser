@@ -1,3 +1,4 @@
+using System.Windows.Media;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services;
@@ -15,8 +16,26 @@ public sealed class BaseDistributionServiceTests
     public void CalculateGlobalMinMax_ShouldHandleNaNAndZeroRanges()
     {
         var service = CreateService();
-        var mins = new List<double> { double.NaN, 5.0, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN };
-        var ranges = new List<double> { double.NaN, 0.0, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN };
+        var mins = new List<double>
+        {
+                double.NaN,
+                5.0,
+                double.NaN,
+                double.NaN,
+                double.NaN,
+                double.NaN,
+                double.NaN
+        };
+        var ranges = new List<double>
+        {
+                double.NaN,
+                0.0,
+                double.NaN,
+                double.NaN,
+                double.NaN,
+                double.NaN,
+                double.NaN
+        };
 
         var (min, max) = service.PublicCalculateGlobalMinMax(mins, ranges);
 
@@ -30,13 +49,40 @@ public sealed class BaseDistributionServiceTests
         var service = CreateService();
         var result = new ChartComputationResult
         {
-            PrimaryRawValues = new List<double> { 1.0, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN },
-            PrimarySmoothed = new List<double> { 0.5, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN }
+                PrimaryRawValues = new List<double>
+                {
+                        1.0,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN
+                },
+                PrimarySmoothed = new List<double>
+                {
+                        0.5,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN
+                }
         };
 
         var extended = new BucketDistributionResult
         {
-            Counts = new List<int> { 2, 0, 0, 0, 0, 0, 0 }
+                Counts = new List<int>
+                {
+                        2,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                }
         };
 
         var tooltip = service.PublicCalculateSimpleRangeTooltipData(result, extended);
@@ -52,20 +98,50 @@ public sealed class BaseDistributionServiceTests
         var service = CreateService();
         var result = new ChartComputationResult
         {
-            PrimaryRawValues = new List<double> { 1.0, 2.0, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN },
-            PrimarySmoothed = new List<double> { 1.0, 2.0, double.NaN, double.NaN, double.NaN, double.NaN, double.NaN }
+                PrimaryRawValues = new List<double>
+                {
+                        1.0,
+                        2.0,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN
+                },
+                PrimarySmoothed = new List<double>
+                {
+                        1.0,
+                        2.0,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN,
+                        double.NaN
+                }
         };
 
         var extended = new BucketDistributionResult
         {
-            BucketValues = new Dictionary<int, List<double>>
-            {
-                { 0, new List<double> { 1.1, 1.9 } },
-                { 1, new List<double> { 2.1, 3.8 } }
-            }
+                BucketValues = new Dictionary<int, List<double>>
+                {
+                        {
+                                0, new List<double>
+                                {
+                                        1.1,
+                                        1.9
+                                }
+                        },
+                        {
+                                1, new List<double>
+                                {
+                                        2.1,
+                                        3.8
+                                }
+                        }
+                }
         };
 
-        var tooltip = service.PublicCalculateTooltipData(result, extended, intervalCount: 2);
+        var tooltip = service.PublicCalculateTooltipData(result, extended, 2);
 
         Assert.Equal(7, tooltip.Count);
         Assert.True(tooltip[0].Sum(t => t.Percentage) > 99.0);
@@ -84,15 +160,11 @@ public sealed class BaseDistributionServiceTests
 
     private sealed class TestDistributionService : BaseDistributionService
     {
-        public TestDistributionService(
-            IDistributionConfiguration configuration,
-            Dictionary<CartesianChart, List<DateTime>> chartTimestamps,
-            IStrategyCutOverService strategyCutOverService)
-            : base(configuration, chartTimestamps, strategyCutOverService, new FrequencyBasedShadingStrategy(configuration.BucketCount))
+        public TestDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService) : base(configuration, chartTimestamps, strategyCutOverService, new FrequencyBasedShadingStrategy(configuration.BucketCount))
         {
         }
 
-        public (double Min, double Max) PublicCalculateGlobalMinMax(List<double> mins, List<double> ranges)
+        public(double Min, double Max) PublicCalculateGlobalMinMax(List<double> mins, List<double> ranges)
         {
             return CalculateGlobalMinMax(mins, ranges);
         }
@@ -124,7 +196,7 @@ public sealed class BaseDistributionServiceTests
 
     private sealed class NoOpIntervalRenderer : IIntervalRenderer
     {
-        public int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, System.Windows.Media.Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
+        public int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
         {
             return 0;
         }
@@ -133,7 +205,18 @@ public sealed class BaseDistributionServiceTests
     private sealed class TestDistributionConfiguration : IDistributionConfiguration
     {
         public int BucketCount => 7;
-        public string[] BucketLabels => new[] { "A", "B", "C", "D", "E", "F", "G" };
+
+        public string[] BucketLabels => new[]
+        {
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G"
+        };
+
         public string XAxisTitle => "Bucket";
         public StrategyType StrategyType => StrategyType.WeeklyDistribution;
         public string LogPrefix => "TestDistribution";

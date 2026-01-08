@@ -15,24 +15,19 @@ public sealed class UnitResolutionService : IUnitResolutionService
         if (data == null || data.Count == 0)
             return null;
 
-        return data.FirstOrDefault()?.
-                    Unit;
+        return data.FirstOrDefault()?.Unit;
     }
 
     public string? ResolveUnit(IReadOnlyList<MetricData> left, IReadOnlyList<MetricData> right)
     {
         if (left == null || left.Count == 0)
-            return right?.FirstOrDefault()?.
-                          Unit;
+            return right?.FirstOrDefault()?.Unit;
 
         if (right == null || right.Count == 0)
-            return left.FirstOrDefault()?.
-                        Unit;
+            return left.FirstOrDefault()?.Unit;
 
-        var leftUnit = left.FirstOrDefault()?.
-                            Unit;
-        var rightUnit = right.FirstOrDefault()?.
-                              Unit;
+        var leftUnit = left.FirstOrDefault()?.Unit;
+        var rightUnit = right.FirstOrDefault()?.Unit;
 
         // If both units match, return that unit
         if (leftUnit == rightUnit)
@@ -74,10 +69,8 @@ public sealed class UnitResolutionService : IUnitResolutionService
         if (left == null || left.Count == 0 || right == null || right.Count == 0)
             return null;
 
-        var unitLeft = left.FirstOrDefault()?.
-                            Unit;
-        var unitRight = right.FirstOrDefault()?.
-                              Unit;
+        var unitLeft = left.FirstOrDefault()?.Unit;
+        var unitRight = right.FirstOrDefault()?.Unit;
 
         // Return compound unit only if both are non-empty
         if (!string.IsNullOrEmpty(unitLeft) && !string.IsNullOrEmpty(unitRight))

@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.UI;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.Controllers;

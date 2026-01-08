@@ -18,9 +18,7 @@ public sealed class TransformOperationService
     /// </summary>
     public TransformOperationResult ComputeUnaryTransform(IEnumerable<MetricData> data, string operation)
     {
-        var preparedData = data.Where(d => d.Value.HasValue).
-                                OrderBy(d => d.NormalizedTimestamp).
-                                ToList();
+        var preparedData = data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
         if (preparedData.Count == 0)
             return new TransformOperationResult
@@ -51,13 +49,12 @@ public sealed class TransformOperationService
 
             var op = operation switch
             {
-                    "Log"  => UnaryOperators.Logarithm,
+                    "Log" => UnaryOperators.Logarithm,
                     "Sqrt" => UnaryOperators.SquareRoot,
-                    _      => x => x
+                    _ => x => x
             };
 
-            var values = preparedData.Select(d => (double)d.Value!.Value).
-                                      ToList();
+            var values = preparedData.Select(d => (double)d.Value!.Value).ToList();
 
             computedResults = MathHelper.ApplyUnaryOperation(values, op);
         }
@@ -78,13 +75,9 @@ public sealed class TransformOperationService
     /// </summary>
     public TransformOperationResult ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation)
     {
-        var prepared1 = data1.Where(d => d.Value.HasValue).
-                              OrderBy(d => d.NormalizedTimestamp).
-                              ToList();
+        var prepared1 = data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
-        var prepared2 = data2.Where(d => d.Value.HasValue).
-                              OrderBy(d => d.NormalizedTimestamp).
-                              ToList();
+        var prepared2 = data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
         if (prepared1.Count == 0 || prepared2.Count == 0)
             return new TransformOperationResult
@@ -125,15 +118,13 @@ public sealed class TransformOperationService
 
             var op = operation switch
             {
-                    "Add"      => BinaryOperators.Sum,
+                    "Add" => BinaryOperators.Sum,
                     "Subtract" => BinaryOperators.Difference,
-                    _          => (a, b) => a
+                    _ => (a, b) => a
             };
 
-            var values1 = aligned1.Select(d => (double)d.Value!.Value).
-                                   ToList();
-            var values2 = aligned2.Select(d => (double)d.Value!.Value).
-                                   ToList();
+            var values1 = aligned1.Select(d => (double)d.Value!.Value).ToList();
+            var values2 = aligned2.Select(d => (double)d.Value!.Value).ToList();
 
             computedResults = MathHelper.ApplyBinaryOperation(values1, values2, op);
         }

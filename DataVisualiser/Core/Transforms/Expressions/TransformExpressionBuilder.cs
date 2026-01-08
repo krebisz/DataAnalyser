@@ -27,8 +27,7 @@ public static class TransformExpressionBuilder
             return null;
 
         // Build operands from metric indices
-        var operands = metricIndices.Select(idx => TransformOperand.Metric(idx)).
-                                     ToArray();
+        var operands = metricIndices.Select(idx => TransformOperand.Metric(idx)).ToArray();
 
         // Create expression based on arity
         return operation.Arity switch
@@ -74,8 +73,7 @@ public static class TransformExpressionBuilder
         if (operation == null)
             return null;
 
-        var operands = metricIndices.Select(idx => TransformOperand.Metric(idx)).
-                                     ToArray();
+        var operands = metricIndices.Select(idx => TransformOperand.Metric(idx)).ToArray();
         return TransformExpression.CreateOperation(operation, operands);
     }
 }

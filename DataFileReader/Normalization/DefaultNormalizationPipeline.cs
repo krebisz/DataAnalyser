@@ -10,8 +10,8 @@ namespace DataFileReader.Normalization;
 /// </summary>
 public sealed class DefaultNormalizationPipeline : INormalizationPipeline
 {
-    private readonly CmsProductionStage                 _cmsProductionStage;
-    private readonly NormalizationContext               _context;
+    private readonly CmsProductionStage _cmsProductionStage;
+    private readonly NormalizationContext _context;
     private readonly IReadOnlyList<INormalizationStage> _stages;
 
     public DefaultNormalizationPipeline(IReadOnlyList<INormalizationStage> stages, NormalizationContext context)

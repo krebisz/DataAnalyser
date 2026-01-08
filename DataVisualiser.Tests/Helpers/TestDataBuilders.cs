@@ -21,10 +21,10 @@ public static class TestDataBuilders
 
 public class HealthMetricDataBuilder
 {
-    private readonly string?  _provider  = "Test";
-    private          DateTime _timestamp = DateTime.UtcNow;
-    private          string?  _unit      = "kg";
-    private          decimal? _value     = 100m;
+    private readonly string? _provider = "Test";
+    private DateTime _timestamp = DateTime.UtcNow;
+    private string? _unit = "kg";
+    private decimal? _value = 100m;
 
     public HealthMetricDataBuilder WithTimestamp(DateTime timestamp)
     {
@@ -77,12 +77,12 @@ public class HealthMetricDataBuilder
 
 public class MockCmsBuilder
 {
-    private TimeSpan       _interval    = TimeSpan.FromDays(1);
-    private string         _metricId    = "metric.test";
-    private int            _sampleCount = 10;
-    private DateTimeOffset _startTime   = DateTimeOffset.UtcNow;
-    private string         _unitSymbol  = "kg";
-    private decimal?       _value       = 100m;
+    private TimeSpan _interval = TimeSpan.FromDays(1);
+    private string _metricId = "metric.test";
+    private int _sampleCount = 10;
+    private DateTimeOffset _startTime = DateTimeOffset.UtcNow;
+    private string _unitSymbol = "kg";
+    private decimal? _value = 100m;
 
     public MockCmsBuilder WithMetricId(string metricId)
     {
@@ -142,11 +142,11 @@ public class MockCmsBuilder
 
 internal class MockCanonicalMetricSeries : ICanonicalMetricSeries
 {
-    public CanonicalMetricId           MetricId   { get; init; } = default!;
-    public TimeSemantics               Time       { get; init; } = default!;
-    public IReadOnlyList<MetricSample> Samples    { get; init; } = Array.Empty<MetricSample>();
-    public MetricUnit                  Unit       { get; init; } = default!;
-    public MetricDimension             Dimension  { get; init; } = MetricDimension.Unknown;
-    public MetricProvenance            Provenance { get; init; } = new("Test", "Test", "1.0");
-    public MetricQuality               Quality    { get; init; } = new(DataCompleteness.Complete, ValidationStatus.Validated);
+    public CanonicalMetricId MetricId { get; init; } = default!;
+    public TimeSemantics Time { get; init; } = default!;
+    public IReadOnlyList<MetricSample> Samples { get; init; } = Array.Empty<MetricSample>();
+    public MetricUnit Unit { get; init; } = default!;
+    public MetricDimension Dimension { get; init; } = MetricDimension.Unknown;
+    public MetricProvenance Provenance { get; init; } = new("Test", "Test", "1.0");
+    public MetricQuality Quality { get; init; } = new(DataCompleteness.Complete, ValidationStatus.Validated);
 }

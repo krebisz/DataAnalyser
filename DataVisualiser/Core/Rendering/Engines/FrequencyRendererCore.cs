@@ -1,5 +1,4 @@
 using System.Windows.Media;
-using DataVisualiser.Core.Rendering;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;

@@ -12,16 +12,16 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class StrategyCutOverServiceTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void ShouldUseCms_ShouldReturnFalse_WhenGlobalDisabled()
     {
-        using var _ = new CmsConfigurationScope(useCmsData: false, useCmsForSingleMetric: true);
+        using var _ = new CmsConfigurationScope(false, true);
         var service = CreateService();
         var ctx = new ChartDataContext
         {
-            PrimaryCms = TestDataBuilders.CanonicalMetricSeries().Build()
+                PrimaryCms = TestDataBuilders.CanonicalMetricSeries().Build()
         };
 
         var result = service.ShouldUseCms(StrategyType.SingleMetric, ctx);
@@ -32,11 +32,15 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void ShouldUseCms_ShouldReturnTrue_WhenEnabledAndCmsPresent()
     {
-        using var _ = new CmsConfigurationScope(useCmsData: true, useCmsForSingleMetric: true);
+        using var _ = new CmsConfigurationScope(true, true);
         var service = CreateService();
+        var from = new DateTime(2024, 01, 01);
+        var to = from.AddDays(1);
         var ctx = new ChartDataContext
         {
-            PrimaryCms = TestDataBuilders.CanonicalMetricSeries().Build()
+                PrimaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(from, TimeSpan.Zero)).Build(),
+                From = from,
+                To = to
         };
 
         var result = service.ShouldUseCms(StrategyType.SingleMetric, ctx);
@@ -47,30 +51,23 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void CreateStrategy_ShouldPreferCms_WhenEnabled()
     {
-        using var _ = new CmsConfigurationScope(useCmsData: true, useCmsForSingleMetric: true);
+        using var _ = new CmsConfigurationScope(true, true);
         var service = CreateService();
-        var cms = TestDataBuilders.CanonicalMetricSeries().
-                                   WithMetricId("metric.test").
-                                   WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).
-                                   WithInterval(TimeSpan.FromDays(1)).
-                                   WithSampleCount(5).
-                                   Build();
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build();
 
         var ctx = new ChartDataContext
         {
-            PrimaryCms = cms,
-            From = From,
-            To = To
+                PrimaryCms = cms,
+                From = From,
+                To = To
         };
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = TestDataBuilders.HealthMetricData().
-                                         WithTimestamp(From).
-                                         BuildSeries(2, TimeSpan.FromDays(1)),
-            Label1 = "Test",
-            From = From,
-            To = To
+                LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).BuildSeries(2, TimeSpan.FromDays(1)),
+                Label1 = "Test",
+                From = From,
+                To = To
         };
 
         var strategy = service.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
@@ -84,32 +81,25 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void CreateStrategy_ShouldPreferLegacy_WhenGlobalDisabled()
     {
-        using var _ = new CmsConfigurationScope(useCmsData: false, useCmsForSingleMetric: true);
+        using var _ = new CmsConfigurationScope(false, true);
         var service = CreateService();
-        var cms = TestDataBuilders.CanonicalMetricSeries().
-                                   WithMetricId("metric.test").
-                                   WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).
-                                   WithInterval(TimeSpan.FromDays(1)).
-                                   WithSampleCount(5).
-                                   Build();
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build();
 
-        var legacy = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     BuildSeries(2, TimeSpan.FromDays(1));
+        var legacy = TestDataBuilders.HealthMetricData().WithTimestamp(From).BuildSeries(2, TimeSpan.FromDays(1));
 
         var ctx = new ChartDataContext
         {
-            PrimaryCms = cms,
-            From = From,
-            To = To
+                PrimaryCms = cms,
+                From = From,
+                To = To
         };
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = legacy,
-            Label1 = "Test",
-            From = From,
-            To = To
+                LegacyData1 = legacy,
+                Label1 = "Test",
+                From = From,
+                To = To
         };
 
         var strategy = service.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);

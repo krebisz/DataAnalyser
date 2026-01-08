@@ -116,8 +116,7 @@ public static class TransformExpressionEvaluator
         if (expression.Operation == null)
             return ResolveMetricLabel(expression, metricLabels);
 
-        var operandLabels = expression.Operands.Select(op => ResolveOperandLabel(op, metricLabels)).
-                                       ToList();
+        var operandLabels = expression.Operands.Select(op => ResolveOperandLabel(op, metricLabels)).ToList();
 
         var symbol = GetOperationSymbol(expression.Operation.Id);
         return string.Join($" {symbol} ", operandLabels);
@@ -157,11 +156,11 @@ public static class TransformExpressionEvaluator
     {
         return operationId switch
         {
-                "Log"      => "log",
-                "Sqrt"     => "√",
-                "Add"      => "+",
+                "Log" => "log",
+                "Sqrt" => "√",
+                "Add" => "+",
                 "Subtract" => "-",
-                _          => operationId
+                _ => operationId
         };
     }
 
@@ -174,11 +173,12 @@ public static class TransformExpressionEvaluator
     /// <returns>Generated label string.</returns>
     public static string GenerateTransformLabel(string operation, IReadOnlyList<IReadOnlyList<MetricData>> metrics, ChartDataContext? ctx)
     {
-        var metricIndices = metrics.Count > 0 ? Enumerable.Range(0, metrics.Count).
-                                                           ToArray() : new[]
-        {
-                0
-        };
+        var metricIndices = metrics.Count > 0 ?
+                Enumerable.Range(0, metrics.Count).ToArray() :
+                new[]
+                {
+                        0
+                };
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, metricIndices);
 
         if (expression != null && metrics.Count > 0)
@@ -227,11 +227,11 @@ public static class TransformExpressionEvaluator
     {
         return operationTag switch
         {
-                "Log"      => "Log(Result)",
-                "Sqrt"     => "√(Result)",
-                "Add"      => "Result (Sum)",
+                "Log" => "Log(Result)",
+                "Sqrt" => "√(Result)",
+                "Add" => "Result (Sum)",
                 "Subtract" => "Result (Difference)",
-                _          => "Transform Result"
+                _ => "Transform Result"
         };
     }
 
@@ -261,11 +261,12 @@ public static class TransformExpressionEvaluator
     /// </summary>
     public static List<object> CreateTransformResultData(List<MetricData> dataList, List<double> results)
     {
-        return dataList.Zip(results, (d, r) => new
-                        {
-                                Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                                Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
-                        }).
-                        ToList<object>();
+        return dataList.Zip(results,
+                               (d, r) => new
+                               {
+                                       Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                       Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
+                               })
+                       .ToList<object>();
     }
 }

@@ -1,4 +1,5 @@
 using DataFileReader.Helper;
+using DataFileReader.Normalization.Canonical;
 
 namespace DataFileReader.Canonical;
 
@@ -35,17 +36,17 @@ public sealed class HealthMetricToCmsMapper
 
             var metricIdValue = resolved.MetricId.Value;
             string? unit = null;
-            MetricDimension dimension = MetricDimension.Unknown;
+            var dimension = MetricDimension.Unknown;
             string provenanceVersion;
 
             // Determine unit, dimension, and provenance based on metric type
-            if (metricIdValue == Normalization.Canonical.MetricIdentity.BodyWeight.Id)
+            if (metricIdValue == MetricIdentity.BodyWeight.Id)
             {
                 unit = r.Unit ?? "kg";
                 dimension = MetricDimension.Mass;
                 provenanceVersion = "Phase3.Weight.Shadow";
             }
-            else if (metricIdValue == Normalization.Canonical.MetricIdentity.Sleep.Id)
+            else if (metricIdValue == MetricIdentity.Sleep.Id)
             {
                 unit = r.Unit ?? "hours";
                 dimension = MetricDimension.Duration;
@@ -81,13 +82,11 @@ public sealed class HealthMetricToCmsMapper
 
             // Collect all samples, ordered by timestamp
             foreach (var (record, _, _, _, _) in group)
-            {
                 if (record.NormalizedTimestamp.HasValue)
                 {
                     var ts = new DateTimeOffset(record.NormalizedTimestamp.Value);
                     samples.Add(new MetricSample(ts, record.Value));
                 }
-            }
 
             if (samples.Count == 0)
                 continue;

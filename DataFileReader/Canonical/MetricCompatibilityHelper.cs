@@ -45,8 +45,8 @@ public static class MetricCompatibilityHelper
         return canonicalMetricId switch
         {
                 "metric.body_weight" => MetricDimension.Mass,
-                "metric.sleep"       => MetricDimension.Duration,
-                _                    => MetricDimension.Unknown
+                "metric.sleep" => MetricDimension.Duration,
+                _ => MetricDimension.Unknown
         };
     }
 
@@ -61,8 +61,7 @@ public static class MetricCompatibilityHelper
         if (canonicalIds == null)
             return false;
 
-        var ids = canonicalIds.Where(id => !string.IsNullOrWhiteSpace(id)).
-                               ToList();
+        var ids = canonicalIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToList();
 
         // Empty or single metric is always compatible (nothing to compare)
         if (ids.Count < 2)
@@ -71,8 +70,7 @@ public static class MetricCompatibilityHelper
         // For now, all must have the same canonical ID
         // Future: Could allow same dimension
         var firstId = ids[0];
-        return ids.Skip(1).
-                   All(id => id == firstId);
+        return ids.Skip(1).All(id => id == firstId);
     }
 
     /// <summary>
@@ -88,8 +86,7 @@ public static class MetricCompatibilityHelper
         if (canonicalIds == null)
             return false;
 
-        var ids = canonicalIds.Where(id => !string.IsNullOrWhiteSpace(id)).
-                               ToList();
+        var ids = canonicalIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToList();
 
         // Empty or single metric is always compatible
         if (ids.Count < 2)
@@ -102,8 +99,7 @@ public static class MetricCompatibilityHelper
             return false;
 
         // All metrics must have the same dimension
-        return ids.Skip(1).
-                   All(id => GetDimension(id) == firstDimension);
+        return ids.Skip(1).All(id => GetDimension(id) == firstDimension);
     }
 
     /// <summary>
@@ -117,15 +113,13 @@ public static class MetricCompatibilityHelper
         if (canonicalIds == null)
             return "No metrics provided";
 
-        var ids = canonicalIds.Where(id => !string.IsNullOrWhiteSpace(id)).
-                               ToList();
+        var ids = canonicalIds.Where(id => !string.IsNullOrWhiteSpace(id)).ToList();
 
         if (ids.Count < 2)
             return null; // Compatible (nothing to compare)
 
         // Check for mismatched canonical IDs
-        var uniqueIds = ids.Distinct().
-                            ToList();
+        var uniqueIds = ids.Distinct().ToList();
         if (uniqueIds.Count > 1)
         {
             var displayNames = uniqueIds.Select(id => CanonicalMetricMapping.GetDisplayName(id));
@@ -133,9 +127,7 @@ public static class MetricCompatibilityHelper
         }
 
         // Check for dimension mismatches (if using dimension-based validation)
-        var dimensions = ids.Select(GetDimension).
-                             Distinct().
-                             ToList();
+        var dimensions = ids.Select(GetDimension).Distinct().ToList();
         if (dimensions.Count > 1)
         {
             var dimensionNames = dimensions.Select(d => d.ToString());

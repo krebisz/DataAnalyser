@@ -7,18 +7,19 @@ namespace DataVisualiser.Tests.Parity;
 public sealed class MultiMetricParityTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void Parity_ShouldPass_WithThreeMetrics()
     {
         var legacySeries = CreateLegacySeries(3, 10);
-        AssertParity(legacySeries, new[]
-        {
-                "A",
-                "B",
-                "C"
-        });
+        AssertParity(legacySeries,
+                new[]
+                {
+                        "A",
+                        "B",
+                        "C"
+                });
     }
 
     [Fact]
@@ -30,11 +31,12 @@ public sealed class MultiMetricParityTests
                 Enumerable.Empty<MetricData>()
         };
 
-        AssertParity(legacySeries, new[]
-        {
-                "A",
-                "B"
-        });
+        AssertParity(legacySeries,
+                new[]
+                {
+                        "A",
+                        "B"
+                });
     }
 
     [Fact]
@@ -42,20 +44,17 @@ public sealed class MultiMetricParityTests
     {
         var legacySeries = new List<IEnumerable<MetricData>>
         {
-                TestDataBuilders.HealthMetricData().
-                                 WithUnit("kg").
-                                 BuildSeries(12, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithUnit("kg").BuildSeries(12, TimeSpan.FromDays(1)),
 
-                TestDataBuilders.HealthMetricData().
-                                 WithUnit("kg").
-                                 BuildSeries(8, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().WithUnit("kg").BuildSeries(8, TimeSpan.FromDays(1))
         };
 
-        AssertParity(legacySeries, new[]
-        {
-                "A",
-                "B"
-        });
+        AssertParity(legacySeries,
+                new[]
+                {
+                        "A",
+                        "B"
+                });
     }
 
     private static List<IEnumerable<MetricData>> CreateLegacySeries(int seriesCount, int pointsPerSeries)
@@ -63,9 +62,7 @@ public sealed class MultiMetricParityTests
         var result = new List<IEnumerable<MetricData>>();
 
         for (var i = 0; i < seriesCount; i++)
-            result.Add(TestDataBuilders.HealthMetricData().
-                                        WithUnit("kg").
-                                        BuildSeries(pointsPerSeries, TimeSpan.FromDays(1)));
+            result.Add(TestDataBuilders.HealthMetricData().WithUnit("kg").BuildSeries(pointsPerSeries, TimeSpan.FromDays(1)));
 
         return result;
     }
@@ -78,12 +75,7 @@ public sealed class MultiMetricParityTests
 
         const string sharedMetricId = "metric.test.multi";
 
-        var cmsSeries = legacySeries.Select(series => TestDataBuilders.CanonicalMetricSeries().
-                                                                       WithMetricId(sharedMetricId).
-                                                                       WithUnit("kg").
-                                                                       WithSampleCount(series.Count()).
-                                                                       Build()).
-                                     ToList();
+        var cmsSeries = legacySeries.Select(series => TestDataBuilders.CanonicalMetricSeries().WithMetricId(sharedMetricId).WithUnit("kg").WithSampleCount(series.Count()).Build()).ToList();
 
         var cmsStrategy = new MultiMetricStrategy(cmsSeries, labels, From, To);
 

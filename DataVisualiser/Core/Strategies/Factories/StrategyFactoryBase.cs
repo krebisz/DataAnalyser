@@ -11,7 +11,7 @@ namespace DataVisualiser.Core.Strategies.Factories;
 public abstract class StrategyFactoryBase : IStrategyFactory
 {
     private readonly Func<ChartDataContext, StrategyCreationParameters, IChartComputationStrategy>? _cmsFactory;
-    private readonly Func<StrategyCreationParameters, IChartComputationStrategy>?                   _legacyFactory;
+    private readonly Func<StrategyCreationParameters, IChartComputationStrategy>? _legacyFactory;
 
     /// <summary>
     ///     Constructor for factories that need custom logic (override methods).

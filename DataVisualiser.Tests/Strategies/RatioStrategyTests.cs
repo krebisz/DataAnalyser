@@ -7,7 +7,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class RatioStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()
@@ -25,10 +25,7 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldReturnNull_WhenOneSeriesEmpty()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var right = Enumerable.Empty<MetricData>();
 
@@ -42,15 +39,9 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldAlignByIndex_UsingShortestSeries()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(8, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(8, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new RatioStrategy(left, right, "L", "R", From, To);
 
@@ -102,10 +93,11 @@ public sealed class RatioStrategyTests
 
         Assert.NotNull(result);
         Assert.Equal(new[]
-        {
-                5.0,
-                5.0
-        }, result!.PrimaryRawValues);
+                {
+                        5.0,
+                        5.0
+                },
+                result!.PrimaryRawValues);
     }
 
     [Fact]
@@ -142,15 +134,9 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldGenerateSmoothedValues()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(10, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(10, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1));
 
         var strategy = new RatioStrategy(left, right, "L", "R", From, To);
 
@@ -164,15 +150,9 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldResolveUnit_AsRatio_WhenBothUnitsPresent()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit("kg").
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("m").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("m").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new RatioStrategy(left, right, "L", "R", From, To);
 
@@ -185,15 +165,9 @@ public sealed class RatioStrategyTests
     [Fact]
     public void Compute_ShouldReturnNullUnit_WhenEitherUnitMissing()
     {
-        var left = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(From).
-                                    WithUnit(null).
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var left = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit(null).BuildSeries(5, TimeSpan.FromDays(1));
 
-        var right = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(From).
-                                     WithUnit("kg").
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var right = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1));
 
         var strategy = new RatioStrategy(left, right, "L", "R", From, To);
 

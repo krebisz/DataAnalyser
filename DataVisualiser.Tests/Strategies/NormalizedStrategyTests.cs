@@ -6,7 +6,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class NormalizedStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void Compute_ShouldReturnNull_WhenBothSeriesEmpty()

@@ -19,8 +19,7 @@ public class HierarchyObjectList
             var type = hierarchyObject.Value.GetType();
 
             if (string.IsNullOrEmpty(hierarchyObject.Name))
-                hierarchyObject.Name = Guid.NewGuid().
-                                            ToString();
+                hierarchyObject.Name = Guid.NewGuid().ToString();
 
             hierarchyObject.Fields.Add(hierarchyObject.Value, type);
             hierarchyObject.GenerateMetaDataID();
@@ -48,8 +47,7 @@ public class HierarchyObjectList
                 hierarchyObject.Value += $"{childName}; ";
             }
         else if (classID == "Array")
-            for (var i = 0; i < jToken.Children().
-                                       Count(); i++)
+            for (var i = 0; i < jToken.Children().Count(); i++)
                 hierarchyObject.Value += $"{hierarchyObject.Name}[{i}]; ";
         else
             hierarchyObject.Value = jToken.ToString();
@@ -78,8 +76,7 @@ public class HierarchyObjectList
         if (parentName is null)
             return null; // No parent name found
 
-        return HierarchyObjects.FirstOrDefault(h => h.Name == parentName)?.
-                                ID;
+        return HierarchyObjects.FirstOrDefault(h => h.Name == parentName)?.ID;
     }
 
     public int? FindLevel(int? parentID)

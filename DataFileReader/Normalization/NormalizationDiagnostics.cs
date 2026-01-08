@@ -10,7 +10,7 @@ namespace DataFileReader.Normalization;
 /// </summary>
 public static class NormalizationDiagnostics
 {
-    public static Action<RawRecord>?                     OnRawRecordObserved    { get; set; }
+    public static Action<RawRecord>? OnRawRecordObserved { get; set; }
     public static Action<CanonicalMetricSeries<object>>? OnMetricSeriesProduced { get; set; }
 
     /// <summary>

@@ -22,11 +22,11 @@ public sealed class ChartDataContextBuilder
     ///     - primarySubtype = first selected subtype
     ///     - secondarySubtype = second selected subtype
     /// </summary>
-    public ChartDataContext Build(string                   metricType,       string? primarySubtype, // First selected subtype
-                                  string?                  secondarySubtype, // Second selected subtype
-                                  IEnumerable<MetricData>  data1,            // First selected subtype data (primary)
+    public ChartDataContext Build(string metricType, string? primarySubtype, // First selected subtype
+                                  string? secondarySubtype,                  // Second selected subtype
+                                  IEnumerable<MetricData> data1,             // First selected subtype data (primary)
                                   IEnumerable<MetricData>? data2,            // Second selected subtype data (secondary)
-                                  DateTime                 from,             DateTime to)
+                                  DateTime from, DateTime to)
     {
         // Normalize inputs - maintain ordering: list1 = first selected, list2 = second selected
         var list1 = data1?.ToList() ?? new List<MetricData>(); // First selected subtype
@@ -107,11 +107,7 @@ public sealed class ChartDataContextBuilder
     // ---------------------------------------------------------
     private static IReadOnlyList<DateTime> BuildUnifiedTimeline(List<MetricData> list1, List<MetricData> list2)
     {
-        return list1.Select(d => d.NormalizedTimestamp.Date).
-                     Concat(list2.Select(d => d.NormalizedTimestamp.Date)).
-                     Distinct().
-                     OrderBy(d => d).
-                     ToList();
+        return list1.Select(d => d.NormalizedTimestamp.Date).Concat(list2.Select(d => d.NormalizedTimestamp.Date)).Distinct().OrderBy(d => d).ToList();
     }
 
     // ---------------------------------------------------------
@@ -120,9 +116,7 @@ public sealed class ChartDataContextBuilder
     private static IReadOnlyList<double> AlignValues(List<MetricData> source, IReadOnlyList<DateTime> timeline)
     {
         // Map: date -> numeric value
-        var dict = source.GroupBy(d => d.NormalizedTimestamp.Date).
-                          ToDictionary(g => g.Key, g => Convert.ToDouble(g.First().
-                                                                           Value ?? 0m));
+        var dict = source.GroupBy(d => d.NormalizedTimestamp.Date).ToDictionary(g => g.Key, g => Convert.ToDouble(g.First().Value ?? 0m));
 
         var lastValue = ComputationDefaults.ForwardFillSeedValue;
 
@@ -193,8 +187,7 @@ public sealed class ChartDataContextBuilder
         var max = values.Max();
         if (max <= 0)
             return values.ToList();
-        return values.Select(v => v / max).
-                      ToList();
+        return values.Select(v => v / max).ToList();
     }
 
     // ---------------------------------------------------------

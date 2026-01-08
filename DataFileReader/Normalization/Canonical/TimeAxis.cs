@@ -15,7 +15,7 @@ public sealed class TimeAxis
         TimeZone = timeZone ?? throw new ArgumentNullException(nameof(timeZone));
     }
 
-    public bool         IsIntervalBased { get; }
-    public TimeSpan     Resolution      { get; }
-    public TimeZoneInfo TimeZone        { get; }
+    public bool IsIntervalBased { get; }
+    public TimeSpan Resolution { get; }
+    public TimeZoneInfo TimeZone { get; }
 }

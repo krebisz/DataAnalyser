@@ -63,23 +63,23 @@ public sealed class WeekdayTrendStrategy
             var dayIndex = weekdayGroup.Key;
             var dayOfWeek = IndexToDayOfWeek(dayIndex);
 
-            var points = weekdayGroup.GroupBy(d => d.NormalizedTimestamp.Date).
-                                      OrderBy(g => g.Key).
-                                      Select(g =>
-                                      {
-                                          var avg = g.Average(x => (double)x.Value!.Value);
+            var points = weekdayGroup.GroupBy(d => d.NormalizedTimestamp.Date)
+                                     .OrderBy(g => g.Key)
+                                     .Select(g =>
+                                     {
+                                         var avg = g.Average(x => (double)x.Value!.Value);
 
-                                          globalMin = Math.Min(globalMin, avg);
-                                          globalMax = Math.Max(globalMax, avg);
+                                         globalMin = Math.Min(globalMin, avg);
+                                         globalMax = Math.Max(globalMax, avg);
 
-                                          return new WeekdayTrendPoint
-                                          {
-                                                  Date = g.Key,
-                                                  Value = avg,
-                                                  SampleCount = g.Count()
-                                          };
-                                      }).
-                                      ToList();
+                                         return new WeekdayTrendPoint
+                                         {
+                                                 Date = g.Key,
+                                                 Value = avg,
+                                                 SampleCount = g.Count()
+                                         };
+                                     })
+                                     .ToList();
 
             seriesByDay[dayIndex] = new WeekdayTrendSeries
             {

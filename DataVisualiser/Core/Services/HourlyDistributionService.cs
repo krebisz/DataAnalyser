@@ -25,7 +25,7 @@ public class HourlyDistributionService : BaseDistributionService
         {
                 HourlyDistributionStrategy legacy => legacy.ExtendedResult,
                 CmsHourlyDistributionStrategy cms => cms.ExtendedResult,
-                _                                 => null
+                _ => null
         };
     }
 

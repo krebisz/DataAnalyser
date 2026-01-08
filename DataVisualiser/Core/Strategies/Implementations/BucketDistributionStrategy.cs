@@ -14,9 +14,9 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 public abstract class BucketDistributionStrategy : IChartComputationStrategy
 {
     private readonly IEnumerable<MetricData> _data;
-    private readonly DateTime                _from;
-    private readonly DateTime                _to;
-    private readonly IUnitResolutionService  _unitResolutionService;
+    private readonly DateTime _from;
+    private readonly DateTime _to;
+    private readonly IUnitResolutionService _unitResolutionService;
 
     protected BucketDistributionStrategy(IEnumerable<MetricData> data, string label, DateTime from, DateTime to, IUnitResolutionService? unitResolutionService = null)
     {
@@ -37,8 +37,8 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
     // friendly name for chart title/legend (not used as series name here)
     public string PrimaryLabel { get; }
 
-    public string  SecondaryLabel => string.Empty;
-    public string? Unit           { get; protected set; }
+    public string SecondaryLabel => string.Empty;
+    public string? Unit { get; protected set; }
 
     /// <summary>
     ///     Result contains arrays for mins, maxes and counts in bucket order.
@@ -83,9 +83,7 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
 
     private List<List<double>> BucketByType(IEnumerable<MetricData> ordered)
     {
-        var buckets = Enumerable.Range(0, BucketCount).
-                                 Select(_ => new List<double>()).
-                                 ToList();
+        var buckets = Enumerable.Range(0, BucketCount).Select(_ => new List<double>()).ToList();
 
         foreach (var d in ordered)
         {
@@ -94,8 +92,7 @@ public abstract class BucketDistributionStrategy : IChartComputationStrategy
             if (idx < 0 || idx >= BucketCount)
                 idx = 0;
 
-            buckets[idx].
-                    Add((double)d.Value!.Value);
+            buckets[idx].Add((double)d.Value!.Value);
         }
 
         return buckets;

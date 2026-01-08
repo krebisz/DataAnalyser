@@ -7,7 +7,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class MultiMetricStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 10);
+    private static readonly DateTime To = new(2024, 01, 10);
 
     [Fact]
     public void Compute_ShouldReturnNull_WhenAllSeriesEmpty()
@@ -18,11 +18,14 @@ public sealed class MultiMetricStrategyTests
                 Enumerable.Empty<MetricData>()
         };
 
-        var strategy = new MultiMetricStrategy(series, new[]
-        {
-                "A",
-                "B"
-        }, From, To);
+        var strategy = new MultiMetricStrategy(series,
+                new[]
+                {
+                        "A",
+                        "B"
+                },
+                From,
+                To);
 
         var result = strategy.Compute();
 
@@ -35,17 +38,17 @@ public sealed class MultiMetricStrategyTests
         var series = new List<IEnumerable<MetricData>>
         {
                 Enumerable.Empty<MetricData>(),
-                TestDataBuilders.HealthMetricData().
-                                 WithTimestamp(From).
-                                 WithUnit("kg").
-                                 BuildSeries(5, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1))
         };
 
-        var strategy = new MultiMetricStrategy(series, new[]
-        {
-                "Empty",
-                "Valid"
-        }, From, To);
+        var strategy = new MultiMetricStrategy(series,
+                new[]
+                {
+                        "Empty",
+                        "Valid"
+                },
+                From,
+                To);
 
         var result = strategy.Compute();
 
@@ -59,21 +62,18 @@ public sealed class MultiMetricStrategyTests
     {
         var series = new List<IEnumerable<MetricData>>
         {
-                TestDataBuilders.HealthMetricData().
-                                 WithTimestamp(From).
-                                 WithUnit("kg").
-                                 BuildSeries(5, TimeSpan.FromDays(1)),
-                TestDataBuilders.HealthMetricData().
-                                 WithTimestamp(From).
-                                 WithUnit("kg").
-                                 BuildSeries(5, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1))
         };
 
-        var strategy = new MultiMetricStrategy(series, new[]
-        {
-                "A",
-                "B"
-        }, From, To);
+        var strategy = new MultiMetricStrategy(series,
+                new[]
+                {
+                        "A",
+                        "B"
+                },
+                From,
+                To);
 
         var result = strategy.Compute();
 
@@ -109,10 +109,13 @@ public sealed class MultiMetricStrategyTests
                 }
         };
 
-        var strategy = new MultiMetricStrategy(series, new[]
-        {
-                "A"
-        }, From, To);
+        var strategy = new MultiMetricStrategy(series,
+                new[]
+                {
+                        "A"
+                },
+                From,
+                To);
 
         var result = strategy.Compute();
 
@@ -126,16 +129,16 @@ public sealed class MultiMetricStrategyTests
     {
         var series = new List<IEnumerable<MetricData>>
         {
-                TestDataBuilders.HealthMetricData().
-                                 WithTimestamp(From).
-                                 WithUnit("kg").
-                                 BuildSeries(10, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(10, TimeSpan.FromDays(1))
         };
 
-        var strategy = new MultiMetricStrategy(series, new[]
-        {
-                "A"
-        }, From, To);
+        var strategy = new MultiMetricStrategy(series,
+                new[]
+                {
+                        "A"
+                },
+                From,
+                To);
 
         var result = strategy.Compute();
 
@@ -150,21 +153,18 @@ public sealed class MultiMetricStrategyTests
     {
         var series = new List<IEnumerable<MetricData>>
         {
-                TestDataBuilders.HealthMetricData().
-                                 WithTimestamp(From).
-                                 WithUnit("kg").
-                                 BuildSeries(5, TimeSpan.FromDays(1)),
-                TestDataBuilders.HealthMetricData().
-                                 WithTimestamp(From).
-                                 WithUnit("lb").
-                                 BuildSeries(5, TimeSpan.FromDays(1))
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("lb").BuildSeries(5, TimeSpan.FromDays(1))
         };
 
-        var strategy = new MultiMetricStrategy(series, new[]
-        {
-                "A",
-                "B"
-        }, From, To);
+        var strategy = new MultiMetricStrategy(series,
+                new[]
+                {
+                        "A",
+                        "B"
+                },
+                From,
+                To);
 
         var result = strategy.Compute();
 
@@ -177,25 +177,18 @@ public sealed class MultiMetricStrategyTests
     {
         var cmsSeries = new[]
         {
-                TestDataBuilders.CanonicalMetricSeries().
-                                 WithMetricId("metric.test.multi").
-                                 WithUnit("kg").
-                                 WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).
-                                 WithSampleCount(5).
-                                 Build(),
-                TestDataBuilders.CanonicalMetricSeries().
-                                 WithMetricId("metric.test.multi").
-                                 WithUnit("kg").
-                                 WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).
-                                 WithSampleCount(5).
-                                 Build()
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build()
         };
 
-        var strategy = new MultiMetricStrategy(cmsSeries, new[]
-        {
-                "A",
-                "B"
-        }, From, To);
+        var strategy = new MultiMetricStrategy(cmsSeries,
+                new[]
+                {
+                        "A",
+                        "B"
+                },
+                From,
+                To);
 
         var result = strategy.Compute();
 

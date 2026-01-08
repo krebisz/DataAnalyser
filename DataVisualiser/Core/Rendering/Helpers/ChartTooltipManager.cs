@@ -13,13 +13,13 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public class ChartTooltipManager : IDisposable
 {
-    private readonly Dictionary<CartesianChart, string>         _chartLabels;
-    private readonly Dictionary<CartesianChart, TextBlock>      _chartTextBlocks;
+    private readonly Dictionary<CartesianChart, string> _chartLabels;
+    private readonly Dictionary<CartesianChart, TextBlock> _chartTextBlocks;
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
-    private readonly Dictionary<CartesianChart, AxisSection?>   _chartVerticalLines;
-    private readonly Popup                                      _hoverPopup;
-    private readonly Window                                     _parentWindow;
-    private readonly TextBlock                                  _timestampText;
+    private readonly Dictionary<CartesianChart, AxisSection?> _chartVerticalLines;
+    private readonly Popup _hoverPopup;
+    private readonly Window _parentWindow;
+    private readonly TextBlock _timestampText;
 
     /// <summary>
     ///     Initializes a new instance of ChartTooltipManager.
@@ -296,8 +296,7 @@ public class ChartTooltipManager : IDisposable
         {
             var timestamps = kvp.Value;
             if (index >= 0 && index < timestamps.Count)
-                return timestamps[index].
-                        ToString("yyyy-MM-dd HH:mm:ss");
+                return timestamps[index].ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         return "Timestamp: N/A";

@@ -107,11 +107,11 @@ public abstract class BucketDistributionParityHarness : IStrategyParityHarness
         {
                 SeriesKey = key,
                 Points = values.Select((v, i) => new ParityPoint
-                                {
-                                        Time = timeAt(i),
-                                        Value = v
-                                }).
-                                ToList()
+                               {
+                                       Time = timeAt(i),
+                                       Value = v
+                               })
+                               .ToList()
         });
     }
 

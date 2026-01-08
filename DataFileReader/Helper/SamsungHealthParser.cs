@@ -7,15 +7,15 @@ namespace DataFileReader.Helper;
 /// </summary>
 public class HealthMetric
 {
-    public string                     Provider            { get; set; } = string.Empty;
-    public string                     MetricType          { get; set; } = string.Empty;
-    public string                     MetricSubtype       { get; set; } = string.Empty;
-    public string                     SourceFile          { get; set; } = string.Empty;
-    public DateTime?                  NormalizedTimestamp { get; set; }
-    public string                     RawTimestamp        { get; set; } = string.Empty;
-    public decimal?                   Value               { get; set; }
-    public string                     Unit                { get; set; } = string.Empty;
-    public Dictionary<string, object> AdditionalFields    { get; set; } = new();
+    public string Provider { get; set; } = string.Empty;
+    public string MetricType { get; set; } = string.Empty;
+    public string MetricSubtype { get; set; } = string.Empty;
+    public string SourceFile { get; set; } = string.Empty;
+    public DateTime? NormalizedTimestamp { get; set; }
+    public string RawTimestamp { get; set; } = string.Empty;
+    public decimal? Value { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public Dictionary<string, object> AdditionalFields { get; set; } = new();
 }
 
 /// <summary>
@@ -38,20 +38,17 @@ public static class SamsungHealthParser
     public static string ExtractMetricType(string filePath)
     {
         var parts = filePath.Split(new[]
-        {
-                '\\',
-                '/'
-        }, StringSplitOptions.RemoveEmptyEntries);
+                {
+                        '\\',
+                        '/'
+                },
+                StringSplitOptions.RemoveEmptyEntries);
 
         foreach (var part in parts)
             if (part.StartsWith("com.samsung.", StringComparison.OrdinalIgnoreCase))
             {
                 // Extract the metric name part
-                var metricPart = part.Replace("com.samsung.shealth.", "").
-                                      Replace("com.samsung.health.", "").
-                                      Replace(".raw", "").
-                                      Replace(".binning_data", "").
-                                      Replace(".extra_data", "");
+                var metricPart = part.Replace("com.samsung.shealth.", "").Replace("com.samsung.health.", "").Replace(".raw", "").Replace(".binning_data", "").Replace(".extra_data", "");
 
                 // Convert to PascalCase
                 return ToPascalCase(metricPart);
@@ -66,13 +63,13 @@ public static class SamsungHealthParser
             return input;
 
         var parts = input.Split(new[]
-        {
-                '.',
-                '_',
-                '-'
-        }, StringSplitOptions.RemoveEmptyEntries);
-        return string.Join("", parts.Select(p => char.ToUpper(p[0]) + p.Substring(1).
-                                                                        ToLower()));
+                {
+                        '.',
+                        '_',
+                        '-'
+                },
+                StringSplitOptions.RemoveEmptyEntries);
+        return string.Join("", parts.Select(p => char.ToUpper(p[0]) + p.Substring(1).ToLower()));
     }
 
     /// <summary>
@@ -125,9 +122,7 @@ public static class SamsungHealthParser
 
         // Extract timestamp
         var timestamp = TimeNormalizationHelper.ExtractTimestamp(obj);
-        var rawTimestamp = obj["start_time"]?.
-                ToString() ?? obj["end_time"]?.
-                ToString() ?? "";
+        var rawTimestamp = obj["start_time"]?.ToString() ?? obj["end_time"]?.ToString() ?? "";
 
         // Extract all numeric values that could be metrics
         foreach (var property in obj.Properties())

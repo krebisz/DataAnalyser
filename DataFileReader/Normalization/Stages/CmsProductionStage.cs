@@ -10,7 +10,7 @@ namespace DataFileReader.Normalization.Stages;
 /// </summary>
 public sealed class CmsProductionStage : INormalizationStage
 {
-    private readonly CanonicalMetricIdentityResolver     _identityResolver;
+    private readonly CanonicalMetricIdentityResolver _identityResolver;
     private readonly List<CanonicalMetricSeries<object>> _producedCms;
 
     public CmsProductionStage()
@@ -59,8 +59,7 @@ public sealed class CmsProductionStage : INormalizationStage
             if (!groupedByIdentity.ContainsKey(identityKey))
                 groupedByIdentity[identityKey] = new List<RawRecord>();
 
-            groupedByIdentity[identityKey].
-                    Add(record);
+            groupedByIdentity[identityKey].Add(record);
         }
 
         // Produce CMS for each resolved identity group

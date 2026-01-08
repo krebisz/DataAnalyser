@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        xmlns:ui="clr-namespace:DataVisualiser.UI"
         xmlns:controllers="clr-namespace:DataVisualiser.UI.Controllers"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Health Data Viz"
@@ -37,12 +36,14 @@
                 <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
                 <StackPanel x:Name="TopControlBarPanel" Orientation="Horizontal" Margin="{StaticResource TopBarMargin}">
                     <Label Content="Resolution:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                    <ComboBox x:Name="ResolutionCombo" Width="{StaticResource ResolutionComboWidth}" Margin="{StaticResource ControlMargin}"
+                    <ComboBox x:Name="ResolutionCombo" Width="{StaticResource ResolutionComboWidth}"
+                              Margin="{StaticResource ControlMargin}"
                               IsEditable="False"
                               SelectionChanged="OnResolutionSelectionChanged" />
 
                     <Label Content="Metric Type:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                    <ComboBox x:Name="TablesCombo" Width="{StaticResource MetricTypeComboWidth}" Margin="{StaticResource ControlMargin}"
+                    <ComboBox x:Name="TablesCombo" Width="{StaticResource MetricTypeComboWidth}"
+                              Margin="{StaticResource ControlMargin}"
                               IsEditable="False"
                               SelectionChanged="OnMetricTypeSelectionChanged" />
 

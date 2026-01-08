@@ -20,16 +20,13 @@ public static class MetricTypeParser
             return (string.Empty, new List<string>());
 
         // Split by any non-alphanumeric character
-        var parts = Regex.Split(metricType, @"[^a-zA-Z0-9]+").
-                          Where(part => !string.IsNullOrWhiteSpace(part)).
-                          ToList();
+        var parts = Regex.Split(metricType, @"[^a-zA-Z0-9]+").Where(part => !string.IsNullOrWhiteSpace(part)).ToList();
 
         if (parts.Count == 0)
             return (metricType, new List<string>());
 
         var baseType = parts[0];
-        var subtypes = parts.Skip(1).
-                             ToList();
+        var subtypes = parts.Skip(1).ToList();
 
         return (baseType, subtypes);
     }

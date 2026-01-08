@@ -9,7 +9,7 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public sealed class FrequencyShadingCalculator
 {
-    private static   int                      _bucketCount;
+    private static int _bucketCount;
     private readonly IIntervalShadingStrategy _shadingStrategy;
 
     public FrequencyShadingCalculator(IIntervalShadingStrategy shadingStrategy, int bucketCount)
@@ -157,22 +157,18 @@ public sealed class FrequencyShadingCalculator
     {
         var totalValues = frequencies.Values.Sum();
         var nonZeroIntervals = frequencies.Values.Count(f => f > 0);
-        var maxFreq = frequencies.Values.DefaultIfEmpty(0).
-                                  Max();
+        var maxFreq = frequencies.Values.DefaultIfEmpty(0).Max();
 
         Debug.WriteLine($"Day {bucketIndex} frequencies: " + $"Total values={totalValues}, " + $"Non-zero intervals={nonZeroIntervals}, " + $"Max frequency={maxFreq}");
 
         if (frequencies.Count == 0)
             return;
 
-        var ordered = frequencies.OrderBy(kvp => kvp.Key).
-                                  ToList();
+        var ordered = frequencies.OrderBy(kvp => kvp.Key).ToList();
 
-        var firstFew = ordered.Take(3).
-                               Select(kvp => $"I{kvp.Key}={kvp.Value}");
+        var firstFew = ordered.Take(3).Select(kvp => $"I{kvp.Key}={kvp.Value}");
 
-        var lastFew = ordered.Skip(Math.Max(0, ordered.Count - 3)).
-                              Select(kvp => $"I{kvp.Key}={kvp.Value}");
+        var lastFew = ordered.Skip(Math.Max(0, ordered.Count - 3)).Select(kvp => $"I{kvp.Key}={kvp.Value}");
 
         Debug.WriteLine($"  First intervals: {string.Join(", ", firstFew)}");
         Debug.WriteLine($"  Last intervals: {string.Join(", ", lastFew)}");

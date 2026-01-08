@@ -42,12 +42,13 @@ public static class ParityResultAdapter
         return new ParitySeries
         {
                 SeriesKey = seriesKey,
-                Points = timestamps.Zip(rawValues, (t, v) => new ParityPoint
-                                    {
-                                            Time = t,
-                                            Value = v
-                                    }).
-                                    ToList()
+                Points = timestamps.Zip(rawValues,
+                                           (t, v) => new ParityPoint
+                                           {
+                                                   Time = t,
+                                                   Value = v
+                                           })
+                                   .ToList()
         };
     }
 
@@ -56,8 +57,7 @@ public static class ParityResultAdapter
         // CMS and Legacy produce same ChartComputationResult structure
         return new CmsExecutionResult
         {
-                Series = ToLegacyExecutionResult(result).
-                        Series
+                Series = ToLegacyExecutionResult(result).Series
         };
     }
 
@@ -67,15 +67,16 @@ public static class ParityResultAdapter
             return Array.Empty<ParitySeries>();
 
         return series.Select(s => new ParitySeries
-                      {
-                              SeriesKey = s.SeriesId,
-                              Points = s.Timestamps.Zip(s.RawValues, (t, v) => new ParityPoint
-                                         {
-                                                 Time = t,
-                                                 Value = v
-                                         }).
-                                         ToList()
-                      }).
-                      ToList();
+                     {
+                             SeriesKey = s.SeriesId,
+                             Points = s.Timestamps.Zip(s.RawValues,
+                                               (t, v) => new ParityPoint
+                                               {
+                                                       Time = t,
+                                                       Value = v
+                                               })
+                                       .ToList()
+                     })
+                     .ToList();
     }
 }

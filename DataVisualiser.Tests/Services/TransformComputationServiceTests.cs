@@ -10,8 +10,8 @@ namespace DataVisualiser.Tests.Services;
 /// </summary>
 public sealed class TransformComputationServiceTests
 {
-    private static readonly DateTime                    BaseDate = new(2024, 1, 1);
-    private readonly        TransformComputationService _service;
+    private static readonly DateTime BaseDate = new(2024, 1, 1);
+    private readonly TransformComputationService _service;
 
     public TransformComputationServiceTests()
     {
@@ -64,10 +64,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeUnaryTransform_ShouldComputeLog_WhenOperationIsLog()
     {
         // Arrange
-        var data = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(BaseDate).
-                                    WithValue(100m).
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var data = TestDataBuilders.HealthMetricData().WithTimestamp(BaseDate).WithValue(100m).BuildSeries(5, TimeSpan.FromDays(1));
 
         // Act
         var result = _service.ComputeUnaryTransform(data, "Log");
@@ -85,10 +82,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeUnaryTransform_ShouldComputeSqrt_WhenOperationIsSqrt()
     {
         // Arrange
-        var data = TestDataBuilders.HealthMetricData().
-                                    WithTimestamp(BaseDate).
-                                    WithValue(100m).
-                                    BuildSeries(5, TimeSpan.FromDays(1));
+        var data = TestDataBuilders.HealthMetricData().WithTimestamp(BaseDate).WithValue(100m).BuildSeries(5, TimeSpan.FromDays(1));
 
         // Act
         var result = _service.ComputeUnaryTransform(data, "Sqrt");
@@ -140,8 +134,7 @@ public sealed class TransformComputationServiceTests
     {
         // Arrange
         var data1 = Enumerable.Empty<MetricData>();
-        var data2 = TestDataBuilders.HealthMetricData().
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var data2 = TestDataBuilders.HealthMetricData().BuildSeries(5, TimeSpan.FromDays(1));
 
         // Act
         var result = _service.ComputeBinaryTransform(data1, data2, "Add");
@@ -155,8 +148,7 @@ public sealed class TransformComputationServiceTests
     public void ComputeBinaryTransform_ShouldReturnEmpty_WhenData2IsEmpty()
     {
         // Arrange
-        var data1 = TestDataBuilders.HealthMetricData().
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var data1 = TestDataBuilders.HealthMetricData().BuildSeries(5, TimeSpan.FromDays(1));
         var data2 = Enumerable.Empty<MetricData>();
 
         // Act
@@ -171,15 +163,9 @@ public sealed class TransformComputationServiceTests
     public void ComputeBinaryTransform_ShouldComputeAdd_WhenOperationIsAdd()
     {
         // Arrange
-        var data1 = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(BaseDate).
-                                     WithValue(10m).
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var data1 = TestDataBuilders.HealthMetricData().WithTimestamp(BaseDate).WithValue(10m).BuildSeries(5, TimeSpan.FromDays(1));
 
-        var data2 = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(BaseDate).
-                                     WithValue(20m).
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var data2 = TestDataBuilders.HealthMetricData().WithTimestamp(BaseDate).WithValue(20m).BuildSeries(5, TimeSpan.FromDays(1));
 
         // Act
         var result = _service.ComputeBinaryTransform(data1, data2, "Add");
@@ -197,15 +183,9 @@ public sealed class TransformComputationServiceTests
     public void ComputeBinaryTransform_ShouldComputeSubtract_WhenOperationIsSubtract()
     {
         // Arrange
-        var data1 = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(BaseDate).
-                                     WithValue(20m).
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var data1 = TestDataBuilders.HealthMetricData().WithTimestamp(BaseDate).WithValue(20m).BuildSeries(5, TimeSpan.FromDays(1));
 
-        var data2 = TestDataBuilders.HealthMetricData().
-                                     WithTimestamp(BaseDate).
-                                     WithValue(10m).
-                                     BuildSeries(5, TimeSpan.FromDays(1));
+        var data2 = TestDataBuilders.HealthMetricData().WithTimestamp(BaseDate).WithValue(10m).BuildSeries(5, TimeSpan.FromDays(1));
 
         // Act
         var result = _service.ComputeBinaryTransform(data1, data2, "Subtract");

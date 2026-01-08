@@ -17,8 +17,8 @@ namespace DataVisualiser.Core.Data.Repositories;
 public class CmsDataService
 {
     private readonly HealthMetricToCmsMapper _cmsMapper;
-    private readonly string                  _connectionString;
-    private readonly DataFetcher             _legacyFetcher;
+    private readonly string _connectionString;
+    private readonly DataFetcher _legacyFetcher;
 
     public CmsDataService(string connectionString)
     {
@@ -48,16 +48,16 @@ public class CmsDataService
 
         // Convert to HealthMetric records (simplified - in practice, you'd query HealthMetric directly)
         var healthMetrics = legacyData.Select(d => new HealthMetric
-                                       {
-                                               Provider = d.Provider ?? "Unknown",
-                                               MetricType = metricType,
-                                               MetricSubtype = subtype ?? string.Empty,
-                                               SourceFile = "Database",
-                                               NormalizedTimestamp = d.NormalizedTimestamp,
-                                               Value = d.Value,
-                                               Unit = d.Unit ?? string.Empty
-                                       }).
-                                       ToList();
+                                      {
+                                              Provider = d.Provider ?? "Unknown",
+                                              MetricType = metricType,
+                                              MetricSubtype = subtype ?? string.Empty,
+                                              SourceFile = "Database",
+                                              NormalizedTimestamp = d.NormalizedTimestamp,
+                                              Value = d.Value,
+                                              Unit = d.Unit ?? string.Empty
+                                      })
+                                      .ToList();
 
         // Map to CMS
         return _cmsMapper.Map(healthMetrics);

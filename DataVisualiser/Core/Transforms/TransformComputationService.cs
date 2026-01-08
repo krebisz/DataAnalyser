@@ -67,9 +67,7 @@ public sealed class TransformComputationService
 
     private static List<MetricData> PrepareMetricData(IEnumerable<MetricData> data)
     {
-        return data.Where(d => d.Value.HasValue).
-                    OrderBy(d => d.NormalizedTimestamp).
-                    ToList();
+        return data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
     }
 
     private static List<double> EvaluateWithExpression(TransformExpression expression, List<IReadOnlyList<MetricData>> metricsList, string operation, bool isUnary)
@@ -89,13 +87,12 @@ public sealed class TransformComputationService
 
         var op = operation switch
         {
-                "Log"  => UnaryOperators.Logarithm,
+                "Log" => UnaryOperators.Logarithm,
                 "Sqrt" => UnaryOperators.SquareRoot,
-                _      => x => x
+                _ => x => x
         };
 
-        var values = data.Select(d => (double)d.Value!.Value).
-                          ToList();
+        var values = data.Select(d => (double)d.Value!.Value).ToList();
 
         return MathHelper.ApplyUnaryOperation(values, op);
     }
@@ -106,15 +103,13 @@ public sealed class TransformComputationService
 
         var op = operation switch
         {
-                "Add"      => BinaryOperators.Sum,
+                "Add" => BinaryOperators.Sum,
                 "Subtract" => BinaryOperators.Difference,
-                _          => (a, b) => a
+                _ => (a, b) => a
         };
 
-        var values1 = data1.Select(d => (double)d.Value!.Value).
-                            ToList();
-        var values2 = data2.Select(d => (double)d.Value!.Value).
-                            ToList();
+        var values1 = data1.Select(d => (double)d.Value!.Value).ToList();
+        var values2 = data2.Select(d => (double)d.Value!.Value).ToList();
 
         return MathHelper.ApplyBinaryOperation(values1, values2, op);
     }

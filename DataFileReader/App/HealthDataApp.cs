@@ -7,8 +7,9 @@ namespace DataFileReader.App;
 
 public class HealthDataApp
 {
-    private readonly MetricAggregator          _aggregator;
-    private readonly FileProcessingService     _fileProcessor;
+    private readonly MetricAggregator _aggregator;
+    private readonly FileProcessingService _fileProcessor;
+
     public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor)
     {
         _aggregator = aggregator;
@@ -59,8 +60,7 @@ public class HealthDataApp
 
         // Get list of already processed files to avoid duplicates
         var processedFiles = SQLHelper.GetProcessedFiles();
-        var newFiles = allFiles.Where(file => !processedFiles.Contains(file)).
-                                ToList();
+        var newFiles = allFiles.Where(file => !processedFiles.Contains(file)).ToList();
 
         var totalFiles = allFiles.Count;
         var skippedFiles = totalFiles - newFiles.Count;
@@ -95,9 +95,7 @@ public class HealthDataApp
     private bool AskUserYesNo(string prompt)
     {
         Console.WriteLine($"{prompt} (y/n): ");
-        var input = Console.ReadLine()?.
-                            Trim().
-                            ToLower();
+        var input = Console.ReadLine()?.Trim().ToLower();
 
         return input == "y" || input == "yes" || input == "1";
     }

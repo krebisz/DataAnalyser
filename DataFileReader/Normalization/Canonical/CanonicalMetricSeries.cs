@@ -26,11 +26,11 @@ public sealed class CanonicalMetricSeries<TValue>
     /// </summary>
     public static Action<CanonicalMetricSeries<TValue>>? OnCreated { get; set; }
 
-    public MetricIdentity                      Metric     { get; }
-    public TimeAxis                            TimeAxis   { get; }
-    public DimensionSet                        Dimensions { get; }
-    public IReadOnlyList<DateTimeOffset>       Timestamps { get; }
-    public IReadOnlyList<TValue?>              Values     { get; }
+    public MetricIdentity Metric { get; }
+    public TimeAxis TimeAxis { get; }
+    public DimensionSet Dimensions { get; }
+    public IReadOnlyList<DateTimeOffset> Timestamps { get; }
+    public IReadOnlyList<TValue?> Values { get; }
     public IReadOnlyDictionary<string, string> Provenance { get; }
 
     private void ValidateStructure()

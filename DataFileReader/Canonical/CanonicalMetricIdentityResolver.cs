@@ -1,5 +1,3 @@
-using DataFileReader.Normalization.Canonical;
-
 namespace DataFileReader.Canonical;
 
 /// <summary>
@@ -19,11 +17,12 @@ public sealed class CanonicalMetricIdentityResolver
         // ----------------------------
 
         if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(metricType))
-            return MetricIdentityResolutionResult.Failed(IdentityResolutionFailureReason.MissingRequiredMetadata, new[]
-            {
-                    $"Provider='{provider ?? "<null>"}'",
-                    $"MetricType='{metricType ?? "<null>"}'"
-            });
+            return MetricIdentityResolutionResult.Failed(IdentityResolutionFailureReason.MissingRequiredMetadata,
+                    new[]
+                    {
+                            $"Provider='{provider ?? "<null>"}'",
+                            $"MetricType='{metricType ?? "<null>"}'"
+                    });
 
         // Normalize comparison inputs (not inference)
         var normalizedProvider = provider.Trim();
@@ -40,11 +39,12 @@ public sealed class CanonicalMetricIdentityResolver
         // Explicit non-match
         // ----------------------------
 
-        return MetricIdentityResolutionResult.Failed(IdentityResolutionFailureReason.NoMatchingRule, new[]
-        {
-                $"Provider='{provider}'",
-                $"MetricType='{metricType}'",
-                $"MetricSubtype='{metricSubtype ?? "<null>"}'"
-        });
+        return MetricIdentityResolutionResult.Failed(IdentityResolutionFailureReason.NoMatchingRule,
+                new[]
+                {
+                        $"Provider='{provider}'",
+                        $"MetricType='{metricType}'",
+                        $"MetricSubtype='{metricSubtype ?? "<null>"}'"
+                });
     }
 }

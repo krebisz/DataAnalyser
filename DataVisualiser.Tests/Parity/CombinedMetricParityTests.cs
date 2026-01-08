@@ -27,34 +27,14 @@ public class CombinedMetricParityTests
         var interval = TimeSpan.FromDays(1);
 
         // Create matching legacy data
-        var leftLegacy = TestDataBuilders.HealthMetricData().
-                                          WithTimestamp(from).
-                                          WithValue(100m).
-                                          WithUnit("kg").
-                                          BuildSeries(10, interval);
+        var leftLegacy = TestDataBuilders.HealthMetricData().WithTimestamp(from).WithValue(100m).WithUnit("kg").BuildSeries(10, interval);
 
-        var rightLegacy = TestDataBuilders.HealthMetricData().
-                                           WithTimestamp(from).
-                                           WithValue(50m).
-                                           WithUnit("kg").
-                                           BuildSeries(10, interval);
+        var rightLegacy = TestDataBuilders.HealthMetricData().WithTimestamp(from).WithValue(50m).WithUnit("kg").BuildSeries(10, interval);
 
         // Create matching CMS data
-        var leftCms = TestDataBuilders.CanonicalMetricSeries().
-                                       WithStartTime(new DateTimeOffset(from)).
-                                       WithInterval(interval).
-                                       WithValue(100m).
-                                       WithUnit("kg").
-                                       WithSampleCount(10).
-                                       Build();
+        var leftCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(from)).WithInterval(interval).WithValue(100m).WithUnit("kg").WithSampleCount(10).Build();
 
-        var rightCms = TestDataBuilders.CanonicalMetricSeries().
-                                        WithStartTime(new DateTimeOffset(from)).
-                                        WithInterval(interval).
-                                        WithValue(50m).
-                                        WithUnit("kg").
-                                        WithSampleCount(10).
-                                        Build();
+        var rightCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(from)).WithInterval(interval).WithValue(50m).WithUnit("kg").WithSampleCount(10).Build();
 
         var context = new StrategyParityContext
         {
@@ -69,23 +49,23 @@ public class CombinedMetricParityTests
         };
 
         // Act
-        var result = _harness.Validate(context, () =>
-        {
-            var legacyStrategy = new CombinedMetricStrategy(leftLegacy, rightLegacy, "Left", "Right", from, to);
-            return legacyStrategy.Compute()?.
-                                  ToLegacyExecutionResult() ?? new LegacyExecutionResult
-            {
-                    Series = Array.Empty<ParitySeries>()
-            };
-        }, () =>
-        {
-            var cmsStrategy = new CombinedMetricStrategy(leftCms, rightCms, "Left", "Right", from, to);
-            return cmsStrategy.Compute()?.
-                               ToCmsExecutionResult() ?? new CmsExecutionResult
-            {
-                    Series = Array.Empty<ParitySeries>()
-            };
-        });
+        var result = _harness.Validate(context,
+                () =>
+                {
+                    var legacyStrategy = new CombinedMetricStrategy(leftLegacy, rightLegacy, "Left", "Right", from, to);
+                    return legacyStrategy.Compute()?.ToLegacyExecutionResult() ?? new LegacyExecutionResult
+                    {
+                            Series = Array.Empty<ParitySeries>()
+                    };
+                },
+                () =>
+                {
+                    var cmsStrategy = new CombinedMetricStrategy(leftCms, rightCms, "Left", "Right", from, to);
+                    return cmsStrategy.Compute()?.ToCmsExecutionResult() ?? new CmsExecutionResult
+                    {
+                            Series = Array.Empty<ParitySeries>()
+                    };
+                });
 
         // Assert
         Assert.True(result.Passed, $"Parity failed: {string.Join("; ", result.Failures.Select(f => $"[{f.Layer}] {f.Message}"))}");
@@ -106,30 +86,26 @@ public class CombinedMetricParityTests
         };
 
         // Act
-        var result = _harness.Validate(context, () =>
-        {
-            var legacyStrategy = new CombinedMetricStrategy(Array.Empty<MetricData>(), Array.Empty<MetricData>(), "Left", "Right", from, to);
-            return legacyStrategy.Compute()?.
-                                  ToLegacyExecutionResult() ?? new LegacyExecutionResult
-            {
-                    Series = Array.Empty<ParitySeries>()
-            };
-        }, () =>
-        {
-            var leftCms = TestDataBuilders.CanonicalMetricSeries().
-                                           WithSampleCount(0).
-                                           Build();
-            var rightCms = TestDataBuilders.CanonicalMetricSeries().
-                                            WithSampleCount(0).
-                                            Build();
+        var result = _harness.Validate(context,
+                () =>
+                {
+                    var legacyStrategy = new CombinedMetricStrategy(Array.Empty<MetricData>(), Array.Empty<MetricData>(), "Left", "Right", from, to);
+                    return legacyStrategy.Compute()?.ToLegacyExecutionResult() ?? new LegacyExecutionResult
+                    {
+                            Series = Array.Empty<ParitySeries>()
+                    };
+                },
+                () =>
+                {
+                    var leftCms = TestDataBuilders.CanonicalMetricSeries().WithSampleCount(0).Build();
+                    var rightCms = TestDataBuilders.CanonicalMetricSeries().WithSampleCount(0).Build();
 
-            var cmsStrategy = new CombinedMetricStrategy(leftCms, rightCms, "Left", "Right", from, to);
-            return cmsStrategy.Compute()?.
-                               ToCmsExecutionResult() ?? new CmsExecutionResult
-            {
-                    Series = Array.Empty<ParitySeries>()
-            };
-        });
+                    var cmsStrategy = new CombinedMetricStrategy(leftCms, rightCms, "Left", "Right", from, to);
+                    return cmsStrategy.Compute()?.ToCmsExecutionResult() ?? new CmsExecutionResult
+                    {
+                            Series = Array.Empty<ParitySeries>()
+                    };
+                });
 
         // Assert
         Assert.True(result.Passed);
@@ -144,29 +120,13 @@ public class CombinedMetricParityTests
         var interval = TimeSpan.FromDays(1);
 
         // Left has 10 points, right has 8 points (should align to min)
-        var leftLegacy = TestDataBuilders.HealthMetricData().
-                                          WithTimestamp(from).
-                                          WithValue(100m).
-                                          BuildSeries(10, interval);
+        var leftLegacy = TestDataBuilders.HealthMetricData().WithTimestamp(from).WithValue(100m).BuildSeries(10, interval);
 
-        var rightLegacy = TestDataBuilders.HealthMetricData().
-                                           WithTimestamp(from).
-                                           WithValue(50m).
-                                           BuildSeries(8, interval);
+        var rightLegacy = TestDataBuilders.HealthMetricData().WithTimestamp(from).WithValue(50m).BuildSeries(8, interval);
 
-        var leftCms = TestDataBuilders.CanonicalMetricSeries().
-                                       WithStartTime(new DateTimeOffset(from)).
-                                       WithInterval(interval).
-                                       WithValue(100m).
-                                       WithSampleCount(10).
-                                       Build();
+        var leftCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(from)).WithInterval(interval).WithValue(100m).WithSampleCount(10).Build();
 
-        var rightCms = TestDataBuilders.CanonicalMetricSeries().
-                                        WithStartTime(new DateTimeOffset(from)).
-                                        WithInterval(interval).
-                                        WithValue(50m).
-                                        WithSampleCount(8).
-                                        Build();
+        var rightCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(from)).WithInterval(interval).WithValue(50m).WithSampleCount(8).Build();
 
         var context = new StrategyParityContext
         {
@@ -180,23 +140,23 @@ public class CombinedMetricParityTests
         };
 
         // Act
-        var result = _harness.Validate(context, () =>
-        {
-            var legacyStrategy = new CombinedMetricStrategy(leftLegacy, rightLegacy, "Left", "Right", from, to);
-            return legacyStrategy.Compute()?.
-                                  ToLegacyExecutionResult() ?? new LegacyExecutionResult
-            {
-                    Series = Array.Empty<ParitySeries>()
-            };
-        }, () =>
-        {
-            var cmsStrategy = new CombinedMetricStrategy(leftCms, rightCms, "Left", "Right", from, to);
-            return cmsStrategy.Compute()?.
-                               ToCmsExecutionResult() ?? new CmsExecutionResult
-            {
-                    Series = Array.Empty<ParitySeries>()
-            };
-        });
+        var result = _harness.Validate(context,
+                () =>
+                {
+                    var legacyStrategy = new CombinedMetricStrategy(leftLegacy, rightLegacy, "Left", "Right", from, to);
+                    return legacyStrategy.Compute()?.ToLegacyExecutionResult() ?? new LegacyExecutionResult
+                    {
+                            Series = Array.Empty<ParitySeries>()
+                    };
+                },
+                () =>
+                {
+                    var cmsStrategy = new CombinedMetricStrategy(leftCms, rightCms, "Left", "Right", from, to);
+                    return cmsStrategy.Compute()?.ToCmsExecutionResult() ?? new CmsExecutionResult
+                    {
+                            Series = Array.Empty<ParitySeries>()
+                    };
+                });
 
         // Assert
         Assert.True(result.Passed);

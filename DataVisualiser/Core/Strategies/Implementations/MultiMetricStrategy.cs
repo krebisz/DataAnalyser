@@ -15,14 +15,14 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public sealed class MultiMetricStrategy : IChartComputationStrategy
 {
-    private readonly DateTime                               _from;
-    private readonly IReadOnlyList<string>                  _labels;
+    private readonly DateTime _from;
+    private readonly IReadOnlyList<string> _labels;
     private readonly IReadOnlyList<IEnumerable<MetricData>> _series;
-    private readonly ISmoothingService                      _smoothingService;
-    private readonly ITimelineService                       _timelineService;
-    private readonly DateTime                               _to;
-    private readonly string?                                _unit;
-    private readonly IUnitResolutionService                 _unitResolutionService;
+    private readonly ISmoothingService _smoothingService;
+    private readonly ITimelineService _timelineService;
+    private readonly DateTime _to;
+    private readonly string? _unit;
+    private readonly IUnitResolutionService _unitResolutionService;
 
     /// <summary>
     ///     Legacy constructor using MetricData collections.
@@ -56,9 +56,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
             throw new ArgumentException("Labels count must match series count.", nameof(labels));
 
         // Validate compatibility before processing
-        var canonicalIds = cmsSeries.Where(cms => cms != null && cms.MetricId != null).
-                                     Select(cms => cms.MetricId.Value).
-                                     ToList();
+        var canonicalIds = cmsSeries.Where(cms => cms != null && cms.MetricId != null).Select(cms => cms.MetricId.Value).ToList();
 
         if (canonicalIds.Count != cmsSeries.Count)
             throw new ArgumentException("All CMS series must have valid metric identities.", nameof(cmsSeries));
@@ -70,9 +68,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
         }
 
         // Convert each CMS to MetricData using helper
-        var series = cmsSeries.Select(cms => CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).
-                                                                 ToList()).
-                               ToList();
+        var series = cmsSeries.Select(cms => CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).ToList()).ToList();
 
         _series = series;
         _labels = labels;
@@ -86,9 +82,9 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
         _unitResolutionService = unitResolutionService;
     }
 
-    public string  PrimaryLabel   => _labels.Count > 0 ? _labels[0] : "Multi-Metric";
-    public string  SecondaryLabel => string.Empty;
-    public string? Unit           { get; private set; }
+    public string PrimaryLabel => _labels.Count > 0 ? _labels[0] : "Multi-Metric";
+    public string SecondaryLabel => string.Empty;
+    public string? Unit { get; private set; }
 
     public ChartComputationResult? Compute()
     {
@@ -124,10 +120,8 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
         if (orderedData.Count == 0)
             return null;
 
-        var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).
-                                        ToList();
-        var rawValues = orderedData.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).
-                                    ToList();
+        var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
+        var rawValues = orderedData.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).ToList();
 
         var smoothedValues = _smoothingService.SmoothSeries(orderedData, rawTimestamps, _from, _to);
 
@@ -158,10 +152,7 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
     /// </summary>
     private List<DateTime> CollectAllTimestamps(List<SeriesResult> seriesResults)
     {
-        return seriesResults.SelectMany(s => s.Timestamps).
-                             Distinct().
-                             OrderBy(t => t).
-                             ToList();
+        return seriesResults.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
     }
 
     /// <summary>

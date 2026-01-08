@@ -6,7 +6,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class TransformResultStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To   = new(2024, 01, 05);
+    private static readonly DateTime To = new(2024, 01, 05);
 
     private static List<MetricData> BuildSourceData()
     {

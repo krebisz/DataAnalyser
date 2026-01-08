@@ -32,9 +32,7 @@ public static class FileHelper
         var filePartsLength = fileParts.Length;
 
         if (filePartsLength > 0)
-            fileName = fileParts[filePartsLength - 1].
-                       Trim().
-                       ToLower();
+            fileName = fileParts[filePartsLength - 1].Trim().ToLower();
 
         fileName = DataHelper.RemoveSpecialCharacters(fileName);
 
@@ -50,9 +48,7 @@ public static class FileHelper
         var filePartsLength = fileParts.Length;
 
         if (filePartsLength > 0)
-            fileExtension = fileParts[filePartsLength - 1].
-                            Trim().
-                            ToLower();
+            fileExtension = fileParts[filePartsLength - 1].Trim().ToLower();
 
         return fileExtension;
     }

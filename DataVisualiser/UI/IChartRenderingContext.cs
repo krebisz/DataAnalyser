@@ -10,8 +10,8 @@ namespace DataVisualiser.UI;
 public interface IChartRenderingContext
 {
     ChartDataContext? CurrentDataContext { get; }
-    ChartState        ChartState         { get; }
+    ChartState ChartState { get; }
 
-    bool HasSecondaryData(ChartDataContext?   ctx);
+    bool HasSecondaryData(ChartDataContext? ctx);
     bool ShouldRenderCharts(ChartDataContext? ctx);
 }

@@ -9,7 +9,7 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public sealed class ChartRenderGate
 {
-    private readonly HashSet<CartesianChart>            _attachedCharts = new();
+    private readonly HashSet<CartesianChart> _attachedCharts = new();
     private readonly Dictionary<CartesianChart, Action> _pendingRenders = new();
 
     public void ExecuteWhenReady(CartesianChart chart, Action render)

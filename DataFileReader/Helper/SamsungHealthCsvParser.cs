@@ -19,12 +19,13 @@ public static class SamsungHealthCsvParser
         try
         {
             var lines = fileContent.Split(new[]
-                                    {
-                                            '\r',
-                                            '\n'
-                                    }, StringSplitOptions.RemoveEmptyEntries).
-                                    Where(line => !string.IsNullOrWhiteSpace(line)).
-                                    ToList();
+                                           {
+                                                   '\r',
+                                                   '\n'
+                                           },
+                                           StringSplitOptions.RemoveEmptyEntries)
+                                   .Where(line => !string.IsNullOrWhiteSpace(line))
+                                   .ToList();
 
             if (lines.Count < 2)
             {
@@ -33,8 +34,7 @@ public static class SamsungHealthCsvParser
             }
 
             // First line contains metric type identifier
-            var metricTypeIdentifier = lines[0].
-                    Split(',')[0];
+            var metricTypeIdentifier = lines[0].Split(',')[0];
             var metricType = ExtractMetricTypeFromIdentifier(metricTypeIdentifier, filePath);
             var metricIdentifierForFields = ExtractMetricIdentifierForCsvFields(metricTypeIdentifier, filePath);
 
@@ -74,8 +74,7 @@ public static class SamsungHealthCsvParser
 
         if (normalized.Count > headerCount)
                 // More values than headers: truncate to header count
-            normalized = normalized.Take(headerCount).
-                                    ToList();
+            normalized = normalized.Take(headerCount).ToList();
         else if (normalized.Count < headerCount)
                 // Fewer values than headers: pad with empty strings
             while (normalized.Count < headerCount)
@@ -100,8 +99,7 @@ public static class SamsungHealthCsvParser
             }
             else if (c == ',' && !inQuotes)
             {
-                values.Add(currentValue.ToString().
-                                        Trim());
+                values.Add(currentValue.ToString().Trim());
                 currentValue.Clear();
             }
             else
@@ -110,8 +108,7 @@ public static class SamsungHealthCsvParser
             }
 
         // Add the last value
-        values.Add(currentValue.ToString().
-                                Trim());
+        values.Add(currentValue.ToString().Trim());
 
         return values;
     }
@@ -124,11 +121,7 @@ public static class SamsungHealthCsvParser
     {
         if (!string.IsNullOrEmpty(identifier) && identifier.Contains("com.samsung"))
         {
-            var metricPart = identifier.Replace("com.samsung.shealth.", "").
-                                        Replace("com.samsung.health.", "").
-                                        Replace(".raw", "").
-                                        Replace(".binning_data", "").
-                                        Replace(".extra_data", "");
+            var metricPart = identifier.Replace("com.samsung.shealth.", "").Replace("com.samsung.health.", "").Replace(".raw", "").Replace(".binning_data", "").Replace(".extra_data", "");
 
             // Return PascalCase for consistency with JSON parser
             return SamsungHealthParser.ToPascalCase(metricPart);
@@ -149,28 +142,21 @@ public static class SamsungHealthCsvParser
         if (!string.IsNullOrEmpty(identifier) && identifier.Contains("com.samsung"))
         {
             // Remove prefixes - handle both shealth and health
-            metricPart = identifier.Replace("com.samsung.shealth.", "").
-                                    Replace("com.samsung.health.", "").
-                                    Replace(".raw", "").
-                                    Replace(".binning_data", "").
-                                    Replace(".extra_data", "");
+            metricPart = identifier.Replace("com.samsung.shealth.", "").Replace("com.samsung.health.", "").Replace(".raw", "").Replace(".binning_data", "").Replace(".extra_data", "");
         }
         else
         {
             // Extract from file path
             var parts = filePath.Split(new[]
-            {
-                    '\\',
-                    '/'
-            }, StringSplitOptions.RemoveEmptyEntries);
+                    {
+                            '\\',
+                            '/'
+                    },
+                    StringSplitOptions.RemoveEmptyEntries);
             foreach (var part in parts)
                 if (part.StartsWith("com.samsung.", StringComparison.OrdinalIgnoreCase))
                 {
-                    metricPart = part.Replace("com.samsung.shealth.", "").
-                                      Replace("com.samsung.health.", "").
-                                      Replace(".raw", "").
-                                      Replace(".binning_data", "").
-                                      Replace(".extra_data", "");
+                    metricPart = part.Replace("com.samsung.shealth.", "").Replace("com.samsung.health.", "").Replace(".raw", "").Replace(".binning_data", "").Replace(".extra_data", "");
                     break;
                 }
         }
@@ -294,20 +280,24 @@ public static class SamsungHealthCsvParser
                     if (otherField.Key != fieldName && !otherField.Key.Contains("time", StringComparison.OrdinalIgnoreCase))
                         metric.AdditionalFields[otherField.Key] = otherField.Value ?? "";
 
-                RawRecordFactory.Create("SamsungHealthCsv", new Dictionary<string, object?>
-                {
-                        ["Provider"] = metric.Provider,
-                        ["MetricType"] = metric.MetricType,
-                        ["MetricSubtype"] = metric.MetricSubtype,
-                        ["SourceFile"] = metric.SourceFile,
-                        ["RawTimestamp"] = metric.RawTimestamp,
-                        ["NormalizedTimestamp"] = metric.NormalizedTimestamp,
-                        ["Value"] = metric.Value,
-                        ["Unit"] = metric.Unit
-                }, metric.NormalizedTimestamp.HasValue ? new DateTimeOffset(metric.NormalizedTimestamp.Value) : null, Path.GetFileName(filePath), (IDictionary<string, string>)new Dictionary<string, string>
-                {
-                        ["MetricIdentifierForFields"] = metricIdentifierForFields
-                });
+                RawRecordFactory.Create("SamsungHealthCsv",
+                        new Dictionary<string, object?>
+                        {
+                                ["Provider"] = metric.Provider,
+                                ["MetricType"] = metric.MetricType,
+                                ["MetricSubtype"] = metric.MetricSubtype,
+                                ["SourceFile"] = metric.SourceFile,
+                                ["RawTimestamp"] = metric.RawTimestamp,
+                                ["NormalizedTimestamp"] = metric.NormalizedTimestamp,
+                                ["Value"] = metric.Value,
+                                ["Unit"] = metric.Unit
+                        },
+                        metric.NormalizedTimestamp.HasValue ? new DateTimeOffset(metric.NormalizedTimestamp.Value) : null,
+                        Path.GetFileName(filePath),
+                        (IDictionary<string, string>)new Dictionary<string, string>
+                        {
+                                ["MetricIdentifierForFields"] = metricIdentifierForFields
+                        });
 
 
                 metrics.Add(metric);
@@ -330,18 +320,22 @@ public static class SamsungHealthCsvParser
             foreach (var field in rowData)
                 metric.AdditionalFields[field.Key] = field.Value ?? "";
 
-            RawRecordFactory.Create("SamsungHealthCsv", new Dictionary<string, object?>
-            {
-                    ["Provider"] = metric.Provider,
-                    ["MetricType"] = metric.MetricType,
-                    ["SourceFile"] = metric.SourceFile,
-                    ["RawTimestamp"] = metric.RawTimestamp,
-                    ["NormalizedTimestamp"] = metric.NormalizedTimestamp
-            }, metric.NormalizedTimestamp.HasValue ? new DateTimeOffset(metric.NormalizedTimestamp.Value) : null, Path.GetFileName(filePath), (IDictionary<string, string>)new Dictionary<string, string>
-            {
-                    ["Branch"] = "FallbackNoNumericFields",
-                    ["MetricIdentifierForFields"] = metricIdentifierForFields
-            });
+            RawRecordFactory.Create("SamsungHealthCsv",
+                    new Dictionary<string, object?>
+                    {
+                            ["Provider"] = metric.Provider,
+                            ["MetricType"] = metric.MetricType,
+                            ["SourceFile"] = metric.SourceFile,
+                            ["RawTimestamp"] = metric.RawTimestamp,
+                            ["NormalizedTimestamp"] = metric.NormalizedTimestamp
+                    },
+                    metric.NormalizedTimestamp.HasValue ? new DateTimeOffset(metric.NormalizedTimestamp.Value) : null,
+                    Path.GetFileName(filePath),
+                    (IDictionary<string, string>)new Dictionary<string, string>
+                    {
+                            ["Branch"] = "FallbackNoNumericFields",
+                            ["MetricIdentifierForFields"] = metricIdentifierForFields
+                    });
 
 
             metrics.Add(metric);

@@ -13,9 +13,9 @@ namespace DataVisualiser.Core.Strategies.Implementations;
 /// </summary>
 public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
 {
-    private readonly DateTime               _from;
+    private readonly DateTime _from;
     private readonly ICanonicalMetricSeries _series;
-    private readonly DateTime               _to;
+    private readonly DateTime _to;
     private readonly IUnitResolutionService _unitResolutionService;
 
     protected CmsBucketDistributionStrategy(ICanonicalMetricSeries series, DateTime from, DateTime to, string label, IUnitResolutionService? unitResolutionService = null)
@@ -34,12 +34,12 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
     public Dictionary<int, Dictionary<int, int>> FrequenciesPerBucket { get; } = new();
 
     public Dictionary<int, Dictionary<int, double>> NormalizedFrequenciesPerBucket { get; } = new();
-    public BucketDistributionResult?                ExtendedResult                 { get; protected set; }
+    public BucketDistributionResult? ExtendedResult { get; protected set; }
 
     public string PrimaryLabel { get; }
 
-    public string  SecondaryLabel => string.Empty;
-    public string? Unit           => _unitResolutionService.ResolveUnit(_series);
+    public string SecondaryLabel => string.Empty;
+    public string? Unit => _unitResolutionService.ResolveUnit(_series);
 
     public ChartComputationResult? Compute()
     {
@@ -91,9 +91,7 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
 
     private List<(DateTime Timestamp, double Value, string Unit)> ApplyRangeFilter(List<(DateTime Timestamp, double Value, string Unit)> source)
     {
-        return source.Where(x => x.Timestamp >= _from && x.Timestamp <= _to).
-                      OrderBy(x => x.Timestamp).
-                      ToList();
+        return source.Where(x => x.Timestamp >= _from && x.Timestamp <= _to).OrderBy(x => x.Timestamp).ToList();
     }
 
     private Dictionary<int, List<double>> BucketByType(IEnumerable<(DateTime Timestamp, double Value)> samples)
@@ -111,8 +109,7 @@ public abstract class CmsBucketDistributionStrategy : IChartComputationStrategy
             if (bucketIndex < 0 || bucketIndex >= BucketCount)
                 bucketIndex = 0;
 
-            buckets[bucketIndex].
-                    Add(value);
+            buckets[bucketIndex].Add(value);
         }
 
         return buckets;
