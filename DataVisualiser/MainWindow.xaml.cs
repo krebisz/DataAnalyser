@@ -277,8 +277,62 @@ public partial class MainWindow : Window
         toggleButton.Content = isVisible ? "Hide" : "Show";
     }
 
+    private void UpdateChartVisibilityForToggle(ChartUpdateRequestedEventArgs e)
+    {
+        switch (e.ToggledChartName)
+        {
+            case "Main":
+                MainChartController.Panel.IsChartVisible = e.ShowMain;
+                break;
+            case "Norm":
+                UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
+                break;
+            case "DiffRatio":
+                DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
+                break;
+            case "Weekly":
+                UpdateChartVisibility(ChartWeeklyContentPanel, ChartWeeklyToggleButton, e.ShowWeekly);
+                break;
+            case "Hourly":
+                UpdateChartVisibility(ChartHourlyContentPanel, ChartHourlyToggleButton, e.ShowHourly);
+                break;
+            case "WeeklyTrend":
+                WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
+                UpdateWeekdayTrendChartTypeVisibility();
+                break;
+            case "Transform":
+                UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, e.ShowTransformPanel);
+                break;
+        }
+    }
+
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
     {
+        if (e.IsVisibilityOnlyToggle && !string.IsNullOrEmpty(e.ToggledChartName))
+        {
+            UpdateChartVisibilityForToggle(e);
+
+            // Transform panel visibility toggle - just update visibility, don't reload charts
+            if (e.ToggledChartName == "Transform")
+            {
+                // Only populate grids if panel is being shown and we have data
+                if (_viewModel.ChartState.IsTransformPanelVisible)
+                {
+                    var transformCtx = _viewModel.ChartState.LastContext;
+                    if (transformCtx != null && ShouldRenderCharts(transformCtx))
+                        PopulateTransformGrids(transformCtx);
+                }
+
+                return; // Don't reload other charts
+            }
+
+            var ctx = _viewModel.ChartState.LastContext;
+            if (ctx != null && ShouldRenderCharts(ctx))
+                await RenderSingleChart(e.ToggledChartName, ctx);
+
+            return;
+        }
+
         // Update visibility for all charts (just UI state, doesn't clear data)
         MainChartController.Panel.IsChartVisible = e.ShowMain;
         UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
