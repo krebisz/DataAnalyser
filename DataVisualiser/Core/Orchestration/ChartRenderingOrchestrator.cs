@@ -40,7 +40,7 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Renders all charts based on the provided context and visibility state.
     /// </summary>
-    public async Task RenderChartsFromContext(ChartDataContext ctx, ChartState chartState, CartesianChart chartMain, CartesianChart chartNorm, CartesianChart chartDiffRatio, CartesianChart chartWeekly)
+    public async Task RenderChartsFromContext(ChartDataContext ctx, ChartState chartState, CartesianChart chartMain, CartesianChart chartNorm, CartesianChart chartDiffRatio, CartesianChart chartDistribution)
     {
         if (!ShouldRenderCharts(ctx))
             return;
@@ -54,7 +54,7 @@ public sealed class ChartRenderingOrchestrator
         else
             ClearSecondaryCharts(chartNorm, chartDiffRatio, chartState);
 
-        await RenderWeeklyChartsIfVisible(ctx, chartState, chartWeekly);
+        await RenderDistributionChartsIfVisible(ctx, chartState, chartDistribution);
     }
 
     private async Task RenderPrimaryIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartMain)
@@ -78,10 +78,10 @@ public sealed class ChartRenderingOrchestrator
         ChartHelper.ClearChart(chartDiffRatio, chartState.ChartTimestamps);
     }
 
-    private async Task RenderWeeklyChartsIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartWeekly)
+    private async Task RenderDistributionChartsIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartDistribution)
     {
-        if (chartState.IsWeeklyVisible)
-            await RenderWeeklyDistribution(ctx, chartWeekly, chartState);
+        if (chartState.IsDistributionVisible)
+            await RenderDistribution(ctx, chartDistribution, chartState, chartState.SelectedDistributionMode);
 
         if (chartState.IsWeeklyTrendVisible)
             RenderWeeklyTrend(ctx);
@@ -91,7 +91,7 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Renders a single chart by name.
     /// </summary>
-    public async Task RenderSingleChart(string chartName, ChartDataContext ctx, ChartState chartState, CartesianChart chartMain, CartesianChart chartNorm, CartesianChart chartDiffRatio, CartesianChart chartWeekly)
+    public async Task RenderSingleChart(string chartName, ChartDataContext ctx, ChartState chartState, CartesianChart chartMain, CartesianChart chartNorm, CartesianChart chartDiffRatio, CartesianChart chartDistribution)
     {
         if (!ShouldRenderCharts(ctx))
             return;
@@ -112,9 +112,9 @@ public sealed class ChartRenderingOrchestrator
                     await RenderDiffRatio(ctx, chartDiffRatio, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype, chartState);
                 break;
 
-            case "Weekly":
+            case "Distribution":
             case "WeeklyTrend":
-                await RenderWeeklyChartsIfVisible(ctx, chartState, chartWeekly);
+                await RenderDistributionChartsIfVisible(ctx, chartState, chartDistribution);
                 break;
         }
     }
@@ -134,7 +134,12 @@ public sealed class ChartRenderingOrchestrator
 
     public Task RenderWeeklyDistributionChartAsync(ChartDataContext ctx, CartesianChart chartWeekly, ChartState chartState)
     {
-        return RenderWeeklyDistribution(ctx, chartWeekly, chartState);
+        return RenderDistribution(ctx, chartWeekly, chartState, DistributionMode.Weekly);
+    }
+
+    public Task RenderDistributionChartAsync(ChartDataContext ctx, CartesianChart chartDistribution, ChartState chartState, DistributionMode mode)
+    {
+        return RenderDistribution(ctx, chartDistribution, chartState, mode);
     }
 
 
@@ -333,9 +338,21 @@ public sealed class ChartRenderingOrchestrator
         await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true);
     }
 
-    private async Task RenderWeeklyDistribution(ChartDataContext ctx, CartesianChart chartWeekly, ChartState chartState)
+    private async Task RenderDistribution(ChartDataContext ctx, CartesianChart chartDistribution, ChartState chartState, DistributionMode mode)
     {
-        await _weeklyDistributionService.UpdateDistributionChartAsync(chartWeekly, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, chartState.UseWeeklyFrequencyShading, chartState.WeeklyIntervalCount);
+        var settings = chartState.GetDistributionSettings(mode);
+        switch (mode)
+        {
+            case DistributionMode.Weekly:
+                await _weeklyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+                break;
+            case DistributionMode.Hourly:
+                await _hourlyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+                break;
+            default:
+                await _weeklyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+                break;
+        }
     }
 
     private void RenderWeeklyTrend(ChartDataContext ctx)

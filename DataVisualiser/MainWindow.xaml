@@ -233,68 +233,70 @@
                 <!-- ========== CHART WEEKDAY TREND ========== -->
                 <controllers:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />
 
-                <!-- ========== CHART WEEKLY DISTRIBUTION ========== -->
+                <!-- ========== CHART DISTRIBUTION ========== -->
                 <Border BorderBrush="#FF444444"
                         BorderThickness="1"
                         Margin="0,0,0,10">
 
-                    <StackPanel x:Name="ChartWeeklySectionPanel" Orientation="Vertical" Margin="0,0,0,10">
+                    <StackPanel x:Name="ChartDistributionSectionPanel" Orientation="Vertical" Margin="0,0,0,10">
 
                         <Border Background="#BB131313"
                                 BorderBrush="#FF444444"
                                 BorderThickness="1"
                                 Padding="10,5">
 
-                            <StackPanel x:Name="ChartWeeklyHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
-                                <TextBlock x:Name="ChartWeeklyTitle"
-                                           Text="Weekly Distribution"
+                            <StackPanel x:Name="ChartDistributionHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
+                                <TextBlock x:Name="ChartDistributionTitle"
+                                           Text="Distribution"
                                            FontWeight="Bold"
                                            FontSize="14"
                                            VerticalAlignment="Center" />
 
-                                <Button x:Name="ChartWeeklyToggleButton"
+                                <Button x:Name="ChartDistributionToggleButton"
                                         Content="Show"
                                         Margin="10,0,0,0"
                                         Padding="10,3"
-                                        Click="OnChartWeeklyToggle" />
+                                        Click="OnChartDistributionToggle" />
                             </StackPanel>
                         </Border>
 
-                        <StackPanel x:Name="ChartWeeklyOptionsPanel" Orientation="Horizontal" Margin="40,5,10,0">
-                            <TextBlock Text="Display Mode:"
+                        <StackPanel x:Name="ChartDistributionOptionsPanel" Orientation="Horizontal" Margin="40,5,10,0">
+                            <TextBlock Text="Mode:"
                                        VerticalAlignment="Center"
                                        Margin="0,0,10,0" />
 
-                            <RadioButton x:Name="WeeklyFrequencyShadingRadio"
-                                         Content="Frequency Shading"
-                                         GroupName="WeeklyDisplayModes"
-                                         IsChecked="True"
-                                         Checked="OnWeeklyDisplayModeChanged" />
+                            <ComboBox x:Name="DistributionModeCombo"
+                                      Width="100"
+                                      VerticalAlignment="Center"
+                                      SelectionChanged="OnDistributionModeChanged" />
 
-                            <RadioButton x:Name="WeeklySimpleRangeRadio"
+                            <TextBlock Text="Display Mode:"
+                                       VerticalAlignment="Center"
+                                       Margin="20,0,10,0" />
+
+                            <RadioButton x:Name="DistributionFrequencyShadingRadio"
+                                         Content="Frequency Shading"
+                                         GroupName="DistributionDisplayModes"
+                                         IsChecked="True"
+                                         Checked="OnDistributionDisplayModeChanged" />
+
+                            <RadioButton x:Name="DistributionSimpleRangeRadio"
                                          Content="Simple Range"
-                                         GroupName="WeeklyDisplayModes"
-                                         Checked="OnWeeklyDisplayModeChanged" />
+                                         GroupName="DistributionDisplayModes"
+                                         Checked="OnDistributionDisplayModeChanged" />
 
                             <TextBlock Text="Interval Count:"
                                        VerticalAlignment="Center"
                                        Margin="20,0,10,0" />
 
-                            <ComboBox x:Name="WeeklyIntervalCountCombo"
+                            <ComboBox x:Name="DistributionIntervalCountCombo"
                                       Width="80"
                                       VerticalAlignment="Center"
-                                      SelectionChanged="OnWeeklyIntervalCountChanged">
-                                <ComboBoxItem Content="3" Tag="3" />
-                                <ComboBoxItem Content="5" Tag="5" />
-                                <ComboBoxItem Content="10" Tag="10" />
-                                <ComboBoxItem Content="25" Tag="25" IsSelected="True" />
-                                <ComboBoxItem Content="50" Tag="50" />
-                                <ComboBoxItem Content="100" Tag="100" />
-                            </ComboBox>
+                                      SelectionChanged="OnDistributionIntervalCountChanged" />
                         </StackPanel>
 
-                        <StackPanel x:Name="ChartWeeklyContentPanel" Orientation="Vertical">
-                            <lvc:CartesianChart x:Name="ChartWeekly"
+                        <StackPanel x:Name="ChartDistributionContentPanel" Orientation="Vertical">
+                            <lvc:CartesianChart x:Name="ChartDistribution"
                                                 LegendLocation="Right"
                                                 Zoom="X"
                                                 Pan="X"
@@ -302,90 +304,7 @@
                                                 Margin="20,5,10,20"
                                                 MinHeight="400">
                                 <lvc:CartesianChart.AxisX>
-                                    <lvc:Axis Title="Day of Week"
-                                              Labels="Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday" />
-                                </lvc:CartesianChart.AxisX>
-                                <lvc:CartesianChart.AxisY>
-                                    <lvc:Axis Title="Value"
-                                              ShowLabels="True" />
-                                </lvc:CartesianChart.AxisY>
-                            </lvc:CartesianChart>
-                        </StackPanel>
-
-                    </StackPanel>
-                </Border>
-
-                <!-- ========== CHART HOURLY DISTRIBUTION ========== -->
-                <Border BorderBrush="#FF444444"
-                        BorderThickness="1"
-                        Margin="0,0,0,10">
-
-                    <StackPanel x:Name="ChartHourlySectionPanel" Orientation="Vertical" Margin="0,0,0,10">
-
-                        <Border Background="#BB131313"
-                                BorderBrush="#FF444444"
-                                BorderThickness="1"
-                                Padding="10,5">
-
-                            <StackPanel x:Name="ChartHourlyHeaderPanel" Orientation="Horizontal" Margin="20,5,10,0">
-                                <TextBlock x:Name="ChartHourlyTitle"
-                                           Text="Hourly Distribution"
-                                           FontWeight="Bold"
-                                           FontSize="14"
-                                           VerticalAlignment="Center" />
-
-                                <Button x:Name="ChartHourlyToggleButton"
-                                        Content="Show"
-                                        Margin="10,0,0,0"
-                                        Padding="10,3"
-                                        Click="OnChartHourlyToggle" />
-                            </StackPanel>
-                        </Border>
-
-                        <StackPanel x:Name="ChartHourlyOptionsPanel" Orientation="Horizontal" Margin="40,5,10,0">
-                            <TextBlock Text="Display Mode:"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,10,0" />
-
-                            <RadioButton x:Name="HourlyFrequencyShadingRadio"
-                                         Content="Frequency Shading"
-                                         GroupName="HourlyDisplayModes"
-                                         IsChecked="True"
-                                         Checked="OnHourlyDisplayModeChanged" />
-
-                            <RadioButton x:Name="HourlySimpleRangeRadio"
-                                         Content="Simple Range"
-                                         GroupName="HourlyDisplayModes"
-                                         Checked="OnHourlyDisplayModeChanged" />
-
-                            <TextBlock Text="Interval Count:"
-                                       VerticalAlignment="Center"
-                                       Margin="20,0,10,0" />
-
-                            <ComboBox x:Name="HourlyIntervalCountCombo"
-                                      Width="80"
-                                      VerticalAlignment="Center"
-                                      SelectionChanged="OnHourlyIntervalCountChanged">
-                                <ComboBoxItem Content="3" Tag="3" />
-                                <ComboBoxItem Content="5" Tag="5" />
-                                <ComboBoxItem Content="15" Tag="15" IsSelected="True" />
-                                <ComboBoxItem Content="25" Tag="25" />
-                                <ComboBoxItem Content="50" Tag="50" />
-                                <ComboBoxItem Content="100" Tag="100" />
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel x:Name="ChartHourlyContentPanel" Orientation="Vertical">
-                            <lvc:CartesianChart x:Name="ChartHourly"
-                                                LegendLocation="Right"
-                                                Zoom="X"
-                                                Pan="X"
-                                                Hoverable="True"
-                                                Margin="20,5,10,20"
-                                                MinHeight="400">
-                                <lvc:CartesianChart.AxisX>
-                                    <lvc:Axis Title="Hours of Day"
-                                              Labels="12AM,1AM,2AM,3AM,4AM,5AM,6AM,7AM,8AM,9AM,10AM,11AM,12PM,1PM,2PM,3PM,4PM,5PM,6PM,7PM,8PM,9PM,10PM,11PM" />
+                                    <lvc:Axis Title="Bucket" />
                                 </lvc:CartesianChart.AxisX>
                                 <lvc:CartesianChart.AxisY>
                                     <lvc:Axis Title="Value"

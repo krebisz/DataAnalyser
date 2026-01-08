@@ -26,9 +26,9 @@ public partial class MainWindowViewModel
         RequestChartUpdate();
     }
 
-    public void SetWeeklyVisible(bool value)
+    public void SetDistributionVisible(bool value)
     {
-        ChartState.IsWeeklyVisible = value;
+        ChartState.IsDistributionVisible = value;
         RequestChartUpdate();
     }
 
@@ -79,24 +79,20 @@ public partial class MainWindowViewModel
         ChartState.SelectedNormalizationMode = mode;
     }
 
-    public void SetWeeklyFrequencyShading(bool useFrequencyShading)
+    public void SetDistributionMode(DistributionMode mode)
     {
-        ChartState.UseWeeklyFrequencyShading = useFrequencyShading;
+        ChartState.SelectedDistributionMode = mode;
+        RequestChartUpdate(false, "Distribution");
     }
 
-    public void SetHourlyFrequencyShading(bool useFrequencyShading)
+    public void SetDistributionFrequencyShading(DistributionMode mode, bool useFrequencyShading)
     {
-        ChartState.UseHourlyFrequencyShading = useFrequencyShading;
+        ChartState.GetDistributionSettings(mode).UseFrequencyShading = useFrequencyShading;
     }
 
-    public void SetWeeklyIntervalCount(int intervalCount)
+    public void SetDistributionIntervalCount(DistributionMode mode, int intervalCount)
     {
-        ChartState.WeeklyIntervalCount = intervalCount;
-    }
-
-    public void SetHourlyIntervalCount(int intervalCount)
-    {
-        ChartState.HourlyIntervalCount = intervalCount;
+        ChartState.GetDistributionSettings(mode).IntervalCount = intervalCount;
     }
 
     public void SetSelectedMetricType(string? metric)

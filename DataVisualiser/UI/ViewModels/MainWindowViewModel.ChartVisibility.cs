@@ -36,14 +36,9 @@ public partial class MainWindowViewModel
             ChartUpdateRequested?.Invoke(this, updateArgs);
     }
 
-    public void ToggleWeekly()
+    public void ToggleDistribution()
     {
-        ToggleChartVisibility("Weekly", () => ChartState.IsWeeklyVisible, v => ChartState.IsWeeklyVisible = v);
-    }
-
-    public void ToggleHourly()
-    {
-        ToggleChartVisibility("Hourly", () => ChartState.IsHourlyVisible, v => ChartState.IsHourlyVisible = v);
+        ToggleChartVisibility("Distribution", () => ChartState.IsDistributionVisible, v => ChartState.IsDistributionVisible = v);
     }
 
     public void ToggleWeeklyTrend()

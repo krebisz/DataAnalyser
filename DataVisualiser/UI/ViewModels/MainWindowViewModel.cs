@@ -36,8 +36,7 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
         ToggleNormCommand = new RelayCommand(_ => ToggleNorm());
         ToggleDiffRatioCommand = new RelayCommand(_ => ToggleDiffRatio());
         ToggleDiffRatioOperationCommand = new RelayCommand(_ => ToggleDiffRatioOperation());
-        ToggleWeeklyCommand = new RelayCommand(_ => ToggleWeekly());
-        ToggleHourlyCommand = new RelayCommand(_ => ToggleHourly());
+        ToggleDistributionCommand = new RelayCommand(_ => ToggleDistribution());
     }
 
     // ======================
@@ -58,8 +57,7 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
     public ICommand ToggleNormCommand { get; }
     public ICommand ToggleDiffRatioCommand { get; }
     public ICommand ToggleDiffRatioOperationCommand { get; }
-    public ICommand ToggleWeeklyCommand { get; }
-    public ICommand ToggleHourlyCommand { get; }
+    public ICommand ToggleDistributionCommand { get; }
 
     // ======================
     // INotifyPropertyChanged

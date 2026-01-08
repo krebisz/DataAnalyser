@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -290,11 +291,8 @@ public partial class MainWindow : Window
             case "DiffRatio":
                 DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
                 break;
-            case "Weekly":
-                UpdateChartVisibility(ChartWeeklyContentPanel, ChartWeeklyToggleButton, e.ShowWeekly);
-                break;
-            case "Hourly":
-                UpdateChartVisibility(ChartHourlyContentPanel, ChartHourlyToggleButton, e.ShowHourly);
+            case "Distribution":
+                UpdateChartVisibility(ChartDistributionContentPanel, ChartDistributionToggleButton, e.ShowDistribution);
                 break;
             case "WeeklyTrend":
                 WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
@@ -337,8 +335,7 @@ public partial class MainWindow : Window
         MainChartController.Panel.IsChartVisible = e.ShowMain;
         UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
         DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
-        UpdateChartVisibility(ChartWeeklyContentPanel, ChartWeeklyToggleButton, e.ShowWeekly);
-        UpdateChartVisibility(ChartHourlyContentPanel, ChartHourlyToggleButton, e.ShowHourly);
+        UpdateChartVisibility(ChartDistributionContentPanel, ChartDistributionToggleButton, e.ShowDistribution);
         WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
         UpdateWeekdayTrendChartTypeVisibility();
         UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
@@ -483,14 +480,11 @@ public partial class MainWindow : Window
         }
 
         // Charts that don't require secondary data - only render if visible
-        if (_viewModel.ChartState.IsWeeklyVisible)
-            await RenderWeeklyDistribution(safeCtx);
+        if (_viewModel.ChartState.IsDistributionVisible)
+            await RenderDistributionChart(safeCtx, _viewModel.ChartState.SelectedDistributionMode);
 
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
             RenderWeeklyTrend(safeCtx);
-
-        if (_viewModel.ChartState.IsHourlyVisible)
-            await RenderHourlyDistribution(safeCtx);
 
         // Populate transform panel grids if visible
         if (_viewModel.ChartState.IsTransformPanelVisible)
@@ -615,14 +609,9 @@ public partial class MainWindow : Window
                     await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
                 break;
 
-            case "Weekly":
-                if (_viewModel.ChartState.IsWeeklyVisible)
-                    await RenderWeeklyDistribution(ctx);
-                break;
-
-            case "Hourly":
-                if (_viewModel.ChartState.IsHourlyVisible)
-                    await RenderHourlyDistribution(ctx);
+            case "Distribution":
+                if (_viewModel.ChartState.IsDistributionVisible)
+                    await RenderDistributionChart(ctx, _viewModel.ChartState.SelectedDistributionMode);
                 break;
 
             case "WeeklyTrend":
@@ -633,7 +622,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    ///     Renders all secondary charts (normalized, weekly distribution, weekday trend, difference, ratio).
+    ///     Renders all secondary charts (normalized, distribution, weekday trend, difference, ratio).
     /// </summary>
     private async Task RenderSecondaryCharts(ChartDataContext ctx)
     {
@@ -642,7 +631,7 @@ public partial class MainWindow : Window
         var secondarySubtype = ctx.SecondarySubtype;
 
         await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
-        await RenderWeeklyDistribution(ctx);
+        await RenderDistributionChart(ctx, _viewModel.ChartState.SelectedDistributionMode);
         RenderWeeklyTrend(ctx);
         await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
     }
@@ -651,7 +640,7 @@ public partial class MainWindow : Window
     {
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(ChartWeekly);
+        ClearDistributionChart(ChartDistribution);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
     }
@@ -665,40 +654,25 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    ///     Common method to render distribution charts (weekly or hourly).
+    ///     Common method to render the distribution chart for the selected mode.
     /// </summary>
-    private async Task RenderDistributionChart(ChartDataContext ctx, bool isWeekly)
+    private async Task RenderDistributionChart(ChartDataContext ctx, DistributionMode mode)
     {
-        var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
-        if (!isVisible)
+        if (!_viewModel.ChartState.IsDistributionVisible)
             return;
 
-        var chart = isWeekly ? ChartWeekly : ChartHourly;
-        var useFrequencyShading = isWeekly ? _viewModel.ChartState.UseWeeklyFrequencyShading : _viewModel.ChartState.UseHourlyFrequencyShading;
-        var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
+        var settings = _viewModel.ChartState.GetDistributionSettings(mode);
+        var chart = ChartDistribution;
 
-        if (isWeekly)
+        if (_chartRenderingOrchestrator != null)
         {
-            if (_chartRenderingOrchestrator != null)
-                await _chartRenderingOrchestrator.RenderWeeklyDistributionChartAsync(ctx, chart, _viewModel.ChartState);
-            else
-                await _weeklyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+            await _chartRenderingOrchestrator.RenderDistributionChartAsync(ctx, chart, _viewModel.ChartState, mode);
+            return;
         }
-        else
-        {
-            await _hourlyDistributionService.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
-        }
+
+        var service = GetDistributionService(mode);
+        await service.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
-    }
-
-    private async Task RenderWeeklyDistribution(ChartDataContext ctx)
-    {
-        await RenderDistributionChart(ctx, true);
-    }
-
-    private async Task RenderHourlyDistribution(ChartDataContext ctx)
-    {
-        await RenderDistributionChart(ctx, false);
     }
 
     private void RenderWeeklyTrend(ChartDataContext ctx)
@@ -710,6 +684,16 @@ public partial class MainWindow : Window
                 RenderWeekdayTrendChart(result);
         }
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
+    }
+
+    private BaseDistributionService GetDistributionService(DistributionMode mode)
+    {
+        return mode switch
+        {
+                DistributionMode.Weekly => _weeklyDistributionService,
+                DistributionMode.Hourly => _hourlyDistributionService,
+                _ => _weeklyDistributionService
+        };
     }
 
     private async Task RenderDiffRatio(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
@@ -726,8 +710,7 @@ public partial class MainWindow : Window
         {
                 "Norm" => ChartNormContentPanel,
                 "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
-                "Weekly" => ChartWeeklyContentPanel,
-                "Hourly" => ChartHourlyContentPanel,
+                "Distribution" => ChartDistributionContentPanel,
                 "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
                 _ => null
         };
@@ -873,8 +856,7 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(ChartWeekly);
-        ClearDistributionChart(ChartHourly);
+        ClearDistributionChart(ChartDistribution);
         ChartHelper.ClearChart(WeekdayTrendChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(WeekdayTrendChartController.PolarChart, _viewModel.ChartState.ChartTimestamps);
         _viewModel.ChartState.LastContext = null;
@@ -1104,6 +1086,7 @@ public partial class MainWindow : Window
 
     private void InitializeCharts()
     {
+        InitializeDistributionControls();
         InitializeChartBehavior();
         ClearChartsOnStartup();
         DisableAxisLabelsWhenNoData();
@@ -1159,7 +1142,7 @@ public partial class MainWindow : Window
         _viewModel.SetMainVisible(true); // Default to visible (Show on startup)
         _viewModel.SetNormalizedVisible(false);
         _viewModel.SetDiffRatioVisible(false);
-        _viewModel.SetWeeklyVisible(false);
+        _viewModel.SetDistributionVisible(false);
         _viewModel.CompleteInitialization();
 
         _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
@@ -1190,11 +1173,38 @@ public partial class MainWindow : Window
         ResolutionCombo.Items.Add("Yearly");
     }
 
+    private void InitializeDistributionControls()
+    {
+        DistributionModeCombo.Items.Clear();
+        foreach (var definition in DistributionModeCatalog.All)
+        {
+            DistributionModeCombo.Items.Add(new ComboBoxItem
+            {
+                    Content = definition.DisplayName,
+                    Tag = definition.Mode
+            });
+        }
+
+        DistributionIntervalCountCombo.Items.Clear();
+        foreach (var intervalCount in DistributionModeCatalog.IntervalCounts)
+        {
+            DistributionIntervalCountCombo.Items.Add(new ComboBoxItem
+            {
+                    Content = intervalCount.ToString(),
+                    Tag = intervalCount
+            });
+        }
+
+        var initialMode = _viewModel.ChartState.SelectedDistributionMode;
+        SelectDistributionMode(initialMode);
+        ApplyDistributionModeDefinition(initialMode);
+        ApplyDistributionSettingsToUi(initialMode);
+    }
+
     private void InitializeChartBehavior()
     {
         ChartHelper.InitializeChartBehavior(MainChartController.Chart);
-        InitializeDistributionChartBehavior(ChartWeekly);
-        InitializeDistributionChartBehavior(ChartHourly);
+        InitializeDistributionChartBehavior(ChartDistribution);
         ChartHelper.InitializeChartBehavior(ChartNorm);
         ChartHelper.InitializeChartBehavior(DiffRatioChartController.Chart);
     }
@@ -1213,8 +1223,7 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(ChartWeekly);
-        ClearDistributionChart(ChartHourly);
+        ClearDistributionChart(ChartDistribution);
     }
 
     /// <summary>
@@ -1230,8 +1239,7 @@ public partial class MainWindow : Window
         DisableAxisLabels(MainChartController.Chart);
         DisableAxisLabels(ChartNorm);
         DisableAxisLabels(DiffRatioChartController.Chart);
-        DisableDistributionAxisLabels(ChartWeekly);
-        DisableDistributionAxisLabels(ChartHourly);
+        DisableDistributionAxisLabels(ChartDistribution);
     }
 
     /// <summary>
@@ -1452,24 +1460,16 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    ///     Common handler for distribution chart toggles (weekly or hourly).
+    ///     Common handler for distribution chart toggles.
     /// </summary>
-    private void HandleDistributionChartToggle(bool isWeekly)
+    private void HandleDistributionChartToggle()
     {
-        if (isWeekly)
-            _viewModel.ToggleWeekly();
-        else
-            _viewModel.ToggleHourly();
+        _viewModel.ToggleDistribution();
     }
 
-    private void OnChartWeeklyToggle(object sender, RoutedEventArgs e)
+    private void OnChartDistributionToggle(object sender, RoutedEventArgs e)
     {
-        HandleDistributionChartToggle(true);
-    }
-
-    private void OnChartHourlyToggle(object sender, RoutedEventArgs e)
-    {
-        HandleDistributionChartToggle(false);
+        HandleDistributionChartToggle();
     }
 
     private void OnWeekdayTrendToggleRequested(object? sender, EventArgs e)
@@ -1876,8 +1876,7 @@ public partial class MainWindow : Window
         ChartHelper.ResetZoom(mainChart);
         ChartHelper.ResetZoom(ChartNorm);
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
-        ResetDistributionChartZoom(ChartWeekly);
-        ResetDistributionChartZoom(ChartHourly);
+        ResetDistributionChartZoom(ChartDistribution);
         ChartHelper.ResetZoom(ChartTransformResult);
         var weekdayChart = WeekdayTrendChartController.Chart;
         ChartHelper.ResetZoom(ref weekdayChart);
@@ -1942,108 +1941,172 @@ public partial class MainWindow : Window
 
     #endregion
 
-    #region Distribution chart display mode UI handling (common for weekly and hourly)
+    #region Distribution chart display mode UI handling
+
+    private void SelectDistributionMode(DistributionMode mode)
+    {
+        foreach (var item in DistributionModeCombo.Items.OfType<ComboBoxItem>())
+        {
+            if (item.Tag is DistributionMode taggedMode && taggedMode == mode)
+            {
+                DistributionModeCombo.SelectedItem = item;
+                return;
+            }
+        }
+    }
+
+    private void SelectDistributionIntervalCount(int intervalCount)
+    {
+        foreach (var item in DistributionIntervalCountCombo.Items.OfType<ComboBoxItem>())
+        {
+            if (item.Tag is int taggedInterval && taggedInterval == intervalCount)
+            {
+                DistributionIntervalCountCombo.SelectedItem = item;
+                return;
+            }
+        }
+    }
+
+    private void ApplyDistributionModeDefinition(DistributionMode mode)
+    {
+        var definition = DistributionModeCatalog.Get(mode);
+        ChartDistributionTitle.Text = definition.Title;
+
+        if (ChartDistribution.AxisX.Count == 0)
+            ChartDistribution.AxisX.Add(new Axis());
+
+        var axis = ChartDistribution.AxisX[0];
+        axis.Title = definition.XAxisTitle;
+        axis.Labels = definition.XAxisLabels.ToArray();
+    }
+
+    private void ApplyDistributionSettingsToUi(DistributionMode mode)
+    {
+        var settings = _viewModel.ChartState.GetDistributionSettings(mode);
+        DistributionFrequencyShadingRadio.IsChecked = settings.UseFrequencyShading;
+        DistributionSimpleRangeRadio.IsChecked = !settings.UseFrequencyShading;
+        SelectDistributionIntervalCount(settings.IntervalCount);
+    }
 
     /// <summary>
     ///     Common handler for display mode changes (frequency shading vs simple range).
-    ///     Works for both weekly and hourly distribution charts.
     /// </summary>
-    private async Task HandleDistributionDisplayModeChanged(bool isWeekly, bool useFrequencyShading)
+    private async Task HandleDistributionDisplayModeChanged(DistributionMode mode, bool useFrequencyShading)
     {
         if (_isInitializing)
             return;
 
         try
         {
-            var chartType = isWeekly ? "Weekly" : "Hourly";
-            Debug.WriteLine($"On{chartType}DisplayModeChanged: Setting Use{chartType}FrequencyShading to {useFrequencyShading}");
+            var definition = DistributionModeCatalog.Get(mode);
+            Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged: Setting UseFrequencyShading to {useFrequencyShading}");
 
-            if (isWeekly)
-                _viewModel.SetWeeklyFrequencyShading(useFrequencyShading);
-            else
-                _viewModel.SetHourlyFrequencyShading(useFrequencyShading);
+            _viewModel.SetDistributionFrequencyShading(mode, useFrequencyShading);
 
-            var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
-            var intervalCount = isWeekly ? _viewModel.ChartState.WeeklyIntervalCount : _viewModel.ChartState.HourlyIntervalCount;
-            var useFrequencyShadingState = isWeekly ? _viewModel.ChartState.UseWeeklyFrequencyShading : _viewModel.ChartState.UseHourlyFrequencyShading;
+            var isVisible = _viewModel.ChartState.IsDistributionVisible;
+            var settings = _viewModel.ChartState.GetDistributionSettings(mode);
+            var useFrequencyShadingState = settings.UseFrequencyShading;
 
-            Debug.WriteLine($"On{chartType}DisplayModeChanged: ChartState.Use{chartType}FrequencyShading = {useFrequencyShadingState}");
+            Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged: ChartState.UseFrequencyShading = {useFrequencyShadingState}");
 
             if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
             {
                 var ctx = _viewModel.ChartState.LastContext;
-                Debug.WriteLine($"On{chartType}DisplayModeChanged: Refreshing chart with useFrequencyShading={useFrequencyShadingState}");
-
-                if (isWeekly)
-                    await _weeklyDistributionService.UpdateDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
-                else
-                    await _hourlyDistributionService.UpdateDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShadingState, intervalCount);
+                Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged: Refreshing chart with useFrequencyShading={useFrequencyShadingState}");
+                await RenderDistributionChart(ctx, mode);
             }
         }
         catch (Exception ex)
         {
-            var chartType = isWeekly ? "Weekly" : "Hourly";
-            Debug.WriteLine($"On{chartType}DisplayModeChanged error: {ex.Message}");
+            var definition = DistributionModeCatalog.Get(mode);
+            Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged error: {ex.Message}");
         }
     }
 
     /// <summary>
     ///     Common handler for interval count changes.
-    ///     Works for both weekly and hourly distribution charts.
     /// </summary>
-    private async Task HandleDistributionIntervalCountChanged(bool isWeekly, int intervalCount)
+    private async Task HandleDistributionIntervalCountChanged(DistributionMode mode, int intervalCount)
     {
         if (_isInitializing)
             return;
 
         try
         {
-            if (isWeekly)
-                _viewModel.SetWeeklyIntervalCount(intervalCount);
-            else
-                _viewModel.SetHourlyIntervalCount(intervalCount);
-
-            var isVisible = isWeekly ? _viewModel.ChartState.IsWeeklyVisible : _viewModel.ChartState.IsHourlyVisible;
-            var useFrequencyShading = isWeekly ? _viewModel.ChartState.UseWeeklyFrequencyShading : _viewModel.ChartState.UseHourlyFrequencyShading;
+            _viewModel.SetDistributionIntervalCount(mode, intervalCount);
+            var isVisible = _viewModel.ChartState.IsDistributionVisible;
+            var useFrequencyShading = _viewModel.ChartState.GetDistributionSettings(mode).UseFrequencyShading;
 
             if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
             {
                 var ctx = _viewModel.ChartState.LastContext;
-                if (isWeekly)
-                    await _weeklyDistributionService.UpdateDistributionChartAsync(ChartWeekly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
-                else
-                    await _hourlyDistributionService.UpdateDistributionChartAsync(ChartHourly, ctx.Data1, ctx.DisplayName1, ctx.From, ctx.To, 400, useFrequencyShading, intervalCount);
+                await RenderDistributionChart(ctx, mode);
             }
         }
         catch (Exception ex)
         {
-            var chartType = isWeekly ? "Weekly" : "Hourly";
-            Debug.WriteLine($"On{chartType}IntervalCountChanged error: {ex.Message}");
+            var definition = DistributionModeCatalog.Get(mode);
+            Debug.WriteLine($"On{definition.DisplayName}IntervalCountChanged error: {ex.Message}");
         }
     }
 
-    private async void OnWeeklyDisplayModeChanged(object sender, RoutedEventArgs e)
+    private DistributionMode GetSelectedDistributionMode()
     {
-        var useFrequencyShading = WeeklyFrequencyShadingRadio.IsChecked == true;
-        await HandleDistributionDisplayModeChanged(true, useFrequencyShading);
+        if (_viewModel == null)
+            return DistributionMode.Weekly;
+
+        if (DistributionModeCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is DistributionMode mode)
+            return mode;
+
+        return _viewModel.ChartState.SelectedDistributionMode;
     }
 
-    private async void OnHourlyDisplayModeChanged(object sender, RoutedEventArgs e)
+    private static bool TryGetIntervalCount(object? tag, out int intervalCount)
     {
-        var useFrequencyShading = HourlyFrequencyShadingRadio.IsChecked == true;
-        await HandleDistributionDisplayModeChanged(false, useFrequencyShading);
+        switch (tag)
+        {
+            case int direct:
+                intervalCount = direct;
+                return true;
+            case string tagValue when int.TryParse(tagValue, out var parsed):
+                intervalCount = parsed;
+                return true;
+            default:
+                intervalCount = 0;
+                return false;
+        }
     }
 
-    private async void OnWeeklyIntervalCountChanged(object sender, SelectionChangedEventArgs e)
+    private async void OnDistributionDisplayModeChanged(object sender, RoutedEventArgs e)
     {
-        if (WeeklyIntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tagValue && int.TryParse(tagValue, out var intervalCount))
-            await HandleDistributionIntervalCountChanged(true, intervalCount);
+        if (_viewModel == null)
+            return;
+
+        var useFrequencyShading = DistributionFrequencyShadingRadio.IsChecked == true;
+        await HandleDistributionDisplayModeChanged(GetSelectedDistributionMode(), useFrequencyShading);
     }
 
-    private async void OnHourlyIntervalCountChanged(object sender, SelectionChangedEventArgs e)
+    private async void OnDistributionIntervalCountChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (HourlyIntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string tagValue && int.TryParse(tagValue, out var intervalCount))
-            await HandleDistributionIntervalCountChanged(false, intervalCount);
+        if (_viewModel == null)
+            return;
+
+        if (DistributionIntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var intervalCount))
+            await HandleDistributionIntervalCountChanged(GetSelectedDistributionMode(), intervalCount);
+    }
+
+    private void OnDistributionModeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_viewModel == null)
+            return;
+
+        if (_isInitializing)
+            return;
+
+        var mode = GetSelectedDistributionMode();
+        _viewModel.SetDistributionMode(mode);
+        ApplyDistributionModeDefinition(mode);
+        ApplyDistributionSettingsToUi(mode);
     }
 
     #endregion
