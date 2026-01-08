@@ -105,6 +105,43 @@ public abstract class BaseDistributionService
                 });
     }
 
+    /// <summary>
+    ///     Computes per-bucket min/max values for simple range rendering.
+    /// </summary>
+    public async Task<DistributionRangeResult?> ComputeSimpleRangeAsync(IEnumerable<MetricData> data, string displayName, DateTime from, DateTime to, ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
+    {
+        if (data == null)
+            return null;
+
+        var useCmsStrategy = cmsSeries != null;
+        var (result, _) = await ComputeDistributionAsync(data, cmsSeries, displayName, from, to, useCmsStrategy, enableParity);
+        if (result?.PrimaryRawValues == null || result.PrimarySmoothed == null)
+            return null;
+
+        var mins = result.PrimaryRawValues;
+        var ranges = result.PrimarySmoothed;
+        if (mins.Count != Configuration.BucketCount || ranges.Count != Configuration.BucketCount)
+            return null;
+
+        var maxs = mins.Zip(ranges, (min, range) =>
+        {
+            if (double.IsNaN(min))
+                return double.NaN;
+
+            if (double.IsNaN(range))
+                range = 0.0;
+
+            return min + range;
+        }).ToList();
+
+        var globalMin = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0.0).Min();
+        var globalMax = maxs.Where(m => !double.IsNaN(m)).DefaultIfEmpty(globalMin + 1.0).Max();
+        if (globalMax <= globalMin)
+            globalMax = globalMin + 1.0;
+
+        return new DistributionRangeResult(mins, maxs, globalMin, globalMax, result.Unit);
+    }
+
     // Abstract methods that must be implemented by derived classes
     protected async Task<(ChartComputationResult? Result, BucketDistributionResult? ExtendedResult)> ComputeDistributionAsync(IEnumerable<MetricData> data, ICanonicalMetricSeries? cmsSeries, string displayName, DateTime from, DateTime to, bool useCmsStrategy, bool enableParity)
     {

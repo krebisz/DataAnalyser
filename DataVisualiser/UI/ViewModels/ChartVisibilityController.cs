@@ -50,6 +50,12 @@ public sealed class ChartVisibilityController
         _onPropertyChanged(nameof(ChartState));
     }
 
+    public void ToggleDistributionChartType()
+    {
+        _chartState.IsDistributionPolarMode = !_chartState.IsDistributionPolarMode;
+        _onPropertyChanged(nameof(ChartState));
+    }
+
     public ChartUpdateRequestedEventArgs? ToggleTransformPanel()
     {
         _chartState.IsTransformPanelVisible = !_chartState.IsTransformPanelVisible;

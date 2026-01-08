@@ -51,6 +51,11 @@ public partial class MainWindowViewModel
         _chartVisibilityController.ToggleWeekdayTrendChartType();
     }
 
+    public void ToggleDistributionChartType()
+    {
+        _chartVisibilityController.ToggleDistributionChartType();
+    }
+
     public void ToggleTransformPanel()
     {
         var updateArgs = _chartVisibilityController.ToggleTransformPanel();

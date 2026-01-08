@@ -26,6 +26,7 @@ using DataVisualiser.UI.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.SubtypeSelectors;
 using DataVisualiser.UI.ViewModels;
+using LiveChartsCore.Kernel;
 using LiveCharts.Wpf;
 using ChartHelper = DataVisualiser.Core.Rendering.Helpers.ChartHelper;
 
@@ -40,6 +41,8 @@ public partial class MainWindow : Window
     private ChartRenderEngine _chartRenderEngine = null!;
     private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
     private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
+    private DistributionPolarRenderingService _distributionPolarRenderingService = null!;
+    private ToolTip _distributionPolarTooltip = null!;
 
     private string _connectionString = null!;
     private HourlyDistributionService _hourlyDistributionService = null!;
@@ -293,6 +296,7 @@ public partial class MainWindow : Window
                 break;
             case "Distribution":
                 UpdateChartVisibility(ChartDistributionContentPanel, ChartDistributionToggleButton, e.ShowDistribution);
+                UpdateDistributionChartTypeVisibility();
                 break;
             case "WeeklyTrend":
                 WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
@@ -336,6 +340,7 @@ public partial class MainWindow : Window
         UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
         DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
         UpdateChartVisibility(ChartDistributionContentPanel, ChartDistributionToggleButton, e.ShowDistribution);
+        UpdateDistributionChartTypeVisibility();
         WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
         UpdateWeekdayTrendChartTypeVisibility();
         UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
@@ -661,6 +666,12 @@ public partial class MainWindow : Window
         if (!_viewModel.ChartState.IsDistributionVisible)
             return;
 
+        if (_viewModel.ChartState.IsDistributionPolarMode)
+        {
+            await RenderDistributionPolarChart(ctx, mode);
+            return;
+        }
+
         var settings = _viewModel.ChartState.GetDistributionSettings(mode);
         var chart = ChartDistribution;
 
@@ -684,6 +695,18 @@ public partial class MainWindow : Window
                 RenderWeekdayTrendChart(result);
         }
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
+    }
+
+    private async Task RenderDistributionPolarChart(ChartDataContext ctx, DistributionMode mode)
+    {
+        var service = GetDistributionService(mode);
+        var rangeResult = await service.ComputeSimpleRangeAsync(ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To);
+        if (rangeResult == null)
+            return;
+
+        var definition = DistributionModeCatalog.Get(mode);
+        _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, ChartDistributionPolar);
+        ChartDistributionPolar.Tag = new DistributionPolarTooltipState(definition, rangeResult);
     }
 
     private BaseDistributionService GetDistributionService(DistributionMode mode)
@@ -857,6 +880,7 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(ChartDistribution);
+        ClearDistributionPolarChart();
         ChartHelper.ClearChart(WeekdayTrendChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(WeekdayTrendChartController.PolarChart, _viewModel.ChartState.ChartTimestamps);
         _viewModel.ChartState.LastContext = null;
@@ -903,6 +927,7 @@ public partial class MainWindow : Window
         _chartUpdateCoordinator = CreateChartUpdateCoordinator();
         _weeklyDistributionService = CreateWeeklyDistributionService();
         _hourlyDistributionService = CreateHourlyDistributionService();
+        _distributionPolarRenderingService = CreateDistributionPolarRenderingService();
         _chartRenderingOrchestrator = CreateChartRenderingOrchestrator();
         _weekdayTrendChartUpdateCoordinator = CreateWeekdayTrendChartUpdateCoordinator();
     }
@@ -1033,6 +1058,11 @@ public partial class MainWindow : Window
         return new WeekdayTrendChartUpdateCoordinator(renderingService, _chartState.ChartTimestamps);
     }
 
+    private DistributionPolarRenderingService CreateDistributionPolarRenderingService()
+    {
+        return new DistributionPolarRenderingService();
+    }
+
     private WeeklyDistributionService CreateWeeklyDistributionService()
     {
         var dataPreparationService = new DataPreparationService();
@@ -1091,6 +1121,8 @@ public partial class MainWindow : Window
         ClearChartsOnStartup();
         DisableAxisLabelsWhenNoData();
         SetDefaultChartTitles();
+        UpdateDistributionChartTypeVisibility();
+        InitializeDistributionPolarTooltip();
     }
 
     private void SyncInitialButtonStates()
@@ -1209,6 +1241,17 @@ public partial class MainWindow : Window
         ChartHelper.InitializeChartBehavior(DiffRatioChartController.Chart);
     }
 
+    private void InitializeDistributionPolarTooltip()
+    {
+        _distributionPolarTooltip = new ToolTip
+        {
+                Placement = PlacementMode.Mouse,
+                StaysOpen = true
+        };
+        ToolTipService.SetToolTip(ChartDistributionPolar, _distributionPolarTooltip);
+        ChartDistributionPolar.HoveredPointsChanged += OnDistributionPolarHoveredPointsChanged;
+    }
+
     /// <summary>
     ///     Common method to initialize distribution chart behavior.
     /// </summary>
@@ -1224,6 +1267,7 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(ChartDistribution);
+        ClearDistributionPolarChart();
     }
 
     /// <summary>
@@ -1234,12 +1278,23 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(chart, _viewModel.ChartState.ChartTimestamps);
     }
 
+    private void ClearDistributionPolarChart()
+    {
+        ChartDistributionPolar.Series = Array.Empty<LiveChartsCore.ISeries>();
+        ChartDistributionPolar.AngleAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        ChartDistributionPolar.RadiusAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        ChartDistributionPolar.Tag = null;
+        if (_distributionPolarTooltip != null)
+            _distributionPolarTooltip.IsOpen = false;
+    }
+
     private void DisableAxisLabelsWhenNoData()
     {
         DisableAxisLabels(MainChartController.Chart);
         DisableAxisLabels(ChartNorm);
         DisableAxisLabels(DiffRatioChartController.Chart);
         DisableDistributionAxisLabels(ChartDistribution);
+        DisableDistributionPolarAxisLabels();
     }
 
     /// <summary>
@@ -1248,6 +1303,15 @@ public partial class MainWindow : Window
     private void DisableDistributionAxisLabels(CartesianChart chart)
     {
         DisableAxisLabels(chart);
+    }
+
+    private void DisableDistributionPolarAxisLabels()
+    {
+        ChartDistributionPolar.AngleAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        ChartDistributionPolar.RadiusAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        ChartDistributionPolar.Tag = null;
+        if (_distributionPolarTooltip != null)
+            _distributionPolarTooltip.IsOpen = false;
     }
 
     private static void DisableAxisLabels(CartesianChart chart)
@@ -1489,6 +1553,15 @@ public partial class MainWindow : Window
             if (result != null)
                 RenderWeekdayTrendChart(result);
         }
+    }
+
+    private async void OnDistributionChartTypeToggleRequested(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ToggleDistributionChartType();
+        UpdateDistributionChartTypeVisibility();
+
+        if (_viewModel.ChartState.IsDistributionVisible && _viewModel.ChartState.LastContext != null)
+            await RenderDistributionChart(_viewModel.ChartState.LastContext, _viewModel.ChartState.SelectedDistributionMode);
     }
 
     private void UpdateWeekdayTrendChartTypeVisibility()
@@ -1877,6 +1950,7 @@ public partial class MainWindow : Window
         ChartHelper.ResetZoom(ChartNorm);
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
         ResetDistributionChartZoom(ChartDistribution);
+        ResetDistributionPolarZoom();
         ChartHelper.ResetZoom(ChartTransformResult);
         var weekdayChart = WeekdayTrendChartController.Chart;
         ChartHelper.ResetZoom(ref weekdayChart);
@@ -1890,6 +1964,74 @@ public partial class MainWindow : Window
     private void ResetDistributionChartZoom(CartesianChart chart)
     {
         ChartHelper.ResetZoom(chart);
+    }
+
+    private void ResetDistributionPolarZoom()
+    {
+        ChartDistributionPolar.FitToBounds = true;
+    }
+
+    private void OnDistributionPolarHoveredPointsChanged(LiveChartsCore.Kernel.Sketches.IChartView chart, IEnumerable<ChartPoint>? newPoints, IEnumerable<ChartPoint>? oldPoints)
+    {
+        if (_distributionPolarTooltip == null)
+            return;
+
+        var state = ChartDistributionPolar.Tag as DistributionPolarTooltipState;
+        if (state == null || newPoints == null)
+        {
+            _distributionPolarTooltip.IsOpen = false;
+            return;
+        }
+
+        var point = newPoints.FirstOrDefault();
+        if (point == null)
+        {
+            _distributionPolarTooltip.IsOpen = false;
+            return;
+        }
+
+        var bucketCount = state.Definition.XAxisLabels.Count;
+        if (bucketCount <= 0)
+        {
+            _distributionPolarTooltip.IsOpen = false;
+            return;
+        }
+
+        var rawIndex = (int)Math.Round(point.Coordinate.SecondaryValue);
+        var index = rawIndex % bucketCount;
+        if (index < 0)
+            index += bucketCount;
+
+        var label = state.Definition.XAxisLabels[index];
+        var minValue = FormatDistributionValue(state.RangeResult.Mins[index], state.RangeResult.Unit);
+        var maxValue = FormatDistributionValue(state.RangeResult.Maxs[index], state.RangeResult.Unit);
+
+        _distributionPolarTooltip.Content = $"{label}\nMin: {minValue}\nMax: {maxValue}";
+        _distributionPolarTooltip.IsOpen = true;
+    }
+
+    private static string FormatDistributionValue(double value, string? unit)
+    {
+        if (double.IsNaN(value))
+            return "n/a";
+
+        var formatted = value.ToString("0.###");
+        if (!string.IsNullOrWhiteSpace(unit))
+            formatted = $"{formatted} {unit}";
+
+        return formatted;
+    }
+
+    private sealed class DistributionPolarTooltipState
+    {
+        public DistributionPolarTooltipState(DistributionModeDefinition definition, DistributionRangeResult rangeResult)
+        {
+            Definition = definition;
+            RangeResult = rangeResult;
+        }
+
+        public DistributionModeDefinition Definition { get; }
+        public DistributionRangeResult RangeResult { get; }
     }
 
     private void SetChartTitles(string leftName, string rightName)
@@ -1952,6 +2094,33 @@ public partial class MainWindow : Window
                 DistributionModeCombo.SelectedItem = item;
                 return;
             }
+        }
+    }
+
+    private void UpdateDistributionChartTypeVisibility()
+    {
+        if (!_viewModel.ChartState.IsDistributionVisible)
+        {
+            ChartDistribution.Visibility = Visibility.Collapsed;
+            ChartDistributionPolar.Visibility = Visibility.Collapsed;
+            if (_distributionPolarTooltip != null)
+                _distributionPolarTooltip.IsOpen = false;
+            return;
+        }
+
+        if (_viewModel.ChartState.IsDistributionPolarMode)
+        {
+            ChartDistribution.Visibility = Visibility.Collapsed;
+            ChartDistributionPolar.Visibility = Visibility.Visible;
+            DistributionChartTypeToggleButton.Content = "Cartesian";
+        }
+        else
+        {
+            ChartDistribution.Visibility = Visibility.Visible;
+            ChartDistributionPolar.Visibility = Visibility.Collapsed;
+            DistributionChartTypeToggleButton.Content = "Polar";
+            if (_distributionPolarTooltip != null)
+                _distributionPolarTooltip.IsOpen = false;
         }
     }
 

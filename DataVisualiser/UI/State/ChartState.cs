@@ -23,6 +23,7 @@ public class ChartState
     public bool IsWeeklyTrendVisible { get; set; }
     public bool IsTransformPanelVisible { get; set; }
     public bool IsWeekdayTrendPolarMode { get; set; } = false; // Default to Cartesian
+    public bool IsDistributionPolarMode { get; set; } = false; // Default to Cartesian
 
     // Weekly Trend (weekday series toggles)
     public bool ShowMonday { get; set; } = true;
