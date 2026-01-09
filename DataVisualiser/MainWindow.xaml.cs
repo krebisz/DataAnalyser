@@ -57,6 +57,7 @@ public partial class MainWindow : Window
     private bool _isChangingResolution;
 
     private bool _isInitializing = true;
+    private int _uiBusyDepth;
 
     private MetricSelectionService _metricSelectionService = null!;
     private SubtypeSelectorManager _selectorManager = null!;
@@ -91,6 +92,45 @@ public partial class MainWindow : Window
         _tooltipManager = null;
     }
 
+    private IDisposable BeginUiBusyScope()
+    {
+        _uiBusyDepth++;
+        if (_uiBusyDepth == 1)
+            _uiState.IsUiBusy = true;
+
+        return new UiBusyScope(this);
+    }
+
+    private void EndUiBusyScope()
+    {
+        if (_uiBusyDepth == 0)
+            return;
+
+        _uiBusyDepth--;
+        if (_uiBusyDepth == 0)
+            _uiState.IsUiBusy = false;
+    }
+
+    private sealed class UiBusyScope : IDisposable
+    {
+        private readonly MainWindow _owner;
+        private bool _disposed;
+
+        public UiBusyScope(MainWindow owner)
+        {
+            _owner = owner;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            _owner.EndUiBusyScope();
+        }
+    }
+
     #region Normalization mode UI handling
 
     private async void OnNormalizationModeChanged(object? sender, EventArgs e)
@@ -109,6 +149,7 @@ public partial class MainWindow : Window
 
             if (_viewModel.ChartState.IsNormalizedVisible && _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
             {
+                using var busyScope = BeginUiBusyScope();
                 var ctx = _viewModel.ChartState.LastContext;
 
                 var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1, ctx.Data2, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
@@ -470,6 +511,7 @@ public partial class MainWindow : Window
 
     private async Task RenderChartsFromLastContext()
     {
+        using var busyScope = BeginUiBusyScope();
         var ctx = _viewModel.ChartState.LastContext;
         if (!ShouldRenderCharts(ctx))
             return;
@@ -702,6 +744,7 @@ public partial class MainWindow : Window
     /// </summary>
     private async Task RenderSingleChart(string chartName, ChartDataContext ctx)
     {
+        using var busyScope = BeginUiBusyScope();
         var hasSecondaryData = HasSecondaryData(ctx);
         var metricType = ctx.MetricType;
         var primarySubtype = ctx.PrimarySubtype;
@@ -1804,6 +1847,7 @@ public partial class MainWindow : Window
         if (_isChangingResolution)
             return;
 
+        using var busyScope = BeginUiBusyScope();
         await _viewModel.RefreshDateRangeForCurrentSelectionAsync();
 
         UpdateChartTitlesFromCombos();
@@ -1933,6 +1977,7 @@ public partial class MainWindow : Window
 
     private void OnWeekdayTrendChartTypeToggleRequested(object? sender, EventArgs e)
     {
+        using var busyScope = BeginUiBusyScope();
         _viewModel.ToggleWeekdayTrendChartType();
         UpdateWeekdayTrendChartTypeVisibility();
 
@@ -1947,6 +1992,7 @@ public partial class MainWindow : Window
 
     private async void OnDistributionChartTypeToggleRequested(object? sender, EventArgs e)
     {
+        using var busyScope = BeginUiBusyScope();
         _viewModel.ToggleDistributionChartType();
         UpdateDistributionChartTypeVisibility();
 
@@ -1985,6 +2031,7 @@ public partial class MainWindow : Window
 
     private async void OnDiffRatioOperationToggleRequested(object? sender, EventArgs e)
     {
+        using var busyScope = BeginUiBusyScope();
         _viewModel.ToggleDiffRatioOperation();
         UpdateDiffRatioOperationButton();
 
@@ -2092,6 +2139,7 @@ public partial class MainWindow : Window
         if (!TryGetSelectedOperation(out var operationTag))
             return;
 
+        using var busyScope = BeginUiBusyScope();
         await ExecuteTransformOperation(ctx, operationTag);
     }
 
@@ -2384,6 +2432,7 @@ public partial class MainWindow : Window
 
     private void OnResetZoom(object sender, RoutedEventArgs e)
     {
+        using var busyScope = BeginUiBusyScope();
         var mainChart = MainChartController.Chart;
         ChartHelper.ResetZoom(mainChart);
         ChartHelper.ResetZoom(NormalizedChartController.Chart);
@@ -2702,6 +2751,7 @@ public partial class MainWindow : Window
 
             if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
             {
+                using var busyScope = BeginUiBusyScope();
                 var ctx = _viewModel.ChartState.LastContext;
                 Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged: Refreshing chart with useFrequencyShading={useFrequencyShadingState}");
                 await RenderDistributionChart(ctx, mode);
@@ -2730,6 +2780,7 @@ public partial class MainWindow : Window
 
             if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
             {
+                using var busyScope = BeginUiBusyScope();
                 var ctx = _viewModel.ChartState.LastContext;
                 await RenderDistributionChart(ctx, mode);
             }
