@@ -48,6 +48,9 @@ public partial class MainWindow : Window
     private bool _isUpdatingDistributionSubtypeCombo;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _weekdayTrendSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isUpdatingWeekdayTrendSubtypeCombo;
+    private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private bool _isUpdatingTransformSubtypeCombos;
+    private bool _isTransformSelectionPendingLoad;
 
     private string _connectionString = null!;
     private HourlyDistributionService _hourlyDistributionService = null!;
@@ -279,6 +282,10 @@ public partial class MainWindow : Window
             MessageBox.Show(msg, "DEBUG - LastContext contents");
         }
 
+        _isTransformSelectionPendingLoad = false;
+        UpdateTransformSubtypeOptions();
+        UpdateTransformComputeButtonState();
+
         await RenderChartsFromLastContext();
     }
 
@@ -330,6 +337,7 @@ public partial class MainWindow : Window
                     var transformCtx = _viewModel.ChartState.LastContext;
                     if (transformCtx != null && ShouldRenderCharts(transformCtx))
                         PopulateTransformGrids(transformCtx);
+                    UpdateTransformSubtypeOptions();
                 }
 
                 return; // Don't reload other charts
@@ -364,6 +372,7 @@ public partial class MainWindow : Window
                     var transformCtx = _viewModel.ChartState.LastContext;
                     if (transformCtx != null && ShouldRenderCharts(transformCtx))
                         PopulateTransformGrids(transformCtx);
+                    UpdateTransformSubtypeOptions();
                 }
 
                 return; // Don't reload other charts
@@ -565,6 +574,100 @@ public partial class MainWindow : Window
         TransformChartContentPanel.Visibility = Visibility.Collapsed;
         TransformGrid3.ItemsSource = null;
         TransformComputeButton.IsEnabled = false;
+    }
+
+    private void ResetTransformSelectionsPendingLoad()
+    {
+        _isTransformSelectionPendingLoad = true;
+        _viewModel.ChartState.SelectedTransformPrimarySubtype = null;
+        _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
+
+        if (TransformPrimarySubtypeCombo == null || TransformSecondarySubtypeCombo == null)
+            return;
+
+        _isUpdatingTransformSubtypeCombos = true;
+        try
+        {
+            TransformPrimarySubtypeCombo.Items.Clear();
+            TransformSecondarySubtypeCombo.Items.Clear();
+            TransformPrimarySubtypeCombo.IsEnabled = false;
+            TransformSecondarySubtypeCombo.IsEnabled = false;
+            TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+            TransformPrimarySubtypeCombo.SelectedItem = null;
+            TransformSecondarySubtypeCombo.SelectedItem = null;
+            TransformOperationCombo.SelectedItem = null;
+            TransformComputeButton.IsEnabled = false;
+        }
+        finally
+        {
+            _isUpdatingTransformSubtypeCombos = false;
+        }
+    }
+
+    private void UpdateTransformSubtypeOptions()
+    {
+        if (TransformPrimarySubtypeCombo == null || TransformSecondarySubtypeCombo == null)
+            return;
+
+        if (_isTransformSelectionPendingLoad)
+            return;
+
+        _isUpdatingTransformSubtypeCombos = true;
+        try
+        {
+            TransformPrimarySubtypeCombo.Items.Clear();
+            TransformSecondarySubtypeCombo.Items.Clear();
+
+            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
+            if (selectedSubtypes.Count == 0)
+            {
+                TransformPrimarySubtypeCombo.IsEnabled = false;
+                TransformSecondarySubtypeCombo.IsEnabled = false;
+                TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+                _viewModel.ChartState.SelectedTransformPrimarySubtype = null;
+                _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
+                TransformPrimarySubtypeCombo.SelectedItem = null;
+                TransformSecondarySubtypeCombo.SelectedItem = null;
+                return;
+            }
+
+            foreach (var subtype in selectedSubtypes)
+            {
+                TransformPrimarySubtypeCombo.Items.Add(subtype);
+                TransformSecondarySubtypeCombo.Items.Add(subtype);
+            }
+
+            TransformPrimarySubtypeCombo.IsEnabled = true;
+
+            var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySubtype;
+            var primarySelection = primaryCurrent != null && selectedSubtypes.Contains(primaryCurrent) ? primaryCurrent : selectedSubtypes[0];
+            TransformPrimarySubtypeCombo.SelectedItem = primarySelection;
+            _viewModel.ChartState.SelectedTransformPrimarySubtype = primarySelection;
+
+            if (selectedSubtypes.Count > 1)
+            {
+                TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
+                TransformSecondarySubtypeCombo.IsEnabled = true;
+
+                var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySubtype;
+                var secondarySelection = secondaryCurrent != null && selectedSubtypes.Contains(secondaryCurrent) ? secondaryCurrent : selectedSubtypes[1];
+                TransformSecondarySubtypeCombo.SelectedItem = secondarySelection;
+                _viewModel.ChartState.SelectedTransformSecondarySubtype = secondarySelection;
+            }
+            else
+            {
+                TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+                TransformSecondarySubtypeCombo.IsEnabled = false;
+                TransformSecondarySubtypeCombo.SelectedItem = null;
+                _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
+            }
+
+            UpdateTransformComputeButtonState();
+        }
+        finally
+        {
+            _isUpdatingTransformSubtypeCombos = false;
+        }
     }
 
 
@@ -864,6 +967,114 @@ public partial class MainWindow : Window
     }
 
     private static string BuildWeekdayTrendCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
+    {
+        return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
+    }
+
+    private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveTransformDataAsync(ChartDataContext ctx)
+    {
+        var primarySubtype = ResolveSelectedTransformPrimarySubtype(ctx);
+        var secondarySubtype = ResolveSelectedTransformSecondarySubtype(ctx);
+
+        var primaryData = await ResolveTransformDataAsync(ctx, primarySubtype);
+        IReadOnlyList<MetricData>? secondaryData = null;
+
+        if (!string.IsNullOrWhiteSpace(secondarySubtype))
+            secondaryData = await ResolveTransformDataAsync(ctx, secondarySubtype);
+
+        var displayName1 = ResolveTransformDisplayName(ctx, primarySubtype);
+        var displayName2 = ResolveTransformDisplayName(ctx, secondarySubtype);
+
+        var transformContext = new ChartDataContext
+        {
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                DisplayName1 = displayName1,
+                DisplayName2 = displayName2,
+                MetricType = ctx.MetricType,
+                PrimarySubtype = primarySubtype,
+                SecondarySubtype = secondarySubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
+
+        return (primaryData, secondaryData, transformContext);
+    }
+
+    private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, string? selectedSubtype)
+    {
+        if (ctx.Data1 == null)
+            return null;
+
+        if (string.IsNullOrWhiteSpace(selectedSubtype))
+            return ctx.Data1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.Data1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.Data2 ?? ctx.Data1;
+
+        var metricType = ctx.MetricType ?? _viewModel.MetricState.SelectedMetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return ctx.Data1;
+
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var cacheKey = BuildTransformCacheKey(metricType, selectedSubtype, ctx.From, ctx.To, tableName);
+        if (_transformSubtypeCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(metricType, selectedSubtype, null, ctx.From, ctx.To, tableName);
+        var data = primaryData.ToList();
+        _transformSubtypeCache[cacheKey] = data;
+        return data;
+    }
+
+    private string? ResolveSelectedTransformPrimarySubtype(ChartDataContext ctx)
+    {
+        if (!_isTransformSelectionPendingLoad && TransformPrimarySubtypeCombo?.SelectedItem is string comboSelection)
+            return comboSelection;
+
+        var selectedSubtype = _viewModel.ChartState.SelectedTransformPrimarySubtype;
+        if (!string.IsNullOrWhiteSpace(selectedSubtype))
+            return selectedSubtype;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype))
+            return ctx.PrimarySubtype;
+
+        return null;
+    }
+
+    private string? ResolveSelectedTransformSecondarySubtype(ChartDataContext ctx)
+    {
+        if (!_isTransformSelectionPendingLoad && TransformSecondarySubtypeCombo?.SelectedItem is string comboSelection)
+            return comboSelection;
+
+        var selectedSubtype = _viewModel.ChartState.SelectedTransformSecondarySubtype;
+        if (!string.IsNullOrWhiteSpace(selectedSubtype))
+            return selectedSubtype;
+
+        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype))
+            return ctx.SecondarySubtype;
+
+        return null;
+    }
+
+    private static string ResolveTransformDisplayName(ChartDataContext ctx, string? selectedSubtype)
+    {
+        if (string.IsNullOrWhiteSpace(selectedSubtype))
+            return ctx.DisplayName1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.DisplayName1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.DisplayName2;
+
+        return selectedSubtype;
+    }
+
+    private static string BuildTransformCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
     {
         return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
     }
@@ -1637,6 +1848,8 @@ public partial class MainWindow : Window
         {
             _distributionSubtypeCache.Clear();
             _weekdayTrendSubtypeCache.Clear();
+            _transformSubtypeCache.Clear();
+            ResetTransformSelectionsPendingLoad();
             var dataLoaded = await _viewModel.LoadMetricDataAsync();
             if (!dataLoaded)
             {
@@ -1790,28 +2003,73 @@ public partial class MainWindow : Window
 
     private void OnTransformOperationChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (TransformOperationCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is string operationTag)
+        UpdateTransformComputeButtonState();
+    }
+
+    private void OnTransformPrimarySubtypeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_viewModel == null)
+            return;
+
+        if (_isInitializing || _isUpdatingTransformSubtypeCombos)
+            return;
+
+        if (TransformPrimarySubtypeCombo.SelectedItem is string selectedSubtype)
+            _viewModel.SetTransformPrimarySubtype(selectedSubtype);
+
+        UpdateTransformComputeButtonState();
+    }
+
+    private void OnTransformSecondarySubtypeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_viewModel == null)
+            return;
+
+        if (_isInitializing || _isUpdatingTransformSubtypeCombos)
+            return;
+
+        if (TransformSecondarySubtypeCombo.SelectedItem is string selectedSubtype)
+            _viewModel.SetTransformSecondarySubtype(selectedSubtype);
+
+        UpdateTransformComputeButtonState();
+    }
+
+    private void UpdateTransformComputeButtonState()
+    {
+        if (_isTransformSelectionPendingLoad)
         {
-            var ctx = _viewModel.ChartState.LastContext;
-            if (ctx == null)
-            {
-                TransformComputeButton.IsEnabled = false;
-                return;
-            }
-
-            var hasSecondary = HasSecondaryData(ctx);
-            var hasSecondSubtype = !string.IsNullOrEmpty(ctx.SecondarySubtype);
-            var isUnary = operationTag == "Log" || operationTag == "Sqrt";
-            var isBinary = operationTag == "Add" || operationTag == "Subtract";
-
-            // Enable compute button if operation matches data availability
-            // For binary operations, require both secondary data AND a second subtype selected
-            TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) || (isBinary && hasSecondary && hasSecondSubtype);
+            TransformComputeButton.IsEnabled = false;
+            return;
         }
+
+        if (TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string operationTag)
+        {
+            TransformComputeButton.IsEnabled = false;
+            return;
+        }
+
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx == null)
+        {
+            TransformComputeButton.IsEnabled = false;
+            return;
+        }
+
+        var hasSecondary = HasSecondaryData(ctx);
+        var hasSecondSubtype = !string.IsNullOrEmpty(ResolveSelectedTransformSecondarySubtype(ctx));
+        var isUnary = operationTag == "Log" || operationTag == "Sqrt";
+        var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
+
+        // Enable compute button if operation matches data availability
+        // For binary operations, require both secondary data AND a second subtype selected
+        TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) || (isBinary && hasSecondary && hasSecondSubtype);
     }
 
     private async void OnTransformCompute(object sender, RoutedEventArgs e)
     {
+        if (_isTransformSelectionPendingLoad)
+            return;
+
         if (_viewModel.ChartState.LastContext == null)
             return;
 
@@ -1841,16 +2099,20 @@ public partial class MainWindow : Window
     private async Task ExecuteTransformOperation(ChartDataContext ctx, string operationTag)
     {
         var isUnary = operationTag == "Log" || operationTag == "Sqrt";
-        var isBinary = operationTag == "Add" || operationTag == "Subtract";
-        var hasSecondary = HasSecondaryData(ctx) && !string.IsNullOrEmpty(ctx.SecondarySubtype);
+        var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
+        var hasSecondary = HasSecondaryData(ctx) && !string.IsNullOrEmpty(ResolveSelectedTransformSecondarySubtype(ctx));
 
-        if (isUnary && ctx.Data1 != null)
-            await ComputeUnaryTransform(ctx.Data1, operationTag);
-        else if (isBinary && hasSecondary && ctx.Data1 != null && ctx.Data2 != null)
-            await ComputeBinaryTransform(ctx.Data1, ctx.Data2, operationTag);
+        var (primaryData, secondaryData, transformContext) = await ResolveTransformDataAsync(ctx);
+        if (primaryData == null)
+            return;
+
+        if (isUnary)
+            await ComputeUnaryTransform(primaryData, operationTag, transformContext);
+        else if (isBinary && hasSecondary && secondaryData != null)
+            await ComputeBinaryTransform(primaryData, secondaryData, operationTag, transformContext);
     }
 
-    private async Task ComputeUnaryTransform(IEnumerable<MetricData> data, string operation)
+    private async Task ComputeUnaryTransform(IEnumerable<MetricData> data, string operation, ChartDataContext transformContext)
     {
         // Use ALL data for chart computation (proper normalization)
         var allDataList = data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
@@ -1893,13 +2155,13 @@ public partial class MainWindow : Window
         }
 
         // Continue with grid and chart rendering
-        await RenderTransformResults(allDataList, computedResults, operation, metricsList);
+        await RenderTransformResults(allDataList, computedResults, operation, metricsList, transformContext);
     }
 
     /// <summary>
     ///     Phase 4: Shared method to render transform results (grid and chart) using new infrastructure.
     /// </summary>
-    private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics)
+    private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext)
     {
         var resultData = TransformExpressionEvaluator.CreateTransformResultData(dataList, results);
         PopulateTransformResultGrid(resultData);
@@ -1909,7 +2171,7 @@ public partial class MainWindow : Window
 
         ShowTransformResultPanels();
         await PrepareTransformChartLayout();
-        await RenderTransformChart(dataList, results, operation, metrics);
+        await RenderTransformChart(dataList, results, operation, metrics, transformContext);
         await FinalizeTransformChartRendering();
     }
 
@@ -2017,18 +2279,17 @@ public partial class MainWindow : Window
     /// <summary>
     ///     Phase 4: Renders transform chart using new infrastructure for label generation.
     /// </summary>
-    private async Task RenderTransformChart(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics)
+    private async Task RenderTransformChart(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext)
     {
         if (dataList.Count == 0 || results.Count == 0)
             return;
 
         // Get date range from context or data
-        var ctx = _viewModel.ChartState.LastContext;
-        var from = ctx?.From ?? dataList.Min(d => d.NormalizedTimestamp);
-        var to = ctx?.To ?? dataList.Max(d => d.NormalizedTimestamp);
+        var from = transformContext.From != default ? transformContext.From : dataList.Min(d => d.NormalizedTimestamp);
+        var to = transformContext.To != default ? transformContext.To : dataList.Max(d => d.NormalizedTimestamp);
 
         // Phase 4: Generate label using new infrastructure
-        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metrics, ctx);
+        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metrics, transformContext);
 
         // Create strategy using existing pipeline
         var strategy = new TransformResultStrategy(dataList, results, label, from, to);
@@ -2036,14 +2297,14 @@ public partial class MainWindow : Window
         // Use existing chart rendering pipeline
         // Pass metric type and subtype info for proper label formatting
         var operationTag = TransformOperationCombo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() ?? "Transform" : "Transform";
-        var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : null;
-        var isOperationChart = operationTag == "Subtract" || operationTag == "Add";
+        var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
+        var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartTransformResult, strategy, label, null, 400, ctx?.MetricType, ctx?.PrimarySubtype, ctx?.SecondarySubtype, operationType, isOperationChart);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartTransformResult, strategy, label, null, 400, transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart);
     }
 
 
-    private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation)
+    private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation, ChartDataContext transformContext)
     {
         // Use ALL data for chart computation (proper normalization)
         var allData1List = data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
@@ -2071,6 +2332,7 @@ public partial class MainWindow : Window
             {
                     "Add" => BinaryOperators.Sum,
                     "Subtract" => BinaryOperators.Difference,
+                    "Divide" => BinaryOperators.Ratio,
                     _ => (a, b) => a
             };
 
@@ -2098,7 +2360,7 @@ public partial class MainWindow : Window
         }
 
         // Continue with grid and chart rendering
-        await RenderTransformResults(alignedData.Item1, binaryComputedResults, operation, binaryMetricsList);
+        await RenderTransformResults(alignedData.Item1, binaryComputedResults, operation, binaryMetricsList, transformContext);
     }
 
     #endregion

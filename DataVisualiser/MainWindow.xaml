@@ -370,6 +370,15 @@
 
                         <StackPanel x:Name="TransformContentPanel" Orientation="Vertical" Visibility="Collapsed">
                             <StackPanel x:Name="TransformOperationRowPanel" Orientation="Horizontal" Margin="20,10">
+                                <!-- Primary Subtype Selection -->
+                                <StackPanel x:Name="TransformPrimarySubtypePanel" Orientation="Vertical" Margin="0,0,20,0"
+                                            MinWidth="160">
+                                    <TextBlock Text="Primary Subtype:" FontWeight="Bold" Margin="0,0,0,5" />
+                                    <ComboBox x:Name="TransformPrimarySubtypeCombo"
+                                              SelectionChanged="OnTransformPrimarySubtypeChanged"
+                                              MinWidth="140" />
+                                </StackPanel>
+
                                 <!-- Operation Selection -->
                                 <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical" Margin="0,0,20,0"
                                             MinWidth="150">
@@ -381,7 +390,18 @@
                                         <ComboBoxItem Content="Square Root" Tag="Sqrt" />
                                         <ComboBoxItem Content="Add (+)" Tag="Add" />
                                         <ComboBoxItem Content="Subtract (-)" Tag="Subtract" />
+                                        <ComboBoxItem Content="Divide (/)" Tag="Divide" />
                                     </ComboBox>
+                                </StackPanel>
+
+                                <!-- Secondary Subtype Selection -->
+                                <StackPanel x:Name="TransformSecondarySubtypePanel" Orientation="Vertical" Margin="0,0,20,0"
+                                            MinWidth="160"
+                                            Visibility="Collapsed">
+                                    <TextBlock Text="Secondary Subtype:" FontWeight="Bold" Margin="0,0,0,5" />
+                                    <ComboBox x:Name="TransformSecondarySubtypeCombo"
+                                              SelectionChanged="OnTransformSecondarySubtypeChanged"
+                                              MinWidth="140" />
                                 </StackPanel>
 
                                 <!-- Compute Button -->

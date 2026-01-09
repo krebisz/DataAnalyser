@@ -97,6 +97,16 @@ public partial class MainWindowViewModel
         RequestChartUpdate(false, "WeeklyTrend");
     }
 
+    public void SetTransformPrimarySubtype(string? subtype)
+    {
+        ChartState.SelectedTransformPrimarySubtype = subtype;
+    }
+
+    public void SetTransformSecondarySubtype(string? subtype)
+    {
+        ChartState.SelectedTransformSecondarySubtype = subtype;
+    }
+
     public void SetDistributionFrequencyShading(DistributionMode mode, bool useFrequencyShading)
     {
         ChartState.GetDistributionSettings(mode).UseFrequencyShading = useFrequencyShading;
