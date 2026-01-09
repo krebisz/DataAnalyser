@@ -16,6 +16,9 @@ public partial class NormalizedChartController : UserControl
 
         PanelController.Title = "ChartNorm";
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
+        NormZeroToOneRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);
+        NormPercentOfMaxRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);
+        NormRelativeToMaxRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);
 
         RootGrid.Children.Remove(BehavioralControlsPanel);
         RootGrid.Children.Remove(ChartContentPanelRoot);
@@ -36,4 +39,6 @@ public partial class NormalizedChartController : UserControl
     public WpfCartesianChart Chart => ChartNormControl;
 
     public event EventHandler? ToggleRequested;
+
+    public event EventHandler? NormalizationModeChanged;
 }

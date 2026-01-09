@@ -17,6 +17,12 @@ public partial class DistributionChartController : UserControl
 
         PanelController.Title = "Distribution";
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
+        DistributionChartTypeToggleButtonControl.Click += (s, e) => ChartTypeToggleRequested?.Invoke(this, EventArgs.Empty);
+        DistributionModeComboControl.SelectionChanged += (s, e) => ModeChanged?.Invoke(this, EventArgs.Empty);
+        DistributionSubtypeComboControl.SelectionChanged += (s, e) => SubtypeChanged?.Invoke(this, EventArgs.Empty);
+        DistributionFrequencyShadingRadioControl.Checked += (s, e) => DisplayModeChanged?.Invoke(this, EventArgs.Empty);
+        DistributionSimpleRangeRadioControl.Checked += (s, e) => DisplayModeChanged?.Invoke(this, EventArgs.Empty);
+        DistributionIntervalCountComboControl.SelectionChanged += (s, e) => IntervalCountChanged?.Invoke(this, EventArgs.Empty);
 
         RootGrid.Children.Remove(BehavioralControlsPanel);
         RootGrid.Children.Remove(ChartContentPanelRoot);
@@ -45,4 +51,10 @@ public partial class DistributionChartController : UserControl
     public PolarChart PolarChart => ChartDistributionPolarControl;
 
     public event EventHandler? ToggleRequested;
+
+    public event EventHandler? ChartTypeToggleRequested;
+    public event EventHandler? ModeChanged;
+    public event EventHandler? SubtypeChanged;
+    public event EventHandler? DisplayModeChanged;
+    public event EventHandler? IntervalCountChanged;
 }

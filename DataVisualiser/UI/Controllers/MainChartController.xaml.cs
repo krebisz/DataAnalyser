@@ -51,6 +51,8 @@ public partial class MainChartController : UserControl
     /// </summary>
     public CartesianChart Chart { get; }
 
+    public Button ToggleButton => PanelController.ToggleButtonControl;
+
     /// <summary>
     ///     Gets the panel controller for external access.
     /// </summary>

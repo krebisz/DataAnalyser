@@ -16,6 +16,10 @@ public partial class TransformDataPanelController : UserControl
 
         PanelController.Title = "Data Transform";
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
+        TransformOperationComboControl.SelectionChanged += (s, e) => OperationChanged?.Invoke(this, EventArgs.Empty);
+        TransformPrimarySubtypeComboControl.SelectionChanged += (s, e) => PrimarySubtypeChanged?.Invoke(this, EventArgs.Empty);
+        TransformSecondarySubtypeComboControl.SelectionChanged += (s, e) => SecondarySubtypeChanged?.Invoke(this, EventArgs.Empty);
+        TransformComputeButtonControl.Click += (s, e) => ComputeRequested?.Invoke(this, EventArgs.Empty);
 
         RootGrid.Children.Remove(TransformContentRootPanel);
         PanelController.SetChartContent(TransformContentRootPanel);
@@ -57,5 +61,15 @@ public partial class TransformDataPanelController : UserControl
 
     public CartesianChart ChartTransformResult => ChartTransformResultControl;
 
+    public CartesianChart Chart => ChartTransformResultControl;
+
     public event EventHandler? ToggleRequested;
+
+    public event EventHandler? OperationChanged;
+
+    public event EventHandler? PrimarySubtypeChanged;
+
+    public event EventHandler? SecondarySubtypeChanged;
+
+    public event EventHandler? ComputeRequested;
 }

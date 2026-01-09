@@ -33,6 +33,8 @@ public partial class WeekdayTrendChartController : UserControl
 
     public ChartPanelController Panel => PanelController;
 
+    public Button ToggleButton => PanelController.ToggleButtonControl;
+
     public Button ChartTypeToggleButton { get; private set; } = null!;
     public ComboBox SubtypeCombo { get; private set; } = null!;
 

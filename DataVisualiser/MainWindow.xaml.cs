@@ -93,7 +93,7 @@ public partial class MainWindow : Window
 
     #region Normalization mode UI handling
 
-    private async void OnNormalizationModeChanged(object sender, RoutedEventArgs e)
+    private async void OnNormalizationModeChanged(object? sender, EventArgs e)
     {
         if (_isInitializing)
             return;
@@ -1324,21 +1324,18 @@ public partial class MainWindow : Window
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
         NormalizedChartController.ToggleRequested += OnChartNormToggleRequested;
-        NormalizedChartController.NormZeroToOneRadio.Checked += OnNormalizationModeChanged;
-        NormalizedChartController.NormPercentOfMaxRadio.Checked += OnNormalizationModeChanged;
-        NormalizedChartController.NormRelativeToMaxRadio.Checked += OnNormalizationModeChanged;
+        NormalizedChartController.NormalizationModeChanged += OnNormalizationModeChanged;
         DistributionChartController.ToggleRequested += OnDistributionToggleRequested;
-        DistributionChartController.ChartTypeToggleButton.Click += OnDistributionChartTypeToggleRequested;
-        DistributionChartController.ModeCombo.SelectionChanged += OnDistributionModeChanged;
-        DistributionChartController.SubtypeCombo.SelectionChanged += OnDistributionSubtypeChanged;
-        DistributionChartController.FrequencyShadingRadio.Checked += OnDistributionDisplayModeChanged;
-        DistributionChartController.SimpleRangeRadio.Checked += OnDistributionDisplayModeChanged;
-        DistributionChartController.IntervalCountCombo.SelectionChanged += OnDistributionIntervalCountChanged;
+        DistributionChartController.ChartTypeToggleRequested += OnDistributionChartTypeToggleRequested;
+        DistributionChartController.ModeChanged += OnDistributionModeChanged;
+        DistributionChartController.SubtypeChanged += OnDistributionSubtypeChanged;
+        DistributionChartController.DisplayModeChanged += OnDistributionDisplayModeChanged;
+        DistributionChartController.IntervalCountChanged += OnDistributionIntervalCountChanged;
         TransformDataPanelController.ToggleRequested += OnTransformPanelToggleRequested;
-        TransformDataPanelController.TransformOperationCombo.SelectionChanged += OnTransformOperationChanged;
-        TransformDataPanelController.TransformPrimarySubtypeCombo.SelectionChanged += OnTransformPrimarySubtypeChanged;
-        TransformDataPanelController.TransformSecondarySubtypeCombo.SelectionChanged += OnTransformSecondarySubtypeChanged;
-        TransformDataPanelController.TransformComputeButton.Click += OnTransformCompute;
+        TransformDataPanelController.OperationChanged += OnTransformOperationChanged;
+        TransformDataPanelController.PrimarySubtypeChanged += OnTransformPrimarySubtypeChanged;
+        TransformDataPanelController.SecondarySubtypeChanged += OnTransformSecondarySubtypeChanged;
+        TransformDataPanelController.ComputeRequested += OnTransformCompute;
     }
 
     private void ExecuteStartupSequence()
@@ -1948,7 +1945,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void OnDistributionChartTypeToggleRequested(object sender, RoutedEventArgs e)
+    private async void OnDistributionChartTypeToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleDistributionChartType();
         UpdateDistributionChartTypeVisibility();
@@ -2019,12 +2016,12 @@ public partial class MainWindow : Window
         _viewModel.ToggleTransformPanel();
     }
 
-    private void OnTransformOperationChanged(object sender, SelectionChangedEventArgs e)
+    private void OnTransformOperationChanged(object? sender, EventArgs e)
     {
         UpdateTransformComputeButtonState();
     }
 
-    private void OnTransformPrimarySubtypeChanged(object sender, SelectionChangedEventArgs e)
+    private void OnTransformPrimarySubtypeChanged(object? sender, EventArgs e)
     {
         if (_viewModel == null)
             return;
@@ -2038,7 +2035,7 @@ public partial class MainWindow : Window
         UpdateTransformComputeButtonState();
     }
 
-    private void OnTransformSecondarySubtypeChanged(object sender, SelectionChangedEventArgs e)
+    private void OnTransformSecondarySubtypeChanged(object? sender, EventArgs e)
     {
         if (_viewModel == null)
             return;
@@ -2083,7 +2080,7 @@ public partial class MainWindow : Window
         TransformDataPanelController.TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) || (isBinary && hasSecondary && hasSecondSubtype);
     }
 
-    private async void OnTransformCompute(object sender, RoutedEventArgs e)
+    private async void OnTransformCompute(object? sender, EventArgs e)
     {
         if (_isTransformSelectionPendingLoad)
             return;
@@ -2771,7 +2768,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void OnDistributionDisplayModeChanged(object sender, RoutedEventArgs e)
+    private async void OnDistributionDisplayModeChanged(object? sender, EventArgs e)
     {
         if (_viewModel == null)
             return;
@@ -2780,7 +2777,7 @@ public partial class MainWindow : Window
         await HandleDistributionDisplayModeChanged(GetSelectedDistributionMode(), useFrequencyShading);
     }
 
-    private async void OnDistributionIntervalCountChanged(object sender, SelectionChangedEventArgs e)
+    private async void OnDistributionIntervalCountChanged(object? sender, EventArgs e)
     {
         if (_viewModel == null)
             return;
@@ -2789,7 +2786,7 @@ public partial class MainWindow : Window
             await HandleDistributionIntervalCountChanged(GetSelectedDistributionMode(), intervalCount);
     }
 
-    private void OnDistributionModeChanged(object sender, SelectionChangedEventArgs e)
+    private void OnDistributionModeChanged(object? sender, EventArgs e)
     {
         if (_viewModel == null)
             return;
@@ -2803,7 +2800,7 @@ public partial class MainWindow : Window
         ApplyDistributionSettingsToUi(mode);
     }
 
-    private void OnDistributionSubtypeChanged(object sender, SelectionChangedEventArgs e)
+    private void OnDistributionSubtypeChanged(object? sender, EventArgs e)
     {
         if (_viewModel == null)
             return;

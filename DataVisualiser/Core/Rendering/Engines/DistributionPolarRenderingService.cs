@@ -44,18 +44,18 @@ public sealed class DistributionPolarRenderingService
 
         chart.Series = new ISeries[]
         {
-                CreateSeries("Min", rangeResult.Mins, bucketCount, new SKColor(70, 130, 180), new SKColor(70, 130, 180, 80)),
-                CreateSeries("Max", rangeResult.Maxs, bucketCount, new SKColor(220, 80, 80), new SKColor(220, 80, 80, 80)),
-                CreateSeries("Avg", rangeResult.Averages, bucketCount, new SKColor(235, 200, 40), new SKColor(235, 200, 40, 60))
+                CreateSeries("Min", rangeResult.Mins, bucketCount, radiusMinLimit, new SKColor(70, 130, 180), new SKColor(70, 130, 180, 80)),
+                CreateSeries("Max", rangeResult.Maxs, bucketCount, radiusMinLimit, new SKColor(220, 80, 80), new SKColor(220, 80, 80, 80)),
+                CreateSeries("Avg", rangeResult.Averages, bucketCount, radiusMinLimit, new SKColor(235, 200, 40), new SKColor(235, 200, 40, 60))
         };
     }
 
-    private static PolarLineSeries<ObservablePoint> CreateSeries(string name, IReadOnlyList<double> values, int bucketCount, SKColor strokeColor, SKColor fillColor)
+    private static PolarLineSeries<ObservablePoint> CreateSeries(string name, IReadOnlyList<double> values, int bucketCount, double missingValue, SKColor strokeColor, SKColor fillColor)
     {
         return new PolarLineSeries<ObservablePoint>
         {
                 Name = name,
-                Values = BuildSeriesValues(values, bucketCount),
+                Values = BuildSeriesValues(values, bucketCount, missingValue),
                 LineSmoothness = 0.2,
                 Stroke = new SolidColorPaint(strokeColor, 2),
                 Fill = new SolidColorPaint(fillColor),
@@ -65,21 +65,24 @@ public sealed class DistributionPolarRenderingService
         };
     }
 
-    private static IReadOnlyCollection<ObservablePoint> BuildSeriesValues(IReadOnlyList<double> values, int bucketCount)
+    private static IReadOnlyCollection<ObservablePoint> BuildSeriesValues(IReadOnlyList<double> values, int bucketCount, double missingValue)
     {
         var seriesValues = new List<ObservablePoint>();
         if (values.Count < bucketCount)
             return seriesValues;
 
+        double? firstValue = null;
         for (var i = 0; i < bucketCount; i++)
         {
-            var value = double.IsNaN(values[i]) ? 0.0 : values[i];
+            var value = double.IsNaN(values[i]) ? missingValue : values[i];
+
+            firstValue ??= value;
             seriesValues.Add(new ObservablePoint(i, value));
         }
 
         // Close the loop.
-        if (bucketCount > 0)
-            seriesValues.Add(new ObservablePoint(bucketCount, double.IsNaN(values[0]) ? 0.0 : values[0]));
+        if (bucketCount > 0 && firstValue.HasValue)
+            seriesValues.Add(new ObservablePoint(bucketCount, firstValue.Value));
 
         return seriesValues;
     }

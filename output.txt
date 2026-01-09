@@ -1,79 +1,103 @@
-'DataVisualiser.exe' (CoreCLR: DefaultDomain): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Private.CoreLib.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Development\POCs\DataFileReaderRedux\DataVisualiser\bin\Debug\net10.0-windows7.0\DataVisualiser.dll'. Symbols loaded.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\PresentationFramework.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\WindowsBase.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Runtime.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\System.Xaml.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'c:\program files\microsoft visual studio\18\insiders\common7\ide\extensions\microsoft\managedprojectsystem\HotReload\net10.0\Microsoft.Extensions.DotNetDeltaApplier.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Linq.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Runtime.Loader.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Console.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Collections.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Runtime.InteropServices.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Collections.Concurrent.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.IO.Pipes.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Threading.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Threading.Overlapped.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Security.AccessControl.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Security.Principal.Windows.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Security.Claims.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\PrivateAssemblies\Runtime\Microsoft.VisualStudio.Debugger.Runtime.NetCoreApp.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Threading.ThreadPool.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-Step into: Stepping over non-user code 'DataVisualiser.App..ctor'
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Diagnostics.TraceSource.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\System.IO.Packaging.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Text.RegularExpressions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Private.Uri.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\PresentationCore.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Memory.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\Microsoft.Win32.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\DirectWriteForwarder.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Runtime.Extensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Diagnostics.Debug.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Runtime.CompilerServices.VisualC.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Collections.NonGeneric.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\Microsoft.Win32.Registry.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Collections.Specialized.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.ComponentModel.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Threading.Thread.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\System.Configuration.ConfigurationManager.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Xml.ReaderWriter.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Private.Xml.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Net.WebClient.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Text.Encoding.Extensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.ComponentModel.TypeConverter.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.ObjectModel.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-Step into: Stepping over non-user code 'DataVisualiser.App.InitializeComponent'
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.ComponentModel.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\System.Windows.Extensions.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Development\POCs\DataFileReaderRedux\DataVisualiser\bin\Debug\net10.0-windows7.0\LiveCharts.Wpf.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Development\POCs\DataFileReaderRedux\DataVisualiser\bin\Debug\net10.0-windows7.0\LiveCharts.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\netstandard.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\UIAutomationTypes.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Diagnostics.Process.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\PresentationFramework.Aero2.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\System.Windows.Controls.Ribbon.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\UIAutomationProvider.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-**_viewModel** was null.
-
-**_viewModel** was null.
-
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Development\POCs\DataFileReaderRedux\DataVisualiser\bin\Debug\net10.0-windows7.0\DataFileReader.dll'. Symbols loaded.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\10.0.1\PresentationFramework-SystemXml.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Data.Common.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Development\POCs\DataFileReaderRedux\DataVisualiser\bin\Debug\net10.0-windows7.0\runtimes\win\lib\net9.0\Microsoft.Data.SqlClient.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Transactions.Local.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Development\POCs\DataFileReaderRedux\DataVisualiser\bin\Debug\net10.0-windows7.0\Dapper.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Diagnostics.DiagnosticSource.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Diagnostics.Tracing.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Diagnostics.StackTrace.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Security.Cryptography.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Text.Encoding.CodePages.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Reflection.Metadata.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Collections.Immutable.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.Net.Primitives.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-'DataVisualiser.exe' (CoreCLR: clrhost): Loaded 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\10.0.1\System.IO.MemoryMappedFiles.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
-An unhandled exception of type 'System.NullReferenceException' occurred in WindowsBase.dll
-Object reference not set to an instance of an object.
-
-The program '[30060] DataVisualiser.exe' has exited with code 0 (0x0).
+[HasSufficientCmsSamples] series is not ICanonicalMetricSeries
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+The thread '.NET TP Worker' (9792) has exited with code 0 (0x0).
+The thread '.NET TP Worker' (39632) has exited with code 0 (0x0).
+[CMS] Enabled=False
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[CTX] SemanticMetricCount=2, PrimaryCms=SET
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] WeeklyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=WeeklyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[CTX] SemanticMetricCount=2, PrimaryCms=SET
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-08]
+[CTX] SemanticMetricCount=2, PrimaryCms=SET
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] WeekdayTrend: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=WeekdayTrend, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+[WeekdayTrend] Day=Monday, Points=14
+[WeekdayTrend] Day=Tuesday, Points=11
+[WeekdayTrend] Day=Wednesday, Points=15
+[WeekdayTrend] Day=Thursday, Points=12
+[WeekdayTrend] Day=Friday, Points=13
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] WeeklyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=WeeklyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+=== HourlyDistribution: Data Summary ===
+Global Min: 35.9725, Global Max: 39.3439, Range: 3.3714
+Hour Min/Max values:
+  Hour 0: Min=0.0000, Max=0.0000, Range=NaN
+  Hour 1: Min=0.0000, Max=0.0000, Range=NaN
+  Hour 2: Min=37.3339, Max=38.3951, Range=1.0612
+  Hour 3: Min=36.3131, Max=38.2456, Range=1.9325
+  Hour 4: Min=36.0652, Max=39.0507, Range=2.9855
+  Hour 5: Min=36.8266, Max=38.9535, Range=2.1269
+  Hour 6: Min=37.6522, Max=38.3087, Range=0.6565
+  Hour 7: Min=35.9963, Max=35.9963, Range=0.0000
+  Hour 8: Min=38.6005, Max=38.6359, Range=0.0354
+  Hour 9: Min=0.0000, Max=0.0000, Range=NaN
+  Hour 10: Min=37.8371, Max=39.3439, Range=1.5068
+  Hour 11: Min=37.5714, Max=38.1148, Range=0.5434
+  Hour 12: Min=37.0833, Max=37.9358, Range=0.8525
+  Hour 13: Min=36.3443, Max=38.1188, Range=1.7745
+  Hour 14: Min=36.3754, Max=37.8503, Range=1.4749
+  Hour 15: Min=36.5304, Max=38.5770, Range=2.0466
+  Hour 16: Min=36.3941, Max=39.1058, Range=2.7117
+  Hour 17: Min=37.7064, Max=38.1300, Range=0.4236
+  Hour 18: Min=37.0893, Max=37.4392, Range=0.3499
+  Hour 19: Min=35.9725, Max=35.9725, Range=0.0000
+  Hour 20: Min=0.0000, Max=0.0000, Range=NaN
+  Hour 21: Min=0.0000, Max=0.0000, Range=NaN
+  Hour 22: Min=0.0000, Max=0.0000, Range=NaN
+  Hour 23: Min=0.0000, Max=0.0000, Range=NaN
+Hour 2 raw values (first 10): 37.8091, 37.4939, 37.6227, 37.3339, 37.3563, 37.3863, 37.8179, 37.4708, 38.2338, 38.3951
+Hour 2 total value count: 11
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
+OnHourlyDisplayModeChanged: Setting UseFrequencyShading to True
+OnHourlyDisplayModeChanged: ChartState.UseFrequencyShading = True
+OnHourlyDisplayModeChanged: Refreshing chart with useFrequencyShading=True
+[ShouldUseCms] Global CMS disabled: UseCmsData=False
+[CMS] HourlyDistribution: PrimarySamples=0 (filtered), TotalPrimarySamples=0, SecondarySamples=0 (filtered), TotalSecondarySamples=0
+[CutOver] Strategy=HourlyDistribution, UseCms=False, PrimaryCms=NULL, SecondaryCms=NULL, DateRange=[2023-08-15 to 2024-01-02]
