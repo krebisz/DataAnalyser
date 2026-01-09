@@ -3,6 +3,16 @@
 **Test Date:** Based on output.txt analysis  
 **Test Scope:** All strategies tested with 1, 2, and 4 metric subtypes, with and without CMS enabled
 
+## Update (2026-01-09)
+
+This audit reflects a historical run. Since then:
+
+- CMS toggles were added to the UI (global + per-strategy).
+- Canonical mapping now uses a subtype-aware mapping table.
+- Orchestration now routes through `StrategyCutOverService`.
+
+Re-run the audit to confirm current reachability and CMS usage.
+
 ## Critical Finding
 
 **⚠️ Global CMS was disabled for all tests** (`UseCmsData=False`)

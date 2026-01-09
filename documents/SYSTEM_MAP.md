@@ -211,7 +211,7 @@ The orchestration layer coordinates strategies within the unified pipeline:
 
 **StrategyCutOverService**:
 
-- **STATUS**: ‚úÖ COMPLETE - Implemented and registered for all 8 strategy types
+- **STATUS**: ‚úÖ COMPLETE - Implemented and registered for all 9 strategy types
 - Single decision point for legacy vs CMS
 - Unified cut-over mechanism for all strategies
 - Parity validation support included
@@ -230,18 +230,18 @@ The orchestration layer coordinates strategies within the unified pipeline:
 
 **Solution**: Phase 3.5 - Orchestration Layer Assessment
 
-**Status**: 70% COMPLETE - Major infrastructure in place
+**Status**: 70% COMPLETE - Major infrastructure in place, reachability verification pending
 
 **Completed**:
-- ‚úÖ StrategyCutOverService implemented for all 8 strategy types
-- ‚úÖ ChartRenderingOrchestrator uses unified cut-over mechanism
-- ‚úÖ ChartDataContextBuilder preserves CMS (doesn't convert)
-- ‚úÖ WeeklyDistributionService migrated to use StrategyCutOverService
-- ‚úÖ ChartUpdateCoordinator handles strategies generically
+- Éo. StrategyCutOverService implemented for all 9 strategy types
+- Éo. ChartRenderingOrchestrator uses unified cut-over mechanism
+- Éo. ChartDataContextBuilder preserves CMS (doesn't convert)
+- Éo. WeeklyDistributionService migrated to use StrategyCutOverService
+- Éo. ChartUpdateCoordinator handles strategies generically
 
 **Remaining**:
-- ‚è≥ StrategySelectionService cleanup (1 direct instantiation)
-- ‚è≥ Verify all code paths use StrategyCutOverService
+- Éo. StrategySelectionService cleanup resolved
+- É?¸ Verify all code paths use StrategyCutOverService
 
 ### 7D.4 Boundaries
 
@@ -472,8 +472,12 @@ The UI/Presentation layer provides visualization and user interaction for comput
 
 **Chart-Specific Controllers**:
 
-- `MainChartController` - Main metrics chart (migrated to new structure)
-- Future: `NormalizedChartController`, `DiffRatioChartController`, etc.
+- `MainChartController` - Main metrics chart
+- `NormalizedChartController` - Normalized chart
+- `DiffRatioChartController` - Difference/ratio chart
+- `WeekdayTrendChartController` - Weekday trend chart
+- `DistributionChartController` - Weekly/hourly distribution chart
+- `TransformDataPanelController` - Transform results panel
 
 **Benefits**:
 
@@ -508,20 +512,16 @@ The UI/Presentation layer provides visualization and user interaction for comput
 **Completed**:
 
 - ChartPanelController component created (reusable base component)
-- MainChartController migrated (1/6 charts - proof of concept)
-- ChartDiffRatio unified (ChartDiff + ChartRatio ‚Üí single chart with operation toggle)
+- All chart controllers migrated to controller-based panels (Main, Normalized, DiffRatio, WeekdayTrend, Distribution, Transform)
+- ChartDiffRatio unified (ChartDiff + ChartRatio É≈' single chart with operation toggle)
 - IChartRenderingContext interface created (decouples controllers from MainWindow)
 - ChartRenderingContextAdapter created (bridges MainWindow/ViewModel to interface)
 
-**Remaining** (5 charts, 25% complete):
+**Remaining** (validation only):
 
-- ChartNorm (Normalized chart)
-- ChartDiffRatio (unified but not migrated to controller structure)
-- ChartWeekdayTrend (Weekday trend chart)
-- ChartWeekly (Weekly distribution chart)
-- TransformPanel (Transform results panel)
+- Repository / persistence validation
 
-**Impact**: ~50+ lines of duplicate UI code eliminated per migrated chart, ~250+ lines remaining to eliminate.
+**Impact**: ~50+ lines of duplicate UI code eliminated per migrated chart, chart panels consolidated.
 
 ### 7E.6 Boundaries
 
@@ -558,3 +558,8 @@ Correctness without observability is treated as non-existence.
 ---
 
 End of SYSTEM MAP
+
+
+
+
+

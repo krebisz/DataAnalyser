@@ -55,40 +55,44 @@ CMS produces deterministic, independently verifiable outputs.
 
 ### Phase 3 — Strategy Migration
 
-**Status:** MOSTLY COMPLETE (90%) - ORCHESTRATION GAP ADDRESSED
+**Status:** PARTIALLY COMPLETE (55%) - ORCHESTRATION GAP ADDRESSED
 
-Migrated strategies:
+CMS-wired strategies:
 
 - SingleMetricStrategy (unified - handles both CMS and legacy)
 - CombinedMetricStrategy (unified - handles both CMS and legacy)
+- WeeklyDistributionStrategy (CMS implementation via CmsWeeklyDistributionStrategy)
+- WeekdayTrendStrategy (unified - handles both CMS and legacy)
+- HourlyDistributionStrategy (CMS implementation via CmsHourlyDistributionStrategy)
+
+Pending CMS wiring (factory TODOs):
+
 - MultiMetricStrategy
 - DifferenceStrategy
 - RatioStrategy
 - NormalizedStrategy
-- WeeklyDistributionStrategy
-- WeekdayTrendStrategy
 
 **What Was Completed:**
 
-- All 8 strategies implemented in CMS
+- 5 of 9 strategies implemented in CMS and wired via factories
 - Strategies validated independently (unit tests)
-- Strategies pass parity tests in isolation
+- Strategies pass parity tests in isolation where harnesses exist
 - **Strategy consolidation**: SingleMetric and CombinedMetric unified (single class with dual constructors)
-- **Factory pattern consolidation**: StrategyFactoryBase created, all 8 factories refactored
+- **Factory pattern consolidation**: StrategyFactoryBase created, all 9 factories refactored
 - **Code abstraction**: Common patterns extracted to shared helpers
 
 **Orchestration Gap Status:**
 
 - **ADDRESSED**: Phase 3.5 work has significantly progressed (70% complete)
-- StrategyCutOverService implemented for all 8 strategy types
+- StrategyCutOverService implemented for all 9 strategy types
 - ChartRenderingOrchestrator uses unified cut-over mechanism
 - ChartDataContextBuilder preserves CMS (doesn't convert to legacy)
 - WeeklyDistributionService migrated to use StrategyCutOverService
 
 **Remaining Work:**
 
-- Minor cleanup: StrategySelectionService still has 1 direct instantiation
-- Verify all code paths use StrategyCutOverService
+1. DONE **StrategySelectionService** - Direct instantiation removed (resolved in code)
+   - Minor cleanup complete
 
 **Original Closure Condition (Flawed):**  
 Strategies compile, execute in isolation, and match expected semantics.
@@ -97,7 +101,7 @@ Strategies compile, execute in isolation, and match expected semantics.
 Strategies compile, execute in isolation, AND work correctly in unified pipeline with migrated orchestration layer.
 
 **Current Status:**  
-90% complete - orchestration infrastructure in place, minor cleanup remaining.
+55% complete - orchestration infrastructure in place; cleanup resolved, reachability verification pending; CMS wiring pending for 4 strategies.
 
 ---
 
@@ -159,9 +163,9 @@ Legacy-dependent strategies:
 - CMS versions of strategies exist
 - Unit tests and parity harnesses exist
 - Strategy logic correctness largely verified
-- **Service/UI cut-over NOT completed**
+- **Service/UI cut-over completed; reachability verification pending**
 - **Execution reachability NOT universally guaranteed**
-- **Legacy remains authoritative at orchestration level**
+- **Legacy remains default unless CMS toggles are enabled**
 
 This phase exposed **systemic execution-locus ambiguity**, now addressed by protocol updates.
 
@@ -213,7 +217,7 @@ Phase 3 migrated strategies in isolation, but the orchestration layer was never 
 
 **Completed Work:**
 
-1. ✅ **StrategyCutOverService** - Implemented and registered for all 8 strategy types
+1. ✅ **StrategyCutOverService** - Implemented and registered for all 9 strategy types
    - Unified cut-over mechanism established
    - Parity validation support included
    - Factory-based strategy creation
@@ -230,8 +234,8 @@ Phase 3 migrated strategies in isolation, but the orchestration layer was never 
 
 **Remaining Work:**
 
-1. ⏳ **StrategySelectionService** - Still has 1 direct instantiation (`new MultiMetricStrategy`)
-   - Minor cleanup: Replace with StrategyCutOverService call
+1. DONE **StrategySelectionService** - Direct instantiation removed (resolved in code)
+   - Minor cleanup complete
 2. ⏳ **Verification** - Verify all code paths use StrategyCutOverService
    - Search for any remaining direct strategy instantiations
 
@@ -247,13 +251,13 @@ Phase 3 migrated strategies in isolation, but the orchestration layer was never 
 - ✅ `ChartDataContextBuilder` - Preserves CMS, doesn't convert (COMPLETE)
 - ✅ `ChartUpdateCoordinator` - Handles CMS data directly (COMPLETE)
 - ✅ `ChartRenderingOrchestrator` - Uses unified cut-over (COMPLETE)
-- ⏳ `StrategySelectionService` - Minor cleanup needed (IN PROGRESS)
+- DONE StrategySelectionService - Cleanup complete (RESOLVED)
 
 **Closure Condition:**
 
 - ✅ Orchestration layer handles CMS directly (no conversion) - ACHIEVED
 - ✅ Unified cut-over mechanism established and tested - ACHIEVED
-- ⏳ All code paths use unified cut-over - MINOR CLEANUP REMAINING
+- ⏳ All code paths use unified cut-over - REACHABILITY VERIFICATION PENDING
 - ✅ Strategies work in unified pipeline context - ACHIEVED
 
 **Guardrail:**
@@ -263,7 +267,7 @@ Phase 3 migrated strategies in isolation, but the orchestration layer was never 
 - Test strategies in unified pipeline, not just isolation
 
 **Current Status:**  
-70% complete - major infrastructure in place, minor cleanup remaining.
+70% complete - major infrastructure in place, reachability verification pending.
 
 ---
 
@@ -305,7 +309,7 @@ Reorganize codebase structure, consolidate duplicate implementations, and extrac
 2. **File Consolidation (100%)**:
 
    - Strategy consolidation: SingleMetric and CombinedMetric unified (single class with dual constructors)
-   - Factory pattern consolidation: StrategyFactoryBase created, all 8 factories refactored
+   - Factory pattern consolidation: StrategyFactoryBase created, all 9 factories refactored
    - Helper merging: TransformDataHelper merged into TransformExpressionEvaluator
    - ~150+ lines of duplicate code eliminated
 
@@ -337,27 +341,22 @@ All files reorganized, strategies consolidated, factories unified, common patter
 
 ### Phase 7 — UI / State / Integration
 
-**Status:** IN PROGRESS (25%)
+**Status:** COMPLETE - chart panels migrated, validation pending
 
 **Completed Work**:
 
 - ChartPanelController component created (reusable chart panel structure)
-- MainChartController migrated (1/6 charts to new structure)
+- MainChartController migrated (controller-based)
 - ChartDiffRatio unified (ChartDiff + ChartRatio → single chart with operation toggle)
 - TransformOperationRegistry enhanced (added "Divide" operation)
 - IChartRenderingContext interface created (decouples chart controllers from MainWindow)
 - ChartRenderingContextAdapter created (bridges MainWindow/ViewModel to IChartRenderingContext)
 
-**Remaining Work**:
+**Remaining Work (Validation):**
 
-- Migrate 5 remaining chart panels to ChartPanelController:
-  - ChartNorm (Normalized chart)
-  - ChartDiffRatio (Diff/Ratio chart - unified but not migrated to controller)
-  - ChartWeekdayTrend (Weekday trend chart)
-  - ChartWeekly (Weekly distribution chart)
-  - TransformPanel (Transform results panel)
-- ViewModel tests
-- State container validation
+- DONE Migrate remaining chart panels to ChartPanelController (Normalized, DiffRatio, WeekdayTrend, Weekly, Transform)
+- DONE ViewModel tests
+- DONE State container validation
 - Repository / persistence validation
 
 **Impact**:
@@ -365,7 +364,7 @@ All files reorganized, strategies consolidated, factories unified, common patter
 - ~50+ lines of duplicate UI code eliminated per migrated chart
 - Foundation established for standardizing all chart panels
 - Clear path to eliminate ~250+ more lines of duplicate UI code
-- 1/6 charts migrated, 5 remaining
+- 6/6 charts migrated, chart panels consolidated
 
 **Guardrail:**
 
@@ -382,10 +381,10 @@ All files reorganized, strategies consolidated, factories unified, common patter
 → ✅ Orchestration layer handles CMS directly - COMPLETE
 → ✅ ChartRenderingOrchestrator uses unified cut-over - COMPLETE
 → ✅ WeeklyDistributionStrategy CMS cut-over - COMPLETE
-→ ⏳ StrategySelectionService cleanup (minor) - IN PROGRESS
+- DONE StrategySelectionService - Cleanup complete (RESOLVED)
 → ⏳ Verify all code paths use StrategyCutOverService - IN PROGRESS
-→ **Then**: Complete Phase 3.5 (minor cleanup)
-→ **Then**: WeekdayTrendStrategy CMS cut-over (if needed)
+? **Then**: Complete Phase 3.5 (reachability verification)
+→ **Then**: WeekdayTrendStrategy CMS cut-over available; verify reachability
 → **Then**: Strategy-level parity confirmation in pipeline context
 → **Then**: Phase 4 closure  
 → **Then**: Phase 6 eligibility
@@ -418,22 +417,25 @@ All files reorganized, strategies consolidated, factories unified, common patter
 
 ---
 
-**Last Updated:** 2025-01-XX  
+**Last Updated:** 2026-01-09  
 **Overall Status:**
 
-- Phase 3.5 (Orchestration Assessment): 70% complete - major infrastructure in place, minor cleanup remaining
-- Phase 3 (Strategy Migration): 90% complete - all strategies have CMS implementations, factory pattern established
-- Phase 4: 85% complete - Phase 4A and 4B complete, Phase 4C at 75%
-- Phase 7 (UI/State/Integration): 25% complete - 1/6 charts migrated, foundation established
+- Phase 3.5 (Orchestration Assessment): 70% complete - major infrastructure in place, reachability verification pending
+- Phase 3 (Strategy Migration): 55% complete - 5 of 9 strategies wired for CMS, factory pattern established
+- Phase 4: 80% complete - Phase 4A and 4B complete, Phase 4C at 75%
+- Phase 7 (UI/State/Integration): complete - chart panels migrated, validation pending
 - **Refactoring Plan**: 100% complete - file reorganization, consolidation, and code abstraction all complete
 
 **Recent Achievements:**
-
+- Chart panel controllers migrated for all charts`r`n
 - Complete file reorganization per architectural layers
 - Strategy consolidation (SingleMetric, CombinedMetric unified)
 - Factory pattern consolidation (StrategyFactoryBase)
 - Code abstraction (common patterns extracted to shared helpers)
 - ~450+ lines of duplicate code eliminated
-- StrategyCutOverService implemented for all 8 strategy types
+- StrategyCutOverService implemented for all 9 strategy types
 - ChartRenderingOrchestrator migrated to use unified cut-over
 - ChartDataContextBuilder preserves CMS (doesn't convert)
+
+
+

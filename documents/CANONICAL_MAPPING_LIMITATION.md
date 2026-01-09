@@ -4,6 +4,17 @@
 
 The canonical metric mapping system (`CanonicalMetricMapping`) does not currently distinguish between metric subtypes when mapping to canonical IDs. This creates a fundamental limitation when attempting to use CMS (Canonical Metric Series) data for multi-subtype scenarios.
 
+## Update (2026-01-09)
+
+This limitation has been addressed in the current codebase:
+
+- Canonical mappings are now sourced from a runtime mapping table (`CanonicalMetricMappings`).
+- Canonical IDs are subtype-aware and follow `<metric>.<metric subtype>` in lowercase.
+- Empty subtypes are represented as `(all)` to preserve the `<metric>.<subtype>` shape.
+- The table is auto-seeded from distinct `HealthMetrics` metric/subtype pairs.
+
+This document is retained as historical context; the limitation described below applies to pre-mapping-table implementations.
+
 ## Root Cause
 
 ### Current Implementation
@@ -38,7 +49,7 @@ When multiple subtypes of the same metric type are selected (e.g., "weight" and 
 - **Secondary Subtype**: "fat_free_mass" → also maps to `"metric.body_weight"`
 - **Result**: Both CMS series contain identical aggregated weight data (171 samples with same values)
 
-## Why This Is a Design Limitation
+## Why This Is a Design Limitation (Historical Context)
 
 This is not a wiring bug, but a **fundamental architectural limitation**:
 
@@ -137,10 +148,10 @@ The `CombinedMetricCmsStrategy` does not correctly handle cases where the two in
 
 ## Status
 
-- **Current State**: Single-subtype CMS support works correctly
-- **Multi-Subtype**: Blocked by this limitation
-- **Weekly Distribution**: Works for single subtype (primary metric only, as designed)
-- **Parity Tests**: 13/14 passing (1 known failure with mismatched counts)
+- **Current State**: Subtype-aware canonical mapping is in place via mapping table
+- **Multi-Subtype**: No longer blocked by canonical ID collisions (data availability and reachability still apply)
+- **Weekly Distribution**: CMS path depends on reachability and CMS data availability
+- **Parity Tests**: Verify current results against the latest test run
 
 ---
 

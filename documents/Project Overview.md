@@ -136,7 +136,7 @@ This reflects **actual implementation state**, not aspiration.
 ---
 
 ### Phase 3 — Canonical Identity & CMS Integration  
-**Complete**
+**Mostly Complete (55%)**
 
 - CMS produced alongside legacy outputs
 - Identity and semantics stabilized
@@ -145,15 +145,15 @@ This reflects **actual implementation state**, not aspiration.
 ---
 
 ### Phase 4 — Consumer Adoption & Visualization Integration  
-**In Progress (~85%)**
+**In Progress (~80%)**
 
 DataVisualiser currently:
 
 - Consumes CMS through an explicit dependency surface
 - Supports **parallel CMS and legacy execution paths**
-- Migrates strategies incrementally (90% complete - all 8 strategies have CMS implementations)
+- Migrates strategies incrementally (55% complete - 5 of 9 strategies wired for CMS; 4 pending)
 - Uses parity harnesses to validate equivalence without forced cut-over
-- **Orchestration layer migration in progress** (70% complete - StrategyCutOverService implemented)
+- **Orchestration layer migration in progress** (70% complete - StrategyCutOverService implemented; reachability verification pending)
 - Provides **user-defined metric transformations**:
   - Unary: Logarithm, Square Root
   - Binary: Add, Subtract, Divide (Ratio)
@@ -174,7 +174,7 @@ Parity is treated as a **phase obligation**, not an implementation detail.
 **Recent Progress:**
 - Phase 4A (Core Strategy Parity): Complete - 3 parity test suites passing
 - Phase 4B (Transform Pipeline Parity): Complete - "Divide" operation added
-- Phase 4C (Weekly/Temporal Migration): 75% complete - strategies exist, service cut-over completed, UI integration pending
+- Phase 4C (Weekly/Temporal Migration): 75% complete - strategies exist, service cut-over completed, UI integration complete, reachability verification pending
 
 ---
 
@@ -259,19 +259,20 @@ Additive clarification based on recent execution experience.
 - Partial migrations are expected and acceptable
 - Non-reachable logic is treated as **non-existent**
 
-**Current Migration Status (2025-01-XX):**
+**Current Migration Status (2026-01-09):**
 
-- **Strategy Migration (Phase 3)**: 90% complete
-  - All 8 strategies have CMS implementations and factory support
+- **Strategy Migration (Phase 3)**: 55% complete
+  - 5 of 9 strategies have CMS implementations and factory support
   - StrategyCutOverService implemented for unified cut-over
-  - Minor cleanup remaining (1 direct instantiation in StrategySelectionService)
+  - Minor cleanup resolved (StrategySelectionService direct instantiation removed)
+  - Pending CMS factory wiring: MultiMetric, Normalized, Difference, Ratio
   
 - **Orchestration Assessment (Phase 3.5)**: 70% complete
   - StrategyCutOverService implemented and registered for all strategy types
   - ChartRenderingOrchestrator uses unified cut-over mechanism
   - ChartDataContextBuilder preserves CMS (doesn't convert to legacy)
   - WeeklyDistributionService migrated to use StrategyCutOverService
-  - Minor cleanup remaining (StrategySelectionService)
+  - Reachability verification pending (StrategySelectionService cleanup resolved)
 
 - **File Reorganization & Code Abstraction**: 100% complete
   - All files reorganized per architectural layers
@@ -281,6 +282,19 @@ Additive clarification based on recent execution experience.
   - ~450+ lines of duplicate code eliminated
 
 This document reflects **state**, not guarantee.
+
+---
+
+## 8A. Recent State Alignment (Additive)
+
+Additive clarification based on current repo state.
+
+- **Phase 3.5 cleanup**: StrategySelectionService direct instantiation removed; unified cut-over usage confirmed in code.
+- **Phase 7 UI consolidation**: Chart panels are now controller-based across all charts (Main, Normalized, DiffRatio, WeekdayTrend, Distribution, Transform).
+- **Declarative mapping**: Canonical identity mapping resolved via runtime mapping table; hardcoded lists treated as temporary only.
+- **Pending CMS wiring**: MultiMetric, Normalized, Difference, Ratio still route to legacy via factory TODOs.
+
+This section updates status interpretation without changing binding constraints.
 
 ---
 
@@ -294,3 +308,8 @@ The system favors **trust, auditability, and long-term coherence** over speed or
 ---
 
 End of Project Overview
+
+
+
+
+

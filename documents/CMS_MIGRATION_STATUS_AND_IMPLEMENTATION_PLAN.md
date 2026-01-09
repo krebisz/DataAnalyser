@@ -16,6 +16,17 @@
 
 ---
 
+## Update (2026-01-09)
+
+Additive alignment with current repo state:
+
+- Strategy cut-over is centralized in `StrategyCutOverService` and used by orchestration.
+- CMS toggles exist in the UI (global + per-strategy) for reachability testing.
+- Canonical ID mapping is now subtype-aware and sourced from the runtime mapping table.
+- Factory TODOs remain for **MultiMetric**, **Normalized**, **Difference**, **Ratio**.
+
+---
+
 ## Part 1: Migration Status Overview
 
 ### ✅ Migrated Strategies (Ready to Test)
@@ -507,4 +518,6 @@ If `UseCms=False`, check:
 - Reference `CombinedMetricStrategy` for dual-series patterns
 - Reference `SingleMetricStrategy` for single-series patterns
 - Check factory base class for delegate patterns
+
+
 
