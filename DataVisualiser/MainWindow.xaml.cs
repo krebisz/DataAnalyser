@@ -100,11 +100,11 @@ public partial class MainWindow : Window
 
         try
         {
-            if (NormZeroToOneRadio.IsChecked == true)
+            if (NormalizedChartController.NormZeroToOneRadio.IsChecked == true)
                 _viewModel.SetNormalizationMode(NormalizationMode.ZeroToOne);
-            else if (NormPercentOfMaxRadio.IsChecked == true)
+            else if (NormalizedChartController.NormPercentOfMaxRadio.IsChecked == true)
                 _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
-            else if (NormRelativeToMaxRadio.IsChecked == true)
+            else if (NormalizedChartController.NormRelativeToMaxRadio.IsChecked == true)
                 _viewModel.SetNormalizationMode(NormalizationMode.RelativeToMax);
 
             if (_viewModel.ChartState.IsNormalizedVisible && _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
@@ -112,7 +112,7 @@ public partial class MainWindow : Window
                 var ctx = _viewModel.ChartState.LastContext;
 
                 var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1, ctx.Data2, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartNorm, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400);
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400);
             }
         }
         catch
@@ -193,7 +193,7 @@ public partial class MainWindow : Window
         }
 
         // Update button enabled states (this is UI-only, not part of the rendering pipeline)
-        ChartNormToggleButton.IsEnabled = hasSecondaryData;
+        NormalizedChartController.ToggleButton.IsEnabled = hasSecondaryData;
         DiffRatioChartController.ToggleButton.IsEnabled = hasSecondaryData;
     }
 
@@ -303,7 +303,7 @@ public partial class MainWindow : Window
                 MainChartController.Panel.IsChartVisible = e.ShowMain;
                 break;
             case "Norm":
-                UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
+                NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
                 break;
             case "DiffRatio":
                 DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
@@ -352,7 +352,7 @@ public partial class MainWindow : Window
 
         // Update visibility for all charts (just UI state, doesn't clear data)
         MainChartController.Panel.IsChartVisible = e.ShowMain;
-        UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
+        NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
         DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
         DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
         UpdateDistributionChartTypeVisibility();
@@ -496,7 +496,7 @@ public partial class MainWindow : Window
         else
         {
             // Clear charts that require secondary data when no secondary data exists
-            ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+            ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
             ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         }
 
@@ -753,7 +753,7 @@ public partial class MainWindow : Window
 
     private void ClearSecondaryChartsAndReturn()
     {
-        ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+        ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(DistributionChartController.Chart);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
@@ -765,7 +765,7 @@ public partial class MainWindow : Window
         if (_chartRenderingOrchestrator == null)
             return Task.CompletedTask;
 
-        return _chartRenderingOrchestrator.RenderNormalizedChartAsync(ctx, ChartNorm, _viewModel.ChartState);
+        return _chartRenderingOrchestrator.RenderNormalizedChartAsync(ctx, NormalizedChartController.Chart, _viewModel.ChartState);
     }
 
     /// <summary>
@@ -1103,7 +1103,7 @@ public partial class MainWindow : Window
     {
         return chartName switch
         {
-                "Norm" => ChartNormContentPanel,
+                "Norm" => NormalizedChartController.Panel.ChartContentPanel,
                 "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
                 "Distribution" => DistributionChartController.Panel.ChartContentPanel,
                 "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
@@ -1249,7 +1249,7 @@ public partial class MainWindow : Window
     private void ClearAllCharts()
     {
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+        ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(DistributionChartController.Chart);
         ClearDistributionPolarChart();
@@ -1323,6 +1323,10 @@ public partial class MainWindow : Window
         WeekdayTrendChartController.SubtypeChanged += OnWeekdayTrendSubtypeChanged;
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
+        NormalizedChartController.ToggleRequested += OnChartNormToggleRequested;
+        NormalizedChartController.NormZeroToOneRadio.Checked += OnNormalizationModeChanged;
+        NormalizedChartController.NormPercentOfMaxRadio.Checked += OnNormalizationModeChanged;
+        NormalizedChartController.NormRelativeToMaxRadio.Checked += OnNormalizationModeChanged;
         DistributionChartController.ToggleRequested += OnDistributionToggleRequested;
         DistributionChartController.ChartTypeToggleButton.Click += OnDistributionChartTypeToggleRequested;
         DistributionChartController.ModeCombo.SelectionChanged += OnDistributionModeChanged;
@@ -1529,14 +1533,14 @@ public partial class MainWindow : Window
         var chartLabels = new Dictionary<CartesianChart, string>
         {
                 { MainChartController.Chart, "Main" },
-                { ChartNorm, "Norm" },
+                { NormalizedChartController.Chart, "Norm" },
                 { DiffRatioChartController.Chart, "DiffRatio" },
                 { TransformDataPanelController.ChartTransformResult, "Transform" }
         };
 
         _tooltipManager = new ChartTooltipManager(this, chartLabels);
         _tooltipManager.AttachChart(MainChartController.Chart, "Main");
-        _tooltipManager.AttachChart(ChartNorm, "Norm");
+        _tooltipManager.AttachChart(NormalizedChartController.Chart, "Norm");
         _tooltipManager.AttachChart(DiffRatioChartController.Chart, "DiffRatio");
         _tooltipManager.AttachChart(TransformDataPanelController.ChartTransformResult, "Transform");
     }
@@ -1622,7 +1626,7 @@ public partial class MainWindow : Window
     {
         ChartHelper.InitializeChartBehavior(MainChartController.Chart);
         InitializeDistributionChartBehavior(DistributionChartController.Chart);
-        ChartHelper.InitializeChartBehavior(ChartNorm);
+        ChartHelper.InitializeChartBehavior(NormalizedChartController.Chart);
         ChartHelper.InitializeChartBehavior(DiffRatioChartController.Chart);
     }
 
@@ -1649,7 +1653,7 @@ public partial class MainWindow : Window
     {
         // Clear charts on startup to prevent gibberish tick labels
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
+        ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(DistributionChartController.Chart);
         ClearDistributionPolarChart();
@@ -1676,7 +1680,7 @@ public partial class MainWindow : Window
     private void DisableAxisLabelsWhenNoData()
     {
         DisableAxisLabels(MainChartController.Chart);
-        DisableAxisLabels(ChartNorm);
+        DisableAxisLabels(NormalizedChartController.Chart);
         DisableAxisLabels(DiffRatioChartController.Chart);
         DisableDistributionAxisLabels(DistributionChartController.Chart);
         DisableDistributionPolarAxisLabels();
@@ -1710,7 +1714,7 @@ public partial class MainWindow : Window
     private void SetDefaultChartTitles()
     {
         MainChartController.Panel.Title = "Metrics: Total";
-        ChartNormTitle.Text = "Metrics: Normalized";
+        NormalizedChartController.Panel.Title = "Metrics: Normalized";
         DiffRatioChartController.Panel.Title = "Difference / Ratio";
         UpdateDiffRatioOperationButton(); // Initialize button state
     }
@@ -1907,7 +1911,7 @@ public partial class MainWindow : Window
         _viewModel.ToggleMain();
     }
 
-    private void OnChartNormToggle(object sender, RoutedEventArgs e)
+    private void OnChartNormToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleNorm();
     }
@@ -2385,7 +2389,7 @@ public partial class MainWindow : Window
     {
         var mainChart = MainChartController.Chart;
         ChartHelper.ResetZoom(mainChart);
-        ChartHelper.ResetZoom(ChartNorm);
+        ChartHelper.ResetZoom(NormalizedChartController.Chart);
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
         ResetDistributionChartZoom(DistributionChartController.Chart);
         ResetDistributionPolarZoom();
@@ -2485,7 +2489,7 @@ public partial class MainWindow : Window
         _viewModel.ChartState.RightTitle = rightName;
 
         MainChartController.Panel.Title = $"{leftName} vs. {rightName}";
-        ChartNormTitle.Text = $"{leftName} ~ {rightName}";
+        NormalizedChartController.Panel.Title = $"{leftName} ~ {rightName}";
         DiffRatioChartController.Panel.Title = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
     }
 
@@ -2825,6 +2829,7 @@ public partial class MainWindow : Window
 
     #endregion
 }
+
 
 
 

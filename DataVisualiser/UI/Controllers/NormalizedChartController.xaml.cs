@@ -1,0 +1,39 @@
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using WpfCartesianChart = LiveCharts.Wpf.CartesianChart;
+
+namespace DataVisualiser.UI.Controllers;
+
+/// <summary>
+///     Controller for the normalized chart panel.
+/// </summary>
+public partial class NormalizedChartController : UserControl
+{
+    public NormalizedChartController()
+    {
+        InitializeComponent();
+
+        PanelController.Title = "ChartNorm";
+        PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
+
+        RootGrid.Children.Remove(BehavioralControlsPanel);
+        RootGrid.Children.Remove(ChartContentPanelRoot);
+        PanelController.SetBehavioralControls(BehavioralControlsPanel);
+        PanelController.SetChartContent(ChartContentPanelRoot);
+    }
+
+    public ChartPanelController Panel => PanelController;
+
+    public Button ToggleButton => PanelController.ToggleButtonControl;
+
+    public RadioButton NormZeroToOneRadio => NormZeroToOneRadioControl;
+
+    public RadioButton NormPercentOfMaxRadio => NormPercentOfMaxRadioControl;
+
+    public RadioButton NormRelativeToMaxRadio => NormRelativeToMaxRadioControl;
+
+    public WpfCartesianChart Chart => ChartNormControl;
+
+    public event EventHandler? ToggleRequested;
+}
