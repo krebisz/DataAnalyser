@@ -85,6 +85,12 @@ public partial class MainWindowViewModel
         RequestChartUpdate(false, "Distribution");
     }
 
+    public void SetDistributionSubtype(string? subtype)
+    {
+        ChartState.SelectedDistributionSubtype = subtype;
+        RequestChartUpdate(false, "Distribution");
+    }
+
     public void SetDistributionFrequencyShading(DistributionMode mode, bool useFrequencyShading)
     {
         ChartState.GetDistributionSettings(mode).UseFrequencyShading = useFrequencyShading;

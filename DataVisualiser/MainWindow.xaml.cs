@@ -8,6 +8,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
@@ -43,6 +44,8 @@ public partial class MainWindow : Window
     private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
     private DistributionPolarRenderingService _distributionPolarRenderingService = null!;
     private ToolTip _distributionPolarTooltip = null!;
+    private readonly Dictionary<string, IReadOnlyList<MetricData>> _distributionSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private bool _isUpdatingDistributionSubtypeCombo;
 
     private string _connectionString = null!;
     private HourlyDistributionService _hourlyDistributionService = null!;
@@ -145,6 +148,7 @@ public partial class MainWindow : Window
         }
 
         _viewModel.SetSelectedSubtypes(selectedSubtypes);
+        UpdateDistributionSubtypeOptions();
 
         // Update button states based on selected subtype count
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypes.Count);
@@ -666,9 +670,16 @@ public partial class MainWindow : Window
         if (!_viewModel.ChartState.IsDistributionVisible)
             return;
 
+        var selectedSubtype = ResolveSelectedDistributionSubtype(ctx);
+        var data = await ResolveDistributionDataAsync(ctx, selectedSubtype);
+        if (data == null || data.Count == 0)
+            return;
+
+        var displayName = ResolveDistributionDisplayName(ctx, selectedSubtype);
+
         if (_viewModel.ChartState.IsDistributionPolarMode)
         {
-            await RenderDistributionPolarChart(ctx, mode);
+            await RenderDistributionPolarChart(ctx, mode, data, displayName);
             return;
         }
 
@@ -677,12 +688,21 @@ public partial class MainWindow : Window
 
         if (_chartRenderingOrchestrator != null)
         {
-            await _chartRenderingOrchestrator.RenderDistributionChartAsync(ctx, chart, _viewModel.ChartState, mode);
+            var distributionContext = new ChartDataContext
+            {
+                    Data1 = data,
+                    DisplayName1 = displayName,
+                    MetricType = ctx.MetricType,
+                    PrimarySubtype = selectedSubtype,
+                    From = ctx.From,
+                    To = ctx.To
+            };
+            await _chartRenderingOrchestrator.RenderDistributionChartAsync(distributionContext, chart, _viewModel.ChartState, mode);
             return;
         }
 
         var service = GetDistributionService(mode);
-        await service.UpdateDistributionChartAsync(chart, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+        await service.UpdateDistributionChartAsync(chart, data, displayName, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
@@ -697,16 +717,76 @@ public partial class MainWindow : Window
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
-    private async Task RenderDistributionPolarChart(ChartDataContext ctx, DistributionMode mode)
+    private async Task RenderDistributionPolarChart(ChartDataContext ctx, DistributionMode mode, IReadOnlyList<MetricData> data, string displayName)
     {
         var service = GetDistributionService(mode);
-        var rangeResult = await service.ComputeSimpleRangeAsync(ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To);
+        var rangeResult = await service.ComputeSimpleRangeAsync(data, displayName, ctx.From, ctx.To);
         if (rangeResult == null)
             return;
 
         var definition = DistributionModeCatalog.Get(mode);
         _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, ChartDistributionPolar);
         ChartDistributionPolar.Tag = new DistributionPolarTooltipState(definition, rangeResult);
+    }
+
+    private async Task<IReadOnlyList<MetricData>?> ResolveDistributionDataAsync(ChartDataContext ctx, string? selectedSubtype)
+    {
+        if (ctx.Data1 == null)
+            return null;
+
+        if (string.IsNullOrWhiteSpace(selectedSubtype))
+            return ctx.Data1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.Data1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.Data2 ?? ctx.Data1;
+
+        var metricType = ctx.MetricType ?? _viewModel.MetricState.SelectedMetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return ctx.Data1;
+
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var cacheKey = BuildDistributionCacheKey(metricType, selectedSubtype, ctx.From, ctx.To, tableName);
+        if (_distributionSubtypeCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(metricType, selectedSubtype, null, ctx.From, ctx.To, tableName);
+        var data = primaryData.ToList();
+        _distributionSubtypeCache[cacheKey] = data;
+        return data;
+    }
+
+    private string? ResolveSelectedDistributionSubtype(ChartDataContext ctx)
+    {
+        var selectedSubtype = _viewModel.ChartState.SelectedDistributionSubtype;
+        if (!string.IsNullOrWhiteSpace(selectedSubtype))
+            return selectedSubtype;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype))
+            return ctx.PrimarySubtype;
+
+        return null;
+    }
+
+    private static string ResolveDistributionDisplayName(ChartDataContext ctx, string? selectedSubtype)
+    {
+        if (string.IsNullOrWhiteSpace(selectedSubtype))
+            return ctx.DisplayName1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.DisplayName1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.DisplayName2;
+
+        return selectedSubtype;
+    }
+
+    private static string BuildDistributionCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
+    {
+        return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
     }
 
     private BaseDistributionService GetDistributionService(DistributionMode mode)
@@ -1475,6 +1555,7 @@ public partial class MainWindow : Window
     {
         try
         {
+            _distributionSubtypeCache.Clear();
             var dataLoaded = await _viewModel.LoadMetricDataAsync();
             if (!dataLoaded)
             {
@@ -2161,6 +2242,45 @@ public partial class MainWindow : Window
         SelectDistributionIntervalCount(settings.IntervalCount);
     }
 
+    private void UpdateDistributionSubtypeOptions()
+    {
+        if (DistributionSubtypeCombo == null)
+            return;
+
+        _isUpdatingDistributionSubtypeCombo = true;
+        try
+        {
+            DistributionSubtypeCombo.Items.Clear();
+
+            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
+            if (selectedSubtypes.Count == 0)
+            {
+                DistributionSubtypeCombo.IsEnabled = false;
+                _viewModel.ChartState.SelectedDistributionSubtype = null;
+                DistributionSubtypeCombo.SelectedItem = null;
+                return;
+            }
+
+            foreach (var subtype in selectedSubtypes)
+                DistributionSubtypeCombo.Items.Add(subtype);
+
+            DistributionSubtypeCombo.IsEnabled = true;
+
+            var current = _viewModel.ChartState.SelectedDistributionSubtype;
+            var selection = current != null && selectedSubtypes.Contains(current) ? current : selectedSubtypes[0];
+            DistributionSubtypeCombo.SelectedItem = selection;
+
+            if (_isInitializing)
+                _viewModel.ChartState.SelectedDistributionSubtype = selection;
+            else
+                _viewModel.SetDistributionSubtype(selection);
+        }
+        finally
+        {
+            _isUpdatingDistributionSubtypeCombo = false;
+        }
+    }
+
     /// <summary>
     ///     Common handler for display mode changes (frequency shading vs simple range).
     /// </summary>
@@ -2280,6 +2400,18 @@ public partial class MainWindow : Window
         _viewModel.SetDistributionMode(mode);
         ApplyDistributionModeDefinition(mode);
         ApplyDistributionSettingsToUi(mode);
+    }
+
+    private void OnDistributionSubtypeChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_viewModel == null)
+            return;
+
+        if (_isInitializing || _isUpdatingDistributionSubtypeCombo)
+            return;
+
+        if (DistributionSubtypeCombo.SelectedItem is string selectedSubtype)
+            _viewModel.SetDistributionSubtype(selectedSubtype);
     }
 
     #endregion

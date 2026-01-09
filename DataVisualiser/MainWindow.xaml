@@ -271,6 +271,15 @@
                                       VerticalAlignment="Center"
                                       SelectionChanged="OnDistributionModeChanged" />
 
+                            <TextBlock Text="Subtype:"
+                                       VerticalAlignment="Center"
+                                       Margin="20,0,10,0" />
+
+                            <ComboBox x:Name="DistributionSubtypeCombo"
+                                      Width="160"
+                                      VerticalAlignment="Center"
+                                      SelectionChanged="OnDistributionSubtypeChanged" />
+
                             <TextBlock Text="Display Mode:"
                                        VerticalAlignment="Center"
                                        Margin="20,0,10,0" />
