@@ -3,38 +3,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="clr-namespace:DataVisualiser.UI"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Border BorderBrush="#FF444444"
+    <Border BorderBrush="{x:Static ui:ChartUiDefaults.ChartPanelBorderBrush}"
             BorderThickness="1"
-            Margin="0,0,0,10">
-        <StackPanel Orientation="Vertical" Margin="0,0,0,10">
+            Margin="{x:Static ui:ChartUiDefaults.ChartPanelBorderMargin}">
+        <StackPanel Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.ChartPanelStackMargin}">
             <!-- Header Section -->
-            <Border Background="#BB131313"
-                    BorderBrush="#FF444444"
+            <Border Background="{x:Static ui:ChartUiDefaults.ChartHeaderBackground}"
+                    BorderBrush="{x:Static ui:ChartUiDefaults.ChartHeaderBorderBrush}"
                     BorderThickness="1"
-                    Padding="10,5">
-                <StackPanel Orientation="Horizontal" Margin="20,5,10,0">
+                    Padding="{x:Static ui:ChartUiDefaults.ChartHeaderPadding}">
+                <StackPanel Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.ChartHeaderMargin}">
                     <TextBlock x:Name="TitleTextBlock"
                                Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                FontWeight="Bold"
-                               FontSize="14"
+                               FontSize="{x:Static ui:ChartUiDefaults.ChartHeaderFontSize}"
                                VerticalAlignment="Center" />
                     <Button x:Name="ToggleButton"
-                            Content="Show"
-                            Margin="10,0,0,0"
-                            Padding="10,3"
+                            Content="{x:Static ui:UiDefaults.ToggleShowLabel}"
+                            Margin="{x:Static ui:ChartUiDefaults.ChartHeaderToggleMargin}"
+                            Padding="{x:Static ui:ChartUiDefaults.ChartHeaderTogglePadding}"
                             Click="OnToggleButtonClick" />
                     <!-- Additional Header Controls -->
                     <ContentPresenter x:Name="HeaderControlsPresenter"
-                                      Margin="20,0,0,0"
+                                      Margin="{x:Static ui:ChartUiDefaults.ChartHeaderControlsMargin}"
                                       VerticalAlignment="Center" />
                 </StackPanel>
             </Border>
 
             <!-- Behavioral Controls Section (Optional) -->
             <ContentPresenter x:Name="BehavioralControlsPresenter"
-                              Margin="40,5,10,0" />
+                              Margin="{x:Static ui:ChartUiDefaults.BehavioralControlsMargin}" />
 
             <!-- Chart Content Panel -->
             <StackPanel x:Name="ContentPanel"

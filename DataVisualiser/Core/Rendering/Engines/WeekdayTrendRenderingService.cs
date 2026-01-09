@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media;
+using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
@@ -41,15 +42,15 @@ public sealed class WeekdayTrendRenderingService
 
         chart.AxisX.Add(new Axis
         {
-                Title = "Time",
+                Title = ChartRenderDefaults.AxisTitleTime,
                 MinValue = result.From.Ticks,
                 MaxValue = result.To.Ticks,
-                LabelFormatter = v => new DateTime((long)v).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                LabelFormatter = v => new DateTime((long)v).ToString(ChartRenderDefaults.WeekdayDateLabelFormat, CultureInfo.InvariantCulture)
         });
 
         chart.AxisY.Add(new Axis
         {
-                Title = result.Unit ?? "Value",
+                Title = result.Unit ?? ChartRenderDefaults.AxisTitleValue,
                 MinValue = result.GlobalMin,
                 MaxValue = result.GlobalMax
         });
@@ -74,10 +75,10 @@ public sealed class WeekdayTrendRenderingService
                     Title = series.Day.ToString(),
                     Values = values,
                     PointGeometry = showPoints ? DefaultGeometries.Circle : null,
-                    PointGeometrySize = showPoints ? 6 : 0,
-                    LineSmoothness = 0.3,
+                    PointGeometrySize = showPoints ? ChartRenderDefaults.WeekdayPointSize : 0,
+                    LineSmoothness = ChartRenderDefaults.WeekdayLineSmoothness,
                     Fill = Brushes.Transparent,
-                    StrokeThickness = 2,
+                    StrokeThickness = ChartRenderDefaults.WeekdayLineStrokeThickness,
                     Stroke = WeekdayTrendDefaults.WeekdayStrokes[dayIndex]
             });
         }
@@ -95,9 +96,9 @@ public sealed class WeekdayTrendRenderingService
         // Configure axes for polar-like display
         chart.AxisX.Add(new Axis
         {
-                Title = "Day of Week",
-                MinValue = 0,
-                MaxValue = 360,
+                Title = ChartRenderDefaults.AxisTitleDayOfWeek,
+                MinValue = ChartRenderDefaults.PolarAxisMinValue,
+                MaxValue = ChartRenderDefaults.PolarAxisMaxValue,
                 LabelFormatter = v =>
                 {
                     // Convert angle (0-360) to day name
@@ -118,7 +119,7 @@ public sealed class WeekdayTrendRenderingService
 
         chart.AxisY.Add(new Axis
         {
-                Title = result.Unit ?? "Value",
+                Title = result.Unit ?? ChartRenderDefaults.AxisTitleValue,
                 MinValue = result.GlobalMin,
                 MaxValue = result.GlobalMax
         });
@@ -136,7 +137,7 @@ public sealed class WeekdayTrendRenderingService
 
             var values = new ChartValues<ObservablePoint>();
             // Base angle for this day (in degrees)
-            var baseAngleDegrees = dayIndex * 360.0 / BucketCount;
+            var baseAngleDegrees = dayIndex * ChartRenderDefaults.PolarAxisMaxValue / BucketCount;
 
             // For each time point in the series, plot at the day's angle with the value as radius
             foreach (var point in series.Points)
@@ -146,12 +147,12 @@ public sealed class WeekdayTrendRenderingService
             {
                     Title = series.Day.ToString(),
                     Values = values,
-                    LineSmoothness = 0.3,
-                    StrokeThickness = 2,
+                    LineSmoothness = ChartRenderDefaults.WeekdayLineSmoothness,
+                    StrokeThickness = ChartRenderDefaults.WeekdayLineStrokeThickness,
                     Stroke = WeekdayTrendDefaults.WeekdayStrokes[dayIndex],
                     Fill = Brushes.Transparent,
                     PointGeometry = DefaultGeometries.Circle,
-                    PointGeometrySize = 6
+                    PointGeometrySize = ChartRenderDefaults.WeekdayPointSize
             });
         }
     }

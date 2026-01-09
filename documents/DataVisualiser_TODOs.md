@@ -19,3 +19,7 @@
 ## Group 4 - Data Access Defaults (medium)
 - [x] Centralize table name mappings and defaults
 - [x] Centralize SQL limiting thresholds and sampling policy
+
+## Group 5 - Chart Controller Defaults (quick wins)
+- [x] Centralize controller chart initialization defaults (titles, margins, min heights)
+- [x] Centralize chart axis titles and tick sizing for rendering engines

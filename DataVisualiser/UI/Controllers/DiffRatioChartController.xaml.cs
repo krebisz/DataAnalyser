@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -16,7 +17,7 @@ public partial class DiffRatioChartController : UserControl
     {
         InitializeComponent();
 
-        PanelController.Title = "Difference / Ratio";
+        PanelController.Title = ChartUiDefaults.DiffRatioChartTitle;
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
 
         var headerControls = BuildHeaderControls();
@@ -42,11 +43,11 @@ public partial class DiffRatioChartController : UserControl
     {
         OperationToggleButton = new Button
         {
-                Content = "/",
-                Margin = new Thickness(20, 0, 0, 0),
-                Padding = new Thickness(10, 3, 10, 3),
+                Content = ChartUiDefaults.OperationToggleContent,
+                Margin = ChartUiDefaults.ToggleButtonMargin,
+                Padding = ChartUiDefaults.ToggleButtonPadding,
                 VerticalAlignment = VerticalAlignment.Center,
-                ToolTip = "Toggle between Difference (-) and Ratio (/)"
+                ToolTip = ChartUiDefaults.OperationToggleToolTip
         };
         OperationToggleButton.Click += (s, e) => OperationToggleRequested?.Invoke(this, EventArgs.Empty);
 
@@ -57,20 +58,20 @@ public partial class DiffRatioChartController : UserControl
     {
         chart = new CartesianChart
         {
-                LegendLocation = LegendLocation.Right,
-                Zoom = ZoomingOptions.X,
-                Pan = PanningOptions.X,
-                Hoverable = true,
-                Margin = new Thickness(20, 5, 10, 20),
-                MinHeight = 400
+                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                Zoom = ChartUiDefaults.DefaultZoom,
+                Pan = ChartUiDefaults.DefaultPan,
+                Hoverable = ChartUiDefaults.DefaultHoverable,
+                Margin = ChartUiDefaults.ChartContentMargin,
+                MinHeight = ChartUiDefaults.ChartMinHeight
         };
         chart.AxisX.Add(new Axis
         {
-                Title = "Time"
+                Title = ChartUiDefaults.AxisTitleTime
         });
         chart.AxisY.Add(new Axis
         {
-                Title = "Difference",
+                Title = ChartUiDefaults.AxisTitleDifference,
                 ShowLabels = true
         });
 

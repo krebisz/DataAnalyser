@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -16,26 +17,26 @@ public partial class MainChartController : UserControl
         InitializeComponent();
 
         // Set up the panel controller
-        PanelController.Title = "ChartMain";
+        PanelController.Title = ChartUiDefaults.MainChartTitle;
         PanelController.IsChartVisible = true;
 
         // Create the chart
         Chart = new CartesianChart
         {
-                LegendLocation = LegendLocation.Right,
-                Zoom = ZoomingOptions.X,
-                Pan = PanningOptions.X,
-                Hoverable = true,
-                Margin = new Thickness(20, 5, 10, 20),
-                MinHeight = 500
+                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                Zoom = ChartUiDefaults.DefaultZoom,
+                Pan = ChartUiDefaults.DefaultPan,
+                Hoverable = ChartUiDefaults.DefaultHoverable,
+                Margin = ChartUiDefaults.ChartContentMargin,
+                MinHeight = ChartUiDefaults.MainChartMinHeight
         };
         Chart.AxisX.Add(new Axis
         {
-                Title = "Time"
+                Title = ChartUiDefaults.AxisTitleTime
         });
         Chart.AxisY.Add(new Axis
         {
-                Title = "Value",
+                Title = ChartUiDefaults.AxisTitleValue,
                 ShowLabels = true
         });
 

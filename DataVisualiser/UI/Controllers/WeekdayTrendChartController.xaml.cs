@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -17,7 +18,7 @@ public partial class WeekdayTrendChartController : UserControl
     {
         InitializeComponent();
 
-        PanelController.Title = "Weekday Trends";
+        PanelController.Title = ChartUiDefaults.WeekdayTrendChartTitle;
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
 
         var behavioralControls = BuildBehavioralControls();
@@ -50,14 +51,14 @@ public partial class WeekdayTrendChartController : UserControl
         var panel = new StackPanel
         {
                 Orientation = Orientation.Horizontal,
-                Margin = new Thickness(40, 5, 10, 0)
+                Margin = ChartUiDefaults.BehavioralControlsMargin
         };
 
         panel.Children.Add(new TextBlock
         {
                 Text = "Days:",
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 10, 0)
+                Margin = ChartUiDefaults.LabelMargin
         });
 
         AddDayCheckBox(panel, "Mon", DayOfWeek.Monday);
@@ -72,12 +73,12 @@ public partial class WeekdayTrendChartController : UserControl
         {
                 Text = "Subtype:",
                 VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(20, 0, 10, 0)
+                Margin = ChartUiDefaults.SectionLabelMargin
         });
 
         SubtypeCombo = new ComboBox
         {
-                Width = 160,
+                Width = ChartUiDefaults.SubtypeComboWidth,
                 VerticalAlignment = VerticalAlignment.Center
         };
         SubtypeCombo.SelectionChanged += (s, e) => SubtypeChanged?.Invoke(this, EventArgs.Empty);
@@ -85,11 +86,11 @@ public partial class WeekdayTrendChartController : UserControl
 
         ChartTypeToggleButton = new Button
         {
-                Content = "Polar",
-                Margin = new Thickness(20, 0, 0, 0),
-                Padding = new Thickness(10, 3, 10, 3),
+                Content = ChartUiDefaults.ChartTypeToggleLabel,
+                Margin = ChartUiDefaults.ToggleButtonMargin,
+                Padding = ChartUiDefaults.ToggleButtonPadding,
                 VerticalAlignment = VerticalAlignment.Center,
-                ToolTip = "Toggle between Cartesian and Polar chart"
+                ToolTip = ChartUiDefaults.ChartTypeToggleToolTip
         };
         ChartTypeToggleButton.Click += (s, e) => ChartTypeToggleRequested?.Invoke(this, EventArgs.Empty);
         panel.Children.Add(ChartTypeToggleButton);
@@ -103,7 +104,7 @@ public partial class WeekdayTrendChartController : UserControl
         {
                 Content = label,
                 IsChecked = true,
-                Margin = new Thickness(5, 0, 0, 0)
+                Margin = ChartUiDefaults.DayCheckboxMargin
         };
 
         checkbox.Click += (s, e) => DayToggled?.Invoke(this, new WeekdayTrendDayToggleEventArgs(day, checkbox.IsChecked == true));
@@ -119,43 +120,43 @@ public partial class WeekdayTrendChartController : UserControl
 
         cartesianChart = new CartesianChart
         {
-                LegendLocation = LegendLocation.Right,
-                Zoom = ZoomingOptions.X,
-                Pan = PanningOptions.X,
-                Hoverable = true,
-                Margin = new Thickness(20, 5, 10, 20),
-                MinHeight = 400
+                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                Zoom = ChartUiDefaults.DefaultZoom,
+                Pan = ChartUiDefaults.DefaultPan,
+                Hoverable = ChartUiDefaults.DefaultHoverable,
+                Margin = ChartUiDefaults.ChartContentMargin,
+                MinHeight = ChartUiDefaults.ChartMinHeight
         };
         cartesianChart.AxisX.Add(new Axis
         {
-                Title = "Time"
+                Title = ChartUiDefaults.AxisTitleTime
         });
         cartesianChart.AxisY.Add(new Axis
         {
-                Title = "Value",
+                Title = ChartUiDefaults.AxisTitleValue,
                 ShowLabels = true
         });
         panel.Children.Add(cartesianChart);
 
         polarChart = new CartesianChart
         {
-                LegendLocation = LegendLocation.Right,
-                Zoom = ZoomingOptions.X,
-                Pan = PanningOptions.X,
-                Hoverable = true,
-                Margin = new Thickness(20, 5, 10, 20),
-                MinHeight = 400,
+                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                Zoom = ChartUiDefaults.DefaultZoom,
+                Pan = ChartUiDefaults.DefaultPan,
+                Hoverable = ChartUiDefaults.DefaultHoverable,
+                Margin = ChartUiDefaults.ChartContentMargin,
+                MinHeight = ChartUiDefaults.ChartMinHeight,
                 Visibility = Visibility.Collapsed
         };
         polarChart.AxisX.Add(new Axis
         {
-                Title = "Day of Week",
-                MinValue = 0,
-                MaxValue = 360
+                Title = ChartUiDefaults.AxisTitleDayOfWeek,
+                MinValue = ChartUiDefaults.PolarAxisMinValue,
+                MaxValue = ChartUiDefaults.PolarAxisMaxValue
         });
         polarChart.AxisY.Add(new Axis
         {
-                Title = "Value",
+                Title = ChartUiDefaults.AxisTitleValue,
                 ShowLabels = true
         });
         panel.Children.Add(polarChart);

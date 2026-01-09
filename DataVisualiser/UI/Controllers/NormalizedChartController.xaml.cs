@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI;
 using WpfCartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.UI.Controllers;
@@ -14,7 +15,7 @@ public partial class NormalizedChartController : UserControl
     {
         InitializeComponent();
 
-        PanelController.Title = "ChartNorm";
+        PanelController.Title = ChartUiDefaults.NormalizedChartTitle;
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
         NormZeroToOneRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);
         NormPercentOfMaxRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);

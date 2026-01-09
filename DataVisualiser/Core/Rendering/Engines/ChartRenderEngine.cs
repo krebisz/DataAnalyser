@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows.Media;
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Shared.Helpers;
@@ -142,7 +143,7 @@ public sealed class ChartRenderEngine
 
         var title = $"{result.DisplayName} ({(isSmoothed ? "smooth" : "raw")})";
 
-        var series = CreateAndPopulateSeries(title, isSmoothed ? 5 : 3, isSmoothed ? 2 : 1, color, values);
+        var series = CreateAndPopulateSeries(title, isSmoothed ? ChartRenderDefaults.SmoothedPointSize : ChartRenderDefaults.RawPointSize, isSmoothed ? ChartRenderDefaults.SmoothedLineThickness : ChartRenderDefaults.RawLineThickness, color, values);
 
         chart.Series.Add(series);
     }
@@ -210,7 +211,7 @@ public sealed class ChartRenderEngine
             {
                 var primarySmoothedLabel = FormatSeriesLabel(model, true, true);
                 // Values should already be aligned to dataTimestamps from the strategy
-                var smoothedPrimary = CreateAndPopulateSeries(primarySmoothedLabel, 5, 2, model.PrimaryColor, model.PrimarySmoothed.ToList());
+                var smoothedPrimary = CreateAndPopulateSeries(primarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.PrimaryColor, model.PrimarySmoothed.ToList());
                 targetChart.Series.Add(smoothedPrimary);
                 Debug.WriteLine($"[TransformChart] Added smoothed series: {primarySmoothedLabel}, values={model.PrimarySmoothed.Count}");
             }
@@ -221,7 +222,7 @@ public sealed class ChartRenderEngine
             {
                 var primaryRawLabel = FormatSeriesLabel(model, true, false);
                 // Values should already be aligned to dataTimestamps from the strategy
-                var rawPrimary = CreateAndPopulateSeries(primaryRawLabel, 3, 1, Colors.DarkGray, model.PrimaryRaw.ToList());
+                var rawPrimary = CreateAndPopulateSeries(primaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.PrimaryRaw.ToList());
                 targetChart.Series.Add(rawPrimary);
                 Debug.WriteLine($"[TransformChart] Added raw series: {primaryRawLabel}, values={model.PrimaryRaw.Count}");
             }
@@ -242,7 +243,7 @@ public sealed class ChartRenderEngine
             if (model.SecondarySmoothed.Count > 0)
             {
                 var secondarySmoothedLabel = FormatSeriesLabel(model, false, true);
-                var smoothedSecondary = CreateAndPopulateSeries(secondarySmoothedLabel, 5, 2, model.SecondaryColor, model.SecondarySmoothed.ToList());
+                var smoothedSecondary = CreateAndPopulateSeries(secondarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.SecondaryColor, model.SecondarySmoothed.ToList());
                 targetChart.Series.Add(smoothedSecondary);
             }
 
@@ -251,7 +252,7 @@ public sealed class ChartRenderEngine
             if (model.SecondaryRaw.Count > 0)
             {
                 var secondaryRawLabel = FormatSeriesLabel(model, false, false);
-                var rawSecondary = CreateAndPopulateSeries(secondaryRawLabel, 3, 1, Colors.DarkGray, model.SecondaryRaw.ToList());
+                var rawSecondary = CreateAndPopulateSeries(secondaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.SecondaryRaw.ToList());
                 targetChart.Series.Add(rawSecondary);
             }
     }
@@ -267,7 +268,7 @@ public sealed class ChartRenderEngine
             return;
 
         var xAxis = targetChart.AxisX[0];
-        xAxis.Title = "Time";
+        xAxis.Title = ChartRenderDefaults.AxisTitleTime;
         xAxis.ShowLabels = true; // Re-enable labels when rendering data
 
         // Use actual data timestamps for axis range (this determines how many values we have)
@@ -304,7 +305,7 @@ public sealed class ChartRenderEngine
 
         // === UNIFORM STEP ===
         // Roughly 10 visible ticks, auto-adjusted
-        var desiredTicks = 10;
+        var desiredTicks = ChartRenderDefaults.DesiredXAxisTickCount;
         var step = Math.Max(1, total / (double)desiredTicks);
 
         // Cleaner numbers

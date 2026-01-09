@@ -5,47 +5,48 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
              xmlns:controllers="clr-namespace:DataVisualiser.UI.Controllers"
+             xmlns:ui="clr-namespace:DataVisualiser.UI"
              mc:Ignorable="d"
              d:DesignHeight="550"
              d:DesignWidth="900">
     <Grid x:Name="RootGrid">
         <controllers:ChartPanelController x:Name="PanelController" />
 
-        <StackPanel x:Name="BehavioralControlsPanel" Orientation="Horizontal" Margin="40,5,10,0">
+        <StackPanel x:Name="BehavioralControlsPanel" Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.BehavioralControlsMargin}">
             <TextBlock Text="Normalization:"
                        VerticalAlignment="Center"
-                       Margin="0,0,10,0" />
+                       Margin="{x:Static ui:ChartUiDefaults.LabelMargin}" />
 
             <RadioButton x:Name="NormZeroToOneRadioControl"
                          Content="Zero-To-One"
-                         Margin="5,0"
+                         Margin="{x:Static ui:ChartUiDefaults.RadioButtonMargin}"
                          GroupName="NormModes" />
 
             <RadioButton x:Name="NormPercentOfMaxRadioControl"
                          Content="% of Max"
-                         Margin="5,0"
+                         Margin="{x:Static ui:ChartUiDefaults.RadioButtonMargin}"
                          GroupName="NormModes"
                          IsChecked="True" />
 
             <RadioButton x:Name="NormRelativeToMaxRadioControl"
                          Content="Relative to Max"
-                         Margin="5,0"
+                         Margin="{x:Static ui:ChartUiDefaults.RadioButtonMargin}"
                          GroupName="NormModes" />
         </StackPanel>
 
         <StackPanel x:Name="ChartContentPanelRoot" Orientation="Vertical">
             <lvc:CartesianChart x:Name="ChartNormControl"
-                                LegendLocation="Right"
-                                Zoom="X"
-                                Pan="X"
-                                Hoverable="True"
-                                Margin="20,5,10,20"
-                                MinHeight="400">
+                                LegendLocation="{x:Static ui:ChartUiDefaults.DefaultLegendLocation}"
+                                Zoom="{x:Static ui:ChartUiDefaults.DefaultZoom}"
+                                Pan="{x:Static ui:ChartUiDefaults.DefaultPan}"
+                                Hoverable="{x:Static ui:ChartUiDefaults.DefaultHoverable}"
+                                Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}"
+                                MinHeight="{x:Static ui:ChartUiDefaults.ChartMinHeight}">
                 <lvc:CartesianChart.AxisX>
-                    <lvc:Axis Title="Time" />
+                    <lvc:Axis Title="{x:Static ui:ChartUiDefaults.AxisTitleTime}" />
                 </lvc:CartesianChart.AxisX>
                 <lvc:CartesianChart.AxisY>
-                    <lvc:Axis Title="Relative"
+                    <lvc:Axis Title="{x:Static ui:ChartUiDefaults.AxisTitleRelative}"
                               ShowLabels="True" />
                 </lvc:CartesianChart.AxisY>
             </lvc:CartesianChart>

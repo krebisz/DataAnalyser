@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI;
 using LiveChartsCore.SkiaSharpView.WPF;
 using WpfCartesianChart = LiveCharts.Wpf.CartesianChart;
 
@@ -15,7 +16,7 @@ public partial class DistributionChartController : UserControl
     {
         InitializeComponent();
 
-        PanelController.Title = "Distribution";
+        PanelController.Title = ChartUiDefaults.DistributionChartTitle;
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
         DistributionChartTypeToggleButtonControl.Click += (s, e) => ChartTypeToggleRequested?.Invoke(this, EventArgs.Empty);
         DistributionModeComboControl.SelectionChanged += (s, e) => ModeChanged?.Invoke(this, EventArgs.Empty);

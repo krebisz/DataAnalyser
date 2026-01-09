@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controllers;
@@ -14,7 +15,7 @@ public partial class TransformDataPanelController : UserControl
     {
         InitializeComponent();
 
-        PanelController.Title = "Data Transform";
+        PanelController.Title = ChartUiDefaults.TransformChartTitle;
         PanelController.ToggleRequested += (s, e) => ToggleRequested?.Invoke(this, e);
         TransformOperationComboControl.SelectionChanged += (s, e) => OperationChanged?.Invoke(this, EventArgs.Empty);
         TransformPrimarySubtypeComboControl.SelectionChanged += (s, e) => PrimarySubtypeChanged?.Invoke(this, EventArgs.Empty);

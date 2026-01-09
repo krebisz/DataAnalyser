@@ -6,32 +6,33 @@
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
              xmlns:lvc2="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:controllers="clr-namespace:DataVisualiser.UI.Controllers"
+             xmlns:ui="clr-namespace:DataVisualiser.UI"
              mc:Ignorable="d"
              d:DesignHeight="550"
              d:DesignWidth="1000">
     <Grid x:Name="RootGrid">
         <controllers:ChartPanelController x:Name="PanelController" />
 
-        <StackPanel x:Name="BehavioralControlsPanel" Orientation="Horizontal" Margin="40,5,10,0">
+        <StackPanel x:Name="BehavioralControlsPanel" Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.BehavioralControlsMargin}">
             <TextBlock Text="Mode:"
                        VerticalAlignment="Center"
-                       Margin="0,0,10,0" />
+                       Margin="{x:Static ui:ChartUiDefaults.LabelMargin}" />
 
             <ComboBox x:Name="DistributionModeComboControl"
-                      Width="100"
+                      Width="{x:Static ui:ChartUiDefaults.DistributionModeComboWidth}"
                       VerticalAlignment="Center" />
 
             <TextBlock Text="Subtype:"
                        VerticalAlignment="Center"
-                       Margin="20,0,10,0" />
+                       Margin="{x:Static ui:ChartUiDefaults.SectionLabelMargin}" />
 
             <ComboBox x:Name="DistributionSubtypeComboControl"
-                      Width="160"
+                      Width="{x:Static ui:ChartUiDefaults.DistributionSubtypeComboWidth}"
                       VerticalAlignment="Center" />
 
             <TextBlock Text="Display Mode:"
                        VerticalAlignment="Center"
-                       Margin="20,0,10,0" />
+                       Margin="{x:Static ui:ChartUiDefaults.SectionLabelMargin}" />
 
             <RadioButton x:Name="DistributionFrequencyShadingRadioControl"
                          Content="Frequency Shading"
@@ -44,42 +45,42 @@
 
             <TextBlock Text="Interval Count:"
                        VerticalAlignment="Center"
-                       Margin="20,0,10,0" />
+                       Margin="{x:Static ui:ChartUiDefaults.SectionLabelMargin}" />
 
             <ComboBox x:Name="DistributionIntervalCountComboControl"
-                      Width="80"
+                      Width="{x:Static ui:ChartUiDefaults.DistributionIntervalComboWidth}"
                       VerticalAlignment="Center" />
 
             <Button x:Name="DistributionChartTypeToggleButtonControl"
-                    Content="Polar"
-                    Margin="20,0,0,0"
-                    Padding="10,3"
+                    Content="{x:Static ui:ChartUiDefaults.ChartTypeToggleLabel}"
+                    Margin="{x:Static ui:ChartUiDefaults.ToggleButtonMargin}"
+                    Padding="{x:Static ui:ChartUiDefaults.ToggleButtonPaddingCompact}"
                     VerticalAlignment="Center"
-                    ToolTip="Toggle between Cartesian and Polar chart" />
+                    ToolTip="{x:Static ui:ChartUiDefaults.ChartTypeToggleToolTip}" />
         </StackPanel>
 
         <StackPanel x:Name="ChartContentPanelRoot" Orientation="Vertical">
             <lvc:CartesianChart x:Name="ChartDistributionControl"
-                                LegendLocation="Right"
-                                Zoom="X"
-                                Pan="X"
-                                Hoverable="True"
-                                Margin="20,5,10,20"
-                                MinHeight="400">
+                                LegendLocation="{x:Static ui:ChartUiDefaults.DefaultLegendLocation}"
+                                Zoom="{x:Static ui:ChartUiDefaults.DefaultZoom}"
+                                Pan="{x:Static ui:ChartUiDefaults.DefaultPan}"
+                                Hoverable="{x:Static ui:ChartUiDefaults.DefaultHoverable}"
+                                Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}"
+                                MinHeight="{x:Static ui:ChartUiDefaults.ChartMinHeight}">
                 <lvc:CartesianChart.AxisX>
-                    <lvc:Axis Title="Bucket" />
+                    <lvc:Axis Title="{x:Static ui:ChartUiDefaults.AxisTitleBucket}" />
                 </lvc:CartesianChart.AxisX>
                 <lvc:CartesianChart.AxisY>
-                    <lvc:Axis Title="Value"
+                    <lvc:Axis Title="{x:Static ui:ChartUiDefaults.AxisTitleValue}"
                               ShowLabels="True" />
                 </lvc:CartesianChart.AxisY>
             </lvc:CartesianChart>
 
             <lvc2:PolarChart x:Name="ChartDistributionPolarControl"
                              LegendPosition="Right"
-                             Margin="20,5,10,20"
-                             MinHeight="400"
-                             InitialRotation="-45"
+                             Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}"
+                             MinHeight="{x:Static ui:ChartUiDefaults.ChartMinHeight}"
+                             InitialRotation="{x:Static ui:ChartUiDefaults.DistributionPolarInitialRotation}"
                              Visibility="Collapsed" />
         </StackPanel>
     </Grid>
