@@ -46,6 +46,8 @@ public partial class MainWindow : Window
     private ToolTip _distributionPolarTooltip = null!;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _distributionSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isUpdatingDistributionSubtypeCombo;
+    private readonly Dictionary<string, IReadOnlyList<MetricData>> _weekdayTrendSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private bool _isUpdatingWeekdayTrendSubtypeCombo;
 
     private string _connectionString = null!;
     private HourlyDistributionService _hourlyDistributionService = null!;
@@ -149,6 +151,7 @@ public partial class MainWindow : Window
 
         _viewModel.SetSelectedSubtypes(selectedSubtypes);
         UpdateDistributionSubtypeOptions();
+        UpdateWeekdayTrendSubtypeOptions();
 
         // Update button states based on selected subtype count
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypes.Count);
@@ -493,7 +496,7 @@ public partial class MainWindow : Window
             await RenderDistributionChart(safeCtx, _viewModel.ChartState.SelectedDistributionMode);
 
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
-            RenderWeeklyTrend(safeCtx);
+            await RenderWeeklyTrendAsync(safeCtx);
 
         // Populate transform panel grids if visible
         if (_viewModel.ChartState.IsTransformPanelVisible)
@@ -625,7 +628,7 @@ public partial class MainWindow : Window
 
             case "WeeklyTrend":
                 if (_viewModel.ChartState.IsWeeklyTrendVisible)
-                    RenderWeeklyTrend(ctx);
+                    await RenderWeeklyTrendAsync(ctx);
                 break;
         }
     }
@@ -641,7 +644,7 @@ public partial class MainWindow : Window
 
         await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
         await RenderDistributionChart(ctx, _viewModel.ChartState.SelectedDistributionMode);
-        RenderWeeklyTrend(ctx);
+        await RenderWeeklyTrendAsync(ctx);
         await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
     }
 
@@ -706,14 +709,30 @@ public partial class MainWindow : Window
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
-    private void RenderWeeklyTrend(ChartDataContext ctx)
+    private async Task RenderWeeklyTrendAsync(ChartDataContext ctx)
     {
-        if (_viewModel.ChartState.IsWeeklyTrendVisible)
+        if (!_viewModel.ChartState.IsWeeklyTrendVisible)
+            return;
+
+        var selectedSubtype = ResolveSelectedWeekdayTrendSubtype(ctx);
+        var data = await ResolveWeekdayTrendDataAsync(ctx, selectedSubtype);
+        if (data == null || data.Count == 0)
+            return;
+
+        var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSubtype);
+        var trendContext = new ChartDataContext
         {
-            var result = ComputeWeekdayTrend(ctx);
-            if (result != null)
-                RenderWeekdayTrendChart(result);
-        }
+                Data1 = data,
+                DisplayName1 = displayName,
+                MetricType = ctx.MetricType,
+                PrimarySubtype = selectedSubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
+
+        var result = ComputeWeekdayTrend(trendContext);
+        if (result != null)
+            RenderWeekdayTrendChart(result);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
@@ -785,6 +804,66 @@ public partial class MainWindow : Window
     }
 
     private static string BuildDistributionCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
+    {
+        return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
+    }
+
+    private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, string? selectedSubtype)
+    {
+        if (ctx.Data1 == null)
+            return null;
+
+        if (string.IsNullOrWhiteSpace(selectedSubtype))
+            return ctx.Data1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.Data1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.Data2 ?? ctx.Data1;
+
+        var metricType = ctx.MetricType ?? _viewModel.MetricState.SelectedMetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return ctx.Data1;
+
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var cacheKey = BuildWeekdayTrendCacheKey(metricType, selectedSubtype, ctx.From, ctx.To, tableName);
+        if (_weekdayTrendSubtypeCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(metricType, selectedSubtype, null, ctx.From, ctx.To, tableName);
+        var data = primaryData.ToList();
+        _weekdayTrendSubtypeCache[cacheKey] = data;
+        return data;
+    }
+
+    private string? ResolveSelectedWeekdayTrendSubtype(ChartDataContext ctx)
+    {
+        var selectedSubtype = _viewModel.ChartState.SelectedWeekdayTrendSubtype;
+        if (!string.IsNullOrWhiteSpace(selectedSubtype))
+            return selectedSubtype;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype))
+            return ctx.PrimarySubtype;
+
+        return null;
+    }
+
+    private static string ResolveWeekdayTrendDisplayName(ChartDataContext ctx, string? selectedSubtype)
+    {
+        if (string.IsNullOrWhiteSpace(selectedSubtype))
+            return ctx.DisplayName1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.DisplayName1;
+
+        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+            return ctx.DisplayName2;
+
+        return selectedSubtype;
+    }
+
+    private static string BuildWeekdayTrendCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
     {
         return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
     }
@@ -1028,6 +1107,7 @@ public partial class MainWindow : Window
         WeekdayTrendChartController.ToggleRequested += OnWeekdayTrendToggleRequested;
         WeekdayTrendChartController.ChartTypeToggleRequested += OnWeekdayTrendChartTypeToggleRequested;
         WeekdayTrendChartController.DayToggled += OnWeekdayTrendDayToggled;
+        WeekdayTrendChartController.SubtypeChanged += OnWeekdayTrendSubtypeChanged;
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
     }
@@ -1556,6 +1636,7 @@ public partial class MainWindow : Window
         try
         {
             _distributionSubtypeCache.Clear();
+            _weekdayTrendSubtypeCache.Clear();
             var dataLoaded = await _viewModel.LoadMetricDataAsync();
             if (!dataLoaded)
             {
@@ -2281,6 +2362,46 @@ public partial class MainWindow : Window
         }
     }
 
+    private void UpdateWeekdayTrendSubtypeOptions()
+    {
+        var combo = WeekdayTrendChartController?.SubtypeCombo;
+        if (combo == null)
+            return;
+
+        _isUpdatingWeekdayTrendSubtypeCombo = true;
+        try
+        {
+            combo.Items.Clear();
+
+            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
+            if (selectedSubtypes.Count == 0)
+            {
+                combo.IsEnabled = false;
+                _viewModel.ChartState.SelectedWeekdayTrendSubtype = null;
+                combo.SelectedItem = null;
+                return;
+            }
+
+            foreach (var subtype in selectedSubtypes)
+                combo.Items.Add(subtype);
+
+            combo.IsEnabled = true;
+
+            var current = _viewModel.ChartState.SelectedWeekdayTrendSubtype;
+            var selection = current != null && selectedSubtypes.Contains(current) ? current : selectedSubtypes[0];
+            combo.SelectedItem = selection;
+
+            if (_isInitializing)
+                _viewModel.ChartState.SelectedWeekdayTrendSubtype = selection;
+            else
+                _viewModel.SetWeekdayTrendSubtype(selection);
+        }
+        finally
+        {
+            _isUpdatingWeekdayTrendSubtypeCombo = false;
+        }
+    }
+
     /// <summary>
     ///     Common handler for display mode changes (frequency shading vs simple range).
     /// </summary>
@@ -2412,6 +2533,18 @@ public partial class MainWindow : Window
 
         if (DistributionSubtypeCombo.SelectedItem is string selectedSubtype)
             _viewModel.SetDistributionSubtype(selectedSubtype);
+    }
+
+    private void OnWeekdayTrendSubtypeChanged(object? sender, EventArgs e)
+    {
+        if (_viewModel == null)
+            return;
+
+        if (_isInitializing || _isUpdatingWeekdayTrendSubtypeCombo)
+            return;
+
+        if (WeekdayTrendChartController.SubtypeCombo.SelectedItem is string selectedSubtype)
+            _viewModel.SetWeekdayTrendSubtype(selectedSubtype);
     }
 
     #endregion

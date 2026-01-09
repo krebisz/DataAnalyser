@@ -91,6 +91,12 @@ public partial class MainWindowViewModel
         RequestChartUpdate(false, "Distribution");
     }
 
+    public void SetWeekdayTrendSubtype(string? subtype)
+    {
+        ChartState.SelectedWeekdayTrendSubtype = subtype;
+        RequestChartUpdate(false, "WeeklyTrend");
+    }
+
     public void SetDistributionFrequencyShading(DistributionMode mode, bool useFrequencyShading)
     {
         ChartState.GetDistributionSettings(mode).UseFrequencyShading = useFrequencyShading;

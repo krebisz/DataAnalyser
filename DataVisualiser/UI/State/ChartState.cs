@@ -41,6 +41,7 @@ public class ChartState
     // Distribution chart options
     public DistributionMode SelectedDistributionMode { get; set; } = DistributionMode.Weekly;
     public string? SelectedDistributionSubtype { get; set; }
+    public string? SelectedWeekdayTrendSubtype { get; set; }
 
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }

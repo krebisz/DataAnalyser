@@ -34,10 +34,12 @@ public partial class WeekdayTrendChartController : UserControl
     public ChartPanelController Panel => PanelController;
 
     public Button ChartTypeToggleButton { get; private set; } = null!;
+    public ComboBox SubtypeCombo { get; private set; } = null!;
 
     public event EventHandler? ToggleRequested;
 
     public event EventHandler? ChartTypeToggleRequested;
+    public event EventHandler? SubtypeChanged;
 
     public event EventHandler<WeekdayTrendDayToggleEventArgs>? DayToggled;
 
@@ -63,6 +65,21 @@ public partial class WeekdayTrendChartController : UserControl
         AddDayCheckBox(panel, "Fri", DayOfWeek.Friday);
         AddDayCheckBox(panel, "Sat", DayOfWeek.Saturday);
         AddDayCheckBox(panel, "Sun", DayOfWeek.Sunday);
+
+        panel.Children.Add(new TextBlock
+        {
+                Text = "Subtype:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(20, 0, 10, 0)
+        });
+
+        SubtypeCombo = new ComboBox
+        {
+                Width = 160,
+                VerticalAlignment = VerticalAlignment.Center
+        };
+        SubtypeCombo.SelectionChanged += (s, e) => SubtypeChanged?.Invoke(this, EventArgs.Empty);
+        panel.Children.Add(SubtypeCombo);
 
         ChartTypeToggleButton = new Button
         {
