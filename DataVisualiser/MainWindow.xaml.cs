@@ -317,7 +317,7 @@ public partial class MainWindow : Window
                 UpdateWeekdayTrendChartTypeVisibility();
                 break;
             case "Transform":
-                UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, e.ShowTransformPanel);
+                TransformDataPanelController.Panel.IsChartVisible = e.ShowTransformPanel;
                 break;
         }
     }
@@ -358,7 +358,7 @@ public partial class MainWindow : Window
         UpdateDistributionChartTypeVisibility();
         WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
         UpdateWeekdayTrendChartTypeVisibility();
-        UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
+        TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
 
         // If a specific chart was identified (visibility toggle or chart-specific config change), only render that chart
         if (!string.IsNullOrEmpty(e.ToggledChartName))
@@ -514,22 +514,22 @@ public partial class MainWindow : Window
 
     private void PopulateTransformGrids(ChartDataContext ctx)
     {
-        PopulateTransformGrid(ctx.Data1, TransformGrid1, TransformGrid1Title, ctx.DisplayName1 ?? "Primary Data", true);
+        PopulateTransformGrid(ctx.Data1, TransformDataPanelController.TransformGrid1, TransformDataPanelController.TransformGrid1Title, ctx.DisplayName1 ?? "Primary Data", true);
 
         var hasSecondary = HasSecondaryData(ctx) && !string.IsNullOrEmpty(ctx.SecondarySubtype) && ctx.Data2 != null;
 
         if (hasSecondary)
         {
-            TransformGrid2Panel.Visibility = Visibility.Visible;
+            TransformDataPanelController.TransformGrid2Panel.Visibility = Visibility.Visible;
 
-            PopulateTransformGrid(ctx.Data2, TransformGrid2, TransformGrid2Title, ctx.DisplayName2 ?? "Secondary Data", false);
+            PopulateTransformGrid(ctx.Data2, TransformDataPanelController.TransformGrid2, TransformDataPanelController.TransformGrid2Title, ctx.DisplayName2 ?? "Secondary Data", false);
 
             SetBinaryTransformOperationsEnabled(true);
         }
         else
         {
-            TransformGrid2Panel.Visibility = Visibility.Collapsed;
-            TransformGrid2.ItemsSource = null;
+            TransformDataPanelController.TransformGrid2Panel.Visibility = Visibility.Collapsed;
+            TransformDataPanelController.TransformGrid2.ItemsSource = null;
             SetBinaryTransformOperationsEnabled(false);
         }
 
@@ -562,7 +562,7 @@ public partial class MainWindow : Window
 
     private void SetBinaryTransformOperationsEnabled(bool enabled)
     {
-        var binaryItems = TransformOperationCombo.Items.Cast<ComboBoxItem>().Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
+        var binaryItems = TransformDataPanelController.TransformOperationCombo.Items.Cast<ComboBoxItem>().Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
 
         foreach (var item in binaryItems)
             item.IsEnabled = enabled;
@@ -570,10 +570,10 @@ public partial class MainWindow : Window
 
     private void ResetTransformResultState()
     {
-        TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        TransformChartContentPanel.Visibility = Visibility.Collapsed;
-        TransformGrid3.ItemsSource = null;
-        TransformComputeButton.IsEnabled = false;
+        TransformDataPanelController.TransformGrid3Panel.Visibility = Visibility.Collapsed;
+        TransformDataPanelController.TransformChartContentPanel.Visibility = Visibility.Collapsed;
+        TransformDataPanelController.TransformGrid3.ItemsSource = null;
+        TransformDataPanelController.TransformComputeButton.IsEnabled = false;
     }
 
     private void ResetTransformSelectionsPendingLoad()
@@ -582,21 +582,21 @@ public partial class MainWindow : Window
         _viewModel.ChartState.SelectedTransformPrimarySubtype = null;
         _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
 
-        if (TransformPrimarySubtypeCombo == null || TransformSecondarySubtypeCombo == null)
+        if (TransformDataPanelController.TransformPrimarySubtypeCombo == null || TransformDataPanelController.TransformSecondarySubtypeCombo == null)
             return;
 
         _isUpdatingTransformSubtypeCombos = true;
         try
         {
-            TransformPrimarySubtypeCombo.Items.Clear();
-            TransformSecondarySubtypeCombo.Items.Clear();
-            TransformPrimarySubtypeCombo.IsEnabled = false;
-            TransformSecondarySubtypeCombo.IsEnabled = false;
-            TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            TransformPrimarySubtypeCombo.SelectedItem = null;
-            TransformSecondarySubtypeCombo.SelectedItem = null;
-            TransformOperationCombo.SelectedItem = null;
-            TransformComputeButton.IsEnabled = false;
+            TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Clear();
+            TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Clear();
+            TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = false;
+            TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
+            TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+            TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = null;
+            TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
+            TransformDataPanelController.TransformOperationCombo.SelectedItem = null;
+            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
         }
         finally
         {
@@ -606,7 +606,7 @@ public partial class MainWindow : Window
 
     private void UpdateTransformSubtypeOptions()
     {
-        if (TransformPrimarySubtypeCombo == null || TransformSecondarySubtypeCombo == null)
+        if (TransformDataPanelController.TransformPrimarySubtypeCombo == null || TransformDataPanelController.TransformSecondarySubtypeCombo == null)
             return;
 
         if (_isTransformSelectionPendingLoad)
@@ -615,50 +615,50 @@ public partial class MainWindow : Window
         _isUpdatingTransformSubtypeCombos = true;
         try
         {
-            TransformPrimarySubtypeCombo.Items.Clear();
-            TransformSecondarySubtypeCombo.Items.Clear();
+            TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Clear();
+            TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Clear();
 
             var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
             if (selectedSubtypes.Count == 0)
             {
-                TransformPrimarySubtypeCombo.IsEnabled = false;
-                TransformSecondarySubtypeCombo.IsEnabled = false;
-                TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+                TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = false;
+                TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
+                TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
                 _viewModel.ChartState.SelectedTransformPrimarySubtype = null;
                 _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
-                TransformPrimarySubtypeCombo.SelectedItem = null;
-                TransformSecondarySubtypeCombo.SelectedItem = null;
+                TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = null;
+                TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
                 return;
             }
 
             foreach (var subtype in selectedSubtypes)
             {
-                TransformPrimarySubtypeCombo.Items.Add(subtype);
-                TransformSecondarySubtypeCombo.Items.Add(subtype);
+                TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Add(subtype);
+                TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Add(subtype);
             }
 
-            TransformPrimarySubtypeCombo.IsEnabled = true;
+            TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = true;
 
             var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySubtype;
             var primarySelection = primaryCurrent != null && selectedSubtypes.Contains(primaryCurrent) ? primaryCurrent : selectedSubtypes[0];
-            TransformPrimarySubtypeCombo.SelectedItem = primarySelection;
+            TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = primarySelection;
             _viewModel.ChartState.SelectedTransformPrimarySubtype = primarySelection;
 
             if (selectedSubtypes.Count > 1)
             {
-                TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
-                TransformSecondarySubtypeCombo.IsEnabled = true;
+                TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
+                TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = true;
 
                 var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySubtype;
                 var secondarySelection = secondaryCurrent != null && selectedSubtypes.Contains(secondaryCurrent) ? secondaryCurrent : selectedSubtypes[1];
-                TransformSecondarySubtypeCombo.SelectedItem = secondarySelection;
+                TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = secondarySelection;
                 _viewModel.ChartState.SelectedTransformSecondarySubtype = secondarySelection;
             }
             else
             {
-                TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-                TransformSecondarySubtypeCombo.IsEnabled = false;
-                TransformSecondarySubtypeCombo.SelectedItem = null;
+                TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+                TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
+                TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
                 _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
             }
 
@@ -1032,7 +1032,7 @@ public partial class MainWindow : Window
 
     private string? ResolveSelectedTransformPrimarySubtype(ChartDataContext ctx)
     {
-        if (!_isTransformSelectionPendingLoad && TransformPrimarySubtypeCombo?.SelectedItem is string comboSelection)
+        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformPrimarySubtypeCombo?.SelectedItem is string comboSelection)
             return comboSelection;
 
         var selectedSubtype = _viewModel.ChartState.SelectedTransformPrimarySubtype;
@@ -1047,7 +1047,7 @@ public partial class MainWindow : Window
 
     private string? ResolveSelectedTransformSecondarySubtype(ChartDataContext ctx)
     {
-        if (!_isTransformSelectionPendingLoad && TransformSecondarySubtypeCombo?.SelectedItem is string comboSelection)
+        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformSecondarySubtypeCombo?.SelectedItem is string comboSelection)
             return comboSelection;
 
         var selectedSubtype = _viewModel.ChartState.SelectedTransformSecondarySubtype;
@@ -1261,14 +1261,14 @@ public partial class MainWindow : Window
 
     private void ClearTransformGrids()
     {
-        TransformGrid1.ItemsSource = null;
-        TransformGrid2.ItemsSource = null;
-        TransformGrid3.ItemsSource = null;
-        TransformGrid2Panel.Visibility = Visibility.Collapsed;
-        TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        TransformChartContentPanel.Visibility = Visibility.Collapsed;
-        TransformComputeButton.IsEnabled = false;
-        ChartHelper.ClearChart(ChartTransformResult, _viewModel.ChartState.ChartTimestamps);
+        TransformDataPanelController.TransformGrid1.ItemsSource = null;
+        TransformDataPanelController.TransformGrid2.ItemsSource = null;
+        TransformDataPanelController.TransformGrid3.ItemsSource = null;
+        TransformDataPanelController.TransformGrid2Panel.Visibility = Visibility.Collapsed;
+        TransformDataPanelController.TransformGrid3Panel.Visibility = Visibility.Collapsed;
+        TransformDataPanelController.TransformChartContentPanel.Visibility = Visibility.Collapsed;
+        TransformDataPanelController.TransformComputeButton.IsEnabled = false;
+        ChartHelper.ClearChart(TransformDataPanelController.ChartTransformResult, _viewModel.ChartState.ChartTimestamps);
     }
 
     #region Initialization Phases
@@ -1321,6 +1321,11 @@ public partial class MainWindow : Window
         WeekdayTrendChartController.SubtypeChanged += OnWeekdayTrendSubtypeChanged;
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
+        TransformDataPanelController.ToggleRequested += OnTransformPanelToggleRequested;
+        TransformDataPanelController.TransformOperationCombo.SelectionChanged += OnTransformOperationChanged;
+        TransformDataPanelController.TransformPrimarySubtypeCombo.SelectionChanged += OnTransformPrimarySubtypeChanged;
+        TransformDataPanelController.TransformSecondarySubtypeCombo.SelectionChanged += OnTransformSecondarySubtypeChanged;
+        TransformDataPanelController.TransformComputeButton.Click += OnTransformCompute;
     }
 
     private void ExecuteStartupSequence()
@@ -1503,7 +1508,7 @@ public partial class MainWindow : Window
         // Sync main chart button text with initial state
         MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
 
-        UpdateChartVisibility(TransformContentPanel, TransformPanelToggleButton, _viewModel.ChartState.IsTransformPanelVisible);
+        TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
     }
 
     #endregion
@@ -1517,14 +1522,14 @@ public partial class MainWindow : Window
                 { MainChartController.Chart, "Main" },
                 { ChartNorm, "Norm" },
                 { DiffRatioChartController.Chart, "DiffRatio" },
-                { ChartTransformResult, "Transform" }
+                { TransformDataPanelController.ChartTransformResult, "Transform" }
         };
 
         _tooltipManager = new ChartTooltipManager(this, chartLabels);
         _tooltipManager.AttachChart(MainChartController.Chart, "Main");
         _tooltipManager.AttachChart(ChartNorm, "Norm");
         _tooltipManager.AttachChart(DiffRatioChartController.Chart, "DiffRatio");
-        _tooltipManager.AttachChart(ChartTransformResult, "Transform");
+        _tooltipManager.AttachChart(TransformDataPanelController.ChartTransformResult, "Transform");
     }
 
     private void WireViewModelEvents()
@@ -1996,7 +2001,7 @@ public partial class MainWindow : Window
     }
 
 
-    private void OnTransformPanelToggle(object sender, RoutedEventArgs e)
+    private void OnTransformPanelToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleTransformPanel();
     }
@@ -2014,7 +2019,7 @@ public partial class MainWindow : Window
         if (_isInitializing || _isUpdatingTransformSubtypeCombos)
             return;
 
-        if (TransformPrimarySubtypeCombo.SelectedItem is string selectedSubtype)
+        if (TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem is string selectedSubtype)
             _viewModel.SetTransformPrimarySubtype(selectedSubtype);
 
         UpdateTransformComputeButtonState();
@@ -2028,7 +2033,7 @@ public partial class MainWindow : Window
         if (_isInitializing || _isUpdatingTransformSubtypeCombos)
             return;
 
-        if (TransformSecondarySubtypeCombo.SelectedItem is string selectedSubtype)
+        if (TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem is string selectedSubtype)
             _viewModel.SetTransformSecondarySubtype(selectedSubtype);
 
         UpdateTransformComputeButtonState();
@@ -2038,20 +2043,20 @@ public partial class MainWindow : Window
     {
         if (_isTransformSelectionPendingLoad)
         {
-            TransformComputeButton.IsEnabled = false;
+            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
             return;
         }
 
-        if (TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string operationTag)
+        if (TransformDataPanelController.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string operationTag)
         {
-            TransformComputeButton.IsEnabled = false;
+            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
             return;
         }
 
         var ctx = _viewModel.ChartState.LastContext;
         if (ctx == null)
         {
-            TransformComputeButton.IsEnabled = false;
+            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
             return;
         }
 
@@ -2062,7 +2067,7 @@ public partial class MainWindow : Window
 
         // Enable compute button if operation matches data availability
         // For binary operations, require both secondary data AND a second subtype selected
-        TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) || (isBinary && hasSecondary && hasSecondSubtype);
+        TransformDataPanelController.TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) || (isBinary && hasSecondary && hasSecondSubtype);
     }
 
     private async void OnTransformCompute(object sender, RoutedEventArgs e)
@@ -2086,7 +2091,7 @@ public partial class MainWindow : Window
     private bool TryGetSelectedOperation(out string operationTag)
     {
         operationTag = string.Empty;
-        if (TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string tag)
+        if (TransformDataPanelController.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string tag)
             return false;
 
         operationTag = tag;
@@ -2181,11 +2186,11 @@ public partial class MainWindow : Window
     /// </summary>
     private void PopulateTransformResultGrid(List<object> resultData)
     {
-        TransformGrid3.ItemsSource = resultData;
-        if (TransformGrid3.Columns.Count >= 2)
+        TransformDataPanelController.TransformGrid3.ItemsSource = resultData;
+        if (TransformDataPanelController.TransformGrid3.Columns.Count >= 2)
         {
-            TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            TransformDataPanelController.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            TransformDataPanelController.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
         }
     }
 
@@ -2194,8 +2199,8 @@ public partial class MainWindow : Window
     /// </summary>
     private void ShowTransformResultPanels()
     {
-        TransformGrid3Panel.Visibility = Visibility.Visible;
-        TransformChartContentPanel.Visibility = Visibility.Visible;
+        TransformDataPanelController.TransformGrid3Panel.Visibility = Visibility.Visible;
+        TransformDataPanelController.TransformChartContentPanel.Visibility = Visibility.Visible;
     }
 
     /// <summary>
@@ -2203,13 +2208,13 @@ public partial class MainWindow : Window
     /// </summary>
     private async Task PrepareTransformChartLayout()
     {
-        TransformChartContentPanel.UpdateLayout();
+        TransformDataPanelController.TransformChartContentPanel.UpdateLayout();
         await Dispatcher.InvokeAsync(() =>
                 {
                 },
                 DispatcherPriority.Render);
         await CalculateAndSetTransformChartWidth();
-        Debug.WriteLine($"[TransformChart] Before render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, IsVisible={ChartTransformResult.IsVisible}, PanelVisible={TransformChartContentPanel.Visibility}");
+        Debug.WriteLine($"[TransformChart] Before render - ActualWidth={TransformDataPanelController.ChartTransformResult.ActualWidth}, ActualHeight={TransformDataPanelController.ChartTransformResult.ActualHeight}, IsVisible={TransformDataPanelController.ChartTransformResult.IsVisible}, PanelVisible={TransformDataPanelController.TransformChartContentPanel.Visibility}");
     }
 
     /// <summary>
@@ -2217,15 +2222,15 @@ public partial class MainWindow : Window
     /// </summary>
     private async Task FinalizeTransformChartRendering()
     {
-        ChartTransformResult.Update(true, true);
-        TransformChartContentPanel.UpdateLayout();
+        TransformDataPanelController.ChartTransformResult.Update(true, true);
+        TransformDataPanelController.TransformChartContentPanel.UpdateLayout();
         await Dispatcher.InvokeAsync(() =>
                 {
-                    ChartTransformResult.InvalidateVisual();
-                    ChartTransformResult.Update(true, true);
+                    TransformDataPanelController.ChartTransformResult.InvalidateVisual();
+                    TransformDataPanelController.ChartTransformResult.Update(true, true);
                 },
                 DispatcherPriority.Render);
-        Debug.WriteLine($"[TransformChart] After render - ActualWidth={ChartTransformResult.ActualWidth}, ActualHeight={ChartTransformResult.ActualHeight}, SeriesCount={ChartTransformResult.Series?.Count ?? 0}");
+        Debug.WriteLine($"[TransformChart] After render - ActualWidth={TransformDataPanelController.ChartTransformResult.ActualWidth}, ActualHeight={TransformDataPanelController.ChartTransformResult.ActualHeight}, SeriesCount={TransformDataPanelController.ChartTransformResult.Series?.Count ?? 0}");
     }
 
     /// <summary>
@@ -2235,10 +2240,10 @@ public partial class MainWindow : Window
     {
         await Dispatcher.InvokeAsync(() =>
                 {
-                    if (TransformChartContainer == null)
+                    if (TransformDataPanelController.TransformChartContainer == null)
                         return;
 
-                    var parentStackPanel = TransformChartContainer.Parent as FrameworkElement;
+                    var parentStackPanel = TransformDataPanelController.TransformChartContainer.Parent as FrameworkElement;
                     if (parentStackPanel?.Parent is not FrameworkElement parentContainer)
                         return;
 
@@ -2247,7 +2252,7 @@ public partial class MainWindow : Window
 
                     var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
                     var chartWidth = Math.Max(400, availableWidth - usedWidth - 40); // 40px for window padding
-                    TransformChartContainer.Width = chartWidth;
+                    TransformDataPanelController.TransformChartContainer.Width = chartWidth;
 
                     Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
                 },
@@ -2262,16 +2267,16 @@ public partial class MainWindow : Window
         double usedWidth = 0;
 
         // Grid 1 is always visible
-        var grid1StackPanel = TransformGrid1.Parent as FrameworkElement;
+        var grid1StackPanel = TransformDataPanelController.TransformGrid1.Parent as FrameworkElement;
         usedWidth += grid1StackPanel?.ActualWidth > 0 ? grid1StackPanel.ActualWidth : 250;
 
         // Grid 2 (if visible)
-        if (TransformGrid2Panel.IsVisible)
-            usedWidth += TransformGrid2Panel.ActualWidth > 0 ? TransformGrid2Panel.ActualWidth : 250;
+        if (TransformDataPanelController.TransformGrid2Panel.IsVisible)
+            usedWidth += TransformDataPanelController.TransformGrid2Panel.ActualWidth > 0 ? TransformDataPanelController.TransformGrid2Panel.ActualWidth : 250;
 
         // Grid 3 (if visible)
-        if (TransformGrid3Panel.IsVisible)
-            usedWidth += TransformGrid3Panel.ActualWidth > 0 ? TransformGrid3Panel.ActualWidth : 250;
+        if (TransformDataPanelController.TransformGrid3Panel.IsVisible)
+            usedWidth += TransformDataPanelController.TransformGrid3Panel.ActualWidth > 0 ? TransformDataPanelController.TransformGrid3Panel.ActualWidth : 250;
 
         return usedWidth;
     }
@@ -2296,11 +2301,11 @@ public partial class MainWindow : Window
 
         // Use existing chart rendering pipeline
         // Pass metric type and subtype info for proper label formatting
-        var operationTag = TransformOperationCombo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() ?? "Transform" : "Transform";
+        var operationTag = TransformDataPanelController.TransformOperationCombo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() ?? "Transform" : "Transform";
         var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
         var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(ChartTransformResult, strategy, label, null, 400, transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(TransformDataPanelController.ChartTransformResult, strategy, label, null, 400, transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart);
     }
 
 
@@ -2375,7 +2380,7 @@ public partial class MainWindow : Window
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
         ResetDistributionChartZoom(ChartDistribution);
         ResetDistributionPolarZoom();
-        ChartHelper.ResetZoom(ChartTransformResult);
+        ChartHelper.ResetZoom(TransformDataPanelController.ChartTransformResult);
         var weekdayChart = WeekdayTrendChartController.Chart;
         ChartHelper.ResetZoom(ref weekdayChart);
         var weekdayPolarChart = WeekdayTrendChartController.PolarChart;
@@ -2811,3 +2816,6 @@ public partial class MainWindow : Window
 
     #endregion
 }
+
+
+
