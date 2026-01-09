@@ -309,7 +309,7 @@ public partial class MainWindow : Window
                 DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
                 break;
             case "Distribution":
-                UpdateChartVisibility(ChartDistributionContentPanel, ChartDistributionToggleButton, e.ShowDistribution);
+                DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
                 UpdateDistributionChartTypeVisibility();
                 break;
             case "WeeklyTrend":
@@ -354,7 +354,7 @@ public partial class MainWindow : Window
         MainChartController.Panel.IsChartVisible = e.ShowMain;
         UpdateChartVisibility(ChartNormContentPanel, ChartNormToggleButton, e.ShowNormalized);
         DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
-        UpdateChartVisibility(ChartDistributionContentPanel, ChartDistributionToggleButton, e.ShowDistribution);
+        DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
         UpdateDistributionChartTypeVisibility();
         WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
         UpdateWeekdayTrendChartTypeVisibility();
@@ -755,7 +755,7 @@ public partial class MainWindow : Window
     {
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(ChartDistribution);
+        ClearDistributionChart(DistributionChartController.Chart);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
     }
@@ -790,7 +790,7 @@ public partial class MainWindow : Window
         }
 
         var settings = _viewModel.ChartState.GetDistributionSettings(mode);
-        var chart = ChartDistribution;
+        var chart = DistributionChartController.Chart;
 
         if (_chartRenderingOrchestrator != null)
         {
@@ -847,8 +847,10 @@ public partial class MainWindow : Window
             return;
 
         var definition = DistributionModeCatalog.Get(mode);
-        _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, ChartDistributionPolar);
-        ChartDistributionPolar.Tag = new DistributionPolarTooltipState(definition, rangeResult);
+        _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, DistributionChartController.PolarChart);
+        DistributionChartController.PolarChart.Tag = new DistributionPolarTooltipState(definition, rangeResult);
+        DistributionChartController.PolarChart.UpdateLayout();
+        DistributionChartController.PolarChart.InvalidateVisual();
     }
 
     private async Task<IReadOnlyList<MetricData>?> ResolveDistributionDataAsync(ChartDataContext ctx, string? selectedSubtype)
@@ -1103,7 +1105,7 @@ public partial class MainWindow : Window
         {
                 "Norm" => ChartNormContentPanel,
                 "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
-                "Distribution" => ChartDistributionContentPanel,
+                "Distribution" => DistributionChartController.Panel.ChartContentPanel,
                 "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
                 _ => null
         };
@@ -1249,7 +1251,7 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(ChartDistribution);
+        ClearDistributionChart(DistributionChartController.Chart);
         ClearDistributionPolarChart();
         ChartHelper.ClearChart(WeekdayTrendChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(WeekdayTrendChartController.PolarChart, _viewModel.ChartState.ChartTimestamps);
@@ -1321,6 +1323,13 @@ public partial class MainWindow : Window
         WeekdayTrendChartController.SubtypeChanged += OnWeekdayTrendSubtypeChanged;
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
+        DistributionChartController.ToggleRequested += OnDistributionToggleRequested;
+        DistributionChartController.ChartTypeToggleButton.Click += OnDistributionChartTypeToggleRequested;
+        DistributionChartController.ModeCombo.SelectionChanged += OnDistributionModeChanged;
+        DistributionChartController.SubtypeCombo.SelectionChanged += OnDistributionSubtypeChanged;
+        DistributionChartController.FrequencyShadingRadio.Checked += OnDistributionDisplayModeChanged;
+        DistributionChartController.SimpleRangeRadio.Checked += OnDistributionDisplayModeChanged;
+        DistributionChartController.IntervalCountCombo.SelectionChanged += OnDistributionIntervalCountChanged;
         TransformDataPanelController.ToggleRequested += OnTransformPanelToggleRequested;
         TransformDataPanelController.TransformOperationCombo.SelectionChanged += OnTransformOperationChanged;
         TransformDataPanelController.TransformPrimarySubtypeCombo.SelectionChanged += OnTransformPrimarySubtypeChanged;
@@ -1583,20 +1592,20 @@ public partial class MainWindow : Window
 
     private void InitializeDistributionControls()
     {
-        DistributionModeCombo.Items.Clear();
+        DistributionChartController.ModeCombo.Items.Clear();
         foreach (var definition in DistributionModeCatalog.All)
         {
-            DistributionModeCombo.Items.Add(new ComboBoxItem
+            DistributionChartController.ModeCombo.Items.Add(new ComboBoxItem
             {
                     Content = definition.DisplayName,
                     Tag = definition.Mode
             });
         }
 
-        DistributionIntervalCountCombo.Items.Clear();
+        DistributionChartController.IntervalCountCombo.Items.Clear();
         foreach (var intervalCount in DistributionModeCatalog.IntervalCounts)
         {
-            DistributionIntervalCountCombo.Items.Add(new ComboBoxItem
+            DistributionChartController.IntervalCountCombo.Items.Add(new ComboBoxItem
             {
                     Content = intervalCount.ToString(),
                     Tag = intervalCount
@@ -1612,7 +1621,7 @@ public partial class MainWindow : Window
     private void InitializeChartBehavior()
     {
         ChartHelper.InitializeChartBehavior(MainChartController.Chart);
-        InitializeDistributionChartBehavior(ChartDistribution);
+        InitializeDistributionChartBehavior(DistributionChartController.Chart);
         ChartHelper.InitializeChartBehavior(ChartNorm);
         ChartHelper.InitializeChartBehavior(DiffRatioChartController.Chart);
     }
@@ -1624,8 +1633,8 @@ public partial class MainWindow : Window
                 Placement = PlacementMode.Mouse,
                 StaysOpen = true
         };
-        ToolTipService.SetToolTip(ChartDistributionPolar, _distributionPolarTooltip);
-        ChartDistributionPolar.HoveredPointsChanged += OnDistributionPolarHoveredPointsChanged;
+        ToolTipService.SetToolTip(DistributionChartController.PolarChart, _distributionPolarTooltip);
+        DistributionChartController.PolarChart.HoveredPointsChanged += OnDistributionPolarHoveredPointsChanged;
     }
 
     /// <summary>
@@ -1642,7 +1651,7 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(ChartNorm, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(ChartDistribution);
+        ClearDistributionChart(DistributionChartController.Chart);
         ClearDistributionPolarChart();
     }
 
@@ -1656,10 +1665,10 @@ public partial class MainWindow : Window
 
     private void ClearDistributionPolarChart()
     {
-        ChartDistributionPolar.Series = Array.Empty<LiveChartsCore.ISeries>();
-        ChartDistributionPolar.AngleAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
-        ChartDistributionPolar.RadiusAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
-        ChartDistributionPolar.Tag = null;
+        DistributionChartController.PolarChart.Series = Array.Empty<LiveChartsCore.ISeries>();
+        DistributionChartController.PolarChart.AngleAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        DistributionChartController.PolarChart.RadiusAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        DistributionChartController.PolarChart.Tag = null;
         if (_distributionPolarTooltip != null)
             _distributionPolarTooltip.IsOpen = false;
     }
@@ -1669,7 +1678,7 @@ public partial class MainWindow : Window
         DisableAxisLabels(MainChartController.Chart);
         DisableAxisLabels(ChartNorm);
         DisableAxisLabels(DiffRatioChartController.Chart);
-        DisableDistributionAxisLabels(ChartDistribution);
+        DisableDistributionAxisLabels(DistributionChartController.Chart);
         DisableDistributionPolarAxisLabels();
     }
 
@@ -1683,9 +1692,9 @@ public partial class MainWindow : Window
 
     private void DisableDistributionPolarAxisLabels()
     {
-        ChartDistributionPolar.AngleAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
-        ChartDistributionPolar.RadiusAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
-        ChartDistributionPolar.Tag = null;
+        DistributionChartController.PolarChart.AngleAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        DistributionChartController.PolarChart.RadiusAxes = Array.Empty<LiveChartsCore.SkiaSharpView.PolarAxis>();
+        DistributionChartController.PolarChart.Tag = null;
         if (_distributionPolarTooltip != null)
             _distributionPolarTooltip.IsOpen = false;
     }
@@ -1911,7 +1920,7 @@ public partial class MainWindow : Window
         _viewModel.ToggleDistribution();
     }
 
-    private void OnChartDistributionToggle(object sender, RoutedEventArgs e)
+    private void OnDistributionToggleRequested(object? sender, EventArgs e)
     {
         HandleDistributionChartToggle();
     }
@@ -2378,7 +2387,7 @@ public partial class MainWindow : Window
         ChartHelper.ResetZoom(mainChart);
         ChartHelper.ResetZoom(ChartNorm);
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
-        ResetDistributionChartZoom(ChartDistribution);
+        ResetDistributionChartZoom(DistributionChartController.Chart);
         ResetDistributionPolarZoom();
         ChartHelper.ResetZoom(TransformDataPanelController.ChartTransformResult);
         var weekdayChart = WeekdayTrendChartController.Chart;
@@ -2397,7 +2406,7 @@ public partial class MainWindow : Window
 
     private void ResetDistributionPolarZoom()
     {
-        ChartDistributionPolar.FitToBounds = true;
+        DistributionChartController.PolarChart.FitToBounds = true;
     }
 
     private void OnDistributionPolarHoveredPointsChanged(LiveChartsCore.Kernel.Sketches.IChartView chart, IEnumerable<ChartPoint>? newPoints, IEnumerable<ChartPoint>? oldPoints)
@@ -2405,7 +2414,7 @@ public partial class MainWindow : Window
         if (_distributionPolarTooltip == null)
             return;
 
-        var state = ChartDistributionPolar.Tag as DistributionPolarTooltipState;
+        var state = DistributionChartController.PolarChart.Tag as DistributionPolarTooltipState;
         if (state == null || newPoints == null)
         {
             _distributionPolarTooltip.IsOpen = false;
@@ -2520,11 +2529,11 @@ public partial class MainWindow : Window
 
     private void SelectDistributionMode(DistributionMode mode)
     {
-        foreach (var item in DistributionModeCombo.Items.OfType<ComboBoxItem>())
+        foreach (var item in DistributionChartController.ModeCombo.Items.OfType<ComboBoxItem>())
         {
             if (item.Tag is DistributionMode taggedMode && taggedMode == mode)
             {
-                DistributionModeCombo.SelectedItem = item;
+                DistributionChartController.ModeCombo.SelectedItem = item;
                 return;
             }
         }
@@ -2534,8 +2543,8 @@ public partial class MainWindow : Window
     {
         if (!_viewModel.ChartState.IsDistributionVisible)
         {
-            ChartDistribution.Visibility = Visibility.Collapsed;
-            ChartDistributionPolar.Visibility = Visibility.Collapsed;
+            DistributionChartController.Chart.Visibility = Visibility.Collapsed;
+            DistributionChartController.PolarChart.Visibility = Visibility.Collapsed;
             if (_distributionPolarTooltip != null)
                 _distributionPolarTooltip.IsOpen = false;
             return;
@@ -2543,15 +2552,15 @@ public partial class MainWindow : Window
 
         if (_viewModel.ChartState.IsDistributionPolarMode)
         {
-            ChartDistribution.Visibility = Visibility.Collapsed;
-            ChartDistributionPolar.Visibility = Visibility.Visible;
-            DistributionChartTypeToggleButton.Content = "Cartesian";
+            DistributionChartController.Chart.Visibility = Visibility.Collapsed;
+            DistributionChartController.PolarChart.Visibility = Visibility.Visible;
+            DistributionChartController.ChartTypeToggleButton.Content = "Cartesian";
         }
         else
         {
-            ChartDistribution.Visibility = Visibility.Visible;
-            ChartDistributionPolar.Visibility = Visibility.Collapsed;
-            DistributionChartTypeToggleButton.Content = "Polar";
+            DistributionChartController.Chart.Visibility = Visibility.Visible;
+            DistributionChartController.PolarChart.Visibility = Visibility.Collapsed;
+            DistributionChartController.ChartTypeToggleButton.Content = "Polar";
             if (_distributionPolarTooltip != null)
                 _distributionPolarTooltip.IsOpen = false;
         }
@@ -2559,11 +2568,11 @@ public partial class MainWindow : Window
 
     private void SelectDistributionIntervalCount(int intervalCount)
     {
-        foreach (var item in DistributionIntervalCountCombo.Items.OfType<ComboBoxItem>())
+        foreach (var item in DistributionChartController.IntervalCountCombo.Items.OfType<ComboBoxItem>())
         {
             if (item.Tag is int taggedInterval && taggedInterval == intervalCount)
             {
-                DistributionIntervalCountCombo.SelectedItem = item;
+                DistributionChartController.IntervalCountCombo.SelectedItem = item;
                 return;
             }
         }
@@ -2572,12 +2581,12 @@ public partial class MainWindow : Window
     private void ApplyDistributionModeDefinition(DistributionMode mode)
     {
         var definition = DistributionModeCatalog.Get(mode);
-        ChartDistributionTitle.Text = definition.Title;
+        DistributionChartController.Panel.Title = definition.Title;
 
-        if (ChartDistribution.AxisX.Count == 0)
-            ChartDistribution.AxisX.Add(new Axis());
+        if (DistributionChartController.Chart.AxisX.Count == 0)
+            DistributionChartController.Chart.AxisX.Add(new Axis());
 
-        var axis = ChartDistribution.AxisX[0];
+        var axis = DistributionChartController.Chart.AxisX[0];
         axis.Title = definition.XAxisTitle;
         axis.Labels = definition.XAxisLabels.ToArray();
     }
@@ -2585,38 +2594,38 @@ public partial class MainWindow : Window
     private void ApplyDistributionSettingsToUi(DistributionMode mode)
     {
         var settings = _viewModel.ChartState.GetDistributionSettings(mode);
-        DistributionFrequencyShadingRadio.IsChecked = settings.UseFrequencyShading;
-        DistributionSimpleRangeRadio.IsChecked = !settings.UseFrequencyShading;
+        DistributionChartController.FrequencyShadingRadio.IsChecked = settings.UseFrequencyShading;
+        DistributionChartController.SimpleRangeRadio.IsChecked = !settings.UseFrequencyShading;
         SelectDistributionIntervalCount(settings.IntervalCount);
     }
 
     private void UpdateDistributionSubtypeOptions()
     {
-        if (DistributionSubtypeCombo == null)
+        if (DistributionChartController.SubtypeCombo == null)
             return;
 
         _isUpdatingDistributionSubtypeCombo = true;
         try
         {
-            DistributionSubtypeCombo.Items.Clear();
+            DistributionChartController.SubtypeCombo.Items.Clear();
 
             var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
             if (selectedSubtypes.Count == 0)
             {
-                DistributionSubtypeCombo.IsEnabled = false;
+                DistributionChartController.SubtypeCombo.IsEnabled = false;
                 _viewModel.ChartState.SelectedDistributionSubtype = null;
-                DistributionSubtypeCombo.SelectedItem = null;
+                DistributionChartController.SubtypeCombo.SelectedItem = null;
                 return;
             }
 
             foreach (var subtype in selectedSubtypes)
-                DistributionSubtypeCombo.Items.Add(subtype);
+                DistributionChartController.SubtypeCombo.Items.Add(subtype);
 
-            DistributionSubtypeCombo.IsEnabled = true;
+            DistributionChartController.SubtypeCombo.IsEnabled = true;
 
             var current = _viewModel.ChartState.SelectedDistributionSubtype;
             var selection = current != null && selectedSubtypes.Contains(current) ? current : selectedSubtypes[0];
-            DistributionSubtypeCombo.SelectedItem = selection;
+            DistributionChartController.SubtypeCombo.SelectedItem = selection;
 
             if (_isInitializing)
                 _viewModel.ChartState.SelectedDistributionSubtype = selection;
@@ -2736,7 +2745,7 @@ public partial class MainWindow : Window
         if (_viewModel == null)
             return DistributionMode.Weekly;
 
-        if (DistributionModeCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is DistributionMode mode)
+        if (DistributionChartController.ModeCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is DistributionMode mode)
             return mode;
 
         return _viewModel.ChartState.SelectedDistributionMode;
@@ -2763,7 +2772,7 @@ public partial class MainWindow : Window
         if (_viewModel == null)
             return;
 
-        var useFrequencyShading = DistributionFrequencyShadingRadio.IsChecked == true;
+        var useFrequencyShading = DistributionChartController.FrequencyShadingRadio.IsChecked == true;
         await HandleDistributionDisplayModeChanged(GetSelectedDistributionMode(), useFrequencyShading);
     }
 
@@ -2772,7 +2781,7 @@ public partial class MainWindow : Window
         if (_viewModel == null)
             return;
 
-        if (DistributionIntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var intervalCount))
+        if (DistributionChartController.IntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var intervalCount))
             await HandleDistributionIntervalCountChanged(GetSelectedDistributionMode(), intervalCount);
     }
 
@@ -2798,7 +2807,7 @@ public partial class MainWindow : Window
         if (_isInitializing || _isUpdatingDistributionSubtypeCombo)
             return;
 
-        if (DistributionSubtypeCombo.SelectedItem is string selectedSubtype)
+        if (DistributionChartController.SubtypeCombo.SelectedItem is string selectedSubtype)
             _viewModel.SetDistributionSubtype(selectedSubtype);
     }
 
@@ -2816,6 +2825,8 @@ public partial class MainWindow : Window
 
     #endregion
 }
+
+
 
 
 
