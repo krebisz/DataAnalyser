@@ -2003,10 +2003,14 @@ public partial class MainWindow : Window
             index += bucketCount;
 
         var label = state.Definition.XAxisLabels[index];
-        var minValue = FormatDistributionValue(state.RangeResult.Mins[index], state.RangeResult.Unit);
-        var maxValue = FormatDistributionValue(state.RangeResult.Maxs[index], state.RangeResult.Unit);
+        var minRaw = state.RangeResult.Mins[index];
+        var maxRaw = state.RangeResult.Maxs[index];
+        var minValue = FormatDistributionValue(minRaw, state.RangeResult.Unit);
+        var maxValue = FormatDistributionValue(maxRaw, state.RangeResult.Unit);
+        var avgValue = FormatDistributionValue(state.RangeResult.Averages[index], state.RangeResult.Unit);
+        var diffValue = FormatDistributionValue(maxRaw - minRaw, state.RangeResult.Unit);
 
-        _distributionPolarTooltip.Content = $"{label}\nMin: {minValue}\nMax: {maxValue}";
+        _distributionPolarTooltip.Content = $"{label}\nMin: {minValue}\nMax: {maxValue}\nAvg: {avgValue}\nΔ: {diffValue}";
         _distributionPolarTooltip.IsOpen = true;
     }
 

@@ -114,7 +114,7 @@ public abstract class BaseDistributionService
             return null;
 
         var useCmsStrategy = cmsSeries != null;
-        var (result, _) = await ComputeDistributionAsync(data, cmsSeries, displayName, from, to, useCmsStrategy, enableParity);
+        var (result, extendedResult) = await ComputeDistributionAsync(data, cmsSeries, displayName, from, to, useCmsStrategy, enableParity);
         if (result?.PrimaryRawValues == null || result.PrimarySmoothed == null)
             return null;
 
@@ -139,7 +139,21 @@ public abstract class BaseDistributionService
         if (globalMax <= globalMin)
             globalMax = globalMin + 1.0;
 
-        return new DistributionRangeResult(mins, maxs, globalMin, globalMax, result.Unit);
+        var averages = new List<double>(Configuration.BucketCount);
+        for (var i = 0; i < Configuration.BucketCount; i++)
+        {
+            if (extendedResult?.BucketValues.TryGetValue(i, out var values) == true)
+            {
+                var validValues = values.Where(v => !double.IsNaN(v)).ToList();
+                averages.Add(validValues.Count > 0 ? validValues.Average() : double.NaN);
+            }
+            else
+            {
+                averages.Add(double.NaN);
+            }
+        }
+
+        return new DistributionRangeResult(mins, maxs, averages, globalMin, globalMax, result.Unit);
     }
 
     // Abstract methods that must be implemented by derived classes

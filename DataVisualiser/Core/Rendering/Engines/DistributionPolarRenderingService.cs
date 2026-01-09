@@ -45,7 +45,8 @@ public sealed class DistributionPolarRenderingService
         chart.Series = new ISeries[]
         {
                 CreateSeries("Min", rangeResult.Mins, bucketCount, new SKColor(70, 130, 180), new SKColor(70, 130, 180, 80)),
-                CreateSeries("Max", rangeResult.Maxs, bucketCount, new SKColor(220, 80, 80), new SKColor(220, 80, 80, 80))
+                CreateSeries("Max", rangeResult.Maxs, bucketCount, new SKColor(220, 80, 80), new SKColor(220, 80, 80, 80)),
+                CreateSeries("Avg", rangeResult.Averages, bucketCount, new SKColor(235, 200, 40), new SKColor(235, 200, 40, 60))
         };
     }
 
