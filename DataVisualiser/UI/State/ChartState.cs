@@ -40,10 +40,10 @@ public class ChartState
 
     // Distribution chart options
     public DistributionMode SelectedDistributionMode { get; set; } = DistributionMode.Weekly;
-    public string? SelectedDistributionSubtype { get; set; }
-    public string? SelectedWeekdayTrendSubtype { get; set; }
-    public string? SelectedTransformPrimarySubtype { get; set; }
-    public string? SelectedTransformSecondarySubtype { get; set; }
+    public MetricSeriesSelection? SelectedDistributionSeries { get; set; }
+    public MetricSeriesSelection? SelectedWeekdayTrendSeries { get; set; }
+    public MetricSeriesSelection? SelectedTransformPrimarySeries { get; set; }
+    public MetricSeriesSelection? SelectedTransformSecondarySeries { get; set; }
 
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }

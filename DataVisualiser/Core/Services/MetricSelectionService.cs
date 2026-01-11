@@ -18,7 +18,7 @@ public class MetricSelectionService
     }
 
 
-    public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
+    public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName)
     {
         var dataFetcher = new DataFetcher(_connectionString);
         var cmsService = new CmsDataService(_connectionString);
@@ -32,14 +32,20 @@ public class MetricSelectionService
         // -----------------------
         // Legacy loads with result limiting
         // -----------------------
-        var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, maxRecords);
-        var secondaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName, maxRecords);
+        var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, maxRecords);
+        var secondaryLegacyTask = secondarySelection != null
+                ? dataFetcher.GetHealthMetricsDataByBaseType(secondarySelection.MetricType, secondarySelection.QuerySubtype, from, to, tableName, maxRecords)
+                : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
 
         // ---------------------------------
         // Canonical ID resolution (explicit)
         // ---------------------------------
-        var primaryCanonicalId = CanonicalMetricMapping.FromLegacyFields(baseType, primarySubtype);
-        var secondaryCanonicalId = CanonicalMetricMapping.FromLegacyFields(baseType, secondarySubtype);
+        var primaryCanonicalId = !string.Equals(primarySelection.MetricType, "(All)", StringComparison.OrdinalIgnoreCase)
+                ? CanonicalMetricMapping.FromLegacyFields(primarySelection.MetricType, primarySelection.QuerySubtype)
+                : null;
+        var secondaryCanonicalId = secondarySelection != null && !string.Equals(secondarySelection.MetricType, "(All)", StringComparison.OrdinalIgnoreCase)
+                ? CanonicalMetricMapping.FromLegacyFields(secondarySelection.MetricType, secondarySelection.QuerySubtype)
+                : null;
 
         // ------------------------
         // CMS availability checks

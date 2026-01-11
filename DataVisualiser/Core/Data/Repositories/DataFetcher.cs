@@ -179,6 +179,9 @@ public class DataFetcher
         if (string.IsNullOrWhiteSpace(baseType))
             throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
 
+        if (string.Equals(baseType, "(All)", StringComparison.OrdinalIgnoreCase))
+            return await GetAllSubtypes(tableName);
+
         tableName = SqlQueryBuilder.NormalizeTableName(tableName);
 
         using var conn = new SqlConnection(_connectionString);
@@ -221,6 +224,43 @@ public class DataFetcher
                     });
             return subtypes;
         }
+    }
+
+    /// <summary>
+    ///     Gets distinct subtypes across all metric types from the specified table.
+    /// </summary>
+    public async Task<IEnumerable<string>> GetAllSubtypes(string tableName = DataAccessDefaults.DefaultTableName)
+    {
+        tableName = SqlQueryBuilder.NormalizeTableName(tableName);
+
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        if (tableName == DataAccessDefaults.DefaultTableName)
+        {
+            var sql = $@"
+                    -- DataFetcher.GetAllSubtypes (HealthMetrics)
+                    SELECT DISTINCT MetricSubtype 
+                    FROM {DataAccessDefaults.HealthMetricsCountsTable} 
+                    WHERE MetricSubtype IS NOT NULL
+                      AND MetricSubtype != ''
+                      AND RecordCount > 0
+                    ORDER BY MetricSubtype";
+
+            var subtypes = await conn.QueryAsync<string>(sql);
+            return subtypes;
+        }
+
+        var fallbackSql = $@"
+                -- DataFetcher.GetAllSubtypes ({tableName})
+                SELECT DISTINCT MetricSubtype 
+                FROM [dbo].[{tableName}]
+                WHERE MetricSubtype IS NOT NULL
+                  AND MetricSubtype != ''
+                ORDER BY MetricSubtype";
+
+        var fallbackSubtypes = await conn.QueryAsync<string>(fallbackSql);
+        return fallbackSubtypes;
     }
 
     /// <summary>

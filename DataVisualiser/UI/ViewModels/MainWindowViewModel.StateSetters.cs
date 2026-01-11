@@ -85,26 +85,26 @@ public partial class MainWindowViewModel
         RequestChartUpdate(false, "Distribution");
     }
 
-    public void SetDistributionSubtype(string? subtype)
+    public void SetDistributionSeries(MetricSeriesSelection? selection)
     {
-        ChartState.SelectedDistributionSubtype = subtype;
+        ChartState.SelectedDistributionSeries = selection;
         RequestChartUpdate(false, "Distribution");
     }
 
-    public void SetWeekdayTrendSubtype(string? subtype)
+    public void SetWeekdayTrendSeries(MetricSeriesSelection? selection)
     {
-        ChartState.SelectedWeekdayTrendSubtype = subtype;
+        ChartState.SelectedWeekdayTrendSeries = selection;
         RequestChartUpdate(false, "WeeklyTrend");
     }
 
-    public void SetTransformPrimarySubtype(string? subtype)
+    public void SetTransformPrimarySeries(MetricSeriesSelection? selection)
     {
-        ChartState.SelectedTransformPrimarySubtype = subtype;
+        ChartState.SelectedTransformPrimarySeries = selection;
     }
 
-    public void SetTransformSecondarySubtype(string? subtype)
+    public void SetTransformSecondarySeries(MetricSeriesSelection? selection)
     {
-        ChartState.SelectedTransformSecondarySubtype = subtype;
+        ChartState.SelectedTransformSecondarySeries = selection;
     }
 
     public void SetDistributionFrequencyShading(DistributionMode mode, bool useFrequencyShading)
@@ -122,9 +122,9 @@ public partial class MainWindowViewModel
         MetricState.SelectedMetricType = metric;
     }
 
-    public void SetSelectedSubtypes(IEnumerable<string?> subtypes)
+    public void SetSelectedSeries(IEnumerable<MetricSeriesSelection> selections)
     {
-        MetricState.SetSubtypes(subtypes);
+        MetricState.SetSeriesSelections(selections);
     }
 
     public void SetDateRange(DateTime? from, DateTime? to)

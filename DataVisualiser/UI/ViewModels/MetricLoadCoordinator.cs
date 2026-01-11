@@ -106,19 +106,27 @@ public sealed class MetricLoadCoordinator
         if (!ValidateDataLoadPrerequisites(out var validationError, onError))
             return false;
 
-        var metricType = _metricState.SelectedMetricType!;
         var tableName = _metricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
 
-        // IMPORTANT: Ensure consistent ordering - first selected subtype is always primary (data1),
-        // second selected subtype is always secondary (data2). This ordering is maintained
+        if (_metricState.SelectedSeries.Count == 0)
+        {
+            onError(new ErrorEventArgs
+            {
+                    Message = "Please select at least one Metric Subtype before loading data."
+            });
+            return false;
+        }
+
+        // IMPORTANT: Ensure consistent ordering - first selected series is always primary (data1),
+        // second selected series is always secondary (data2). This ordering is maintained
         // across all charts and strategies.
-        var (primarySubtype, secondarySubtype) = ExtractPrimaryAndSecondarySubtypes();
+        var (primarySelection, secondarySelection) = ExtractPrimaryAndSecondarySelections();
 
         try
         {
             _uiState.IsLoadingData = true;
 
-            var dataLoaded = await LoadAndValidateMetricDataAsync(metricType, primarySubtype, secondarySubtype, tableName, onError);
+            var dataLoaded = await LoadAndValidateMetricDataAsync(primarySelection, secondarySelection, tableName, onError);
 
             if (!dataLoaded)
                 return false;
@@ -150,7 +158,6 @@ public sealed class MetricLoadCoordinator
                     // Silently return without showing error - this prevents popups during resolution changes
                 return;
 
-            var metricType = _metricState.SelectedMetricType!;
             var tableName = _metricState.ResolutionTableName!;
             if (string.IsNullOrWhiteSpace(tableName))
             {
@@ -161,17 +168,11 @@ public sealed class MetricLoadCoordinator
                 return;
             }
 
-            // Use the *primary* selected subtype (if any) for the date range.
-            // If the first subtype is "(All)" or empty, we pass null to mean "all subtypes".
-            string? primarySubtype = null;
-            if (_metricState.SelectedSubtypes.Any())
-            {
-                var first = _metricState.SelectedSubtypes.First();
-                if (!string.IsNullOrWhiteSpace(first) && first != "(All)")
-                    primarySubtype = first;
-            }
+            var primarySelection = _metricState.SelectedSeries.FirstOrDefault();
+            if (primarySelection == null)
+                return;
 
-            var dateRange = await _metricService.LoadDateRangeAsync(metricType, primarySubtype, tableName);
+            var dateRange = await _metricService.LoadDateRangeAsync(primarySelection.MetricType, primarySelection.QuerySubtype, tableName);
 
             if (!dateRange.HasValue)
             {
@@ -237,46 +238,39 @@ public sealed class MetricLoadCoordinator
     ///     IMPORTANT: First selected subtype is always primary (data1),
     ///     second selected subtype is always secondary (data2).
     /// </summary>
-    private(string? primarySubtype, string? secondarySubtype) ExtractPrimaryAndSecondarySubtypes()
+    private(MetricSeriesSelection Primary, MetricSeriesSelection? Secondary) ExtractPrimaryAndSecondarySelections()
     {
-        var primarySubtype = _metricState.SelectedSubtypes.Count > 0 ?
-                _metricState.SelectedSubtypes[0] // First selected subtype = primary
-                :
-                null;
+        var primary = _metricState.SelectedSeries[0];
+        var secondary = _metricState.SelectedSeries.Count > 1 ? _metricState.SelectedSeries[1] : null;
 
-        var secondarySubtype = _metricState.SelectedSubtypes.Count > 1 ?
-                _metricState.SelectedSubtypes[1] // Second selected subtype = secondary
-                :
-                null;
-
-        return (primarySubtype, secondarySubtype);
+        return (primary, secondary);
     }
 
     /// <summary>
     ///     Loads and validates metric data, then builds the chart data context.
     ///     Returns false if data loading or validation fails.
     /// </summary>
-    private async Task<bool> LoadAndValidateMetricDataAsync(string metricType, string? primarySubtype, string? secondarySubtype, string tableName, Action<ErrorEventArgs> onError)
+    private async Task<bool> LoadAndValidateMetricDataAsync(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, string tableName, Action<ErrorEventArgs> onError)
     {
         // Load data: data1 = first selected subtype (primary), data2 = second selected subtype (secondary)
-        var (primaryCms, secondaryCms, data1, data2) = await _metricService.LoadMetricDataWithCmsAsync(metricType, primarySubtype, secondarySubtype, _metricState.FromDate!.Value, _metricState.ToDate!.Value, tableName);
+        var (primaryCms, secondaryCms, data1, data2) = await _metricService.LoadMetricDataWithCmsAsync(primarySelection, secondarySelection, _metricState.FromDate!.Value, _metricState.ToDate!.Value, tableName);
 
         // When only one subtype is selected, ensure data2 is empty to prevent mixing with all subtypes
         // GetHealthMetricsDataByBaseType with null subtype returns ALL subtypes, which corrupts the chart
-        if (secondarySubtype == null)
+        if (secondarySelection == null)
             data2 = Enumerable.Empty<MetricData>();
 
         EventHandler<ErrorEventArgs> errorHandler = (_, args) => onError(args);
 
         // Validate primary data
-        if (!MetricDataValidationHelper.ValidatePrimaryData(metricType, primarySubtype, primaryCms, data1, errorHandler))
+        if (!MetricDataValidationHelper.ValidatePrimaryData(primarySelection.MetricType, primarySelection.QuerySubtype, primaryCms, data1, errorHandler))
         {
             _chartState.LastContext = null;
             return false;
         }
 
         // Validate secondary data (only if secondary subtype is selected)
-        if (!MetricDataValidationHelper.ValidateSecondaryData(metricType, secondarySubtype, secondaryCms, data2, errorHandler))
+        if (secondarySelection != null && !MetricDataValidationHelper.ValidateSecondaryData(secondarySelection.MetricType, secondarySelection.QuerySubtype, secondaryCms, data2, errorHandler))
         {
             _chartState.LastContext = null;
             return false;
@@ -285,7 +279,7 @@ public sealed class MetricLoadCoordinator
         // NEW: delegate context construction to the builder
         var ctxBuilder = new ChartDataContextBuilder();
 
-        _chartState.LastContext = ctxBuilder.Build(metricType, primarySubtype, secondarySubtype, data1, data2, _metricState.FromDate.Value, _metricState.ToDate.Value, primaryCms, secondaryCms);
+        _chartState.LastContext = ctxBuilder.Build(primarySelection, secondarySelection, data1, data2, _metricState.FromDate.Value, _metricState.ToDate.Value, primaryCms, secondaryCms);
 
         Debug.WriteLine($"[CTX] SemanticMetricCount={_chartState.LastContext.SemanticMetricCount}, " + $"PrimaryCms={(_chartState.LastContext.PrimaryCms == null ? "NULL" : "SET")}");
 

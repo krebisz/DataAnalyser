@@ -204,13 +204,16 @@ public static class TransformExpressionEvaluator
 
         if (ctx != null)
         {
-            if (!string.IsNullOrEmpty(ctx.PrimarySubtype))
-                metricLabels.Add($"{ctx.MetricType}:{ctx.PrimarySubtype}");
-            else if (!string.IsNullOrEmpty(ctx.MetricType))
-                metricLabels.Add(ctx.MetricType);
+            var primaryMetricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+            var secondaryMetricType = ctx.SecondaryMetricType ?? primaryMetricType;
 
-            if (requiredCount > 1 && !string.IsNullOrEmpty(ctx.SecondarySubtype))
-                metricLabels.Add($"{ctx.MetricType}:{ctx.SecondarySubtype}");
+            if (!string.IsNullOrEmpty(ctx.PrimarySubtype) && !string.IsNullOrEmpty(primaryMetricType))
+                metricLabels.Add($"{primaryMetricType}:{ctx.PrimarySubtype}");
+            else if (!string.IsNullOrEmpty(primaryMetricType))
+                metricLabels.Add(primaryMetricType);
+
+            if (requiredCount > 1 && !string.IsNullOrEmpty(ctx.SecondarySubtype) && !string.IsNullOrEmpty(secondaryMetricType))
+                metricLabels.Add($"{secondaryMetricType}:{ctx.SecondarySubtype}");
         }
 
         // Fallback to generic labels if context not available

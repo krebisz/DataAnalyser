@@ -342,7 +342,10 @@ public sealed class ChartRenderEngine
         var smoothRaw = isSmoothed ? "smooth" : "raw";
 
         // If we have metric type and subtype information, use the new format
-        if (!string.IsNullOrEmpty(model.MetricType))
+        var primaryMetricType = model.PrimaryMetricType ?? model.MetricType;
+        var secondaryMetricType = model.SecondaryMetricType ?? primaryMetricType;
+
+        if (!string.IsNullOrEmpty(primaryMetricType))
         {
             if (model.IsOperationChart && !string.IsNullOrEmpty(model.OperationType))
             {
@@ -353,20 +356,21 @@ public sealed class ChartRenderEngine
 
                 if (isPrimary)
                         // Primary series shows: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth/raw)"
-                    return $"{model.MetricType}:{primarySubtype} ({operation}) {model.MetricType}:{secondarySubtype} ({smoothRaw})";
+                    return $"{primaryMetricType}:{primarySubtype} ({operation}) {secondaryMetricType}:{secondarySubtype} ({smoothRaw})";
 
                 // Secondary series (shouldn't happen for operation charts, but handle it)
-                return $"{model.MetricType}:{secondarySubtype} ({smoothRaw})";
+                return $"{secondaryMetricType}:{secondarySubtype} ({smoothRaw})";
             }
 
             // Independent chart format: "Weight:fat_free_mass (smooth/raw)"
             var subtype = isPrimary ? model.PrimarySubtype ?? string.Empty : model.SecondarySubtype ?? string.Empty;
+            var metricType = isPrimary ? primaryMetricType : secondaryMetricType;
 
             if (!string.IsNullOrEmpty(subtype))
-                return $"{model.MetricType}:{subtype} ({smoothRaw})";
+                return $"{metricType}:{subtype} ({smoothRaw})";
 
             // Fallback if no subtype
-            return $"{model.MetricType} ({smoothRaw})";
+            return $"{metricType} ({smoothRaw})";
         }
 
         // Fallback to old format if metric type info is not available

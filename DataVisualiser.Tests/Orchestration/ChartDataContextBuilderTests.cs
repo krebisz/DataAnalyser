@@ -37,7 +37,10 @@ public sealed class ChartDataContextBuilderTests
 
         var builder = new ChartDataContextBuilder();
 
-        var ctx = builder.Build("Weight", "A", "B", data1, data2, From, To);
+        var primarySelection = new MetricSeriesSelection("Weight", "A");
+        var secondarySelection = new MetricSeriesSelection("Weight", "B");
+
+        var ctx = builder.Build(primarySelection, secondarySelection, data1, data2, From, To);
 
         Assert.Equal(new[]
                 {
@@ -100,7 +103,8 @@ public sealed class ChartDataContextBuilderTests
 
         var builder = new ChartDataContextBuilder();
 
-        var ctx = builder.Build("Weight", "(All)", null, data, null, From, To);
+        var primarySelection = new MetricSeriesSelection("Weight", "(All)");
+        var ctx = builder.Build(primarySelection, null, data, null, From, To);
 
         Assert.Equal("Weight", ctx.DisplayName1);
         Assert.Equal("Weight", ctx.DisplayName2);
@@ -117,7 +121,10 @@ public sealed class ChartDataContextBuilderTests
 
         var builder = new ChartDataContextBuilder();
 
-        var ctx = builder.Build("Weight", "A", "B", data, data, From, To, cms1, cms2);
+        var primarySelection = new MetricSeriesSelection("Weight", "A");
+        var secondarySelection = new MetricSeriesSelection("Weight", "B");
+
+        var ctx = builder.Build(primarySelection, secondarySelection, data, data, From, To, cms1, cms2);
 
         Assert.Same(cms1, ctx.PrimaryCms);
         Assert.Same(cms2, ctx.SecondaryCms);

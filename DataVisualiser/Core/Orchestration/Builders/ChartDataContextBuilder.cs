@@ -22,8 +22,8 @@ public sealed class ChartDataContextBuilder
     ///     - primarySubtype = first selected subtype
     ///     - secondarySubtype = second selected subtype
     /// </summary>
-    public ChartDataContext Build(string metricType, string? primarySubtype, // First selected subtype
-                                  string? secondarySubtype,                  // Second selected subtype
+    public ChartDataContext Build(MetricSeriesSelection primarySelection,
+                                  MetricSeriesSelection? secondarySelection,
                                   IEnumerable<MetricData> data1,             // First selected subtype data (primary)
                                   IEnumerable<MetricData>? data2,            // Second selected subtype data (secondary)
                                   DateTime from, DateTime to)
@@ -50,7 +50,7 @@ public sealed class ChartDataContextBuilder
         var norm2 = Normalize(raw2);
 
         // STEP 5 � Display labels
-        var (display1, display2) = BuildDisplayNames(metricType, primarySubtype, secondarySubtype);
+        var (display1, display2) = BuildDisplayNames(primarySelection, secondarySelection);
 
         // Construct full context
         return new ChartDataContext
@@ -73,26 +73,28 @@ public sealed class ChartDataContextBuilder
                 DisplayName1 = display1,
                 DisplayName2 = display2,
 
-                MetricType = metricType,
-                PrimarySubtype = primarySubtype,
-                SecondarySubtype = secondarySubtype,
+                MetricType = primarySelection.MetricType,
+                PrimaryMetricType = primarySelection.MetricType,
+                SecondaryMetricType = secondarySelection?.MetricType,
+                PrimarySubtype = primarySelection.Subtype,
+                SecondarySubtype = secondarySelection?.Subtype,
 
                 From = from,
                 To = to,
 
-                SemanticMetricCount = secondarySubtype == null ? 1 : 2
+                SemanticMetricCount = secondarySelection == null ? 1 : 2
         };
     }
 
 
-    public ChartDataContext Build(string metricType, string? primarySubtype, string? secondarySubtype, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, DateTime from, DateTime to, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
+    public ChartDataContext Build(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, DateTime from, DateTime to, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
     {
         // CRITICAL FIX: Don't convert CMS to legacy here.
         // Strategies should receive CMS directly via StrategyCutOverService.
         // Only convert if we need legacy data for derived calculations (diff/ratio/norm).
         // For now, use legacy data as-is and let strategies handle CMS directly.
 
-        var ctx = Build(metricType, primarySubtype, secondarySubtype, data1, data2, from, to);
+        var ctx = Build(primarySelection, secondarySelection, data1, data2, from, to);
 
         // Store CMS in context for strategies to use directly
         ctx.PrimaryCms = primaryCms;
@@ -193,11 +195,10 @@ public sealed class ChartDataContextBuilder
     // ---------------------------------------------------------
     // LABEL GENERATION
     // ---------------------------------------------------------
-    private static(string DisplayName1, string DisplayName2) BuildDisplayNames(string metricType, string? primarySubtype, string? secondarySubtype)
+    private static(string DisplayName1, string DisplayName2) BuildDisplayNames(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection)
     {
-        var display1 = !string.IsNullOrWhiteSpace(primarySubtype) && primarySubtype != "(All)" ? $"{metricType} - {primarySubtype}" : metricType;
-
-        var display2 = !string.IsNullOrWhiteSpace(secondarySubtype) && secondarySubtype != "(All)" ? $"{metricType} - {secondarySubtype}" : metricType;
+        var display1 = primarySelection.DisplayName;
+        var display2 = secondarySelection?.DisplayName ?? primarySelection.DisplayName;
 
         return (display1, display2);
     }

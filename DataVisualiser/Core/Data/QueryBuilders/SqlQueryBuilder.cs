@@ -13,6 +13,9 @@ public static class SqlQueryBuilder
     /// </summary>
     public static void AddMetricTypeFilter(StringBuilder sql, DynamicParameters parameters, string baseType)
     {
+        if (string.Equals(baseType, "(All)", StringComparison.OrdinalIgnoreCase))
+            return;
+
         sql.Append(" AND MetricType = @BaseType");
         parameters.Add("BaseType", baseType);
     }

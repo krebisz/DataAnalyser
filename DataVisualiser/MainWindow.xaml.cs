@@ -55,6 +55,7 @@ public partial class MainWindow : Window
     private string _connectionString = null!;
     private HourlyDistributionService _hourlyDistributionService = null!;
     private bool _isChangingResolution;
+    private bool _isMetricTypeChangePending;
 
     private bool _isInitializing = true;
     private int _uiBusyDepth;
@@ -153,7 +154,7 @@ public partial class MainWindow : Window
                 var ctx = _viewModel.ChartState.LastContext;
 
                 var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1, ctx.Data2, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400);
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: ctx.PrimaryMetricType ?? ctx.MetricType, primarySubtype: ctx.PrimarySubtype, secondarySubtype: ctx.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: ctx.SecondaryMetricType);
             }
         }
         catch
@@ -166,39 +167,57 @@ public partial class MainWindow : Window
 
     private void UpdateSelectedSubtypesInViewModel()
     {
-        var selectedSubtypes = new List<string?>();
+        var distinctSeries = GetDistinctSelectedSeries();
 
-        string? primary = null;
-        if (SubtypeCombo.IsEnabled && SubtypeCombo.SelectedItem != null)
-        {
-            primary = SubtypeCombo.SelectedItem.ToString();
-            if (!string.IsNullOrWhiteSpace(primary) && primary != "(All)")
-                selectedSubtypes.Add(primary);
-        }
-
-        var activeCombos = _selectorManager.GetActiveCombos();
-        foreach (var combo in activeCombos)
-        {
-            if (combo.SelectedItem == null)
-                continue;
-
-            var st = combo.SelectedItem.ToString();
-            if (string.IsNullOrWhiteSpace(st))
-                continue;
-            if (st == "(All)")
-                continue;
-            if (selectedSubtypes.Contains(st))
-                continue;
-
-            selectedSubtypes.Add(st);
-        }
-
-        _viewModel.SetSelectedSubtypes(selectedSubtypes);
+        _viewModel.SetSelectedSeries(distinctSeries);
         UpdateDistributionSubtypeOptions();
         UpdateWeekdayTrendSubtypeOptions();
 
         // Update button states based on selected subtype count
-        UpdateSecondaryDataRequiredButtonStates(selectedSubtypes.Count);
+        UpdateSecondaryDataRequiredButtonStates(distinctSeries.Count);
+    }
+
+    private List<MetricSeriesSelection> GetDistinctSelectedSeries()
+    {
+        return _selectorManager.GetSelectedSeries()
+                .GroupBy(series => series.DisplayKey, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .ToList();
+    }
+
+    private static ComboBoxItem BuildSeriesComboItem(MetricSeriesSelection selection)
+    {
+        return new ComboBoxItem
+        {
+            Content = selection.DisplayName,
+            Tag = selection
+        };
+    }
+
+    private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)
+    {
+        if (combo.SelectedItem is ComboBoxItem item && item.Tag is MetricSeriesSelection selection)
+            return selection;
+
+        return combo.SelectedItem as MetricSeriesSelection;
+    }
+
+    private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
+    {
+        return combo.Items.OfType<ComboBoxItem>()
+                .FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate &&
+                                        string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
+    {
+        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
+        var selectionSubtype = selection.QuerySubtype;
+
+        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -254,13 +273,17 @@ public partial class MainWindow : Window
 
     private void OnMetricTypesLoaded(object? sender, MetricTypesLoadedEventArgs e)
     {
+        _isMetricTypeChangePending = false;
         TablesCombo.Items.Clear();
+        var addedAllMetricType = !e.MetricTypes.Any(type => string.Equals(type, "(All)", StringComparison.OrdinalIgnoreCase));
+        if (addedAllMetricType)
+            TablesCombo.Items.Add("(All)");
         foreach (var type in e.MetricTypes)
             TablesCombo.Items.Add(type);
 
         if (TablesCombo.Items.Count > 0)
         {
-            TablesCombo.SelectedIndex = 0;
+            TablesCombo.SelectedIndex = addedAllMetricType && TablesCombo.Items.Count > 1 ? 1 : 0;
             _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
             _viewModel.LoadSubtypesCommand.Execute(null);
         }
@@ -278,15 +301,21 @@ public partial class MainWindow : Window
     {
         var subtypeListLocal = e.Subtypes.ToList();
 
-        SubtypeCombo.Items.Clear();
-        SubtypeCombo.Items.Add("(All)");
-        foreach (var st in subtypeListLocal)
-            SubtypeCombo.Items.Add(st);
-
-        SubtypeCombo.IsEnabled = subtypeListLocal.Any();
-        SubtypeCombo.SelectedIndex = 0;
-
         _subtypeList = subtypeListLocal;
+        var selectedMetricType = TablesCombo.SelectedItem?.ToString();
+
+        if (_isMetricTypeChangePending)
+        {
+            if (_selectorManager.HasDynamicCombos)
+                _selectorManager.UpdateLastDynamicComboItems(subtypeListLocal, selectedMetricType);
+            else
+                RefreshPrimarySubtypeCombo(subtypeListLocal, preserveSelection: true, selectedMetricType);
+            _isMetricTypeChangePending = false;
+            UpdateSelectedSubtypesInViewModel();
+            return;
+        }
+
+        RefreshPrimarySubtypeCombo(subtypeListLocal, preserveSelection: false, selectedMetricType);
 
         BuildDynamicSubtypeControls(subtypeListLocal);
         UpdateSelectedSubtypesInViewModel();
@@ -297,6 +326,29 @@ public partial class MainWindow : Window
     {
         _selectorManager.ClearDynamic();
         UpdateSelectedSubtypesInViewModel();
+    }
+
+    private void RefreshPrimarySubtypeCombo(IEnumerable<string> subtypes, bool preserveSelection, string? selectedMetricType)
+    {
+        var previousSelection = SubtypeCombo.SelectedItem?.ToString();
+
+        SubtypeCombo.Items.Clear();
+        SubtypeCombo.Items.Add("(All)");
+        foreach (var st in subtypes)
+            SubtypeCombo.Items.Add(st);
+
+        SubtypeCombo.IsEnabled = subtypes.Any();
+        _selectorManager.SetPrimaryMetricType(selectedMetricType);
+
+        if (preserveSelection &&
+            !string.IsNullOrWhiteSpace(previousSelection) &&
+            SubtypeCombo.Items.Cast<object>().Any(item => string.Equals(item?.ToString(), previousSelection, StringComparison.OrdinalIgnoreCase)))
+        {
+            SubtypeCombo.SelectedItem = previousSelection;
+            return;
+        }
+
+        SubtypeCombo.SelectedIndex = 0;
     }
 
     private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
@@ -454,7 +506,7 @@ public partial class MainWindow : Window
         if (ctx == null || _chartRenderingOrchestrator == null)
             return;
 
-        await _chartRenderingOrchestrator.RenderPrimaryChartAsync(ctx, MainChartController.Chart, data1, data2, displayName1, displayName2, from, to, metricType, _viewModel.MetricState.SelectedSubtypes, _viewModel.MetricState.ResolutionTableName);
+        await _chartRenderingOrchestrator.RenderPrimaryChartAsync(ctx, MainChartController.Chart, data1, data2, displayName1, displayName2, from, to, metricType, _viewModel.MetricState.SelectedSeries, _viewModel.MetricState.ResolutionTableName);
     }
 
 
@@ -621,8 +673,8 @@ public partial class MainWindow : Window
     private void ResetTransformSelectionsPendingLoad()
     {
         _isTransformSelectionPendingLoad = true;
-        _viewModel.ChartState.SelectedTransformPrimarySubtype = null;
-        _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
+        _viewModel.ChartState.SelectedTransformPrimarySeries = null;
+        _viewModel.ChartState.SelectedTransformSecondarySeries = null;
 
         if (TransformDataPanelController.TransformPrimarySubtypeCombo == null || TransformDataPanelController.TransformSecondarySubtypeCombo == null)
             return;
@@ -660,48 +712,56 @@ public partial class MainWindow : Window
             TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Clear();
             TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Clear();
 
-            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
-            if (selectedSubtypes.Count == 0)
+            var selectedSeries = _viewModel.MetricState.SelectedSeries;
+            if (selectedSeries.Count == 0)
             {
                 TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = false;
                 TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
                 TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-                _viewModel.ChartState.SelectedTransformPrimarySubtype = null;
-                _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
+                _viewModel.ChartState.SelectedTransformPrimarySeries = null;
+                _viewModel.ChartState.SelectedTransformSecondarySeries = null;
                 TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = null;
                 TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
                 return;
             }
 
-            foreach (var subtype in selectedSubtypes)
+            foreach (var selection in selectedSeries)
             {
-                TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Add(subtype);
-                TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Add(subtype);
+                TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+                TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
             }
 
             TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = true;
 
-            var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySubtype;
-            var primarySelection = primaryCurrent != null && selectedSubtypes.Contains(primaryCurrent) ? primaryCurrent : selectedSubtypes[0];
-            TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = primarySelection;
-            _viewModel.ChartState.SelectedTransformPrimarySubtype = primarySelection;
+            var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySeries;
+            var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
+                    ? primaryCurrent
+                    : selectedSeries[0];
+            var primaryItem = FindSeriesComboItem(TransformDataPanelController.TransformPrimarySubtypeCombo, primarySelection) ??
+                              TransformDataPanelController.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = primaryItem;
+            _viewModel.ChartState.SelectedTransformPrimarySeries = primarySelection;
 
-            if (selectedSubtypes.Count > 1)
+            if (selectedSeries.Count > 1)
             {
                 TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
                 TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = true;
 
-                var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySubtype;
-                var secondarySelection = secondaryCurrent != null && selectedSubtypes.Contains(secondaryCurrent) ? secondaryCurrent : selectedSubtypes[1];
-                TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = secondarySelection;
-                _viewModel.ChartState.SelectedTransformSecondarySubtype = secondarySelection;
+                var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySeries;
+                var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
+                        ? secondaryCurrent
+                        : selectedSeries[1];
+                var secondaryItem = FindSeriesComboItem(TransformDataPanelController.TransformSecondarySubtypeCombo, secondarySelection) ??
+                                    TransformDataPanelController.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+                TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = secondaryItem;
+                _viewModel.ChartState.SelectedTransformSecondarySeries = secondarySelection;
             }
             else
             {
                 TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
                 TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
                 TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
-                _viewModel.ChartState.SelectedTransformSecondarySubtype = null;
+                _viewModel.ChartState.SelectedTransformSecondarySeries = null;
             }
 
             UpdateTransformComputeButtonState();
@@ -819,12 +879,12 @@ public partial class MainWindow : Window
         if (!_viewModel.ChartState.IsDistributionVisible)
             return;
 
-        var selectedSubtype = ResolveSelectedDistributionSubtype(ctx);
-        var data = await ResolveDistributionDataAsync(ctx, selectedSubtype);
+        var selectedSeries = ResolveSelectedDistributionSeries(ctx);
+        var data = await ResolveDistributionDataAsync(ctx, selectedSeries);
         if (data == null || data.Count == 0)
             return;
 
-        var displayName = ResolveDistributionDisplayName(ctx, selectedSubtype);
+        var displayName = ResolveDistributionDisplayName(ctx, selectedSeries);
 
         if (_viewModel.ChartState.IsDistributionPolarMode)
         {
@@ -841,8 +901,9 @@ public partial class MainWindow : Window
             {
                     Data1 = data,
                     DisplayName1 = displayName,
-                    MetricType = ctx.MetricType,
-                    PrimarySubtype = selectedSubtype,
+                    MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
+                    PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+                    PrimarySubtype = selectedSeries?.Subtype,
                     From = ctx.From,
                     To = ctx.To
             };
@@ -860,18 +921,19 @@ public partial class MainWindow : Window
         if (!_viewModel.ChartState.IsWeeklyTrendVisible)
             return;
 
-        var selectedSubtype = ResolveSelectedWeekdayTrendSubtype(ctx);
-        var data = await ResolveWeekdayTrendDataAsync(ctx, selectedSubtype);
+        var selectedSeries = ResolveSelectedWeekdayTrendSeries(ctx);
+        var data = await ResolveWeekdayTrendDataAsync(ctx, selectedSeries);
         if (data == null || data.Count == 0)
             return;
 
-        var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSubtype);
+        var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSeries);
         var trendContext = new ChartDataContext
         {
                 Data1 = data,
                 DisplayName1 = displayName,
-                MetricType = ctx.MetricType,
-                PrimarySubtype = selectedSubtype,
+                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+                PrimarySubtype = selectedSeries?.Subtype,
                 From = ctx.From,
                 To = ctx.To
         };
@@ -896,139 +958,137 @@ public partial class MainWindow : Window
         DistributionChartController.PolarChart.InvalidateVisual();
     }
 
-    private async Task<IReadOnlyList<MetricData>?> ResolveDistributionDataAsync(ChartDataContext ctx, string? selectedSubtype)
+    private async Task<IReadOnlyList<MetricData>?> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         if (ctx.Data1 == null)
             return null;
 
-        if (string.IsNullOrWhiteSpace(selectedSubtype))
+        if (selectedSeries == null)
             return ctx.Data1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.Data1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2 ?? ctx.Data1;
 
-        var metricType = ctx.MetricType ?? _viewModel.MetricState.SelectedMetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
+        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
             return ctx.Data1;
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildDistributionCacheKey(metricType, selectedSubtype, ctx.From, ctx.To, tableName);
+        var cacheKey = BuildDistributionCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
         if (_distributionSubtypeCache.TryGetValue(cacheKey, out var cached))
             return cached;
 
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(metricType, selectedSubtype, null, ctx.From, ctx.To, tableName);
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
         _distributionSubtypeCache[cacheKey] = data;
         return data;
     }
 
-    private string? ResolveSelectedDistributionSubtype(ChartDataContext ctx)
+    private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)
     {
-        var selectedSubtype = _viewModel.ChartState.SelectedDistributionSubtype;
-        if (!string.IsNullOrWhiteSpace(selectedSubtype))
-            return selectedSubtype;
+        if (_viewModel.ChartState.SelectedDistributionSeries != null)
+            return _viewModel.ChartState.SelectedDistributionSeries;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype))
-            return ctx.PrimarySubtype;
+        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
 
-        return null;
+        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
     }
 
-    private static string ResolveDistributionDisplayName(ChartDataContext ctx, string? selectedSubtype)
+    private static string ResolveDistributionDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (string.IsNullOrWhiteSpace(selectedSubtype))
+        if (selectedSeries == null)
             return ctx.DisplayName1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.DisplayName1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.DisplayName2;
 
-        return selectedSubtype;
+        return selectedSeries.DisplayName;
     }
 
-    private static string BuildDistributionCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
+    private static string BuildDistributionCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
     {
-        return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
+        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
-    private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, string? selectedSubtype)
+    private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         if (ctx.Data1 == null)
             return null;
 
-        if (string.IsNullOrWhiteSpace(selectedSubtype))
+        if (selectedSeries == null)
             return ctx.Data1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.Data1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2 ?? ctx.Data1;
 
-        var metricType = ctx.MetricType ?? _viewModel.MetricState.SelectedMetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
+        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
             return ctx.Data1;
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildWeekdayTrendCacheKey(metricType, selectedSubtype, ctx.From, ctx.To, tableName);
+        var cacheKey = BuildWeekdayTrendCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
         if (_weekdayTrendSubtypeCache.TryGetValue(cacheKey, out var cached))
             return cached;
 
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(metricType, selectedSubtype, null, ctx.From, ctx.To, tableName);
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
         _weekdayTrendSubtypeCache[cacheKey] = data;
         return data;
     }
 
-    private string? ResolveSelectedWeekdayTrendSubtype(ChartDataContext ctx)
+    private MetricSeriesSelection? ResolveSelectedWeekdayTrendSeries(ChartDataContext ctx)
     {
-        var selectedSubtype = _viewModel.ChartState.SelectedWeekdayTrendSubtype;
-        if (!string.IsNullOrWhiteSpace(selectedSubtype))
-            return selectedSubtype;
+        if (_viewModel.ChartState.SelectedWeekdayTrendSeries != null)
+            return _viewModel.ChartState.SelectedWeekdayTrendSeries;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype))
-            return ctx.PrimarySubtype;
+        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
 
-        return null;
+        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
     }
 
-    private static string ResolveWeekdayTrendDisplayName(ChartDataContext ctx, string? selectedSubtype)
+    private static string ResolveWeekdayTrendDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (string.IsNullOrWhiteSpace(selectedSubtype))
+        if (selectedSeries == null)
             return ctx.DisplayName1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.DisplayName1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.DisplayName2;
 
-        return selectedSubtype;
+        return selectedSeries.DisplayName;
     }
 
-    private static string BuildWeekdayTrendCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
+    private static string BuildWeekdayTrendCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
     {
-        return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
+        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveTransformDataAsync(ChartDataContext ctx)
     {
-        var primarySubtype = ResolveSelectedTransformPrimarySubtype(ctx);
-        var secondarySubtype = ResolveSelectedTransformSecondarySubtype(ctx);
+        var primarySelection = ResolveSelectedTransformPrimarySeries(ctx);
+        var secondarySelection = ResolveSelectedTransformSecondarySeries(ctx);
 
-        var primaryData = await ResolveTransformDataAsync(ctx, primarySubtype);
+        var primaryData = await ResolveTransformDataAsync(ctx, primarySelection);
         IReadOnlyList<MetricData>? secondaryData = null;
 
-        if (!string.IsNullOrWhiteSpace(secondarySubtype))
-            secondaryData = await ResolveTransformDataAsync(ctx, secondarySubtype);
+        if (secondarySelection != null)
+            secondaryData = await ResolveTransformDataAsync(ctx, secondarySelection);
 
-        var displayName1 = ResolveTransformDisplayName(ctx, primarySubtype);
-        var displayName2 = ResolveTransformDisplayName(ctx, secondarySubtype);
+        var displayName1 = ResolveTransformDisplayName(ctx, primarySelection);
+        var displayName2 = ResolveTransformDisplayName(ctx, secondarySelection);
 
         var transformContext = new ChartDataContext
         {
@@ -1036,9 +1096,11 @@ public partial class MainWindow : Window
                 Data2 = secondaryData,
                 DisplayName1 = displayName1,
                 DisplayName2 = displayName2,
-                MetricType = ctx.MetricType,
-                PrimarySubtype = primarySubtype,
-                SecondarySubtype = secondarySubtype,
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondarySubtype = secondarySelection?.Subtype,
                 From = ctx.From,
                 To = ctx.To
         };
@@ -1046,82 +1108,89 @@ public partial class MainWindow : Window
         return (primaryData, secondaryData, transformContext);
     }
 
-    private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, string? selectedSubtype)
+    private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         if (ctx.Data1 == null)
             return null;
 
-        if (string.IsNullOrWhiteSpace(selectedSubtype))
+        if (selectedSeries == null)
             return ctx.Data1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.Data1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2 ?? ctx.Data1;
 
-        var metricType = ctx.MetricType ?? _viewModel.MetricState.SelectedMetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
+        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
             return ctx.Data1;
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildTransformCacheKey(metricType, selectedSubtype, ctx.From, ctx.To, tableName);
+        var cacheKey = BuildTransformCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
         if (_transformSubtypeCache.TryGetValue(cacheKey, out var cached))
             return cached;
 
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(metricType, selectedSubtype, null, ctx.From, ctx.To, tableName);
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
         _transformSubtypeCache[cacheKey] = data;
         return data;
     }
 
-    private string? ResolveSelectedTransformPrimarySubtype(ChartDataContext ctx)
+    private MetricSeriesSelection? ResolveSelectedTransformPrimarySeries(ChartDataContext ctx)
     {
-        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformPrimarySubtypeCombo?.SelectedItem is string comboSelection)
-            return comboSelection;
+        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformPrimarySubtypeCombo != null)
+        {
+            var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformPrimarySubtypeCombo);
+            if (selection != null)
+                return selection;
+        }
 
-        var selectedSubtype = _viewModel.ChartState.SelectedTransformPrimarySubtype;
-        if (!string.IsNullOrWhiteSpace(selectedSubtype))
-            return selectedSubtype;
+        if (_viewModel.ChartState.SelectedTransformPrimarySeries != null)
+            return _viewModel.ChartState.SelectedTransformPrimarySeries;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype))
-            return ctx.PrimarySubtype;
+        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
 
-        return null;
+        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
     }
 
-    private string? ResolveSelectedTransformSecondarySubtype(ChartDataContext ctx)
+    private MetricSeriesSelection? ResolveSelectedTransformSecondarySeries(ChartDataContext ctx)
     {
-        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformSecondarySubtypeCombo?.SelectedItem is string comboSelection)
-            return comboSelection;
+        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformSecondarySubtypeCombo != null)
+        {
+            var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformSecondarySubtypeCombo);
+            if (selection != null)
+                return selection;
+        }
 
-        var selectedSubtype = _viewModel.ChartState.SelectedTransformSecondarySubtype;
-        if (!string.IsNullOrWhiteSpace(selectedSubtype))
-            return selectedSubtype;
+        if (_viewModel.ChartState.SelectedTransformSecondarySeries != null)
+            return _viewModel.ChartState.SelectedTransformSecondarySeries;
 
-        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype))
-            return ctx.SecondarySubtype;
+        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
 
-        return null;
+        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
     }
 
-    private static string ResolveTransformDisplayName(ChartDataContext ctx, string? selectedSubtype)
+    private static string ResolveTransformDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (string.IsNullOrWhiteSpace(selectedSubtype))
+        if (selectedSeries == null)
             return ctx.DisplayName1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.PrimarySubtype) && string.Equals(selectedSubtype, ctx.PrimarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.DisplayName1;
 
-        if (!string.IsNullOrWhiteSpace(ctx.SecondarySubtype) && string.Equals(selectedSubtype, ctx.SecondarySubtype, StringComparison.OrdinalIgnoreCase))
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.DisplayName2;
 
-        return selectedSubtype;
+        return selectedSeries.DisplayName;
     }
 
-    private static string BuildTransformCacheKey(string metricType, string subtype, DateTime from, DateTime to, string tableName)
+    private static string BuildTransformCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
     {
-        return $"{metricType}|{subtype}|{from:O}|{to:O}|{tableName}";
+        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
     private BaseDistributionService GetDistributionService(DistributionMode mode)
@@ -1556,7 +1625,7 @@ public partial class MainWindow : Window
 
     private void SyncInitialButtonStates()
     {
-        UpdateSecondaryDataRequiredButtonStates(_viewModel.MetricState.SelectedSubtypes.Count);
+        UpdateSecondaryDataRequiredButtonStates(_viewModel.MetricState.SelectedSeries.Count);
 
         // Sync main chart button text with initial state
         MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
@@ -1811,16 +1880,9 @@ public partial class MainWindow : Window
         if (_viewModel.UiState.IsLoadingMetricTypes)
             return;
 
-        // Clear all charts when metric type changes
-        ClearAllCharts();
-
+        _isMetricTypeChangePending = true;
         _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
         _viewModel.LoadSubtypesCommand.Execute(null);
-
-        UpdateChartTitlesFromCombos();
-
-        // Update button states since subtypes will be cleared when metric type changes
-        UpdateSecondaryDataRequiredButtonStates(0);
     }
 
     /// <summary>
@@ -1877,15 +1939,12 @@ public partial class MainWindow : Window
         _viewModel.SetSelectedMetricType(selectedMetricType);
         UpdateSelectedSubtypesInViewModel();
 
-        var primarySubtype = _selectorManager.GetPrimarySubtype();
-        var secondarySubtype = _selectorManager.GetSecondarySubtype();
-
-        var baseType = _viewModel.MetricState.SelectedMetricType!;
-        var display1 = primarySubtype != null && primarySubtype != "(All)" ? primarySubtype : baseType;
-        var display2 = secondarySubtype ?? string.Empty;
+        var selections = GetDistinctSelectedSeries();
+        var display1 = selections.Count > 0 ? selections[0].DisplayName : string.Empty;
+        var display2 = selections.Count > 1 ? selections[1].DisplayName : string.Empty;
 
         SetChartTitles(display1, display2);
-        UpdateChartLabels(primarySubtype ?? string.Empty, secondarySubtype ?? string.Empty);
+        UpdateChartLabels();
 
         var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
         var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
@@ -1930,7 +1989,8 @@ public partial class MainWindow : Window
         if (_subtypeList == null || !_subtypeList.Any())
             return;
 
-        var newCombo = _selectorManager.AddSubtypeCombo(_subtypeList);
+        var metricType = TablesCombo.SelectedItem?.ToString();
+        var newCombo = _selectorManager.AddSubtypeCombo(_subtypeList, metricType);
         newCombo.SelectedIndex = 0;
         newCombo.IsEnabled = true;
 
@@ -2076,8 +2136,8 @@ public partial class MainWindow : Window
         if (_isInitializing || _isUpdatingTransformSubtypeCombos)
             return;
 
-        if (TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem is string selectedSubtype)
-            _viewModel.SetTransformPrimarySubtype(selectedSubtype);
+        var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformPrimarySubtypeCombo);
+        _viewModel.SetTransformPrimarySeries(selection);
 
         UpdateTransformComputeButtonState();
     }
@@ -2090,8 +2150,8 @@ public partial class MainWindow : Window
         if (_isInitializing || _isUpdatingTransformSubtypeCombos)
             return;
 
-        if (TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem is string selectedSubtype)
-            _viewModel.SetTransformSecondarySubtype(selectedSubtype);
+        var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformSecondarySubtypeCombo);
+        _viewModel.SetTransformSecondarySeries(selection);
 
         UpdateTransformComputeButtonState();
     }
@@ -2118,7 +2178,7 @@ public partial class MainWindow : Window
         }
 
         var hasSecondary = HasSecondaryData(ctx);
-        var hasSecondSubtype = !string.IsNullOrEmpty(ResolveSelectedTransformSecondarySubtype(ctx));
+        var hasSecondSubtype = ResolveSelectedTransformSecondarySeries(ctx) != null;
         var isUnary = operationTag == "Log" || operationTag == "Sqrt";
         var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
 
@@ -2163,7 +2223,7 @@ public partial class MainWindow : Window
     {
         var isUnary = operationTag == "Log" || operationTag == "Sqrt";
         var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
-        var hasSecondary = HasSecondaryData(ctx) && !string.IsNullOrEmpty(ResolveSelectedTransformSecondarySubtype(ctx));
+        var hasSecondary = HasSecondaryData(ctx) && ResolveSelectedTransformSecondarySeries(ctx) != null;
 
         var (primaryData, secondaryData, transformContext) = await ResolveTransformDataAsync(ctx);
         if (primaryData == null)
@@ -2363,7 +2423,7 @@ public partial class MainWindow : Window
         var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
         var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(TransformDataPanelController.ChartTransformResult, strategy, label, null, 400, transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(TransformDataPanelController.ChartTransformResult, strategy, label, null, 400, transformContext.PrimaryMetricType ?? transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart, secondaryMetricType: transformContext.SecondaryMetricType);
     }
 
 
@@ -2539,18 +2599,17 @@ public partial class MainWindow : Window
         DiffRatioChartController.Panel.Title = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
     }
 
-    private void UpdateChartLabels(string subtype1, string subtype2)
+    private void UpdateChartLabels()
     {
         if (_tooltipManager == null)
             return;
 
-        subtype1 ??= string.Empty;
-        subtype2 ??= string.Empty;
+        var selections = GetDistinctSelectedSeries();
+        var primary = selections.Count > 0 ? selections[0] : null;
+        var secondary = selections.Count > 1 ? selections[1] : null;
 
-        var baseType = TablesCombo.SelectedItem?.ToString() ?? "";
-
-        var label1 = !string.IsNullOrEmpty(subtype1) && subtype1 != "(All)" ? subtype1 : baseType;
-        var label2 = !string.IsNullOrEmpty(subtype2) ? subtype2 : string.Empty;
+        var label1 = primary?.DisplayName ?? string.Empty;
+        var label2 = secondary?.DisplayName ?? string.Empty;
 
         var chartMainLabel = !string.IsNullOrEmpty(label2) ? $"{label1} vs {label2}" : label1;
         _tooltipManager.UpdateChartLabel(MainChartController.Chart, chartMainLabel);
@@ -2561,16 +2620,12 @@ public partial class MainWindow : Window
 
     private void UpdateChartTitlesFromCombos()
     {
-        var subtype1 = _selectorManager.GetPrimarySubtype() ?? "";
-        var subtype2 = _selectorManager.GetSecondarySubtype() ?? "";
-
-        var baseType = TablesCombo.SelectedItem?.ToString() ?? "";
-
-        var display1 = !string.IsNullOrEmpty(subtype1) && subtype1 != "(All)" ? subtype1 : baseType;
-        var display2 = !string.IsNullOrEmpty(subtype2) ? subtype2 : "";
+        var selections = GetDistinctSelectedSeries();
+        var display1 = selections.Count > 0 ? selections[0].DisplayName : string.Empty;
+        var display2 = selections.Count > 1 ? selections[1].DisplayName : string.Empty;
 
         SetChartTitles(display1, display2);
-        UpdateChartLabels(subtype1, subtype2);
+        UpdateChartLabels();
     }
 
     #endregion
@@ -2659,28 +2714,32 @@ public partial class MainWindow : Window
         {
             DistributionChartController.SubtypeCombo.Items.Clear();
 
-            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
-            if (selectedSubtypes.Count == 0)
+            var selectedSeries = _viewModel.MetricState.SelectedSeries;
+            if (selectedSeries.Count == 0)
             {
                 DistributionChartController.SubtypeCombo.IsEnabled = false;
-                _viewModel.ChartState.SelectedDistributionSubtype = null;
+                _viewModel.ChartState.SelectedDistributionSeries = null;
                 DistributionChartController.SubtypeCombo.SelectedItem = null;
                 return;
             }
 
-            foreach (var subtype in selectedSubtypes)
-                DistributionChartController.SubtypeCombo.Items.Add(subtype);
+            foreach (var selection in selectedSeries)
+                DistributionChartController.SubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
 
             DistributionChartController.SubtypeCombo.IsEnabled = true;
 
-            var current = _viewModel.ChartState.SelectedDistributionSubtype;
-            var selection = current != null && selectedSubtypes.Contains(current) ? current : selectedSubtypes[0];
-            DistributionChartController.SubtypeCombo.SelectedItem = selection;
+            var current = _viewModel.ChartState.SelectedDistributionSeries;
+            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase))
+                    ? current
+                    : selectedSeries[0];
+            var distributionItem = FindSeriesComboItem(DistributionChartController.SubtypeCombo, seriesSelection) ??
+                                   DistributionChartController.SubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            DistributionChartController.SubtypeCombo.SelectedItem = distributionItem;
 
             if (_isInitializing)
-                _viewModel.ChartState.SelectedDistributionSubtype = selection;
+                _viewModel.ChartState.SelectedDistributionSeries = seriesSelection;
             else
-                _viewModel.SetDistributionSubtype(selection);
+                _viewModel.SetDistributionSeries(seriesSelection);
         }
         finally
         {
@@ -2699,28 +2758,31 @@ public partial class MainWindow : Window
         {
             combo.Items.Clear();
 
-            var selectedSubtypes = _viewModel.MetricState.SelectedSubtypes;
-            if (selectedSubtypes.Count == 0)
+            var selectedSeries = _viewModel.MetricState.SelectedSeries;
+            if (selectedSeries.Count == 0)
             {
                 combo.IsEnabled = false;
-                _viewModel.ChartState.SelectedWeekdayTrendSubtype = null;
+                _viewModel.ChartState.SelectedWeekdayTrendSeries = null;
                 combo.SelectedItem = null;
                 return;
             }
 
-            foreach (var subtype in selectedSubtypes)
-                combo.Items.Add(subtype);
+            foreach (var selection in selectedSeries)
+                combo.Items.Add(BuildSeriesComboItem(selection));
 
             combo.IsEnabled = true;
 
-            var current = _viewModel.ChartState.SelectedWeekdayTrendSubtype;
-            var selection = current != null && selectedSubtypes.Contains(current) ? current : selectedSubtypes[0];
-            combo.SelectedItem = selection;
+            var current = _viewModel.ChartState.SelectedWeekdayTrendSeries;
+            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase))
+                    ? current
+                    : selectedSeries[0];
+            var weekdayItem = FindSeriesComboItem(combo, seriesSelection) ?? combo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            combo.SelectedItem = weekdayItem;
 
             if (_isInitializing)
-                _viewModel.ChartState.SelectedWeekdayTrendSubtype = selection;
+                _viewModel.ChartState.SelectedWeekdayTrendSeries = seriesSelection;
             else
-                _viewModel.SetWeekdayTrendSubtype(selection);
+                _viewModel.SetWeekdayTrendSeries(seriesSelection);
         }
         finally
         {
@@ -2859,8 +2921,8 @@ public partial class MainWindow : Window
         if (_isInitializing || _isUpdatingDistributionSubtypeCombo)
             return;
 
-        if (DistributionChartController.SubtypeCombo.SelectedItem is string selectedSubtype)
-            _viewModel.SetDistributionSubtype(selectedSubtype);
+        var selection = GetSeriesSelectionFromCombo(DistributionChartController.SubtypeCombo);
+        _viewModel.SetDistributionSeries(selection);
     }
 
     private void OnWeekdayTrendSubtypeChanged(object? sender, EventArgs e)
@@ -2871,8 +2933,8 @@ public partial class MainWindow : Window
         if (_isInitializing || _isUpdatingWeekdayTrendSubtypeCombo)
             return;
 
-        if (WeekdayTrendChartController.SubtypeCombo.SelectedItem is string selectedSubtype)
-            _viewModel.SetWeekdayTrendSubtype(selectedSubtype);
+        var selection = GetSeriesSelectionFromCombo(WeekdayTrendChartController.SubtypeCombo);
+        _viewModel.SetWeekdayTrendSeries(selection);
     }
 
     #endregion

@@ -156,14 +156,14 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = CreatePrimaryStrategy(ctx, series, labels, out var secondaryLabel);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType);
     }
 
     /// <summary>
     ///     Renders the primary chart with support for additional subtypes.
     ///     Loads additional subtype data if more than 2 subtypes are selected.
     /// </summary>
-    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<string>? selectedSubtypes = null, string? resolutionTableName = null)
+    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<MetricSeriesSelection>? selectedSeries = null, string? resolutionTableName = null)
     {
         if (ctx == null || chartMain == null)
             return;
@@ -172,7 +172,7 @@ public sealed class ChartRenderingOrchestrator
         var (series, labels) = BuildInitialSeriesList(data1, data2, displayName1, displayName2);
 
         // Load additional subtypes if more than 2 are selected
-        await LoadAdditionalSubtypesAsync(series, labels, metricType, from, to, selectedSubtypes, resolutionTableName);
+        await LoadAdditionalSubtypesAsync(series, labels, metricType, from, to, selectedSeries, resolutionTableName);
 
         // Extract additional series (beyond the first 2 from context)
         IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null;
@@ -276,7 +276,7 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartNorm, strategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartNorm, strategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: ctx.SecondaryMetricType);
     }
 
     private async Task RenderDiffRatio(ChartDataContext ctx, CartesianChart chartDiffRatio, string? metricType, string? primarySubtype, string? secondarySubtype, ChartState? chartState = null)
@@ -335,7 +335,7 @@ public sealed class ChartRenderingOrchestrator
         // Create strategy and render
         var strategy = new TransformResultStrategy(alignedData.Item1, computedResults, label, ctx.From, ctx.To);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, secondaryMetricType: ctx.SecondaryMetricType);
     }
 
     private async Task RenderDistribution(ChartDataContext ctx, CartesianChart chartDistribution, ChartState chartState, DistributionMode mode)
@@ -397,29 +397,29 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
     /// </summary>
-    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, string? metricType, DateTime from, DateTime to, IReadOnlyList<string>? selectedSubtypes, string? resolutionTableName)
+    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, string? metricType, DateTime from, DateTime to, IReadOnlyList<MetricSeriesSelection>? selectedSeries, string? resolutionTableName)
     {
-        if (selectedSubtypes == null || selectedSubtypes.Count <= 2 || string.IsNullOrEmpty(metricType) || string.IsNullOrEmpty(_connectionString))
+        if (selectedSeries == null || selectedSeries.Count <= 2 || string.IsNullOrEmpty(_connectionString))
             return;
 
         var dataFetcher = new DataFetcher(_connectionString);
         var tableName = resolutionTableName ?? DataAccessDefaults.DefaultTableName;
 
         // Load data for subtypes 3, 4, etc.
-        for (var i = 2; i < selectedSubtypes.Count; i++)
+        for (var i = 2; i < selectedSeries.Count; i++)
         {
-            var subtype = selectedSubtypes[i];
-            if (string.IsNullOrWhiteSpace(subtype))
+            var selection = selectedSeries[i];
+            if (string.IsNullOrWhiteSpace(selection.MetricType))
                 continue;
 
             try
             {
-                var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(metricType, subtype, from, to, tableName);
+                var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(selection.MetricType, selection.QuerySubtype, from, to, tableName);
 
                 if (additionalData != null && additionalData.Any())
                 {
                     series.Add(additionalData);
-                    labels.Add($"{metricType}:{subtype}");
+                    labels.Add(selection.DisplayName);
                 }
             }
             catch

@@ -35,6 +35,8 @@ public class ChartDataContext
 
     // Raw metric information for label formatting
     public string? MetricType { get; init; }
+    public string? PrimaryMetricType { get; init; }
+    public string? SecondaryMetricType { get; init; }
     public string? PrimarySubtype { get; init; }
     public string? SecondarySubtype { get; init; }
 
