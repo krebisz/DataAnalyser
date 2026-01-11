@@ -3,6 +3,7 @@ using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Orchestration.Builders;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.ViewModels;

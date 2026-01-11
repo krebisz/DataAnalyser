@@ -1,3 +1,4 @@
+using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.ViewModels;

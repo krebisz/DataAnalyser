@@ -1,5 +1,5 @@
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Validation.Parity;
+using DataVisualiser.Core.Validation.Parity;
 
 namespace DataVisualiser.Tests.Helpers;
 

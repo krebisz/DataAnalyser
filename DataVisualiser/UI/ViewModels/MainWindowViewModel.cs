@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DataVisualiser.Core.Services;
+using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.ViewModels;

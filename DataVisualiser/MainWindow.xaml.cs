@@ -8,6 +8,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
@@ -23,9 +24,10 @@ using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Controllers;
+using DataVisualiser.UI.Controls;
+using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
-using DataVisualiser.UI.SubtypeSelectors;
+using DataVisualiser.UI.Controls;
 using DataVisualiser.UI.ViewModels;
 using LiveChartsCore.Kernel;
 using LiveCharts.Wpf;
@@ -2939,6 +2941,8 @@ public partial class MainWindow : Window
 
     #endregion
 }
+
+
 
 
 

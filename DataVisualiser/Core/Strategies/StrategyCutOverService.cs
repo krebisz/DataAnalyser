@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Factories;
-using DataVisualiser.UI.State;
-using DataVisualiser.Validation.Parity;
-using ParityResult = DataVisualiser.Validation.ParityResult;
+using DataVisualiser.Core.Validation.Parity;
+using ParityResult = DataVisualiser.Core.Validation.ParityResult;
 
 namespace DataVisualiser.Core.Strategies;
 
@@ -308,3 +308,4 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         };
     }
 }
+

@@ -1,5 +1,5 @@
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Validation;
+using DataVisualiser.Core.Validation;
 
 namespace DataVisualiser.Core.Strategies.Abstractions;
 

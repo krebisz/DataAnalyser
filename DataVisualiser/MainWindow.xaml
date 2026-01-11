@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:lvc2="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-        xmlns:controllers="clr-namespace:DataVisualiser.UI.Controllers"
+        xmlns:controls="clr-namespace:DataVisualiser.UI.Controls"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Health Data Viz"
         SizeToContent="Height"
@@ -166,22 +166,22 @@
                             Orientation="Vertical">
 
                     <!-- ========== CHART MAIN ========== -->
-                    <controllers:MainChartController x:Name="MainChartController" />
+                    <controls:MainChartController x:Name="MainChartController" />
 
                     <!-- ========== CHART NORMALIZED ========== -->
-                    <controllers:NormalizedChartController x:Name="NormalizedChartController" />
+                    <controls:NormalizedChartController x:Name="NormalizedChartController" />
 
                     <!-- ========== CHART DIFFERENCE / RATIO (UNIFIED) ========== -->
-                    <controllers:DiffRatioChartController x:Name="DiffRatioChartController" />
+                    <controls:DiffRatioChartController x:Name="DiffRatioChartController" />
 
                     <!-- ========== CHART WEEKDAY TREND ========== -->
-                    <controllers:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />
+                    <controls:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />
 
                     <!-- ========== CHART DISTRIBUTION ========== -->
-                    <controllers:DistributionChartController x:Name="DistributionChartController" />
+                    <controls:DistributionChartController x:Name="DistributionChartController" />
 
                     <!-- ========== TRANSFORM DATA PANEL ========== -->
-                    <controllers:TransformDataPanelController x:Name="TransformDataPanelController" />
+                    <controls:TransformDataPanelController x:Name="TransformDataPanelController" />
 
                 </StackPanel>
             </ScrollViewer>
@@ -212,4 +212,5 @@
         </Grid>
     </Grid>
 </Window>
+
 

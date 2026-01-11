@@ -1,3 +1,5 @@
+using DataVisualiser.UI.Events;
+
 namespace DataVisualiser.UI.ViewModels;
 
 public partial class MainWindowViewModel
