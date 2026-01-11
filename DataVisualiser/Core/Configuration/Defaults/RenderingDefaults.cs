@@ -1,4 +1,4 @@
-namespace DataVisualiser.Core.Rendering;
+namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
 ///     Centralized rendering defaults to reduce scattered magic numbers.

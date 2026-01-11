@@ -1,4 +1,4 @@
-namespace DataVisualiser.Core.Services;
+namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
 ///     Centralized defaults for distribution chart rendering.

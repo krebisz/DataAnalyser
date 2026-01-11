@@ -1,4 +1,5 @@
 using DataFileReader.Canonical;
+using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 

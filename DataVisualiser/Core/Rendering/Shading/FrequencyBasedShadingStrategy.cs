@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows.Media;
+using DataVisualiser.Core.Configuration.Defaults;
 
 namespace DataVisualiser.Core.Rendering.Shading;
 

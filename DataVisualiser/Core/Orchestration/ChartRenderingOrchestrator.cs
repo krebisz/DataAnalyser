@@ -1,4 +1,4 @@
-using DataVisualiser.Core.Data;
+using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;

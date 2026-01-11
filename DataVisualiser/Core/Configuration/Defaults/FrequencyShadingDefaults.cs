@@ -1,6 +1,6 @@
 using System.Windows.Media;
 
-namespace DataVisualiser.Core.Rendering;
+namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
 ///     Shared defaults for frequency shading gradients and colors.

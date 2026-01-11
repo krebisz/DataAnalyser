@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using DataVisualiser.Core.Data;
+using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;

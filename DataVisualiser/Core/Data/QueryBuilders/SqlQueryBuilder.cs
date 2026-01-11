@@ -1,5 +1,6 @@
 using System.Text;
 using Dapper;
+using DataVisualiser.Core.Configuration.Defaults;
 
 namespace DataVisualiser.Core.Data.QueryBuilders;
 

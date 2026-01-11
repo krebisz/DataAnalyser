@@ -1,4 +1,5 @@
 using System.Windows.Media;
+using DataVisualiser.Core.Configuration.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
 

@@ -1,4 +1,4 @@
-namespace DataVisualiser.Core.Data;
+namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
 ///     Centralized defaults for data access and query behavior.

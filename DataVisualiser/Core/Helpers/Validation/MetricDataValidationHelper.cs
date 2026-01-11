@@ -1,7 +1,7 @@
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Events;
 
-namespace DataVisualiser.UI.ViewModels;
+namespace DataVisualiser.Core.Helpers.Validation;
 
 /// <summary>
 ///     Helper for validating metric data loading results.

@@ -1,6 +1,6 @@
 using System.Windows.Media;
 
-namespace DataVisualiser.Core.Rendering;
+namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
 ///     Centralized defaults for weekday trend rendering.

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media;
-using DataVisualiser.Core.Rendering;
+using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;

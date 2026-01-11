@@ -1,4 +1,4 @@
-namespace DataVisualiser.Shared.Helpers;
+namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
 ///     Centralized defaults for computation behavior and policies.

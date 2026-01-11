@@ -1,6 +1,6 @@
 using DataVisualiser.UI.State;
 
-namespace DataVisualiser.UI.ViewModels;
+namespace DataVisualiser.Core.Helpers.Validation;
 
 public sealed class DataLoadValidator
 {

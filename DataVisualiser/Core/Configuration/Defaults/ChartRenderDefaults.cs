@@ -1,4 +1,4 @@
-namespace DataVisualiser.Core.Rendering;
+namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
 ///     Centralized defaults for rendering logic used by chart engines/services.

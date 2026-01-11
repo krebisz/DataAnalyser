@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
-using DataVisualiser.Core.Rendering;
+using DataVisualiser.Core.Configuration.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
 
