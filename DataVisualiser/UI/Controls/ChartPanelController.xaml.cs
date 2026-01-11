@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.State;
 
@@ -143,3 +144,4 @@ public partial class ChartPanelController : UserControl
             controller._renderingContext = e.NewValue as IChartRenderingContext;
     }
 }
+

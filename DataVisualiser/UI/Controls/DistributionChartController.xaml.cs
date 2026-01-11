@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.UI;
+using DataVisualiser.UI.Defaults;
 using LiveChartsCore.SkiaSharpView.WPF;
 using WpfCartesianChart = LiveCharts.Wpf.CartesianChart;
 
@@ -59,4 +59,5 @@ public partial class DistributionChartController : UserControl
     public event EventHandler? DisplayModeChanged;
     public event EventHandler? IntervalCountChanged;
 }
+
 

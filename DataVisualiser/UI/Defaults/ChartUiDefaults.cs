@@ -4,7 +4,7 @@ using DataVisualiser.Core.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.UI;
+namespace DataVisualiser.UI.Defaults;
 
 /// <summary>
 ///     Centralized UI defaults for chart controllers and layout.
@@ -91,3 +91,4 @@ public static class ChartUiDefaults
     public static readonly PanningOptions DefaultPan = PanningOptions.X;
     public const bool DefaultHoverable = true;
 }
+

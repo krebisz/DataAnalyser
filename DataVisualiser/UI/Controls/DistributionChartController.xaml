@@ -6,7 +6,7 @@
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
              xmlns:lvc2="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:controls="clr-namespace:DataVisualiser.UI.Controls"
-             xmlns:ui="clr-namespace:DataVisualiser.UI"
+             xmlns:ui="clr-namespace:DataVisualiser.UI.Defaults"
              mc:Ignorable="d"
              d:DesignHeight="550"
              d:DesignWidth="1000">
@@ -85,5 +85,6 @@
         </StackPanel>
     </Grid>
 </UserControl>
+
 
 

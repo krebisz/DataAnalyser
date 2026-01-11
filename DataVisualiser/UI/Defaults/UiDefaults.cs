@@ -1,4 +1,4 @@
-namespace DataVisualiser.UI;
+namespace DataVisualiser.UI.Defaults;
 
 /// <summary>
 ///     Centralized UI defaults for labels and common text.

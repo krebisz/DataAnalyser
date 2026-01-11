@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.UI;
+using DataVisualiser.UI.Defaults;
 using DataVisualiser.UI.Events;
 using LiveCharts;
 using LiveCharts.Wpf;
@@ -165,4 +165,5 @@ public partial class WeekdayTrendChartController : UserControl
         return panel;
     }
 }
+
 

@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.UI;
+using DataVisualiser.UI.Defaults;
 using WpfCartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.UI.Controls;
@@ -43,4 +43,5 @@ public partial class NormalizedChartController : UserControl
 
     public event EventHandler? NormalizationModeChanged;
 }
+
 

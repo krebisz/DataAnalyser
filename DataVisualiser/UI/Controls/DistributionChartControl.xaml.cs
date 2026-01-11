@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using DataVisualiser.UI.Defaults;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;

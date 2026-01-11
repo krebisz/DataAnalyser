@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.UI;
+using DataVisualiser.UI.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -64,4 +64,5 @@ public partial class MainChartController : UserControl
     /// </summary>
     public event EventHandler? ToggleRequested;
 }
+
 
