@@ -8,6 +8,7 @@ namespace DataVisualiser.UI.ViewModels;
 
 public partial class MainWindowViewModel : INotifyPropertyChanged
 {
+    private readonly BusyStateTracker _busyStateTracker;
     private readonly ChartVisibilityController _chartVisibilityController;
     private readonly DataLoadValidator _dataLoadValidator;
     private readonly MetricLoadCoordinator _metricLoadCoordinator;
@@ -30,7 +31,8 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
         _metricLoadCoordinator = new MetricLoadCoordinator(ChartState, MetricState, UiState, _metricService, _dataLoadValidator, FormatDatabaseError);
         _chartVisibilityController = new ChartVisibilityController(ChartState, () => _isInitializing, OnPropertyChanged);
 
-        UiState.PropertyChanged += OnUiStatePropertyChanged;
+        _busyStateTracker = new BusyStateTracker(UiState);
+        _busyStateTracker.PropertyChanged += OnBusyStatePropertyChanged;
 
         LoadMetricsCommand = new AsyncRelayCommand(LoadMetricsAsync);
         LoadSubtypesCommand = new AsyncRelayCommand(LoadSubtypesAsync);
@@ -48,7 +50,7 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
     public ChartState ChartState { get; }
     public MetricState MetricState { get; }
     public UiState UiState { get; }
-    public bool IsBusy => UiState.IsLoadingMetricTypes || UiState.IsLoadingSubtypes || UiState.IsLoadingData || UiState.IsUiBusy;
+    public bool IsBusy => _busyStateTracker.IsBusy;
 
     // ======================
     // COMMANDS
@@ -88,20 +90,9 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    private void OnUiStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnBusyStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(e.PropertyName))
-        {
+        if (string.IsNullOrWhiteSpace(e.PropertyName) || e.PropertyName == nameof(BusyStateTracker.IsBusy))
             OnPropertyChanged(nameof(IsBusy));
-            return;
-        }
-
-        if (e.PropertyName == nameof(UiState.IsLoadingMetricTypes) ||
-            e.PropertyName == nameof(UiState.IsLoadingSubtypes) ||
-            e.PropertyName == nameof(UiState.IsLoadingData) ||
-            e.PropertyName == nameof(UiState.IsUiBusy))
-        {
-            OnPropertyChanged(nameof(IsBusy));
-        }
     }
 }
