@@ -123,16 +123,18 @@ public abstract class BaseDistributionService
         if (mins.Count != Configuration.BucketCount || ranges.Count != Configuration.BucketCount)
             return null;
 
-        var maxs = mins.Zip(ranges, (min, range) =>
-        {
-            if (double.IsNaN(min))
-                return double.NaN;
+        var maxs = mins.Zip(ranges,
+                               (min, range) =>
+                               {
+                                   if (double.IsNaN(min))
+                                       return double.NaN;
 
-            if (double.IsNaN(range))
-                range = 0.0;
+                                   if (double.IsNaN(range))
+                                       range = 0.0;
 
-            return min + range;
-        }).ToList();
+                                   return min + range;
+                               })
+                       .ToList();
 
         var globalMin = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0.0).Min();
         var globalMax = maxs.Where(m => !double.IsNaN(m)).DefaultIfEmpty(globalMin + 1.0).Max();
@@ -141,7 +143,6 @@ public abstract class BaseDistributionService
 
         var averages = new List<double>(Configuration.BucketCount);
         for (var i = 0; i < Configuration.BucketCount; i++)
-        {
             if (extendedResult?.BucketValues.TryGetValue(i, out var values) == true)
             {
                 var validValues = values.Where(v => !double.IsNaN(v)).ToList();
@@ -151,7 +152,6 @@ public abstract class BaseDistributionService
             {
                 averages.Add(double.NaN);
             }
-        }
 
         return new DistributionRangeResult(mins, maxs, averages, globalMin, globalMax, result.Unit);
     }

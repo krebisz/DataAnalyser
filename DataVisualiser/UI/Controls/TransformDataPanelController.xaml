@@ -13,9 +13,11 @@
         <controls:ChartPanelController x:Name="PanelController" />
 
         <StackPanel x:Name="TransformContentRootPanel" Orientation="Vertical">
-            <StackPanel x:Name="TransformOperationRowPanel" Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.TransformOperationRowMargin}">
+            <StackPanel x:Name="TransformOperationRowPanel" Orientation="Horizontal"
+                        Margin="{x:Static ui:ChartUiDefaults.TransformOperationRowMargin}">
                 <!-- Primary Subtype Selection -->
-                <StackPanel x:Name="TransformPrimarySubtypePanel" Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
+                <StackPanel x:Name="TransformPrimarySubtypePanel" Orientation="Vertical"
+                            Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
                             MinWidth="{x:Static ui:ChartUiDefaults.TransformPrimaryPanelMinWidth}">
                     <TextBlock Text="Primary Subtype:" FontWeight="Bold" Margin="0,0,0,5" />
                     <ComboBox x:Name="TransformPrimarySubtypeComboControl"
@@ -23,7 +25,8 @@
                 </StackPanel>
 
                 <!-- Operation Selection -->
-                <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
+                <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical"
+                            Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
                             MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationPanelMinWidth}">
                     <TextBlock Text="Operation:" FontWeight="Bold" Margin="0,0,0,5" />
                     <ComboBox x:Name="TransformOperationComboControl"
@@ -37,7 +40,8 @@
                 </StackPanel>
 
                 <!-- Secondary Subtype Selection -->
-                <StackPanel x:Name="TransformSecondarySubtypePanelControl" Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
+                <StackPanel x:Name="TransformSecondarySubtypePanelControl" Orientation="Vertical"
+                            Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
                             MinWidth="{x:Static ui:ChartUiDefaults.TransformSecondaryPanelMinWidth}"
                             Visibility="Collapsed">
                     <TextBlock Text="Secondary Subtype:" FontWeight="Bold" Margin="0,0,0,5" />
@@ -56,9 +60,11 @@
             </StackPanel>
 
             <!-- Data Grids -->
-            <StackPanel x:Name="TransformDataGridsPanel" Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.TransformOperationRowMargin}">
+            <StackPanel x:Name="TransformDataGridsPanel" Orientation="Horizontal"
+                        Margin="{x:Static ui:ChartUiDefaults.TransformOperationRowMargin}">
                 <!-- Grid 1: Primary Data -->
-                <StackPanel x:Name="TransformGrid1Panel" Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMarginSmall}"
+                <StackPanel x:Name="TransformGrid1Panel" Orientation="Vertical"
+                            Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMarginSmall}"
                             MinWidth="{x:Static ui:ChartUiDefaults.TransformGridMinWidth}">
                     <TextBlock x:Name="TransformGrid1TitleControl"
                                Text="Primary Data"
@@ -74,7 +80,8 @@
                               CanUserReorderColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}"
-                                                Width="Auto" MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
+                                                Width="Auto"
+                                                MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
                             <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto"
                                                 MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                         </DataGrid.Columns>
@@ -101,7 +108,8 @@
                               CanUserReorderColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}"
-                                                Width="Auto" MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
+                                                Width="Auto"
+                                                MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
                             <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto"
                                                 MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                         </DataGrid.Columns>
@@ -127,7 +135,8 @@
                               CanUserReorderColumns="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}"
-                                                Width="Auto" MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
+                                                Width="Auto"
+                                                MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
                             <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto"
                                                 MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                         </DataGrid.Columns>
@@ -135,7 +144,9 @@
                 </StackPanel>
 
                 <!-- Chart: Transform Result -->
-                <Grid x:Name="TransformChartContainerControl" Margin="{x:Static ui:ChartUiDefaults.TransformChartContainerMargin}" HorizontalAlignment="Stretch"
+                <Grid x:Name="TransformChartContainerControl"
+                      Margin="{x:Static ui:ChartUiDefaults.TransformChartContainerMargin}"
+                      HorizontalAlignment="Stretch"
                       MinWidth="{x:Static ui:ChartUiDefaults.TransformChartContainerMinWidth}">
                     <StackPanel x:Name="TransformChartContentPanelControl"
                                 Orientation="Vertical"
@@ -161,6 +172,3 @@
         </StackPanel>
     </Grid>
 </UserControl>
-
-
-

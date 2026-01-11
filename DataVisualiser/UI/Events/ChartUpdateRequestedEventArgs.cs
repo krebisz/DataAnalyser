@@ -18,4 +18,3 @@ public class ChartUpdateRequestedEventArgs : EventArgs
     // NEW: which chart was toggled (null if not a single-chart toggle)
     public string? ToggledChartName { get; set; }
 }
-

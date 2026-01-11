@@ -1,5 +1,3 @@
-using System;
-using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
 using LiveCharts.Wpf;
@@ -74,5 +72,3 @@ public partial class TransformDataPanelController : UserControl
 
     public event EventHandler? ComputeRequested;
 }
-
-

@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Helpers.Validation;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 

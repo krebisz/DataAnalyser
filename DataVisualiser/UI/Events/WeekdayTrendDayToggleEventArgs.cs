@@ -12,4 +12,3 @@ public sealed class WeekdayTrendDayToggleEventArgs : EventArgs
 
     public bool IsChecked { get; }
 }
-

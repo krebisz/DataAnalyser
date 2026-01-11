@@ -10,9 +10,9 @@ public class SubtypeSelectorManager
     ///     List of dynamically-added ComboBoxes for additional subtypes.
     /// </summary>
     private readonly List<ComboBox> _dynamicCombos = new();
-    private readonly Dictionary<ComboBox, string?> _metricTypesByCombo = new();
 
     private readonly List<SubtypeControlPair> _dynamicControls = new();
+    private readonly Dictionary<ComboBox, string?> _metricTypesByCombo = new();
     private readonly Panel _parentPanel;
 
     public SubtypeSelectorManager(Panel parentPanel, ComboBox primaryCombo)
@@ -31,6 +31,7 @@ public class SubtypeSelectorManager
     ///     MainWindow will pass this reference into the manager.
     /// </summary>
     public ComboBox PrimaryCombo { get; }
+
     public bool HasDynamicCombos => _dynamicControls.Count > 0;
 
     /// <summary>
@@ -188,8 +189,7 @@ public class SubtypeSelectorManager
 
         combo.IsEnabled = true;
 
-        if (!string.IsNullOrWhiteSpace(previousSelection) &&
-            combo.Items.Cast<object>().Any(item => string.Equals(item?.ToString(), previousSelection, StringComparison.OrdinalIgnoreCase)))
+        if (!string.IsNullOrWhiteSpace(previousSelection) && combo.Items.Cast<object>().Any(item => string.Equals(item?.ToString(), previousSelection, StringComparison.OrdinalIgnoreCase)))
         {
             combo.SelectedItem = previousSelection;
             return true;
@@ -235,4 +235,3 @@ public class SubtypeSelectorManager
             yield return combo.SelectedItem?.ToString() ?? string.Empty;
     }
 }
-

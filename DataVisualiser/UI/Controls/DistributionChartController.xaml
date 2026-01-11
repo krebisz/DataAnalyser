@@ -13,7 +13,8 @@
     <Grid x:Name="RootGrid">
         <controls:ChartPanelController x:Name="PanelController" />
 
-        <StackPanel x:Name="BehavioralControlsPanel" Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.BehavioralControlsMargin}">
+        <StackPanel x:Name="BehavioralControlsPanel" Orientation="Horizontal"
+                    Margin="{x:Static ui:ChartUiDefaults.BehavioralControlsMargin}">
             <TextBlock Text="Mode:"
                        VerticalAlignment="Center"
                        Margin="{x:Static ui:ChartUiDefaults.LabelMargin}" />
@@ -85,6 +86,3 @@
         </StackPanel>
     </Grid>
 </UserControl>
-
-
-

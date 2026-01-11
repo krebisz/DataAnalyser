@@ -1,5 +1,3 @@
-using System;
-using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
 using LiveChartsCore.SkiaSharpView.WPF;
@@ -59,5 +57,3 @@ public partial class DistributionChartController : UserControl
     public event EventHandler? DisplayModeChanged;
     public event EventHandler? IntervalCountChanged;
 }
-
-

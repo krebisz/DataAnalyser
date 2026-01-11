@@ -288,31 +288,50 @@ public sealed class ChartRenderingOrchestrator
         var operation = isDifferenceMode ? "Subtract" : "Divide";
         var operationSymbol = isDifferenceMode ? "-" : "/";
 
-        // Use transform infrastructure to compute the operation
-        var allData1List = ctx.Data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+        var preparedData = PrepareAndAlignBinaryData(ctx.Data1, ctx.Data2);
+        if (preparedData == null)
+            return;
 
-        var allData2List = ctx.Data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+        var alignedData = preparedData.Value;
+
+        var computation = ComputeBinaryResults(alignedData, operation);
+
+        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, computation.MetricsList, ctx);
+
+        var strategy = new TransformResultStrategy(alignedData.Item1, computation.Results, label, ctx.From, ctx.To);
+
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType);
+    }
+
+    private static(List<MetricData> Item1, List<MetricData> Item2)? PrepareAndAlignBinaryData(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2)
+    {
+        var allData1List = data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+
+        var allData2List = data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
 
         if (allData1List.Count == 0 || allData2List.Count == 0)
-            return;
+            return null;
 
-        // Align data by timestamp
         var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
-        if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
-            return;
 
-        // Build expression and evaluate
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
-        List<double> computedResults;
+        if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
+            return null;
+
+        return alignedData;
+    }
+
+    private static( List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
+    {
         var metricsList = new List<IReadOnlyList<MetricData>>
         {
                 alignedData.Item1,
                 alignedData.Item2
         };
 
+        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
+
         if (expression == null)
         {
-            // Fallback to legacy approach
             var op = operation switch
             {
                     "Subtract" => BinaryOperators.Difference,
@@ -320,23 +339,20 @@ public sealed class ChartRenderingOrchestrator
                     _ => (a, b) => a
             };
 
-            var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
-            var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
-            computedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
+            var values1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
+
+            var values2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
+
+            var results = MathHelper.ApplyBinaryOperation(values1, values2, op);
+
+            return (results, metricsList);
         }
-        else
-        {
-            computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-        }
 
-        // Generate label
-        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metricsList, ctx);
+        var computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
 
-        // Create strategy and render
-        var strategy = new TransformResultStrategy(alignedData.Item1, computedResults, label, ctx.From, ctx.To);
-
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, secondaryMetricType: ctx.SecondaryMetricType);
+        return (computedResults, metricsList);
     }
+
 
     private async Task RenderDistribution(ChartDataContext ctx, CartesianChart chartDistribution, ChartState chartState, DistributionMode mode)
     {

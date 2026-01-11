@@ -1,6 +1,6 @@
 ﻿# Dependency Summary
 
-Generated: 2025-12-25 09:14:44
+Generated: 2026-01-11 11:25:31
 Root: .
 
 This file is auto-generated.
@@ -32,7 +32,6 @@ No inference. No semantic interpretation.
 - RestSharp (112.1.1-alpha.0.4)
 - System.Configuration.ConfigurationManager (10.0.0-preview.1.25080.5)
 - System.Data.SqlClient (4.9.0)
-- System.Net.Http (4.3.4)
 
 ### DataFileReader.Tests
 
@@ -46,13 +45,13 @@ No inference. No semantic interpretation.
 ### DataVisualiser
 
 -  ((unspecified))
-- CSharpMarkup.WinUI.LiveChartsCore.SkiaSharpView (3.1.2)
 - Dapper (2.1.66)
 - LiveCharts.Core (0.9.8)
 - LiveCharts.Wpf.Core (0.9.8)
+- LiveChartsCore (2.0.0-rc6.1)
+- LiveChartsCore.SkiaSharpView (2.0.0-rc6.1)
+- LiveChartsCore.SkiaSharpView.WPF (2.0.0-rc6.1)
 - Microsoft.Data.SqlClient (6.1.3)
-- SkiaSharp (3.119.1)
-- System.Configuration.ConfigurationManager (10.0.0)
 
 ### DataVisualiser.Tests
 

@@ -9,4 +9,3 @@
              d:DesignWidth="800">
     <controls:ChartPanelController x:Name="PanelController" />
 </UserControl>
-

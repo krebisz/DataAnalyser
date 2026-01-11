@@ -1,8 +1,6 @@
 <Window x:Class="DataVisualiser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        xmlns:lvc2="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
         xmlns:controls="clr-namespace:DataVisualiser.UI.Controls"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Health Data Viz"
@@ -48,7 +46,8 @@
             <Border DockPanel.Dock="Top" Background="#FF747171" Padding="{StaticResource TopControlBorderPadding}">
                 <StackPanel x:Name="TopControlAreaPanel" Orientation="Vertical">
                     <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
-                    <StackPanel x:Name="TopControlBarPanel" Orientation="Horizontal" Margin="{StaticResource TopBarMargin}">
+                    <StackPanel x:Name="TopControlBarPanel" Orientation="Horizontal"
+                                Margin="{StaticResource TopBarMargin}">
                         <Label Content="Resolution:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
                         <ComboBox x:Name="ResolutionCombo" Width="{StaticResource ResolutionComboWidth}"
                                   Margin="{StaticResource ControlMargin}"
@@ -212,5 +211,3 @@
         </Grid>
     </Grid>
 </Window>
-
-
