@@ -19,6 +19,10 @@ namespace DataVisualiser.Core.Orchestration;
 ///     Orchestrates chart rendering operations, extracting complex rendering logic
 ///     from MainWindow to improve maintainability and testability.
 ///     Handles multi-chart rendering, visibility management, and chart-specific rendering strategies.
+///     IMPORTANT:
+///     Never fetch metric data directly in this orchestrator.
+///     All data loading MUST go through MetricSelectionService
+///     to ensure consistent sampling / limiting policy.
 /// </summary>
 public sealed class ChartRenderingOrchestrator
 {
@@ -27,6 +31,7 @@ public sealed class ChartRenderingOrchestrator
     private readonly HourlyDistributionService _hourlyDistributionService;
     private readonly IStrategyCutOverService _strategyCutOverService;
     private readonly WeeklyDistributionService _weeklyDistributionService;
+    private readonly MetricSelectionService _metricSelectionService;
 
     public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
     {
@@ -37,6 +42,16 @@ public sealed class ChartRenderingOrchestrator
         _connectionString = connectionString;
     }
 
+    public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, MetricSelectionService metricSelectionService, string? connectionString = null)
+    {
+        _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
+        _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));
+        _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));
+        _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
+        _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
+        _connectionString = connectionString;
+
+    }
     /// <summary>
     ///     Renders all charts based on the provided context and visibility state.
     /// </summary>
@@ -413,15 +428,24 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
     /// </summary>
-    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, string? metricType, DateTime from, DateTime to, IReadOnlyList<MetricSeriesSelection>? selectedSeries, string? resolutionTableName)
+    private async Task LoadAdditionalSubtypesAsync(
+            List<IEnumerable<MetricData>> series,
+            List<string> labels,
+            string? metricType,
+            DateTime from,
+            DateTime to,
+            IReadOnlyList<MetricSeriesSelection>? selectedSeries,
+            string? resolutionTableName)
     {
         if (selectedSeries == null || selectedSeries.Count <= 2 || string.IsNullOrEmpty(_connectionString))
             return;
 
-        var dataFetcher = new DataFetcher(_connectionString);
+        //var metricSelectionService = new MetricSelectionService(_connectionString);
+        var metricSelectionService = _metricSelectionService;
+
         var tableName = resolutionTableName ?? DataAccessDefaults.DefaultTableName;
 
-        // Load data for subtypes 3, 4, etc.
+        // Load data for subtypes 3, 4, etc. via MetricSelectionService
         for (var i = 2; i < selectedSeries.Count; i++)
         {
             var selection = selectedSeries[i];
@@ -430,11 +454,17 @@ public sealed class ChartRenderingOrchestrator
 
             try
             {
-                var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(selection.MetricType, selection.QuerySubtype, from, to, tableName);
+                var (primary, _) = await metricSelectionService.LoadMetricDataAsync(
+                        selection.MetricType,
+                        selection.QuerySubtype,
+                        null,
+                        from,
+                        to,
+                        tableName);
 
-                if (additionalData != null && additionalData.Any())
+                if (primary.Any())
                 {
-                    series.Add(additionalData);
+                    series.Add(primary);
                     labels.Add(selection.DisplayName);
                 }
             }
@@ -444,4 +474,5 @@ public sealed class ChartRenderingOrchestrator
             }
         }
     }
+
 }

@@ -1753,7 +1753,8 @@ public partial class MainWindow : Window
         var dataPreparationService = new DataPreparationService();
         _strategyCutOverService = new StrategyCutOverService(dataPreparationService);
 
-        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService, _strategyCutOverService, _connectionString);
+        var metricSelectionService = new MetricSelectionService(_connectionString);
+        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService, _strategyCutOverService, metricSelectionService, _connectionString);
     }
 
     #endregion

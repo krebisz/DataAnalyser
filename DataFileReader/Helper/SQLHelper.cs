@@ -1084,6 +1084,43 @@ public static class SQLHelper
         return results;
     }
 
+    public static void InsertHealthMetricsHour(
+            string? metricType = null,
+            string? metricSubtype = null,
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            bool overwriteExisting = false)
+    {
+        ExecuteHealthMetricsAggregation(
+                "[dbo].[HealthMetricsHour]",
+                "DATEADD(HOUR, DATEDIFF(HOUR, 0, NormalizedTimestamp), 0)",
+                "HourStart",
+                metricType,
+                metricSubtype,
+                fromDate,
+                toDate,
+                overwriteExisting);
+    }
+
+    public static void InsertHealthMetricsDay(
+            string? metricType = null,
+            string? metricSubtype = null,
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            bool overwriteExisting = false)
+    {
+        ExecuteHealthMetricsAggregation(
+                "[dbo].[HealthMetricsDay]",
+                "DATEADD(DAY, DATEDIFF(DAY, 0, NormalizedTimestamp), 0)",
+                "DayStart",
+                metricType,
+                metricSubtype,
+                fromDate,
+                toDate,
+                overwriteExisting);
+    }
+
+
     public static void InsertHealthMetricsWeek(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null, bool overwriteExisting = false)
     {
         ExecuteHealthMetricsAggregation("[dbo].[HealthMetricsWeek]",

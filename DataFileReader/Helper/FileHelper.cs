@@ -1,19 +1,20 @@
-﻿namespace DataFileReader.Helper;
+﻿using System.IO;
+
+namespace DataFileReader.Helper;
 
 public static class FileHelper
 {
     public static List<string> GetFileList(string directory)
     {
-        var fileList = new List<string>();
+        List<string> fileList = new List<string>();
 
-        var files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+        string[] files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-        foreach (var file in files)
+        foreach (string file in files)
+        {
+            
             fileList.Add(file);
-
-        //string[] subDirectories = Directory.GetDirectories(directory);
-
-        //foreach (var subDirectory in subDirectories) GetFileList(subDirectory);
+        }
 
         return fileList;
     }
@@ -51,5 +52,33 @@ public static class FileHelper
             fileExtension = fileParts[filePartsLength - 1].Trim().ToLower();
 
         return fileExtension;
+    }
+
+    public static int DeleteEmptyFiles(List<string> fileList)
+    {
+        int filesDeleted = 0;
+
+        foreach (var file in fileList)
+        {
+            try
+            {
+                if (File.Exists(file))
+                {
+                    long sizeInBytes = new FileInfo(file).Length;
+
+                    if (sizeInBytes == 0)
+                    {
+                        File.Delete(file);
+                        filesDeleted++;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors
+            }
+        }
+
+        return filesDeleted;
     }
 }

@@ -5,68 +5,150 @@ using DataFileReader.Services;
 
 namespace DataFileReader.App;
 
-public class HealthDataApp
+public sealed class HealthDataApp
 {
     private readonly MetricAggregator _aggregator;
     private readonly FileProcessingService _fileProcessor;
 
-    public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor)
+    public HealthDataApp(
+        MetricAggregator aggregator,
+        FileProcessingService fileProcessor)
     {
-        _aggregator = aggregator;
-        _fileProcessor = fileProcessor;
+        _aggregator = aggregator ?? throw new ArgumentNullException(nameof(aggregator));
+        _fileProcessor = fileProcessor ?? throw new ArgumentNullException(nameof(fileProcessor));
     }
 
     public void Run()
     {
-        Console.WriteLine("Health Data Reader - Starting...");
-        Console.WriteLine("================================");
-
+        WriteHeader();
         EnsureDatabaseTables();
 
-        if (AskUserYesNo("Aggregate all metrics by week and month?"))
+        RunMainLoop();
+    }
+
+    // ----------------------------
+    // Main control flow
+    // ----------------------------
+
+    private void RunMainLoop()
+    {
+        while (true)
         {
-            var allMetricTypes = SQLHelper.GetAllMetricTypes();
-
-            if (allMetricTypes.Count == 0)
+            switch (ReadOption())
             {
-                Console.WriteLine("No metric types found in database. Skipping aggregation.");
-            }
-            else
-            {
-                Console.WriteLine($"Found {allMetricTypes.Count} metric type(s) to aggregate:");
-                foreach (var metricType in allMetricTypes)
-                    Console.WriteLine($"  - {metricType}");
-                Console.WriteLine();
+                case AppOption.AggregateMetrics:
+                    AggregateData();
+                    break;
 
-                foreach (var metricType in allMetricTypes)
-                {
-                    Console.WriteLine($"\n=== Aggregating {metricType} ===");
-                    _aggregator.Aggregate(metricType, AggregationPeriod.Week);
-                    _aggregator.Aggregate(metricType, AggregationPeriod.Month);
-                }
+                case AppOption.ProcessFiles:
+                    ProcessFiles();
+                    break;
 
-                Console.WriteLine("\n=== Aggregation Complete ===");
+                case AppOption.RemoveJunkFiles:
+                    DeleteJunkFiles();
+                    break;
+
+                case AppOption.Exit:
+                    Console.WriteLine("Exiting application.");
+                    return;
+
+                default:
+                    Console.WriteLine("Invalid option. Please try again.");
+                    break;
             }
         }
+    }
 
-        var rootDirectory = ConfigurationManager.AppSettings["RootDirectory"];
-        if (string.IsNullOrWhiteSpace(rootDirectory))
+    // ----------------------------
+    // Menu & input
+    // ----------------------------
+
+    private static void WriteHeader()
+    {
+        Console.WriteLine("HEALTH DATA READER - Starting...");
+        Console.WriteLine("================================");
+    }
+
+    private static AppOption ReadOption()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Options:");
+        Console.WriteLine("  1. Aggregate Metrics");
+        Console.WriteLine("  2. Process New Files");
+        Console.WriteLine("  3. Remove Junk Files");
+        Console.WriteLine("  4. Exit");
+        Console.Write("> ");
+
+        return Console.ReadLine()?.Trim() switch
         {
-            Console.WriteLine("RootDirectory is not configured. Skipping file processing.");
+            "1" => AppOption.AggregateMetrics,
+            "2" => AppOption.ProcessFiles,
+            "3" => AppOption.RemoveJunkFiles,
+            "4" => AppOption.Exit,
+            _ => AppOption.Invalid
+        };
+    }
+
+    // ----------------------------
+    // Operations
+    // ----------------------------
+
+    private void EnsureDatabaseTables()
+    {
+        try
+        {
+            SQLHelper.EnsureHealthMetricsTableExists();
+            Console.WriteLine("✓ HealthMetrics table verified/created");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fatal database error: {ex.Message}");
+            throw;
+        }
+    }
+
+    private void AggregateData()
+    {
+        var metricTypes = SQLHelper.GetAllMetricTypes();
+
+        if (metricTypes.Count == 0)
+        {
+            Console.WriteLine("No metric types found. Skipping aggregation.");
             return;
         }
 
+        Console.WriteLine($"Found {metricTypes.Count} metric type(s):");
+        foreach (var metricType in metricTypes)
+            Console.WriteLine($"  - {metricType}");
+
+        foreach (var metricType in metricTypes)
+        {
+            Console.WriteLine($"\n=== Aggregating {metricType} ===");
+
+            _aggregator.Aggregate(metricType, AggregationPeriod.Day);
+            _aggregator.Aggregate(metricType, AggregationPeriod.Week);
+            _aggregator.Aggregate(metricType, AggregationPeriod.Month);
+        }
+
+        Console.WriteLine("\n=== Aggregation Complete ===");
+    }
+
+    private void ProcessFiles()
+    {
+        var rootDirectory = GetRootDirectory();
+        if (rootDirectory is null)
+            return;
+
         var allFiles = FileHelper.GetFileList(rootDirectory);
-
-        // Get list of already processed files to avoid duplicates
         var processedFiles = SQLHelper.GetProcessedFiles();
-        var newFiles = allFiles.Where(file => !processedFiles.Contains(file)).ToList();
 
-        var totalFiles = allFiles.Count;
-        var skippedFiles = totalFiles - newFiles.Count;
+        var newFiles = allFiles
+            .Where(f => !processedFiles.Contains(f))
+            .ToList();
 
-        if (skippedFiles > 0)
-            Console.WriteLine($"Skipping {skippedFiles} already processed file(s)");
+        var skipped = allFiles.Count - newFiles.Count;
+        if (skipped > 0)
+            Console.WriteLine($"Skipping {skipped} already processed file(s)");
 
         Console.WriteLine($"Processing {newFiles.Count} new file(s)...");
 
@@ -78,25 +160,41 @@ public class HealthDataApp
         Console.WriteLine($"Total metrics inserted: {result.MetricsInserted}");
     }
 
-    private void EnsureDatabaseTables()
+    private void DeleteJunkFiles()
     {
-        try
-        {
-            SQLHelper.EnsureHealthMetricsTableExists();
-            Console.WriteLine("✓ HealthMetrics table verified/created");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error setting up database: {ex.Message}");
-            throw;
-        }
+        var rootDirectory = GetRootDirectory();
+        if (rootDirectory is null)
+            return;
+
+        var files = FileHelper.GetFileList(rootDirectory);
+        var deleted = FileHelper.DeleteEmptyFiles(files);
+
+        Console.WriteLine($"Removed: {deleted} empty file(s).");
     }
 
-    private bool AskUserYesNo(string prompt)
-    {
-        Console.WriteLine($"{prompt} (y/n): ");
-        var input = Console.ReadLine()?.Trim().ToLower();
+    // ----------------------------
+    // Helpers
+    // ----------------------------
 
-        return input == "y" || input == "yes" || input == "1";
+    private static string? GetRootDirectory()
+    {
+        var rootDirectory = ConfigurationManager.AppSettings["RootDirectory"];
+
+        if (string.IsNullOrWhiteSpace(rootDirectory))
+        {
+            Console.WriteLine("RootDirectory is not configured.");
+            return null;
+        }
+
+        return rootDirectory;
+    }
+
+    private enum AppOption
+    {
+        Invalid,
+        AggregateMetrics,
+        ProcessFiles,
+        RemoveJunkFiles,
+        Exit
     }
 }

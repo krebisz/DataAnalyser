@@ -53,11 +53,13 @@ public class MetricAggregator
     {
         return period switch
         {
-                AggregationPeriod.Week => (t, s, f, e) => SQLHelper.InsertHealthMetricsWeek(t, s, f, e, true),
+            AggregationPeriod.Day => (t, s, f, e) => SQLHelper.InsertHealthMetricsDay(t, s, f, e, false),
 
-                AggregationPeriod.Month => (t, s, f, e) => SQLHelper.InsertHealthMetricsMonth(t, s, f, e, true),
+            AggregationPeriod.Week => (t, s, f, e) => SQLHelper.InsertHealthMetricsWeek(t, s, f, e, false),
 
-                _ => throw new NotSupportedException($"{period} not supported.")
+            AggregationPeriod.Month => (t, s, f, e) => SQLHelper.InsertHealthMetricsMonth(t, s, f, e, false),
+
+            _ => throw new NotSupportedException($"{period} not supported.")
         };
     }
 }

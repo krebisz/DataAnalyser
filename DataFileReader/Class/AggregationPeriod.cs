@@ -2,6 +2,7 @@
 
 public enum AggregationPeriod
 {
+    Day,
     Week,
     Month,
     Quarter,

@@ -30,7 +30,7 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
 
         _metricService = metricService ?? throw new ArgumentNullException(nameof(metricService));
         _dataLoadValidator = new DataLoadValidator(MetricState);
-        _metricLoadCoordinator = new MetricLoadCoordinator(ChartState, MetricState, UiState, _metricService, _dataLoadValidator, FormatDatabaseError);
+        _metricLoadCoordinator = MetricLoadCoordinator.CreateInstance(ChartState, MetricState, UiState, _metricService, _dataLoadValidator, FormatDatabaseError);
         _chartVisibilityController = new ChartVisibilityController(ChartState, () => _isInitializing, OnPropertyChanged);
 
         _busyStateTracker = new BusyStateTracker(UiState);

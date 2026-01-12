@@ -18,7 +18,7 @@ public sealed class MetricLoadCoordinator
     private readonly UiState _uiState;
     private readonly DataLoadValidator _validator;
 
-    public MetricLoadCoordinator(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError)
+    private MetricLoadCoordinator(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError)
     {
         _chartState = chartState ?? throw new ArgumentNullException(nameof(chartState));
         _metricState = metricState ?? throw new ArgumentNullException(nameof(metricState));
@@ -26,6 +26,11 @@ public sealed class MetricLoadCoordinator
         _metricService = metricService ?? throw new ArgumentNullException(nameof(metricService));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _formatError = formatError ?? throw new ArgumentNullException(nameof(formatError));
+    }
+
+    public static MetricLoadCoordinator CreateInstance(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError)
+    {
+        return new MetricLoadCoordinator(chartState, metricState, uiState, metricService, validator, formatError);
     }
 
     public async Task LoadMetricsAsync(Action<MetricTypesLoadedEventArgs> onLoaded, Action<string> onError)
