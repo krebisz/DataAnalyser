@@ -323,19 +323,19 @@ public class DataFetcher
         switch (mode)
         {
             case QueryMode.Sampled:
-                BuildSamplingQuery(sql, parameters, tableName, providerColumn, targetSamples!.Value);
+                BuildSamplingQuery(sql, parameters, tableName, providerColumn, targetSamples!.Value, baseType, subtype, from, to);
                 break;
 
             case QueryMode.Limited:
                 BuildLimitedQuery(sql, tableName, providerColumn, maxRecords!.Value);
+                ApplyCommonFilters(sql, parameters, baseType, subtype, from, to);
                 break;
 
             default:
                 BuildUnboundedQuery(sql, tableName, providerColumn);
+                ApplyCommonFilters(sql, parameters, baseType, subtype, from, to);
                 break;
         }
-
-        ApplyCommonFilters(sql, parameters, baseType, subtype, from, to);
 
         return await conn.QueryAsync<MetricData>(sql.ToString(), parameters);
     }
@@ -368,7 +368,11 @@ public class DataFetcher
             DynamicParameters parameters,
             string tableName,
             string providerColumn,
-            int targetSamples)
+            int targetSamples,
+            string baseType,
+            string? subtype,
+            DateTime? from,
+            DateTime? to)
     {
         sql.Append($@"
         WITH OrderedData AS (
@@ -380,7 +384,15 @@ public class DataFetcher
                 ROW_NUMBER() OVER (ORDER BY NormalizedTimestamp) AS rn,
                 COUNT(*) OVER () AS total_count
             FROM [dbo].[{tableName}]
-            WHERE 1=1
+            WHERE 1=1");
+
+        // Apply filters inside the CTE's WHERE clause
+        SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
+        SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
+        SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
+        sql.Append(" AND Value IS NOT NULL");
+
+        sql.Append($@"
         )
         SELECT
             NormalizedTimestamp,
