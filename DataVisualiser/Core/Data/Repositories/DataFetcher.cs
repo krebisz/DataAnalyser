@@ -296,21 +296,18 @@ public class DataFetcher
     ///     Maximum number of records to return. If null, returns all records. Used for performance
     ///     optimization with large datasets.
     /// </param>
-    public async Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(
-        string baseType,
-        string? subtype = null,
-        DateTime? from = null,
-        DateTime? to = null,
-        string tableName = DataAccessDefaults.DefaultTableName,
-        int? maxRecords = null,
-        SamplingMode samplingMode = SamplingMode.None,
-        int? targetSamples = null)
-    {
-        if (string.IsNullOrWhiteSpace(baseType))
-            throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
 
-        if (from.HasValue && to.HasValue && from.Value > to.Value)
-            throw new ArgumentException("'from' date must be earlier than or equal to 'to' date.", nameof(from));
+    public async Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(
+            string baseType,
+            string? subtype = null,
+            DateTime? from = null,
+            DateTime? to = null,
+            string tableName = DataAccessDefaults.DefaultTableName,
+            int? maxRecords = null,
+            SamplingMode samplingMode = SamplingMode.None,
+            int? targetSamples = null)
+    {
+        ValidateArguments(baseType, from, to);
 
         tableName = SqlQueryBuilder.NormalizeTableName(tableName);
 
@@ -321,89 +318,142 @@ public class DataFetcher
         var sql = new StringBuilder();
         var parameters = new DynamicParameters();
 
-        // ---------- SAMPLING PATH ----------
-        if (samplingMode == SamplingMode.UniformOverTime
-            && targetSamples.HasValue
-            && targetSamples.Value > 0)
+        var mode = ResolveQueryMode(samplingMode, targetSamples, maxRecords);
+
+        switch (mode)
         {
-            sql.Append($@"
-            -- DataFetcher.GetHealthMetricsDataByBaseType (UniformOverTime sampling)
-            WITH OrderedData AS (
-                SELECT
-                    NormalizedTimestamp,
-                    Value,
-                    Unit,
-                    {providerColumn},
-                    ROW_NUMBER() OVER (ORDER BY NormalizedTimestamp) AS rn,
-                    COUNT(*) OVER () AS total_count
-                FROM [dbo].[{tableName}]
-                WHERE 1=1");
+            case QueryMode.Sampled:
+                BuildSamplingQuery(sql, parameters, tableName, providerColumn, targetSamples!.Value);
+                break;
 
-            SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
-            SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
-            SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
+            case QueryMode.Limited:
+                BuildLimitedQuery(sql, tableName, providerColumn, maxRecords!.Value);
+                break;
 
-            sql.Append(@"
-                    AND Value IS NOT NULL
-            )
-            SELECT
-                NormalizedTimestamp,
-                Value,
-                Unit,
-                " + providerColumn + @"
-            FROM OrderedData
-            WHERE rn = 1
-               OR rn = total_count
-               OR rn % CEILING(1.0 * total_count / @TargetSamples) = 1
-            ORDER BY NormalizedTimestamp");
-
-            parameters.Add("@TargetSamples", targetSamples.Value);
+            default:
+                BuildUnboundedQuery(sql, tableName, providerColumn);
+                break;
         }
-        // ---------- LEGACY LIMITING PATH ----------
-        else if (maxRecords.HasValue && maxRecords.Value > 0)
-        {
-            sql.Append($@"
-            -- DataFetcher.GetHealthMetricsDataByBaseType (TOP {maxRecords.Value})
-            SELECT TOP {maxRecords.Value}
-                NormalizedTimestamp,
-                Value,
-                Unit,
-                {providerColumn}
-            FROM [dbo].[{tableName}]
-            WHERE 1=1");
 
-            SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
-            SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
-            SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
-
-            sql.Append(@"
-                AND Value IS NOT NULL
-            ORDER BY NormalizedTimestamp");
-        }
-        // ---------- FULL DATA PATH ----------
-        else
-        {
-            sql.Append($@"
-            -- DataFetcher.GetHealthMetricsDataByBaseType (Unbounded)
-            SELECT
-                NormalizedTimestamp,
-                Value,
-                Unit,
-                {providerColumn}
-            FROM [dbo].[{tableName}]
-            WHERE 1=1");
-
-            SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
-            SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
-            SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
-
-            sql.Append(@"
-                AND Value IS NOT NULL
-            ORDER BY NormalizedTimestamp");
-        }
+        ApplyCommonFilters(sql, parameters, baseType, subtype, from, to);
 
         return await conn.QueryAsync<MetricData>(sql.ToString(), parameters);
     }
+
+    private static QueryMode ResolveQueryMode(
+            SamplingMode samplingMode,
+            int? targetSamples,
+            int? maxRecords)
+    {
+        if (samplingMode == SamplingMode.UniformOverTime
+         && targetSamples.HasValue
+         && targetSamples.Value > 0)
+            return QueryMode.Sampled;
+
+        if (maxRecords.HasValue && maxRecords.Value > 0)
+            return QueryMode.Limited;
+
+        return QueryMode.Unbounded;
+    }
+
+    private enum QueryMode
+    {
+        Sampled,
+        Limited,
+        Unbounded
+    }
+
+    private static void BuildSamplingQuery(
+            StringBuilder sql,
+            DynamicParameters parameters,
+            string tableName,
+            string providerColumn,
+            int targetSamples)
+    {
+        sql.Append($@"
+        WITH OrderedData AS (
+            SELECT
+                NormalizedTimestamp,
+                Value,
+                Unit,
+                {providerColumn},
+                ROW_NUMBER() OVER (ORDER BY NormalizedTimestamp) AS rn,
+                COUNT(*) OVER () AS total_count
+            FROM [dbo].[{tableName}]
+            WHERE 1=1
+        )
+        SELECT
+            NormalizedTimestamp,
+            Value,
+            Unit,
+            {providerColumn}
+        FROM OrderedData
+        WHERE rn = 1
+           OR rn = total_count
+           OR rn % CEILING(1.0 * total_count / @TargetSamples) = 1
+        ORDER BY NormalizedTimestamp");
+
+        parameters.Add("@TargetSamples", targetSamples);
+    }
+
+    private static void BuildLimitedQuery(
+            StringBuilder sql,
+            string tableName,
+            string providerColumn,
+            int maxRecords)
+    {
+        sql.Append($@"
+        SELECT TOP {maxRecords}
+            NormalizedTimestamp,
+            Value,
+            Unit,
+            {providerColumn}
+        FROM [dbo].[{tableName}]
+        WHERE 1=1");
+    }
+
+    private static void BuildUnboundedQuery(
+            StringBuilder sql,
+            string tableName,
+            string providerColumn)
+    {
+        sql.Append($@"
+        SELECT
+            NormalizedTimestamp,
+            Value,
+            Unit,
+            {providerColumn}
+        FROM [dbo].[{tableName}]
+        WHERE 1=1");
+    }
+
+    private static void ApplyCommonFilters(
+            StringBuilder sql,
+            DynamicParameters parameters,
+            string baseType,
+            string? subtype,
+            DateTime? from,
+            DateTime? to)
+    {
+        SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
+        SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
+        SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
+
+        sql.Append(" AND Value IS NOT NULL ORDER BY NormalizedTimestamp");
+    }
+
+    private static void ValidateArguments(
+            string baseType,
+            DateTime? from,
+            DateTime? to)
+    {
+        if (string.IsNullOrWhiteSpace(baseType))
+            throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
+
+        if (from.HasValue && to.HasValue && from.Value > to.Value)
+            throw new ArgumentException("'from' date must be earlier than or equal to 'to' date.", nameof(from));
+    }
+
 
 
     /// <summary>

@@ -66,37 +66,37 @@ public class MetricSelectionService
         var dataFetcher = new DataFetcher(_connectionString);
         var cmsService = new CmsDataService(_connectionString);
 
-        var maxRecords = ResolveMaxRecords(from, to);
+        var primaryCountTask = dataFetcher.GetRecordCount(primarySelection.MetricType, primarySelection.QuerySubtype);
+        var secondaryCountTask = secondarySelection != null
+                ? dataFetcher.GetRecordCount(secondarySelection.MetricType, secondarySelection.QuerySubtype)
+                : Task.FromResult(0L);
 
-        var legacyTasks = StartLegacyLoadTasks(dataFetcher, primarySelection, secondarySelection, from, to, tableName, maxRecords);
+        await Task.WhenAll(primaryCountTask, secondaryCountTask);
 
-        var cmsTasks = await StartCmsLoadTasksAsync(cmsService, primarySelection, secondarySelection, from, to);
+        var primaryStrategy = ResolveDataLoadStrategy(from, to, primaryCountTask.Result);
+        var secondaryStrategy = secondarySelection != null
+                ? ResolveDataLoadStrategy(from, to, secondaryCountTask.Result)
+                : (Mode: SamplingMode.None, TargetSamples: (int?)null, MaxRecords: (int?)null);
+
+        var legacyTasks = StartLegacyLoadTasks(dataFetcher, primarySelection, secondarySelection, from, to, tableName, primaryStrategy, secondaryStrategy);
+
+        var cmsTasks = await StartCmsLoadTasksAsync(cmsService, primarySelection, secondarySelection, from, to, tableName, primaryStrategy, secondaryStrategy);
 
         await Task.WhenAll(legacyTasks.Primary, legacyTasks.Secondary, cmsTasks.Primary ?? Task.CompletedTask, cmsTasks.Secondary ?? Task.CompletedTask);
 
         return (PrimaryCms: cmsTasks.Primary?.Result.FirstOrDefault(), SecondaryCms: cmsTasks.Secondary?.Result.FirstOrDefault(), PrimaryLegacy: legacyTasks.Primary.Result, SecondaryLegacy: legacyTasks.Secondary.Result);
     }
 
-    private static int? ResolveMaxRecords(DateTime from, DateTime to)
+    private static( Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(DataFetcher dataFetcher, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
     {
-        var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
+        var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
 
-        if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
-            return MathHelper.CalculateOptimalMaxRecords(from, to);
-
-        return null;
-    }
-
-    private static( Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(DataFetcher dataFetcher, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, int? maxRecords)
-    {
-        var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, maxRecords);
-
-        var secondaryTask = secondarySelection != null ? dataFetcher.GetHealthMetricsDataByBaseType(secondarySelection.MetricType, secondarySelection.QuerySubtype, from, to, tableName, maxRecords) : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+        var secondaryTask = secondarySelection != null ? dataFetcher.GetHealthMetricsDataByBaseType(secondarySelection.MetricType, secondarySelection.QuerySubtype, from, to, tableName, secondaryStrategy.MaxRecords, secondaryStrategy.Mode, secondaryStrategy.TargetSamples) : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
 
         return (primaryTask, secondaryTask);
     }
 
-    private static async Task<( Task<IReadOnlyList<ICanonicalMetricSeries>>? Primary, Task<IReadOnlyList<ICanonicalMetricSeries>>? Secondary)> StartCmsLoadTasksAsync(CmsDataService cmsService, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to)
+    private static async Task<( Task<IReadOnlyList<ICanonicalMetricSeries>>? Primary, Task<IReadOnlyList<ICanonicalMetricSeries>>? Secondary)> StartCmsLoadTasksAsync(CmsDataService cmsService, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
     {
         Task<IReadOnlyList<ICanonicalMetricSeries>>? primaryTask = null;
         Task<IReadOnlyList<ICanonicalMetricSeries>>? secondaryTask = null;
@@ -104,14 +104,14 @@ public class MetricSelectionService
         var primaryCanonicalId = !string.Equals(primarySelection.MetricType, "(All)", StringComparison.OrdinalIgnoreCase) ? CanonicalMetricMapping.FromLegacyFields(primarySelection.MetricType, primarySelection.QuerySubtype) : null;
 
         if (primaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(primaryCanonicalId))
-            primaryTask = cmsService.GetCmsByCanonicalIdAsync(primaryCanonicalId, from, to);
+            primaryTask = cmsService.GetCmsByCanonicalIdAsync(primaryCanonicalId, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
 
         if (secondarySelection != null)
         {
             var secondaryCanonicalId = !string.Equals(secondarySelection.MetricType, "(All)", StringComparison.OrdinalIgnoreCase) ? CanonicalMetricMapping.FromLegacyFields(secondarySelection.MetricType, secondarySelection.QuerySubtype) : null;
 
             if (secondaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(secondaryCanonicalId))
-                secondaryTask = cmsService.GetCmsByCanonicalIdAsync(secondaryCanonicalId, from, to);
+                secondaryTask = cmsService.GetCmsByCanonicalIdAsync(secondaryCanonicalId, from, to, tableName, secondaryStrategy.MaxRecords, secondaryStrategy.Mode, secondaryStrategy.TargetSamples);
         }
 
         return (primaryTask, secondaryTask);

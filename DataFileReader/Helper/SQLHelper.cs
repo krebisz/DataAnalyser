@@ -11,12 +11,43 @@ namespace DataFileReader.Helper;
 
 public static class SQLHelper
 {
+    private static void EnsureHealthMetricsMetaDataTableExists(string connectionString)
+    {
+        var sql = @"
+        IF NOT EXISTS (
+            SELECT * FROM sys.objects 
+            WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsMetaData]') 
+              AND type IN (N'U')
+        )
+        BEGIN
+            CREATE TABLE [dbo].[HealthMetricsMetaData](
+                [Id] UNIQUEIDENTIFIER NOT NULL
+                    CONSTRAINT PK_HealthMetricsMetaData PRIMARY KEY
+                    DEFAULT NEWSEQUENTIALID(),
+                [MetadataJson] NVARCHAR(MAX) NOT NULL,
+                [MetadataHash] VARBINARY(32) NOT NULL,
+                [CreatedDate] DATETIME2 NOT NULL DEFAULT GETDATE()
+            );
+
+            CREATE UNIQUE NONCLUSTERED INDEX UX_HealthMetricsMetaData_Hash
+                ON [dbo].[HealthMetricsMetaData](MetadataHash);
+        END
+    ";
+
+        using var conn = new SqlConnection(connectionString);
+        conn.Open();
+        using var cmd = new SqlCommand(sql, conn);
+        cmd.ExecuteNonQuery();
+    }
+
     /// <summary>
     ///     Creates the standardized HealthMetrics table if it doesn't exist
     /// </summary>
     public static void EnsureHealthMetricsTableExists()
     {
         var connectionString = ConfigurationManager.AppSettings["HealthDB"];
+        EnsureHealthMetricsMetaDataTableExists(connectionString);
+
         var createTableQuery = @"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetrics]') AND type in (N'U'))
             BEGIN
@@ -30,7 +61,7 @@ public static class SQLHelper
                     [RawTimestamp] NVARCHAR(100) NULL,
                     [Value] DECIMAL(18,4) NULL,
                     [Unit] NVARCHAR(50) NULL,
-                    [Metadata] NVARCHAR(MAX) NULL,
+                    [MetaDataId] UNIQUEIDENTIFIER NULL,
                     [CreatedDate] DATETIME2 DEFAULT GETDATE()
                 )
                 
@@ -46,7 +77,11 @@ public static class SQLHelper
                     ON HealthMetrics(MetricType, MetricSubtype, NormalizedTimestamp) 
                     INCLUDE (Value, Unit, Provider)
                     WHERE NormalizedTimestamp IS NOT NULL AND Value IS NOT NULL
-                
+
+                CREATE NONCLUSTERED INDEX IX_HealthMetrics_MetaDataId
+                    ON HealthMetrics(MetaDataId)
+                    WHERE MetaDataId IS NOT NULL;
+
                 -- Index for timestamp-only queries (if needed)
                 CREATE NONCLUSTERED INDEX IX_HealthMetrics_Timestamp 
                     ON HealthMetrics(NormalizedTimestamp)
@@ -63,6 +98,7 @@ public static class SQLHelper
             using (var sqlConnection = new SqlConnection(connectionString))
             {
                 sqlConnection.Open();
+
                 using (var sqlCommand = new SqlCommand(createTableQuery, sqlConnection))
                 {
                     sqlCommand.ExecuteNonQuery();
@@ -578,6 +614,41 @@ public static class SQLHelper
         }
     }
 
+    private static Guid? GetOrCreateMetaDataId(
+            SqlConnection connection,
+            string metadataJson)
+    {
+        if (string.IsNullOrWhiteSpace(metadataJson))
+            return null;
+
+        var hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(metadataJson));
+
+        var sql = @"
+        DECLARE @Id UNIQUEIDENTIFIER;
+
+        SELECT @Id = Id
+        FROM HealthMetricsMetaData
+        WHERE MetadataHash = @Hash;
+
+        IF @Id IS NULL
+        BEGIN
+            INSERT INTO HealthMetricsMetaData (MetadataJson, MetadataHash)
+            OUTPUT inserted.Id
+            VALUES (@Json, @Hash);
+        END
+        ELSE
+        BEGIN
+            SELECT @Id;
+        END
+    ";
+
+        using var cmd = new SqlCommand(sql, connection);
+        cmd.Parameters.AddWithValue("@Json", metadataJson);
+        cmd.Parameters.AddWithValue("@Hash", hash);
+
+        return (Guid?)cmd.ExecuteScalar();
+    }
+
     /// <summary>
     ///     Gets distinct SourceFile values from HealthMetrics table (files that have already been processed)
     /// </summary>
@@ -646,9 +717,9 @@ public static class SQLHelper
                 // Insert minimal record to mark file as processed
                 var insertQuery = @"
                     INSERT INTO HealthMetrics 
-                    (Provider, MetricType, MetricSubtype, SourceFile, NormalizedTimestamp, RawTimestamp, Value, Unit, Metadata)
+                    (Provider, MetricType, MetricSubtype, SourceFile, NormalizedTimestamp, RawTimestamp, Value, Unit, MetaDataId)
                     VALUES 
-                    (@Provider, @MetricType, @MetricSubtype, @SourceFile, @NormalizedTimestamp, @RawTimestamp, @Value, @Unit, @Metadata)";
+                    (@Provider, @MetricType, @MetricSubtype, @SourceFile, @NormalizedTimestamp, @RawTimestamp, @Value, @Unit, @MetaDataId)";
 
                 using (var sqlCommand = new SqlCommand(insertQuery, sqlConnection))
                 {
@@ -660,7 +731,7 @@ public static class SQLHelper
                     sqlCommand.Parameters.AddWithValue("@RawTimestamp", DBNull.Value);
                     sqlCommand.Parameters.AddWithValue("@Value", DBNull.Value);
                     sqlCommand.Parameters.AddWithValue("@Unit", DBNull.Value);
-                    sqlCommand.Parameters.AddWithValue("@Metadata", DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@MetaDataId", DBNull.Value);
 
                     sqlCommand.ExecuteNonQuery();
                 }
@@ -692,10 +763,10 @@ public static class SQLHelper
 
                 // Use parameterized query for safety and performance
                 var insertQuery = @"
-                    INSERT INTO HealthMetrics 
-                    (Provider, MetricType, MetricSubtype, SourceFile, NormalizedTimestamp, RawTimestamp, Value, Unit, Metadata)
-                    VALUES 
-                    (@Provider, @MetricType, @MetricSubtype, @SourceFile, @NormalizedTimestamp, @RawTimestamp, @Value, @Unit, @Metadata)";
+                    INSERT INTO HealthMetrics
+                        (Provider, MetricType, MetricSubtype, SourceFile,NormalizedTimestamp, RawTimestamp, Value, Unit, MetaDataId)
+                    VALUES
+                        (@Provider, @MetricType, @MetricSubtype, @SourceFile, @NormalizedTimestamp, @RawTimestamp, @Value, @Unit, @MetaDataId)";
 
                 // Track MetricType/Subtype combinations for summary table update
                 // Store count, min timestamp, and max timestamp for each combination
@@ -758,8 +829,17 @@ public static class SQLHelper
                         sqlCommand.Parameters.AddWithValue("@Unit", (object)metric.Unit ?? DBNull.Value);
 
                         // Serialize additional fields to JSON
-                        var metadataJson = metric.AdditionalFields.Count > 0 ? JsonConvert.SerializeObject(metric.AdditionalFields) : (object)DBNull.Value;
-                        sqlCommand.Parameters.AddWithValue("@Metadata", metadataJson);
+                        var metadataJson = metric.AdditionalFields.Count > 0
+                                ? JsonConvert.SerializeObject(metric.AdditionalFields)
+                                : null;
+
+                        var metaDataId = metadataJson != null
+                                ? GetOrCreateMetaDataId(sqlConnection, metadataJson)
+                                : null;
+
+                        sqlCommand.Parameters.AddWithValue("@MetaDataId",
+                                (object?)metaDataId ?? DBNull.Value);
+
 
                         sqlCommand.ExecuteNonQuery();
                     }

@@ -2011,14 +2011,24 @@ public partial class MainWindow : Window
         // Store the selected resolution to retain it
         var selectedResolution = ResolutionCombo.SelectedItem.ToString();
 
-        // Set flag to suppress error popups during resolution change
+        ResetForResolutionChange(selectedResolution);
+
+        // Restore the resolution selection (in case it was changed)
+        if (ResolutionCombo.SelectedItem?.ToString() != selectedResolution)
+            ResolutionCombo.SelectedItem = selectedResolution;
+    }
+
+    private void ResetForResolutionChange(string selectedResolution)
+    {
+        if (string.IsNullOrWhiteSpace(selectedResolution))
+            return;
+
+        // Set flag to suppress validation errors while resolution is being refreshed
         _isChangingResolution = true;
 
-        // Clear all charts when resolution changes
         ClearAllCharts();
 
-        // Prevent error popups during resolution change by temporarily suppressing validation
-        _viewModel.MetricState.SelectedMetricType = null; // Clear to prevent validation errors
+        _viewModel.MetricState.SelectedMetricType = null;
 
         TablesCombo.Items.Clear();
 
@@ -2029,11 +2039,7 @@ public partial class MainWindow : Window
         _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
         _viewModel.LoadMetricsCommand.Execute(null);
 
-        // Restore the resolution selection (in case it was changed)
-        if (ResolutionCombo.SelectedItem?.ToString() != selectedResolution)
-            ResolutionCombo.SelectedItem = selectedResolution;
-
-        // Update button states since subtypes are cleared when resolution changes
+        // Ensure secondary chart buttons reflect the absence of subtypes
         UpdateSecondaryDataRequiredButtonStates(0);
     }
 
@@ -2737,6 +2743,19 @@ public partial class MainWindow : Window
         ChartHelper.ResetZoom(ref weekdayChart);
         var weekdayPolarChart = WeekdayTrendChartController.PolarChart;
         ChartHelper.ResetZoom(ref weekdayPolarChart);
+    }
+
+    private void OnClear(object sender, RoutedEventArgs e)
+    {
+        const string defaultResolution = "All";
+
+        if (ResolutionCombo.SelectedItem?.ToString() == defaultResolution)
+        {
+            ResetForResolutionChange(defaultResolution);
+            return;
+        }
+
+        ResolutionCombo.SelectedItem = defaultResolution;
     }
 
     /// <summary>

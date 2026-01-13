@@ -136,19 +136,23 @@ public sealed class HealthDataApp
     private void ProcessFiles()
     {
         var rootDirectory = GetRootDirectory();
+
         if (rootDirectory is null)
+        {
             return;
+        }
 
         var allFiles = FileHelper.GetFileList(rootDirectory);
         var processedFiles = SQLHelper.GetProcessedFiles();
 
-        var newFiles = allFiles
-            .Where(f => !processedFiles.Contains(f))
-            .ToList();
+        var newFiles = allFiles.Where(f => !processedFiles.Contains(f)).ToList();
 
         var skipped = allFiles.Count - newFiles.Count;
+
         if (skipped > 0)
+        {
             Console.WriteLine($"Skipping {skipped} already processed file(s)");
+        }
 
         Console.WriteLine($"Processing {newFiles.Count} new file(s)...");
 

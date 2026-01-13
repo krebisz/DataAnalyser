@@ -1,5 +1,6 @@
 using DataFileReader.Canonical;
 using DataFileReader.Helper;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 
@@ -33,9 +34,9 @@ public class CmsDataService
     /// <summary>
     ///     Fetches CMS data for a specific canonical metric identity.
     /// </summary>
-    public async Task<IReadOnlyList<ICanonicalMetricSeries>> GetCmsByCanonicalIdAsync(string canonicalMetricId, DateTime from, DateTime to)
+    public async Task<IReadOnlyList<ICanonicalMetricSeries>> GetCmsByCanonicalIdAsync(string canonicalMetricId, DateTime from, DateTime to, string? tableName = null, int? maxRecords = null, SamplingMode samplingMode = SamplingMode.None, int? targetSamples = null)
     {
-        // For Phase 4, we still read from HealthMetrics table and convert to CMS
+        // For Phase 4, we still read from legacy metric tables and convert to CMS
         // In future phases, CMS may be stored directly
 
         // Determine which metric type/subtype to query based on canonical ID
@@ -44,7 +45,7 @@ public class CmsDataService
             return Array.Empty<ICanonicalMetricSeries>();
 
         // Fetch legacy data
-        var legacyData = await _legacyFetcher.GetHealthMetricsDataByBaseType(metricType, subtype, from, to);
+        var legacyData = await _legacyFetcher.GetHealthMetricsDataByBaseType(metricType, subtype, from, to, tableName, maxRecords, samplingMode, targetSamples);
 
         // Convert to HealthMetric records (simplified - in practice, you'd query HealthMetric directly)
         var healthMetrics = legacyData.Select(d => new HealthMetric

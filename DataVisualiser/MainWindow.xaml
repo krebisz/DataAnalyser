@@ -83,6 +83,10 @@
                                 Click="OnResetZoom"
                                 Margin="{StaticResource ControlMargin}"
                                 Padding="{StaticResource ButtonPadding}" />
+                        <Button Content="Clear"
+                                Click="OnClear"
+                                Margin="{StaticResource ControlMargin}"
+                                Padding="{StaticResource ButtonPadding}" />
                     </StackPanel>
 
                     <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
