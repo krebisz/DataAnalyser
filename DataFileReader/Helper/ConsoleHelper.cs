@@ -1,11 +1,23 @@
 ﻿using System.Data;
 using System.Text;
+using System.Configuration;
 using DataFileReader.Class;
 
 namespace DataFileReader.Helper;
 
 public static class ConsoleHelper
 {
+    private static readonly Lazy<bool> ConsoleOutputEnabled = new(() =>
+    {
+        var raw = ConfigurationManager.AppSettings["ConsoleHelper:Enabled"];
+        if (string.IsNullOrWhiteSpace(raw))
+            return true;
+
+        return string.Equals(raw.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+    });
+
+    private static bool IsEnabled => ConsoleOutputEnabled.Value;
+
     public static ConsoleColor ConsoleOutputColour(string variableType)
     {
         var consoleColor = new ConsoleColor();
@@ -34,6 +46,9 @@ public static class ConsoleHelper
 
     public static void PrintPathMap(HierarchyObject hierarchyObject)
     {
+        if (!IsEnabled)
+            return;
+
         Console.ForegroundColor = ConsoleColor.White;
 
         if (hierarchyObject.ClassID == "Element")
@@ -42,6 +57,9 @@ public static class ConsoleHelper
 
     public static void PrintHierarchyObject(string key, string Id, string level, string value, string parent, string metaId, string refVal, ConsoleColor colour)
     {
+        if (!IsEnabled)
+            return;
+
         Console.ForegroundColor = ConsoleColor.White;
         Console.Write("   ID: ");
 
@@ -94,6 +112,9 @@ public static class ConsoleHelper
 
     public static void PrintMetaData(MetaData metaData)
     {
+        if (!IsEnabled)
+            return;
+
         var variableColour = ConsoleOutputColour(metaData.Type);
 
         Console.ForegroundColor = ConsoleColor.White;
@@ -129,6 +150,9 @@ public static class ConsoleHelper
 
     public static void PrintFlattenedData(DataTable flattenedData)
     {
+        if (!IsEnabled)
+            return;
+
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine();
         Console.WriteLine("FLATTENED DATA:");

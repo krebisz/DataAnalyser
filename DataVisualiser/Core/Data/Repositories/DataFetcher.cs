@@ -62,6 +62,7 @@ public class DataFetcher
                 SELECT DISTINCT MetricType 
                 FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                 WHERE MetricType IS NOT NULL 
+                  AND (Disabled IS NULL OR Disabled = 0)
                   AND RecordCount > 0
                 ORDER BY MetricType";
 
@@ -154,6 +155,7 @@ public class DataFetcher
                     SELECT DISTINCT MetricType 
                     FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                     WHERE MetricType IS NOT NULL 
+                      AND (Disabled IS NULL OR Disabled = 0)
                       AND RecordCount > 0
                     ORDER BY MetricType";
 
@@ -197,6 +199,7 @@ public class DataFetcher
                     SELECT DISTINCT MetricSubtype 
                     FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                     WHERE MetricType = @BaseType
+                      AND (Disabled IS NULL OR Disabled = 0)
                       AND MetricSubtype IS NOT NULL
                       AND MetricSubtype != ''
                       AND RecordCount > 0
@@ -246,6 +249,7 @@ public class DataFetcher
                     SELECT DISTINCT MetricSubtype 
                     FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                     WHERE MetricSubtype IS NOT NULL
+                      AND (Disabled IS NULL OR Disabled = 0)
                       AND MetricSubtype != ''
                       AND RecordCount > 0
                     ORDER BY MetricSubtype";
@@ -280,6 +284,7 @@ public class DataFetcher
                 SELECT MetricType, MetricSubtype
                 FROM {DataAccessDefaults.HealthMetricsCountsTable} 
                 WHERE MetricType IS NOT NULL 
+                  AND (Disabled IS NULL OR Disabled = 0)
                   AND RecordCount > 0";
 
         var results = await conn.QueryAsync<(string MetricType, string MetricSubtype)>(sql);

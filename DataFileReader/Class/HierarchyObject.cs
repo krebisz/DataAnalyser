@@ -36,6 +36,8 @@ public class HierarchyObject
 
     public string ReferenceValue { get; set; }
 
+    public string ValueType { get; set; } = string.Empty;
+
     public string Path { get; set; } = string.Empty;
 
 

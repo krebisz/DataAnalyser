@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Text;
 using static DataFileReader.Helper.DataHelper;
 
 namespace DataFileReader.Class;
@@ -18,11 +17,10 @@ public class MetaDataList
         MetaDataObjects = new List<MetaData>();
 
         HierarchyObjectList.GenerateMetaIDs();
+        HierarchyRefValCalculator.AssignStructuralReferenceValues(HierarchyObjectList.HierarchyObjects);
 
         foreach (var hierarchyObject in HierarchyObjectList.HierarchyObjects)
         {
-            //hierarchyObject.ReferenceValue = GetMetaDataObjectReferenceValue(HierarchyObjectList.HierarchyObjects, hierarchyObject.ID, ref referenceValue).ToString();
-            hierarchyObject.ReferenceValue = GetMetaDataObjectReferenceValue(HierarchyObjectList.HierarchyObjects, hierarchyObject.ID);
             if (string.IsNullOrEmpty(hierarchyObject.Name))
                 hierarchyObject.Name = Guid.NewGuid().ToString();
 
@@ -114,39 +112,5 @@ public class MetaDataList
         var distinctTable = GetDistinctRows(flattenedData);
 
         return distinctTable;
-    }
-
-    public static int? GetMetaDataObjectReferenceValue(List<HierarchyObject> HierarchyObjectList, int hierarchyObjectID, ref int? referenceValue)
-    {
-        if (referenceValue == null)
-            referenceValue = 0;
-
-        var hierarchyObject = HierarchyObjectList.FirstOrDefault(x => x.ID == hierarchyObjectID);
-
-        if (hierarchyObject != null)
-        {
-            referenceValue = referenceValue + hierarchyObject.MetaDataID;
-
-            if (hierarchyObject.ParentID != null && hierarchyObject.ParentID > -1)
-                GetMetaDataObjectReferenceValue(HierarchyObjectList, (int)hierarchyObject.ParentID, ref referenceValue);
-        }
-
-        return referenceValue;
-    }
-
-    public static string GetMetaDataObjectReferenceValue(List<HierarchyObject> HierarchyObjectList, int ID)
-    {
-        var referenceValue = string.Empty;
-        var reference = new StringBuilder();
-
-        var hierarchyObject = HierarchyObjectList.FirstOrDefault(x => x.ID == ID);
-        var hierarchyObjectParent = HierarchyObjectList.FirstOrDefault(x => x.ID == hierarchyObject?.ParentID);
-
-        if (hierarchyObjectParent != null && hierarchyObjectParent.ReferenceValue != null)
-            reference.Append(hierarchyObjectParent.ReferenceValue);
-        if (hierarchyObject != null)
-            reference.Append(hierarchyObject.ID);
-
-        return reference.ToString();
     }
 }

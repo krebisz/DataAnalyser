@@ -30,14 +30,13 @@ public class HierarchyObjectList
     {
         var hierarchyObject = new HierarchyObject();
 
-        var pathParts = path.Split('.');
-
         hierarchyObject.ID = HierarchyObjects.Count + 1; // Simple ID generation
-        hierarchyObject.Name = pathParts.Last();
-        hierarchyObject.ParentID = FindParentID(pathParts);          // Default parent ID, can be adjusted later
-        hierarchyObject.Level = FindLevel(hierarchyObject.ParentID); // Default level, can be adjusted later
+        hierarchyObject.Name = ExtractNameFromPath(path);
+        hierarchyObject.ParentID = FindParentID(path);
+        hierarchyObject.Level = FindLevel(hierarchyObject.ParentID);
         hierarchyObject.ClassID = classID;
         hierarchyObject.Path = path;
+        hierarchyObject.ValueType = GetValueType(jToken, classID);
 
 
         if (classID == "Container")
@@ -60,23 +59,61 @@ public class HierarchyObjectList
             HierarchyObjects.Add(hierarchyObject);
     }
 
-    public int? FindParentID(string[] pathParts)
+    private static string ExtractNameFromPath(string path)
     {
-        var objectName = pathParts.Last();
-        var parentName = pathParts.Length > 1 ? pathParts[pathParts.Length - 2] : null;
+        if (string.IsNullOrWhiteSpace(path))
+            return string.Empty;
 
-        if (parentName is null)
+        var lastDot = path.LastIndexOf('.');
+        return lastDot >= 0 ? path[(lastDot + 1)..] : path;
+    }
+
+    public int? FindParentID(string path)
+    {
+        var parentPath = GetParentPath(path);
+        if (string.IsNullOrEmpty(parentPath))
+            return null;
+
+        return HierarchyObjects.FirstOrDefault(h => h.Path == parentPath)?.ID;
+    }
+
+    private static string? GetParentPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return null;
+
+        if (string.Equals(path, "Root", StringComparison.Ordinal))
+            return null;
+
+        if (path.EndsWith(']'))
         {
-            var parts = Regex.Split(objectName, @"\[.*?\]");
-            // If the last part is an index, we need to find the parent name from the previous part
-            if (parts.Length > 1)
-                parentName = parts[parts.Length - 2];
+            var match = Regex.Match(path, @"^(.*)\[\d+\]$");
+            if (match.Success)
+                return match.Groups[1].Value;
         }
 
-        if (parentName is null)
-            return null; // No parent name found
+        var lastDot = path.LastIndexOf('.');
+        return lastDot >= 0 ? path[..lastDot] : null;
+    }
 
-        return HierarchyObjects.FirstOrDefault(h => h.Name == parentName)?.ID;
+    private static string GetValueType(JToken token, string classID)
+    {
+        return classID switch
+        {
+            "Container" => "object",
+            "Array" => "array",
+            _ => token.Type switch
+            {
+                JTokenType.Integer => "number",
+                JTokenType.Float => "number",
+                JTokenType.String => "string",
+                JTokenType.Boolean => "bool",
+                JTokenType.Date => "date",
+                JTokenType.Null => "null",
+                JTokenType.Undefined => "null",
+                _ => token.Type.ToString().ToLowerInvariant()
+            }
+        };
     }
 
     public int? FindLevel(int? parentID)

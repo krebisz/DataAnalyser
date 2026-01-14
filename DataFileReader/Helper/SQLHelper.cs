@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.Text;
 using DataFileReader.Class;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 #pragma warning disable CS0618
 #pragma warning disable CS8600
@@ -11,14 +12,40 @@ namespace DataFileReader.Helper;
 
 public static class SQLHelper
 {
+    public static void CleanDatabase()
+    {
+        var connectionString = ConfigurationManager.AppSettings["HealthDB"];
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("HealthDB connection string is not configured.");
+
+        var sql = @"
+IF OBJECT_ID(N'[dbo].[CanonicalMetricMappings]', N'U') IS NOT NULL DROP TABLE [dbo].[CanonicalMetricMappings];
+
+IF OBJECT_ID(N'[dbo].[HealthMetricsCounts]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsCounts];
+
+IF OBJECT_ID(N'[dbo].[HealthMetricsSecond]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsSecond];
+IF OBJECT_ID(N'[dbo].[HealthMetricsMinute]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsMinute];
+IF OBJECT_ID(N'[dbo].[HealthMetricsHour]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsHour];
+IF OBJECT_ID(N'[dbo].[HealthMetricsDay]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsDay];
+IF OBJECT_ID(N'[dbo].[HealthMetricsWeek]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsWeek];
+IF OBJECT_ID(N'[dbo].[HealthMetricsMonth]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsMonth];
+IF OBJECT_ID(N'[dbo].[HealthMetricsYear]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsYear];
+
+IF OBJECT_ID(N'[dbo].[HealthMetrics]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetrics];
+IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo].[HealthMetricsMetaData];
+";
+
+        using var conn = new SqlConnection(connectionString);
+        conn.Open();
+        using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 300;
+        cmd.ExecuteNonQuery();
+    }
+
     private static void EnsureHealthMetricsMetaDataTableExists(string connectionString)
     {
         var sql = @"
-        IF NOT EXISTS (
-            SELECT * FROM sys.objects 
-            WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsMetaData]') 
-              AND type IN (N'U')
-        )
+        IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NULL
         BEGIN
             CREATE TABLE [dbo].[HealthMetricsMetaData](
                 [Id] UNIQUEIDENTIFIER NOT NULL
@@ -26,11 +53,35 @@ public static class SQLHelper
                     DEFAULT NEWSEQUENTIALID(),
                 [MetadataJson] NVARCHAR(MAX) NOT NULL,
                 [MetadataHash] VARBINARY(32) NOT NULL,
+                [ReferenceValue] NVARCHAR(64) NULL,
                 [CreatedDate] DATETIME2 NOT NULL DEFAULT GETDATE()
             );
+        END
 
-            CREATE UNIQUE NONCLUSTERED INDEX UX_HealthMetricsMetaData_Hash
-                ON [dbo].[HealthMetricsMetaData](MetadataHash);
+        -- Column migration (existing DBs)
+        IF COL_LENGTH(N'dbo.HealthMetricsMetaData', N'ReferenceValue') IS NULL
+        BEGIN
+            ALTER TABLE [dbo].[HealthMetricsMetaData]
+            ADD [ReferenceValue] NVARCHAR(64) NULL;
+        END
+
+        -- Indexes (use dynamic SQL to avoid compile-time 'invalid column' errors during migrations)
+        IF NOT EXISTS (
+            SELECT 1 FROM sys.indexes
+            WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsMetaData]')
+              AND name = 'UX_HealthMetricsMetaData_Hash'
+        )
+        BEGIN
+            EXEC(N'CREATE UNIQUE NONCLUSTERED INDEX UX_HealthMetricsMetaData_Hash ON [dbo].[HealthMetricsMetaData](MetadataHash);');
+        END
+
+        IF NOT EXISTS (
+            SELECT 1 FROM sys.indexes
+            WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsMetaData]')
+              AND name = 'IX_HealthMetricsMetaData_ReferenceValue'
+        )
+        BEGIN
+            EXEC(N'CREATE NONCLUSTERED INDEX IX_HealthMetricsMetaData_ReferenceValue ON [dbo].[HealthMetricsMetaData]([ReferenceValue]) WHERE [ReferenceValue] IS NOT NULL;');
         END
     ";
 
@@ -334,6 +385,9 @@ public static class SQLHelper
                         CREATE TABLE [dbo].[HealthMetricsCounts](
                             [MetricType] NVARCHAR(100) NOT NULL,
                             [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
+                            [MetricTypeName] NVARCHAR(100) NOT NULL DEFAULT '',
+                            [MetricSubtypeName] NVARCHAR(200) NOT NULL DEFAULT '',
+                            [Disabled] BIT NOT NULL DEFAULT 0,
                             [RecordCount] BIGINT NOT NULL DEFAULT 0,
                             [EarliestDateTime] DATETIME2 NULL,
                             [MostRecentDateTime] DATETIME2 NULL,
@@ -367,6 +421,32 @@ public static class SQLHelper
                         BEGIN
                             ALTER TABLE [dbo].[HealthMetricsCounts]
                             ADD [MostRecentDateTime] DATETIME2 NULL;
+                        END
+
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricTypeName')
+                        BEGIN
+                            ALTER TABLE [dbo].[HealthMetricsCounts]
+                            ADD [MetricTypeName] NVARCHAR(100) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricTypeName DEFAULT '';
+
+                            UPDATE [dbo].[HealthMetricsCounts]
+                            SET MetricTypeName = MetricType
+                            WHERE MetricTypeName = '';
+                        END
+
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricSubtypeName')
+                        BEGIN
+                            ALTER TABLE [dbo].[HealthMetricsCounts]
+                            ADD [MetricSubtypeName] NVARCHAR(200) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricSubtypeName DEFAULT '';
+
+                            UPDATE [dbo].[HealthMetricsCounts]
+                            SET MetricSubtypeName = MetricSubtype
+                            WHERE MetricSubtypeName = '';
+                        END
+
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'Disabled')
+                        BEGIN
+                            ALTER TABLE [dbo].[HealthMetricsCounts]
+                            ADD [Disabled] BIT NOT NULL CONSTRAINT DF_HealthMetricsCounts_Disabled DEFAULT 0;
                         END
                         
                         -- Add computed columns if they don't exist
@@ -419,6 +499,9 @@ public static class SQLHelper
                         CREATE TABLE [dbo].[HealthMetricsCounts](
                             [MetricType] NVARCHAR(100) NOT NULL,
                             [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
+                            [MetricTypeName] NVARCHAR(100) NOT NULL DEFAULT '',
+                            [MetricSubtypeName] NVARCHAR(200) NOT NULL DEFAULT '',
+                            [Disabled] BIT NOT NULL DEFAULT 0,
                             [RecordCount] BIGINT NOT NULL DEFAULT 0,
                             [EarliestDateTime] DATETIME2 NULL,
                             [MostRecentDateTime] DATETIME2 NULL,
@@ -446,6 +529,32 @@ public static class SQLHelper
                             ALTER TABLE [dbo].[HealthMetricsCounts]
                             ADD [MostRecentDateTime] DATETIME2 NULL;
                         END
+
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricTypeName')
+                        BEGIN
+                            ALTER TABLE [dbo].[HealthMetricsCounts]
+                            ADD [MetricTypeName] NVARCHAR(100) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricTypeName DEFAULT '';
+
+                            UPDATE [dbo].[HealthMetricsCounts]
+                            SET MetricTypeName = MetricType
+                            WHERE MetricTypeName = '';
+                        END
+
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricSubtypeName')
+                        BEGIN
+                            ALTER TABLE [dbo].[HealthMetricsCounts]
+                            ADD [MetricSubtypeName] NVARCHAR(200) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricSubtypeName DEFAULT '';
+
+                            UPDATE [dbo].[HealthMetricsCounts]
+                            SET MetricSubtypeName = MetricSubtype
+                            WHERE MetricSubtypeName = '';
+                        END
+
+                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'Disabled')
+                        BEGIN
+                            ALTER TABLE [dbo].[HealthMetricsCounts]
+                            ADD [Disabled] BIT NOT NULL CONSTRAINT DF_HealthMetricsCounts_Disabled DEFAULT 0;
+                        END
                         
                         -- Add computed columns if they don't exist
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'DaysBetween')
@@ -460,27 +569,42 @@ public static class SQLHelper
                             ADD [DaysPerRecord] AS CAST(CAST(DATEDIFF(day, [EarliestDateTime], [MostRecentDateTime]) AS DECIMAL(18,5)) / NULLIF([RecordCount], 0) AS DECIMAL(18,5)) PERSISTED;
                         END
                     END
-                    
-                    -- Clear existing counts and recalculate from HealthMetrics
-                    TRUNCATE TABLE [dbo].[HealthMetricsCounts];
-                    
-                    -- Insert counts grouped by MetricType and MetricSubtype
-                    -- Only count records with valid timestamps (NormalizedTimestamp is not null, OR RawTimestamp is not null and not empty)
-                    -- Also calculate min and max timestamps for each combination
-                    INSERT INTO [dbo].[HealthMetricsCounts] (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
-                    SELECT 
-                        ISNULL(MetricType, '') AS MetricType,
-                        ISNULL(MetricSubtype, '') AS MetricSubtype,
-                        COUNT(*) AS RecordCount,
-                        MIN(NormalizedTimestamp) AS EarliestDateTime,
-                        MAX(NormalizedTimestamp) AS MostRecentDateTime,
-                        GETDATE() AS CreatedDate,
-                        GETDATE() AS LastUpdated
-                    FROM [dbo].[HealthMetrics]
-                    WHERE MetricType IS NOT NULL
-                      AND (NormalizedTimestamp IS NOT NULL 
-                           OR (RawTimestamp IS NOT NULL AND RawTimestamp != ''))
-                    GROUP BY MetricType, MetricSubtype";
+
+                    ;WITH SourceCounts AS (
+                        SELECT
+                            ISNULL(MetricType, '') AS MetricType,
+                            ISNULL(MetricSubtype, '') AS MetricSubtype,
+                            COUNT(*) AS RecordCount,
+                            MIN(NormalizedTimestamp) AS EarliestDateTime,
+                            MAX(NormalizedTimestamp) AS MostRecentDateTime
+                        FROM [dbo].[HealthMetrics]
+                        WHERE MetricType IS NOT NULL
+                          AND (NormalizedTimestamp IS NOT NULL
+                               OR (RawTimestamp IS NOT NULL AND RawTimestamp != ''))
+                        GROUP BY MetricType, MetricSubtype
+                    )
+                    MERGE [dbo].[HealthMetricsCounts] AS target
+                    USING SourceCounts AS source
+                    ON target.MetricType = source.MetricType
+                       AND target.MetricSubtype = source.MetricSubtype
+                    WHEN MATCHED THEN
+                        UPDATE SET
+                            RecordCount = source.RecordCount,
+                            EarliestDateTime = source.EarliestDateTime,
+                            MostRecentDateTime = source.MostRecentDateTime,
+                            MetricTypeName = CASE WHEN target.MetricTypeName IS NULL OR target.MetricTypeName = '' THEN source.MetricType ELSE target.MetricTypeName END,
+                            MetricSubtypeName = CASE WHEN target.MetricSubtypeName IS NULL OR target.MetricSubtypeName = '' THEN source.MetricSubtype ELSE target.MetricSubtypeName END,
+                            LastUpdated = GETDATE()
+                    WHEN NOT MATCHED THEN
+                        INSERT (MetricType, MetricSubtype, MetricTypeName, MetricSubtypeName, Disabled, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
+                        VALUES (source.MetricType, source.MetricSubtype, source.MetricType, source.MetricSubtype, 0, source.RecordCount, source.EarliestDateTime, source.MostRecentDateTime, GETDATE(), GETDATE())
+                    WHEN NOT MATCHED BY SOURCE THEN
+                        UPDATE SET
+                            RecordCount = 0,
+                            EarliestDateTime = NULL,
+                            MostRecentDateTime = NULL,
+                            LastUpdated = GETDATE();
+                    ";
 
                 using (var sqlCommand = new SqlCommand(initializeQuery, sqlConnection))
                 {
@@ -622,6 +746,7 @@ public static class SQLHelper
             return null;
 
         var hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(metadataJson));
+        var referenceValue = ComputeStructuralReferenceValue(metadataJson);
 
         var sql = @"
         DECLARE @Id UNIQUEIDENTIFIER;
@@ -632,12 +757,19 @@ public static class SQLHelper
 
         IF @Id IS NULL
         BEGIN
-            INSERT INTO HealthMetricsMetaData (MetadataJson, MetadataHash)
+            INSERT INTO HealthMetricsMetaData (MetadataJson, MetadataHash, ReferenceValue)
             OUTPUT inserted.Id
-            VALUES (@Json, @Hash);
+            VALUES (@Json, @Hash, @ReferenceValue);
         END
         ELSE
         BEGIN
+            IF @ReferenceValue IS NOT NULL
+            BEGIN
+                UPDATE HealthMetricsMetaData
+                SET ReferenceValue = @ReferenceValue
+                WHERE Id = @Id AND ReferenceValue IS NULL;
+            END
+
             SELECT @Id;
         END
     ";
@@ -645,8 +777,30 @@ public static class SQLHelper
         using var cmd = new SqlCommand(sql, connection);
         cmd.Parameters.AddWithValue("@Json", metadataJson);
         cmd.Parameters.AddWithValue("@Hash", hash);
+        cmd.Parameters.AddWithValue("@ReferenceValue", (object?)referenceValue ?? DBNull.Value);
 
         return (Guid?)cmd.ExecuteScalar();
+    }
+
+    private static string? ComputeStructuralReferenceValue(string metadataJson)
+    {
+        try
+        {
+            var token = JToken.Parse(metadataJson);
+            var hierarchyObjectList = new HierarchyObjectList();
+            JsoonHelper.CreateHierarchyObjectList(ref hierarchyObjectList, token);
+
+            HierarchyRefValCalculator.AssignStructuralReferenceValues(hierarchyObjectList.HierarchyObjects);
+
+            var root = hierarchyObjectList.HierarchyObjects.FirstOrDefault(x => x.ParentID is null && x.Path == "Root")
+                       ?? hierarchyObjectList.HierarchyObjects.OrderBy(x => x.Level ?? 0).FirstOrDefault();
+
+            return root?.ReferenceValue;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -889,8 +1043,8 @@ public static class SQLHelper
                         END,
                         LastUpdated = GETDATE()
                 WHEN NOT MATCHED THEN
-                    INSERT (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
-                    VALUES (source.MetricType, source.MetricSubtype, source.IncrementCount, source.MinTimestamp, source.MaxTimestamp, GETDATE(), GETDATE());";
+                    INSERT (MetricType, MetricSubtype, MetricTypeName, MetricSubtypeName, Disabled, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
+                    VALUES (source.MetricType, source.MetricSubtype, source.MetricType, source.MetricSubtype, 0, source.IncrementCount, source.MinTimestamp, source.MaxTimestamp, GETDATE(), GETDATE());";
 
             // Build the VALUES clause for all combinations
             var valuesList = new List<string>();
@@ -944,6 +1098,9 @@ public static class SQLHelper
                         CREATE TABLE [dbo].[HealthMetricsCounts](
                             [MetricType] NVARCHAR(100) NOT NULL,
                             [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
+                            [MetricTypeName] NVARCHAR(100) NOT NULL DEFAULT '',
+                            [MetricSubtypeName] NVARCHAR(200) NOT NULL DEFAULT '',
+                            [Disabled] BIT NOT NULL DEFAULT 0,
                             [RecordCount] BIGINT NOT NULL DEFAULT 0,
                             [EarliestDateTime] DATETIME2 NULL,
                             [MostRecentDateTime] DATETIME2 NULL,
@@ -971,6 +1128,32 @@ public static class SQLHelper
                     BEGIN
                         ALTER TABLE [dbo].[HealthMetricsCounts]
                         ADD [MostRecentDateTime] DATETIME2 NULL;
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricTypeName')
+                    BEGIN
+                        ALTER TABLE [dbo].[HealthMetricsCounts]
+                        ADD [MetricTypeName] NVARCHAR(100) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricTypeName DEFAULT '';
+
+                        UPDATE [dbo].[HealthMetricsCounts]
+                        SET MetricTypeName = MetricType
+                        WHERE MetricTypeName = '';
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricSubtypeName')
+                    BEGIN
+                        ALTER TABLE [dbo].[HealthMetricsCounts]
+                        ADD [MetricSubtypeName] NVARCHAR(200) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricSubtypeName DEFAULT '';
+
+                        UPDATE [dbo].[HealthMetricsCounts]
+                        SET MetricSubtypeName = MetricSubtype
+                        WHERE MetricSubtypeName = '';
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'Disabled')
+                    BEGIN
+                        ALTER TABLE [dbo].[HealthMetricsCounts]
+                        ADD [Disabled] BIT NOT NULL CONSTRAINT DF_HealthMetricsCounts_Disabled DEFAULT 0;
                     END
                     
                     -- Add computed columns if they don't exist

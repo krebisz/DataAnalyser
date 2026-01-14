@@ -40,7 +40,9 @@
     </Window.Style>
 
     <Grid>
-        <DockPanel>
+        <TabControl TabStripPlacement="Bottom" Margin="0">
+            <TabItem Header="Charts">
+                <DockPanel>
 
             <!-- ====== TOP CONTROL AREA (Two Rows) ====== -->
             <Border DockPanel.Dock="Top" Background="#FF747171" Padding="{StaticResource TopControlBorderPadding}">
@@ -189,7 +191,20 @@
                 </StackPanel>
             </ScrollViewer>
 
-        </DockPanel>
+                </DockPanel>
+            </TabItem>
+
+            <TabItem Header="Admin">
+                <Grid Margin="10">
+                    <TextBlock Text="Admin tab (coming soon)"
+                               Foreground="#FF3B3B3B"
+                               FontWeight="SemiBold"
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center" />
+                </Grid>
+            </TabItem>
+        </TabControl>
 
         <Grid x:Name="BusyOverlay"
               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"

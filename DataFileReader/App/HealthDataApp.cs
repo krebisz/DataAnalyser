@@ -48,6 +48,10 @@ public sealed class HealthDataApp
                     DeleteJunkFiles();
                     break;
 
+                case AppOption.CleanDatabase:
+                    CleanDatabase();
+                    break;
+
                 case AppOption.Exit:
                     Console.WriteLine("Exiting application.");
                     return;
@@ -76,7 +80,8 @@ public sealed class HealthDataApp
         Console.WriteLine("  1. Aggregate Metrics");
         Console.WriteLine("  2. Process New Files");
         Console.WriteLine("  3. Remove Junk Files");
-        Console.WriteLine("  4. Exit");
+        Console.WriteLine("  4. Clean Database");
+        Console.WriteLine("  5. Exit");
         Console.Write("> ");
 
         return Console.ReadLine()?.Trim() switch
@@ -84,7 +89,8 @@ public sealed class HealthDataApp
             "1" => AppOption.AggregateMetrics,
             "2" => AppOption.ProcessFiles,
             "3" => AppOption.RemoveJunkFiles,
-            "4" => AppOption.Exit,
+            "4" => AppOption.CleanDatabase,
+            "5" => AppOption.Exit,
             _ => AppOption.Invalid
         };
     }
@@ -176,6 +182,32 @@ public sealed class HealthDataApp
         Console.WriteLine($"Removed: {deleted} empty file(s).");
     }
 
+    private void CleanDatabase()
+    {
+        Console.WriteLine("This will DROP all DataFileReader-created tables in the configured HealthDB database.");
+        Console.Write("Type DELETE to confirm: ");
+
+        var confirmation = Console.ReadLine()?.Trim();
+        if (!string.Equals(confirmation, "DELETE", StringComparison.Ordinal))
+        {
+            Console.WriteLine("Cancelled.");
+            return;
+        }
+
+        try
+        {
+            SQLHelper.CleanDatabase();
+            Console.WriteLine("Database cleaned.");
+
+            // Recreate tables so the app can continue running without restart.
+            EnsureDatabaseTables();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cleaning database: {ex.Message}");
+        }
+    }
+
     // ----------------------------
     // Helpers
     // ----------------------------
@@ -199,6 +231,7 @@ public sealed class HealthDataApp
         AggregateMetrics,
         ProcessFiles,
         RemoveJunkFiles,
+        CleanDatabase,
         Exit
     }
 }
