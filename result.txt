@@ -1,0 +1,90 @@
+
+1) ERROR
+System.InvalidOperationException: ''Filter' is not allowed during an AddNew or EditItem transaction.' At:
+	
+	private void RefreshRowFilter()
+    {
+        var view = CollectionViewSource.GetDefaultView(CountsGrid.ItemsSource);
+        if (view == null)
+            return;
+
+        view.Filter = _hideDisabled
+            ? item => item is EditableHealthMetricsCountEntry entry && !entry.Disabled
+            : null;
+
+        view.Refresh();
+    }
+	
+
+2) COPILOT ANALYSIS:
+Error (concise)
+The app throws System.InvalidOperationException: "'Filter' is not allowed during an AddNew or EditItem transaction." because code sets the collection view's `Filter` while a DataGrid edit transaction is active.
+
+Why this happens (<200 words)
+The DataGrid opens an edit transaction when a cell/row is being edited. Your bindings use `UpdateSourceTrigger=PropertyChanged` (notably the `Disabled` checkbox), so the source property is updated and raises PropertyChanged while the DataGrid is still in the edit transaction. `CollectionView.Filter` cannot be changed during an `IEditableCollectionView` AddNew/EditItem transaction, so calling `RefreshRowFilter()` in response to the property change triggers the exception.
+
+Root cause
+Setting the filter synchronously from a PropertyChanged handler while the DataGrid/item is still being edited. The immediate cause is the call to `view.Filter = ...` during an open edit transaction; the deeper cause is updating the filter inside the same synchronous flow that the DataGrid uses to perform editing (because of `UpdateSourceTrigger=PropertyChanged` and immediate PropertyChanged notifications).
+
+Concrete fixes (pick one)
+
+1) Defer filter update until after the edit transaction completes (recommended, minimal disruption)
+- Change the Disabled-handling path to schedule the refresh on the Dispatcher (runs after current edit completes):
+
+```csharp
+// C#
+private void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
+{
+    if (e.PropertyName is nameof(EditableHealthMetricsCountEntry.IsDirty)
+        or nameof(EditableHealthMetricsCountEntry.MetricTypeName)
+        or nameof(EditableHealthMetricsCountEntry.MetricSubtypeName)
+        or nameof(EditableHealthMetricsCountEntry.Disabled))
+    {
+        UpdateSaveButtonState();
+        if (e.PropertyName == nameof(EditableHealthMetricsCountEntry.Disabled))
+            Dispatcher.BeginInvoke((Action)RefreshRowFilter, System.Windows.Threading.DispatcherPriority.Background);
+    }
+}
+```
+
+2) Detect an active edit and defer inside `RefreshRowFilter`
+- Prevent setting Filter while `IEditableCollectionView.IsAddingNew` or `IsEditingItem` is true and schedule a deferred refresh:
+
+```csharp
+// C#
+private void RefreshRowFilter()
+{
+    var view = CollectionViewSource.GetDefaultView(CountsGrid.ItemsSource);
+    if (view == null) return;
+
+    if (view is IEditableCollectionView editable && (editable.IsAddingNew || editable.IsEditingItem))
+    {
+        Dispatcher.BeginInvoke((Action)RefreshRowFilter, System.Windows.Threading.DispatcherPriority.Background);
+        return;
+    }
+
+    view.Filter = _hideDisabled
+        ? item => item is EditableHealthMetricsCountEntry entry && !entry.Disabled
+        : null;
+
+    view.Refresh();
+}
+```
+
+3) Commit the edit before changing the filter
+- Call `CountsGrid.CommitEdit()` (and possibly `CountsGrid.CommitEdit(DataGridEditingUnit.Row, true)`) before assigning `view.Filter`. This is more disruptive to user editing flow and may not be desirable.
+
+Other options
+- Change `UpdateSourceTrigger` to `LostFocus` so property changes occur only when editing finishes (UX tradeoff).
+- Subscribe to `DataGrid.RowEditEnding` or `DataGrid.CurrentCellChanged` to update the filter after edits complete.
+
+Possible improvements (readability / performance)
+- Avoid repeated `CollectionViewSource.GetDefaultView` calls by caching the view or encapsulating filter logic.
+- Prevent multiple queued deferred refreshes by guarding with a boolean `_filterRefreshPending`.
+- Throttle/debounce frequent filter updates (if edits can be rapid), to reduce repeated `view.Refresh()` cost.
+- Add null-safety and logging when deferring to diagnose future issues.
+
+Related Work Items
+- No relevant work items or issues were found in the repository for this error.
+
+Would you like me to defer the filter update via Dispatcher?

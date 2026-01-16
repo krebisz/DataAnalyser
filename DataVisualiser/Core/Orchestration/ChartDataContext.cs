@@ -40,6 +40,12 @@ public class ChartDataContext
     public string? PrimarySubtype { get; init; }
     public string? SecondarySubtype { get; init; }
 
+    // Display metric information for UI/legend/tooltip formatting
+    public string? DisplayPrimaryMetricType { get; init; }
+    public string? DisplaySecondaryMetricType { get; init; }
+    public string? DisplayPrimarySubtype { get; init; }
+    public string? DisplaySecondarySubtype { get; init; }
+
     public DateTime From { get; init; }
     public DateTime To { get; init; }
 }

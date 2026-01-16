@@ -1,121 +1,148 @@
 # PROJECT OVERVIEW
-Status: Descriptive (Non-Binding)
-Scope: Intent, Trajectory, and Current State
+**Status:** Descriptive  
+**Scope:** System intent, current capabilities, and evolutionary direction  
+**Authority:** Subordinate to Project Bible.md and SYSTEM_MAP.md
 
 ---
 
 ## 1. Purpose
 
-This document provides a high-level description of the project, its intent, and its current trajectory.
+This document provides a **descriptive overview** of the project:
 
-It is **descriptive, not binding**.  
-Architectural law resides in **Project Bible.md**.  
-Execution discipline resides in **MASTER_OPERATING_PROTOCOL.md**.
+- what the system currently does
+- how it is structured conceptually
+- what direction it is evolving toward
+- what constraints govern that evolution
 
----
+It does **not** define architectural law or sequencing authority.
 
-## 2. Project Intent
-
-The project exists to ingest heterogeneous structured data, normalize it into a **deterministic and semantically authoritative metric space**, and enable computation and visualization **without semantic erosion**.
-
-The primary objective is **trustworthy metric meaning**, not visualization, analytics, or UI convenience.
-
-Visualization and analytics are treated as **consumers of truth**, not definers of it.
+If a conflict exists, higher-authority documents prevail.
 
 ---
 
-## 3. Architectural Direction (Current)
+## 2. Project Intent (High-Level)
 
-The system explicitly prioritizes:
+The project exists to provide a **trustworthy analytical environment** for exploring time-indexed metrics, with an explicit emphasis on:
 
-- Canonical semantic authority over inferred meaning
-- Deterministic normalization and identity resolution
-- Strict separation between:
-  - canonical truth
-  - derived, exploratory, or comparative computation
-- Parallelism over forced migration
-- Additive, non-destructive evolution
+- canonical truth
+- deterministic computation
+- explicit semantics
+- reversible interpretation
+- visible uncertainty
 
-Downstream consumers are designed to **trust semantics, not reinterpret them**.
+The system favors **clarity and auditability** over automation or convenience.
 
 ---
 
-## 3A. Declarative Mapping Policy (Additive - Descriptive)
+## 3. What the System Is (Today)
 
-Additive clarification aligned with Project Bible and SYSTEM_MAP.
+At present, the system:
 
-Canonical identity mapping is treated as declarative infrastructure:
+- ingests raw metric data losslessly
+- assigns meaning through declarative normalization
+- produces Canonical Metric Series (CMS)
+- computes derived results deterministically
+- visualizes results through multiple chart types
+- validates behavior through parity testing
+- supports parallel legacy and CMS execution paths during migration
 
-- Mapping sources are authoritative and dynamic (e.g., mapping tables).
-- Hardcoded lists are permitted only as short-lived migration scaffolding.
-- Manual upkeep is avoided once a declarative source exists.
-
-This preserves determinism and avoids long-term semantic bottlenecks.
-
----
-
-## 4. Historical Context & Design Evolution
-
-> Contextual section — explanatory only.
-
-### 4.1 Early Structural Exploration
-
-Early iterations explored structural and hierarchical equivalence across heterogeneous inputs (notably JSON), enabling discovery through shape- and relationship-based analysis.
-
-This approach proved valuable for exploratory insight.
+Canonical semantics form the foundation for all computation.
 
 ---
 
-### 4.2 Limitations Identified
+## 4. Core Capabilities (Current)
 
-When applied to persisted metrics and computation, structural inference introduced unacceptable risks:
+### 4.1 Canonical Semantics & CMS
 
-- structurally similar data representing different semantics
-- loss of auditability
-- long-term semantic drift
-
-These risks were deemed incompatible with the project’s trust objectives.
-
----
-
-### 4.3 Transition to Canonical Metric Semantics
-
-The system transitioned to a **metric-first deterministic model**:
-
-- explicit time semantics
-- scalar value primacy
-- canonical metric identity
-- declarative normalization stages
-
-This established a **truth layer** that downstream systems can consume safely.
+- Canonical Metric Series (CMS) is the sole analytical truth
+- Metric identity is stable and explicit
+- Normalization is deterministic and staged
+- Downstream systems consume CMS without reinterpretation
 
 ---
 
-### 4.4 Deferred Structural Analysis
+### 4.2 Strategy-Based Computation
 
-Structural and manifold-style analysis was **deliberately deferred**, not discarded.
+The system supports multiple computation strategies, including:
 
-It is now treated as a **future, non-authoritative analytical layer**, explicitly prevented from mutating canonical truth without declaration and promotion.
+- single metric
+- combined metrics
+- multi-metric comparisons
+- temporal distributions
+- transformations (unary and binary)
 
----
-
-## 5. Relationship to Foundational Documents
-
-This document must be interpreted alongside:
-
-- **Project Bible.md** — architectural law and invariants
-- **SYSTEM_MAP.md** — conceptual layering and execution boundaries
-- **MASTER_OPERATING_PROTOCOL.md** — execution, collaboration, and failure discipline
-- **Workspace Workflow.md** — workspace initialization and grounding rules
-- **Project Roadmap.md** — sequencing and intent
-
-In case of conflict, higher-authority documents prevail.
+Strategies may exist in both legacy and CMS forms during migration, with parity validation enforcing correctness.
 
 ---
 
-## 6. Current Phase Status (Descriptive)
+### 4.3 Visualization & Interaction
 
-This reflects **actual implementation state**, not aspiration.
+The UI layer provides:
+
+- time-series charts
+- distribution views
+- transform previews
+- compositional and comparative charts
+- dynamic chart visibility and state management
+
+UI components are controller-based and standardized to support extension.
+
+---
+
+## 5. Interpretive & Exploratory Capabilities (Evolving)
+
+Beyond raw computation, the system increasingly supports **interpretive exploration**, including:
+
+- trend identification and comparison
+- compositional analysis (part vs whole)
+- transform-based derived views
+- pivot-oriented inspection (event-relative views)
+- dynamic visual cues (colouring, emphasis)
+
+These capabilities are **non-authoritative overlays** applied on top of canonical truth.
+
+They exist to aid understanding, not to redefine meaning.
+
+---
+
+## 6. Confidence & Reliability (Newly Explicit)
+
+The system supports (or will support) explicit representation of **data confidence and reliability**, including:
+
+- statistical identification of atypical readings
+- visual marking of low-confidence points
+- optional attenuation or exclusion from interpretive overlays
+- preservation of raw and canonical values
+
+Confidence assessments:
+
+- are annotations, not mutations
+- are explicitly declared
+- are reversible
+- never influence normalization or identity
+
+This allows uncertainty to be visible without compromising trust.
+
+---
+
+## 7. Derived & Dynamic Metrics
+
+Derived metrics are created through explicit composition or transformation of canonical metrics.
+
+Characteristics:
+
+- each derived metric has its own identity
+- provenance is always preserved
+- derived metrics are non-canonical by default
+- promotion to canonical truth is explicit and declarative
+
+Derived results may be ephemeral (session-scoped) or persisted, depending on intent.
+
+---
+
+## 8. Current Phase Status (Descriptive)
+
+This section reflects **observed implementation state**, not aspiration.
 
 ### Phase 1 — Ingestion & Persistence  
 **Complete**
@@ -126,190 +153,92 @@ This reflects **actual implementation state**, not aspiration.
 
 ---
 
-### Phase 2 — Canonical Semantics & Normalization Foundations  
+### Phase 2 — Canonical Semantics & Normalization  
 **Complete**
 
-- Canonical Metric Series (CMS)
-- Metric identity resolution
-- Deterministic normalization contracts
+- Canonical Metric Series established
+- Deterministic normalization
+- Stable identity resolution
 
 ---
 
-### Phase 3 — Canonical Identity & CMS Integration  
-**Mostly Complete (55%)**
+### Phase 3 — Strategy Migration  
+**In Progress (~55%)**
 
-- CMS produced alongside legacy outputs
-- Identity and semantics stabilized
-- Downstream exposure via consumer interfaces
+- CMS strategies implemented for a subset of strategies
+- Parallel legacy execution maintained
+- Factory consolidation completed
+- Orchestration migration ongoing
+
+---
+
+### Phase 3.5 — Orchestration Layer Assessment  
+**In Progress (~70%)**
+
+- Unified cut-over mechanism implemented
+- CMS preserved through orchestration
+- Execution reachability verification pending
 
 ---
 
 ### Phase 4 — Consumer Adoption & Visualization Integration  
 **In Progress (~80%)**
 
-DataVisualiser currently:
-
-- Consumes CMS through an explicit dependency surface
-- Supports **parallel CMS and legacy execution paths**
-- Migrates strategies incrementally (55% complete - 5 of 9 strategies wired for CMS; 4 pending)
-- Uses parity harnesses to validate equivalence without forced cut-over
-- **Orchestration layer migration in progress** (70% complete - StrategyCutOverService implemented; reachability verification pending)
-- Provides **user-defined metric transformations**:
-  - Unary: Logarithm, Square Root
-  - Binary: Add, Subtract, Divide (Ratio)
-- Treats transform results as:
-  - ephemeral
-  - non-canonical
-  - non-promotable without declaration
-- Integrates transform results into:
-  - preview grids
-  - charting pipeline
-- Applies performance optimizations:
-  - configurable SQL result limiting
-  - elimination of redundant materialization
-  - computation skipping for hidden charts
-
-Parity is treated as a **phase obligation**, not an implementation detail.
-
-**Recent Progress:**
-- Phase 4A (Core Strategy Parity): Complete - 3 parity test suites passing
-- Phase 4B (Transform Pipeline Parity): Complete - "Divide" operation added
-- Phase 4C (Weekly/Temporal Migration): 75% complete - strategies exist, service cut-over completed, UI integration complete, reachability verification pending
+- CMS consumed explicitly by visualization pipeline
+- UI migration largely complete
+- Parity treated as a phase obligation
 
 ---
 
-### Phase 5 — Derived Metrics & Analytical Composition  
-**Planned**
+## 9. Evolutionary Direction (Non-Exhaustive)
 
-- Derived metrics are not authoritative by default
-- Promotion to canonical truth requires explicit declaration
+The project is intentionally **open-ended**.
 
----
+Future directions may include (non-exhaustive):
 
-### Future — Structural / Manifold Analysis  
-**Deferred**
+- richer interpretive overlays
+- expanded transform capabilities
+- compositional and relational analysis
+- confidence-aware visualizations
+- rules-based option gating
+- advanced exploratory views
 
-- Non-authoritative
-- Explicitly constrained
-- Insight-only unless promoted declaratively
+These directions represent **intent**, not commitment.
 
----
+All future work must respect canonical boundaries and phase discipline.
 
-## 7. Derived & Dynamic Metrics (Clarification)
-
-Derived metrics are **explicit semantic entities**, created through declared composition or aggregation of canonical metrics.
-
-Constraints:
-
-- Each derived metric has its **own identity**
-- Source identities are never mutated
-- Units, dimensions, and provenance are explicit
-- Promotion to canonical truth is never implicit
-
-Derived metrics may be ephemeral or persistent, but are always **intentional and reversible**.
+> **Note on Planning Discipline**  
+> Exploratory and confidence-related capabilities are no longer treated as informal future ideas.  
+> They are explicitly staged and gated under **Phase 6** of the Project Roadmap, with declared scope, constraints, and closure conditions to prevent semantic erosion while supporting intentional exploration.
 
 ---
 
-## 7A. Transform Operations (Phase 4 Implementation)
+## 10. What This Project Is Not
 
-The system currently supports **ephemeral transform operations**:
+To avoid ambiguity, the system is **not**:
 
-- Results are explicitly non-canonical
-- Operations include unary and binary forms
-- Results are visualized but not promoted
-- Provenance is tracked (sources + operation)
+- an automated decision engine
+- a semantic inference system
+- a self-correcting data authority
+- a recommendation engine
+- an AI-driven reinterpretation layer
 
-### Infrastructure Architecture (Descriptive)
+Human judgement remains central.
 
-- Expression Tree Model:
-  - `TransformExpression`
-  - `TransformOperand`
-  - `TransformOperation`
-- Operation Registry:
-  - `TransformOperationRegistry`
-- Evaluation Engine:
-  - `TransformExpressionEvaluator`
-- Builder:
-  - `TransformExpressionBuilder`
-- Data Processing:
-  - `TransformExpressionEvaluator` (includes merged TransformDataHelper functionality)
-- Strategy Integration:
-  - `TransformResultStrategy`
-
-### Expansion Readiness
-
-Provisioned to support:
-
-- N-metric expressions
-- Chained operations
-- Complex expression trees
-
-This aligns with Phase 4 goals while preserving Canonical boundaries.
+The system exists to **support reasoning**, not replace it.
 
 ---
 
-## 8. Migration & Parity Status (Additive · Descriptive)
+## 11. Summary
 
-Additive clarification based on recent execution experience.
+- Canonical truth is stable and immutable
+- Interpretation is powerful but bounded
+- Confidence is explicit, not implicit
+- Exploration is supported without semantic erosion
+- Evolution is intentional and phase-gated
 
-- CMS strategies may exist without being reachable
-- Migration is only considered real once:
-  - execution reachability is proven
-  - parity is observable
-- Partial migrations are expected and acceptable
-- Non-reachable logic is treated as **non-existent**
-
-**Current Migration Status (2026-01-09):**
-
-- **Strategy Migration (Phase 3)**: 55% complete
-  - 5 of 9 strategies have CMS implementations and factory support
-  - StrategyCutOverService implemented for unified cut-over
-  - Minor cleanup resolved (StrategySelectionService direct instantiation removed)
-  - Pending CMS factory wiring: MultiMetric, Normalized, Difference, Ratio
-  
-- **Orchestration Assessment (Phase 3.5)**: 70% complete
-  - StrategyCutOverService implemented and registered for all strategy types
-  - ChartRenderingOrchestrator uses unified cut-over mechanism
-  - ChartDataContextBuilder preserves CMS (doesn't convert to legacy)
-  - WeeklyDistributionService migrated to use StrategyCutOverService
-  - Reachability verification pending (StrategySelectionService cleanup resolved)
-
-- **File Reorganization & Code Abstraction**: 100% complete
-  - All files reorganized per architectural layers
-  - Strategies unified (SingleMetric, CombinedMetric)
-  - Factory pattern consolidated (StrategyFactoryBase)
-  - Common patterns extracted to shared helpers (StrategyComputationHelper, CmsConversionHelper, ChartHelper)
-  - ~450+ lines of duplicate code eliminated
-
-This document reflects **state**, not guarantee.
+This overview describes the system as it exists today and the direction it is deliberately moving toward.
 
 ---
 
-## 8A. Recent State Alignment (Additive)
-
-Additive clarification based on current repo state.
-
-- **Phase 3.5 cleanup**: StrategySelectionService direct instantiation removed; unified cut-over usage confirmed in code.
-- **Phase 7 UI consolidation**: Chart panels are now controller-based across all charts (Main, Normalized, DiffRatio, WeekdayTrend, Distribution, Transform).
-- **Declarative mapping**: Canonical identity mapping resolved via runtime mapping table; hardcoded lists treated as temporary only.
-- **Pending CMS wiring**: MultiMetric, Normalized, Difference, Ratio still route to legacy via factory TODOs.
-
-This section updates status interpretation without changing binding constraints.
-
----
-
-## 9. Summary
-
-Canonical semantics form the foundation.  
-Everything else builds on top — **explicitly, reversibly, and without inference**.
-
-The system favors **trust, auditability, and long-term coherence** over speed or convenience.
-
----
-
-End of Project Overview
-
-
-
-
-
+**End of Project Overview**

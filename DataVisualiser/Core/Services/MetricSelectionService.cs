@@ -213,10 +213,10 @@ public class MetricSelectionService
     // ------------------------------------------------------------
     // LOAD METRIC TYPES (BASE METRIC TYPES)
     // ------------------------------------------------------------
-    public async Task<List<string>> LoadMetricTypesAsync(string tableName)
+    public async Task<List<MetricNameOption>> LoadMetricTypesAsync(string tableName)
     {
         var dataFetcher = new DataFetcher(_connectionString);
-        var baseMetricTypes = await dataFetcher.GetBaseMetricTypes(tableName);
+        var baseMetricTypes = await dataFetcher.GetBaseMetricTypeOptions(tableName);
 
         return baseMetricTypes.ToList();
     }
@@ -224,10 +224,10 @@ public class MetricSelectionService
     // ------------------------------------------------------------
     // LOAD SUBTYPES
     // ------------------------------------------------------------
-    public async Task<List<string>> LoadSubtypesAsync(string metricType, string tableName)
+    public async Task<List<MetricNameOption>> LoadSubtypesAsync(string metricType, string tableName)
     {
         var dataFetcher = new DataFetcher(_connectionString);
-        var subtypes = await dataFetcher.GetSubtypesForBaseType(metricType, tableName);
+        var subtypes = await dataFetcher.GetSubtypeOptionsForBaseType(metricType, tableName);
 
         return subtypes.ToList();
     }

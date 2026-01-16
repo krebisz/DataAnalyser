@@ -70,6 +70,118 @@ public class DataFetcher
         return metricTypes;
     }
 
+    public async Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName = DataAccessDefaults.DefaultTableName)
+    {
+        tableName = SqlQueryBuilder.NormalizeTableName(tableName);
+
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        if (tableName == DataAccessDefaults.DefaultTableName)
+        {
+            var sql = $@"
+                    -- DataFetcher.GetBaseMetricTypeOptions (HealthMetrics)
+                    SELECT DISTINCT MetricType, MetricTypeName
+                    FROM {DataAccessDefaults.HealthMetricsCountsTable}
+                    WHERE MetricType IS NOT NULL
+                      AND (Disabled IS NULL OR Disabled = 0)
+                      AND RecordCount > 0
+                    ORDER BY MetricType";
+
+            var rows = await conn.QueryAsync<(string MetricType, string? MetricTypeName)>(sql);
+            return rows.Select(row => new MetricNameOption(row.MetricType, string.IsNullOrWhiteSpace(row.MetricTypeName) ? row.MetricType : row.MetricTypeName));
+        }
+
+        var tableSql = $@"
+                -- DataFetcher.GetBaseMetricTypeOptions ({tableName})
+                SELECT t.MetricType, MAX(c.MetricTypeName) AS MetricTypeName
+                FROM [dbo].[{tableName}] t
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCountsTable} c
+                       ON c.MetricType = t.MetricType
+                WHERE t.MetricType IS NOT NULL
+                GROUP BY t.MetricType
+                ORDER BY t.MetricType";
+
+        var tableRows = await conn.QueryAsync<(string MetricType, string? MetricTypeName)>(tableSql);
+        return tableRows.Select(row => new MetricNameOption(row.MetricType, string.IsNullOrWhiteSpace(row.MetricTypeName) ? row.MetricType : row.MetricTypeName));
+    }
+
+    public async Task<IReadOnlyList<string>> GetCountsMetricTypesForAdmin()
+    {
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        var sql = $@"
+                -- DataFetcher.GetCountsMetricTypesForAdmin
+                SELECT DISTINCT MetricType
+                FROM {DataAccessDefaults.HealthMetricsCountsTable}
+                WHERE MetricType IS NOT NULL AND MetricType != ''
+                ORDER BY MetricType";
+
+        var rows = await conn.QueryAsync<string>(sql);
+        return rows.ToList();
+    }
+
+    public async Task<IReadOnlyList<HealthMetricsCountEntry>> GetHealthMetricsCountsForAdmin(string? metricType = null)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        var sql = $@"
+                -- DataFetcher.GetHealthMetricsCountsForAdmin
+                SELECT
+                    MetricType,
+                    MetricSubtype,
+                    MetricTypeName,
+                    MetricSubtypeName,
+                    CAST(ISNULL(Disabled, 0) AS bit) AS Disabled,
+                    RecordCount,
+                    EarliestDateTime,
+                    MostRecentDateTime
+                FROM {DataAccessDefaults.HealthMetricsCountsTable}
+                WHERE (@MetricType IS NULL OR MetricType = @MetricType)
+                ORDER BY MetricType, MetricSubtype";
+
+        var rows = await conn.QueryAsync<HealthMetricsCountEntry>(sql, new { MetricType = metricType });
+        return rows.ToList();
+    }
+
+    public async Task<int> UpdateHealthMetricsCountsForAdmin(IEnumerable<HealthMetricsCountEntry> updates)
+    {
+        if (updates is null)
+            throw new ArgumentNullException(nameof(updates));
+
+        var updateList = updates.ToList();
+        if (updateList.Count == 0)
+            return 0;
+
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var sql = $@"
+                -- DataFetcher.UpdateHealthMetricsCountsForAdmin
+                UPDATE {DataAccessDefaults.HealthMetricsCountsTable}
+                SET
+                    MetricTypeName = @MetricTypeName,
+                    MetricSubtypeName = @MetricSubtypeName,
+                    Disabled = @Disabled
+                WHERE MetricType = @MetricType
+                  AND MetricSubtype = @MetricSubtype;";
+
+            var affected = await conn.ExecuteAsync(sql, updateList, tx);
+            tx.Commit();
+            return affected;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
     public async Task<(DateTime MinDate, DateTime MaxDate)?> GetMetricTypeDateRange(string metricType)
     {
         if (string.IsNullOrWhiteSpace(metricType))
@@ -212,24 +324,69 @@ public class DataFetcher
                     });
             return subtypes;
         }
-        else
+
+        var fallbackSql = $@"
+                -- DataFetcher.GetSubtypesForBaseType ({tableName})
+                SELECT DISTINCT MetricSubtype 
+                FROM [dbo].[{tableName}]
+                WHERE MetricType = @BaseType
+                  AND MetricSubtype IS NOT NULL
+                  AND MetricSubtype != ''
+                ORDER BY MetricSubtype";
+
+        var fallbackSubtypes = await conn.QueryAsync<string>(fallbackSql,
+                new
+                {
+                        BaseType = baseType
+                });
+        return fallbackSubtypes;
+    }
+
+    public async Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName = DataAccessDefaults.DefaultTableName)
+    {
+        if (string.IsNullOrWhiteSpace(baseType))
+            throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
+
+        if (string.Equals(baseType, "(All)", StringComparison.OrdinalIgnoreCase))
+            return await GetAllSubtypeOptions(tableName);
+
+        tableName = SqlQueryBuilder.NormalizeTableName(tableName);
+
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        if (tableName == DataAccessDefaults.DefaultTableName)
         {
             var sql = $@"
-                    -- DataFetcher.GetSubtypesForBaseType ({tableName})
-                    SELECT DISTINCT MetricSubtype 
-                    FROM [dbo].[{tableName}]
-                    WHERE MetricType = @BaseType
+                    -- DataFetcher.GetSubtypeOptionsForBaseType (HealthMetrics)
+                    SELECT DISTINCT MetricSubtype, MetricSubtypeName
+                    FROM {DataAccessDefaults.HealthMetricsCountsTable}
+                    WHERE MetricType = @MetricType
                       AND MetricSubtype IS NOT NULL
                       AND MetricSubtype != ''
+                      AND (Disabled IS NULL OR Disabled = 0)
+                      AND RecordCount > 0
                     ORDER BY MetricSubtype";
 
-            var subtypes = await conn.QueryAsync<string>(sql,
-                    new
-                    {
-                            BaseType = baseType
-                    });
-            return subtypes;
+            var rows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(sql, new { MetricType = baseType });
+            return rows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
         }
+
+        var tableSql = $@"
+                -- DataFetcher.GetSubtypeOptionsForBaseType ({tableName})
+                SELECT t.MetricSubtype, MAX(c.MetricSubtypeName) AS MetricSubtypeName
+                FROM [dbo].[{tableName}] t
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCountsTable} c
+                       ON c.MetricType = t.MetricType
+                      AND c.MetricSubtype = t.MetricSubtype
+                WHERE t.MetricType = @MetricType
+                  AND t.MetricSubtype IS NOT NULL
+                  AND t.MetricSubtype != ''
+                GROUP BY t.MetricSubtype
+                ORDER BY t.MetricSubtype";
+
+        var tableRows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(tableSql, new { MetricType = baseType });
+        return tableRows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
     }
 
     /// <summary>
@@ -268,6 +425,45 @@ public class DataFetcher
 
         var fallbackSubtypes = await conn.QueryAsync<string>(fallbackSql);
         return fallbackSubtypes;
+    }
+
+    public async Task<IEnumerable<MetricNameOption>> GetAllSubtypeOptions(string tableName = DataAccessDefaults.DefaultTableName)
+    {
+        tableName = SqlQueryBuilder.NormalizeTableName(tableName);
+
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        if (tableName == DataAccessDefaults.DefaultTableName)
+        {
+            var sql = $@"
+                    -- DataFetcher.GetAllSubtypeOptions (HealthMetrics)
+                    SELECT DISTINCT MetricSubtype, MetricSubtypeName
+                    FROM {DataAccessDefaults.HealthMetricsCountsTable}
+                    WHERE MetricSubtype IS NOT NULL
+                      AND (Disabled IS NULL OR Disabled = 0)
+                      AND MetricSubtype != ''
+                      AND RecordCount > 0
+                    ORDER BY MetricSubtype";
+
+            var rows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(sql);
+            return rows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
+        }
+
+        var fallbackSql = $@"
+                -- DataFetcher.GetAllSubtypeOptions ({tableName})
+                SELECT t.MetricSubtype, MAX(c.MetricSubtypeName) AS MetricSubtypeName
+                FROM [dbo].[{tableName}] t
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCountsTable} c
+                       ON c.MetricType = t.MetricType
+                      AND c.MetricSubtype = t.MetricSubtype
+                WHERE t.MetricSubtype IS NOT NULL
+                  AND t.MetricSubtype != ''
+                GROUP BY t.MetricSubtype
+                ORDER BY t.MetricSubtype";
+
+        var fallbackRows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(fallbackSql);
+        return fallbackRows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
     }
 
     /// <summary>

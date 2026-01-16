@@ -171,7 +171,7 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = CreatePrimaryStrategy(ctx, series, labels, out var secondaryLabel);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
     }
 
     /// <summary>
@@ -291,7 +291,7 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartNorm, strategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: ctx.SecondaryMetricType);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartNorm, strategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
     }
 
     private async Task RenderDiffRatio(ChartDataContext ctx, CartesianChart chartDiffRatio, string? metricType, string? primarySubtype, string? secondarySubtype, ChartState? chartState = null)
@@ -315,7 +315,7 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = new TransformResultStrategy(alignedData.Item1, computation.Results, label, ctx.From, ctx.To);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
     }
 
     private static(List<MetricData> Item1, List<MetricData> Item2)? PrepareAndAlignBinaryData(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2)

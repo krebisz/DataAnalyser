@@ -42,7 +42,7 @@ public class ChartUpdateCoordinator
     ///     Runs the supplied strategy, then renders the result into the target chart.
     ///     If the strategy returns null, the chart is cleared.
     /// </summary>
-    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null)
+    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -63,7 +63,7 @@ public class ChartUpdateCoordinator
         // -------------------------
         // Phase 2: Build render model
         // -------------------------
-        var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart, secondaryMetricType);
+        var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart, secondaryMetricType, displayPrimaryMetricType, displaySecondaryMetricType, displayPrimarySubtype, displaySecondarySubtype);
 
         // -------------------------
         // Phase 3: Render + post-render sync
@@ -102,7 +102,7 @@ public class ChartUpdateCoordinator
     /// <summary>
     ///     Builds a ChartRenderModel from a computation result and strategy metadata.
     /// </summary>
-    private ChartRenderModel BuildChartRenderModel(IChartComputationStrategy strategy, ChartComputationResult result, CartesianChart targetChart, string primaryLabel, string? secondaryLabel, string? metricType, string? primarySubtype, string? secondarySubtype, string? operationType, bool isOperationChart, string? secondaryMetricType)
+    private ChartRenderModel BuildChartRenderModel(IChartComputationStrategy strategy, ChartComputationResult result, CartesianChart targetChart, string primaryLabel, string? secondaryLabel, string? metricType, string? primarySubtype, string? secondarySubtype, string? operationType, bool isOperationChart, string? secondaryMetricType, string? displayPrimaryMetricType, string? displaySecondaryMetricType, string? displayPrimarySubtype, string? displaySecondarySubtype)
     {
         return new ChartRenderModel
         {
@@ -133,6 +133,10 @@ public class ChartUpdateCoordinator
                 SecondaryMetricType = secondaryMetricType,
                 PrimarySubtype = primarySubtype,
                 SecondarySubtype = secondarySubtype,
+                DisplayPrimaryMetricType = displayPrimaryMetricType,
+                DisplaySecondaryMetricType = displaySecondaryMetricType,
+                DisplayPrimarySubtype = displayPrimarySubtype,
+                DisplaySecondarySubtype = displaySecondarySubtype,
                 OperationType = operationType,
                 IsOperationChart = isOperationChart,
 

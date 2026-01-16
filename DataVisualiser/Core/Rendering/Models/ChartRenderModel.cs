@@ -37,6 +37,10 @@ public sealed class ChartRenderModel
     public string? SecondaryMetricType { get; init; }
     public string? PrimarySubtype { get; init; }
     public string? SecondarySubtype { get; init; }
+    public string? DisplayPrimaryMetricType { get; init; }
+    public string? DisplaySecondaryMetricType { get; init; }
+    public string? DisplayPrimarySubtype { get; init; }
+    public string? DisplaySecondarySubtype { get; init; }
     public string? OperationType { get; init; }          // "-", "/", "~", or null for independent charts
     public bool IsOperationChart { get; init; } = false; // true for difference, ratio, normalization charts
 

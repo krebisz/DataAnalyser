@@ -1,6 +1,8 @@
 namespace DataVisualiser.UI.Events;
 
+using DataVisualiser.Shared.Models;
+
 public class MetricTypesLoadedEventArgs : EventArgs
 {
-    public IEnumerable<string> MetricTypes { get; set; } = Enumerable.Empty<string>();
+    public IEnumerable<MetricNameOption> MetricTypes { get; set; } = Enumerable.Empty<MetricNameOption>();
 }

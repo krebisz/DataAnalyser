@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:DataVisualiser.UI.Controls"
+        xmlns:admin="clr-namespace:DataVisualiser.UI.Admin"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="Health Data Viz"
         SizeToContent="Height"
@@ -60,6 +61,8 @@
                         <ComboBox x:Name="TablesCombo" Width="{StaticResource MetricTypeComboWidth}"
                                   Margin="{StaticResource ControlMargin}"
                                   IsEditable="False"
+                                  DisplayMemberPath="Display"
+                                  SelectedValuePath="Value"
                                   SelectionChanged="OnMetricTypeSelectionChanged" />
 
                         <Label Content="From:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
@@ -104,6 +107,8 @@
                                   Width="{StaticResource SubtypeComboWidth}"
                                   Margin="{StaticResource ControlMargin}"
                                   IsEditable="False"
+                                  DisplayMemberPath="Display"
+                                  SelectedValuePath="Value"
                                   IsEnabled="False" />
 
                         <Button Content="Add Subtype"
@@ -195,14 +200,7 @@
             </TabItem>
 
             <TabItem Header="Admin">
-                <Grid Margin="10">
-                    <TextBlock Text="Admin tab (coming soon)"
-                               Foreground="#FF3B3B3B"
-                               FontWeight="SemiBold"
-                               FontSize="14"
-                               VerticalAlignment="Center"
-                               HorizontalAlignment="Center" />
-                </Grid>
+                <admin:AdminMetricsManagerView />
             </TabItem>
         </TabControl>
 

@@ -51,7 +51,7 @@ public static class ChartHelper
     /// </summary>
     public static string[] GetChartTitlesFromCombos(ComboBox TablesCombo, ComboBox SubtypeCombo, ComboBox? SubtypeCombo2)
     {
-        var baseMetric = TablesCombo.SelectedItem?.ToString() ?? string.Empty;
+        var baseMetric = GetDisplayValueFromCombo(TablesCombo);
         var display1 = GetDisplayNameFromCombo(SubtypeCombo, baseMetric);
         var display2 = SubtypeCombo2 != null ? GetDisplayNameFromCombo(SubtypeCombo2, baseMetric) : baseMetric;
         return new[]
@@ -124,7 +124,7 @@ public static class ChartHelper
     /// </summary>
     private static(string BaseName, bool IsRaw, bool IsSmoothed) ParseSeriesTitle(string title)
     {
-        if (title.EndsWith(" (Raw)"))
+        if (title.EndsWith(" (Raw)") || title.EndsWith(" (raw)"))
             return (title.Substring(0, title.Length - 6), true, false);
 
         if (title.EndsWith(" (smooth)"))
@@ -366,7 +366,7 @@ public static class ChartHelper
         if (!subMetricTypeCombo.IsEnabled || subMetricTypeCombo.SelectedItem == null)
             return null;
 
-        var subtypeValue = subMetricTypeCombo.SelectedItem.ToString();
+        var subtypeValue = GetValueFromCombo(subMetricTypeCombo);
         if (string.IsNullOrEmpty(subtypeValue) || subtypeValue == "(All)")
             return null;
 
@@ -380,12 +380,28 @@ public static class ChartHelper
     {
         if (combo.IsEnabled && combo.SelectedItem != null)
         {
-            var selected = combo.SelectedItem.ToString();
+            var selected = GetDisplayValueFromCombo(combo);
             if (!string.IsNullOrEmpty(selected) && selected != "(All)")
                 return selected;
         }
 
         return baseType;
+    }
+
+    private static string GetDisplayValueFromCombo(ComboBox combo)
+    {
+        if (combo.SelectedItem is MetricNameOption option)
+            return option.Display;
+
+        return combo.SelectedItem?.ToString() ?? string.Empty;
+    }
+
+    private static string? GetValueFromCombo(ComboBox combo)
+    {
+        if (combo.SelectedItem is MetricNameOption option)
+            return option.Value;
+
+        return combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
     }
 
     public static void ResetZoom(CartesianChart? chart)

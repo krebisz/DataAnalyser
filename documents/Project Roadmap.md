@@ -1,441 +1,292 @@
 # PROJECT ROADMAP
-
-DataVisualiser
-
-Status: Descriptive / Sequencing Authority  
-Scope: Phase ordering, execution dependencies, and closure criteria  
-Authority: Subordinate to Project Bible.md and MASTER_OPERATING_PROTOCOL.md
+**Status:** Sequencing & Execution Authority  
+**Scope:** Phase ordering, execution dependencies, and closure criteria  
+**Authority:** Subordinate to Project Bible.md and SYSTEM_MAP.md  
+**Last Updated:** 2026-01-16  
+**Change Note:** Phase 6 decomposed into explicit exploratory & confidence sub-phases
 
 ---
 
-## Purpose
+## 1. Purpose
 
-This roadmap defines **phased execution milestones** for the migration, parity validation, and stabilization of the DataVisualiser system.
-
-It is a **status and sequencing document**, not an architectural authority.
+This roadmap defines **how the project advances safely over time**.
 
 It answers:
 
 - what is complete
+- what is in progress
 - what is blocked
-- what is allowed to proceed
+- what may proceed
 - what must not proceed yet
 
+It does **not** define architecture or semantics.  
+It defines **order, discipline, and exit conditions**.
+
 ---
 
-## Phase Overview
+## 2. Roadmap Philosophy (Binding for This Document)
 
-### Phase 1 — Baseline Stabilization
+- Phases exist to **protect correctness**, not to accelerate delivery
+- A phase is not complete until its **closure conditions are provably met**
+- Unreachable code is treated as **non-existent**
+- Exploratory capability must be **explicitly staged**, not silently accumulated
+- The roadmap is **evolutionary**, but never vague
 
+---
+
+## 3. Phase Overview (Authoritative)
+
+---
+
+### Phase 1 — Baseline Stabilization  
 **Status:** COMPLETE
 
-- Legacy system understood and frozen
-- Core computation paths identified
-- Baseline behavior documented
-- Initial CMS scaffolding completed
+**Objective**
+- Freeze and understand legacy behavior
 
-**Closure Condition:**  
-Legacy behavior stable and reproducible.
+**Closure Condition**
+- Legacy behavior is stable and reproducible
 
 ---
 
-### Phase 2 — CMS Core Infrastructure
-
+### Phase 2 — Canonical Semantics & Normalization  
 **Status:** COMPLETE
 
-- CMS computation pipeline established
-- Shared models stabilized
-- Helper and normalization logic implemented
-- CMS outputs verified for standalone correctness
+**Objective**
+- Establish a single semantic authority
 
-**Closure Condition:**  
-CMS produces deterministic, independently verifiable outputs.
+**Closure Condition**
+- CMS produces deterministic, independently verifiable outputs
 
 ---
 
-### Phase 3 — Strategy Migration
+### Phase 3 — Strategy Migration  
+**Status:** IN PROGRESS (~55%)  
+**Blocked By:** Phase 3.5 and Phase 4C
 
-**Status:** PARTIALLY COMPLETE (55%) - ORCHESTRATION GAP ADDRESSED
+**Objective**
+- Migrate computation strategies to CMS-based execution
 
-CMS-wired strategies:
-
-- SingleMetricStrategy (unified - handles both CMS and legacy)
-- CombinedMetricStrategy (unified - handles both CMS and legacy)
-- WeeklyDistributionStrategy (CMS implementation via CmsWeeklyDistributionStrategy)
-- WeekdayTrendStrategy (unified - handles both CMS and legacy)
-- HourlyDistributionStrategy (CMS implementation via CmsHourlyDistributionStrategy)
-
-Pending CMS wiring (factory TODOs):
-
-- MultiMetricStrategy
-- DifferenceStrategy
-- RatioStrategy
-- NormalizedStrategy
-
-**What Was Completed:**
-
-- 5 of 9 strategies implemented in CMS and wired via factories
-- Strategies validated independently (unit tests)
-- Strategies pass parity tests in isolation where harnesses exist
-- **Strategy consolidation**: SingleMetric and CombinedMetric unified (single class with dual constructors)
-- **Factory pattern consolidation**: StrategyFactoryBase created, all 9 factories refactored
-- **Code abstraction**: Common patterns extracted to shared helpers
-
-**Orchestration Gap Status:**
-
-- **ADDRESSED**: Phase 3.5 work has significantly progressed (70% complete)
-- StrategyCutOverService implemented for all 9 strategy types
-- ChartRenderingOrchestrator uses unified cut-over mechanism
-- ChartDataContextBuilder preserves CMS (doesn't convert to legacy)
-- WeeklyDistributionService migrated to use StrategyCutOverService
-
-**Remaining Work:**
-
-1. DONE **StrategySelectionService** - Direct instantiation removed (resolved in code)
-   - Minor cleanup complete
-
-**Original Closure Condition (Flawed):**  
-Strategies compile, execute in isolation, and match expected semantics.
-
-**Corrected Closure Condition:**  
-Strategies compile, execute in isolation, AND work correctly in unified pipeline with migrated orchestration layer.
-
-**Current Status:**  
-55% complete - orchestration infrastructure in place; cleanup resolved, reachability verification pending; CMS wiring pending for 4 strategies.
+**Closure Condition**
+- All strategies are CMS-capable
+- All strategies are reachable via orchestration
+- Parity coverage exists for all strategies
 
 ---
 
-### Phase 4 — Parity Validation (CRITICAL)
+### Phase 3.5 — Orchestration Layer Assessment (CRITICAL)  
+**Status:** IN PROGRESS (~70%)
 
-**Objective:**  
-Ensure CMS behavior is **numerically, structurally, and semantically identical** to Legacy behavior for all migrated features.
+**Objective**
+- Ensure CMS strategies are actually executed in live pipelines
 
-Parity is a **safety mechanism**, not a wiring exercise.
+**Closure Condition**
+- CMS execution is observable and provable for all strategies
 
 ---
 
-#### Phase 4A — Core Strategy Parity
+### Phase 4 — Parity Validation (CRITICAL)  
+**Status:** PARTIALLY COMPLETE (~80%)  
+**Blocked By:** Phase 4C
 
+**Objective**
+- Prove CMS behavior is numerically, structurally, and semantically identical to legacy behavior
+
+---
+
+#### Phase 4A — Core Strategy Parity  
 **Status:** COMPLETE
 
-- SingleMetricParityTests
-- CombinedMetricParityTests
-- MultiMetricParityTests
-- Helper parity:
-  - Math
-  - Alignment
-  - Smoothing
-  - Normalization
-
-**Closure Condition:**  
-All core strategy parity tests pass deterministically.
+**Closure Condition**
+- All parity tests pass deterministically
 
 ---
 
-#### Phase 4B — Transform Pipeline Parity
-
+#### Phase 4B — Transform Pipeline Parity  
 **Status:** COMPLETE
 
-- TransformExpressionEvaluator parity
-- TransformExpressionBuilder parity
-- TransformOperationRegistry parity
-- TransformDataHelper parity
-- TransformResultStrategy parity
-
-Transform semantics and ordering are now identical to Legacy behavior.
-
-**Closure Condition:**  
-Transform results match legacy output for all supported expressions.
+**Closure Condition**
+- Transform results match legacy output for all supported expressions
 
 ---
 
-#### Phase 4C — Weekly / Temporal Strategy Migration
+#### Phase 4C — Weekly / Temporal Strategy Migration  
+**Status:** IN PROGRESS (BLOCKING)
 
-**Status:** PARTIALLY COMPLETE (BLOCKING PHASE 4 CLOSURE)
-
-Legacy-dependent strategies:
-
-- WeeklyDistributionStrategy
-- WeekdayTrendStrategy
-
-**Updated factual status (additive clarification):**
-
-- CMS versions of strategies exist
-- Unit tests and parity harnesses exist
-- Strategy logic correctness largely verified
-- **Service/UI cut-over completed; reachability verification pending**
-- **Execution reachability NOT universally guaranteed**
-- **Legacy remains default unless CMS toggles are enabled**
-
-This phase exposed **systemic execution-locus ambiguity**, now addressed by protocol updates.
-
-**Remaining Required Steps (Authoritative):**
-
-1. Declare **single cut-over locus** per strategy (file + method)
-2. Wire CMS strategy at service boundary **only**
-3. Preserve legacy path behind explicit flag
-4. Prove reachability (observable execution)
-5. Execute parity harness at orchestration level
-6. Confirm identical ExtendedResult outputs
-
-**Closure Condition:**  
-CMS strategy reachable via service, parity verified, legacy path preserved.
-
-Phase 4 **cannot be closed** until this sub-phase is complete.
+**Closure Condition**
+- CMS strategies reachable via services
+- Parity verified in pipeline context
+- Legacy path preserved behind explicit flag
 
 ---
 
-### Phase 5 — Optional End-to-End Parity
-
+### Phase 5 — Optional End-to-End Parity  
 **Status:** OPTIONAL / DEFERRED
 
-- Single orchestration-level parity test
-- Guards against wiring or ordering regressions
-- Intended as regression protection
-
-**Clarification (Additive):**
-
-- Phase 5 is **not a substitute** for Phase 4C
-- Phase 5 must not be used to mask unresolved reachability issues
+**Objective**
+- Regression protection against orchestration regressions
 
 ---
 
-### Phase 3.5 — Orchestration Layer Assessment (CRITICAL GAP)
+## 4. Phase 6 — Exploratory & Confidence Capability Expansion (INTENTIONAL)
 
-**Status:** SIGNIFICANT PROGRESS (70%) - MAJOR INFRASTRUCTURE IN PLACE
+**Status:** PLANNED / UNOPENED  
+**Entry Gate:** Phases 3, 3.5, and 4 fully closed
 
-**Purpose:**  
-Assess and migrate the orchestration layer that coordinates strategies in the unified pipeline.
+**Purpose**
+Phase 6 introduces **explicit, non-authoritative exploratory capabilities** and **confidence-aware interpretation**, without violating Canonical Law.
 
-**Why This Phase Exists:**
-Phase 3 migrated strategies in isolation, but the orchestration layer was never assessed. When cut-over was attempted (weekly distribution), it exposed that:
-
-- `ChartDataContextBuilder` converts CMS to legacy before strategies receive it
-- `ChartUpdateCoordinator` expects legacy format
-- `MetricSelectionService` uses legacy data loading
-- Strategies never actually receive CMS data in production pipeline
-
-**Completed Work:**
-
-1. ✅ **StrategyCutOverService** - Implemented and registered for all 9 strategy types
-   - Unified cut-over mechanism established
-   - Parity validation support included
-   - Factory-based strategy creation
-2. ✅ **ChartRenderingOrchestrator** - Migrated to use StrategyCutOverService
-   - Primary chart (SingleMetric, CombinedMetric, MultiMetric) uses unified cut-over
-   - Normalized chart uses unified cut-over
-   - DiffRatio chart uses unified cut-over (via TransformResultStrategy)
-3. ✅ **ChartDataContextBuilder** - Preserves CMS (doesn't convert to legacy)
-   - CMS stored in context for strategies to use directly
-   - Legacy data still available for derived calculations
-4. ✅ **WeeklyDistributionService** - Migrated to use StrategyCutOverService
-5. ✅ **ChartUpdateCoordinator** - Handles strategies generically (works with both CMS and legacy)
-6. ✅ **Declarative Mapping Source** - Canonical identity mapping sourced from a runtime mapping table (no hardcoded lists as steady-state)
-
-**Remaining Work:**
-
-1. DONE **StrategySelectionService** - Direct instantiation removed (resolved in code)
-   - Minor cleanup complete
-2. ⏳ **Verification** - Verify all code paths use StrategyCutOverService
-   - Search for any remaining direct strategy instantiations
-
-
-**Additive Clarification: Declarative Mapping Requirement**
-
-- Canonical identity mapping must resolve from a dynamic, authoritative source (mapping table).
-- Hardcoded mappings are acceptable only as temporary scaffolding and must be retired.
-
-**Includes:**
-
-- ✅ `StrategyCutOverService` - Single decision point for all strategies (COMPLETE)
-- ✅ `ChartDataContextBuilder` - Preserves CMS, doesn't convert (COMPLETE)
-- ✅ `ChartUpdateCoordinator` - Handles CMS data directly (COMPLETE)
-- ✅ `ChartRenderingOrchestrator` - Uses unified cut-over (COMPLETE)
-- DONE StrategySelectionService - Cleanup complete (RESOLVED)
-
-**Closure Condition:**
-
-- ✅ Orchestration layer handles CMS directly (no conversion) - ACHIEVED
-- ✅ Unified cut-over mechanism established and tested - ACHIEVED
-- ⏳ All code paths use unified cut-over - REACHABILITY VERIFICATION PENDING
-- ✅ Strategies work in unified pipeline context - ACHIEVED
-
-**Guardrail:**
-
-- Phase 3.5 MUST complete before Phase 4 can proceed
-- No strategy cut-over until orchestration is migrated
-- Test strategies in unified pipeline, not just isolation
-
-**Current Status:**  
-70% complete - major infrastructure in place, reachability verification pending.
+This phase is intentionally decomposed to prevent semantic leakage and uncontrolled scope growth.
 
 ---
 
-### Phase 6 — Services & Orchestration
+### Phase 6.1 — Interpretive Visual Overlays (Render-Only)
 
-**Status:** NOT STARTED (DEPENDS ON PHASE 3.5)
+**Scope**
+- Dynamic line colouring (hot/cold, increasing/decreasing)
+- Through-lines (median, average, reference markers)
+- Enhanced hover and tooltip signalling
+- Legend-driven visibility toggles
 
-**Note:** Phase 3.5 addresses the critical orchestration gap. Phase 6 will handle remaining service-level concerns after orchestration is established.
+**Constraints**
+- Render-only
+- No impact on computation
+- No influence on derived values
 
-Includes:
-
-- Chart coordination services (advanced features)
-- Metric selection logic (extensions)
-- Context builders (optimizations)
-
-**Guardrail:**
-
-- Phase 6 MUST NOT begin until Phase 4 is closed
-- Phase 3.5 must complete first (orchestration foundation)
-- No service refactors permitted while parity incomplete
+**Closure Condition**
+- Overlays are visually correct, reversible, and provenance-neutral
 
 ---
 
-### Refactoring Plan — File Reorganization, Consolidation & Code Abstraction
+### Phase 6.2 — Confidence Annotation (Non-Destructive)
 
-**Status:** COMPLETE (100%)
+**Scope**
+- Statistical identification of atypical data points
+- Confidence markers on charts and data views
+- Declaration of statistical model and parameters
 
-**Purpose:**  
-Reorganize codebase structure, consolidate duplicate implementations, and extract common patterns to improve maintainability and reduce code duplication.
+**Constraints**
+- Canonical values remain unchanged
+- Confidence is annotation only
+- Language avoids claims of correctness or error
 
-**Completed Work:**
-
-1. **File Reorganization (100%)**:
-
-   - All files moved to new directory structure per architectural layers
-   - Namespaces updated to match new structure
-   - Clear separation: Core, Shared, UI, Validation layers
-
-2. **File Consolidation (100%)**:
-
-   - Strategy consolidation: SingleMetric and CombinedMetric unified (single class with dual constructors)
-   - Factory pattern consolidation: StrategyFactoryBase created, all 9 factories refactored
-   - Helper merging: TransformDataHelper merged into TransformExpressionEvaluator
-   - ~150+ lines of duplicate code eliminated
-
-3. **Code Abstraction (100%)**:
-   - StrategyComputationHelper: PrepareOrderedData(), FilterAndOrderByRange() methods
-   - CmsConversionHelper: Consistent CMS-to-HealthMetricData conversion
-   - ChartHelper: ClearChart() method for consistent chart clearing
-   - All strategies and rendering engines updated to use helpers
-   - **Distribution pipeline base classes**: BaseDistributionService, BucketDistributionStrategy, CmsBucketDistributionStrategy, BucketDistributionTooltip
-   - HourlyDistributionService and WeeklyDistributionService inherit from BaseDistributionService
-   - HourlyDistributionTooltip and WeeklyDistributionTooltip inherit from BucketDistributionTooltip
-   - ~30 lines of duplicate code eliminated (helpers)
-   - ~750+ lines of duplicate code eliminated (distribution pipeline refactoring)
-
-**Impact**:
-
-- ~450+ lines of duplicate code eliminated (refactoring plan + previous work)
-- ~750+ additional lines eliminated (distribution pipeline base classes)
-- **Total: ~1200+ lines of duplicate code eliminated**
-- Improved code organization and maintainability
-- Established patterns for future work
-- Foundation for easier future migrations
-- **Distribution pipeline fully abstracted**: Services, strategies (legacy & CMS), and tooltips all use base classes
-
-**Closure Condition:**  
-All files reorganized, strategies consolidated, factories unified, common patterns extracted.
+**Closure Condition**
+- Confidence annotations are visible, explainable, and reversible
 
 ---
 
-### Phase 7 — UI / State / Integration
+### Phase 6.3 — Confidence-Aware Interpretation
 
-**Status:** COMPLETE - chart panels migrated, validation pending
+**Scope**
+- Optional exclusion of low-confidence points from overlays
+- Optional attenuation / weighting in trend or smoothing views
+- Explicit user control over confidence handling
 
-**Completed Work**:
+**Constraints**
+- Applies only to interpretive overlays
+- Never affects CMS or normalization
+- Must expose provenance
 
-- ChartPanelController component created (reusable chart panel structure)
-- MainChartController migrated (controller-based)
-- ChartDiffRatio unified (ChartDiff + ChartRatio → single chart with operation toggle)
-- TransformOperationRegistry enhanced (added "Divide" operation)
-- IChartRenderingContext interface created (decouples chart controllers from MainWindow)
-- ChartRenderingContextAdapter created (bridges MainWindow/ViewModel to IChartRenderingContext)
-
-**Remaining Work (Validation):**
-
-- DONE Migrate remaining chart panels to ChartPanelController (Normalized, DiffRatio, WeekdayTrend, Weekly, Transform)
-- DONE ViewModel tests
-- DONE State container validation
-- Repository / persistence validation
-
-**Impact**:
-
-- ~50+ lines of duplicate UI code eliminated per migrated chart
-- Foundation established for standardizing all chart panels
-- Clear path to eliminate ~250+ more lines of duplicate UI code
-- 6/6 charts migrated, chart panels consolidated
-
-**Guardrail:**
-
-- UI integration is explicitly downstream of semantic correctness
-- UI must not compensate for incomplete migration
-- UI consolidation work is isolated and doesn't affect computation layers
+**Closure Condition**
+- Confidence-aware views are opt-in and fully transparent
 
 ---
 
-## Current Critical Path (Authoritative - UPDATED)
+### Phase 6.4 — Structural & Relational Exploration
 
-**Phase 3.5 - Orchestration Layer Assessment** (70% COMPLETE)
-→ ✅ Unified cut-over mechanism (`StrategyCutOverService`) - COMPLETE
-→ ✅ Orchestration layer handles CMS directly - COMPLETE
-→ ✅ ChartRenderingOrchestrator uses unified cut-over - COMPLETE
-→ ✅ WeeklyDistributionStrategy CMS cut-over - COMPLETE
-- DONE StrategySelectionService - Cleanup complete (RESOLVED)
-→ ⏳ Verify all code paths use StrategyCutOverService - IN PROGRESS
-? **Then**: Complete Phase 3.5 (reachability verification)
-→ **Then**: WeekdayTrendStrategy CMS cut-over available; verify reachability
-→ **Then**: Strategy-level parity confirmation in pipeline context
-→ **Then**: Phase 4 closure  
-→ **Then**: Phase 6 eligibility
+**Scope**
+- Scatter plots and clustering views
+- Compositional (stacked) analysis
+- Pivot-based inspection (event-relative views)
+- Multi-resolution comparative views
 
----
+**Constraints**
+- Non-authoritative
+- No inferred identity or meaning
+- No automatic promotion of structure to semantics
 
-## Roadmap Integrity Notes
-
-**Critical Correction (2025-01-04):**
-
-- Phase 3 completion was premature - strategies migrated without orchestration assessment
-- Orchestration layer gap identified when weekly distribution cut-over attempted
-- Phase 3.5 added to address orchestration layer migration
-- Recent failures were **orchestration-layer failures**, not just execution-discipline failures
-- Strategies work in isolation but fail in unified pipeline due to orchestration gap
-
-**Root Cause:**
-
-- Strategies migrated assuming orchestration would "just work" once all strategies done
-- Reality: Orchestration layer was never assessed or migrated
-- CMS converted to legacy before strategies receive it
-- Strategies never actually receive CMS data in production pipeline
-
-**Corrected Approach:**
-
-- Phase 3.5: Assess and migrate orchestration layer first
-- Test strategies in unified pipeline context, not just isolation
-- Establish unified cut-over mechanism before completing strategy migrations
-- Then proceed with Phase 4 (parity in pipeline context)
+**Closure Condition**
+- Structural views are clearly interpretive and bounded
 
 ---
 
-**Last Updated:** 2026-01-09  
-**Overall Status:**
+### Phase 6.5 — Rules-Based Option Gating
 
-- Phase 3.5 (Orchestration Assessment): 70% complete - major infrastructure in place, reachability verification pending
-- Phase 3 (Strategy Migration): 55% complete - 5 of 9 strategies wired for CMS, factory pattern established
-- Phase 4: 80% complete - Phase 4A and 4B complete, Phase 4C at 75%
-- Phase 7 (UI/State/Integration): complete - chart panels migrated, validation pending
-- **Refactoring Plan**: 100% complete - file reorganization, consolidation, and code abstraction all complete
+**Scope**
+- Declarative rules controlling UI option availability
+- Prevention of invalid or misleading combinations
+- Context-aware UI constraints
 
-**Recent Achievements:**
-- Chart panel controllers migrated for all charts`r`n
-- Complete file reorganization per architectural layers
-- Strategy consolidation (SingleMetric, CombinedMetric unified)
-- Factory pattern consolidation (StrategyFactoryBase)
-- Code abstraction (common patterns extracted to shared helpers)
-- ~450+ lines of duplicate code eliminated
-- StrategyCutOverService implemented for all 9 strategy types
-- ChartRenderingOrchestrator migrated to use unified cut-over
-- ChartDataContextBuilder preserves CMS (doesn't convert)
+**Constraints**
+- Rules are constraints, not recommendations
+- Rules must be explainable
+- Rules must not encode semantic truth
 
+**Closure Condition**
+- Rule effects are transparent and reversible
 
+---
 
+### Phase 6 Completion Criteria (Global)
+
+Phase 6 is considered complete when:
+
+- All exploratory features are explicitly layered
+- Canonical truth remains untouched
+- Confidence handling is visible and non-destructive
+- Interpretive power increases without semantic erosion
+
+---
+
+### Phase 7 — UI / State / Integration  
+**Status:** IMPLEMENTATION COMPLETE, VALIDATION PENDING
+
+**Objective**
+- Ensure UI accurately reflects computation, interpretation, and uncertainty
+
+**Closure Condition**
+- UI reflects truth and uncertainty without compensation or distortion
+
+---
+
+## 5. Handling Evolving Requirements (Explicit Policy)
+
+Enhancement ideas are:
+
+- welcome
+- expected
+- non-exhaustive
+
+However:
+
+- They do not auto-enter active phases
+- They must be assigned intentionally to a Phase 6 sub-phase (or later)
+- They must declare scope, layer, and reversibility
+
+This policy protects both delivery discipline and long-term trust.
+
+---
+
+## 6. Current Critical Path (Authoritative)
+
+1. Close Phase 3.5 (prove CMS reachability)
+2. Close Phase 4C (weekly / temporal parity)
+3. Complete Phase 3 (remaining strategy wiring)
+4. Close Phase 4 (full parity)
+5. Open Phase 6 deliberately
+
+---
+
+## 7. Summary
+
+- Early phases protect truth
+- Mid phases protect correctness
+- Phase 6 protects interpretation
+- Evolution is deliberate, not accidental
+- Closure means closure
+
+This roadmap defines **how the project grows without lying to itself**.
+
+---
+
+**End of Project Roadmap**

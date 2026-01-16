@@ -1,6 +1,6 @@
 # PROJECT BIBLE
-Status: Canonical
-Scope: Architectural Law
+**Status:** Canonical  
+**Scope:** Architectural Law
 
 ---
 
@@ -148,7 +148,7 @@ The system MAY temporarily support multiple execution paths (e.g. legacy and CMS
 - No semantic authority is duplicated
 - Coexistence is explicitly bounded and observable
 
-Temporal coexistence is a *migration state*, not a steady-state design.
+Temporal coexistence is a migration state, not a steady-state design.
 
 ---
 
@@ -156,7 +156,7 @@ Temporal coexistence is a *migration state*, not a steady-state design.
 
 During migration phases:
 
-- Legacy execution is permitted **only as a compatibility reference**
+- Legacy execution is permitted only as a compatibility reference
 - CMS execution is the sole forward path
 
 Legacy paths MUST NOT:
@@ -169,7 +169,7 @@ Legacy paths MUST NOT:
 
 ### 10.3 Parity as Architectural Safety Mechanism
 
-Parity testing is a **structural safety tool**, not a heuristic convenience.
+Parity testing is a structural safety tool, not a heuristic convenience.
 
 Parity exists to:
 
@@ -193,7 +193,7 @@ A computation path that is:
 - unobservable
 - or conditionally bypassed
 
-is considered **architecturally non-existent**, regardless of correctness.
+is considered architecturally non-existent, regardless of correctness.
 
 Migration work MUST prove execution reachability.
 
@@ -241,7 +241,7 @@ Violation constitutes architectural breach.
 
 ## 13. Declarative Mapping & Non-Static Semantics Rule (Additive · Binding)
 
-Additive Section - Prevents static, manual semantic bottlenecks.
+Additive Section — Prevents static, manual semantic bottlenecks.
 
 Canonical identity and semantic mappings MUST be:
 
@@ -252,7 +252,7 @@ Canonical identity and semantic mappings MUST be:
 
 The system MUST NOT rely on hardcoded or manually curated mappings as a steady-state mechanism.
 
-Temporary static mappings are permitted **only** as short-lived migration scaffolding and MUST:
+Temporary static mappings are permitted only as short-lived migration scaffolding and MUST:
 
 - be explicitly marked as temporary
 - be replaced by declarative sources as soon as feasible
@@ -262,16 +262,126 @@ This rule applies to all legacy-to-canonical identity bridges.
 
 ---
 
+## 14. Confidence & Reliability Law (Additive · Binding)
+
+Additive Section — Supports explicit treatment of data quality **without violating Canonical Law**.
+
+### 14.1 Core Rule: Confidence Is Not Semantics
+
+The system MAY compute confidence / reliability assessments over ingested, normalized, or canonical values.
+
+Such assessments:
+
+- do not alter meaning
+- do not alter identity
+- do not mutate Canonical values
+- do not rewrite history
+
+Confidence is an annotation layer, not a semantic layer.
+
+---
+
+### 14.2 Permitted Confidence Mechanisms
+
+The system MAY implement statistical and rule-based detection of atypical readings, including:
+
+- outlier detection under declared statistical models
+- noise / variance classification
+- local-window anomaly detection
+- detection of missingness or suspicious gaps
+
+These mechanisms must be:
+
+- explicitly declared (model + parameters)
+- deterministic under identical inputs and configuration
+- auditable and explainable
+
+---
+
+### 14.3 Non-Destructive Action Policy (Mandatory)
+
+Permitted downstream actions:
+
+- visual marking (e.g., “low confidence”)
+- optional exclusion from specific computations
+- optional attenuation / weighting in trend assessments
+
+Prohibited actions:
+
+- deleting raw records
+- mutating Canonical values
+- silently excluding points
+- promoting confidence outcomes into normalization or identity
+
+All exclusions or attenuation MUST be:
+
+- explicit
+- reversible
+- visible at the point of interpretation
+
+---
+
+### 14.4 Canonical Immunity Constraint
+
+Confidence mechanisms MUST NOT influence:
+
+- metric identity resolution
+- canonical mapping
+- normalization rule selection
+- CMS construction
+
+Confidence operates **after** meaning assignment.
+
+---
+
+### 14.5 Separation of Truth vs Overlay
+
+The system MUST preserve separation between:
+
+- **Truth layers**: Raw → Normalization → CMS
+- **Derived layers**: transforms, aggregates, compositions
+- **Interpretive overlays**: trends, clusters, pivots, confidence annotations
+
+Interpretive overlays are:
+
+- non-authoritative
+- non-promotable without declaration
+- incapable of mutating truth layers
+
+---
+
+### 14.6 Language Constraint (Binding)
+
+User-facing language MUST NOT imply ground-truth invalidation.
+
+Avoid:
+- “invalid”
+- “wrong”
+- “incorrect data”
+
+Prefer:
+- “statistically atypical under selected model”
+- “low confidence”
+- “flagged for review”
+
+---
+
+### 14.7 Provenance Requirement
+
+Any confidence-influenced computation MUST expose:
+
+- statistical model used
+- parameters / thresholds
+- whether data was marked, attenuated, or excluded
+- result classification (raw / smoothed / robust / weighted)
+
+---
+
 ## Appendix A. Architectural Rationale (Non-Binding)
 
-Explanatory only — not architectural law.
+Earlier designs relied on inferred meaning, leading to drift and ambiguity.
 
-### A.1 Why Explicit Semantics Exist
-
-Earlier designs relied on inferred meaning derived from structure, naming, or statistical behavior.
-This led to ambiguity, drift, and irreproducible outcomes.
-
-Declarative semantics were introduced to guarantee:
+Declarative semantics guarantee:
 
 - stability
 - auditability
@@ -279,67 +389,24 @@ Declarative semantics were introduced to guarantee:
 
 ---
 
-### A.2 Why Canonical Identity Is Enforced
-
-Allowing multiple representations or inferred equivalence caused semantic erosion over time.
-
-Canonical identity enforces:
-
-- one meaning
-- one reference
-- stable comparison
-
-Exploration is allowed elsewhere — never here.
-
----
-
-### A.3 Historical Failure Modes
-
-Observed failures that motivated this document:
-
-- Structural similarity mistaken for semantic equivalence
-- Heuristics leaking into normalization
-- Silent reinterpretation by downstream consumers
-
-These failures justify strict separation between law and analysis.
-
----
-
 ## Appendix B. Derived & Dynamic Metric Identity (Non-Binding)
 
-Additive Appendix — does not modify binding law.
+Derived metrics:
 
-Derived or dynamic metrics are first-class semantic entities created through explicit composition, aggregation, or transformation of existing canonical metrics.
+- have their own identity
+- declare units, dimensions, provenance
+- never mutate source identities
 
-Constraints:
-
-- Derived metrics MUST have their own canonical identity
-- Derived metrics MUST declare dimension, unit, and provenance
-- Source identities are never altered or overridden
-
-No derived metric may be instantiated implicitly or heuristically.
-
-Derived identities may be ephemeral (session-scoped) or persistent.
-In all cases, identity creation must be explicit, reviewable, and reversible.
-
-Analytical or structural systems may suggest derived identities but MUST NOT promote them without explicit declaration.
+Promotion is explicit, reviewable, and reversible.
 
 ---
 
 ## Appendix C. Contract-First Semantic Compression (Non-Binding)
 
-Additive Appendix — explanatory only.
+Architectural intent is captured in text-first contracts.
 
-The project adopts a contract-first discipline to reduce ambiguity, repetition, and conversational overhead.
-
-Principles:
-
-- Semantic truth is expressed through text-only contracts
-- Once anchored, a contract is authoritative
-- Conversational re-derivation is discouraged
-
-Contracts act as lossless compression for architectural intent.
+Once anchored, contracts are authoritative and prevent semantic drift.
 
 ---
 
-End of Project Bible
+**End of Project Bible**

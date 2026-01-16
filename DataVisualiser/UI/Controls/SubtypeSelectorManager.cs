@@ -12,7 +12,7 @@ public class SubtypeSelectorManager
     private readonly List<ComboBox> _dynamicCombos = new();
 
     private readonly List<SubtypeControlPair> _dynamicControls = new();
-    private readonly Dictionary<ComboBox, string?> _metricTypesByCombo = new();
+    private readonly Dictionary<ComboBox, MetricNameOption?> _metricTypesByCombo = new();
     private readonly Panel _parentPanel;
 
     public SubtypeSelectorManager(Panel parentPanel, ComboBox primaryCombo)
@@ -42,7 +42,7 @@ public class SubtypeSelectorManager
     // ============================================================
     // Create a new dynamic subtype ComboBox
     // ============================================================
-    public ComboBox AddSubtypeCombo(IEnumerable<string> subtypeList, string? metricType)
+    public ComboBox AddSubtypeCombo(IEnumerable<MetricNameOption> subtypeList, MetricNameOption? metricType)
     {
         var index = _dynamicControls.Count + 2;
 
@@ -58,7 +58,7 @@ public class SubtypeSelectorManager
         return combo;
     }
 
-    public void SetPrimaryMetricType(string? metricType)
+    public void SetPrimaryMetricType(MetricNameOption? metricType)
     {
         _metricTypesByCombo[PrimaryCombo] = metricType;
     }
@@ -73,14 +73,16 @@ public class SubtypeSelectorManager
         };
     }
 
-    private ComboBox CreateSubtypeCombo(IEnumerable<string> subtypeList)
+    private ComboBox CreateSubtypeCombo(IEnumerable<MetricNameOption> subtypeList)
     {
         var combo = new ComboBox
         {
                 Width = 250,
                 Margin = new Thickness(5),
                 IsEditable = false,
-                IsEnabled = true
+                IsEnabled = true,
+                DisplayMemberPath = "Display",
+                SelectedValuePath = "Value"
         };
 
         foreach (var subtype in subtypeList)
@@ -158,23 +160,24 @@ public class SubtypeSelectorManager
                 continue;
 
             var metricType = GetMetricTypeForCombo(combo);
-            if (string.IsNullOrWhiteSpace(metricType))
+            if (metricType == null || string.IsNullOrWhiteSpace(metricType.Value))
                 continue;
 
-            var subtype = combo.SelectedItem.ToString();
-            selections.Add(new MetricSeriesSelection(metricType, subtype));
+            var subtypeOption = combo.SelectedItem as MetricNameOption;
+            var subtypeValue = subtypeOption?.Value ?? combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
+            selections.Add(new MetricSeriesSelection(metricType.Value, subtypeValue, metricType.Display, subtypeOption?.Display));
         }
 
         return selections;
     }
 
-    public bool UpdateLastDynamicComboItems(IEnumerable<string> subtypeList)
+    public bool UpdateLastDynamicComboItems(IEnumerable<MetricNameOption> subtypeList)
     {
         if (_dynamicControls.Count == 0)
             return false;
 
         var combo = _dynamicControls[^1].Combo;
-        var previousSelection = combo.SelectedItem?.ToString();
+        var previousSelection = (combo.SelectedItem as MetricNameOption)?.Value ?? combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
 
         combo.Items.Clear();
         foreach (var subtype in subtypeList)
@@ -189,9 +192,9 @@ public class SubtypeSelectorManager
 
         combo.IsEnabled = true;
 
-        if (!string.IsNullOrWhiteSpace(previousSelection) && combo.Items.Cast<object>().Any(item => string.Equals(item?.ToString(), previousSelection, StringComparison.OrdinalIgnoreCase)))
+        if (!string.IsNullOrWhiteSpace(previousSelection) && combo.Items.OfType<MetricNameOption>().Any(item => string.Equals(item.Value, previousSelection, StringComparison.OrdinalIgnoreCase)))
         {
-            combo.SelectedItem = previousSelection;
+            combo.SelectedItem = combo.Items.OfType<MetricNameOption>().First(item => string.Equals(item.Value, previousSelection, StringComparison.OrdinalIgnoreCase));
             return true;
         }
 
@@ -199,7 +202,7 @@ public class SubtypeSelectorManager
         return true;
     }
 
-    public bool UpdateLastDynamicComboItems(IEnumerable<string> subtypeList, string? metricType)
+    public bool UpdateLastDynamicComboItems(IEnumerable<MetricNameOption> subtypeList, MetricNameOption? metricType)
     {
         if (!UpdateLastDynamicComboItems(subtypeList))
             return false;
@@ -208,7 +211,7 @@ public class SubtypeSelectorManager
         return true;
     }
 
-    public string? GetMetricTypeForCombo(ComboBox combo)
+    public MetricNameOption? GetMetricTypeForCombo(ComboBox combo)
     {
         return _metricTypesByCombo.TryGetValue(combo, out var metricType) ? metricType : null;
     }
@@ -219,12 +222,12 @@ public class SubtypeSelectorManager
     // ============================================================
     public string? GetPrimarySubtype()
     {
-        return PrimaryCombo.SelectedItem?.ToString();
+        return (PrimaryCombo.SelectedItem as MetricNameOption)?.Value ?? PrimaryCombo.SelectedValue?.ToString();
     }
 
     public string? GetSecondarySubtype()
     {
-        return _dynamicCombos.Count > 0 ? _dynamicCombos[0].SelectedItem?.ToString() : null;
+        return _dynamicCombos.Count > 0 ? (_dynamicCombos[0].SelectedItem as MetricNameOption)?.Value ?? _dynamicCombos[0].SelectedValue?.ToString() : null;
     }
 
     public IEnumerable<string> GetAllSelectedSubtypes()
@@ -232,6 +235,6 @@ public class SubtypeSelectorManager
         yield return GetPrimarySubtype() ?? string.Empty;
 
         foreach (var combo in _dynamicCombos)
-            yield return combo.SelectedItem?.ToString() ?? string.Empty;
+            yield return (combo.SelectedItem as MetricNameOption)?.Value ?? combo.SelectedValue?.ToString() ?? string.Empty;
     }
 }

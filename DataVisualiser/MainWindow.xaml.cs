@@ -66,7 +66,7 @@ public partial class MainWindow : Window
     private MetricSelectionService _metricSelectionService = null!;
     private SubtypeSelectorManager _selectorManager = null!;
     private IStrategyCutOverService? _strategyCutOverService;
-    private List<string>? _subtypeList;
+    private List<MetricNameOption>? _subtypeList;
     private ChartTooltipManager? _tooltipManager;
     private int _uiBusyDepth;
     private MainWindowViewModel _viewModel = null!;
@@ -138,7 +138,7 @@ public partial class MainWindow : Window
                 var ctx = _viewModel.ChartState.LastContext;
 
                 var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1, ctx.Data2, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: ctx.PrimaryMetricType ?? ctx.MetricType, primarySubtype: ctx.PrimarySubtype, secondarySubtype: ctx.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: ctx.SecondaryMetricType);
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: ctx.PrimaryMetricType ?? ctx.MetricType, primarySubtype: ctx.PrimarySubtype, secondarySubtype: ctx.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
             }
         }
         catch
@@ -173,6 +173,19 @@ public partial class MainWindow : Window
                 Content = selection.DisplayName,
                 Tag = selection
         };
+    }
+
+    private static string? GetSelectedMetricValue(ComboBox combo)
+    {
+        if (combo.SelectedItem is MetricNameOption option)
+            return option.Value;
+
+        return combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
+    }
+
+    private static MetricNameOption? GetSelectedMetricOption(ComboBox combo)
+    {
+        return combo.SelectedItem as MetricNameOption;
     }
 
     private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)
@@ -254,16 +267,16 @@ public partial class MainWindow : Window
     {
         _isMetricTypeChangePending = false;
         TablesCombo.Items.Clear();
-        var addedAllMetricType = !e.MetricTypes.Any(type => string.Equals(type, "(All)", StringComparison.OrdinalIgnoreCase));
+        var addedAllMetricType = !e.MetricTypes.Any(type => string.Equals(type.Value, "(All)", StringComparison.OrdinalIgnoreCase));
         if (addedAllMetricType)
-            TablesCombo.Items.Add("(All)");
+            TablesCombo.Items.Add(new MetricNameOption("(All)", "(All)"));
         foreach (var type in e.MetricTypes)
             TablesCombo.Items.Add(type);
 
         if (TablesCombo.Items.Count > 0)
         {
             TablesCombo.SelectedIndex = addedAllMetricType && TablesCombo.Items.Count > 1 ? 1 : 0;
-            _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
+            _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
             _viewModel.LoadSubtypesCommand.Execute(null);
         }
         else
@@ -281,7 +294,7 @@ public partial class MainWindow : Window
         var subtypeListLocal = e.Subtypes.ToList();
 
         _subtypeList = subtypeListLocal;
-        var selectedMetricType = TablesCombo.SelectedItem?.ToString();
+        var selectedMetricType = GetSelectedMetricOption(TablesCombo);
 
         if (_isMetricTypeChangePending)
         {
@@ -301,27 +314,27 @@ public partial class MainWindow : Window
         _ = LoadDateRangeForSelectedMetrics();
     }
 
-    private void BuildDynamicSubtypeControls(IEnumerable<string> subtypes)
+    private void BuildDynamicSubtypeControls(IEnumerable<MetricNameOption> subtypes)
     {
         _selectorManager.ClearDynamic();
         UpdateSelectedSubtypesInViewModel();
     }
 
-    private void RefreshPrimarySubtypeCombo(IEnumerable<string> subtypes, bool preserveSelection, string? selectedMetricType)
+    private void RefreshPrimarySubtypeCombo(IEnumerable<MetricNameOption> subtypes, bool preserveSelection, MetricNameOption? selectedMetricType)
     {
-        var previousSelection = SubtypeCombo.SelectedItem?.ToString();
+        var previousSelection = GetSelectedMetricValue(SubtypeCombo);
 
         SubtypeCombo.Items.Clear();
-        SubtypeCombo.Items.Add("(All)");
+        SubtypeCombo.Items.Add(new MetricNameOption("(All)", "(All)"));
         foreach (var st in subtypes)
             SubtypeCombo.Items.Add(st);
 
         SubtypeCombo.IsEnabled = subtypes.Any();
         _selectorManager.SetPrimaryMetricType(selectedMetricType);
 
-        if (preserveSelection && !string.IsNullOrWhiteSpace(previousSelection) && SubtypeCombo.Items.Cast<object>().Any(item => string.Equals(item?.ToString(), previousSelection, StringComparison.OrdinalIgnoreCase)))
+        if (preserveSelection && !string.IsNullOrWhiteSpace(previousSelection) && SubtypeCombo.Items.OfType<MetricNameOption>().Any(item => string.Equals(item.Value, previousSelection, StringComparison.OrdinalIgnoreCase)))
         {
-            SubtypeCombo.SelectedItem = previousSelection;
+            SubtypeCombo.SelectedItem = SubtypeCombo.Items.OfType<MetricNameOption>().First(item => string.Equals(item.Value, previousSelection, StringComparison.OrdinalIgnoreCase));
             return;
         }
 
@@ -602,7 +615,10 @@ public partial class MainWindow : Window
     private async Task RenderOrClearChart(CartesianChart chart, bool isVisible, IChartComputationStrategy? strategy, string title, double minHeight = 400, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false)
     {
         if (isVisible && strategy != null)
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chart, strategy, title, minHeight: minHeight, metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: operationType, isOperationChart: isOperationChart);
+        {
+            var ctx = _viewModel.ChartState.LastContext;
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chart, strategy, title, minHeight: minHeight, metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: operationType, isOperationChart: isOperationChart, displayPrimaryMetricType: ctx?.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx?.DisplaySecondaryMetricType, displayPrimarySubtype: ctx?.DisplayPrimarySubtype, displaySecondarySubtype: ctx?.DisplaySecondarySubtype);
+        }
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
         // Charts are only cleared when data changes (e.g., new selection, resolution change, etc.)
     }
@@ -1055,6 +1071,8 @@ public partial class MainWindow : Window
                     MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
                     PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
                     PrimarySubtype = selectedSeries?.Subtype,
+                    DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                    DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
                     From = ctx.From,
                     To = ctx.To
             };
@@ -1085,6 +1103,8 @@ public partial class MainWindow : Window
                 MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
                 PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
                 PrimarySubtype = selectedSeries?.Subtype,
+                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
                 From = ctx.From,
                 To = ctx.To
         };
@@ -1252,6 +1272,10 @@ public partial class MainWindow : Window
                 SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
                 PrimarySubtype = primarySelection?.Subtype,
                 SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
                 From = ctx.From,
                 To = ctx.To
         };
@@ -2055,7 +2079,7 @@ public partial class MainWindow : Window
             return;
 
         _isMetricTypeChangePending = true;
-        _viewModel.SetSelectedMetricType(TablesCombo.SelectedItem?.ToString());
+        _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
         _viewModel.LoadSubtypesCommand.Execute(null);
     }
 
@@ -2103,7 +2127,7 @@ public partial class MainWindow : Window
 
     private Task<bool> LoadDataAndValidate()
     {
-        var selectedMetricType = TablesCombo.SelectedItem?.ToString();
+        var selectedMetricType = GetSelectedMetricValue(TablesCombo);
         if (selectedMetricType == null)
         {
             MessageBox.Show("Please select a Metric Type", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -2163,7 +2187,7 @@ public partial class MainWindow : Window
         if (_subtypeList == null || !_subtypeList.Any())
             return;
 
-        var metricType = TablesCombo.SelectedItem?.ToString();
+        var metricType = GetSelectedMetricOption(TablesCombo);
         var newCombo = _selectorManager.AddSubtypeCombo(_subtypeList, metricType);
         newCombo.SelectedIndex = 0;
         newCombo.IsEnabled = true;
@@ -2597,7 +2621,7 @@ public partial class MainWindow : Window
         var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
         var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(TransformDataPanelController.ChartTransformResult, strategy, label, null, 400, transformContext.PrimaryMetricType ?? transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart, transformContext.SecondaryMetricType);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(TransformDataPanelController.ChartTransformResult, strategy, label, null, 400, transformContext.PrimaryMetricType ?? transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart, transformContext.SecondaryMetricType, displayPrimaryMetricType: transformContext.DisplayPrimaryMetricType, displaySecondaryMetricType: transformContext.DisplaySecondaryMetricType, displayPrimarySubtype: transformContext.DisplayPrimarySubtype, displaySecondarySubtype: transformContext.DisplaySecondarySubtype);
     }
 
 

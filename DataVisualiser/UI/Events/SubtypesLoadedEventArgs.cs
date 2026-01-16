@@ -1,6 +1,8 @@
 namespace DataVisualiser.UI.Events;
 
+using DataVisualiser.Shared.Models;
+
 public class SubtypesLoadedEventArgs : EventArgs
 {
-    public IEnumerable<string> Subtypes { get; set; } = Enumerable.Empty<string>();
+    public IEnumerable<MetricNameOption> Subtypes { get; set; } = Enumerable.Empty<MetricNameOption>();
 }

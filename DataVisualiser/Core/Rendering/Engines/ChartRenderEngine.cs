@@ -334,48 +334,57 @@ public sealed class ChartRenderEngine
 
     /// <summary>
     ///     Formats series labels according to the new requirements:
-    ///     - For operation charts: "MetricType:subtype1 (operation) MetricType:subtype2 (smooth/raw)"
-    ///     - For independent charts: "MetricType:subtype (smooth/raw)"
+    ///     - For operation charts: "MetricType : subtype (operation) MetricType : subtype (smooth/raw)"
+    ///     - For independent charts: "MetricType : subtype (smooth/raw)"
     /// </summary>
     private static string FormatSeriesLabel(ChartRenderModel model, bool isPrimary, bool isSmoothed)
     {
         var smoothRaw = isSmoothed ? "smooth" : "raw";
 
         // If we have metric type and subtype information, use the new format
-        var primaryMetricType = model.PrimaryMetricType ?? model.MetricType;
-        var secondaryMetricType = model.SecondaryMetricType ?? primaryMetricType;
+        var primaryMetricType = model.DisplayPrimaryMetricType ?? model.PrimaryMetricType ?? model.MetricType;
+        var secondaryMetricType = model.DisplaySecondaryMetricType ?? model.SecondaryMetricType ?? primaryMetricType;
+        var primarySubtype = model.DisplayPrimarySubtype ?? model.PrimarySubtype;
+        var secondarySubtype = model.DisplaySecondarySubtype ?? model.SecondarySubtype;
 
         if (!string.IsNullOrEmpty(primaryMetricType))
         {
             if (model.IsOperationChart && !string.IsNullOrEmpty(model.OperationType))
             {
                 // Operation chart format: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth)"
-                var primarySubtype = model.PrimarySubtype ?? string.Empty;
-                var secondarySubtype = model.SecondarySubtype ?? string.Empty;
                 var operation = model.OperationType;
+                var primaryLabel = FormatMetricLabel(primaryMetricType, primarySubtype);
+                var secondaryLabel = FormatMetricLabel(secondaryMetricType, secondarySubtype);
 
                 if (isPrimary)
                         // Primary series shows: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth/raw)"
-                    return $"{primaryMetricType}:{primarySubtype} ({operation}) {secondaryMetricType}:{secondarySubtype} ({smoothRaw})";
+                    return $"{primaryLabel} ({operation}) {secondaryLabel} ({smoothRaw})";
 
                 // Secondary series (shouldn't happen for operation charts, but handle it)
-                return $"{secondaryMetricType}:{secondarySubtype} ({smoothRaw})";
+                return $"{secondaryLabel} ({smoothRaw})";
             }
 
             // Independent chart format: "Weight:fat_free_mass (smooth/raw)"
-            var subtype = isPrimary ? model.PrimarySubtype ?? string.Empty : model.SecondarySubtype ?? string.Empty;
+            var subtype = isPrimary ? primarySubtype ?? string.Empty : secondarySubtype ?? string.Empty;
             var metricType = isPrimary ? primaryMetricType : secondaryMetricType;
 
-            if (!string.IsNullOrEmpty(subtype))
-                return $"{metricType}:{subtype} ({smoothRaw})";
+            var metricLabel = FormatMetricLabel(metricType, subtype);
 
             // Fallback if no subtype
-            return $"{metricType} ({smoothRaw})";
+            return $"{metricLabel} ({smoothRaw})";
         }
 
         // Fallback to old format if metric type info is not available
         var seriesName = isPrimary ? model.PrimarySeriesName : model.SecondarySeriesName;
         return $"{seriesName} ({smoothRaw})";
+    }
+
+    private static string FormatMetricLabel(string metricType, string? subtype)
+    {
+        if (string.IsNullOrWhiteSpace(subtype) || subtype == "(All)")
+            return metricType;
+
+        return $"{metricType} : {subtype}";
     }
 
     /// <summary>
