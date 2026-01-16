@@ -42,6 +42,10 @@ public class ChartState
     public DistributionMode SelectedDistributionMode { get; set; } = DistributionMode.Weekly;
     public MetricSeriesSelection? SelectedDistributionSeries { get; set; }
     public MetricSeriesSelection? SelectedWeekdayTrendSeries { get; set; }
+    public MetricSeriesSelection? SelectedNormalizedPrimarySeries { get; set; }
+    public MetricSeriesSelection? SelectedNormalizedSecondarySeries { get; set; }
+    public MetricSeriesSelection? SelectedDiffRatioPrimarySeries { get; set; }
+    public MetricSeriesSelection? SelectedDiffRatioSecondarySeries { get; set; }
     public MetricSeriesSelection? SelectedTransformPrimarySeries { get; set; }
     public MetricSeriesSelection? SelectedTransformSecondarySeries { get; set; }
 

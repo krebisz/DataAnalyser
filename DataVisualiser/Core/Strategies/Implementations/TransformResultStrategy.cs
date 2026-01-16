@@ -72,12 +72,19 @@ public sealed class TransformResultStrategy : IChartComputationStrategy
 
         // Convert computed values to MetricData for smoothing
         var dataForSmoothing = _data.Zip(_computedValues,
-                                            (d, v) => new MetricData
+                                            (d, v) =>
                                             {
-                                                    NormalizedTimestamp = d.NormalizedTimestamp,
-                                                    Value = (decimal)v,
-                                                    Unit = d.Unit,
-                                                    Provider = d.Provider
+                                                decimal? safeValue = null;
+                                                if (!double.IsNaN(v) && !double.IsInfinity(v))
+                                                    safeValue = (decimal)v;
+
+                                                return new MetricData
+                                                {
+                                                        NormalizedTimestamp = d.NormalizedTimestamp,
+                                                        Value = safeValue,
+                                                        Unit = d.Unit,
+                                                        Provider = d.Provider
+                                                };
                                             })
                                     .ToList();
 

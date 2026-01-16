@@ -97,6 +97,26 @@ public partial class MainWindowViewModel
         RequestChartUpdate(false, "WeeklyTrend");
     }
 
+    public void SetNormalizedPrimarySeries(MetricSeriesSelection? selection)
+    {
+        ChartState.SelectedNormalizedPrimarySeries = selection;
+    }
+
+    public void SetNormalizedSecondarySeries(MetricSeriesSelection? selection)
+    {
+        ChartState.SelectedNormalizedSecondarySeries = selection;
+    }
+
+    public void SetDiffRatioPrimarySeries(MetricSeriesSelection? selection)
+    {
+        ChartState.SelectedDiffRatioPrimarySeries = selection;
+    }
+
+    public void SetDiffRatioSecondarySeries(MetricSeriesSelection? selection)
+    {
+        ChartState.SelectedDiffRatioSecondarySeries = selection;
+    }
+
     public void SetTransformPrimarySeries(MetricSeriesSelection? selection)
     {
         ChartState.SelectedTransformPrimarySeries = selection;

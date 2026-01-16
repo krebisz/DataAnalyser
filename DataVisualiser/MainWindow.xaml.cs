@@ -40,8 +40,10 @@ namespace DataVisualiser;
 public partial class MainWindow : Window
 {
     private readonly ChartState _chartState = new();
+    private readonly Dictionary<string, IReadOnlyList<MetricData>> _diffRatioSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _distributionSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly MetricState _metricState = new();
+    private readonly Dictionary<string, IReadOnlyList<MetricData>> _normalizedSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly UiState _uiState = new();
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _weekdayTrendSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
@@ -58,6 +60,8 @@ public partial class MainWindow : Window
 
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
+    private bool _isUpdatingDiffRatioSubtypeCombos;
+    private bool _isUpdatingNormalizedSubtypeCombos;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingDistributionSubtypeCombo;
     private bool _isUpdatingTransformSubtypeCombos;
@@ -136,9 +140,13 @@ public partial class MainWindow : Window
             {
                 using var busyScope = BeginUiBusyScope();
                 var ctx = _viewModel.ChartState.LastContext;
+                var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
+                if (primaryData == null || secondaryData == null)
+                    return;
 
-                var normalizedStrategy = CreateNormalizedStrategy(ctx, ctx.Data1, ctx.Data2, ctx.DisplayName1, ctx.DisplayName2, ctx.From, ctx.To, _viewModel.ChartState.SelectedNormalizationMode);
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{ctx.DisplayName1} ~ {ctx.DisplayName2}", minHeight: 400, metricType: ctx.PrimaryMetricType ?? ctx.MetricType, primarySubtype: ctx.PrimarySubtype, secondarySubtype: ctx.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
+                var normalizedStrategy = CreateNormalizedStrategy(normalizedContext, primaryData, secondaryData, normalizedContext.DisplayName1, normalizedContext.DisplayName2, normalizedContext.From, normalizedContext.To, _viewModel.ChartState.SelectedNormalizationMode);
+                UpdateNormalizedPanelTitle(normalizedContext);
+                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{normalizedContext.DisplayName1} ~ {normalizedContext.DisplayName2}", minHeight: 400, metricType: normalizedContext.PrimaryMetricType ?? normalizedContext.MetricType, primarySubtype: normalizedContext.PrimarySubtype, secondarySubtype: normalizedContext.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: normalizedContext.SecondaryMetricType, displayPrimaryMetricType: normalizedContext.DisplayPrimaryMetricType, displaySecondaryMetricType: normalizedContext.DisplaySecondaryMetricType, displayPrimarySubtype: normalizedContext.DisplayPrimarySubtype, displaySecondarySubtype: normalizedContext.DisplaySecondarySubtype);
             }
         }
         catch
@@ -154,6 +162,8 @@ public partial class MainWindow : Window
         var distinctSeries = GetDistinctSelectedSeries();
 
         _viewModel.SetSelectedSeries(distinctSeries);
+        UpdateNormalizedSubtypeOptions();
+        UpdateDiffRatioSubtypeOptions();
         UpdateDistributionSubtypeOptions();
         UpdateWeekdayTrendSubtypeOptions();
 
@@ -366,6 +376,8 @@ public partial class MainWindow : Window
         }
 
         _isTransformSelectionPendingLoad = false;
+        UpdateNormalizedSubtypeOptions();
+        UpdateDiffRatioSubtypeOptions();
         UpdateTransformSubtypeOptions();
         UpdateTransformComputeButtonState();
 
@@ -859,8 +871,202 @@ public partial class MainWindow : Window
         }
         finally
         {
-            _isUpdatingTransformSubtypeCombos = false;
+        _isUpdatingTransformSubtypeCombos = false;
+    }
+
+    private void UpdateNormalizedSubtypeOptions()
+    {
+        if (!CanUpdateNormalizedSubtypeOptions())
+            return;
+
+        _isUpdatingNormalizedSubtypeCombos = true;
+        try
+        {
+            ClearNormalizedSubtypeCombos();
+
+            var selectedSeries = _viewModel.MetricState.SelectedSeries;
+            if (selectedSeries.Count == 0)
+            {
+                HandleNoSelectedNormalizedSeries();
+                return;
+            }
+
+            PopulateNormalizedSubtypeCombos(selectedSeries);
+            UpdatePrimaryNormalizedSubtype(selectedSeries);
+            UpdateSecondaryNormalizedSubtype(selectedSeries);
         }
+        finally
+        {
+            _isUpdatingNormalizedSubtypeCombos = false;
+        }
+    }
+
+    private bool CanUpdateNormalizedSubtypeOptions()
+    {
+        return NormalizedChartController?.NormalizedPrimarySubtypeCombo != null && NormalizedChartController?.NormalizedSecondarySubtypeCombo != null;
+    }
+
+    private void ClearNormalizedSubtypeCombos()
+    {
+        NormalizedChartController.NormalizedPrimarySubtypeCombo.Items.Clear();
+        NormalizedChartController.NormalizedSecondarySubtypeCombo.Items.Clear();
+    }
+
+    private void HandleNoSelectedNormalizedSeries()
+    {
+        NormalizedChartController.NormalizedPrimarySubtypeCombo.IsEnabled = false;
+        NormalizedChartController.NormalizedSecondarySubtypeCombo.IsEnabled = false;
+        NormalizedChartController.NormalizedSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+
+        _viewModel.ChartState.SelectedNormalizedPrimarySeries = null;
+        _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
+
+        NormalizedChartController.NormalizedPrimarySubtypeCombo.SelectedItem = null;
+        NormalizedChartController.NormalizedSecondarySubtypeCombo.SelectedItem = null;
+    }
+
+    private void PopulateNormalizedSubtypeCombos(IReadOnlyList<dynamic> selectedSeries)
+    {
+        foreach (var selection in selectedSeries)
+        {
+            NormalizedChartController.NormalizedPrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+            NormalizedChartController.NormalizedSecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+        }
+
+        NormalizedChartController.NormalizedPrimarySubtypeCombo.IsEnabled = true;
+    }
+
+    private void UpdatePrimaryNormalizedSubtype(IReadOnlyList<dynamic> selectedSeries)
+    {
+        var primaryCurrent = _viewModel.ChartState.SelectedNormalizedPrimarySeries;
+        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
+
+        var primaryItem = FindSeriesComboItem(NormalizedChartController.NormalizedPrimarySubtypeCombo, primarySelection) ?? NormalizedChartController.NormalizedPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+
+        NormalizedChartController.NormalizedPrimarySubtypeCombo.SelectedItem = primaryItem;
+        _viewModel.ChartState.SelectedNormalizedPrimarySeries = primarySelection;
+    }
+
+    private void UpdateSecondaryNormalizedSubtype(IReadOnlyList<dynamic> selectedSeries)
+    {
+        if (selectedSeries.Count > 1)
+        {
+            NormalizedChartController.NormalizedSecondarySubtypePanel.Visibility = Visibility.Visible;
+            NormalizedChartController.NormalizedSecondarySubtypeCombo.IsEnabled = true;
+
+            var secondaryCurrent = _viewModel.ChartState.SelectedNormalizedSecondarySeries;
+            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
+
+            var secondaryItem = FindSeriesComboItem(NormalizedChartController.NormalizedSecondarySubtypeCombo, secondarySelection) ?? NormalizedChartController.NormalizedSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+
+            NormalizedChartController.NormalizedSecondarySubtypeCombo.SelectedItem = secondaryItem;
+            _viewModel.ChartState.SelectedNormalizedSecondarySeries = secondarySelection;
+        }
+        else
+        {
+            NormalizedChartController.NormalizedSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+            NormalizedChartController.NormalizedSecondarySubtypeCombo.IsEnabled = false;
+            NormalizedChartController.NormalizedSecondarySubtypeCombo.SelectedItem = null;
+            _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
+        }
+    }
+
+    private void UpdateDiffRatioSubtypeOptions()
+    {
+        if (!CanUpdateDiffRatioSubtypeOptions())
+            return;
+
+        _isUpdatingDiffRatioSubtypeCombos = true;
+        try
+        {
+            ClearDiffRatioSubtypeCombos();
+
+            var selectedSeries = _viewModel.MetricState.SelectedSeries;
+            if (selectedSeries.Count == 0)
+            {
+                HandleNoSelectedDiffRatioSeries();
+                return;
+            }
+
+            PopulateDiffRatioSubtypeCombos(selectedSeries);
+            UpdatePrimaryDiffRatioSubtype(selectedSeries);
+            UpdateSecondaryDiffRatioSubtype(selectedSeries);
+        }
+        finally
+        {
+            _isUpdatingDiffRatioSubtypeCombos = false;
+        }
+    }
+
+    private bool CanUpdateDiffRatioSubtypeOptions()
+    {
+        return DiffRatioChartController?.PrimarySubtypeCombo != null && DiffRatioChartController?.SecondarySubtypeCombo != null;
+    }
+
+    private void ClearDiffRatioSubtypeCombos()
+    {
+        DiffRatioChartController.PrimarySubtypeCombo.Items.Clear();
+        DiffRatioChartController.SecondarySubtypeCombo.Items.Clear();
+    }
+
+    private void HandleNoSelectedDiffRatioSeries()
+    {
+        DiffRatioChartController.PrimarySubtypeCombo.IsEnabled = false;
+        DiffRatioChartController.SecondarySubtypeCombo.IsEnabled = false;
+        DiffRatioChartController.SecondarySubtypePanel.Visibility = Visibility.Collapsed;
+
+        _viewModel.ChartState.SelectedDiffRatioPrimarySeries = null;
+        _viewModel.ChartState.SelectedDiffRatioSecondarySeries = null;
+
+        DiffRatioChartController.PrimarySubtypeCombo.SelectedItem = null;
+        DiffRatioChartController.SecondarySubtypeCombo.SelectedItem = null;
+    }
+
+    private void PopulateDiffRatioSubtypeCombos(IReadOnlyList<dynamic> selectedSeries)
+    {
+        foreach (var selection in selectedSeries)
+        {
+            DiffRatioChartController.PrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+            DiffRatioChartController.SecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+        }
+
+        DiffRatioChartController.PrimarySubtypeCombo.IsEnabled = true;
+    }
+
+    private void UpdatePrimaryDiffRatioSubtype(IReadOnlyList<dynamic> selectedSeries)
+    {
+        var primaryCurrent = _viewModel.ChartState.SelectedDiffRatioPrimarySeries;
+        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
+
+        var primaryItem = FindSeriesComboItem(DiffRatioChartController.PrimarySubtypeCombo, primarySelection) ?? DiffRatioChartController.PrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+
+        DiffRatioChartController.PrimarySubtypeCombo.SelectedItem = primaryItem;
+        _viewModel.ChartState.SelectedDiffRatioPrimarySeries = primarySelection;
+    }
+
+    private void UpdateSecondaryDiffRatioSubtype(IReadOnlyList<dynamic> selectedSeries)
+    {
+        if (selectedSeries.Count > 1)
+        {
+            DiffRatioChartController.SecondarySubtypePanel.Visibility = Visibility.Visible;
+            DiffRatioChartController.SecondarySubtypeCombo.IsEnabled = true;
+
+            var secondaryCurrent = _viewModel.ChartState.SelectedDiffRatioSecondarySeries;
+            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
+
+            var secondaryItem = FindSeriesComboItem(DiffRatioChartController.SecondarySubtypeCombo, secondarySelection) ?? DiffRatioChartController.SecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+
+            DiffRatioChartController.SecondarySubtypeCombo.SelectedItem = secondaryItem;
+            _viewModel.ChartState.SelectedDiffRatioSecondarySeries = secondarySelection;
+        }
+        else
+        {
+            DiffRatioChartController.SecondarySubtypePanel.Visibility = Visibility.Collapsed;
+            DiffRatioChartController.SecondarySubtypeCombo.IsEnabled = false;
+            DiffRatioChartController.SecondarySubtypeCombo.SelectedItem = null;
+            _viewModel.ChartState.SelectedDiffRatioSecondarySeries = null;
+        }
+    }
     }
 
     private bool CanUpdateTransformSubtypeOptions()
@@ -1030,12 +1236,17 @@ public partial class MainWindow : Window
         // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
     }
 
-    private Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
+    private async Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
     {
         if (_chartRenderingOrchestrator == null)
-            return Task.CompletedTask;
+            return;
 
-        return _chartRenderingOrchestrator.RenderNormalizedChartAsync(ctx, NormalizedChartController.Chart, _viewModel.ChartState);
+        var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
+        if (primaryData == null || secondaryData == null)
+            return;
+
+        UpdateNormalizedPanelTitle(normalizedContext);
+        await _chartRenderingOrchestrator.RenderNormalizedChartAsync(normalizedContext, NormalizedChartController.Chart, _viewModel.ChartState);
     }
 
     /// <summary>
@@ -1247,6 +1458,248 @@ public partial class MainWindow : Window
         return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
+    private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveNormalizedDataAsync(ChartDataContext ctx)
+    {
+        var primarySelection = ResolveSelectedNormalizedPrimarySeries(ctx);
+        var secondarySelection = ResolveSelectedNormalizedSecondarySeries(ctx);
+
+        var primaryData = await ResolveNormalizedDataAsync(ctx, primarySelection);
+        IReadOnlyList<MetricData>? secondaryData = null;
+
+        if (secondarySelection != null)
+            secondaryData = await ResolveNormalizedDataAsync(ctx, secondarySelection);
+
+        var displayName1 = ResolveNormalizedDisplayName(ctx, primarySelection);
+        var displayName2 = ResolveNormalizedDisplayName(ctx, secondarySelection);
+
+        var normalizedContext = new ChartDataContext
+        {
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                DisplayName1 = displayName1,
+                DisplayName2 = displayName2,
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
+
+        return (primaryData, secondaryData, normalizedContext);
+    }
+
+    private async Task<IReadOnlyList<MetricData>?> ResolveNormalizedDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    {
+        if (ctx.Data1 == null)
+            return null;
+
+        if (selectedSeries == null)
+            return ctx.Data1;
+
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return ctx.Data1;
+
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return ctx.Data2 ?? ctx.Data1;
+
+        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
+            return ctx.Data1;
+
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var cacheKey = BuildNormalizedCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
+        if (_normalizedSubtypeCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
+        var data = primaryData.ToList();
+        _normalizedSubtypeCache[cacheKey] = data;
+        return data;
+    }
+
+    private MetricSeriesSelection? ResolveSelectedNormalizedPrimarySeries(ChartDataContext ctx)
+    {
+        if (!_isUpdatingNormalizedSubtypeCombos && NormalizedChartController.NormalizedPrimarySubtypeCombo != null)
+        {
+            var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedPrimarySubtypeCombo);
+            if (selection != null)
+                return selection;
+        }
+
+        if (_viewModel.ChartState.SelectedNormalizedPrimarySeries != null)
+            return _viewModel.ChartState.SelectedNormalizedPrimarySeries;
+
+        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
+
+        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+    }
+
+    private MetricSeriesSelection? ResolveSelectedNormalizedSecondarySeries(ChartDataContext ctx)
+    {
+        if (!_isUpdatingNormalizedSubtypeCombos && NormalizedChartController.NormalizedSecondarySubtypeCombo != null)
+        {
+            var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedSecondarySubtypeCombo);
+            if (selection != null)
+                return selection;
+        }
+
+        if (_viewModel.ChartState.SelectedNormalizedSecondarySeries != null)
+            return _viewModel.ChartState.SelectedNormalizedSecondarySeries;
+
+        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
+
+        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
+    }
+
+    private static string ResolveNormalizedDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    {
+        if (selectedSeries == null)
+            return ctx.DisplayName1;
+
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return ctx.DisplayName1;
+
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return ctx.DisplayName2;
+
+        return selectedSeries.DisplayName;
+    }
+
+    private static string BuildNormalizedCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
+    {
+        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
+    }
+
+    private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveDiffRatioDataAsync(ChartDataContext ctx)
+    {
+        var primarySelection = ResolveSelectedDiffRatioPrimarySeries(ctx);
+        var secondarySelection = ResolveSelectedDiffRatioSecondarySeries(ctx);
+
+        var primaryData = await ResolveDiffRatioDataAsync(ctx, primarySelection);
+        IReadOnlyList<MetricData>? secondaryData = null;
+
+        if (secondarySelection != null)
+            secondaryData = await ResolveDiffRatioDataAsync(ctx, secondarySelection);
+
+        var displayName1 = ResolveDiffRatioDisplayName(ctx, primarySelection);
+        var displayName2 = ResolveDiffRatioDisplayName(ctx, secondarySelection);
+
+        var diffRatioContext = new ChartDataContext
+        {
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                DisplayName1 = displayName1,
+                DisplayName2 = displayName2,
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
+
+        return (primaryData, secondaryData, diffRatioContext);
+    }
+
+    private async Task<IReadOnlyList<MetricData>?> ResolveDiffRatioDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    {
+        if (ctx.Data1 == null)
+            return null;
+
+        if (selectedSeries == null)
+            return ctx.Data1;
+
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return ctx.Data1;
+
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return ctx.Data2 ?? ctx.Data1;
+
+        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
+            return ctx.Data1;
+
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var cacheKey = BuildDiffRatioCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
+        if (_diffRatioSubtypeCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
+        var data = primaryData.ToList();
+        _diffRatioSubtypeCache[cacheKey] = data;
+        return data;
+    }
+
+    private MetricSeriesSelection? ResolveSelectedDiffRatioPrimarySeries(ChartDataContext ctx)
+    {
+        if (!_isUpdatingDiffRatioSubtypeCombos && DiffRatioChartController.PrimarySubtypeCombo != null)
+        {
+            var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.PrimarySubtypeCombo);
+            if (selection != null)
+                return selection;
+        }
+
+        if (_viewModel.ChartState.SelectedDiffRatioPrimarySeries != null)
+            return _viewModel.ChartState.SelectedDiffRatioPrimarySeries;
+
+        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
+
+        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+    }
+
+    private MetricSeriesSelection? ResolveSelectedDiffRatioSecondarySeries(ChartDataContext ctx)
+    {
+        if (!_isUpdatingDiffRatioSubtypeCombos && DiffRatioChartController.SecondarySubtypeCombo != null)
+        {
+            var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.SecondarySubtypeCombo);
+            if (selection != null)
+                return selection;
+        }
+
+        if (_viewModel.ChartState.SelectedDiffRatioSecondarySeries != null)
+            return _viewModel.ChartState.SelectedDiffRatioSecondarySeries;
+
+        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
+
+        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
+    }
+
+    private static string ResolveDiffRatioDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    {
+        if (selectedSeries == null)
+            return ctx.DisplayName1;
+
+        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return ctx.DisplayName1;
+
+        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return ctx.DisplayName2;
+
+        return selectedSeries.DisplayName;
+    }
+
+    private static string BuildDiffRatioCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
+    {
+        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
+    }
+
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveTransformDataAsync(ChartDataContext ctx)
     {
         var primarySelection = ResolveSelectedTransformPrimarySeries(ctx);
@@ -1383,7 +1836,52 @@ public partial class MainWindow : Window
         if (_chartRenderingOrchestrator == null)
             return;
 
-        await _chartRenderingOrchestrator.RenderDiffRatioChartAsync(ctx, DiffRatioChartController.Chart, _viewModel.ChartState);
+        var (primaryData, secondaryData, diffRatioContext) = await ResolveDiffRatioDataAsync(ctx);
+        if (primaryData == null || secondaryData == null)
+            return;
+
+        UpdateDiffRatioPanelTitle(diffRatioContext);
+        await _chartRenderingOrchestrator.RenderDiffRatioChartAsync(diffRatioContext, DiffRatioChartController.Chart, _viewModel.ChartState);
+    }
+
+    private async Task RenderNormalizedFromSelectionAsync()
+    {
+        if (!_viewModel.ChartState.IsNormalizedVisible || _viewModel.ChartState.LastContext == null)
+            return;
+
+        var ctx = _viewModel.ChartState.LastContext;
+        await RenderNormalized(ctx, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
+    }
+
+    private async Task RenderDiffRatioFromSelectionAsync()
+    {
+        if (!_viewModel.ChartState.IsDiffRatioVisible || _viewModel.ChartState.LastContext == null)
+            return;
+
+        var ctx = _viewModel.ChartState.LastContext;
+        await RenderDiffRatio(ctx, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
+    }
+
+    private void UpdateNormalizedPanelTitle(ChartDataContext ctx)
+    {
+        var leftName = ctx.DisplayName1 ?? string.Empty;
+        var rightName = ctx.DisplayName2 ?? string.Empty;
+        NormalizedChartController.Panel.Title = $"{leftName} ~ {rightName}";
+    }
+
+    private void UpdateDiffRatioPanelTitle(ChartDataContext ctx)
+    {
+        var leftName = ctx.DisplayName1 ?? string.Empty;
+        var rightName = ctx.DisplayName2 ?? string.Empty;
+        var operationSymbol = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/";
+
+        DiffRatioChartController.Panel.Title = $"{leftName} {operationSymbol} {rightName}";
+
+        if (_tooltipManager != null)
+        {
+            var label = !string.IsNullOrEmpty(rightName) ? $"{leftName} {operationSymbol} {rightName}" : leftName;
+            _tooltipManager.UpdateChartLabel(DiffRatioChartController.Chart, label);
+        }
     }
 
     private Panel? GetChartPanel(string chartName)
@@ -1630,8 +2128,12 @@ public partial class MainWindow : Window
         WeekdayTrendChartController.SubtypeChanged += OnWeekdayTrendSubtypeChanged;
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
+        DiffRatioChartController.PrimarySubtypeChanged += OnDiffRatioPrimarySubtypeChanged;
+        DiffRatioChartController.SecondarySubtypeChanged += OnDiffRatioSecondarySubtypeChanged;
         NormalizedChartController.ToggleRequested += OnChartNormToggleRequested;
         NormalizedChartController.NormalizationModeChanged += OnNormalizationModeChanged;
+        NormalizedChartController.PrimarySubtypeChanged += OnNormalizedPrimarySubtypeChanged;
+        NormalizedChartController.SecondarySubtypeChanged += OnNormalizedSecondarySubtypeChanged;
         DistributionChartController.ToggleRequested += OnDistributionToggleRequested;
         DistributionChartController.ChartTypeToggleRequested += OnDistributionChartTypeToggleRequested;
         DistributionChartController.ModeChanged += OnDistributionModeChanged;
@@ -2164,6 +2666,8 @@ public partial class MainWindow : Window
         {
             _distributionSubtypeCache.Clear();
             _weekdayTrendSubtypeCache.Clear();
+            _normalizedSubtypeCache.Clear();
+            _diffRatioSubtypeCache.Clear();
             _transformSubtypeCache.Clear();
             ResetTransformSelectionsPendingLoad();
             var dataLoaded = await _viewModel.LoadMetricDataAsync();
@@ -2213,6 +2717,28 @@ public partial class MainWindow : Window
     private void OnChartNormToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleNorm();
+    }
+
+    private async void OnNormalizedPrimarySubtypeChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing || _isUpdatingNormalizedSubtypeCombos)
+            return;
+
+        var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedPrimarySubtypeCombo);
+        _viewModel.SetNormalizedPrimarySeries(selection);
+
+        await RenderNormalizedFromSelectionAsync();
+    }
+
+    private async void OnNormalizedSecondarySubtypeChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing || _isUpdatingNormalizedSubtypeCombos)
+            return;
+
+        var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedSecondarySubtypeCombo);
+        _viewModel.SetNormalizedSecondarySeries(selection);
+
+        await RenderNormalizedFromSelectionAsync();
     }
 
     /// <summary>
@@ -2287,6 +2813,28 @@ public partial class MainWindow : Window
         _viewModel.ToggleDiffRatio();
     }
 
+    private async void OnDiffRatioPrimarySubtypeChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing || _isUpdatingDiffRatioSubtypeCombos)
+            return;
+
+        var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.PrimarySubtypeCombo);
+        _viewModel.SetDiffRatioPrimarySeries(selection);
+
+        await RenderDiffRatioFromSelectionAsync();
+    }
+
+    private async void OnDiffRatioSecondarySubtypeChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing || _isUpdatingDiffRatioSubtypeCombos)
+            return;
+
+        var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.SecondarySubtypeCombo);
+        _viewModel.SetDiffRatioSecondarySeries(selection);
+
+        await RenderDiffRatioFromSelectionAsync();
+    }
+
     private async void OnDiffRatioOperationToggleRequested(object? sender, EventArgs e)
     {
         using var busyScope = BeginUiBusyScope();
@@ -2294,13 +2842,7 @@ public partial class MainWindow : Window
         UpdateDiffRatioOperationButton();
 
         // Re-render the chart with current data if visible
-        if (_viewModel.ChartState.IsDiffRatioVisible && _viewModel.ChartState.LastContext != null)
-        {
-            var ctx = _viewModel.ChartState.LastContext;
-            var hasSecondaryData = HasSecondaryData(ctx);
-            if (hasSecondaryData)
-                await RenderDiffRatio(ctx, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
-        }
+        await RenderDiffRatioFromSelectionAsync();
     }
 
     private void UpdateDiffRatioOperationButton()

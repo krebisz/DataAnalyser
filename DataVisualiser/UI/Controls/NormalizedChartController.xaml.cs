@@ -18,6 +18,8 @@ public partial class NormalizedChartController : UserControl
         NormZeroToOneRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);
         NormPercentOfMaxRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);
         NormRelativeToMaxRadioControl.Checked += (s, e) => NormalizationModeChanged?.Invoke(this, EventArgs.Empty);
+        NormalizedPrimarySubtypeComboControl.SelectionChanged += (s, e) => PrimarySubtypeChanged?.Invoke(this, EventArgs.Empty);
+        NormalizedSecondarySubtypeComboControl.SelectionChanged += (s, e) => SecondarySubtypeChanged?.Invoke(this, EventArgs.Empty);
 
         RootGrid.Children.Remove(BehavioralControlsPanel);
         RootGrid.Children.Remove(ChartContentPanelRoot);
@@ -40,4 +42,14 @@ public partial class NormalizedChartController : UserControl
     public event EventHandler? ToggleRequested;
 
     public event EventHandler? NormalizationModeChanged;
+
+    public ComboBox NormalizedPrimarySubtypeCombo => NormalizedPrimarySubtypeComboControl;
+
+    public ComboBox NormalizedSecondarySubtypeCombo => NormalizedSecondarySubtypeComboControl;
+
+    public StackPanel NormalizedSecondarySubtypePanel => NormalizedSecondarySubtypePanelControl;
+
+    public event EventHandler? PrimarySubtypeChanged;
+
+    public event EventHandler? SecondarySubtypeChanged;
 }

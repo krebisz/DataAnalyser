@@ -303,6 +303,15 @@ public sealed class ChartRenderingOrchestrator
         var operation = isDifferenceMode ? "Subtract" : "Divide";
         var operationSymbol = isDifferenceMode ? "-" : "/";
 
+        if (TryBuildDiffRatioSeries(ctx, isDifferenceMode, out var derivedData, out var derivedValues))
+        {
+            var derivedLabel = TransformExpressionEvaluator.GenerateTransformLabel(operation, new List<IReadOnlyList<MetricData>> { ctx.Data1, ctx.Data2 }, ctx);
+            var derivedStrategy = new TransformResultStrategy(derivedData, derivedValues, derivedLabel, ctx.From, ctx.To);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, derivedStrategy, derivedLabel, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
+            return;
+        }
+
         var preparedData = PrepareAndAlignBinaryData(ctx.Data1, ctx.Data2);
         if (preparedData == null)
             return;
@@ -316,6 +325,49 @@ public sealed class ChartRenderingOrchestrator
         var strategy = new TransformResultStrategy(alignedData.Item1, computation.Results, label, ctx.From, ctx.To);
 
         await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
+    }
+
+    private static bool TryBuildDiffRatioSeries(ChartDataContext ctx, bool isDifferenceMode, out List<MetricData> data, out List<double> values)
+    {
+        data = new List<MetricData>();
+        values = new List<double>();
+
+        var timeline = ctx.Timestamps;
+        var derivedValues = isDifferenceMode ? ctx.DifferenceValues : ctx.RatioValues;
+        if (timeline == null || derivedValues == null || timeline.Count == 0 || derivedValues.Count == 0)
+            return false;
+
+        var count = Math.Min(timeline.Count, derivedValues.Count);
+        if (count == 0)
+            return false;
+
+        var sample = ctx.Data1.FirstOrDefault(d => d.Value.HasValue)
+                     ?? ctx.Data2.FirstOrDefault(d => d.Value.HasValue)
+                     ?? ctx.Data1.FirstOrDefault()
+                     ?? ctx.Data2.FirstOrDefault();
+
+        data = new List<MetricData>(count);
+        values = new List<double>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            var value = derivedValues[i];
+            values.Add(value);
+
+            decimal? decimalValue = null;
+            if (!double.IsNaN(value) && !double.IsInfinity(value))
+                decimalValue = (decimal)value;
+
+            data.Add(new MetricData
+            {
+                    NormalizedTimestamp = timeline[i],
+                    Value = decimalValue,
+                    Unit = sample?.Unit,
+                    Provider = sample?.Provider
+            });
+        }
+
+        return data.Count > 0 && values.Count > 0;
     }
 
     private static(List<MetricData> Item1, List<MetricData> Item2)? PrepareAndAlignBinaryData(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2)
