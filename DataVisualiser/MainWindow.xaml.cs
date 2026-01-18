@@ -239,33 +239,27 @@ public partial class MainWindow : Window
     /// <summary>
     ///     Updates the enabled state of buttons for charts that require secondary data.
     ///     These buttons are disabled when fewer than 2 subtypes are selected.
-    ///     If charts are currently visible when secondary data becomes unavailable, they are cleared and hidden
-    ///     by leveraging the existing rendering pipeline through state updates.
-    ///     Pipeline flow:
-    ///     1. ViewModel.SetXxxVisible(false) -> Sets ChartState.IsXxxVisible = false
-    ///     2. RequestChartUpdate() -> Fires ChartUpdateRequested event with updated visibility states
-    ///     3. OnChartUpdateRequested() -> Calls UpdateChartVisibility() for each chart
-    ///     4. UpdateChartVisibility() -> Updates panel visibility and button text ("Show"/"Hide")
-    ///     5. RenderChartsFromLastContext() -> Checks visibility states and clears/renders charts accordingly
-    ///     - Uses RenderOrClearChart() which respects visibility state
-    ///     - Or directly clears when no secondary data exists
+    ///     If charts are currently visible when secondary data becomes unavailable, they are cleared and hidden.
     /// </summary>
     private void UpdateSecondaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
         var hasSecondaryData = selectedSubtypeCount >= 2;
 
         // If secondary data is no longer available, use the ViewModel state setters to trigger
-        // the full rendering pipeline. This ensures all state updates, UI updates, and chart
-        // clearing happen through the established pipeline with proper strategy adoption.
+        // visibility updates while clearing stale chart data.
         if (!hasSecondaryData)
         {
-            // Update state through ViewModel - this triggers the full pipeline:
-            // ViewModel -> RequestChartUpdate -> OnChartUpdateRequested -> UpdateChartVisibility -> RenderChartsFromLastContext
             if (_viewModel.ChartState.IsNormalizedVisible)
+            {
+                ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
                 _viewModel.SetNormalizedVisible(false);
+            }
 
             if (_viewModel.ChartState.IsDiffRatioVisible)
+            {
+                ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
                 _viewModel.SetDiffRatioVisible(false);
+            }
         }
 
         // Update button enabled states (this is UI-only, not part of the rendering pipeline)
@@ -544,11 +538,52 @@ public partial class MainWindow : Window
             return true; // Never reload charts
         }
 
+        if (!IsChartVisible(e.ToggledChartName))
+            return true;
+
         var ctx = _viewModel.ChartState.LastContext;
-        if (ctx != null && ShouldRenderCharts(ctx))
+        if (ctx != null && ShouldRenderCharts(ctx) && !HasChartData(e.ToggledChartName))
             _ = RenderSingleChart(e.ToggledChartName, ctx);
 
         return true;
+    }
+
+    private bool IsChartVisible(string chartName)
+    {
+        return chartName switch
+        {
+            "Main" => _viewModel.ChartState.IsMainVisible,
+            "Norm" => _viewModel.ChartState.IsNormalizedVisible,
+            "DiffRatio" => _viewModel.ChartState.IsDiffRatioVisible,
+            "Distribution" => _viewModel.ChartState.IsDistributionVisible,
+            "WeeklyTrend" => _viewModel.ChartState.IsWeeklyTrendVisible,
+            _ => false
+        };
+    }
+
+    private bool HasChartData(string chartName)
+    {
+        return chartName switch
+        {
+            "Main" => HasSeries(MainChartController.Chart.Series),
+            "Norm" => HasSeries(NormalizedChartController.Chart.Series),
+            "DiffRatio" => HasSeries(DiffRatioChartController.Chart.Series),
+            "Distribution" => _viewModel.ChartState.IsDistributionPolarMode
+                    ? HasSeries(DistributionChartController.PolarChart.Series)
+                    : HasSeries(DistributionChartController.Chart.Series),
+            "WeeklyTrend" => _viewModel.ChartState.IsWeekdayTrendPolarMode
+                    ? HasSeries(WeekdayTrendChartController.PolarChart.Series)
+                    : HasSeries(WeekdayTrendChartController.Chart.Series),
+            _ => false
+        };
+    }
+
+    private static bool HasSeries(System.Collections.IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     private void HandleTransformPanelVisibilityOnlyToggle()
@@ -557,7 +592,7 @@ public partial class MainWindow : Window
         {
             var transformCtx = _viewModel.ChartState.LastContext;
             if (transformCtx != null && ShouldRenderCharts(transformCtx))
-                PopulateTransformGrids(transformCtx);
+                PopulateTransformGrids(transformCtx, false);
 
             UpdateTransformSubtypeOptions();
         }
@@ -726,7 +761,7 @@ public partial class MainWindow : Window
             PopulateTransformGrids(safeCtx);
     }
 
-    private void PopulateTransformGrids(ChartDataContext ctx)
+    private void PopulateTransformGrids(ChartDataContext ctx, bool resetResults = true)
     {
         PopulateTransformGrid(ctx.Data1, TransformDataPanelController.TransformGrid1, TransformDataPanelController.TransformGrid1Title, ctx.DisplayName1 ?? "Primary Data", true);
 
@@ -747,7 +782,8 @@ public partial class MainWindow : Window
             SetBinaryTransformOperationsEnabled(false);
         }
 
-        ResetTransformResultState();
+        if (resetResults)
+            ResetTransformResultState();
     }
 
     private void PopulateTransformGrid(IEnumerable<MetricData>? data, DataGrid grid, TextBlock title, string titleText, bool alwaysVisible)

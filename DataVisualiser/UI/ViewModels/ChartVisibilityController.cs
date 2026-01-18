@@ -40,7 +40,7 @@ public sealed class ChartVisibilityController
 
         // Re-render if visible
         if (_chartState.IsDiffRatioVisible && _chartState.LastContext != null)
-            return BuildChartUpdateRequest();
+            return BuildChartUpdateRequest(false, "DiffRatio");
 
         return null;
     }

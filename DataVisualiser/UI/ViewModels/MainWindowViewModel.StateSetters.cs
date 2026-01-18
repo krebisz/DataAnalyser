@@ -12,19 +12,19 @@ public partial class MainWindowViewModel
     public void SetMainVisible(bool value)
     {
         ChartState.IsMainVisible = value;
-        RequestChartUpdate();
+        RequestChartUpdate(true, "Main");
     }
 
     public void SetNormalizedVisible(bool value)
     {
         ChartState.IsNormalizedVisible = value;
-        RequestChartUpdate();
+        RequestChartUpdate(true, "Norm");
     }
 
     public void SetDiffRatioVisible(bool value)
     {
         ChartState.IsDiffRatioVisible = value;
-        RequestChartUpdate();
+        RequestChartUpdate(true, "DiffRatio");
     }
 
     public void SetMainChartDisplayMode(MainChartDisplayMode mode)
@@ -39,7 +39,7 @@ public partial class MainWindowViewModel
     public void SetDistributionVisible(bool value)
     {
         ChartState.IsDistributionVisible = value;
-        RequestChartUpdate();
+        RequestChartUpdate(true, "Distribution");
     }
 
     public void SetWeeklyTrendMondayVisible(bool value)
