@@ -4,14 +4,15 @@ Running list of ideas
 
 ---
 
-- Dynamic Line Chart colouring based on vertical value (hot/cold)
+- Dynamic Line Chart colouring based on vertical value (hot/cold) : PARTIALLY DONE
 - Dynamic Lines colouring based on equivalent trends at a point (increasing/decreasing)
-- Scatter chart for date vs. heart rate (exercise, etc.) clusters
+- Scatter chart for date vs. heart rate (exercise, etc.) clusters : PARTIALLY DONE
 - Stack chart to compare summed graphs/values to total (e.g.: muscle + fat vs. total weight value)
-- Legends that work as toggling radiobuttons for graph display on charts
+- <!-- Legends that work as toggling radiobuttons for graph display on charts : DONE -->
 - Pie Chart(s) per resolution (A Pie Chart per year or month to show compositional changes, side by side)
 - <!-- Introducing metric:submetric selection present for some charts, to all charts : DONE -->
-- Moving original main tab (window) contents into separate control
+- <!-- Moving original main tab (window) contents into separate control : DONE -->
+- Decouple main charts controller, and all suboordinate charts, flows and controls
 - <!-- Adding "average" scoring to simple range rendering of distribution graph : DONE -->
 - Expanding transform graph to ternary operations, with more than two submetrics
 - Allowing for more than one graph to be created/generated within transform graph by dynamically adding more custom transforms (new control)
