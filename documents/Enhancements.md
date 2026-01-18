@@ -10,7 +10,7 @@ Running list of ideas
 - Stack chart to compare summed graphs/values to total (e.g.: muscle + fat vs. total weight value)
 - Legends that work as toggling radiobuttons for graph display on charts
 - Pie Chart(s) per resolution (A Pie Chart per year or month to show compositional changes, side by side)
-- Introducing metric:submetric selection present for some charts, to all charts
+- <!-- Introducing metric:submetric selection present for some charts, to all charts : DONE -->
 - Moving original main tab (window) contents into separate control
 - <!-- Adding "average" scoring to simple range rendering of distribution graph : DONE -->
 - Expanding transform graph to ternary operations, with more than two submetrics
