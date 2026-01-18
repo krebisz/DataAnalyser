@@ -871,7 +871,8 @@ public partial class MainWindow : Window
         }
         finally
         {
-        _isUpdatingTransformSubtypeCombos = false;
+            _isUpdatingTransformSubtypeCombos = false;
+        }
     }
 
     private void UpdateNormalizedSubtypeOptions()
@@ -1067,7 +1068,7 @@ public partial class MainWindow : Window
             _viewModel.ChartState.SelectedDiffRatioSecondarySeries = null;
         }
     }
-    }
+
 
     private bool CanUpdateTransformSubtypeOptions()
     {
