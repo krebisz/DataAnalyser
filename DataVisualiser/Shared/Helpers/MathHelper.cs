@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Shared.Models;
@@ -385,6 +386,55 @@ public static class MathHelper
 
         // For whole numbers, format without decimals
         return ((long)Math.Round(rounded)).ToString(CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    ///     Formats decimal values to 3 significant non-zero digits after the decimal point (truncated).
+    ///     Examples: 100.123456 -> "100.123", 0.123456 -> "0.123", 0.000123456 -> "0.000123".
+    /// </summary>
+    public static string FormatDisplayedValue(double value)
+    {
+        if (double.IsNaN(value) || double.IsInfinity(value))
+            return value.ToString(CultureInfo.InvariantCulture);
+
+        if (value == 0)
+            return "0";
+
+        var sign = value < 0 ? "-" : string.Empty;
+        var abs = Math.Abs(value);
+
+        if (abs > (double)decimal.MaxValue)
+            return value.ToString(CultureInfo.InvariantCulture);
+
+        var absDecimal = (decimal)abs;
+        var integerPart = decimal.Truncate(absDecimal);
+        var fraction = absDecimal - integerPart;
+        var integerText = integerPart.ToString(CultureInfo.InvariantCulture);
+
+        if (fraction == 0m)
+            return $"{sign}{integerText}";
+
+        var digits = new List<char>();
+        var nonZeroCount = 0;
+        const int maxDigits = 18;
+
+        while (fraction > 0m && nonZeroCount < 3 && digits.Count < maxDigits)
+        {
+            fraction *= 10m;
+            var digit = (int)decimal.Truncate(fraction);
+            fraction -= digit;
+            digits.Add((char)('0' + digit));
+            if (digit != 0)
+                nonZeroCount++;
+        }
+
+        while (digits.Count > 0 && digits[^1] == '0')
+            digits.RemoveAt(digits.Count - 1);
+
+        if (digits.Count == 0)
+            return $"{sign}{integerText}";
+
+        return $"{sign}{integerText}.{new string(digits.ToArray())}";
     }
 
 

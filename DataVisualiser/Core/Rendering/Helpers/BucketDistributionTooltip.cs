@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -6,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Shared.Helpers;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -294,7 +296,7 @@ public abstract class BucketDistributionTooltip : IDisposable
 
         return new TextBlock
         {
-                Text = $"Average: {average:F2}",
+                Text = $"Average: {FormatTooltipValue(average)}",
                 FontSize = RenderingDefaults.TooltipSubHeaderFontSize,
                 Margin = new Thickness(0, 0, 0, 6),
                 Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
@@ -319,18 +321,20 @@ public abstract class BucketDistributionTooltip : IDisposable
                 MaxHeight = RenderingDefaults.TooltipMaxHeightPx
         };
 
+        var showPercentages = ShouldShowPercentages(intervals);
+
         foreach (var interval in intervals.OrderBy(i => i.Min))
         {
             if (interval.Count == 0 && interval.Percentage == 0)
                 continue;
 
-            panel.Children.Add(CreateIntervalRow(interval));
+            panel.Children.Add(CreateIntervalRow(interval, showPercentages));
         }
 
         return panel;
     }
 
-    private UIElement CreateIntervalRow((double Min, double Max, int Count, double Percentage) interval)
+    private UIElement CreateIntervalRow((double Min, double Max, int Count, double Percentage) interval, bool showPercentages)
     {
         var panel = new StackPanel
         {
@@ -340,22 +344,23 @@ public abstract class BucketDistributionTooltip : IDisposable
 
         panel.Children.Add(new TextBlock
         {
-                Text = $"[{interval.Min:F2} - {interval.Max:F2}]",
+                Text = $"[{FormatTooltipValue(interval.Min)} - {FormatTooltipValue(interval.Max)}]",
                 FontSize = RenderingDefaults.TooltipRowFontSize,
                 FontFamily = new FontFamily("Consolas"),
                 Width = 120,
                 Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 60))
         });
 
-        panel.Children.Add(new TextBlock
-        {
-                Text = $"{interval.Percentage:F1}%",
-                FontSize = RenderingDefaults.TooltipRowFontSize,
-                Width = 60,
-                TextAlignment = TextAlignment.Right,
-                Margin = new Thickness(8, 0, 0, 0),
-                Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
-        });
+        if (showPercentages)
+            panel.Children.Add(new TextBlock
+            {
+                    Text = $"{FormatTooltipValue(interval.Percentage)}%",
+                    FontSize = RenderingDefaults.TooltipRowFontSize,
+                    Width = 60,
+                    TextAlignment = TextAlignment.Right,
+                    Margin = new Thickness(8, 0, 0, 0),
+                    Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
+            });
 
         panel.Children.Add(new TextBlock
         {
@@ -366,6 +371,23 @@ public abstract class BucketDistributionTooltip : IDisposable
         });
 
         return panel;
+    }
+
+    private static string FormatTooltipValue(double value)
+    {
+        return MathHelper.FormatDisplayedValue(value);
+    }
+
+    private static bool ShouldShowPercentages(List<(double Min, double Max, int Count, double Percentage)> intervals)
+    {
+        if (intervals.Count == 0)
+            return false;
+
+        var hasInvalid = intervals.Any(interval => double.IsNaN(interval.Percentage) || double.IsInfinity(interval.Percentage));
+        if (hasInvalid)
+            return false;
+
+        return intervals.Any(interval => FormatTooltipValue(interval.Percentage) != "0");
     }
 
     private Border WrapTooltip(StackPanel content)

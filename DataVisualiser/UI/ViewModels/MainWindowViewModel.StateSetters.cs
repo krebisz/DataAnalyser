@@ -84,6 +84,18 @@ public partial class MainWindowViewModel
         RequestChartUpdate(false, "WeeklyTrend");
     }
 
+    public void SetWeeklyTrendAverageVisible(bool value)
+    {
+        ChartState.ShowAverage = value;
+        RequestChartUpdate(false, "WeeklyTrend");
+    }
+
+    public void SetWeeklyTrendAverageWindow(WeekdayTrendAverageWindow window)
+    {
+        ChartState.WeekdayTrendAverageWindow = window;
+        RequestChartUpdate(false, "WeeklyTrend");
+    }
+
     public void SetNormalizationMode(NormalizationMode mode)
     {
         ChartState.SelectedNormalizationMode = mode;

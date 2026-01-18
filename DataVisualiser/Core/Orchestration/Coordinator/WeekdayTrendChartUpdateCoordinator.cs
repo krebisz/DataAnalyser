@@ -54,7 +54,7 @@ public sealed class WeekdayTrendChartUpdateCoordinator
         if (_lastResult == null || _chartState == null || _cartesianChart == null || _polarChart == null)
             return;
 
-        var targetChart = _chartState.IsWeekdayTrendPolarMode ? _polarChart : _cartesianChart;
+        var targetChart = _chartState.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar ? _polarChart : _cartesianChart;
 
         _renderGate.ExecuteWhenReady(targetChart,
                 () =>

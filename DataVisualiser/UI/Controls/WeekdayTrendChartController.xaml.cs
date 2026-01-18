@@ -38,6 +38,7 @@ public partial class WeekdayTrendChartController : UserControl
 
     public Button ChartTypeToggleButton { get; private set; } = null!;
     public ComboBox SubtypeCombo { get; private set; } = null!;
+    public ComboBox AverageWindowCombo { get; private set; } = null!;
 
     public event EventHandler? ToggleRequested;
 
@@ -45,6 +46,8 @@ public partial class WeekdayTrendChartController : UserControl
     public event EventHandler? SubtypeChanged;
 
     public event EventHandler<WeekdayTrendDayToggleEventArgs>? DayToggled;
+    public event EventHandler<WeekdayTrendAverageToggleEventArgs>? AverageToggled;
+    public event EventHandler? AverageWindowChanged;
 
     private UIElement BuildBehavioralControls()
     {
@@ -68,6 +71,22 @@ public partial class WeekdayTrendChartController : UserControl
         AddDayCheckBox(panel, "Fri", DayOfWeek.Friday);
         AddDayCheckBox(panel, "Sat", DayOfWeek.Saturday);
         AddDayCheckBox(panel, "Sun", DayOfWeek.Sunday);
+        AddAverageCheckBox(panel);
+
+        panel.Children.Add(new TextBlock
+        {
+                Text = "Average:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = ChartUiDefaults.SectionLabelMargin
+        });
+
+        AverageWindowCombo = new ComboBox
+        {
+                Width = ChartUiDefaults.WeekdayTrendAverageComboWidth,
+                VerticalAlignment = VerticalAlignment.Center
+        };
+        AverageWindowCombo.SelectionChanged += (s, e) => AverageWindowChanged?.Invoke(this, EventArgs.Empty);
+        panel.Children.Add(AverageWindowCombo);
 
         panel.Children.Add(new TextBlock
         {
@@ -90,7 +109,7 @@ public partial class WeekdayTrendChartController : UserControl
                 Margin = ChartUiDefaults.ToggleButtonMargin,
                 Padding = ChartUiDefaults.ToggleButtonPadding,
                 VerticalAlignment = VerticalAlignment.Center,
-                ToolTip = ChartUiDefaults.ChartTypeToggleToolTip
+                ToolTip = ChartUiDefaults.WeekdayTrendChartTypeToggleToolTip
         };
         ChartTypeToggleButton.Click += (s, e) => ChartTypeToggleRequested?.Invoke(this, EventArgs.Empty);
         panel.Children.Add(ChartTypeToggleButton);
@@ -108,6 +127,19 @@ public partial class WeekdayTrendChartController : UserControl
         };
 
         checkbox.Click += (s, e) => DayToggled?.Invoke(this, new WeekdayTrendDayToggleEventArgs(day, checkbox.IsChecked == true));
+        panel.Children.Add(checkbox);
+    }
+
+    private void AddAverageCheckBox(Panel panel)
+    {
+        var checkbox = new CheckBox
+        {
+                Content = "Ave",
+                IsChecked = true,
+                Margin = ChartUiDefaults.DayCheckboxMargin
+        };
+
+        checkbox.Click += (s, e) => AverageToggled?.Invoke(this, new WeekdayTrendAverageToggleEventArgs(checkbox.IsChecked == true));
         panel.Children.Add(checkbox);
     }
 

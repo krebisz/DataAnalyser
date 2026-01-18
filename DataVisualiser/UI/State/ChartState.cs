@@ -23,7 +23,7 @@ public class ChartState
     public bool IsDistributionVisible { get; set; }
     public bool IsWeeklyTrendVisible { get; set; }
     public bool IsTransformPanelVisible { get; set; }
-    public bool IsWeekdayTrendPolarMode { get; set; } = false; // Default to Cartesian
+    public WeekdayTrendChartMode WeekdayTrendChartMode { get; set; } = WeekdayTrendChartMode.Cartesian;
     public bool IsDistributionPolarMode { get; set; } = false; // Default to Cartesian
 
     // Weekly Trend (weekday series toggles)
@@ -34,6 +34,8 @@ public class ChartState
     public bool ShowFriday { get; set; } = true;
     public bool ShowSaturday { get; set; } = true;
     public bool ShowSunday { get; set; } = true;
+    public bool ShowAverage { get; set; } = true;
+    public WeekdayTrendAverageWindow WeekdayTrendAverageWindow { get; set; } = WeekdayTrendAverageWindow.RunningMean;
 
 
     // Normalization mode

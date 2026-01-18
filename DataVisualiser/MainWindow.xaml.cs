@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -571,7 +572,7 @@ public partial class MainWindow : Window
             "Distribution" => _viewModel.ChartState.IsDistributionPolarMode
                     ? HasSeries(DistributionChartController.PolarChart.Series)
                     : HasSeries(DistributionChartController.Chart.Series),
-            "WeeklyTrend" => _viewModel.ChartState.IsWeekdayTrendPolarMode
+            "WeeklyTrend" => _viewModel.ChartState.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar
                     ? HasSeries(WeekdayTrendChartController.PolarChart.Series)
                     : HasSeries(WeekdayTrendChartController.Chart.Series),
             _ => false
@@ -1311,7 +1312,7 @@ public partial class MainWindow : Window
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ClearDistributionChart(DistributionChartController.Chart);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
-        // Both Cartesian and Polar versions are handled by RenderWeekdayTrendChart which checks visibility.
+        // Cartesian, Polar, and Scatter modes are handled by RenderWeekdayTrendChart which checks visibility.
     }
 
     private async Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
@@ -2097,6 +2098,20 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnWeekdayTrendAverageToggled(object? sender, WeekdayTrendAverageToggleEventArgs e)
+    {
+        _viewModel.SetWeeklyTrendAverageVisible(e.IsChecked);
+    }
+
+    private void OnWeekdayTrendAverageWindowChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing)
+            return;
+
+        if (WeekdayTrendChartController.AverageWindowCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is WeekdayTrendAverageWindow window)
+            _viewModel.SetWeeklyTrendAverageWindow(window);
+    }
+
     private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
     {
         var panel = GetChartPanel(e.ChartName);
@@ -2205,6 +2220,8 @@ public partial class MainWindow : Window
         WeekdayTrendChartController.ToggleRequested += OnWeekdayTrendToggleRequested;
         WeekdayTrendChartController.ChartTypeToggleRequested += OnWeekdayTrendChartTypeToggleRequested;
         WeekdayTrendChartController.DayToggled += OnWeekdayTrendDayToggled;
+        WeekdayTrendChartController.AverageToggled += OnWeekdayTrendAverageToggled;
+        WeekdayTrendChartController.AverageWindowChanged += OnWeekdayTrendAverageWindowChanged;
         WeekdayTrendChartController.SubtypeChanged += OnWeekdayTrendSubtypeChanged;
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
@@ -2393,12 +2410,23 @@ public partial class MainWindow : Window
     private void InitializeCharts()
     {
         InitializeDistributionControls();
+        InitializeWeekdayTrendControls();
         InitializeChartBehavior();
         ClearChartsOnStartup();
         DisableAxisLabelsWhenNoData();
         SetDefaultChartTitles();
         UpdateDistributionChartTypeVisibility();
         InitializeDistributionPolarTooltip();
+    }
+
+    private void InitializeWeekdayTrendControls()
+    {
+        WeekdayTrendChartController.AverageWindowCombo.Items.Clear();
+        AddWeekdayTrendAverageOption("Running Mean", WeekdayTrendAverageWindow.RunningMean);
+        AddWeekdayTrendAverageOption("Weekly", WeekdayTrendAverageWindow.Weekly);
+        AddWeekdayTrendAverageOption("Monthly", WeekdayTrendAverageWindow.Monthly);
+
+        SelectWeekdayTrendAverageWindow(_viewModel.ChartState.WeekdayTrendAverageWindow);
     }
 
     private void SyncInitialButtonStates()
@@ -2507,6 +2535,27 @@ public partial class MainWindow : Window
         SelectDistributionMode(initialMode);
         ApplyDistributionModeDefinition(initialMode);
         ApplyDistributionSettingsToUi(initialMode);
+    }
+
+    private void AddWeekdayTrendAverageOption(string label, WeekdayTrendAverageWindow window)
+    {
+        WeekdayTrendChartController.AverageWindowCombo.Items.Add(new ComboBoxItem
+        {
+                Content = label,
+                Tag = window
+        });
+    }
+
+    private void SelectWeekdayTrendAverageWindow(WeekdayTrendAverageWindow window)
+    {
+        foreach (var item in WeekdayTrendChartController.AverageWindowCombo.Items.OfType<ComboBoxItem>())
+        {
+            if (item.Tag is WeekdayTrendAverageWindow option && option == window)
+            {
+                WeekdayTrendChartController.AverageWindowCombo.SelectedItem = item;
+                break;
+            }
+        }
     }
 
     private void InitializeChartBehavior()
@@ -2878,17 +2927,18 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (_viewModel.ChartState.IsWeekdayTrendPolarMode)
+        var mode = _viewModel.ChartState.WeekdayTrendChartMode;
+        if (mode == WeekdayTrendChartMode.Polar)
         {
             WeekdayTrendChartController.Chart.Visibility = Visibility.Collapsed;
             WeekdayTrendChartController.PolarChart.Visibility = Visibility.Visible;
-            WeekdayTrendChartController.ChartTypeToggleButton.Content = "Cartesian";
+            WeekdayTrendChartController.ChartTypeToggleButton.Content = "Scatter";
         }
         else
         {
             WeekdayTrendChartController.Chart.Visibility = Visibility.Visible;
             WeekdayTrendChartController.PolarChart.Visibility = Visibility.Collapsed;
-            WeekdayTrendChartController.ChartTypeToggleButton.Content = "Polar";
+            WeekdayTrendChartController.ChartTypeToggleButton.Content = mode == WeekdayTrendChartMode.Scatter ? "Cartesian" : "Polar";
         }
     }
 
@@ -3469,7 +3519,7 @@ public partial class MainWindow : Window
         if (double.IsNaN(value))
             return "n/a";
 
-        var formatted = value.ToString("0.###");
+        var formatted = MathHelper.FormatDisplayedValue(value);
         if (!string.IsNullOrWhiteSpace(unit))
             formatted = $"{formatted} {unit}";
 

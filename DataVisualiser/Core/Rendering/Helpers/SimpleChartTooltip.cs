@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using DataVisualiser.Shared.Helpers;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -17,7 +19,8 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         _root = new StackPanel
         {
             Orientation = Orientation.Vertical,
-            Margin = new Thickness(6)
+            Margin = new Thickness(6),
+            Background = new SolidColorBrush(Color.FromRgb(230, 230, 230))
         };
 
         Content = _root;
@@ -68,7 +71,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         {
             var sharedText = data.XFormatter != null
                     ? data.XFormatter(data.SharedValue.Value)
-                    : data.SharedValue.Value.ToString(CultureInfo.InvariantCulture);
+                    : MathHelper.FormatDisplayedValue(data.SharedValue.Value);
 
             _root.Children.Add(CreateTextBlock(sharedText, FontWeights.Bold));
         }
@@ -83,9 +86,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
                 seriesTitle = "Series";
 
             var yValue = point?.ChartPoint?.Y ?? double.NaN;
-            var formatted = data.YFormatter != null
-                    ? data.YFormatter(yValue)
-                    : double.IsNaN(yValue) ? "N/A" : yValue.ToString(CultureInfo.InvariantCulture);
+            var formatted = double.IsNaN(yValue) ? "N/A" : MathHelper.FormatDisplayedValue(yValue);
 
             _root.Children.Add(CreateTextBlock($"{seriesTitle}: {formatted}", FontWeights.Normal));
         }

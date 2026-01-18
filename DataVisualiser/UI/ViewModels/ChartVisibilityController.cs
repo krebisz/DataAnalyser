@@ -47,7 +47,12 @@ public sealed class ChartVisibilityController
 
     public void ToggleWeekdayTrendChartType()
     {
-        _chartState.IsWeekdayTrendPolarMode = !_chartState.IsWeekdayTrendPolarMode;
+        _chartState.WeekdayTrendChartMode = _chartState.WeekdayTrendChartMode switch
+        {
+            WeekdayTrendChartMode.Cartesian => WeekdayTrendChartMode.Polar,
+            WeekdayTrendChartMode.Polar => WeekdayTrendChartMode.Scatter,
+            _ => WeekdayTrendChartMode.Cartesian
+        };
         _onPropertyChanged(nameof(ChartState));
     }
 

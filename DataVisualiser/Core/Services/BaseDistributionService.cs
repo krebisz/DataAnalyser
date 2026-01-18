@@ -261,7 +261,7 @@ public abstract class BaseDistributionService
                     Step = step
             };
 
-        yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+        yAxis.LabelFormatter = value => MathHelper.FormatDisplayedValue(value);
         yAxis.ShowLabels = true; // Re-enable labels when rendering data
         yAxis.Title = "Value";   // Ensure title is set
     }

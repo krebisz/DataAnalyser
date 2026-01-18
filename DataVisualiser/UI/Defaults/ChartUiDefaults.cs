@@ -28,8 +28,10 @@ public static class ChartUiDefaults
     public const double MainChartMinHeight = 500.0;
 
     public const double SubtypeComboWidth = 160.0;
+    public const double WeekdayTrendAverageComboWidth = 120.0;
     public const string ChartTypeToggleLabel = "Polar";
     public const string ChartTypeToggleToolTip = "Toggle between Cartesian and Polar chart";
+    public const string WeekdayTrendChartTypeToggleToolTip = "Toggle between Cartesian, Polar, and Scatter charts";
 
     public const string OperationToggleContent = "/";
     public const string OperationToggleToolTip = "Toggle between Difference (-) and Ratio (/)";

@@ -105,7 +105,7 @@ public static class ChartHelper
         try
         {
             var raw = series.Values[index];
-            return raw == null ? "N/A" : MathHelper.FormatToThreeSignificantDigits(Convert.ToDouble(raw));
+            return raw == null ? "N/A" : MathHelper.FormatDisplayedValue(Convert.ToDouble(raw));
         }
         catch
         {
@@ -169,7 +169,7 @@ public static class ChartHelper
                 return "N/A";
 
             var val = Convert.ToDouble(raw);
-            return MathHelper.FormatToThreeSignificantDigits(val);
+            return MathHelper.FormatDisplayedValue(val);
         }
         catch
         {
@@ -284,7 +284,7 @@ public static class ChartHelper
             total = GetStackedTotalAtIndex(chart, index);
 
         if (total.HasValue)
-            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(total.Value)}");
+            parts.Add($"Total: {MathHelper.FormatDisplayedValue(total.Value)}");
 
         return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
     }
@@ -320,20 +320,20 @@ public static class ChartHelper
 
             if (rawValue.HasValue)
             {
-                parts.Add($"{series.DisplayName} Raw: {MathHelper.FormatToThreeSignificantDigits(rawValue.Value)}");
+                parts.Add($"{series.DisplayName} Raw: {MathHelper.FormatDisplayedValue(rawValue.Value)}");
                 rawTotals.Add(rawValue.Value);
             }
             else if (smoothValue.HasValue)
             {
-                parts.Add($"{series.DisplayName} smooth: {MathHelper.FormatToThreeSignificantDigits(smoothValue.Value)}");
+                parts.Add($"{series.DisplayName} smooth: {MathHelper.FormatDisplayedValue(smoothValue.Value)}");
                 smoothTotals.Add(smoothValue.Value);
             }
         }
 
         if (rawTotals.Count > 0)
-            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(rawTotals.Sum())}");
+            parts.Add($"Total: {MathHelper.FormatDisplayedValue(rawTotals.Sum())}");
         else if (smoothTotals.Count > 0)
-            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(smoothTotals.Sum())}");
+            parts.Add($"Total: {MathHelper.FormatDisplayedValue(smoothTotals.Sum())}");
 
         return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
     }
@@ -386,11 +386,11 @@ public static class ChartHelper
             total = chosen.Value;
 
             var suffix = entry.Raw.HasValue ? "Raw" : "smooth";
-            parts.Add($"{name} {suffix}: {MathHelper.FormatToThreeSignificantDigits(originalValue)}");
+            parts.Add($"{name} {suffix}: {MathHelper.FormatDisplayedValue(originalValue)}");
         }
 
         if (total.HasValue)
-            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(total.Value)}");
+            parts.Add($"Total: {MathHelper.FormatDisplayedValue(total.Value)}");
 
         return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
     }
@@ -451,11 +451,11 @@ public static class ChartHelper
             total = chosen.Value;
 
             var suffix = entry.Raw.HasValue ? "Raw" : "smooth";
-            parts.Add($"{name} {suffix}: {MathHelper.FormatToThreeSignificantDigits(originalValue)}");
+            parts.Add($"{name} {suffix}: {MathHelper.FormatDisplayedValue(originalValue)}");
         }
 
         if (total.HasValue)
-            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(total.Value)}");
+            parts.Add($"Total: {MathHelper.FormatDisplayedValue(total.Value)}");
 
         text = parts.Count > 0 ? string.Join("; ", parts) : "N/A";
         return parts.Count > 0;
@@ -790,7 +790,7 @@ public static class ChartHelper
     {
         if (chart == null)
             return;
-        if (chart.DataTooltip == null)
+        if (chart.DataTooltip is not SimpleChartTooltip)
             chart.DataTooltip = new SimpleChartTooltip();
     }
 
@@ -1017,7 +1017,7 @@ public static class ChartHelper
                 } :
                 new Separator();
 
-        yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+        yAxis.LabelFormatter = value => MathHelper.FormatDisplayedValue(value);
 
         yAxis.ShowLabels = true;
 
@@ -1048,7 +1048,7 @@ public static class ChartHelper
                 Step = step
         };
 
-        yAxis.LabelFormatter = value => MathHelper.FormatToThreeSignificantDigits(value);
+        yAxis.LabelFormatter = value => MathHelper.FormatDisplayedValue(value);
 
         yAxis.ShowLabels = true;
 
