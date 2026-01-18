@@ -576,6 +576,7 @@ public class ChartUpdateCoordinator
         Debug.WriteLine($"[TransformChart] NormalizeYAxisForChart: chart={targetChart.Name}, syntheticRawData={syntheticRawData.Count}, smoothedList={smoothedList.Count}");
 
         ChartHelper.NormalizeYAxis(yAxis, syntheticRawData, smoothedList);
+        ChartHelper.ApplyTransformChartGradient(targetChart, yAxis);
 
         Debug.WriteLine($"[TransformChart] After NormalizeYAxis: chart={targetChart.Name}, YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}, ShowLabels={yAxis.ShowLabels}");
 

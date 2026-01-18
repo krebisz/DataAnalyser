@@ -1,5 +1,7 @@
+using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
+using LiveCharts;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
@@ -10,6 +12,8 @@ namespace DataVisualiser.UI.Controls;
 /// </summary>
 public partial class MainChartController : UserControl
 {
+    private readonly LegendToggleManager _legendManager;
+
     public MainChartController()
     {
         InitializeComponent();
@@ -25,7 +29,7 @@ public partial class MainChartController : UserControl
         // Create the chart
         Chart = new CartesianChart
         {
-                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                LegendLocation = LegendLocation.None,
                 Zoom = ChartUiDefaults.DefaultZoom,
                 Pan = ChartUiDefaults.DefaultPan,
                 Hoverable = ChartUiDefaults.DefaultHoverable,
@@ -42,8 +46,21 @@ public partial class MainChartController : UserControl
                 ShowLabels = true
         });
 
+        var legendItems = LegendToggleManager.CreateLegendItemsControl(OnLegendItemToggle);
+        var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
+        var chartGrid = new Grid();
+        chartGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        chartGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(Chart, 0);
+        Grid.SetColumn(legendContainer, 1);
+        chartGrid.Children.Add(Chart);
+        chartGrid.Children.Add(legendContainer);
+
+        _legendManager = new LegendToggleManager(Chart);
+        _legendManager.AttachItemsControl(legendItems);
+
         // Set the chart content
-        PanelController.SetChartContent(Chart);
+        PanelController.SetChartContent(chartGrid);
         RootGrid.Children.Remove(BehavioralControlsPanel);
         PanelController.SetBehavioralControls(BehavioralControlsPanel);
 
@@ -75,4 +92,9 @@ public partial class MainChartController : UserControl
     public event EventHandler? ToggleRequested;
 
     public event EventHandler? DisplayModeChanged;
+
+    private void OnLegendItemToggle(object sender, RoutedEventArgs e)
+    {
+        LegendToggleManager.HandleToggle(sender);
+    }
 }

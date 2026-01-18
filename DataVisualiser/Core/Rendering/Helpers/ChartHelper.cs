@@ -1060,6 +1060,57 @@ public static class ChartHelper
         yAxis.Labels = null;
     }
 
+    public static void ApplyTransformChartGradient(CartesianChart chart, Axis yAxis)
+    {
+        if (chart == null || yAxis == null)
+            return;
+
+        if (!string.Equals(chart.Name, "ChartTransformResultControl", StringComparison.Ordinal))
+            return;
+
+        if (double.IsNaN(yAxis.MinValue) || double.IsNaN(yAxis.MaxValue))
+            return;
+
+        var gradient = CreateYAxisGradientBrush(yAxis.MinValue, yAxis.MaxValue);
+        if (gradient == null)
+            return;
+
+        foreach (var series in chart.Series.OfType<LineSeries>())
+        {
+            var (_, _, isSmoothed) = ParseSeriesTitle(series.Title ?? string.Empty);
+            if (isSmoothed)
+                continue;
+
+            series.Stroke = gradient;
+        }
+    }
+
+    // linear gradients are based on SkiaSharp linear gradients
+    // for more info please see:
+    // https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/effects/shaders/linear-gradient
+    private static LinearGradientBrush? CreateYAxisGradientBrush(double minValue, double maxValue)
+    {
+        var range = maxValue - minValue;
+        if (range <= 0 || double.IsNaN(range) || double.IsInfinity(range))
+            return null;
+
+        var midValue = minValue < 0 && maxValue > 0 ? 0 : minValue + (range / 2.0);
+        var midOffset = (midValue - minValue) / range;
+
+        var brush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 1),
+            EndPoint = new Point(0, 0),
+            SpreadMethod = GradientSpreadMethod.Pad
+        };
+
+        brush.GradientStops.Add(new GradientStop(Color.FromRgb(0x2B, 0x6C, 0xB0), 0.0));
+        brush.GradientStops.Add(new GradientStop(Color.FromRgb(0xE9, 0xC4, 0x6A), midOffset));
+        brush.GradientStops.Add(new GradientStop(Color.FromRgb(0xD6, 0x28, 0x28), 1.0));
+
+        return brush;
+    }
+
     /// <summary>
     ///     Adjusts chart control Height based on Y-axis tick count to ensure ticks are spaced 20-40px apart.
     ///     Charts live inside a ScrollViewer; if total chart heights exceed window height a scrollbar will appear.

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
+using LiveCharts;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
@@ -11,6 +12,7 @@ namespace DataVisualiser.UI.Controls;
 public partial class DiffRatioChartController : UserControl
 {
     private readonly CartesianChart _chart;
+    private readonly LegendToggleManager _legendManager;
     private readonly ComboBox _primarySubtypeCombo;
     private readonly ComboBox _secondarySubtypeCombo;
     private readonly StackPanel _secondarySubtypePanel;
@@ -28,7 +30,9 @@ public partial class DiffRatioChartController : UserControl
         var behavioralControls = BuildBehavioralControls(out _primarySubtypeCombo, out _secondarySubtypeCombo, out _secondarySubtypePanel);
         PanelController.SetBehavioralControls(behavioralControls);
 
-        var chartContent = BuildChartContent(out _chart);
+        var chartContent = BuildChartContent(out _chart, out var legendItems);
+        _legendManager = new LegendToggleManager(_chart);
+        _legendManager.AttachItemsControl(legendItems);
         PanelController.SetChartContent(chartContent);
     }
 
@@ -126,11 +130,11 @@ public partial class DiffRatioChartController : UserControl
         return panel;
     }
 
-    private static UIElement BuildChartContent(out CartesianChart chart)
+    private UIElement BuildChartContent(out CartesianChart chart, out ItemsControl legendItems)
     {
         chart = new CartesianChart
         {
-                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                LegendLocation = LegendLocation.None,
                 Zoom = ChartUiDefaults.DefaultZoom,
                 Pan = ChartUiDefaults.DefaultPan,
                 Hoverable = ChartUiDefaults.DefaultHoverable,
@@ -147,6 +151,22 @@ public partial class DiffRatioChartController : UserControl
                 ShowLabels = true
         });
 
-        return chart;
+        legendItems = LegendToggleManager.CreateLegendItemsControl(OnLegendItemToggle);
+        var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
+
+        var chartGrid = new Grid();
+        chartGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        chartGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(chart, 0);
+        Grid.SetColumn(legendContainer, 1);
+        chartGrid.Children.Add(chart);
+        chartGrid.Children.Add(legendContainer);
+
+        return chartGrid;
+    }
+
+    private void OnLegendItemToggle(object sender, RoutedEventArgs e)
+    {
+        LegendToggleManager.HandleToggle(sender);
     }
 }

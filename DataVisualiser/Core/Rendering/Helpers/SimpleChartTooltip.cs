@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using DataVisualiser.Shared.Helpers;
 using LiveCharts;
 using LiveCharts.Wpf;
@@ -88,7 +89,8 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
             var yValue = point?.ChartPoint?.Y ?? double.NaN;
             var formatted = double.IsNaN(yValue) ? "N/A" : MathHelper.FormatDisplayedValue(yValue);
 
-            _root.Children.Add(CreateTextBlock($"{seriesTitle}: {formatted}", FontWeights.Normal));
+            var colorBrush = point?.Series?.Stroke ?? Brushes.Gray;
+            _root.Children.Add(CreateLegendRow(colorBrush, $"{seriesTitle}: {formatted}"));
         }
     }
 
@@ -100,6 +102,36 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
             FontWeight = weight,
             Margin = new Thickness(0, 2, 0, 0)
         };
+    }
+
+    private static UIElement CreateLegendRow(Brush color, string text)
+    {
+        var row = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Margin = new Thickness(0, 2, 0, 0)
+        };
+
+        var key = new Rectangle
+        {
+            Width = 10,
+            Height = 10,
+            Fill = color,
+            Stroke = Brushes.Black,
+            StrokeThickness = 0.5,
+            Margin = new Thickness(0, 2, 6, 0)
+        };
+
+        var textBlock = new TextBlock
+        {
+            Text = text,
+            FontWeight = FontWeights.Normal
+        };
+
+        row.Children.Add(key);
+        row.Children.Add(textBlock);
+
+        return row;
     }
 
     private void NotifyChanged(string propertyName)

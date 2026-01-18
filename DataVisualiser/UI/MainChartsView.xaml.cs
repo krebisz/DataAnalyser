@@ -48,6 +48,8 @@ public partial class MainChartsView : UserControl
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly UiState _uiState = new();
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _weekdayTrendSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    // Placeholder instance since DiffRatioChartController is commented out in XAML.
+    private readonly DiffRatioChartController _diffRatioChartController = new();
     private ChartComputationEngine _chartComputationEngine = null!;
     private ChartRenderEngine _chartRenderEngine = null!;
     private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
@@ -77,6 +79,7 @@ public partial class MainChartsView : UserControl
     private MainWindowViewModel _viewModel = null!;
     private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
     private WeeklyDistributionService _weeklyDistributionService = null!;
+    private DiffRatioChartController DiffRatioChartController => _diffRatioChartController;
 
     public MainChartsView()
     {

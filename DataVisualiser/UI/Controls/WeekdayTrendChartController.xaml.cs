@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using DataVisualiser.UI.Defaults;
 using DataVisualiser.UI.Events;
+using LiveCharts;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
@@ -13,6 +15,8 @@ public partial class WeekdayTrendChartController : UserControl
 {
     private readonly CartesianChart _cartesianChart;
     private readonly CartesianChart _polarChart;
+    private readonly LegendToggleManager _cartesianLegendManager;
+    private readonly LegendToggleManager _polarLegendManager;
 
     public WeekdayTrendChartController()
     {
@@ -24,7 +28,11 @@ public partial class WeekdayTrendChartController : UserControl
         var behavioralControls = BuildBehavioralControls();
         PanelController.SetBehavioralControls(behavioralControls);
 
-        var chartContent = BuildChartContent(out _cartesianChart, out _polarChart);
+        var chartContent = BuildChartContent(out _cartesianChart, out _polarChart, out var cartesianLegendItems, out var polarLegendItems);
+        _cartesianLegendManager = new LegendToggleManager(_cartesianChart);
+        _cartesianLegendManager.AttachItemsControl(cartesianLegendItems);
+        _polarLegendManager = new LegendToggleManager(_polarChart);
+        _polarLegendManager.AttachItemsControl(polarLegendItems);
         PanelController.SetChartContent(chartContent);
     }
 
@@ -143,7 +151,7 @@ public partial class WeekdayTrendChartController : UserControl
         panel.Children.Add(checkbox);
     }
 
-    private static UIElement BuildChartContent(out CartesianChart cartesianChart, out CartesianChart polarChart)
+    private UIElement BuildChartContent(out CartesianChart cartesianChart, out CartesianChart polarChart, out ItemsControl cartesianLegendItems, out ItemsControl polarLegendItems)
     {
         var panel = new StackPanel
         {
@@ -152,7 +160,7 @@ public partial class WeekdayTrendChartController : UserControl
 
         cartesianChart = new CartesianChart
         {
-                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                LegendLocation = LegendLocation.None,
                 Zoom = ChartUiDefaults.DefaultZoom,
                 Pan = ChartUiDefaults.DefaultPan,
                 Hoverable = ChartUiDefaults.DefaultHoverable,
@@ -168,11 +176,21 @@ public partial class WeekdayTrendChartController : UserControl
                 Title = ChartUiDefaults.AxisTitleValue,
                 ShowLabels = true
         });
-        panel.Children.Add(cartesianChart);
+        cartesianLegendItems = LegendToggleManager.CreateLegendItemsControl(OnLegendItemToggle);
+        var cartesianLegendContainer = LegendToggleManager.CreateLegendContainer(cartesianLegendItems);
+        var cartesianGrid = new Grid();
+        cartesianGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        cartesianGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(cartesianChart, 0);
+        Grid.SetColumn(cartesianLegendContainer, 1);
+        cartesianGrid.Children.Add(cartesianChart);
+        cartesianGrid.Children.Add(cartesianLegendContainer);
+        cartesianGrid.SetBinding(UIElement.VisibilityProperty, new Binding(nameof(Visibility)) { Source = cartesianChart });
+        panel.Children.Add(cartesianGrid);
 
         polarChart = new CartesianChart
         {
-                LegendLocation = ChartUiDefaults.DefaultLegendLocation,
+                LegendLocation = LegendLocation.None,
                 Zoom = ChartUiDefaults.DefaultZoom,
                 Pan = ChartUiDefaults.DefaultPan,
                 Hoverable = ChartUiDefaults.DefaultHoverable,
@@ -191,8 +209,23 @@ public partial class WeekdayTrendChartController : UserControl
                 Title = ChartUiDefaults.AxisTitleValue,
                 ShowLabels = true
         });
-        panel.Children.Add(polarChart);
+        polarLegendItems = LegendToggleManager.CreateLegendItemsControl(OnLegendItemToggle);
+        var polarLegendContainer = LegendToggleManager.CreateLegendContainer(polarLegendItems);
+        var polarGrid = new Grid();
+        polarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        polarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(polarChart, 0);
+        Grid.SetColumn(polarLegendContainer, 1);
+        polarGrid.Children.Add(polarChart);
+        polarGrid.Children.Add(polarLegendContainer);
+        polarGrid.SetBinding(UIElement.VisibilityProperty, new Binding(nameof(Visibility)) { Source = polarChart });
+        panel.Children.Add(polarGrid);
 
         return panel;
+    }
+
+    private void OnLegendItemToggle(object sender, RoutedEventArgs e)
+    {
+        LegendToggleManager.HandleToggle(sender);
     }
 }

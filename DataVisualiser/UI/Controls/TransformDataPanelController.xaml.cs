@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
 using LiveCharts.Wpf;
@@ -9,6 +10,9 @@ namespace DataVisualiser.UI.Controls;
 /// </summary>
 public partial class TransformDataPanelController : UserControl
 {
+    private readonly LegendToggleManager _legendManager;
+    private readonly Dictionary<string, bool> _legendVisibility = new(StringComparer.OrdinalIgnoreCase);
+
     public TransformDataPanelController()
     {
         InitializeComponent();
@@ -19,6 +23,9 @@ public partial class TransformDataPanelController : UserControl
         TransformPrimarySubtypeComboControl.SelectionChanged += (s, e) => PrimarySubtypeChanged?.Invoke(this, EventArgs.Empty);
         TransformSecondarySubtypeComboControl.SelectionChanged += (s, e) => SecondarySubtypeChanged?.Invoke(this, EventArgs.Empty);
         TransformComputeButtonControl.Click += (s, e) => ComputeRequested?.Invoke(this, EventArgs.Empty);
+
+        _legendManager = new LegendToggleManager(ChartTransformResultControl, _legendVisibility);
+        _legendManager.AttachItemsControl(TransformLegendItemsControl);
 
         RootGrid.Children.Remove(TransformContentRootPanel);
         PanelController.SetChartContent(TransformContentRootPanel);
@@ -71,4 +78,9 @@ public partial class TransformDataPanelController : UserControl
     public event EventHandler? SecondarySubtypeChanged;
 
     public event EventHandler? ComputeRequested;
+
+    private void OnLegendItemToggle(object sender, RoutedEventArgs e)
+    {
+        LegendToggleManager.HandleToggle(sender);
+    }
 }

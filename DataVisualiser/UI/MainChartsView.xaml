@@ -140,7 +140,7 @@
                 <controls:NormalizedChartController x:Name="NormalizedChartController" />
 
                 <!-- ========== CHART DIFFERENCE / RATIO (UNIFIED) ========== -->
-                <controls:DiffRatioChartController x:Name="DiffRatioChartController" />
+                <!-- <controls:DiffRatioChartController x:Name="DiffRatioChartController" /> -->
 
                 <!-- ========== CHART WEEKDAY TREND ========== -->
                 <controls:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />
