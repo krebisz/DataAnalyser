@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -87,23 +88,16 @@ public static class ChartHelper
 
         var parts = new List<string>();
 
-        foreach (var series in chart.Series)
+        foreach (var series in chart.Series.OfType<Series>())
         {
-            if (series is not LineSeries lineSeries)
-            {
-                parts.Add($"{series.Title ?? "Series"}: N/A");
-                continue;
-            }
-
-            var title = string.IsNullOrWhiteSpace(lineSeries.Title) ? "Series" : lineSeries.Title;
-
-            parts.Add($"{title}: {GetFormattedValue(lineSeries, index)}");
+            var title = string.IsNullOrWhiteSpace(series.Title) ? "Series" : series.Title;
+            parts.Add($"{title}: {GetFormattedValue(series, index)}");
         }
 
         return string.Join(" | ", parts);
     }
 
-    private static string GetFormattedValue(LineSeries series, int index)
+    private static string GetFormattedValue(Series series, int index)
     {
         if (series.Values == null || index < 0 || index >= series.Values.Count)
             return "N/A";
@@ -142,21 +136,20 @@ public static class ChartHelper
         string? primary = null;
         string? secondary = null;
 
-        foreach (var s in chart.Series)
-            if (s is LineSeries lineSeries)
-            {
-                var title = string.IsNullOrEmpty(lineSeries.Title) ? "Series" : lineSeries.Title;
-                var (baseName, _, _) = ParseSeriesTitle(title);
+        foreach (var s in chart.Series.OfType<Series>())
+        {
+            var title = string.IsNullOrEmpty(s.Title) ? "Series" : s.Title;
+            var (baseName, _, _) = ParseSeriesTitle(title);
 
-                if (!seenBaseNames.Contains(baseName))
-                {
-                    seenBaseNames.Add(baseName);
-                    if (primary == null)
-                        primary = baseName;
-                    else if (secondary == null && baseName != primary)
-                        secondary = baseName;
-                }
+            if (!seenBaseNames.Contains(baseName))
+            {
+                seenBaseNames.Add(baseName);
+                if (primary == null)
+                    primary = baseName;
+                else if (secondary == null && baseName != primary)
+                    secondary = baseName;
             }
+        }
 
         return (primary, secondary);
     }
@@ -164,14 +157,14 @@ public static class ChartHelper
     /// <summary>
     ///     Extracts a formatted value from a line series at the specified index.
     /// </summary>
-    private static string ExtractFormattedValue(LineSeries lineSeries, int index)
+    private static string ExtractFormattedValue(Series series, int index)
     {
-        if (lineSeries.Values == null || index < 0 || index >= lineSeries.Values.Count)
+        if (series.Values == null || index < 0 || index >= series.Values.Count)
             return "N/A";
 
         try
         {
-            var raw = lineSeries.Values[index];
+            var raw = series.Values[index];
             if (raw == null)
                 return "N/A";
 
@@ -193,19 +186,38 @@ public static class ChartHelper
         if (chart?.Series == null || chart.Series.Count == 0)
             return "N/A";
 
+        if (chart.Tag is ChartStackingTooltipState state && state.IncludeTotal)
+        {
+            if (state.IsCumulative)
+            {
+                if (state.OriginalSeries != null && state.OriginalSeries.Count > 0)
+                    return BuildCumulativeOriginalTooltip(state.OriginalSeries, index);
+
+                return BuildCumulativeTooltipFromSeries(chart, index);
+            }
+
+            return BuildStackedValuesFormattedString(chart, index);
+        }
+
+        if (chart.Series.OfType<StackedAreaSeries>().Any())
+            return BuildStackedValuesFormattedString(chart, index);
+
+        if (TryBuildCumulativeTooltipFallback(chart, index, out var fallback))
+            return fallback;
+
         var (primary, secondary) = IdentifySeriesNames(chart);
         var values = new Dictionary<string, string>();
 
-        foreach (var series in chart.Series.OfType<LineSeries>())
+        foreach (var series in chart.Series.OfType<Series>())
         {
             var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(series.Title ?? "Series");
 
-            var formatted = ExtractFormattedValue(series, index);
+            var formattedValue = ExtractFormattedValue(series, index);
 
             var key = baseName == primary ? isSmoothed ? "PrimarySmoothed" : "PrimaryRaw" : baseName == secondary ? isSmoothed ? "SecondarySmoothed" : "SecondaryRaw" : null;
 
             if (key != null)
-                values[key] = formatted;
+                values[key] = formattedValue;
         }
 
         return BuildFormattedString(primary, secondary, values);
@@ -232,6 +244,330 @@ public static class ChartHelper
             parts.Add($"{secondaryName} Raw: {sr}");
 
         return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
+    }
+
+    private static string BuildStackedValuesFormattedString(CartesianChart chart, int index)
+    {
+        var parts = new List<string>();
+        var totalsBySeries = new Dictionary<string, (double? Smoothed, double? Raw)>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            var title = series.Title ?? "Series";
+            var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(title);
+            var valueText = ExtractFormattedValue(series, index);
+
+            if (valueText == "N/A")
+                continue;
+
+            var suffix = isSmoothed ? "smooth" : isRaw ? "Raw" : "value";
+            parts.Add($"{baseName} {suffix}: {valueText}");
+
+            if (!TryExtractNumericValue(series, index, out var numericValue))
+                continue;
+
+            if (!totalsBySeries.TryGetValue(baseName, out var entry))
+                entry = (null, null);
+
+            if (isSmoothed)
+                entry.Smoothed = numericValue;
+            else if (isRaw)
+                entry.Raw = numericValue;
+            else
+                entry.Smoothed = numericValue;
+
+            totalsBySeries[baseName] = entry;
+        }
+
+        var total = GetStackedTotalFromSeries(totalsBySeries);
+        if (!total.HasValue)
+            total = GetStackedTotalAtIndex(chart, index);
+
+        if (total.HasValue)
+            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(total.Value)}");
+
+        return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
+    }
+
+    private static double? GetStackedTotalFromSeries(Dictionary<string, (double? Smoothed, double? Raw)> totalsBySeries)
+    {
+        double total = 0;
+        var found = false;
+
+        foreach (var entry in totalsBySeries.Values)
+        {
+            var value = entry.Smoothed ?? entry.Raw;
+            if (!value.HasValue || double.IsNaN(value.Value) || double.IsInfinity(value.Value))
+                continue;
+
+            total += value.Value;
+            found = true;
+        }
+
+        return found ? total : null;
+    }
+
+    private static string BuildCumulativeOriginalTooltip(IReadOnlyList<SeriesResult> originalSeries, int index)
+    {
+        var parts = new List<string>();
+        var rawTotals = new List<double>();
+        var smoothTotals = new List<double>();
+
+        foreach (var series in originalSeries)
+        {
+            var rawValue = TryGetValue(series.RawValues, index, out var raw) ? raw : (double?)null;
+            var smoothValue = series.Smoothed != null && TryGetValue(series.Smoothed, index, out var smooth) ? smooth : (double?)null;
+
+            if (rawValue.HasValue)
+            {
+                parts.Add($"{series.DisplayName} Raw: {MathHelper.FormatToThreeSignificantDigits(rawValue.Value)}");
+                rawTotals.Add(rawValue.Value);
+            }
+            else if (smoothValue.HasValue)
+            {
+                parts.Add($"{series.DisplayName} smooth: {MathHelper.FormatToThreeSignificantDigits(smoothValue.Value)}");
+                smoothTotals.Add(smoothValue.Value);
+            }
+        }
+
+        if (rawTotals.Count > 0)
+            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(rawTotals.Sum())}");
+        else if (smoothTotals.Count > 0)
+            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(smoothTotals.Sum())}");
+
+        return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
+    }
+
+    private static string BuildCumulativeTooltipFromSeries(CartesianChart chart, int index)
+    {
+        var orderedNames = new List<string>();
+        var valuesByName = new Dictionary<string, (double? Raw, double? Smooth)>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(series.Title ?? "Series");
+            if (string.IsNullOrWhiteSpace(baseName))
+                continue;
+
+            if (!orderedNames.Contains(baseName))
+                orderedNames.Add(baseName);
+
+            if (!TryExtractNumericValue(series, index, out var value))
+                continue;
+
+            if (!valuesByName.TryGetValue(baseName, out var entry))
+                entry = (null, null);
+
+            if (isRaw)
+                entry.Raw = value;
+            else if (isSmoothed)
+                entry.Smooth = value;
+            else
+                entry.Smooth = value;
+
+            valuesByName[baseName] = entry;
+        }
+
+        var parts = new List<string>();
+        double? previousCumulative = null;
+        double? total = null;
+
+        foreach (var name in orderedNames)
+        {
+            if (!valuesByName.TryGetValue(name, out var entry))
+                continue;
+
+            var chosen = entry.Raw ?? entry.Smooth;
+            if (!chosen.HasValue || double.IsNaN(chosen.Value) || double.IsInfinity(chosen.Value))
+                continue;
+
+            var originalValue = previousCumulative.HasValue ? chosen.Value - previousCumulative.Value : chosen.Value;
+            previousCumulative = chosen.Value;
+            total = chosen.Value;
+
+            var suffix = entry.Raw.HasValue ? "Raw" : "smooth";
+            parts.Add($"{name} {suffix}: {MathHelper.FormatToThreeSignificantDigits(originalValue)}");
+        }
+
+        if (total.HasValue)
+            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(total.Value)}");
+
+        return parts.Count > 0 ? string.Join("; ", parts) : "N/A";
+    }
+
+    private static bool TryBuildCumulativeTooltipFallback(CartesianChart chart, int index, out string text)
+    {
+        text = string.Empty;
+
+        var orderedNames = new List<string>();
+        var valuesByName = new Dictionary<string, (double? Raw, double? Smooth)>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(series.Title ?? "Series");
+            if (string.IsNullOrWhiteSpace(baseName))
+                continue;
+
+            if (!orderedNames.Contains(baseName))
+                orderedNames.Add(baseName);
+
+            if (!TryExtractNumericValue(series, index, out var value))
+                continue;
+
+            if (!valuesByName.TryGetValue(baseName, out var entry))
+                entry = (null, null);
+
+            if (isRaw)
+                entry.Raw = value;
+            else if (isSmoothed)
+                entry.Smooth = value;
+            else
+                entry.Smooth = value;
+
+            valuesByName[baseName] = entry;
+        }
+
+        if (orderedNames.Count < 2)
+            return false;
+
+        var parts = new List<string>();
+        double? previousCumulative = null;
+        double? total = null;
+
+        foreach (var name in orderedNames)
+        {
+            if (!valuesByName.TryGetValue(name, out var entry))
+                return false;
+
+            var chosen = entry.Raw ?? entry.Smooth;
+            if (!chosen.HasValue || double.IsNaN(chosen.Value) || double.IsInfinity(chosen.Value))
+                return false;
+
+            if (previousCumulative.HasValue && chosen.Value < previousCumulative.Value - 1e-6)
+                return false;
+
+            var originalValue = previousCumulative.HasValue ? chosen.Value - previousCumulative.Value : chosen.Value;
+            previousCumulative = chosen.Value;
+            total = chosen.Value;
+
+            var suffix = entry.Raw.HasValue ? "Raw" : "smooth";
+            parts.Add($"{name} {suffix}: {MathHelper.FormatToThreeSignificantDigits(originalValue)}");
+        }
+
+        if (total.HasValue)
+            parts.Add($"Total: {MathHelper.FormatToThreeSignificantDigits(total.Value)}");
+
+        text = parts.Count > 0 ? string.Join("; ", parts) : "N/A";
+        return parts.Count > 0;
+    }
+
+    private static bool TryGetValue(IList<double> values, int index, out double value)
+    {
+        value = double.NaN;
+        if (values == null || index < 0 || index >= values.Count)
+            return false;
+
+        value = values[index];
+        if (double.IsNaN(value) || double.IsInfinity(value))
+            return false;
+
+        return true;
+    }
+
+    private static bool ShouldIncludeStackTotal(CartesianChart chart)
+    {
+        return chart.Tag is ChartStackingTooltipState state && state.IncludeTotal;
+    }
+
+    private static bool IsCumulativeStack(CartesianChart chart)
+    {
+        return chart.Tag is ChartStackingTooltipState state && state.IsCumulative;
+    }
+
+    private static double? GetStackedTotalAtIndex(CartesianChart chart, int index)
+    {
+        if (IsCumulativeStack(chart))
+            return GetCumulativeTotalAtIndex(chart, index);
+
+        var totalsBySeries = new Dictionary<string, (double? Smoothed, double? Raw)>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            var title = series.Title ?? "Series";
+            var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(title);
+            if (string.IsNullOrWhiteSpace(baseName))
+                continue;
+
+            if (!TryExtractNumericValue(series, index, out var value))
+                continue;
+
+            if (!totalsBySeries.TryGetValue(baseName, out var entry))
+                entry = (null, null);
+
+            if (isSmoothed)
+                entry.Smoothed = value;
+            else if (isRaw)
+                entry.Raw = value;
+            else
+                entry.Smoothed = value;
+
+            totalsBySeries[baseName] = entry;
+        }
+
+        double total = 0;
+        var found = false;
+
+        foreach (var entry in totalsBySeries.Values)
+        {
+            var value = entry.Smoothed ?? entry.Raw;
+            if (!value.HasValue || double.IsNaN(value.Value) || double.IsInfinity(value.Value))
+                continue;
+
+            total += value.Value;
+            found = true;
+        }
+
+        return found ? total : null;
+    }
+
+    private static double? GetCumulativeTotalAtIndex(CartesianChart chart, int index)
+    {
+        double? total = null;
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            if (!TryExtractNumericValue(series, index, out var value))
+                continue;
+
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                continue;
+
+            total = total.HasValue ? Math.Max(total.Value, value) : value;
+        }
+
+        return total;
+    }
+
+    private static bool TryExtractNumericValue(Series series, int index, out double value)
+    {
+        value = double.NaN;
+
+        if (series.Values == null || index < 0 || index >= series.Values.Count)
+            return false;
+
+        try
+        {
+            var raw = series.Values[index];
+            if (raw == null)
+                return false;
+
+            value = Convert.ToDouble(raw);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -455,7 +791,7 @@ public static class ChartHelper
         if (chart == null)
             return;
         if (chart.DataTooltip == null)
-            chart.DataTooltip = new DefaultTooltip();
+            chart.DataTooltip = new SimpleChartTooltip();
     }
 
     /// <summary>
@@ -772,4 +1108,18 @@ public static class ChartHelper
 
         chart.Height = calculatedHeight;
     }
+}
+
+public sealed class ChartStackingTooltipState
+{
+    public ChartStackingTooltipState(bool includeTotal, bool isCumulative, IReadOnlyList<SeriesResult>? originalSeries = null)
+    {
+        IncludeTotal = includeTotal;
+        IsCumulative = isCumulative;
+        OriginalSeries = originalSeries;
+    }
+
+    public bool IncludeTotal { get; }
+    public bool IsCumulative { get; }
+    public IReadOnlyList<SeriesResult>? OriginalSeries { get; }
 }

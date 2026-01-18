@@ -8,7 +8,7 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 /// </summary>
 public class HourlyDistributionTooltip : BucketDistributionTooltip
 {
-    public HourlyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData) : base(chart, bucketIntervalData)
+    public HourlyDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData, Dictionary<int, double>? bucketAverages = null) : base(chart, bucketIntervalData, bucketAverages)
     {
     }
 

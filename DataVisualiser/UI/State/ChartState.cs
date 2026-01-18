@@ -16,6 +16,7 @@ public class ChartState
 
     // Track which charts are visible
     public bool IsMainVisible { get; set; } = true; // Default to visible (Show on startup)
+    public MainChartDisplayMode MainChartDisplayMode { get; set; } = MainChartDisplayMode.Regular;
     public bool IsNormalizedVisible { get; set; }
     public bool IsDiffRatioVisible { get; set; }                // Unified Diff/Ratio chart
     public bool IsDiffRatioDifferenceMode { get; set; } = true; // true = Difference (-), false = Ratio (/)

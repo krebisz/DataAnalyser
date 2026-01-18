@@ -157,6 +157,20 @@ public partial class MainWindow : Window
 
     #endregion
 
+    private void OnMainChartDisplayModeChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing)
+            return;
+
+        var mode = MainChartController.DisplayStackedRadio.IsChecked == true
+                ? MainChartDisplayMode.Stacked
+                : MainChartController.DisplaySummedRadio.IsChecked == true
+                        ? MainChartDisplayMode.Summed
+                        : MainChartDisplayMode.Regular;
+
+        _viewModel.SetMainChartDisplayMode(mode);
+    }
+
     private void UpdateSelectedSubtypesInViewModel()
     {
         var distinctSeries = GetDistinctSelectedSeries();
@@ -180,8 +194,8 @@ public partial class MainWindow : Window
     {
         return new ComboBoxItem
         {
-                Content = selection.DisplayName,
-                Tag = selection
+            Content = selection.DisplayName,
+            Tag = selection
         };
     }
 
@@ -277,11 +291,18 @@ public partial class MainWindow : Window
     {
         _isMetricTypeChangePending = false;
         TablesCombo.Items.Clear();
+
         var addedAllMetricType = !e.MetricTypes.Any(type => string.Equals(type.Value, "(All)", StringComparison.OrdinalIgnoreCase));
+
         if (addedAllMetricType)
+        {
             TablesCombo.Items.Add(new MetricNameOption("(All)", "(All)"));
+        }
+
         foreach (var type in e.MetricTypes)
+        {
             TablesCombo.Items.Add(type);
+        }
 
         if (TablesCombo.Items.Count > 0)
         {
@@ -309,11 +330,17 @@ public partial class MainWindow : Window
         if (_isMetricTypeChangePending)
         {
             if (_selectorManager.HasDynamicCombos)
+            {
                 _selectorManager.UpdateLastDynamicComboItems(subtypeListLocal, selectedMetricType);
+            }
             else
+            {
                 RefreshPrimarySubtypeCombo(subtypeListLocal, true, selectedMetricType);
+            }
+
             _isMetricTypeChangePending = false;
             UpdateSelectedSubtypesInViewModel();
+
             return;
         }
 
@@ -336,8 +363,11 @@ public partial class MainWindow : Window
 
         SubtypeCombo.Items.Clear();
         SubtypeCombo.Items.Add(new MetricNameOption("(All)", "(All)"));
+
         foreach (var st in subtypes)
+        {
             SubtypeCombo.Items.Add(st);
+        }
 
         SubtypeCombo.IsEnabled = subtypes.Any();
         _selectorManager.SetPrimaryMetricType(selectedMetricType);
@@ -360,11 +390,15 @@ public partial class MainWindow : Window
     private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
     {
         var ctx = e.DataContext ?? _viewModel.ChartState.LastContext;
+
         if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
+        {
             return;
+        }
 
         // Optional debug popup (existing behavior)
         var showDebugPopup = ConfigurationManager.AppSettings["DataVisualiser:ShowDebugPopup"];
+
         if (bool.TryParse(showDebugPopup, out var showDebug) && showDebug)
         {
             var data1 = ctx.Data1.ToList();
@@ -553,8 +587,11 @@ public partial class MainWindow : Window
         }
 
         var ctx = _viewModel.ChartState.LastContext;
+
         if (ctx != null && ShouldRenderCharts(ctx))
+        {
             await RenderSingleChart(e.ToggledChartName, ctx);
+        }
     }
 
 
@@ -582,7 +619,11 @@ public partial class MainWindow : Window
         if (ctx == null || _chartRenderingOrchestrator == null)
             return;
 
-        await _chartRenderingOrchestrator.RenderPrimaryChartAsync(ctx, MainChartController.Chart, data1, data2, displayName1, displayName2, from, to, metricType, _viewModel.MetricState.SelectedSeries, _viewModel.MetricState.ResolutionTableName);
+        var mode = _viewModel.ChartState.MainChartDisplayMode;
+        var isStacked = mode == MainChartDisplayMode.Stacked;
+        var isCumulative = mode == MainChartDisplayMode.Summed;
+
+        await _chartRenderingOrchestrator.RenderPrimaryChartAsync(ctx, MainChartController.Chart, data1, data2, displayName1, displayName2, from, to, metricType, _viewModel.MetricState.SelectedSeries, _viewModel.MetricState.ResolutionTableName, isStacked: isStacked, isCumulative: isCumulative);
     }
 
 
@@ -590,7 +631,7 @@ public partial class MainWindow : Window
     ///     Selects the appropriate computation strategy based on the number of series.
     ///     Returns the strategy and secondary label (if applicable).
     /// </summary>
-    private(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
+    private (IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
     {
         string? secondaryLabel = null;
         IChartComputationStrategy strategy;
@@ -718,8 +759,8 @@ public partial class MainWindow : Window
                        .OrderBy(d => d.NormalizedTimestamp)
                        .Select(d => new
                        {
-                               Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                               Value = d.Value!.Value.ToString("F4")
+                           Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                           Value = d.Value!.Value.ToString("F4")
                        })
                        .ToList();
 
@@ -1278,15 +1319,15 @@ public partial class MainWindow : Window
         {
             var distributionContext = new ChartDataContext
             {
-                    Data1 = data,
-                    DisplayName1 = displayName,
-                    MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-                    PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-                    PrimarySubtype = selectedSeries?.Subtype,
-                    DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                    DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                    From = ctx.From,
-                    To = ctx.To
+                Data1 = data,
+                DisplayName1 = displayName,
+                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+                PrimarySubtype = selectedSeries?.Subtype,
+                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                From = ctx.From,
+                To = ctx.To
             };
             await _chartRenderingOrchestrator.RenderDistributionChartAsync(distributionContext, chart, _viewModel.ChartState, mode);
             return;
@@ -1310,15 +1351,15 @@ public partial class MainWindow : Window
         var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSeries);
         var trendContext = new ChartDataContext
         {
-                Data1 = data,
-                DisplayName1 = displayName,
-                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-                PrimarySubtype = selectedSeries?.Subtype,
-                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                From = ctx.From,
-                To = ctx.To
+            Data1 = data,
+            DisplayName1 = displayName,
+            MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
+            PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+            PrimarySubtype = selectedSeries?.Subtype,
+            DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+            DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+            From = ctx.From,
+            To = ctx.To
         };
 
         var result = ComputeWeekdayTrend(trendContext);
@@ -1419,6 +1460,7 @@ public partial class MainWindow : Window
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
         var cacheKey = BuildWeekdayTrendCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
+
         if (_weekdayTrendSubtypeCache.TryGetValue(cacheKey, out var cached))
             return cached;
 
@@ -1475,21 +1517,21 @@ public partial class MainWindow : Window
 
         var normalizedContext = new ChartDataContext
         {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                DisplayName1 = displayName1,
-                DisplayName2 = displayName2,
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                From = ctx.From,
-                To = ctx.To
+            Data1 = primaryData,
+            Data2 = secondaryData,
+            DisplayName1 = displayName1,
+            DisplayName2 = displayName2,
+            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+            PrimarySubtype = primarySelection?.Subtype,
+            SecondarySubtype = secondarySelection?.Subtype,
+            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+            From = ctx.From,
+            To = ctx.To
         };
 
         return (primaryData, secondaryData, normalizedContext);
@@ -1596,21 +1638,21 @@ public partial class MainWindow : Window
 
         var diffRatioContext = new ChartDataContext
         {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                DisplayName1 = displayName1,
-                DisplayName2 = displayName2,
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                From = ctx.From,
-                To = ctx.To
+            Data1 = primaryData,
+            Data2 = secondaryData,
+            DisplayName1 = displayName1,
+            DisplayName2 = displayName2,
+            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+            PrimarySubtype = primarySelection?.Subtype,
+            SecondarySubtype = secondarySelection?.Subtype,
+            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+            From = ctx.From,
+            To = ctx.To
         };
 
         return (primaryData, secondaryData, diffRatioContext);
@@ -1717,21 +1759,21 @@ public partial class MainWindow : Window
 
         var transformContext = new ChartDataContext
         {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                DisplayName1 = displayName1,
-                DisplayName2 = displayName2,
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                From = ctx.From,
-                To = ctx.To
+            Data1 = primaryData,
+            Data2 = secondaryData,
+            DisplayName1 = displayName1,
+            DisplayName2 = displayName2,
+            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+            PrimarySubtype = primarySelection?.Subtype,
+            SecondarySubtype = secondarySelection?.Subtype,
+            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+            From = ctx.From,
+            To = ctx.To
         };
 
         return (primaryData, secondaryData, transformContext);
@@ -1826,9 +1868,9 @@ public partial class MainWindow : Window
     {
         return mode switch
         {
-                DistributionMode.Weekly => _weeklyDistributionService,
-                DistributionMode.Hourly => _hourlyDistributionService,
-                _ => _weeklyDistributionService
+            DistributionMode.Weekly => _weeklyDistributionService,
+            DistributionMode.Hourly => _hourlyDistributionService,
+            _ => _weeklyDistributionService
         };
     }
 
@@ -1889,11 +1931,11 @@ public partial class MainWindow : Window
     {
         return chartName switch
         {
-                "Norm" => NormalizedChartController.Panel.ChartContentPanel,
-                "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
-                "Distribution" => DistributionChartController.Panel.ChartContentPanel,
-                "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
-                _ => null
+            "Norm" => NormalizedChartController.Panel.ChartContentPanel,
+            "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
+            "Distribution" => DistributionChartController.Panel.ChartContentPanel,
+            "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
+            _ => null
         };
     }
 
@@ -1905,10 +1947,10 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = data,
-                Label1 = label,
-                From = from,
-                To = to
+            LegacyData1 = data,
+            Label1 = label,
+            From = from,
+            To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
@@ -1922,11 +1964,11 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacySeries = series,
-                Labels = labels,
-                From = from,
-                To = to,
-                Unit = unit
+            LegacySeries = series,
+            Labels = labels,
+            From = from,
+            To = to,
+            Unit = unit
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
@@ -1940,12 +1982,12 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = data1,
-                LegacyData2 = data2,
-                Label1 = label1,
-                Label2 = label2,
-                From = from,
-                To = to
+            LegacyData1 = data1,
+            LegacyData2 = data2,
+            Label1 = label1,
+            Label2 = label2,
+            From = from,
+            To = to
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
@@ -1959,13 +2001,13 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = data1,
-                LegacyData2 = data2,
-                Label1 = label1,
-                Label2 = label2,
-                From = from,
-                To = to,
-                NormalizationMode = normalizationMode
+            LegacyData1 = data1,
+            LegacyData2 = data2,
+            Label1 = label1,
+            Label2 = label2,
+            From = from,
+            To = to,
+            NormalizationMode = normalizationMode
         };
 
         return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
@@ -1978,10 +2020,10 @@ public partial class MainWindow : Window
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
-                Label1 = ctx.DisplayName1,
-                From = ctx.From,
-                To = ctx.To
+            LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
+            Label1 = ctx.DisplayName1,
+            From = ctx.From,
+            To = ctx.To
         };
 
         var strategy = _strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
@@ -2123,6 +2165,7 @@ public partial class MainWindow : Window
 
         // Wire up MainChartController events
         MainChartController.ToggleRequested += OnMainChartToggleRequested;
+        MainChartController.DisplayModeChanged += OnMainChartDisplayModeChanged;
         WeekdayTrendChartController.ToggleRequested += OnWeekdayTrendToggleRequested;
         WeekdayTrendChartController.ChartTypeToggleRequested += OnWeekdayTrendChartTypeToggleRequested;
         WeekdayTrendChartController.DayToggled += OnWeekdayTrendDayToggled;
@@ -2377,6 +2420,10 @@ public partial class MainWindow : Window
         _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
         _viewModel.ChartState.LastContext = new ChartDataContext();
 
+        MainChartController.DisplayRegularRadio.IsChecked = _viewModel.ChartState.MainChartDisplayMode == MainChartDisplayMode.Regular;
+        MainChartController.DisplaySummedRadio.IsChecked = _viewModel.ChartState.MainChartDisplayMode == MainChartDisplayMode.Summed;
+        MainChartController.DisplayStackedRadio.IsChecked = _viewModel.ChartState.MainChartDisplayMode == MainChartDisplayMode.Stacked;
+
         // Initialize weekday trend chart type visibility
         UpdateWeekdayTrendChartTypeVisibility();
     }
@@ -2408,16 +2455,16 @@ public partial class MainWindow : Window
         foreach (var definition in DistributionModeCatalog.All)
             DistributionChartController.ModeCombo.Items.Add(new ComboBoxItem
             {
-                    Content = definition.DisplayName,
-                    Tag = definition.Mode
+                Content = definition.DisplayName,
+                Tag = definition.Mode
             });
 
         DistributionChartController.IntervalCountCombo.Items.Clear();
         foreach (var intervalCount in DistributionModeCatalog.IntervalCounts)
             DistributionChartController.IntervalCountCombo.Items.Add(new ComboBoxItem
             {
-                    Content = intervalCount.ToString(),
-                    Tag = intervalCount
+                Content = intervalCount.ToString(),
+                Tag = intervalCount
             });
 
         var initialMode = _viewModel.ChartState.SelectedDistributionMode;
@@ -2438,8 +2485,8 @@ public partial class MainWindow : Window
     {
         _distributionPolarTooltip = new ToolTip
         {
-                Placement = PlacementMode.Mouse,
-                StaysOpen = true
+            Placement = PlacementMode.Mouse,
+            StaysOpen = true
         };
         ToolTipService.SetToolTip(DistributionChartController.PolarChart, _distributionPolarTooltip);
         DistributionChartController.PolarChart.HoveredPointsChanged += OnDistributionPolarHoveredPointsChanged;
@@ -2995,9 +3042,9 @@ public partial class MainWindow : Window
             Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                    "Log" => UnaryOperators.Logarithm,
-                    "Sqrt" => UnaryOperators.SquareRoot,
-                    _ => x => x
+                "Log" => UnaryOperators.Logarithm,
+                "Sqrt" => UnaryOperators.SquareRoot,
+                _ => x => x
             };
             var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
             computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
@@ -3250,7 +3297,7 @@ public partial class MainWindow : Window
         return data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
     }
 
-    private static( List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
+    private static (List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
     {
         var metricsList = new List<IReadOnlyList<MetricData>>
         {
@@ -3266,10 +3313,10 @@ public partial class MainWindow : Window
 
             var op = operation switch
             {
-                    "Add" => BinaryOperators.Sum,
-                    "Subtract" => BinaryOperators.Difference,
-                    "Divide" => BinaryOperators.Ratio,
-                    _ => (a, b) => a
+                "Add" => BinaryOperators.Sum,
+                "Subtract" => BinaryOperators.Difference,
+                "Divide" => BinaryOperators.Ratio,
+                _ => (a, b) => a
             };
 
             var values1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();

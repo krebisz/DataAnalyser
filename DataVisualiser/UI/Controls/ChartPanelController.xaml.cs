@@ -81,6 +81,8 @@ public partial class ChartPanelController : UserControl
     public void SetHeaderControls(UIElement? controls)
     {
         HeaderControlsPresenter.Content = controls;
+        var hasHeaderControls = controls != null;
+        HeaderControlsPresenter.Visibility = IsChartVisible && hasHeaderControls ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>
@@ -90,7 +92,7 @@ public partial class ChartPanelController : UserControl
     {
         BehavioralControlsPresenter.Content = controls;
         HasBehavioralControls = controls != null;
-        BehavioralControlsPresenter.Visibility = controls != null ? Visibility.Visible : Visibility.Collapsed;
+        BehavioralControlsPresenter.Visibility = IsChartVisible && controls != null ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>
@@ -135,6 +137,10 @@ public partial class ChartPanelController : UserControl
             var isVisible = (bool)e.NewValue;
             controller.ContentPanel.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
             controller.ToggleButton.Content = isVisible ? UiDefaults.ToggleHideLabel : UiDefaults.ToggleShowLabel;
+            var hasBehavioralControls = controller.HasBehavioralControls && controller.BehavioralControlsPresenter.Content != null;
+            controller.BehavioralControlsPresenter.Visibility = isVisible && hasBehavioralControls ? Visibility.Visible : Visibility.Collapsed;
+            var hasHeaderControls = controller.HeaderControlsPresenter.Content != null;
+            controller.HeaderControlsPresenter.Visibility = isVisible && hasHeaderControls ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

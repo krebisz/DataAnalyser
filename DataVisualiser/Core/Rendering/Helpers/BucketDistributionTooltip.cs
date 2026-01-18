@@ -15,6 +15,7 @@ public abstract class BucketDistributionTooltip : IDisposable
 {
     private const int HoverCheckIntervalMs = RenderingDefaults.TooltipHoverCheckIntervalMs; // Check every 100ms
     private const int HoverTimeoutMs = RenderingDefaults.TooltipHoverTimeoutMs;             // Hide if no valid hover for 300ms AND mouse moved away
+    private readonly Dictionary<int, double> _bucketAverages;
     private readonly Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> _bucketIntervalData;
     private readonly CartesianChart _chart;
 
@@ -23,10 +24,11 @@ public abstract class BucketDistributionTooltip : IDisposable
     private int _lastValidBucketIndex = -1; // Track which bucket we last hovered over
     private DateTime _lastValidHoverTime;
 
-    public BucketDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData)
+    public BucketDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData, Dictionary<int, double>? bucketAverages = null)
     {
         _chart = chart ?? throw new ArgumentNullException(nameof(chart));
         _bucketIntervalData = bucketIntervalData ?? new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
+        _bucketAverages = bucketAverages ?? new Dictionary<int, double>();
 
         // Find parent window for popup
         Window? parentWindow = null;
@@ -230,6 +232,9 @@ public abstract class BucketDistributionTooltip : IDisposable
 
         stackPanel.Children.Add(CreateBucketHeader(bucketIndex));
         stackPanel.Children.Add(CreateTotalHeader(intervals));
+        var averageRow = CreateAverageHeader(bucketIndex);
+        if (averageRow != null)
+            stackPanel.Children.Add(averageRow);
         stackPanel.Children.Add(CreateSeparator());
 
         var intervalPanel = CreateIntervalsPanel(intervals);
@@ -277,6 +282,20 @@ public abstract class BucketDistributionTooltip : IDisposable
                 Text = $"Total Values: {totalCount}",
                 FontSize = RenderingDefaults.TooltipSubHeaderFontSize,
                 FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(0, 0, 0, 6),
+                Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
+        };
+    }
+
+    private TextBlock? CreateAverageHeader(int bucketIndex)
+    {
+        if (!_bucketAverages.TryGetValue(bucketIndex, out var average) || double.IsNaN(average) || double.IsInfinity(average))
+            return null;
+
+        return new TextBlock
+        {
+                Text = $"Average: {average:F2}",
+                FontSize = RenderingDefaults.TooltipSubHeaderFontSize,
                 Margin = new Thickness(0, 0, 0, 6),
                 Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
         };

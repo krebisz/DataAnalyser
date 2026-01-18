@@ -1,4 +1,5 @@
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.ViewModels;
 
@@ -24,6 +25,15 @@ public partial class MainWindowViewModel
     {
         ChartState.IsDiffRatioVisible = value;
         RequestChartUpdate();
+    }
+
+    public void SetMainChartDisplayMode(MainChartDisplayMode mode)
+    {
+        if (ChartState.MainChartDisplayMode == mode)
+            return;
+
+        ChartState.MainChartDisplayMode = mode;
+        RequestChartUpdate(false, "Main");
     }
 
     public void SetDistributionVisible(bool value)

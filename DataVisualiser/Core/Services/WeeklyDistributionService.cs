@@ -32,17 +32,21 @@ public class WeeklyDistributionService : BaseDistributionService
     protected override void SetupTooltip(CartesianChart targetChart, ChartComputationResult result, BucketDistributionResult extendedResult, bool useFrequencyShading, int intervalCount)
     {
         Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> tooltipData;
+        Dictionary<int, double>? averages = null;
         if (useFrequencyShading)
             tooltipData = CalculateTooltipData(result, extendedResult, intervalCount);
         else
+        {
             tooltipData = CalculateSimpleRangeTooltipData(result, extendedResult);
+            averages = CalculateBucketAverages(extendedResult);
+        }
 
         if (tooltipData != null && tooltipData.Count > 0)
         {
             var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
             oldTooltip?.Dispose();
 
-            var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData);
+            var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData, averages);
             targetChart.Tag = tooltip;
         }
         else

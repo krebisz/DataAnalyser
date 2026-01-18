@@ -12,7 +12,7 @@ Running list of ideas
 - Pie Chart(s) per resolution (A Pie Chart per year or month to show compositional changes, side by side)
 - Introducing metric:submetric selection present for some charts, to all charts
 - Moving original main tab (window) contents into separate control
-- Adding "average" scoring to simple range rendering of distribution graph
+- <!-- Adding "average" scoring to simple range rendering of distribution graph : DONE -->
 - Expanding transform graph to ternary operations, with more than two submetrics
 - Allowing for more than one graph to be created/generated within transform graph by dynamically adding more custom transforms (new control)
 - Persisting HealthMetricsCanonical table in DB across cleans

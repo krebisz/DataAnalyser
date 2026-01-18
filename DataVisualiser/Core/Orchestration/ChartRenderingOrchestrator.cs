@@ -75,7 +75,10 @@ public sealed class ChartRenderingOrchestrator
     private async Task RenderPrimaryIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartMain)
     {
         if (chartState.IsMainVisible)
-            await RenderPrimaryChart(ctx, chartMain);
+        {
+            var (isStacked, isCumulative) = ResolveMainChartDisplayMode(chartState.MainChartDisplayMode);
+            await RenderPrimaryChart(ctx, chartMain, isStacked: isStacked, isCumulative: isCumulative);
+        }
     }
 
     private async Task RenderSecondaryChartsIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartNorm, CartesianChart? chartDiffRatio)
@@ -162,7 +165,7 @@ public sealed class ChartRenderingOrchestrator
     ///     Renders the primary (main) chart using StrategyCutOverService.
     ///     Handles single, combined, and multi-metric strategies.
     /// </summary>
-    public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain, IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null, IReadOnlyList<string>? additionalLabels = null)
+    public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain, IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null, IReadOnlyList<string>? additionalLabels = null, bool isStacked = false, bool isCumulative = false)
     {
         if (ctx == null || chartMain == null)
             return;
@@ -171,14 +174,14 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = CreatePrimaryStrategy(ctx, series, labels, out var secondaryLabel);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: isStacked, isCumulative: isCumulative);
     }
 
     /// <summary>
     ///     Renders the primary chart with support for additional subtypes.
     ///     Loads additional subtype data if more than 2 subtypes are selected.
     /// </summary>
-    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<MetricSeriesSelection>? selectedSeries = null, string? resolutionTableName = null)
+    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<MetricSeriesSelection>? selectedSeries = null, string? resolutionTableName = null, bool isStacked = false, bool isCumulative = false)
     {
         if (ctx == null || chartMain == null)
             return;
@@ -200,7 +203,17 @@ public sealed class ChartRenderingOrchestrator
         }
 
         // Use existing RenderPrimaryChart method
-        await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels);
+        await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels, isStacked, isCumulative);
+    }
+
+    private static (bool IsStacked, bool IsCumulative) ResolveMainChartDisplayMode(MainChartDisplayMode mode)
+    {
+        return mode switch
+        {
+                MainChartDisplayMode.Stacked => (true, false),
+                MainChartDisplayMode.Summed => (false, true),
+                _ => (false, false)
+        };
     }
 
     private static(List<IEnumerable<MetricData>> Series, List<string> Labels) BuildSeriesAndLabels(ChartDataContext ctx, IReadOnlyList<IEnumerable<MetricData>>? additionalSeries, IReadOnlyList<string>? additionalLabels)

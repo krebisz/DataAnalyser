@@ -281,6 +281,9 @@ public abstract class BaseDistributionService
 
         AddBaselineAndRangeSeries(targetChart, mins, ranges, globalMin, displayName, useFrequencyShading);
 
+        if (!useFrequencyShading)
+            AddAverageSeries(targetChart, bucketValues, displayName);
+
         if (useFrequencyShading)
             ApplyFrequencyShadingViaRenderer(targetChart, mins, ranges, shadingData, globalMin, globalMax);
 
@@ -336,6 +339,24 @@ public abstract class BaseDistributionService
 
         chart.Series.Add(baseline);
         chart.Series.Add(range);
+    }
+
+    protected void AddAverageSeries(CartesianChart chart, Dictionary<int, List<double>> bucketValues, string displayName)
+    {
+        var series = ChartHelper.CreateLineSeries($"{displayName} avg", 5, 2, Color.FromRgb(235, 200, 40));
+        if (series == null)
+            return;
+
+        series.LineSmoothness = 0;
+
+        for (var i = 0; i < Configuration.BucketCount; i++)
+        {
+            var values = bucketValues.TryGetValue(i, out var bucket) ? bucket : new List<double>();
+            var validValues = values.Where(v => !double.IsNaN(v)).ToList();
+            series.Values.Add(validValues.Count > 0 ? validValues.Average() : double.NaN);
+        }
+
+        chart.Series.Add(series);
     }
 
     protected StackedColumnSeries CreateBaselineSeries(string displayName)
@@ -568,5 +589,20 @@ public abstract class BaseDistributionService
         }
 
         return tooltipData;
+    }
+
+    protected Dictionary<int, double> CalculateBucketAverages(BucketDistributionResult? extendedResult)
+    {
+        var bucketValues = GetBucketValuesFromResult(extendedResult);
+        var averages = new Dictionary<int, double>(Configuration.BucketCount);
+
+        for (var i = 0; i < Configuration.BucketCount; i++)
+        {
+            var values = bucketValues.TryGetValue(i, out var bucket) ? bucket : new List<double>();
+            var validValues = values.Where(v => !double.IsNaN(v)).ToList();
+            averages[i] = validValues.Count > 0 ? validValues.Average() : double.NaN;
+        }
+
+        return averages;
     }
 }

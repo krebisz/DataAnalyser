@@ -31,6 +31,8 @@ public sealed class ChartRenderModel
     /// </summary>
     public ChartSeriesMode SeriesMode { get; init; } = ChartSeriesMode.RawAndSmoothed;
 
+    public bool IsStacked { get; init; }
+
     // New properties for proper label formatting
     public string? MetricType { get; init; }
     public string? PrimaryMetricType { get; init; }
