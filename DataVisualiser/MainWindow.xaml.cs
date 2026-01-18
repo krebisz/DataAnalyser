@@ -175,6 +175,7 @@ public partial class MainWindow : Window
     private void UpdateSelectedSubtypesInViewModel()
     {
         var distinctSeries = GetDistinctSelectedSeries();
+        var selectedSubtypeCount = CountSelectedSubtypes(distinctSeries);
 
         _viewModel.SetSelectedSeries(distinctSeries);
         UpdateNormalizedSubtypeOptions();
@@ -183,12 +184,23 @@ public partial class MainWindow : Window
         UpdateWeekdayTrendSubtypeOptions();
 
         // Update button states based on selected subtype count
-        UpdateSecondaryDataRequiredButtonStates(distinctSeries.Count);
+        UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
+        UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
     }
 
     private List<MetricSeriesSelection> GetDistinctSelectedSeries()
     {
         return _selectorManager.GetSelectedSeries().GroupBy(series => series.DisplayKey, StringComparer.OrdinalIgnoreCase).Select(group => group.First()).ToList();
+    }
+
+    private static int CountSelectedSubtypes(IEnumerable<MetricSeriesSelection> selections)
+    {
+        return selections.Count(selection => selection.QuerySubtype != null);
+    }
+
+    private bool HasLoadedData()
+    {
+        return _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data1.Any();
     }
 
     private static ComboBoxItem BuildSeriesComboItem(MetricSeriesSelection selection)
@@ -245,6 +257,7 @@ public partial class MainWindow : Window
     private void UpdateSecondaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
         var hasSecondaryData = selectedSubtypeCount >= 2;
+        var canToggle = hasSecondaryData && HasLoadedData();
 
         // If secondary data is no longer available, use the ViewModel state setters to trigger
         // visibility updates while clearing stale chart data.
@@ -264,8 +277,23 @@ public partial class MainWindow : Window
         }
 
         // Update button enabled states (this is UI-only, not part of the rendering pipeline)
-        NormalizedChartController.ToggleButton.IsEnabled = hasSecondaryData;
-        DiffRatioChartController.ToggleButton.IsEnabled = hasSecondaryData;
+        NormalizedChartController.ToggleButton.IsEnabled = canToggle;
+        DiffRatioChartController.ToggleButton.IsEnabled = canToggle;
+    }
+
+    /// <summary>
+    ///     Updates the enabled state of buttons for charts that require at least one subtype.
+    ///     These buttons are disabled when no subtypes are selected.
+    /// </summary>
+    private void UpdatePrimaryDataRequiredButtonStates(int selectedSubtypeCount)
+    {
+        var hasPrimaryData = selectedSubtypeCount >= 1;
+        var canToggle = hasPrimaryData && HasLoadedData();
+
+        MainChartController.ToggleButton.IsEnabled = HasLoadedData();
+        WeekdayTrendChartController.ToggleButton.IsEnabled = canToggle;
+        DistributionChartController.ToggleButton.IsEnabled = canToggle;
+        TransformDataPanelController.ToggleButton.IsEnabled = canToggle;
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -409,6 +437,9 @@ public partial class MainWindow : Window
         UpdateDiffRatioSubtypeOptions();
         UpdateTransformSubtypeOptions();
         UpdateTransformComputeButtonState();
+        var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
+        UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
+        UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
 
         await RenderChartsFromLastContext();
     }
@@ -2121,6 +2152,12 @@ public partial class MainWindow : Window
 
     private void OnErrorOccured(object? sender, ErrorEventArgs e)
     {
+        if (_isChangingResolution)
+        {
+            ClearAllCharts();
+            return;
+        }
+
         MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         ClearAllCharts();
     }
@@ -2431,7 +2468,9 @@ public partial class MainWindow : Window
 
     private void SyncInitialButtonStates()
     {
-        UpdateSecondaryDataRequiredButtonStates(_viewModel.MetricState.SelectedSeries.Count);
+        var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
+        UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
+        UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
 
         // Sync main chart button text with initial state
         MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
@@ -2541,8 +2580,8 @@ public partial class MainWindow : Window
     {
         WeekdayTrendChartController.AverageWindowCombo.Items.Add(new ComboBoxItem
         {
-                Content = label,
-                Tag = window
+            Content = label,
+            Tag = window
         });
     }
 
@@ -2688,6 +2727,7 @@ public partial class MainWindow : Window
         ClearAllCharts();
 
         _viewModel.MetricState.SelectedMetricType = null;
+        _viewModel.ChartState.LastContext = new ChartDataContext();
 
         TablesCombo.Items.Clear();
 
@@ -2698,7 +2738,8 @@ public partial class MainWindow : Window
         _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
         _viewModel.LoadMetricsCommand.Execute(null);
 
-        // Ensure secondary chart buttons reflect the absence of subtypes
+        // Ensure chart buttons reflect the absence of subtypes
+        UpdatePrimaryDataRequiredButtonStates(0);
         UpdateSecondaryDataRequiredButtonStates(0);
     }
 
@@ -3448,6 +3489,12 @@ public partial class MainWindow : Window
     private void OnClear(object sender, RoutedEventArgs e)
     {
         const string defaultResolution = "All";
+
+        // Clear selection state and disable chart toggles immediately on reset.
+        _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
+        _viewModel.ChartState.LastContext = new ChartDataContext();
+        UpdatePrimaryDataRequiredButtonStates(0);
+        UpdateSecondaryDataRequiredButtonStates(0);
 
         if (ResolutionCombo.SelectedItem?.ToString() == defaultResolution)
         {
