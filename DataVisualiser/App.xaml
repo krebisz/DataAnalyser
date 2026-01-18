@@ -1,8 +1,24 @@
-﻿<Application x:Class="DataVisualiser.App"
+<Application x:Class="DataVisualiser.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <Thickness x:Key="TopControlBorderPadding">5</Thickness>
+        <Thickness x:Key="TopBarMargin">0,0,0,5</Thickness>
+        <Thickness x:Key="ControlMargin">5</Thickness>
+        <Thickness x:Key="LabelMargin">5,0</Thickness>
+        <Thickness x:Key="ButtonPadding">10,5</Thickness>
+        <Thickness x:Key="SeparatorMargin">10,0</Thickness>
+        <sys:Double x:Key="SeparatorWidth">10</sys:Double>
+        <Thickness x:Key="SubtypePanelMargin">5</Thickness>
+        <Thickness x:Key="ExpanderMargin">5,0,5,0</Thickness>
+        <Thickness x:Key="CmsTogglePanelMargin">5,5,5,0</Thickness>
 
+        <sys:Double x:Key="ResolutionComboWidth">120</sys:Double>
+        <sys:Double x:Key="MetricTypeComboWidth">300</sys:Double>
+        <sys:Double x:Key="DatePickerWidth">150</sys:Double>
+        <sys:Double x:Key="SubtypeComboWidth">250</sys:Double>
     </Application.Resources>
 </Application>

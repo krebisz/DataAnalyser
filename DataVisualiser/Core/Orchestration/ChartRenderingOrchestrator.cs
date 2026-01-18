@@ -31,7 +31,7 @@ public sealed class ChartRenderingOrchestrator
     private readonly HourlyDistributionService _hourlyDistributionService;
     private readonly IStrategyCutOverService _strategyCutOverService;
     private readonly WeeklyDistributionService _weeklyDistributionService;
-    private readonly MetricSelectionService _metricSelectionService;
+    private readonly MetricSelectionService? _metricSelectionService;
 
     public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
     {
@@ -507,6 +507,13 @@ public sealed class ChartRenderingOrchestrator
 
         //var metricSelectionService = new MetricSelectionService(_connectionString);
         var metricSelectionService = _metricSelectionService;
+        if (metricSelectionService == null)
+        {
+            if (string.IsNullOrWhiteSpace(_connectionString))
+                return;
+
+            metricSelectionService = new MetricSelectionService(_connectionString);
+        }
 
         var tableName = resolutionTableName ?? DataAccessDefaults.DefaultTableName;
 

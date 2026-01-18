@@ -173,7 +173,6 @@ public class MetricSelectionService
         var primaryStrategy = ResolveDataLoadStrategy(from, to, primaryCount);
 
         // SECONDARY
-        (long recordCount, SamplingMode Mode, int? TargetSamples, int? MaxRecords) _;
         var secondaryStrategy = secondarySubtype != null
                 ? ResolveDataLoadStrategy(
                         from,

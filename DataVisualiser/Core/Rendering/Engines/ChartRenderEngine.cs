@@ -516,8 +516,11 @@ public sealed class ChartRenderEngine
         return $"{seriesName} ({smoothRaw})";
     }
 
-    private static string FormatMetricLabel(string metricType, string? subtype)
+    private static string FormatMetricLabel(string? metricType, string? subtype)
     {
+        if (string.IsNullOrWhiteSpace(metricType))
+            return string.Empty;
+
         if (string.IsNullOrWhiteSpace(subtype) || subtype == "(All)")
             return metricType;
 

@@ -1,5 +1,6 @@
 using DataFileReader.Canonical;
 using DataFileReader.Helper;
+using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Data;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -45,7 +46,8 @@ public class CmsDataService
             return Array.Empty<ICanonicalMetricSeries>();
 
         // Fetch legacy data
-        var legacyData = await _legacyFetcher.GetHealthMetricsDataByBaseType(metricType, subtype, from, to, tableName, maxRecords, samplingMode, targetSamples);
+        var resolvedTableName = string.IsNullOrWhiteSpace(tableName) ? DataAccessDefaults.DefaultTableName : tableName;
+        var legacyData = await _legacyFetcher.GetHealthMetricsDataByBaseType(metricType, subtype, from, to, resolvedTableName, maxRecords, samplingMode, targetSamples);
 
         // Convert to HealthMetric records (simplified - in practice, you'd query HealthMetric directly)
         var healthMetrics = legacyData.Select(d => new HealthMetric
