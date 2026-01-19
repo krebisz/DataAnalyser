@@ -2,8 +2,11 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using DataVisualiser.UI.Defaults;
+using DataVisualiser.UI.Controls;
 using LiveCharts;
 using LiveCharts.Wpf;
 using DataVisualiser.Shared.Helpers;
@@ -33,10 +36,22 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
     private static UIElement BuildFacetPieContent(ChartRenderModel model)
     {
-        var wrap = new WrapPanel
+        var columnCount = Math.Min(5, Math.Max(1, model.Facets.Count));
+        var pieSize = GetFacetPieSize(columnCount);
+
+        var grid = new Grid
         {
-            Orientation = Orientation.Horizontal,
             Margin = ChartUiDefaults.ChartContentMargin
+        };
+
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        if (model.Legend?.IsVisible == true)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var uniform = new UniformGrid
+        {
+            Columns = columnCount
         };
 
         foreach (var facet in model.Facets)
@@ -44,7 +59,8 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             var panel = new StackPanel
             {
                 Orientation = Orientation.Vertical,
-                Margin = new Thickness(10)
+                Margin = new Thickness(10),
+                HorizontalAlignment = HorizontalAlignment.Center
             };
 
             if (!string.IsNullOrWhiteSpace(facet.Title))
@@ -59,10 +75,10 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
             var pieChart = new PieChart
             {
-                LegendLocation = GetLegendLocation(model.Legend),
+                LegendLocation = LegendLocation.None,
                 Hoverable = model.Interactions?.Hoverable ?? ChartUiDefaults.DefaultHoverable,
-                MinHeight = ChartUiDefaults.ChartMinHeight,
-                MinWidth = 250
+                Width = pieSize,
+                Height = pieSize
             };
 
             foreach (var series in facet.Series)
@@ -84,10 +100,23 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             }
 
             panel.Children.Add(pieChart);
-            wrap.Children.Add(panel);
+            uniform.Children.Add(panel);
         }
 
-        return wrap;
+        Grid.SetColumn(uniform, 0);
+        grid.Children.Add(uniform);
+
+        if (model.Legend?.IsVisible == true)
+        {
+            var legendItems = BuildFacetLegendItems(model);
+            if (legendItems != null)
+            {
+                var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
+                Grid.SetColumn(legendContainer, 1);
+                grid.Children.Add(legendContainer);
+            }
+        }
+        return grid;
     }
 
     private static UIElement BuildSingleChartContent(ChartRenderModel model)
@@ -169,6 +198,21 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             chart.AxisY.Add(axis);
         }
 
+        if (model.Legend?.IsVisible == true)
+        {
+            var legendItems = BuildSeriesLegendItemsControl(chart.Series);
+            var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
+
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(chart, 0);
+            Grid.SetColumn(legendContainer, 1);
+            grid.Children.Add(chart);
+            grid.Children.Add(legendContainer);
+            return grid;
+        }
+
         return chart;
     }
 
@@ -215,6 +259,106 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             return PanningOptions.X;
 
         return PanningOptions.None;
+    }
+
+    private static double GetFacetPieSize(int columnCount)
+    {
+        return columnCount switch
+        {
+            <= 3 => 240,
+            4 => 200,
+            _ => 160
+        };
+    }
+
+    private static ItemsControl? BuildFacetLegendItems(ChartRenderModel model)
+    {
+        var firstFacet = model.Facets.FirstOrDefault();
+        if (firstFacet == null || firstFacet.Series.Count == 0)
+            return null;
+
+        var entries = firstFacet.Series
+            .Select(series => new LegendEntry(series.Name ?? "Series", CreateBrush(series.Color) ?? Brushes.Gray))
+            .ToList();
+
+        var itemsControl = new ItemsControl
+        {
+            HorizontalAlignment = HorizontalAlignment.Left,
+            ItemsSource = entries
+        };
+
+        itemsControl.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(StackPanel)));
+
+        var stackFactory = new FrameworkElementFactory(typeof(StackPanel));
+        stackFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+        stackFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Left);
+
+        var rectFactory = new FrameworkElementFactory(typeof(Rectangle));
+        rectFactory.SetValue(FrameworkElement.WidthProperty, 12.0);
+        rectFactory.SetValue(FrameworkElement.HeightProperty, 12.0);
+        rectFactory.SetBinding(Shape.FillProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Stroke)));
+        rectFactory.SetValue(Shape.StrokeProperty, Brushes.White);
+        rectFactory.SetValue(Shape.StrokeThicknessProperty, 0.5);
+        rectFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 6, 0));
+
+        var textFactory = new FrameworkElementFactory(typeof(TextBlock));
+        textFactory.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Title)));
+        textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.White);
+        textFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Left);
+
+        stackFactory.AppendChild(rectFactory);
+        stackFactory.AppendChild(textFactory);
+
+        itemsControl.ItemTemplate = new DataTemplate
+        {
+            VisualTree = stackFactory
+        };
+
+        return itemsControl;
+    }
+
+    private sealed record LegendEntry(string Title, Brush Stroke);
+
+    private static ItemsControl BuildSeriesLegendItemsControl(SeriesCollection seriesCollection)
+    {
+        var entries = seriesCollection.OfType<Series>()
+            .Select(series => new LegendEntry(string.IsNullOrWhiteSpace(series.Title) ? "Series" : series.Title, series.Stroke ?? Brushes.Gray))
+            .ToList();
+
+        var itemsControl = new ItemsControl
+        {
+            HorizontalAlignment = HorizontalAlignment.Left,
+            ItemsSource = entries
+        };
+
+        itemsControl.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(StackPanel)));
+
+        var stackFactory = new FrameworkElementFactory(typeof(StackPanel));
+        stackFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+        stackFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Left);
+
+        var rectFactory = new FrameworkElementFactory(typeof(Rectangle));
+        rectFactory.SetValue(FrameworkElement.WidthProperty, 12.0);
+        rectFactory.SetValue(FrameworkElement.HeightProperty, 12.0);
+        rectFactory.SetBinding(Shape.FillProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Stroke)));
+        rectFactory.SetValue(Shape.StrokeProperty, Brushes.White);
+        rectFactory.SetValue(Shape.StrokeThicknessProperty, 0.5);
+        rectFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 6, 0));
+
+        var textFactory = new FrameworkElementFactory(typeof(TextBlock));
+        textFactory.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Title)));
+        textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.White);
+        textFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Left);
+
+        stackFactory.AppendChild(rectFactory);
+        stackFactory.AppendChild(textFactory);
+
+        itemsControl.ItemTemplate = new DataTemplate
+        {
+            VisualTree = stackFactory
+        };
+
+        return itemsControl;
     }
 
     private static Brush? CreateBrush(Color? color)
