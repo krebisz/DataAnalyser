@@ -25,6 +25,7 @@ public class ChartState
     public bool IsTransformPanelVisible { get; set; }
     public WeekdayTrendChartMode WeekdayTrendChartMode { get; set; } = WeekdayTrendChartMode.Cartesian;
     public bool IsDistributionPolarMode { get; set; } = false; // Default to Cartesian
+    public int BarPieBucketCount { get; set; } = 3;
 
     // Weekly Trend (weekday series toggles)
     public bool ShowMonday { get; set; } = true;

@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
+using System.Windows.Media;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration;
@@ -25,7 +26,11 @@ using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Controls;
+using DataVisualiser.UI.Defaults;
 using DataVisualiser.UI.Events;
+using DataVisualiser.UI.Rendering;
+using DataVisualiser.UI.Rendering.LiveCharts;
+using UiChartRenderModel = DataVisualiser.UI.Rendering.ChartRenderModel;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;
@@ -48,6 +53,7 @@ public partial class MainChartsView : UserControl
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly UiState _uiState = new();
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _weekdayTrendSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly LiveChartsChartRenderer _barPieRenderer = new();
     // Placeholder instance since DiffRatioChartController is commented out in XAML.
     private readonly DiffRatioChartController _diffRatioChartController = new();
     private ChartComputationEngine _chartComputationEngine = null!;
@@ -60,6 +66,8 @@ public partial class MainChartsView : UserControl
     private ToolTip _distributionPolarTooltip = null!;
     private HourlyDistributionService _hourlyDistributionService = null!;
     private bool _isChangingResolution;
+    private ChartPanelSurface _barPieSurface = null!;
+    private bool _isBarPieVisible;
 
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
@@ -294,6 +302,7 @@ public partial class MainChartsView : UserControl
         WeekdayTrendChartController.ToggleButton.IsEnabled = canToggle;
         DistributionChartController.ToggleButton.IsEnabled = canToggle;
         TransformDataPanelController.ToggleButton.IsEnabled = canToggle;
+        BarPieChartController.ToggleButton.IsEnabled = canToggle;
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -440,6 +449,9 @@ public partial class MainChartsView : UserControl
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
         UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
+
+        if (_isBarPieVisible)
+            await RenderBarPieChartAsync();
 
         await RenderChartsFromLastContext();
     }
@@ -2174,6 +2186,7 @@ public partial class MainChartsView : UserControl
         ClearDistributionPolarChart();
         ChartHelper.ClearChart(WeekdayTrendChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(WeekdayTrendChartController.PolarChart, _viewModel.ChartState.ChartTimestamps);
+        ClearBarPieChart();
         _viewModel.ChartState.LastContext = null;
 
         // Clear transform panel grids
@@ -2190,6 +2203,12 @@ public partial class MainChartsView : UserControl
         TransformDataPanelController.TransformChartContentPanel.Visibility = Visibility.Collapsed;
         TransformDataPanelController.TransformComputeButton.IsEnabled = false;
         ChartHelper.ClearChart(TransformDataPanelController.ChartTransformResult, _viewModel.ChartState.ChartTimestamps);
+    }
+
+    private void ClearBarPieChart()
+    {
+        _barPieSurface ??= new ChartPanelSurface(BarPieChartController.Panel);
+        _barPieRenderer.Apply(_barPieSurface, CreateEmptyBarPieModel());
     }
 
     private sealed class UiBusyScope : IDisposable
@@ -2260,6 +2279,9 @@ public partial class MainChartsView : UserControl
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
         DiffRatioChartController.PrimarySubtypeChanged += OnDiffRatioPrimarySubtypeChanged;
         DiffRatioChartController.SecondarySubtypeChanged += OnDiffRatioSecondarySubtypeChanged;
+        BarPieChartController.ToggleRequested += OnBarPieToggleRequested;
+        BarPieChartController.DisplayModeChanged += OnBarPieDisplayModeChanged;
+        BarPieChartController.BucketCountChanged += OnBarPieBucketCountChanged;
         NormalizedChartController.ToggleRequested += OnChartNormToggleRequested;
         NormalizedChartController.NormalizationModeChanged += OnNormalizationModeChanged;
         NormalizedChartController.PrimarySubtypeChanged += OnNormalizedPrimarySubtypeChanged;
@@ -2438,6 +2460,8 @@ public partial class MainChartsView : UserControl
 
     private void InitializeCharts()
     {
+        _barPieSurface = new ChartPanelSurface(BarPieChartController.Panel);
+        InitializeBarPieControls();
         InitializeDistributionControls();
         InitializeWeekdayTrendControls();
         InitializeChartBehavior();
@@ -2458,6 +2482,19 @@ public partial class MainChartsView : UserControl
         SelectWeekdayTrendAverageWindow(_viewModel.ChartState.WeekdayTrendAverageWindow);
     }
 
+    private void InitializeBarPieControls()
+    {
+        BarPieChartController.BucketCountCombo.Items.Clear();
+        for (var i = 1; i <= 20; i++)
+            BarPieChartController.BucketCountCombo.Items.Add(new ComboBoxItem
+            {
+                Content = i.ToString(),
+                Tag = i
+            });
+
+        SelectBarPieBucketCount(_viewModel.ChartState.BarPieBucketCount);
+    }
+
     private void SyncInitialButtonStates()
     {
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
@@ -2466,6 +2503,7 @@ public partial class MainChartsView : UserControl
 
         // Sync main chart button text with initial state
         MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
+        BarPieChartController.Panel.IsChartVisible = _isBarPieVisible;
 
         TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
     }
@@ -2519,6 +2557,7 @@ public partial class MainChartsView : UserControl
         _viewModel.SetNormalizedVisible(false);
         _viewModel.SetDiffRatioVisible(false);
         _viewModel.SetDistributionVisible(false);
+        _isBarPieVisible = false;
         _viewModel.CompleteInitialization();
 
         _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
@@ -2894,6 +2933,32 @@ public partial class MainChartsView : UserControl
     private void OnChartNormToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleNorm();
+    }
+
+    private async void OnBarPieToggleRequested(object? sender, EventArgs e)
+    {
+        _isBarPieVisible = !_isBarPieVisible;
+        await RenderBarPieChartAsync();
+    }
+
+    private async void OnBarPieDisplayModeChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing)
+            return;
+
+        await RenderBarPieChartAsync();
+    }
+
+    private async void OnBarPieBucketCountChanged(object? sender, EventArgs e)
+    {
+        if (_isInitializing)
+            return;
+
+        if (BarPieChartController.BucketCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var bucketCount))
+            _viewModel.ChartState.BarPieBucketCount = bucketCount;
+
+        if (_isBarPieVisible)
+            await RenderBarPieChartAsync();
     }
 
     private async void OnNormalizedPrimarySubtypeChanged(object? sender, EventArgs e)
@@ -3630,6 +3695,273 @@ public partial class MainChartsView : UserControl
         UpdateChartLabels();
     }
 
+    private async Task RenderBarPieChartAsync()
+    {
+        if (_barPieSurface == null)
+            _barPieSurface = new ChartPanelSurface(BarPieChartController.Panel);
+
+        if (!_isBarPieVisible)
+        {
+            _barPieRenderer.Apply(_barPieSurface, CreateEmptyBarPieModel());
+            return;
+        }
+
+        var isPieMode = BarPieChartController.PieModeRadio.IsChecked == true;
+        var model = await BuildBarPieRenderModelAsync(isPieMode);
+        _barPieRenderer.Apply(_barPieSurface, model);
+    }
+
+    private async Task<UiChartRenderModel> BuildBarPieRenderModelAsync(bool isPieMode)
+    {
+        var selections = GetDistinctSelectedSeries();
+        if (selections.Count == 0)
+            return CreateEmptyBarPieModel();
+
+        if (!TryResolveBarPieDateRange(out var from, out var to))
+            return CreateEmptyBarPieModel();
+
+        var seriesData = await LoadBarPieSeriesDataAsync(selections, from, to);
+        if (seriesData.Count == 0)
+            return CreateEmptyBarPieModel();
+
+        var bucketCount = ResolveBarPieBucketCount(from, to);
+        var bucketPlan = BuildBarPieBucketPlan(from, to, bucketCount);
+
+        var paletteKey = BarPieChartController;
+        ColourPalette.Reset(paletteKey);
+
+        var coloredSeries = seriesData.Select(data => new BarPieSeriesValues(
+            data.Selection,
+            BuildBucketTotals(data.Data, bucketPlan),
+            ColourPalette.Next(paletteKey))).ToList();
+
+        if (isPieMode)
+        {
+            var facets = bucketPlan.Buckets.Select(bucket =>
+            {
+                var series = coloredSeries.Select(item => new ChartSeriesModel
+                {
+                    Name = item.Selection.DisplayName,
+                    SeriesType = ChartSeriesType.Pie,
+                    Values = new double?[] { item.Totals[bucket.Index] },
+                    Color = item.Color
+                }).ToList();
+
+                return new ChartFacetModel
+                {
+                    Title = bucket.Label,
+                    Series = series
+                };
+            }).ToList();
+
+            return new UiChartRenderModel
+            {
+                Title = ChartUiDefaults.BarPieChartTitle,
+                IsVisible = _isBarPieVisible,
+                Facets = facets,
+                Legend = new ChartLegendModel
+                {
+                    IsVisible = true,
+                    Placement = ChartLegendPlacement.Right
+                },
+                Interactions = new ChartInteractionModel
+                {
+                    Hoverable = ChartUiDefaults.DefaultHoverable
+                }
+            };
+        }
+
+        var barSeries = coloredSeries.Select(item => new ChartSeriesModel
+        {
+            Name = item.Selection.DisplayName,
+            SeriesType = ChartSeriesType.Column,
+            Values = item.Totals,
+            Color = item.Color
+        }).ToList();
+
+        return new UiChartRenderModel
+        {
+            Title = ChartUiDefaults.BarPieChartTitle,
+            IsVisible = _isBarPieVisible,
+            Series = barSeries,
+            AxesX = new[]
+            {
+                new ChartAxisModel
+                {
+                    Title = "Interval",
+                    Labels = bucketPlan.Buckets.Select(bucket => bucket.Label).ToList()
+                }
+            },
+            AxesY = new[]
+            {
+                new ChartAxisModel
+                {
+                    Title = "Value"
+                }
+            },
+            Legend = new ChartLegendModel
+            {
+                IsVisible = true,
+                Placement = ChartLegendPlacement.Right
+            },
+            Interactions = new ChartInteractionModel
+            {
+                EnableZoomX = true,
+                EnablePanX = true,
+                Hoverable = ChartUiDefaults.DefaultHoverable
+            }
+        };
+    }
+
+    private UiChartRenderModel CreateEmptyBarPieModel()
+    {
+        return new UiChartRenderModel
+        {
+            Title = ChartUiDefaults.BarPieChartTitle,
+            IsVisible = _isBarPieVisible,
+            Series = Array.Empty<ChartSeriesModel>(),
+            Facets = Array.Empty<ChartFacetModel>()
+        };
+    }
+
+    private async Task<IReadOnlyList<BarPieSeriesData>> LoadBarPieSeriesDataAsync(IReadOnlyList<MetricSeriesSelection> selections, DateTime from, DateTime to)
+    {
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var tasks = selections.Select(selection => LoadBarPieSeriesAsync(selection, from, to, tableName)).ToList();
+        var results = await Task.WhenAll(tasks);
+        return results.Where(result => result != null).Select(result => result!).ToList();
+    }
+
+    private async Task<BarPieSeriesData?> LoadBarPieSeriesAsync(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
+    {
+        if (string.IsNullOrWhiteSpace(selection.MetricType))
+            return null;
+
+        try
+        {
+            var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
+            var dataList = primary?.ToList() ?? new List<MetricData>();
+            if (dataList.Count == 0)
+                return null;
+
+            return new BarPieSeriesData(selection, dataList);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private int ResolveBarPieBucketCount(DateTime from, DateTime to)
+    {
+        const int bucketMax = 20;
+
+        if (to <= from)
+            return 1;
+
+        var bucketCount = _viewModel.ChartState.BarPieBucketCount;
+        return Math.Max(1, Math.Min(bucketCount, bucketMax));
+    }
+
+    private static BarPieBucketPlan BuildBarPieBucketPlan(DateTime from, DateTime to, int bucketCount)
+    {
+        if (to < from)
+            (from, to) = (to, from);
+
+        bucketCount = Math.Max(1, bucketCount);
+        var totalTicks = Math.Max(1, (to - from).Ticks);
+        var bucketTicks = totalTicks / (double)bucketCount;
+
+        var buckets = new List<BarPieBucket>(bucketCount);
+        for (var i = 0; i < bucketCount; i++)
+        {
+            var startTicks = from.Ticks + (long)Math.Floor(i * bucketTicks);
+            var endTicks = i == bucketCount - 1
+                ? to.Ticks
+                : from.Ticks + (long)Math.Floor((i + 1) * bucketTicks);
+
+            if (endTicks < startTicks)
+                endTicks = startTicks;
+
+            var start = new DateTime(startTicks);
+            var end = new DateTime(Math.Min(endTicks, to.Ticks));
+            buckets.Add(new BarPieBucket(i, start, end, $"{start:yyyy-MM-dd} - {end:yyyy-MM-dd}"));
+        }
+
+        return new BarPieBucketPlan(from, to, bucketTicks, buckets);
+    }
+
+    private static double?[] BuildBucketTotals(IReadOnlyList<MetricData> data, BarPieBucketPlan plan)
+    {
+        var totals = new double?[plan.Buckets.Count];
+        var sums = new double[plan.Buckets.Count];
+
+        foreach (var point in data)
+        {
+            if (!point.Value.HasValue)
+                continue;
+
+            var index = ResolveBucketIndex(point.NormalizedTimestamp, plan);
+            if (index < 0 || index >= sums.Length)
+                continue;
+
+            sums[index] += (double)point.Value.Value;
+        }
+
+        for (var i = 0; i < sums.Length; i++)
+            totals[i] = sums[i];
+
+        return totals;
+    }
+
+    private static int ResolveBucketIndex(DateTime timestamp, BarPieBucketPlan plan)
+    {
+        if (timestamp < plan.From || timestamp > plan.To)
+            return -1;
+
+        if (plan.BucketTicks <= 0)
+            return 0;
+
+        var offsetTicks = timestamp.Ticks - plan.From.Ticks;
+        var index = (int)Math.Floor(offsetTicks / plan.BucketTicks);
+        if (index < 0)
+            return -1;
+        if (index >= plan.Buckets.Count)
+            return plan.Buckets.Count - 1;
+
+        return index;
+    }
+
+    private bool TryResolveBarPieDateRange(out DateTime from, out DateTime to)
+    {
+        if (_viewModel.MetricState.FromDate.HasValue && _viewModel.MetricState.ToDate.HasValue)
+        {
+            from = _viewModel.MetricState.FromDate.Value;
+            to = _viewModel.MetricState.ToDate.Value;
+            return true;
+        }
+
+        var context = _viewModel.ChartState.LastContext;
+        if (context != null && context.From != default && context.To != default)
+        {
+            from = context.From;
+            to = context.To;
+            return true;
+        }
+
+        from = default;
+        to = default;
+        return false;
+    }
+
+    private sealed record BarPieSeriesData(MetricSeriesSelection Selection, IReadOnlyList<MetricData> Data);
+
+    private sealed record BarPieSeriesValues(MetricSeriesSelection Selection, double?[] Totals, Color Color);
+
+    private sealed record BarPieBucket(int Index, DateTime Start, DateTime End, string Label);
+
+    private sealed record BarPieBucketPlan(DateTime From, DateTime To, double BucketTicks, IReadOnlyList<BarPieBucket> Buckets);
+
     #endregion
 
     #region Distribution chart display mode UI handling
@@ -3677,6 +4009,16 @@ public partial class MainChartsView : UserControl
             if (item.Tag is int taggedInterval && taggedInterval == intervalCount)
             {
                 DistributionChartController.IntervalCountCombo.SelectedItem = item;
+                return;
+            }
+    }
+
+    private void SelectBarPieBucketCount(int bucketCount)
+    {
+        foreach (var item in BarPieChartController.BucketCountCombo.Items.OfType<ComboBoxItem>())
+            if (item.Tag is int taggedInterval && taggedInterval == bucketCount)
+            {
+                BarPieChartController.BucketCountCombo.SelectedItem = item;
                 return;
             }
     }

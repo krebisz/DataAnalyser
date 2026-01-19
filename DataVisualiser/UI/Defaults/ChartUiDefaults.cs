@@ -14,6 +14,7 @@ public static class ChartUiDefaults
     public const string NormalizedChartTitle = "ChartNorm";
     public const string DistributionChartTitle = "Distribution";
     public const string DiffRatioChartTitle = "Difference / Ratio";
+    public const string BarPieChartTitle = "Bar / Pie";
     public const string WeekdayTrendChartTitle = "Weekday Trends";
     public const string TransformChartTitle = "Data Transform";
 
