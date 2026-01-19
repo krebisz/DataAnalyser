@@ -6,6 +6,7 @@ using System.Windows.Media;
 using DataVisualiser.UI.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
+using DataVisualiser.Shared.Helpers;
 
 namespace DataVisualiser.UI.Rendering.LiveCharts;
 
@@ -77,7 +78,8 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
                     Values = new ChartValues<double> { value.Value },
                     DataLabels = true,
                     Fill = sliceBrush,
-                    Stroke = sliceBrush
+                    Stroke = sliceBrush,
+                    LabelPoint = point => $"{series.Name}: {MathHelper.FormatDisplayedValue(point.Y)} ({point.Participation:P0})"
                 });
             }
 
@@ -118,7 +120,8 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
                         Title = series.Name ?? string.Empty,
                         Values = values,
                         Fill = seriesBrush,
-                        Stroke = seriesBrush
+                        Stroke = seriesBrush,
+                        LabelPoint = point => MathHelper.FormatDisplayedValue(point.Y)
                     });
                     break;
                 case ChartSeriesType.Line:

@@ -119,6 +119,11 @@
                                   Margin="{StaticResource LabelMargin}"
                                   Checked="OnCmsStrategyToggled"
                                   Unchecked="OnCmsStrategyToggled" />
+                        <CheckBox x:Name="CmsBarPieCheckBox"
+                                  Content="Bar/Pie"
+                                  Margin="{StaticResource LabelMargin}"
+                                  Checked="OnCmsStrategyToggled"
+                                  Unchecked="OnCmsStrategyToggled" />
                     </WrapPanel>
                 </Expander>
             </StackPanel>

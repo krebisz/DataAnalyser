@@ -27,6 +27,7 @@ public static class CmsConfiguration
     public static bool UseCmsForWeeklyDistribution { get; set; }
     public static bool UseCmsForWeekdayTrend { get; set; }
     public static bool UseCmsForHourlyDistribution { get; set; }
+    public static bool UseCmsForBarPie { get; set; }
 
     /// <summary>
     ///     Checks if CMS should be used for a specific strategy type.
@@ -47,6 +48,7 @@ public static class CmsConfiguration
                 "WeeklyDistributionStrategy" => UseCmsForWeeklyDistribution,
                 "WeekdayTrendStrategy" => UseCmsForWeekdayTrend,
                 "HourlyDistributionStrategy" => UseCmsForHourlyDistribution,
+                "BarPieStrategy" => UseCmsForBarPie,
                 _ => false
         };
     }

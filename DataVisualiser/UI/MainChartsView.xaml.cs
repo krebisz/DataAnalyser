@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 using System.Windows.Media;
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration;
@@ -2331,6 +2332,7 @@ public partial class MainChartsView : UserControl
         CmsWeeklyCheckBox.IsChecked = CmsConfiguration.UseCmsForWeeklyDistribution;
         CmsWeekdayTrendCheckBox.IsChecked = CmsConfiguration.UseCmsForWeekdayTrend;
         CmsHourlyCheckBox.IsChecked = CmsConfiguration.UseCmsForHourlyDistribution;
+        CmsBarPieCheckBox.IsChecked = CmsConfiguration.UseCmsForBarPie;
 
         UpdateCmsToggleEnablement();
     }
@@ -2345,6 +2347,7 @@ public partial class MainChartsView : UserControl
         CmsWeeklyCheckBox.IsEnabled = enabled;
         CmsWeekdayTrendCheckBox.IsEnabled = enabled;
         CmsHourlyCheckBox.IsEnabled = enabled;
+        CmsBarPieCheckBox.IsEnabled = enabled;
     }
 
     private void OnCmsToggleChanged(object sender, RoutedEventArgs e)
@@ -2355,6 +2358,9 @@ public partial class MainChartsView : UserControl
         CmsConfiguration.UseCmsData = CmsEnableCheckBox.IsChecked == true;
         UpdateCmsToggleEnablement();
         Debug.WriteLine($"[CMS] Enabled={CmsConfiguration.UseCmsData}");
+
+        if (_isBarPieVisible)
+            _ = RenderBarPieChartAsync();
     }
 
     private void OnCmsStrategyToggled(object sender, RoutedEventArgs e)
@@ -2369,8 +2375,12 @@ public partial class MainChartsView : UserControl
         CmsConfiguration.UseCmsForWeeklyDistribution = CmsWeeklyCheckBox.IsChecked == true;
         CmsConfiguration.UseCmsForWeekdayTrend = CmsWeekdayTrendCheckBox.IsChecked == true;
         CmsConfiguration.UseCmsForHourlyDistribution = CmsHourlyCheckBox.IsChecked == true;
+        CmsConfiguration.UseCmsForBarPie = CmsBarPieCheckBox.IsChecked == true;
 
-        Debug.WriteLine($"[CMS] Enabled={CmsConfiguration.UseCmsData}, Single={CmsConfiguration.UseCmsForSingleMetric}, Combined={CmsConfiguration.UseCmsForCombinedMetric}, Multi={CmsConfiguration.UseCmsForMultiMetric}, Normalized={CmsConfiguration.UseCmsForNormalized}, Weekly={CmsConfiguration.UseCmsForWeeklyDistribution}, WeekdayTrend={CmsConfiguration.UseCmsForWeekdayTrend}, Hourly={CmsConfiguration.UseCmsForHourlyDistribution}");
+        Debug.WriteLine($"[CMS] Enabled={CmsConfiguration.UseCmsData}, Single={CmsConfiguration.UseCmsForSingleMetric}, Combined={CmsConfiguration.UseCmsForCombinedMetric}, Multi={CmsConfiguration.UseCmsForMultiMetric}, Normalized={CmsConfiguration.UseCmsForNormalized}, Weekly={CmsConfiguration.UseCmsForWeeklyDistribution}, WeekdayTrend={CmsConfiguration.UseCmsForWeekdayTrend}, Hourly={CmsConfiguration.UseCmsForHourlyDistribution}, BarPie={CmsConfiguration.UseCmsForBarPie}");
+
+        if (_isBarPieVisible)
+            _ = RenderBarPieChartAsync();
     }
 
     #endregion
@@ -3720,19 +3730,19 @@ public partial class MainChartsView : UserControl
         if (!TryResolveBarPieDateRange(out var from, out var to))
             return CreateEmptyBarPieModel();
 
-        var seriesData = await LoadBarPieSeriesDataAsync(selections, from, to);
-        if (seriesData.Count == 0)
-            return CreateEmptyBarPieModel();
-
         var bucketCount = ResolveBarPieBucketCount(from, to);
         var bucketPlan = BuildBarPieBucketPlan(from, to, bucketCount);
+
+        var seriesTotals = await LoadBarPieSeriesTotalsAsync(selections, from, to, bucketPlan);
+        if (seriesTotals.Count == 0)
+            return CreateEmptyBarPieModel();
 
         var paletteKey = BarPieChartController;
         ColourPalette.Reset(paletteKey);
 
-        var coloredSeries = seriesData.Select(data => new BarPieSeriesValues(
+        var coloredSeries = seriesTotals.Select(data => new BarPieSeriesValues(
             data.Selection,
-            BuildBucketTotals(data.Data, bucketPlan),
+            data.Totals,
             ColourPalette.Next(paletteKey))).ToList();
 
         if (isPieMode)
@@ -3824,27 +3834,41 @@ public partial class MainChartsView : UserControl
         };
     }
 
-    private async Task<IReadOnlyList<BarPieSeriesData>> LoadBarPieSeriesDataAsync(IReadOnlyList<MetricSeriesSelection> selections, DateTime from, DateTime to)
+    private async Task<IReadOnlyList<BarPieSeriesTotals>> LoadBarPieSeriesTotalsAsync(IReadOnlyList<MetricSeriesSelection> selections, DateTime from, DateTime to, BarPieBucketPlan plan)
     {
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var tasks = selections.Select(selection => LoadBarPieSeriesAsync(selection, from, to, tableName)).ToList();
+        var useCms = CmsConfiguration.ShouldUseCms("BarPieStrategy");
+        var tasks = selections.Select(selection => LoadBarPieSeriesTotalsAsync(selection, from, to, tableName, plan, useCms)).ToList();
         var results = await Task.WhenAll(tasks);
         return results.Where(result => result != null).Select(result => result!).ToList();
     }
 
-    private async Task<BarPieSeriesData?> LoadBarPieSeriesAsync(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
+    private async Task<BarPieSeriesTotals?> LoadBarPieSeriesTotalsAsync(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName, BarPieBucketPlan plan, bool useCms)
     {
         if (string.IsNullOrWhiteSpace(selection.MetricType))
             return null;
 
         try
         {
+            if (useCms)
+            {
+                var (primaryCms, _, primaryLegacy, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, from, to, tableName);
+                if (primaryCms != null && primaryCms.Samples.Count > 0)
+                    return new BarPieSeriesTotals(selection, BuildBucketTotals(primaryCms, plan));
+
+                var fallbackLegacy = primaryLegacy?.ToList() ?? new List<MetricData>();
+                if (fallbackLegacy.Count == 0)
+                    return null;
+
+                return new BarPieSeriesTotals(selection, BuildBucketTotals(fallbackLegacy, plan));
+            }
+
             var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
             var dataList = primary?.ToList() ?? new List<MetricData>();
             if (dataList.Count == 0)
                 return null;
 
-            return new BarPieSeriesData(selection, dataList);
+            return new BarPieSeriesTotals(selection, BuildBucketTotals(dataList, plan));
         }
         catch
         {
@@ -3895,6 +3919,7 @@ public partial class MainChartsView : UserControl
     {
         var totals = new double?[plan.Buckets.Count];
         var sums = new double[plan.Buckets.Count];
+        var counts = new int[plan.Buckets.Count];
 
         foreach (var point in data)
         {
@@ -3906,10 +3931,37 @@ public partial class MainChartsView : UserControl
                 continue;
 
             sums[index] += (double)point.Value.Value;
+            counts[index] += 1;
         }
 
         for (var i = 0; i < sums.Length; i++)
-            totals[i] = sums[i];
+            totals[i] = counts[i] > 0 ? sums[i] / counts[i] : null;
+
+        return totals;
+    }
+
+    private static double?[] BuildBucketTotals(ICanonicalMetricSeries series, BarPieBucketPlan plan)
+    {
+        var totals = new double?[plan.Buckets.Count];
+        var sums = new double[plan.Buckets.Count];
+        var counts = new int[plan.Buckets.Count];
+
+        foreach (var sample in series.Samples)
+        {
+            if (!sample.Value.HasValue)
+                continue;
+
+            var timestamp = sample.Timestamp.UtcDateTime;
+            var index = ResolveBucketIndex(timestamp, plan);
+            if (index < 0 || index >= sums.Length)
+                continue;
+
+            sums[index] += (double)sample.Value.Value;
+            counts[index] += 1;
+        }
+
+        for (var i = 0; i < sums.Length; i++)
+            totals[i] = counts[i] > 0 ? sums[i] / counts[i] : null;
 
         return totals;
     }
@@ -3954,7 +4006,7 @@ public partial class MainChartsView : UserControl
         return false;
     }
 
-    private sealed record BarPieSeriesData(MetricSeriesSelection Selection, IReadOnlyList<MetricData> Data);
+    private sealed record BarPieSeriesTotals(MetricSeriesSelection Selection, double?[] Totals);
 
     private sealed record BarPieSeriesValues(MetricSeriesSelection Selection, double?[] Totals, Color Color);
 
