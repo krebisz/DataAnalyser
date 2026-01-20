@@ -17,12 +17,14 @@ core orchestration logic.
 - 2026-01-16: Completed Normalized migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `NormalizedChartControllerAdapter`.
 - 2026-01-16: Completed DiffRatio migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `DiffRatioChartControllerAdapter`.
 - 2026-01-20: Completed Transform migration: rendering, compute, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `TransformDataPanelControllerAdapter`.
+- 2026-01-20: Completed Main migration: rendering, display mode handling, and clear/reset logic now live in adapter; `MainChartsView` delegates to `MainChartControllerAdapter`.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.
 - Keep rendering engines and computation orchestration untouched; adapters live in UI layer only.
 - Avoid exposing concrete UI controls beyond what is necessary; introduce thin wrappers where needed.
 - Defer registry/factory work until all chart adapters are in place; current scope focuses on per-chart logic extraction.
+- With all chart adapters in place, begin registry/factory work next.
 
 ## Step 1: Inventory Current Coupling
 Checklist:
@@ -123,7 +125,7 @@ Rollout:
 3) Normalized (done)
 4) DiffRatio (most coupled) (done)
 5) Transform panel (done)
-6) Main chart
+6) Main chart (done)
 
 ## Completed Migration Checklist (Step 1: Distribution)
 - Define `DistributionChartControllerAdapter` responsibilities (toggle, mode, subtype, interval, polar/cartesian switching). (done)
@@ -157,10 +159,13 @@ Rollout:
 - Route Transform UI events in `MainChartsView` to adapter. (done)
 - Keep rendering engines unchanged; only UI orchestration shifts. (on track)
 
-## Next Migration Checklist (Step 6: Main)
-- Define `MainChartControllerAdapter` responsibilities (toggle, display mode, render/clear/reset).
-- Move main chart render orchestration into adapter.
-- Route main chart UI events in `MainChartsView` to adapter.
+## Completed Migration Checklist (Step 6: Main)
+- Define `MainChartControllerAdapter` responsibilities (toggle, display mode, render/clear/reset). (done)
+- Move main chart render orchestration into adapter. (done)
+- Route main chart UI events in `MainChartsView` to adapter. (done)
+
+## Next Steps
+- Start registry/factory work (Step 4) now that all per-chart adapters are in place.
 
 ## Risks and Mitigations
 - Risk: Too many UI control dependencies.

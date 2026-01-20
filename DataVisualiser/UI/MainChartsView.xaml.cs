@@ -66,6 +66,7 @@ public partial class MainChartsView : UserControl
     private NormalizedChartControllerAdapter _normalizedAdapter = null!;
     private DiffRatioChartControllerAdapter _diffRatioAdapter = null!;
     private TransformDataPanelControllerAdapter _transformAdapter = null!;
+    private MainChartControllerAdapter _mainAdapter = null!;
 
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
@@ -119,20 +120,6 @@ public partial class MainChartsView : UserControl
         _uiBusyDepth--;
         if (_uiBusyDepth == 0)
             _uiState.IsUiBusy = false;
-    }
-
-    private void OnMainChartDisplayModeChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing)
-            return;
-
-        var mode = MainChartController.DisplayStackedRadio.IsChecked == true
-                ? MainChartDisplayMode.Stacked
-                : MainChartController.DisplaySummedRadio.IsChecked == true
-                        ? MainChartDisplayMode.Summed
-                        : MainChartDisplayMode.Regular;
-
-        _viewModel.SetMainChartDisplayMode(mode);
     }
 
     private void UpdateSelectedSubtypesInViewModel()
@@ -220,7 +207,7 @@ public partial class MainChartsView : UserControl
         var hasPrimaryData = selectedSubtypeCount >= 1;
         var canToggle = hasPrimaryData && HasLoadedData();
 
-        MainChartController.ToggleButton.IsEnabled = HasLoadedData();
+        _mainAdapter.ToggleButton.IsEnabled = HasLoadedData();
         WeekdayTrendChartController.ToggleButton.IsEnabled = canToggle;
         DistributionChartController.ToggleButton.IsEnabled = canToggle;
         TransformDataPanelController.ToggleButton.IsEnabled = canToggle;
@@ -389,7 +376,7 @@ public partial class MainChartsView : UserControl
         switch (e.ToggledChartName)
         {
             case "Main":
-                MainChartController.Panel.IsChartVisible = e.ShowMain;
+                _mainAdapter.Panel.IsChartVisible = e.ShowMain;
                 break;
             case "Norm":
                 NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
@@ -554,7 +541,7 @@ public partial class MainChartsView : UserControl
 
     private void UpdateAllChartVisibilities(ChartUpdateRequestedEventArgs e)
     {
-        MainChartController.Panel.IsChartVisible = e.ShowMain;
+        _mainAdapter.Panel.IsChartVisible = e.ShowMain;
         NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
         DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
         DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
@@ -602,20 +589,6 @@ public partial class MainChartsView : UserControl
             return null;
 
         return strategy.Compute();
-    }
-
-
-    private async Task RenderMainChart(IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null)
-    {
-        var ctx = _viewModel.ChartState.LastContext;
-        if (ctx == null || _chartRenderingOrchestrator == null)
-            return;
-
-        var mode = _viewModel.ChartState.MainChartDisplayMode;
-        var isStacked = mode == MainChartDisplayMode.Stacked;
-        var isCumulative = mode == MainChartDisplayMode.Summed;
-
-        await _chartRenderingOrchestrator.RenderPrimaryChartAsync(ctx, MainChartController.Chart, data1, data2, displayName1, displayName2, from, to, metricType, _viewModel.MetricState.SelectedSeries, _viewModel.MetricState.ResolutionTableName, isStacked: isStacked, isCumulative: isCumulative);
     }
 
 
@@ -683,7 +656,7 @@ public partial class MainChartsView : UserControl
 
         // Only render charts that are visible - skip computation entirely for hidden charts
         if (_viewModel.ChartState.IsMainVisible)
-            await RenderPrimaryChart(safeCtx);
+            await _mainAdapter.RenderAsync(safeCtx);
 
         // Charts that require secondary data - only render if visible AND secondary data exists
         if (hasSecondaryData)
@@ -730,31 +703,18 @@ public partial class MainChartsView : UserControl
     }
 
     /// <summary>
-    ///     Renders the primary (main) chart from the context.
-    /// </summary>
-    private async Task RenderPrimaryChart(ChartDataContext ctx)
-    {
-        if (_viewModel.ChartState.IsMainVisible)
-            await RenderMainChart(ctx.Data1!, ctx.Data2, ctx.DisplayName1 ?? string.Empty, ctx.DisplayName2 ?? string.Empty, ctx.From, ctx.To, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
-        // Note: We don't clear the chart when hiding - just hide the panel to preserve data
-    }
-
-    /// <summary>
     ///     Renders only a specific chart (used for visibility-only toggles to avoid re-rendering all charts).
     /// </summary>
     private async Task RenderSingleChart(string chartName, ChartDataContext ctx)
     {
         using var busyScope = BeginUiBusyScope();
         var hasSecondaryData = HasSecondaryData(ctx);
-        var metricType = ctx.MetricType;
-        var primarySubtype = ctx.PrimarySubtype;
-        var secondarySubtype = ctx.SecondarySubtype;
 
         switch (chartName)
         {
             case "Main":
                 if (_viewModel.ChartState.IsMainVisible)
-                    await RenderMainChart(ctx.Data1!, ctx.Data2, ctx.DisplayName1 ?? string.Empty, ctx.DisplayName2 ?? string.Empty, ctx.From, ctx.To, metricType, primarySubtype, secondarySubtype);
+                    await _mainAdapter.RenderAsync(ctx);
                 break;
 
             case "Norm":
@@ -784,10 +744,6 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private async Task RenderSecondaryCharts(ChartDataContext ctx)
     {
-        var metricType = ctx.MetricType;
-        var primarySubtype = ctx.PrimarySubtype;
-        var secondarySubtype = ctx.SecondarySubtype;
-
         await _normalizedAdapter.RenderAsync(ctx);
         await _distributionAdapter.RenderAsync(ctx);
         await _weekdayTrendAdapter.RenderAsync(ctx);
@@ -890,7 +846,7 @@ public partial class MainChartsView : UserControl
 
     private void ClearAllCharts()
     {
-        ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _mainAdapter.Clear(_viewModel.ChartState);
         _normalizedAdapter.Clear(_viewModel.ChartState);
         _diffRatioAdapter.Clear(_viewModel.ChartState);
         _distributionAdapter.Clear(_viewModel.ChartState);
@@ -961,6 +917,12 @@ public partial class MainChartsView : UserControl
     {
         WireViewModelEvents();
 
+        _mainAdapter = new MainChartControllerAdapter(
+            MainChartController,
+            _viewModel,
+            () => _isInitializing,
+            () => _chartRenderingOrchestrator);
+
         _distributionAdapter = new DistributionChartControllerAdapter(
             DistributionChartController,
             _viewModel,
@@ -1010,8 +972,8 @@ public partial class MainChartsView : UserControl
             _chartUpdateCoordinator);
 
         // Wire up MainChartController events
-        MainChartController.ToggleRequested += OnMainChartToggleRequested;
-        MainChartController.DisplayModeChanged += OnMainChartDisplayModeChanged;
+        MainChartController.ToggleRequested += _mainAdapter.OnToggleRequested;
+        MainChartController.DisplayModeChanged += _mainAdapter.OnDisplayModeChanged;
         WeekdayTrendChartController.ToggleRequested += _weekdayTrendAdapter.OnToggleRequested;
         WeekdayTrendChartController.ChartTypeToggleRequested += _weekdayTrendAdapter.OnChartTypeToggleRequested;
         WeekdayTrendChartController.DayToggled += _weekdayTrendAdapter.OnDayToggled;
@@ -1244,7 +1206,7 @@ public partial class MainChartsView : UserControl
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
 
         // Sync main chart button text with initial state
-        MainChartController.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
+        _mainAdapter.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
         BarPieChartController.Panel.IsChartVisible = _isBarPieVisible;
 
         TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
@@ -1305,9 +1267,7 @@ public partial class MainChartsView : UserControl
         _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
         _viewModel.ChartState.LastContext = new ChartDataContext();
 
-        MainChartController.DisplayRegularRadio.IsChecked = _viewModel.ChartState.MainChartDisplayMode == MainChartDisplayMode.Regular;
-        MainChartController.DisplaySummedRadio.IsChecked = _viewModel.ChartState.MainChartDisplayMode == MainChartDisplayMode.Summed;
-        MainChartController.DisplayStackedRadio.IsChecked = _viewModel.ChartState.MainChartDisplayMode == MainChartDisplayMode.Stacked;
+        _mainAdapter.SyncDisplayModeSelection();
 
         // Initialize weekday trend chart type visibility
         _weekdayTrendAdapter.UpdateChartTypeVisibility();
@@ -1369,7 +1329,7 @@ public partial class MainChartsView : UserControl
     private void ClearChartsOnStartup()
     {
         // Clear charts on startup to prevent gibberish tick labels
-        ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _mainAdapter.Clear(_viewModel.ChartState);
         _normalizedAdapter.Clear(_viewModel.ChartState);
         _diffRatioAdapter.Clear(_viewModel.ChartState);
         _distributionAdapter.Clear(_viewModel.ChartState);
@@ -1608,11 +1568,6 @@ public partial class MainChartsView : UserControl
         _viewModel.ToggleMain();
     }
 
-    private void OnMainChartToggleRequested(object? sender, EventArgs e)
-    {
-        _viewModel.ToggleMain();
-    }
-
     private async void OnBarPieToggleRequested(object? sender, EventArgs e)
     {
         _isBarPieVisible = !_isBarPieVisible;
@@ -1647,8 +1602,7 @@ public partial class MainChartsView : UserControl
     private void OnResetZoom(object sender, RoutedEventArgs e)
     {
         using var busyScope = BeginUiBusyScope();
-        var mainChart = MainChartController.Chart;
-        ChartHelper.ResetZoom(mainChart);
+        _mainAdapter.ResetZoom();
         _normalizedAdapter.ResetZoom();
         _diffRatioAdapter.ResetZoom();
         _distributionAdapter.ResetZoom();
