@@ -13,10 +13,11 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDiffRatioChartControllerExtras, IChartSeriesAvailability
+public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDiffRatioChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
 {
     private readonly DiffRatioChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -51,6 +52,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
     public bool RequiresSecondaryData => true;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
+    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
 
     public void Initialize()
     {

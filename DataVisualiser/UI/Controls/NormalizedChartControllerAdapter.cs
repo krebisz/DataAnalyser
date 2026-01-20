@@ -16,10 +16,11 @@ using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class NormalizedChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IChartSeriesAvailability
+public sealed class NormalizedChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IChartSeriesAvailability, ICartesianChartSurface
 {
     private readonly NormalizedChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -57,6 +58,7 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
     public bool RequiresSecondaryData => true;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
+    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
 
     public void Initialize()
     {

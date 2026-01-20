@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.State;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
@@ -16,6 +17,16 @@ public interface IChartCacheController
 public interface IChartSeriesAvailability
 {
     bool HasSeries(ChartState state);
+}
+
+public interface ICartesianChartSurface
+{
+    CartesianChart Chart { get; }
+}
+
+public interface IPolarChartSurface
+{
+    LiveChartsCore.SkiaSharpView.WPF.PolarChart PolarChart { get; }
 }
 
 public interface IDistributionChartControllerExtras

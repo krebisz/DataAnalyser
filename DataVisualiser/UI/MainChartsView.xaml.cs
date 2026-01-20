@@ -66,6 +66,7 @@ public partial class MainChartsView : UserControl
     private NormalizedChartControllerAdapter _normalizedAdapter = null!;
     private DiffRatioChartControllerAdapter _diffRatioAdapter = null!;
     private TransformDataPanelControllerAdapter _transformAdapter = null!;
+    private BarPieChartControllerAdapter _barPieAdapter = null!;
     private MainChartControllerAdapter _mainAdapter = null!;
     private IChartControllerRegistry? _chartControllerRegistry;
 
@@ -195,8 +196,8 @@ public partial class MainChartsView : UserControl
         }
 
         // Update button enabled states (this is UI-only, not part of the rendering pipeline)
-        NormalizedChartController.ToggleButton.IsEnabled = canToggle;
-        DiffRatioChartController.ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.Normalized).ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.DiffRatio).ToggleButton.IsEnabled = canToggle;
     }
 
     /// <summary>
@@ -209,10 +210,10 @@ public partial class MainChartsView : UserControl
         var canToggle = hasPrimaryData && HasLoadedData();
 
         ResolveController(ChartControllerKeys.Main).ToggleButton.IsEnabled = HasLoadedData();
-        WeekdayTrendChartController.ToggleButton.IsEnabled = canToggle;
-        DistributionChartController.ToggleButton.IsEnabled = canToggle;
-        TransformDataPanelController.ToggleButton.IsEnabled = canToggle;
-        BarPieChartController.ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.WeeklyTrend).ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.Distribution).ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.Transform).ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.BarPie).ToggleButton.IsEnabled = canToggle;
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -517,6 +518,8 @@ public partial class MainChartsView : UserControl
             ChartControllerKeys.DiffRatio => _viewModel.ChartState.IsDiffRatioVisible,
             ChartControllerKeys.Distribution => _viewModel.ChartState.IsDistributionVisible,
             ChartControllerKeys.WeeklyTrend => _viewModel.ChartState.IsWeeklyTrendVisible,
+            ChartControllerKeys.Transform => _viewModel.ChartState.IsTransformPanelVisible,
+            ChartControllerKeys.BarPie => _isBarPieVisible,
             _ => false
         };
     }
@@ -938,7 +941,6 @@ public partial class MainChartsView : UserControl
     private void ClearAllCharts()
     {
         ClearRegisteredCharts();
-        ClearBarPieChart();
         _viewModel.ChartState.LastContext = null;
     }
 
@@ -1057,6 +1059,19 @@ public partial class MainChartsView : UserControl
             _metricSelectionService,
             _chartUpdateCoordinator);
 
+        _barPieAdapter = new BarPieChartControllerAdapter(
+            BarPieChartController,
+            _viewModel,
+            () => _isInitializing,
+            () => _isBarPieVisible,
+            isVisible =>
+            {
+                _isBarPieVisible = isVisible;
+                SetChartVisibility(ChartControllerKeys.BarPie, isVisible);
+            },
+            RenderBarPieChartAsync,
+            ClearBarPieChart);
+
         _chartControllerRegistry = BuildChartControllerRegistry();
         ValidateChartControllerRegistry(_chartControllerRegistry);
 
@@ -1073,9 +1088,9 @@ public partial class MainChartsView : UserControl
         DiffRatioChartController.OperationToggleRequested += _diffRatioAdapter.OnOperationToggleRequested;
         DiffRatioChartController.PrimarySubtypeChanged += _diffRatioAdapter.OnPrimarySubtypeChanged;
         DiffRatioChartController.SecondarySubtypeChanged += _diffRatioAdapter.OnSecondarySubtypeChanged;
-        BarPieChartController.ToggleRequested += OnBarPieToggleRequested;
-        BarPieChartController.DisplayModeChanged += OnBarPieDisplayModeChanged;
-        BarPieChartController.BucketCountChanged += OnBarPieBucketCountChanged;
+        BarPieChartController.ToggleRequested += _barPieAdapter.OnToggleRequested;
+        BarPieChartController.DisplayModeChanged += _barPieAdapter.OnDisplayModeChanged;
+        BarPieChartController.BucketCountChanged += _barPieAdapter.OnBucketCountChanged;
         NormalizedChartController.ToggleRequested += _normalizedAdapter.OnToggleRequested;
         NormalizedChartController.NormalizationModeChanged += _normalizedAdapter.OnNormalizationModeChanged;
         NormalizedChartController.PrimarySubtypeChanged += _normalizedAdapter.OnPrimarySubtypeChanged;
@@ -1102,6 +1117,7 @@ public partial class MainChartsView : UserControl
         registry.Register(_distributionAdapter);
         registry.Register(_weekdayTrendAdapter);
         registry.Register(_transformAdapter);
+        registry.Register(_barPieAdapter);
         return registry;
     }
 
@@ -1132,8 +1148,47 @@ public partial class MainChartsView : UserControl
             ChartControllerKeys.Distribution => _distributionAdapter,
             ChartControllerKeys.WeeklyTrend => _weekdayTrendAdapter,
             ChartControllerKeys.Transform => _transformAdapter,
+            ChartControllerKeys.BarPie => _barPieAdapter,
             _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
         };
+    }
+
+    private CartesianChart GetCartesianChart(string key)
+    {
+        if (_chartControllerRegistry == null && _mainAdapter == null)
+        {
+            return key switch
+            {
+                ChartControllerKeys.Main => MainChartController.Chart,
+                ChartControllerKeys.Normalized => NormalizedChartController.Chart,
+                ChartControllerKeys.DiffRatio => DiffRatioChartController.Chart,
+                ChartControllerKeys.Distribution => DistributionChartController.Chart,
+                ChartControllerKeys.Transform => TransformDataPanelController.Chart,
+                _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
+            };
+        }
+
+        if (ResolveController(key) is ICartesianChartSurface cartesian)
+            return cartesian.Chart;
+
+        throw new InvalidOperationException($"Chart controller '{key}' does not expose a Cartesian chart.");
+    }
+
+    private LiveChartsCore.SkiaSharpView.WPF.PolarChart GetPolarChart(string key)
+    {
+        if (_chartControllerRegistry == null && _distributionAdapter == null)
+        {
+            return key switch
+            {
+                ChartControllerKeys.Distribution => DistributionChartController.PolarChart,
+                _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
+            };
+        }
+
+        if (ResolveController(key) is IPolarChartSurface polar)
+            return polar.PolarChart;
+
+        throw new InvalidOperationException($"Chart controller '{key}' does not expose a polar chart.");
     }
 
     private void ExecuteStartupSequence()
@@ -1339,7 +1394,7 @@ public partial class MainChartsView : UserControl
 
         // Sync main chart button text with initial state
         SetChartVisibility(ChartControllerKeys.Main, _viewModel.ChartState.IsMainVisible);
-        BarPieChartController.Panel.IsChartVisible = _isBarPieVisible;
+        SetChartVisibility(ChartControllerKeys.BarPie, _isBarPieVisible);
 
         SetChartVisibility(ChartControllerKeys.Transform, _viewModel.ChartState.IsTransformPanelVisible);
     }
@@ -1361,17 +1416,17 @@ public partial class MainChartsView : UserControl
 
         var chartLabels = new Dictionary<CartesianChart, string>
         {
-                { MainChartController.Chart, "Main" },
-                { NormalizedChartController.Chart, "Norm" },
-                { DiffRatioChartController.Chart, "DiffRatio" },
-                { TransformDataPanelController.ChartTransformResult, "Transform" }
+                { GetCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main },
+                { GetCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized },
+                { GetCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio },
+                { GetCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform }
         };
 
         _tooltipManager = new ChartTooltipManager(parentWindow, chartLabels);
-        _tooltipManager.AttachChart(MainChartController.Chart, "Main");
-        _tooltipManager.AttachChart(NormalizedChartController.Chart, "Norm");
-        _tooltipManager.AttachChart(DiffRatioChartController.Chart, "DiffRatio");
-        _tooltipManager.AttachChart(TransformDataPanelController.ChartTransformResult, "Transform");
+        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main);
+        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized);
+        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio);
+        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform);
     }
 
     private void WireViewModelEvents()
@@ -1433,10 +1488,10 @@ public partial class MainChartsView : UserControl
 
     private void InitializeChartBehavior()
     {
-        ChartHelper.InitializeChartBehavior(MainChartController.Chart);
-        InitializeDistributionChartBehavior(DistributionChartController.Chart);
-        ChartHelper.InitializeChartBehavior(NormalizedChartController.Chart);
-        ChartHelper.InitializeChartBehavior(DiffRatioChartController.Chart);
+        ChartHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Main));
+        InitializeDistributionChartBehavior(GetCartesianChart(ChartControllerKeys.Distribution));
+        ChartHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Normalized));
+        ChartHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.DiffRatio));
     }
 
     private void InitializeDistributionPolarTooltip()
@@ -1446,8 +1501,9 @@ public partial class MainChartsView : UserControl
             Placement = PlacementMode.Mouse,
             StaysOpen = true
         };
-        ToolTipService.SetToolTip(DistributionChartController.PolarChart, _distributionPolarTooltip);
-        DistributionChartController.PolarChart.HoveredPointsChanged += OnDistributionPolarHoveredPointsChanged;
+        var polarChart = GetPolarChart(ChartControllerKeys.Distribution);
+        ToolTipService.SetToolTip(polarChart, _distributionPolarTooltip);
+        polarChart.HoveredPointsChanged += OnDistributionPolarHoveredPointsChanged;
     }
 
     /// <summary>
@@ -1492,10 +1548,10 @@ public partial class MainChartsView : UserControl
 
     private void DisableAxisLabelsWhenNoData()
     {
-        DisableAxisLabels(MainChartController.Chart);
-        DisableAxisLabels(NormalizedChartController.Chart);
-        DisableAxisLabels(DiffRatioChartController.Chart);
-        DisableDistributionAxisLabels(DistributionChartController.Chart);
+        DisableAxisLabels(GetCartesianChart(ChartControllerKeys.Main));
+        DisableAxisLabels(GetCartesianChart(ChartControllerKeys.Normalized));
+        DisableAxisLabels(GetCartesianChart(ChartControllerKeys.DiffRatio));
+        DisableDistributionAxisLabels(GetCartesianChart(ChartControllerKeys.Distribution));
         DisableDistributionPolarAxisLabels();
     }
 
@@ -1509,9 +1565,10 @@ public partial class MainChartsView : UserControl
 
     private void DisableDistributionPolarAxisLabels()
     {
-        DistributionChartController.PolarChart.AngleAxes = Array.Empty<PolarAxis>();
-        DistributionChartController.PolarChart.RadiusAxes = Array.Empty<PolarAxis>();
-        DistributionChartController.PolarChart.Tag = null;
+        var polarChart = GetPolarChart(ChartControllerKeys.Distribution);
+        polarChart.AngleAxes = Array.Empty<PolarAxis>();
+        polarChart.RadiusAxes = Array.Empty<PolarAxis>();
+        polarChart.Tag = null;
         if (_distributionPolarTooltip != null)
             _distributionPolarTooltip.IsOpen = false;
     }
@@ -1526,9 +1583,9 @@ public partial class MainChartsView : UserControl
 
     private void SetDefaultChartTitles()
     {
-        MainChartController.Panel.Title = "Metrics: Total";
-        NormalizedChartController.Panel.Title = "Metrics: Normalized";
-        DiffRatioChartController.Panel.Title = "Difference / Ratio";
+        ResolveController(ChartControllerKeys.Main).Panel.Title = "Metrics: Total";
+        ResolveController(ChartControllerKeys.Normalized).Panel.Title = "Metrics: Normalized";
+        ResolveController(ChartControllerKeys.DiffRatio).Panel.Title = "Difference / Ratio";
         UpdateDiffRatioOperationButton(); // Initialize button state
     }
 
@@ -1691,6 +1748,7 @@ public partial class MainChartsView : UserControl
                 return;
             }
 
+            ClearHiddenChartsAfterLoad();
             _viewModel.LoadDataCommand.Execute(null);
         }
         catch (Exception ex)
@@ -1722,34 +1780,6 @@ public partial class MainChartsView : UserControl
     {
         _viewModel.ToggleMain();
     }
-
-    private async void OnBarPieToggleRequested(object? sender, EventArgs e)
-    {
-        _isBarPieVisible = !_isBarPieVisible;
-        await RenderBarPieChartAsync();
-    }
-
-    private async void OnBarPieDisplayModeChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing)
-            return;
-
-        await RenderBarPieChartAsync();
-    }
-
-    private async void OnBarPieBucketCountChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing)
-            return;
-
-        if (BarPieChartController.BucketCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var bucketCount))
-            _viewModel.ChartState.BarPieBucketCount = bucketCount;
-
-        if (_isBarPieVisible)
-            await RenderBarPieChartAsync();
-    }
-
-
     #endregion
 
     #region Chart Configuration and Helper Methods
@@ -1787,7 +1817,7 @@ public partial class MainChartsView : UserControl
         if (_distributionPolarTooltip == null)
             return;
 
-        var state = DistributionChartController.PolarChart.Tag as DistributionPolarTooltipState;
+        var state = GetPolarChart(ChartControllerKeys.Distribution).Tag as DistributionPolarTooltipState;
         if (state == null || newPoints == null)
         {
             _distributionPolarTooltip.IsOpen = false;
@@ -1845,9 +1875,9 @@ public partial class MainChartsView : UserControl
         _viewModel.ChartState.LeftTitle = leftName;
         _viewModel.ChartState.RightTitle = rightName;
 
-        MainChartController.Panel.Title = $"{leftName} vs. {rightName}";
-        NormalizedChartController.Panel.Title = $"{leftName} ~ {rightName}";
-        DiffRatioChartController.Panel.Title = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
+        ResolveController(ChartControllerKeys.Main).Panel.Title = $"{leftName} vs. {rightName}";
+        ResolveController(ChartControllerKeys.Normalized).Panel.Title = $"{leftName} ~ {rightName}";
+        ResolveController(ChartControllerKeys.DiffRatio).Panel.Title = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
     }
 
     private void UpdateChartLabels()
@@ -1863,10 +1893,10 @@ public partial class MainChartsView : UserControl
         var label2 = secondary?.DisplayName ?? string.Empty;
 
         var chartMainLabel = !string.IsNullOrEmpty(label2) ? $"{label1} vs {label2}" : label1;
-        _tooltipManager.UpdateChartLabel(MainChartController.Chart, chartMainLabel);
+        _tooltipManager.UpdateChartLabel(GetCartesianChart(ChartControllerKeys.Main), chartMainLabel);
 
         var chartDiffRatioLabel = !string.IsNullOrEmpty(label2) ? $"{label1} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {label2}" : label1;
-        _tooltipManager.UpdateChartLabel(DiffRatioChartController.Chart, chartDiffRatioLabel);
+        _tooltipManager.UpdateChartLabel(GetCartesianChart(ChartControllerKeys.DiffRatio), chartDiffRatioLabel);
     }
 
     private void UpdateChartTitlesFromCombos()
@@ -2050,6 +2080,15 @@ public partial class MainChartsView : UserControl
         }
     }
 
+    private void ClearHiddenChartsAfterLoad()
+    {
+        foreach (var key in ChartVisibilityHelper.GetHiddenChartKeys(_viewModel.ChartState))
+            ClearChart(key);
+
+        if (!_isBarPieVisible)
+            ClearChart(ChartControllerKeys.BarPie);
+    }
+
     private int ResolveBarPieBucketCount(DateTime from, DateTime to)
     {
         const int bucketMax = 20;
@@ -2200,22 +2239,6 @@ public partial class MainChartsView : UserControl
                 BarPieChartController.BucketCountCombo.SelectedItem = item;
                 return;
             }
-    }
-
-    private static bool TryGetIntervalCount(object? tag, out int intervalCount)
-    {
-        switch (tag)
-        {
-            case int direct:
-                intervalCount = direct;
-                return true;
-            case string tagValue when int.TryParse(tagValue, out var parsed):
-                intervalCount = parsed;
-                return true;
-            default:
-                intervalCount = 0;
-                return false;
-        }
     }
 
     #endregion

@@ -14,10 +14,12 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using LiveCharts.Wpf;
+using LiveChartsCore.SkiaSharpView.WPF;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class DistributionChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDistributionChartControllerExtras, IChartSeriesAvailability
+public sealed class DistributionChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDistributionChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface, IPolarChartSurface
 {
     private readonly DistributionChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -61,6 +63,8 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
     public bool RequiresSecondaryData => false;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
+    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
+    public PolarChart PolarChart => _controller.PolarChart;
 
     public void Initialize()
     {

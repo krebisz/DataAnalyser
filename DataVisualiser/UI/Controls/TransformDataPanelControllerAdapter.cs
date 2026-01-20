@@ -20,10 +20,11 @@ using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class TransformDataPanelControllerAdapter : IChartController, IChartCacheController, ITransformPanelControllerExtras
+public sealed class TransformDataPanelControllerAdapter : IChartController, IChartCacheController, ITransformPanelControllerExtras, ICartesianChartSurface
 {
     private readonly TransformDataPanelController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -56,6 +57,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
     public bool RequiresSecondaryData => false;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
+    public LiveCharts.Wpf.CartesianChart Chart => _controller.ChartTransformResult;
 
     public void Initialize()
     {

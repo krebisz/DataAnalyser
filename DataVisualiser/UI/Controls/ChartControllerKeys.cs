@@ -8,6 +8,7 @@ public static class ChartControllerKeys
     public const string Distribution = "Distribution";
     public const string WeeklyTrend = "WeeklyTrend";
     public const string Transform = "Transform";
+    public const string BarPie = "BarPie";
 
     public static readonly string[] All =
     {
@@ -16,6 +17,7 @@ public static class ChartControllerKeys
         DiffRatio,
         Distribution,
         WeeklyTrend,
-        Transform
+        Transform,
+        BarPie
     };
 }

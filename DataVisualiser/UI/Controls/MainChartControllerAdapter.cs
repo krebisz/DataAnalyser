@@ -7,10 +7,11 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, IChartSeriesAvailability
+public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
 {
     private readonly MainChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -34,6 +35,7 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
     public bool RequiresSecondaryData => false;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
+    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
 
     public void Initialize()
     {

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -17,10 +16,11 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IWeekdayTrendChartControllerExtras, IChartSeriesAvailability
+public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IWeekdayTrendChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
 {
     private readonly WeekdayTrendChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -55,6 +55,8 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
     public bool RequiresSecondaryData => false;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
+    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
+    public LiveCharts.Wpf.CartesianChart PolarChart => _controller.PolarChart;
 
     public void Initialize()
     {
