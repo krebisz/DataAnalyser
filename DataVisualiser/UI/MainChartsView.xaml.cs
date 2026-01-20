@@ -48,7 +48,6 @@ public partial class MainChartsView : UserControl
 {
     private readonly ChartState _chartState = new();
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _diffRatioSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _distributionSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly MetricState _metricState = new();
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _normalizedSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
@@ -69,13 +68,13 @@ public partial class MainChartsView : UserControl
     private bool _isChangingResolution;
     private ChartPanelSurface _barPieSurface = null!;
     private bool _isBarPieVisible;
+    private DistributionChartControllerAdapter _distributionAdapter = null!;
 
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isUpdatingDiffRatioSubtypeCombos;
     private bool _isUpdatingNormalizedSubtypeCombos;
     private bool _isTransformSelectionPendingLoad;
-    private bool _isUpdatingDistributionSubtypeCombo;
     private bool _isUpdatingTransformSubtypeCombos;
     private bool _isUpdatingWeekdayTrendSubtypeCombo;
 
@@ -189,7 +188,7 @@ public partial class MainChartsView : UserControl
         _viewModel.SetSelectedSeries(distinctSeries);
         UpdateNormalizedSubtypeOptions();
         UpdateDiffRatioSubtypeOptions();
-        UpdateDistributionSubtypeOptions();
+        _distributionAdapter.UpdateSubtypeOptions();
         UpdateWeekdayTrendSubtypeOptions();
 
         // Update button states based on selected subtype count
@@ -478,7 +477,7 @@ public partial class MainChartsView : UserControl
                 break;
             case "Distribution":
                 DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
-                UpdateDistributionChartTypeVisibility();
+                _distributionAdapter.UpdateChartTypeVisibility();
                 break;
             case "WeeklyTrend":
                 WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
@@ -649,7 +648,7 @@ public partial class MainChartsView : UserControl
         NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
         DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
         DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
-        UpdateDistributionChartTypeVisibility();
+        _distributionAdapter.UpdateChartTypeVisibility();
 
         WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
         UpdateWeekdayTrendChartTypeVisibility();
@@ -799,7 +798,7 @@ public partial class MainChartsView : UserControl
 
         // Charts that don't require secondary data - only render if visible
         if (_viewModel.ChartState.IsDistributionVisible)
-            await RenderDistributionChart(safeCtx, _viewModel.ChartState.SelectedDistributionMode);
+            await _distributionAdapter.RenderAsync(safeCtx);
 
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
             await RenderWeeklyTrendAsync(safeCtx);
@@ -1328,7 +1327,7 @@ public partial class MainChartsView : UserControl
 
             case "Distribution":
                 if (_viewModel.ChartState.IsDistributionVisible)
-                    await RenderDistributionChart(ctx, _viewModel.ChartState.SelectedDistributionMode);
+                    await _distributionAdapter.RenderAsync(ctx);
                 break;
 
             case "WeeklyTrend":
@@ -1348,7 +1347,7 @@ public partial class MainChartsView : UserControl
         var secondarySubtype = ctx.SecondarySubtype;
 
         await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
-        await RenderDistributionChart(ctx, _viewModel.ChartState.SelectedDistributionMode);
+        await _distributionAdapter.RenderAsync(ctx);
         await RenderWeeklyTrendAsync(ctx);
         await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
     }
@@ -1357,7 +1356,7 @@ public partial class MainChartsView : UserControl
     {
         ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(DistributionChartController.Chart);
+        _distributionAdapter.Clear(_viewModel.ChartState);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Cartesian, Polar, and Scatter modes are handled by RenderWeekdayTrendChart which checks visibility.
     }
@@ -1373,53 +1372,6 @@ public partial class MainChartsView : UserControl
 
         UpdateNormalizedPanelTitle(normalizedContext);
         await _chartRenderingOrchestrator.RenderNormalizedChartAsync(normalizedContext, NormalizedChartController.Chart, _viewModel.ChartState);
-    }
-
-    /// <summary>
-    ///     Common method to render the distribution chart for the selected mode.
-    /// </summary>
-    private async Task RenderDistributionChart(ChartDataContext ctx, DistributionMode mode)
-    {
-        if (!_viewModel.ChartState.IsDistributionVisible)
-            return;
-
-        var selectedSeries = ResolveSelectedDistributionSeries(ctx);
-        var data = await ResolveDistributionDataAsync(ctx, selectedSeries);
-        if (data == null || data.Count == 0)
-            return;
-
-        var displayName = ResolveDistributionDisplayName(ctx, selectedSeries);
-
-        if (_viewModel.ChartState.IsDistributionPolarMode)
-        {
-            await RenderDistributionPolarChart(ctx, mode, data, displayName);
-            return;
-        }
-
-        var settings = _viewModel.ChartState.GetDistributionSettings(mode);
-        var chart = DistributionChartController.Chart;
-
-        if (_chartRenderingOrchestrator != null)
-        {
-            var distributionContext = new ChartDataContext
-            {
-                Data1 = data,
-                DisplayName1 = displayName,
-                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-                PrimarySubtype = selectedSeries?.Subtype,
-                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                From = ctx.From,
-                To = ctx.To
-            };
-            await _chartRenderingOrchestrator.RenderDistributionChartAsync(distributionContext, chart, _viewModel.ChartState, mode);
-            return;
-        }
-
-        var service = GetDistributionService(mode);
-        await service.UpdateDistributionChartAsync(chart, data, displayName, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
-        // Note: We don't clear the chart when hiding - just hide the panel to preserve data
     }
 
     private async Task RenderWeeklyTrendAsync(ChartDataContext ctx)
@@ -1450,79 +1402,6 @@ public partial class MainChartsView : UserControl
         if (result != null)
             RenderWeekdayTrendChart(result);
         // Note: We don't clear the chart when hiding - just hide the panel to preserve data
-    }
-
-    private async Task RenderDistributionPolarChart(ChartDataContext ctx, DistributionMode mode, IReadOnlyList<MetricData> data, string displayName)
-    {
-        var service = GetDistributionService(mode);
-        var rangeResult = await service.ComputeSimpleRangeAsync(data, displayName, ctx.From, ctx.To);
-        if (rangeResult == null)
-            return;
-
-        var definition = DistributionModeCatalog.Get(mode);
-        _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, DistributionChartController.PolarChart);
-        DistributionChartController.PolarChart.Tag = new DistributionPolarTooltipState(definition, rangeResult);
-        DistributionChartController.PolarChart.UpdateLayout();
-        DistributionChartController.PolarChart.InvalidateVisual();
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (ctx.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
-
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildDistributionCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_distributionSubtypeCache.TryGetValue(cacheKey, out var cached))
-            return cached;
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _distributionSubtypeCache[cacheKey] = data;
-        return data;
-    }
-
-    private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)
-    {
-        if (_viewModel.ChartState.SelectedDistributionSeries != null)
-            return _viewModel.ChartState.SelectedDistributionSeries;
-
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-    }
-
-    private static string ResolveDistributionDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
-    }
-
-    private static string BuildDistributionCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
     private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
@@ -1948,16 +1827,6 @@ public partial class MainChartsView : UserControl
         return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
-    private BaseDistributionService GetDistributionService(DistributionMode mode)
-    {
-        return mode switch
-        {
-            DistributionMode.Weekly => _weeklyDistributionService,
-            DistributionMode.Hourly => _hourlyDistributionService,
-            _ => _weeklyDistributionService
-        };
-    }
-
     private async Task RenderDiffRatio(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
     {
         if (_chartRenderingOrchestrator == null)
@@ -2183,8 +2052,7 @@ public partial class MainChartsView : UserControl
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(DistributionChartController.Chart);
-        ClearDistributionPolarChart();
+        _distributionAdapter.Clear(_viewModel.ChartState);
         ChartHelper.ClearChart(WeekdayTrendChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(WeekdayTrendChartController.PolarChart, _viewModel.ChartState.ChartTimestamps);
         ClearBarPieChart();
@@ -2267,6 +2135,18 @@ public partial class MainChartsView : UserControl
     {
         WireViewModelEvents();
 
+        _distributionAdapter = new DistributionChartControllerAdapter(
+            DistributionChartController,
+            _viewModel,
+            () => _isInitializing,
+            BeginUiBusyScope,
+            _metricSelectionService,
+            () => _chartRenderingOrchestrator,
+            _weeklyDistributionService,
+            _hourlyDistributionService,
+            _distributionPolarRenderingService,
+            () => _distributionPolarTooltip);
+
         // Wire up MainChartController events
         MainChartController.ToggleRequested += OnMainChartToggleRequested;
         MainChartController.DisplayModeChanged += OnMainChartDisplayModeChanged;
@@ -2287,12 +2167,12 @@ public partial class MainChartsView : UserControl
         NormalizedChartController.NormalizationModeChanged += OnNormalizationModeChanged;
         NormalizedChartController.PrimarySubtypeChanged += OnNormalizedPrimarySubtypeChanged;
         NormalizedChartController.SecondarySubtypeChanged += OnNormalizedSecondarySubtypeChanged;
-        DistributionChartController.ToggleRequested += OnDistributionToggleRequested;
-        DistributionChartController.ChartTypeToggleRequested += OnDistributionChartTypeToggleRequested;
-        DistributionChartController.ModeChanged += OnDistributionModeChanged;
-        DistributionChartController.SubtypeChanged += OnDistributionSubtypeChanged;
-        DistributionChartController.DisplayModeChanged += OnDistributionDisplayModeChanged;
-        DistributionChartController.IntervalCountChanged += OnDistributionIntervalCountChanged;
+        DistributionChartController.ToggleRequested += _distributionAdapter.OnToggleRequested;
+        DistributionChartController.ChartTypeToggleRequested += _distributionAdapter.OnChartTypeToggleRequested;
+        DistributionChartController.ModeChanged += _distributionAdapter.OnModeChanged;
+        DistributionChartController.SubtypeChanged += _distributionAdapter.OnSubtypeChanged;
+        DistributionChartController.DisplayModeChanged += _distributionAdapter.OnDisplayModeChanged;
+        DistributionChartController.IntervalCountChanged += _distributionAdapter.OnIntervalCountChanged;
         TransformDataPanelController.ToggleRequested += OnTransformPanelToggleRequested;
         TransformDataPanelController.OperationChanged += OnTransformOperationChanged;
         TransformDataPanelController.PrimarySubtypeChanged += OnTransformPrimarySubtypeChanged;
@@ -2478,7 +2358,7 @@ public partial class MainChartsView : UserControl
         ClearChartsOnStartup();
         DisableAxisLabelsWhenNoData();
         SetDefaultChartTitles();
-        UpdateDistributionChartTypeVisibility();
+        _distributionAdapter.UpdateChartTypeVisibility();
         InitializeDistributionPolarTooltip();
     }
 
@@ -2604,26 +2484,7 @@ public partial class MainChartsView : UserControl
 
     private void InitializeDistributionControls()
     {
-        DistributionChartController.ModeCombo.Items.Clear();
-        foreach (var definition in DistributionModeCatalog.All)
-            DistributionChartController.ModeCombo.Items.Add(new ComboBoxItem
-            {
-                Content = definition.DisplayName,
-                Tag = definition.Mode
-            });
-
-        DistributionChartController.IntervalCountCombo.Items.Clear();
-        foreach (var intervalCount in DistributionModeCatalog.IntervalCounts)
-            DistributionChartController.IntervalCountCombo.Items.Add(new ComboBoxItem
-            {
-                Content = intervalCount.ToString(),
-                Tag = intervalCount
-            });
-
-        var initialMode = _viewModel.ChartState.SelectedDistributionMode;
-        SelectDistributionMode(initialMode);
-        ApplyDistributionModeDefinition(initialMode);
-        ApplyDistributionSettingsToUi(initialMode);
+        _distributionAdapter.InitializeControls();
     }
 
     private void AddWeekdayTrendAverageOption(string label, WeekdayTrendAverageWindow window)
@@ -2680,26 +2541,7 @@ public partial class MainChartsView : UserControl
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ClearDistributionChart(DistributionChartController.Chart);
-        ClearDistributionPolarChart();
-    }
-
-    /// <summary>
-    ///     Common method to clear distribution charts.
-    /// </summary>
-    private void ClearDistributionChart(CartesianChart chart)
-    {
-        ChartHelper.ClearChart(chart, _viewModel.ChartState.ChartTimestamps);
-    }
-
-    private void ClearDistributionPolarChart()
-    {
-        DistributionChartController.PolarChart.Series = Array.Empty<ISeries>();
-        DistributionChartController.PolarChart.AngleAxes = Array.Empty<PolarAxis>();
-        DistributionChartController.PolarChart.RadiusAxes = Array.Empty<PolarAxis>();
-        DistributionChartController.PolarChart.Tag = null;
-        if (_distributionPolarTooltip != null)
-            _distributionPolarTooltip.IsOpen = false;
+        _distributionAdapter.Clear(_viewModel.ChartState);
     }
 
     private void DisableAxisLabelsWhenNoData()
@@ -2890,7 +2732,7 @@ public partial class MainChartsView : UserControl
     {
         try
         {
-            _distributionSubtypeCache.Clear();
+            _distributionAdapter.ClearCache();
             _weekdayTrendSubtypeCache.Clear();
             _normalizedSubtypeCache.Clear();
             _diffRatioSubtypeCache.Clear();
@@ -2993,19 +2835,6 @@ public partial class MainChartsView : UserControl
         await RenderNormalizedFromSelectionAsync();
     }
 
-    /// <summary>
-    ///     Common handler for distribution chart toggles.
-    /// </summary>
-    private void HandleDistributionChartToggle()
-    {
-        _viewModel.ToggleDistribution();
-    }
-
-    private void OnDistributionToggleRequested(object? sender, EventArgs e)
-    {
-        HandleDistributionChartToggle();
-    }
-
     private void OnWeekdayTrendToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleWeeklyTrend();
@@ -3024,16 +2853,6 @@ public partial class MainChartsView : UserControl
             if (result != null)
                 RenderWeekdayTrendChart(result);
         }
-    }
-
-    private async void OnDistributionChartTypeToggleRequested(object? sender, EventArgs e)
-    {
-        using var busyScope = BeginUiBusyScope();
-        _viewModel.ToggleDistributionChartType();
-        UpdateDistributionChartTypeVisibility();
-
-        if (_viewModel.ChartState.IsDistributionVisible && _viewModel.ChartState.LastContext != null)
-            await RenderDistributionChart(_viewModel.ChartState.LastContext, _viewModel.ChartState.SelectedDistributionMode);
     }
 
     private void UpdateWeekdayTrendChartTypeVisibility()
@@ -3555,8 +3374,7 @@ public partial class MainChartsView : UserControl
         ChartHelper.ResetZoom(mainChart);
         ChartHelper.ResetZoom(NormalizedChartController.Chart);
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
-        ResetDistributionChartZoom(DistributionChartController.Chart);
-        ResetDistributionPolarZoom();
+        _distributionAdapter.ResetZoom();
         ChartHelper.ResetZoom(TransformDataPanelController.ChartTransformResult);
         var weekdayChart = WeekdayTrendChartController.Chart;
         ChartHelper.ResetZoom(ref weekdayChart);
@@ -3584,18 +3402,8 @@ public partial class MainChartsView : UserControl
     }
 
     /// <summary>
-    ///     Common method to reset zoom for distribution charts.
+    ///     Handles hover updates for the distribution polar tooltip.
     /// </summary>
-    private void ResetDistributionChartZoom(CartesianChart chart)
-    {
-        ChartHelper.ResetZoom(chart);
-    }
-
-    private void ResetDistributionPolarZoom()
-    {
-        DistributionChartController.PolarChart.FitToBounds = true;
-    }
-
     private void OnDistributionPolarHoveredPointsChanged(IChartView chart, IEnumerable<ChartPoint>? newPoints, IEnumerable<ChartPoint>? oldPoints)
     {
         if (_distributionPolarTooltip == null)
@@ -3649,18 +3457,6 @@ public partial class MainChartsView : UserControl
             formatted = $"{formatted} {unit}";
 
         return formatted;
-    }
-
-    private sealed class DistributionPolarTooltipState
-    {
-        public DistributionPolarTooltipState(DistributionModeDefinition definition, DistributionRangeResult rangeResult)
-        {
-            Definition = definition;
-            RangeResult = rangeResult;
-        }
-
-        public DistributionModeDefinition Definition { get; }
-        public DistributionRangeResult RangeResult { get; }
     }
 
     private void SetChartTitles(string leftName, string rightName)
@@ -4018,53 +3814,6 @@ public partial class MainChartsView : UserControl
 
     #region Distribution chart display mode UI handling
 
-    private void SelectDistributionMode(DistributionMode mode)
-    {
-        foreach (var item in DistributionChartController.ModeCombo.Items.OfType<ComboBoxItem>())
-            if (item.Tag is DistributionMode taggedMode && taggedMode == mode)
-            {
-                DistributionChartController.ModeCombo.SelectedItem = item;
-                return;
-            }
-    }
-
-    private void UpdateDistributionChartTypeVisibility()
-    {
-        if (!_viewModel.ChartState.IsDistributionVisible)
-        {
-            DistributionChartController.Chart.Visibility = Visibility.Collapsed;
-            DistributionChartController.PolarChart.Visibility = Visibility.Collapsed;
-            if (_distributionPolarTooltip != null)
-                _distributionPolarTooltip.IsOpen = false;
-            return;
-        }
-
-        if (_viewModel.ChartState.IsDistributionPolarMode)
-        {
-            DistributionChartController.Chart.Visibility = Visibility.Collapsed;
-            DistributionChartController.PolarChart.Visibility = Visibility.Visible;
-            DistributionChartController.ChartTypeToggleButton.Content = "Cartesian";
-        }
-        else
-        {
-            DistributionChartController.Chart.Visibility = Visibility.Visible;
-            DistributionChartController.PolarChart.Visibility = Visibility.Collapsed;
-            DistributionChartController.ChartTypeToggleButton.Content = "Polar";
-            if (_distributionPolarTooltip != null)
-                _distributionPolarTooltip.IsOpen = false;
-        }
-    }
-
-    private void SelectDistributionIntervalCount(int intervalCount)
-    {
-        foreach (var item in DistributionChartController.IntervalCountCombo.Items.OfType<ComboBoxItem>())
-            if (item.Tag is int taggedInterval && taggedInterval == intervalCount)
-            {
-                DistributionChartController.IntervalCountCombo.SelectedItem = item;
-                return;
-            }
-    }
-
     private void SelectBarPieBucketCount(int bucketCount)
     {
         foreach (var item in BarPieChartController.BucketCountCombo.Items.OfType<ComboBoxItem>())
@@ -4075,64 +3824,19 @@ public partial class MainChartsView : UserControl
             }
     }
 
-    private void ApplyDistributionModeDefinition(DistributionMode mode)
+    private static bool TryGetIntervalCount(object? tag, out int intervalCount)
     {
-        var definition = DistributionModeCatalog.Get(mode);
-        DistributionChartController.Panel.Title = definition.Title;
-
-        if (DistributionChartController.Chart.AxisX.Count == 0)
-            DistributionChartController.Chart.AxisX.Add(new Axis());
-
-        var axis = DistributionChartController.Chart.AxisX[0];
-        axis.Title = definition.XAxisTitle;
-        axis.Labels = definition.XAxisLabels.ToArray();
-    }
-
-    private void ApplyDistributionSettingsToUi(DistributionMode mode)
-    {
-        var settings = _viewModel.ChartState.GetDistributionSettings(mode);
-        DistributionChartController.FrequencyShadingRadio.IsChecked = settings.UseFrequencyShading;
-        DistributionChartController.SimpleRangeRadio.IsChecked = !settings.UseFrequencyShading;
-        SelectDistributionIntervalCount(settings.IntervalCount);
-    }
-
-    private void UpdateDistributionSubtypeOptions()
-    {
-        if (DistributionChartController.SubtypeCombo == null)
-            return;
-
-        _isUpdatingDistributionSubtypeCombo = true;
-        try
+        switch (tag)
         {
-            DistributionChartController.SubtypeCombo.Items.Clear();
-
-            var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                DistributionChartController.SubtypeCombo.IsEnabled = false;
-                _viewModel.ChartState.SelectedDistributionSeries = null;
-                DistributionChartController.SubtypeCombo.SelectedItem = null;
-                return;
-            }
-
-            foreach (var selection in selectedSeries)
-                DistributionChartController.SubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-
-            DistributionChartController.SubtypeCombo.IsEnabled = true;
-
-            var current = _viewModel.ChartState.SelectedDistributionSeries;
-            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? current : selectedSeries[0];
-            var distributionItem = FindSeriesComboItem(DistributionChartController.SubtypeCombo, seriesSelection) ?? DistributionChartController.SubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-            DistributionChartController.SubtypeCombo.SelectedItem = distributionItem;
-
-            if (_isInitializing)
-                _viewModel.ChartState.SelectedDistributionSeries = seriesSelection;
-            else
-                _viewModel.SetDistributionSeries(seriesSelection);
-        }
-        finally
-        {
-            _isUpdatingDistributionSubtypeCombo = false;
+            case int direct:
+                intervalCount = direct;
+                return true;
+            case string tagValue when int.TryParse(tagValue, out var parsed):
+                intervalCount = parsed;
+                return true;
+            default:
+                intervalCount = 0;
+                return false;
         }
     }
 
@@ -4175,141 +3879,6 @@ public partial class MainChartsView : UserControl
         {
             _isUpdatingWeekdayTrendSubtypeCombo = false;
         }
-    }
-
-    /// <summary>
-    ///     Common handler for display mode changes (frequency shading vs simple range).
-    /// </summary>
-    private async Task HandleDistributionDisplayModeChanged(DistributionMode mode, bool useFrequencyShading)
-    {
-        if (_isInitializing)
-            return;
-
-        try
-        {
-            var definition = DistributionModeCatalog.Get(mode);
-            Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged: Setting UseFrequencyShading to {useFrequencyShading}");
-
-            _viewModel.SetDistributionFrequencyShading(mode, useFrequencyShading);
-
-            var isVisible = _viewModel.ChartState.IsDistributionVisible;
-            var settings = _viewModel.ChartState.GetDistributionSettings(mode);
-            var useFrequencyShadingState = settings.UseFrequencyShading;
-
-            Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged: ChartState.UseFrequencyShading = {useFrequencyShadingState}");
-
-            if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
-            {
-                using var busyScope = BeginUiBusyScope();
-                var ctx = _viewModel.ChartState.LastContext;
-                Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged: Refreshing chart with useFrequencyShading={useFrequencyShadingState}");
-                await RenderDistributionChart(ctx, mode);
-            }
-        }
-        catch (Exception ex)
-        {
-            var definition = DistributionModeCatalog.Get(mode);
-            Debug.WriteLine($"On{definition.DisplayName}DisplayModeChanged error: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    ///     Common handler for interval count changes.
-    /// </summary>
-    private async Task HandleDistributionIntervalCountChanged(DistributionMode mode, int intervalCount)
-    {
-        if (_isInitializing)
-            return;
-
-        try
-        {
-            _viewModel.SetDistributionIntervalCount(mode, intervalCount);
-            var isVisible = _viewModel.ChartState.IsDistributionVisible;
-            var useFrequencyShading = _viewModel.ChartState.GetDistributionSettings(mode).UseFrequencyShading;
-
-            if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
-            {
-                using var busyScope = BeginUiBusyScope();
-                var ctx = _viewModel.ChartState.LastContext;
-                await RenderDistributionChart(ctx, mode);
-            }
-        }
-        catch (Exception ex)
-        {
-            var definition = DistributionModeCatalog.Get(mode);
-            Debug.WriteLine($"On{definition.DisplayName}IntervalCountChanged error: {ex.Message}");
-        }
-    }
-
-    private DistributionMode GetSelectedDistributionMode()
-    {
-        if (_viewModel == null)
-            return DistributionMode.Weekly;
-
-        if (DistributionChartController.ModeCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is DistributionMode mode)
-            return mode;
-
-        return _viewModel.ChartState.SelectedDistributionMode;
-    }
-
-    private static bool TryGetIntervalCount(object? tag, out int intervalCount)
-    {
-        switch (tag)
-        {
-            case int direct:
-                intervalCount = direct;
-                return true;
-            case string tagValue when int.TryParse(tagValue, out var parsed):
-                intervalCount = parsed;
-                return true;
-            default:
-                intervalCount = 0;
-                return false;
-        }
-    }
-
-    private async void OnDistributionDisplayModeChanged(object? sender, EventArgs e)
-    {
-        if (_viewModel == null)
-            return;
-
-        var useFrequencyShading = DistributionChartController.FrequencyShadingRadio.IsChecked == true;
-        await HandleDistributionDisplayModeChanged(GetSelectedDistributionMode(), useFrequencyShading);
-    }
-
-    private async void OnDistributionIntervalCountChanged(object? sender, EventArgs e)
-    {
-        if (_viewModel == null)
-            return;
-
-        if (DistributionChartController.IntervalCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var intervalCount))
-            await HandleDistributionIntervalCountChanged(GetSelectedDistributionMode(), intervalCount);
-    }
-
-    private void OnDistributionModeChanged(object? sender, EventArgs e)
-    {
-        if (_viewModel == null)
-            return;
-
-        if (_isInitializing)
-            return;
-
-        var mode = GetSelectedDistributionMode();
-        _viewModel.SetDistributionMode(mode);
-        ApplyDistributionModeDefinition(mode);
-        ApplyDistributionSettingsToUi(mode);
-    }
-
-    private void OnDistributionSubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_viewModel == null)
-            return;
-
-        if (_isInitializing || _isUpdatingDistributionSubtypeCombo)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(DistributionChartController.SubtypeCombo);
-        _viewModel.SetDistributionSeries(selection);
     }
 
     private void OnWeekdayTrendSubtypeChanged(object? sender, EventArgs e)

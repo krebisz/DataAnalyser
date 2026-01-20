@@ -4,9 +4,20 @@ Goal: Make chart controllers swappable without touching `MainChartsView` or
 core orchestration logic.
 
 ## Scope
-- Charts: Main, Normalized, DiffRatio, Distribution, WeekdayTrend, Transform.
+- Charts: Main, Normalized, DiffRatio, Distribution, WeekdayTrend, Transform, BarPie.
 - Affects: `DataVisualiser/UI/MainChartsView.xaml.cs` and per-chart controllers.
 - Non-goals: redesign UI or chart rendering engines.
+
+## Progress Log (Living)
+- 2026-01-16: Inventory complete. Coupling map captured from `DataVisualiser/UI/MainChartsView.xaml.cs` (visibility/toggles, subtype combos, rendering orchestration, tooltip/labels, reset/zoom, chart-type switches).
+- 2026-01-16: Added `IChartController` contract and initial `DistributionChartControllerAdapter` skeleton (not wired).
+- 2026-01-16: Wired Distribution events to adapter; moved Distribution UI state handling (mode, interval, subtype, chart-type visibility) into adapter. Rendering still delegated from `MainChartsView`.
+- 2026-01-16: Completed Distribution migration: rendering, cache, and clear/reset logic now live in adapter; `MainChartsView` delegates to `DistributionChartControllerAdapter`.
+
+## Technical Decisions (Living)
+- Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.
+- Keep rendering engines and computation orchestration untouched; adapters live in UI layer only.
+- Avoid exposing concrete UI controls beyond what is necessary; introduce thin wrappers where needed.
 
 ## Step 1: Inventory Current Coupling
 Checklist:
@@ -108,6 +119,14 @@ Rollout:
 4) DiffRatio (most coupled)
 5) Transform panel
 6) Main chart
+
+## Next Migration Checklist (Step 1: Distribution)
+- Define `DistributionChartControllerAdapter` responsibilities (toggle, mode, subtype, interval, polar/cartesian switching). (done)
+- Add adapter class in `DataVisualiser/UI/Controls` (or `DataVisualiser/UI/Adapters`) with explicit dependencies (view model, update coordinator, rendering services). (done)
+- Move `UpdateDistributionSubtypeOptions`, `ApplyDistributionModeDefinition`, `ApplyDistributionSettingsToUi`, and chart-type visibility logic into adapter methods. (done)
+- Route Distribution UI events in `MainChartsView` to adapter (no direct control access). (done)
+- Keep render calls in adapter: `RenderDistributionChart`, `HandleDistributionDisplayModeChanged`, `HandleDistributionIntervalCountChanged`. (done)
+- Leave rendering engines unchanged; only UI orchestration shifts. (on track)
 
 ## Risks and Mitigations
 - Risk: Too many UI control dependencies.
