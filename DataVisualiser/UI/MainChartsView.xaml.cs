@@ -52,7 +52,6 @@ public partial class MainChartsView : UserControl
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _normalizedSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly UiState _uiState = new();
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _weekdayTrendSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly LiveChartsChartRenderer _barPieRenderer = new();
     // Placeholder instance since DiffRatioChartController is commented out in XAML.
     private readonly DiffRatioChartController _diffRatioChartController = new();
@@ -68,6 +67,7 @@ public partial class MainChartsView : UserControl
     private bool _isChangingResolution;
     private ChartPanelSurface _barPieSurface = null!;
     private bool _isBarPieVisible;
+    private WeekdayTrendChartControllerAdapter _weekdayTrendAdapter = null!;
     private DistributionChartControllerAdapter _distributionAdapter = null!;
 
     private bool _isInitializing = true;
@@ -76,7 +76,6 @@ public partial class MainChartsView : UserControl
     private bool _isUpdatingNormalizedSubtypeCombos;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
-    private bool _isUpdatingWeekdayTrendSubtypeCombo;
 
     private MetricSelectionService _metricSelectionService = null!;
     private SubtypeSelectorManager _selectorManager = null!;
@@ -189,7 +188,7 @@ public partial class MainChartsView : UserControl
         UpdateNormalizedSubtypeOptions();
         UpdateDiffRatioSubtypeOptions();
         _distributionAdapter.UpdateSubtypeOptions();
-        UpdateWeekdayTrendSubtypeOptions();
+        _weekdayTrendAdapter.UpdateSubtypeOptions();
 
         // Update button states based on selected subtype count
         UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
@@ -481,7 +480,7 @@ public partial class MainChartsView : UserControl
                 break;
             case "WeeklyTrend":
                 WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
-                UpdateWeekdayTrendChartTypeVisibility();
+                _weekdayTrendAdapter.UpdateChartTypeVisibility();
                 break;
             case "Transform":
                 TransformDataPanelController.Panel.IsChartVisible = e.ShowTransformPanel;
@@ -651,7 +650,7 @@ public partial class MainChartsView : UserControl
         _distributionAdapter.UpdateChartTypeVisibility();
 
         WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
-        UpdateWeekdayTrendChartTypeVisibility();
+        _weekdayTrendAdapter.UpdateChartTypeVisibility();
 
         TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
     }
@@ -758,11 +757,6 @@ public partial class MainChartsView : UserControl
         // Charts are only cleared when data changes (e.g., new selection, resolution change, etc.)
     }
 
-    private void RenderWeekdayTrendChart(WeekdayTrendResult result)
-    {
-        _weekdayTrendChartUpdateCoordinator.UpdateChart(result, _viewModel.ChartState, WeekdayTrendChartController.Chart, WeekdayTrendChartController.PolarChart);
-    }
-
     private async Task RenderChartsFromLastContext()
     {
         using var busyScope = BeginUiBusyScope();
@@ -801,7 +795,7 @@ public partial class MainChartsView : UserControl
             await _distributionAdapter.RenderAsync(safeCtx);
 
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
-            await RenderWeeklyTrendAsync(safeCtx);
+            await _weekdayTrendAdapter.RenderAsync(safeCtx);
 
         // Populate transform panel grids if visible
         if (_viewModel.ChartState.IsTransformPanelVisible)
@@ -1332,7 +1326,7 @@ public partial class MainChartsView : UserControl
 
             case "WeeklyTrend":
                 if (_viewModel.ChartState.IsWeeklyTrendVisible)
-                    await RenderWeeklyTrendAsync(ctx);
+                    await _weekdayTrendAdapter.RenderAsync(ctx);
                 break;
         }
     }
@@ -1348,7 +1342,7 @@ public partial class MainChartsView : UserControl
 
         await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
         await _distributionAdapter.RenderAsync(ctx);
-        await RenderWeeklyTrendAsync(ctx);
+        await _weekdayTrendAdapter.RenderAsync(ctx);
         await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
     }
 
@@ -1358,7 +1352,7 @@ public partial class MainChartsView : UserControl
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         _distributionAdapter.Clear(_viewModel.ChartState);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
-        // Cartesian, Polar, and Scatter modes are handled by RenderWeekdayTrendChart which checks visibility.
+        // Cartesian, Polar, and Scatter modes are handled by the adapter render check.
     }
 
     private async Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
@@ -1372,96 +1366,6 @@ public partial class MainChartsView : UserControl
 
         UpdateNormalizedPanelTitle(normalizedContext);
         await _chartRenderingOrchestrator.RenderNormalizedChartAsync(normalizedContext, NormalizedChartController.Chart, _viewModel.ChartState);
-    }
-
-    private async Task RenderWeeklyTrendAsync(ChartDataContext ctx)
-    {
-        if (!_viewModel.ChartState.IsWeeklyTrendVisible)
-            return;
-
-        var selectedSeries = ResolveSelectedWeekdayTrendSeries(ctx);
-        var data = await ResolveWeekdayTrendDataAsync(ctx, selectedSeries);
-        if (data == null || data.Count == 0)
-            return;
-
-        var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSeries);
-        var trendContext = new ChartDataContext
-        {
-            Data1 = data,
-            DisplayName1 = displayName,
-            MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-            PrimarySubtype = selectedSeries?.Subtype,
-            DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            From = ctx.From,
-            To = ctx.To
-        };
-
-        var result = ComputeWeekdayTrend(trendContext);
-        if (result != null)
-            RenderWeekdayTrendChart(result);
-        // Note: We don't clear the chart when hiding - just hide the panel to preserve data
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (ctx.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
-
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildWeekdayTrendCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-
-        if (_weekdayTrendSubtypeCache.TryGetValue(cacheKey, out var cached))
-            return cached;
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _weekdayTrendSubtypeCache[cacheKey] = data;
-        return data;
-    }
-
-    private MetricSeriesSelection? ResolveSelectedWeekdayTrendSeries(ChartDataContext ctx)
-    {
-        if (_viewModel.ChartState.SelectedWeekdayTrendSeries != null)
-            return _viewModel.ChartState.SelectedWeekdayTrendSeries;
-
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-    }
-
-    private static string ResolveWeekdayTrendDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
-    }
-
-    private static string BuildWeekdayTrendCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveNormalizedDataAsync(ChartDataContext ctx)
@@ -1966,68 +1870,6 @@ public partial class MainChartsView : UserControl
         return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
     }
 
-    private WeekdayTrendResult? ComputeWeekdayTrend(ChartDataContext ctx)
-    {
-        if (_strategyCutOverService == null)
-            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
-
-        var parameters = new StrategyCreationParameters
-        {
-            LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
-            Label1 = ctx.DisplayName1,
-            From = ctx.From,
-            To = ctx.To
-        };
-
-        var strategy = _strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
-        strategy.Compute();
-
-        return strategy is IWeekdayTrendResultProvider provider ? provider.ExtendedResult : null;
-    }
-
-
-    private void OnWeekdayTrendDayToggled(object? sender, WeekdayTrendDayToggleEventArgs e)
-    {
-        switch (e.Day)
-        {
-            case DayOfWeek.Monday:
-                _viewModel.SetWeeklyTrendMondayVisible(e.IsChecked);
-                break;
-            case DayOfWeek.Tuesday:
-                _viewModel.SetWeeklyTrendTuesdayVisible(e.IsChecked);
-                break;
-            case DayOfWeek.Wednesday:
-                _viewModel.SetWeeklyTrendWednesdayVisible(e.IsChecked);
-                break;
-            case DayOfWeek.Thursday:
-                _viewModel.SetWeeklyTrendThursdayVisible(e.IsChecked);
-                break;
-            case DayOfWeek.Friday:
-                _viewModel.SetWeeklyTrendFridayVisible(e.IsChecked);
-                break;
-            case DayOfWeek.Saturday:
-                _viewModel.SetWeeklyTrendSaturdayVisible(e.IsChecked);
-                break;
-            case DayOfWeek.Sunday:
-                _viewModel.SetWeeklyTrendSundayVisible(e.IsChecked);
-                break;
-        }
-    }
-
-    private void OnWeekdayTrendAverageToggled(object? sender, WeekdayTrendAverageToggleEventArgs e)
-    {
-        _viewModel.SetWeeklyTrendAverageVisible(e.IsChecked);
-    }
-
-    private void OnWeekdayTrendAverageWindowChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing)
-            return;
-
-        if (WeekdayTrendChartController.AverageWindowCombo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is WeekdayTrendAverageWindow window)
-            _viewModel.SetWeeklyTrendAverageWindow(window);
-    }
-
     private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
     {
         var panel = GetChartPanel(e.ChartName);
@@ -2053,8 +1895,7 @@ public partial class MainChartsView : UserControl
         ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         _distributionAdapter.Clear(_viewModel.ChartState);
-        ChartHelper.ClearChart(WeekdayTrendChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(WeekdayTrendChartController.PolarChart, _viewModel.ChartState.ChartTimestamps);
+        _weekdayTrendAdapter.Clear(_viewModel.ChartState);
         ClearBarPieChart();
         _viewModel.ChartState.LastContext = null;
 
@@ -2147,15 +1988,24 @@ public partial class MainChartsView : UserControl
             _distributionPolarRenderingService,
             () => _distributionPolarTooltip);
 
+        _weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(
+            WeekdayTrendChartController,
+            _viewModel,
+            () => _isInitializing,
+            BeginUiBusyScope,
+            _metricSelectionService,
+            () => _strategyCutOverService,
+            _weekdayTrendChartUpdateCoordinator);
+
         // Wire up MainChartController events
         MainChartController.ToggleRequested += OnMainChartToggleRequested;
         MainChartController.DisplayModeChanged += OnMainChartDisplayModeChanged;
-        WeekdayTrendChartController.ToggleRequested += OnWeekdayTrendToggleRequested;
-        WeekdayTrendChartController.ChartTypeToggleRequested += OnWeekdayTrendChartTypeToggleRequested;
-        WeekdayTrendChartController.DayToggled += OnWeekdayTrendDayToggled;
-        WeekdayTrendChartController.AverageToggled += OnWeekdayTrendAverageToggled;
-        WeekdayTrendChartController.AverageWindowChanged += OnWeekdayTrendAverageWindowChanged;
-        WeekdayTrendChartController.SubtypeChanged += OnWeekdayTrendSubtypeChanged;
+        WeekdayTrendChartController.ToggleRequested += _weekdayTrendAdapter.OnToggleRequested;
+        WeekdayTrendChartController.ChartTypeToggleRequested += _weekdayTrendAdapter.OnChartTypeToggleRequested;
+        WeekdayTrendChartController.DayToggled += _weekdayTrendAdapter.OnDayToggled;
+        WeekdayTrendChartController.AverageToggled += _weekdayTrendAdapter.OnAverageToggled;
+        WeekdayTrendChartController.AverageWindowChanged += _weekdayTrendAdapter.OnAverageWindowChanged;
+        WeekdayTrendChartController.SubtypeChanged += _weekdayTrendAdapter.OnSubtypeChanged;
         DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
         DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
         DiffRatioChartController.PrimarySubtypeChanged += OnDiffRatioPrimarySubtypeChanged;
@@ -2353,23 +2203,13 @@ public partial class MainChartsView : UserControl
         _barPieSurface = new ChartPanelSurface(BarPieChartController.Panel);
         InitializeBarPieControls();
         InitializeDistributionControls();
-        InitializeWeekdayTrendControls();
+        _weekdayTrendAdapter.InitializeControls();
         InitializeChartBehavior();
         ClearChartsOnStartup();
         DisableAxisLabelsWhenNoData();
         SetDefaultChartTitles();
         _distributionAdapter.UpdateChartTypeVisibility();
         InitializeDistributionPolarTooltip();
-    }
-
-    private void InitializeWeekdayTrendControls()
-    {
-        WeekdayTrendChartController.AverageWindowCombo.Items.Clear();
-        AddWeekdayTrendAverageOption("Running Mean", WeekdayTrendAverageWindow.RunningMean);
-        AddWeekdayTrendAverageOption("Weekly", WeekdayTrendAverageWindow.Weekly);
-        AddWeekdayTrendAverageOption("Monthly", WeekdayTrendAverageWindow.Monthly);
-
-        SelectWeekdayTrendAverageWindow(_viewModel.ChartState.WeekdayTrendAverageWindow);
     }
 
     private void InitializeBarPieControls()
@@ -2458,7 +2298,7 @@ public partial class MainChartsView : UserControl
         MainChartController.DisplayStackedRadio.IsChecked = _viewModel.ChartState.MainChartDisplayMode == MainChartDisplayMode.Stacked;
 
         // Initialize weekday trend chart type visibility
-        UpdateWeekdayTrendChartTypeVisibility();
+        _weekdayTrendAdapter.UpdateChartTypeVisibility();
     }
 
     private void InitializeSubtypeSelector()
@@ -2485,27 +2325,6 @@ public partial class MainChartsView : UserControl
     private void InitializeDistributionControls()
     {
         _distributionAdapter.InitializeControls();
-    }
-
-    private void AddWeekdayTrendAverageOption(string label, WeekdayTrendAverageWindow window)
-    {
-        WeekdayTrendChartController.AverageWindowCombo.Items.Add(new ComboBoxItem
-        {
-            Content = label,
-            Tag = window
-        });
-    }
-
-    private void SelectWeekdayTrendAverageWindow(WeekdayTrendAverageWindow window)
-    {
-        foreach (var item in WeekdayTrendChartController.AverageWindowCombo.Items.OfType<ComboBoxItem>())
-        {
-            if (item.Tag is WeekdayTrendAverageWindow option && option == window)
-            {
-                WeekdayTrendChartController.AverageWindowCombo.SelectedItem = item;
-                break;
-            }
-        }
     }
 
     private void InitializeChartBehavior()
@@ -2733,7 +2552,7 @@ public partial class MainChartsView : UserControl
         try
         {
             _distributionAdapter.ClearCache();
-            _weekdayTrendSubtypeCache.Clear();
+            _weekdayTrendAdapter.ClearCache();
             _normalizedSubtypeCache.Clear();
             _diffRatioSubtypeCache.Clear();
             _transformSubtypeCache.Clear();
@@ -2833,51 +2652,6 @@ public partial class MainChartsView : UserControl
         _viewModel.SetNormalizedSecondarySeries(selection);
 
         await RenderNormalizedFromSelectionAsync();
-    }
-
-    private void OnWeekdayTrendToggleRequested(object? sender, EventArgs e)
-    {
-        _viewModel.ToggleWeeklyTrend();
-    }
-
-    private void OnWeekdayTrendChartTypeToggleRequested(object? sender, EventArgs e)
-    {
-        using var busyScope = BeginUiBusyScope();
-        _viewModel.ToggleWeekdayTrendChartType();
-        UpdateWeekdayTrendChartTypeVisibility();
-
-        // Re-render the chart with current data if visible
-        if (_viewModel.ChartState.IsWeeklyTrendVisible && _viewModel.ChartState.LastContext != null)
-        {
-            var result = ComputeWeekdayTrend(_viewModel.ChartState.LastContext);
-            if (result != null)
-                RenderWeekdayTrendChart(result);
-        }
-    }
-
-    private void UpdateWeekdayTrendChartTypeVisibility()
-    {
-        // Only update chart visibility if the panel itself is visible
-        if (!_viewModel.ChartState.IsWeeklyTrendVisible)
-        {
-            WeekdayTrendChartController.Chart.Visibility = Visibility.Collapsed;
-            WeekdayTrendChartController.PolarChart.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        var mode = _viewModel.ChartState.WeekdayTrendChartMode;
-        if (mode == WeekdayTrendChartMode.Polar)
-        {
-            WeekdayTrendChartController.Chart.Visibility = Visibility.Collapsed;
-            WeekdayTrendChartController.PolarChart.Visibility = Visibility.Visible;
-            WeekdayTrendChartController.ChartTypeToggleButton.Content = "Scatter";
-        }
-        else
-        {
-            WeekdayTrendChartController.Chart.Visibility = Visibility.Visible;
-            WeekdayTrendChartController.PolarChart.Visibility = Visibility.Collapsed;
-            WeekdayTrendChartController.ChartTypeToggleButton.Content = mode == WeekdayTrendChartMode.Scatter ? "Cartesian" : "Polar";
-        }
     }
 
     private void OnDiffRatioToggleRequested(object? sender, EventArgs e)
@@ -3376,10 +3150,7 @@ public partial class MainChartsView : UserControl
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
         _distributionAdapter.ResetZoom();
         ChartHelper.ResetZoom(TransformDataPanelController.ChartTransformResult);
-        var weekdayChart = WeekdayTrendChartController.Chart;
-        ChartHelper.ResetZoom(ref weekdayChart);
-        var weekdayPolarChart = WeekdayTrendChartController.PolarChart;
-        ChartHelper.ResetZoom(ref weekdayPolarChart);
+        _weekdayTrendAdapter.ResetZoom();
     }
 
     private void OnClear(object sender, RoutedEventArgs e)
@@ -3838,59 +3609,6 @@ public partial class MainChartsView : UserControl
                 intervalCount = 0;
                 return false;
         }
-    }
-
-    private void UpdateWeekdayTrendSubtypeOptions()
-    {
-        var combo = WeekdayTrendChartController?.SubtypeCombo;
-        if (combo == null)
-            return;
-
-        _isUpdatingWeekdayTrendSubtypeCombo = true;
-        try
-        {
-            combo.Items.Clear();
-
-            var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                combo.IsEnabled = false;
-                _viewModel.ChartState.SelectedWeekdayTrendSeries = null;
-                combo.SelectedItem = null;
-                return;
-            }
-
-            foreach (var selection in selectedSeries)
-                combo.Items.Add(BuildSeriesComboItem(selection));
-
-            combo.IsEnabled = true;
-
-            var current = _viewModel.ChartState.SelectedWeekdayTrendSeries;
-            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? current : selectedSeries[0];
-            var weekdayItem = FindSeriesComboItem(combo, seriesSelection) ?? combo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-            combo.SelectedItem = weekdayItem;
-
-            if (_isInitializing)
-                _viewModel.ChartState.SelectedWeekdayTrendSeries = seriesSelection;
-            else
-                _viewModel.SetWeekdayTrendSeries(seriesSelection);
-        }
-        finally
-        {
-            _isUpdatingWeekdayTrendSubtypeCombo = false;
-        }
-    }
-
-    private void OnWeekdayTrendSubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_viewModel == null)
-            return;
-
-        if (_isInitializing || _isUpdatingWeekdayTrendSubtypeCombo)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(WeekdayTrendChartController.SubtypeCombo);
-        _viewModel.SetWeekdayTrendSeries(selection);
     }
 
     #endregion

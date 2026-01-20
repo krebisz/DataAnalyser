@@ -13,6 +13,7 @@ core orchestration logic.
 - 2026-01-16: Added `IChartController` contract and initial `DistributionChartControllerAdapter` skeleton (not wired).
 - 2026-01-16: Wired Distribution events to adapter; moved Distribution UI state handling (mode, interval, subtype, chart-type visibility) into adapter. Rendering still delegated from `MainChartsView`.
 - 2026-01-16: Completed Distribution migration: rendering, cache, and clear/reset logic now live in adapter; `MainChartsView` delegates to `DistributionChartControllerAdapter`.
+- 2026-01-16: Completed WeekdayTrend migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `WeekdayTrendChartControllerAdapter`.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.
@@ -120,13 +121,25 @@ Rollout:
 5) Transform panel
 6) Main chart
 
-## Next Migration Checklist (Step 1: Distribution)
+## Completed Migration Checklist (Step 1: Distribution)
 - Define `DistributionChartControllerAdapter` responsibilities (toggle, mode, subtype, interval, polar/cartesian switching). (done)
 - Add adapter class in `DataVisualiser/UI/Controls` (or `DataVisualiser/UI/Adapters`) with explicit dependencies (view model, update coordinator, rendering services). (done)
 - Move `UpdateDistributionSubtypeOptions`, `ApplyDistributionModeDefinition`, `ApplyDistributionSettingsToUi`, and chart-type visibility logic into adapter methods. (done)
 - Route Distribution UI events in `MainChartsView` to adapter (no direct control access). (done)
 - Keep render calls in adapter: `RenderDistributionChart`, `HandleDistributionDisplayModeChanged`, `HandleDistributionIntervalCountChanged`. (done)
 - Leave rendering engines unchanged; only UI orchestration shifts. (on track)
+
+## Completed Migration Checklist (Step 2: WeekdayTrend)
+- Define `WeekdayTrendChartControllerAdapter` responsibilities (toggle, mode, subtype, day/average controls, chart-type switching). (done)
+- Move render/data resolution (`RenderWeekdayTrendAsync`, cache, selection helpers) into adapter. (done)
+- Route WeekdayTrend UI events in `MainChartsView` to adapter (no direct control access). (done)
+- Keep rendering engines unchanged; only UI orchestration shifts. (on track)
+
+## Next Migration Checklist (Step 3: Normalized)
+- Define `NormalizedChartControllerAdapter` responsibilities (toggle, subtype combos, normalization mode).
+- Move render/data resolution and title updates into adapter.
+- Route Normalized UI events in `MainChartsView` to adapter.
+- Keep rendering engines unchanged; only UI orchestration shifts.
 
 ## Risks and Mitigations
 - Risk: Too many UI control dependencies.
