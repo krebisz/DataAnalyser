@@ -19,6 +19,10 @@ core orchestration logic.
 - 2026-01-20: Completed Transform migration: rendering, compute, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `TransformDataPanelControllerAdapter`.
 - 2026-01-20: Completed Main migration: rendering, display mode handling, and clear/reset logic now live in adapter; `MainChartsView` delegates to `MainChartControllerAdapter`.
 - 2026-01-20: Added registry guards, key catalog, registry-based clear/reset paths, and resolver seam; registry remains a mirror for now.
+- 2026-01-20: Added BarPie adapter and moved Bar/Pie rendering + controls into adapter; BarPie visibility moved into `ChartState`; `MainChartsView` now uses registry for BarPie render/init and hidden-chart clearing includes BarPie.
+- 2026-01-20: BarPie now participates in ViewModel visibility toggles (`ShowBarPie` in update args; `ToggleBarPie`), and `MainChartsView` handles BarPie in visibility/render paths alongside other charts.
+- 2026-01-20: Added adapter-level tests for BarPie controller behavior.
+- 2026-01-20: Introduced `ChartControllerFactory` seam so `MainChartsView` no longer instantiates adapters directly.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.
@@ -166,7 +170,9 @@ Rollout:
 - Route main chart UI events in `MainChartsView` to adapter. (done)
 
 ## Next Steps
-- Start registry/factory work (Step 4) now that all per-chart adapters are in place.
+- Remove remaining direct controller references in `MainChartsView` (adapter construction aside) and rely solely on registry.
+- Remove fallback direct control access in `GetCartesianChart`/`GetPolarChart` once registry is always available.
+- Add/adapt adapter-level tests for BarPie similar to other chart adapters. (done)
 
 ## Step-by-Step Plan to Mitigate Registry/Factory Risks
 1) Snapshot current behavior: list all chart keys, visibility toggles, and render entry points in `MainChartsView`. Capture any special cases (visibility-only toggles, secondary-data gating).
@@ -189,7 +195,7 @@ Rollout:
 15) Add minimal tests: registry registration/lookup, presence of all keys, and a smoke test that toggling a chart still renders the same path.
 
 ## Registry Snapshot (Before Wiring Changes)
-Keys: `Main`, `Norm`, `DiffRatio`, `Distribution`, `WeeklyTrend`, `Transform`, plus non-adapter `BarPie`.
+Keys: `Main`, `Norm`, `DiffRatio`, `Distribution`, `WeeklyTrend`, `Transform`, `BarPie`.
 Visibility toggles:
 - `Main` -> `_viewModel.ToggleMain`, `MainChartController.Panel.IsChartVisible`
 - `Norm` -> `_viewModel.ToggleNormalized`
@@ -197,6 +203,7 @@ Visibility toggles:
 - `Distribution` -> `_viewModel.ToggleDistribution` (+ polar/cartesian toggle)
 - `WeeklyTrend` -> `_viewModel.ToggleWeeklyTrend` (+ chart type toggle)
 - `Transform` -> `_viewModel.ToggleTransformPanel` (visibility-only toggle path)
+ - `BarPie` -> adapter-managed toggle + `ChartState.IsBarPieVisible`
 Render entry points:
 - `Main` -> `_mainAdapter.RenderAsync`
 - `Norm` -> `_normalizedAdapter.RenderAsync` (requires secondary data)
@@ -204,9 +211,11 @@ Render entry points:
 - `Distribution` -> `_distributionAdapter.RenderAsync`
 - `WeeklyTrend` -> `_weekdayTrendAdapter.RenderAsync`
 - `Transform` -> `_transformAdapter.RenderAsync` (grids only unless compute)
+ - `BarPie` -> `_barPieAdapter.RenderAsync`
 Special cases:
 - Transform visibility-only toggle must not trigger full re-render.
 - Secondary-data gating clears `Norm`/`DiffRatio` when secondary data disappears.
+- BarPie visibility toggles now follow the same ViewModel update path.
 
 ## Risks and Mitigations
 - Risk: Too many UI control dependencies.

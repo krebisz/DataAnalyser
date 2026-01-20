@@ -82,6 +82,7 @@ public sealed class ChartVisibilityController
                 ShowDistribution = _chartState.IsDistributionVisible,
                 ShowWeeklyTrend = _chartState.IsWeeklyTrendVisible,
                 ShowTransformPanel = _chartState.IsTransformPanelVisible,
+                ShowBarPie = _chartState.IsBarPieVisible,
                 ShouldRenderCharts = _chartState.LastContext != null,
                 IsVisibilityOnlyToggle = isVisibilityOnlyToggle,
                 ToggledChartName = toggledChartName

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.State;
 using LiveCharts.Wpf;
@@ -58,4 +59,10 @@ public interface IDiffRatioChartControllerExtras
 public interface IMainChartControllerExtras
 {
     void SyncDisplayModeSelection();
+}
+
+public interface IBarPieChartControllerExtras
+{
+    void InitializeControls();
+    Task RenderIfVisibleAsync();
 }

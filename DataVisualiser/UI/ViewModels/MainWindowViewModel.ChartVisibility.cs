@@ -63,6 +63,11 @@ public partial class MainWindowViewModel
             ChartUpdateRequested?.Invoke(this, updateArgs);
     }
 
+    public void ToggleBarPie()
+    {
+        ToggleChartVisibility("BarPie", () => ChartState.IsBarPieVisible, v => ChartState.IsBarPieVisible = v);
+    }
+
     public void RequestChartUpdate(bool isVisibilityOnlyToggle = false, string? toggledChartName = null)
     {
         var updateArgs = _chartVisibilityController.BuildChartUpdateRequest(isVisibilityOnlyToggle, toggledChartName);

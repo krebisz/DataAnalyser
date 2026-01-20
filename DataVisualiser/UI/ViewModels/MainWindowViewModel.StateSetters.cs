@@ -42,6 +42,12 @@ public partial class MainWindowViewModel
         RequestChartUpdate(true, "Distribution");
     }
 
+    public void SetBarPieVisible(bool value)
+    {
+        ChartState.IsBarPieVisible = value;
+        RequestChartUpdate(true, "BarPie");
+    }
+
     public void SetWeeklyTrendMondayVisible(bool value)
     {
         ChartState.ShowMonday = value;

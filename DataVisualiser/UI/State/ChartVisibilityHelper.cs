@@ -29,6 +29,9 @@ public static class ChartVisibilityHelper
         if (!state.IsTransformPanelVisible)
             hidden.Add(ChartControllerKeys.Transform);
 
+        if (!state.IsBarPieVisible)
+            hidden.Add(ChartControllerKeys.BarPie);
+
         return hidden;
     }
 }
