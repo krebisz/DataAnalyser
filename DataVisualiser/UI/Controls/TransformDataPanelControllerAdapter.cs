@@ -23,7 +23,7 @@ using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class TransformDataPanelControllerAdapter : IChartController
+public sealed class TransformDataPanelControllerAdapter : IChartController, IChartCacheController, ITransformPanelControllerExtras
 {
     private readonly TransformDataPanelController _controller;
     private readonly MainWindowViewModel _viewModel;

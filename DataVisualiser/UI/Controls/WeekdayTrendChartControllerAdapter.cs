@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -19,7 +20,7 @@ using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class WeekdayTrendChartControllerAdapter : IChartController
+public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IWeekdayTrendChartControllerExtras, IChartSeriesAvailability
 {
     private readonly WeekdayTrendChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -84,6 +85,21 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController
     {
         ChartHelper.ResetZoom(_controller.Chart);
         ChartHelper.ResetZoom(_controller.PolarChart);
+    }
+
+    public bool HasSeries(ChartState state)
+    {
+        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar
+            ? HasSeriesInternal(_controller.PolarChart.Series)
+            : HasSeriesInternal(_controller.Chart.Series);
+    }
+
+    private static bool HasSeriesInternal(System.Collections.IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     public void ClearCache()

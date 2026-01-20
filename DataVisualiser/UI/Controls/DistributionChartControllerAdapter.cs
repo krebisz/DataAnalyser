@@ -17,7 +17,7 @@ using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class DistributionChartControllerAdapter : IChartController
+public sealed class DistributionChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDistributionChartControllerExtras, IChartSeriesAvailability
 {
     private readonly DistributionChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -81,6 +81,21 @@ public sealed class DistributionChartControllerAdapter : IChartController
     {
         ChartHelper.ResetZoom(_controller.Chart);
         _controller.PolarChart.FitToBounds = true;
+    }
+
+    public bool HasSeries(ChartState state)
+    {
+        return state.IsDistributionPolarMode
+            ? HasSeriesInternal(_controller.PolarChart.Series)
+            : HasSeriesInternal(_controller.Chart.Series);
+    }
+
+    private static bool HasSeriesInternal(System.Collections.IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     public void ClearCache()

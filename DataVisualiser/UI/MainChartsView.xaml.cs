@@ -129,10 +129,10 @@ public partial class MainChartsView : UserControl
         var selectedSubtypeCount = CountSelectedSubtypes(distinctSeries);
 
         _viewModel.SetSelectedSeries(distinctSeries);
-        _normalizedAdapter.UpdateSubtypeOptions();
-        _diffRatioAdapter.UpdateSubtypeOptions();
-        _distributionAdapter.UpdateSubtypeOptions();
-        _weekdayTrendAdapter.UpdateSubtypeOptions();
+        UpdateSubtypeOptions(ChartControllerKeys.Normalized);
+        UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
+        UpdateSubtypeOptions(ChartControllerKeys.Distribution);
+        UpdateSubtypeOptions(ChartControllerKeys.WeeklyTrend);
 
         // Update button states based on selected subtype count
         UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
@@ -183,13 +183,13 @@ public partial class MainChartsView : UserControl
         {
             if (_viewModel.ChartState.IsNormalizedVisible)
             {
-                _normalizedAdapter.Clear(_viewModel.ChartState);
+                ClearChart(ChartControllerKeys.Normalized);
                 _viewModel.SetNormalizedVisible(false);
             }
 
             if (_viewModel.ChartState.IsDiffRatioVisible)
             {
-                _diffRatioAdapter.Clear(_viewModel.ChartState);
+                ClearChart(ChartControllerKeys.DiffRatio);
                 _viewModel.SetDiffRatioVisible(false);
             }
         }
@@ -208,7 +208,7 @@ public partial class MainChartsView : UserControl
         var hasPrimaryData = selectedSubtypeCount >= 1;
         var canToggle = hasPrimaryData && HasLoadedData();
 
-        _mainAdapter.ToggleButton.IsEnabled = HasLoadedData();
+        ResolveController(ChartControllerKeys.Main).ToggleButton.IsEnabled = HasLoadedData();
         WeekdayTrendChartController.ToggleButton.IsEnabled = canToggle;
         DistributionChartController.ToggleButton.IsEnabled = canToggle;
         TransformDataPanelController.ToggleButton.IsEnabled = canToggle;
@@ -351,11 +351,11 @@ public partial class MainChartsView : UserControl
             MessageBox.Show(msg, "DEBUG - LastContext contents");
         }
 
-        _transformAdapter.CompleteSelectionsPendingLoad();
-        _normalizedAdapter.UpdateSubtypeOptions();
-        _diffRatioAdapter.UpdateSubtypeOptions();
-        _transformAdapter.UpdateTransformSubtypeOptions();
-        _transformAdapter.UpdateTransformComputeButtonState();
+        CompleteTransformSelectionsPendingLoad();
+        UpdateSubtypeOptions(ChartControllerKeys.Normalized);
+        UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
+        UpdateTransformSubtypeOptions();
+        UpdateTransformComputeButtonState();
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
         UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
@@ -376,25 +376,25 @@ public partial class MainChartsView : UserControl
     {
         switch (e.ToggledChartName)
         {
-            case "Main":
-                _mainAdapter.Panel.IsChartVisible = e.ShowMain;
+            case ChartControllerKeys.Main:
+                SetChartVisibility(ChartControllerKeys.Main, e.ShowMain);
                 break;
-            case "Norm":
-                NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
+            case ChartControllerKeys.Normalized:
+                SetChartVisibility(ChartControllerKeys.Normalized, e.ShowNormalized);
                 break;
-            case "DiffRatio":
-                DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
+            case ChartControllerKeys.DiffRatio:
+                SetChartVisibility(ChartControllerKeys.DiffRatio, e.ShowDiffRatio);
                 break;
-            case "Distribution":
-                DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
-                _distributionAdapter.UpdateChartTypeVisibility();
+            case ChartControllerKeys.Distribution:
+                SetChartVisibility(ChartControllerKeys.Distribution, e.ShowDistribution);
+                UpdateDistributionChartTypeVisibility();
                 break;
-            case "WeeklyTrend":
-                WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
-                _weekdayTrendAdapter.UpdateChartTypeVisibility();
+            case ChartControllerKeys.WeeklyTrend:
+                SetChartVisibility(ChartControllerKeys.WeeklyTrend, e.ShowWeeklyTrend);
+                UpdateWeekdayTrendChartTypeVisibility();
                 break;
-            case "Transform":
-                TransformDataPanelController.Panel.IsChartVisible = e.ShowTransformPanel;
+            case ChartControllerKeys.Transform:
+                SetChartVisibility(ChartControllerKeys.Transform, e.ShowTransformPanel);
                 break;
         }
     }
@@ -484,11 +484,17 @@ public partial class MainChartsView : UserControl
         if (!e.IsVisibilityOnlyToggle || string.IsNullOrEmpty(e.ToggledChartName))
             return false;
 
+        if (!IsKnownChartKey(e.ToggledChartName))
+        {
+            Debug.WriteLine($"[ChartRegistry] Ignoring visibility-only toggle for unknown chart '{e.ToggledChartName}'.");
+            return true;
+        }
+
         UpdateChartVisibilityForToggle(e);
 
-        if (e.ToggledChartName == "Transform")
+        if (e.ToggledChartName == ChartControllerKeys.Transform)
         {
-            _transformAdapter.HandleVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
+            HandleTransformVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
             return true; // Never reload charts
         }
 
@@ -506,52 +512,126 @@ public partial class MainChartsView : UserControl
     {
         return chartName switch
         {
-            "Main" => _viewModel.ChartState.IsMainVisible,
-            "Norm" => _viewModel.ChartState.IsNormalizedVisible,
-            "DiffRatio" => _viewModel.ChartState.IsDiffRatioVisible,
-            "Distribution" => _viewModel.ChartState.IsDistributionVisible,
-            "WeeklyTrend" => _viewModel.ChartState.IsWeeklyTrendVisible,
+            ChartControllerKeys.Main => _viewModel.ChartState.IsMainVisible,
+            ChartControllerKeys.Normalized => _viewModel.ChartState.IsNormalizedVisible,
+            ChartControllerKeys.DiffRatio => _viewModel.ChartState.IsDiffRatioVisible,
+            ChartControllerKeys.Distribution => _viewModel.ChartState.IsDistributionVisible,
+            ChartControllerKeys.WeeklyTrend => _viewModel.ChartState.IsWeeklyTrendVisible,
             _ => false
         };
     }
 
     private bool HasChartData(string chartName)
     {
-        return chartName switch
-        {
-            "Main" => HasSeries(MainChartController.Chart.Series),
-            "Norm" => HasSeries(NormalizedChartController.Chart.Series),
-            "DiffRatio" => HasSeries(DiffRatioChartController.Chart.Series),
-            "Distribution" => _viewModel.ChartState.IsDistributionPolarMode
-                    ? HasSeries(DistributionChartController.PolarChart.Series)
-                    : HasSeries(DistributionChartController.Chart.Series),
-            "WeeklyTrend" => _viewModel.ChartState.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar
-                    ? HasSeries(WeekdayTrendChartController.PolarChart.Series)
-                    : HasSeries(WeekdayTrendChartController.Chart.Series),
-            _ => false
-        };
-    }
-
-    private static bool HasSeries(System.Collections.IEnumerable? series)
-    {
-        if (series == null)
+        if (!IsKnownChartKey(chartName))
             return false;
 
-        return series.Cast<object>().Any();
+        if (ResolveController(chartName) is IChartSeriesAvailability availability)
+            return availability.HasSeries(_viewModel.ChartState);
+
+        return false;
     }
 
     private void UpdateAllChartVisibilities(ChartUpdateRequestedEventArgs e)
     {
-        _mainAdapter.Panel.IsChartVisible = e.ShowMain;
-        NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
-        DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
-        DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
-        _distributionAdapter.UpdateChartTypeVisibility();
+        SetChartVisibility(ChartControllerKeys.Main, e.ShowMain);
+        SetChartVisibility(ChartControllerKeys.Normalized, e.ShowNormalized);
+        SetChartVisibility(ChartControllerKeys.DiffRatio, e.ShowDiffRatio);
+        SetChartVisibility(ChartControllerKeys.Distribution, e.ShowDistribution);
+        UpdateDistributionChartTypeVisibility();
 
-        WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
-        _weekdayTrendAdapter.UpdateChartTypeVisibility();
+        SetChartVisibility(ChartControllerKeys.WeeklyTrend, e.ShowWeeklyTrend);
+        UpdateWeekdayTrendChartTypeVisibility();
 
-        TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
+        SetChartVisibility(ChartControllerKeys.Transform, _viewModel.ChartState.IsTransformPanelVisible);
+    }
+
+    private void SetChartVisibility(string key, bool isVisible)
+    {
+        ResolveController(key).Panel.IsChartVisible = isVisible;
+    }
+
+    private static bool IsKnownChartKey(string key)
+    {
+        return ChartControllerKeys.All.Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void UpdateSubtypeOptions(string key)
+    {
+        if (ResolveController(key) is IChartSubtypeOptionsController controller)
+            controller.UpdateSubtypeOptions();
+    }
+
+    private void ClearChartCache(string key)
+    {
+        if (ResolveController(key) is IChartCacheController controller)
+            controller.ClearCache();
+    }
+
+    private void InitializeDistributionControlsFromRegistry()
+    {
+        if (ResolveController(ChartControllerKeys.Distribution) is IDistributionChartControllerExtras controller)
+            controller.InitializeControls();
+    }
+
+    private void InitializeWeekdayTrendControls()
+    {
+        if (ResolveController(ChartControllerKeys.WeeklyTrend) is IWeekdayTrendChartControllerExtras controller)
+            controller.InitializeControls();
+    }
+
+    private void UpdateDistributionChartTypeVisibility()
+    {
+        if (ResolveController(ChartControllerKeys.Distribution) is IDistributionChartControllerExtras controller)
+            controller.UpdateChartTypeVisibility();
+    }
+
+    private void UpdateWeekdayTrendChartTypeVisibility()
+    {
+        if (ResolveController(ChartControllerKeys.WeeklyTrend) is IWeekdayTrendChartControllerExtras controller)
+            controller.UpdateChartTypeVisibility();
+    }
+
+    private void CompleteTransformSelectionsPendingLoad()
+    {
+        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
+            controller.CompleteSelectionsPendingLoad();
+    }
+
+    private void ResetTransformSelectionsPendingLoad()
+    {
+        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
+            controller.ResetSelectionsPendingLoad();
+    }
+
+    private void HandleTransformVisibilityOnlyToggle(ChartDataContext? context)
+    {
+        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
+            controller.HandleVisibilityOnlyToggle(context);
+    }
+
+    private void UpdateTransformSubtypeOptions()
+    {
+        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
+            controller.UpdateTransformSubtypeOptions();
+    }
+
+    private void UpdateTransformComputeButtonState()
+    {
+        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
+            controller.UpdateTransformComputeButtonState();
+    }
+
+    private void UpdateDiffRatioOperationButton()
+    {
+        if (ResolveController(ChartControllerKeys.DiffRatio) is IDiffRatioChartControllerExtras controller)
+            controller.UpdateOperationButton();
+    }
+
+    private void SyncMainDisplayModeSelection()
+    {
+        if (ResolveController(ChartControllerKeys.Main) is IMainChartControllerExtras controller)
+            controller.SyncDisplayModeSelection();
     }
 
     private async Task HandleSingleChartUpdate(ChartUpdateRequestedEventArgs e)
@@ -559,7 +639,7 @@ public partial class MainChartsView : UserControl
         // Transform panel visibility toggle - just update visibility, don't reload charts
         if (e.ToggledChartName == "Transform" && e.IsVisibilityOnlyToggle)
         {
-            _transformAdapter.HandleVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
+            HandleTransformVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
             return;
         }
 
@@ -651,40 +731,37 @@ public partial class MainChartsView : UserControl
 
         var safeCtx = ctx!;
         var hasSecondaryData = HasSecondaryData(safeCtx);
-        var metricType = safeCtx.MetricType;
-        var primarySubtype = safeCtx.PrimarySubtype;
-        var secondarySubtype = safeCtx.SecondarySubtype;
 
         // Only render charts that are visible - skip computation entirely for hidden charts
         if (_viewModel.ChartState.IsMainVisible)
-            await _mainAdapter.RenderAsync(safeCtx);
+            await RenderChartAsync(ChartControllerKeys.Main, safeCtx);
 
         // Charts that require secondary data - only render if visible AND secondary data exists
         if (hasSecondaryData)
         {
             if (_viewModel.ChartState.IsNormalizedVisible)
-                await _normalizedAdapter.RenderAsync(safeCtx);
+                await RenderChartAsync(ChartControllerKeys.Normalized, safeCtx);
 
             if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
-                await _diffRatioAdapter.RenderAsync(safeCtx);
+                await RenderChartAsync(ChartControllerKeys.DiffRatio, safeCtx);
         }
         else
         {
             // Clear charts that require secondary data when no secondary data exists
-            _normalizedAdapter.Clear(_viewModel.ChartState);
-            _diffRatioAdapter.Clear(_viewModel.ChartState);
+            ClearChart(ChartControllerKeys.Normalized);
+            ClearChart(ChartControllerKeys.DiffRatio);
         }
 
         // Charts that don't require secondary data - only render if visible
         if (_viewModel.ChartState.IsDistributionVisible)
-            await _distributionAdapter.RenderAsync(safeCtx);
+            await RenderChartAsync(ChartControllerKeys.Distribution, safeCtx);
 
         if (_viewModel.ChartState.IsWeeklyTrendVisible)
-            await _weekdayTrendAdapter.RenderAsync(safeCtx);
+            await RenderChartAsync(ChartControllerKeys.WeeklyTrend, safeCtx);
 
         // Populate transform panel grids if visible
         if (_viewModel.ChartState.IsTransformPanelVisible)
-            await _transformAdapter.RenderAsync(safeCtx);
+            await RenderChartAsync(ChartControllerKeys.Transform, safeCtx);
     }
 
     /// <summary>
@@ -713,29 +790,32 @@ public partial class MainChartsView : UserControl
 
         switch (chartName)
         {
-            case "Main":
+            case ChartControllerKeys.Main:
                 if (_viewModel.ChartState.IsMainVisible)
-                    await _mainAdapter.RenderAsync(ctx);
+                    await RenderChartAsync(ChartControllerKeys.Main, ctx);
                 break;
 
-            case "Norm":
+            case ChartControllerKeys.Normalized:
                 if (_viewModel.ChartState.IsNormalizedVisible && hasSecondaryData)
-                    await _normalizedAdapter.RenderAsync(ctx);
+                    await RenderChartAsync(ChartControllerKeys.Normalized, ctx);
                 break;
 
-            case "DiffRatio":
+            case ChartControllerKeys.DiffRatio:
                 if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
-                    await _diffRatioAdapter.RenderAsync(ctx);
+                    await RenderChartAsync(ChartControllerKeys.DiffRatio, ctx);
                 break;
 
-            case "Distribution":
+            case ChartControllerKeys.Distribution:
                 if (_viewModel.ChartState.IsDistributionVisible)
-                    await _distributionAdapter.RenderAsync(ctx);
+                    await RenderChartAsync(ChartControllerKeys.Distribution, ctx);
                 break;
 
-            case "WeeklyTrend":
+            case ChartControllerKeys.WeeklyTrend:
                 if (_viewModel.ChartState.IsWeeklyTrendVisible)
-                    await _weekdayTrendAdapter.RenderAsync(ctx);
+                    await RenderChartAsync(ChartControllerKeys.WeeklyTrend, ctx);
+                break;
+            default:
+                Debug.WriteLine($"[ChartRegistry] RenderSingleChart called with unknown key '{chartName}'.");
                 break;
         }
     }
@@ -745,19 +825,29 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private async Task RenderSecondaryCharts(ChartDataContext ctx)
     {
-        await _normalizedAdapter.RenderAsync(ctx);
-        await _distributionAdapter.RenderAsync(ctx);
-        await _weekdayTrendAdapter.RenderAsync(ctx);
-        await _diffRatioAdapter.RenderAsync(ctx);
+        await RenderChartAsync(ChartControllerKeys.Normalized, ctx);
+        await RenderChartAsync(ChartControllerKeys.Distribution, ctx);
+        await RenderChartAsync(ChartControllerKeys.WeeklyTrend, ctx);
+        await RenderChartAsync(ChartControllerKeys.DiffRatio, ctx);
     }
 
     private void ClearSecondaryChartsAndReturn()
     {
-        _normalizedAdapter.Clear(_viewModel.ChartState);
-        _diffRatioAdapter.Clear(_viewModel.ChartState);
-        _distributionAdapter.Clear(_viewModel.ChartState);
+        ClearChart(ChartControllerKeys.Normalized);
+        ClearChart(ChartControllerKeys.DiffRatio);
+        ClearChart(ChartControllerKeys.Distribution);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Cartesian, Polar, and Scatter modes are handled by the adapter render check.
+    }
+
+    private Task RenderChartAsync(string key, ChartDataContext ctx)
+    {
+        return ResolveController(key).RenderAsync(ctx);
+    }
+
+    private void ClearChart(string key)
+    {
+        ResolveController(key).Clear(_viewModel.ChartState);
     }
 
     private Panel? GetChartPanel(string chartName)
@@ -1018,7 +1108,14 @@ public partial class MainChartsView : UserControl
     private static void ValidateChartControllerRegistry(IChartControllerRegistry registry)
     {
         foreach (var key in ChartControllerKeys.All)
-            _ = registry.Get(key);
+        {
+            var controller = registry.Get(key);
+            if (controller.Panel == null)
+                throw new InvalidOperationException($"Chart controller '{key}' returned a null Panel.");
+
+            if (controller.ToggleButton == null)
+                throw new InvalidOperationException($"Chart controller '{key}' returned a null ToggleButton.");
+        }
     }
 
     private IChartController ResolveController(string key)
@@ -1026,6 +1123,7 @@ public partial class MainChartsView : UserControl
         if (_chartControllerRegistry != null)
             return _chartControllerRegistry.Get(key);
 
+        Debug.WriteLine($"[ChartRegistry] Fallback resolve for '{key}' (registry not available).");
         return key switch
         {
             ChartControllerKeys.Main => _mainAdapter,
@@ -1210,13 +1308,13 @@ public partial class MainChartsView : UserControl
     {
         _barPieSurface = new ChartPanelSurface(BarPieChartController.Panel);
         InitializeBarPieControls();
-        InitializeDistributionControls();
-        _weekdayTrendAdapter.InitializeControls();
+        InitializeDistributionControlsFromRegistry();
+        InitializeWeekdayTrendControls();
         InitializeChartBehavior();
         ClearChartsOnStartup();
         DisableAxisLabelsWhenNoData();
         SetDefaultChartTitles();
-        _distributionAdapter.UpdateChartTypeVisibility();
+        UpdateDistributionChartTypeVisibility();
         InitializeDistributionPolarTooltip();
     }
 
@@ -1240,10 +1338,10 @@ public partial class MainChartsView : UserControl
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
 
         // Sync main chart button text with initial state
-        _mainAdapter.Panel.IsChartVisible = _viewModel.ChartState.IsMainVisible;
+        SetChartVisibility(ChartControllerKeys.Main, _viewModel.ChartState.IsMainVisible);
         BarPieChartController.Panel.IsChartVisible = _isBarPieVisible;
 
-        TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
+        SetChartVisibility(ChartControllerKeys.Transform, _viewModel.ChartState.IsTransformPanelVisible);
     }
 
     #endregion
@@ -1301,10 +1399,10 @@ public partial class MainChartsView : UserControl
         _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
         _viewModel.ChartState.LastContext = new ChartDataContext();
 
-        _mainAdapter.SyncDisplayModeSelection();
+        SyncMainDisplayModeSelection();
 
         // Initialize weekday trend chart type visibility
-        _weekdayTrendAdapter.UpdateChartTypeVisibility();
+        UpdateWeekdayTrendChartTypeVisibility();
     }
 
     private void InitializeSubtypeSelector()
@@ -1330,7 +1428,7 @@ public partial class MainChartsView : UserControl
 
     private void InitializeDistributionControls()
     {
-        _distributionAdapter.InitializeControls();
+        InitializeDistributionControlsFromRegistry();
     }
 
     private void InitializeChartBehavior()
@@ -1370,12 +1468,8 @@ public partial class MainChartsView : UserControl
     {
         if (_chartControllerRegistry == null)
         {
-            _mainAdapter.Clear(_viewModel.ChartState);
-            _normalizedAdapter.Clear(_viewModel.ChartState);
-            _diffRatioAdapter.Clear(_viewModel.ChartState);
-            _distributionAdapter.Clear(_viewModel.ChartState);
-            _weekdayTrendAdapter.Clear(_viewModel.ChartState);
-            _transformAdapter.Clear(_viewModel.ChartState);
+            foreach (var key in ChartControllerKeys.All)
+                ResolveController(key).Clear(_viewModel.ChartState);
             return;
         }
 
@@ -1387,12 +1481,8 @@ public partial class MainChartsView : UserControl
     {
         if (_chartControllerRegistry == null)
         {
-            _mainAdapter.ResetZoom();
-            _normalizedAdapter.ResetZoom();
-            _diffRatioAdapter.ResetZoom();
-            _distributionAdapter.ResetZoom();
-            _transformAdapter.ResetZoom();
-            _weekdayTrendAdapter.ResetZoom();
+            foreach (var key in ChartControllerKeys.All)
+                ResolveController(key).ResetZoom();
             return;
         }
 
@@ -1439,7 +1529,7 @@ public partial class MainChartsView : UserControl
         MainChartController.Panel.Title = "Metrics: Total";
         NormalizedChartController.Panel.Title = "Metrics: Normalized";
         DiffRatioChartController.Panel.Title = "Difference / Ratio";
-        _diffRatioAdapter.UpdateOperationButton(); // Initialize button state
+        UpdateDiffRatioOperationButton(); // Initialize button state
     }
 
     #endregion
@@ -1588,12 +1678,12 @@ public partial class MainChartsView : UserControl
     {
         try
         {
-            _distributionAdapter.ClearCache();
-            _weekdayTrendAdapter.ClearCache();
-            _normalizedAdapter.ClearCache();
-            _diffRatioAdapter.ClearCache();
-            _transformAdapter.ClearCache();
-            _transformAdapter.ResetSelectionsPendingLoad();
+            ClearChartCache(ChartControllerKeys.Distribution);
+            ClearChartCache(ChartControllerKeys.WeeklyTrend);
+            ClearChartCache(ChartControllerKeys.Normalized);
+            ClearChartCache(ChartControllerKeys.DiffRatio);
+            ClearChartCache(ChartControllerKeys.Transform);
+            ResetTransformSelectionsPendingLoad();
             var dataLoaded = await _viewModel.LoadMetricDataAsync();
             if (!dataLoaded)
             {

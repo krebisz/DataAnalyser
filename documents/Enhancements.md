@@ -9,7 +9,7 @@ Running list of ideas
 - Scatter chart for date vs. heart rate (exercise, etc.) clusters : PARTIALLY DONE
 - Stack chart to compare summed graphs/values to total (e.g.: muscle + fat vs. total weight value)
 - <!-- Legends that work as toggling radiobuttons for graph display on charts : DONE -->
-- Pie Chart(s) per resolution (A Pie Chart per year or month to show compositional changes, side by side)
+- <!-- Pie Chart(s) per resolution (A Pie Chart per year or month to show compositional changes, side by side) : DONE -->
 - <!-- Introducing metric:submetric selection present for some charts, to all charts : DONE -->
 - <!-- Moving original main tab (window) contents into separate control : DONE -->
 - Decouple main charts controller, and all suboordinate charts, flows and controls

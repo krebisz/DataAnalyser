@@ -91,6 +91,171 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
         cmd.ExecuteNonQuery();
     }
 
+    private static void EnsureHealthMetricsCanonicalTableExists(string connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+            return;
+
+        try
+        {
+            using var connection = new SqlConnection(connectionString);
+            connection.Open();
+            EnsureHealthMetricsCanonicalTableExists(connection);
+            SeedHealthMetricsCanonicalTableFromCounts(connection);
+            SeedHealthMetricsCanonicalTableFromHealthMetrics(connection);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Error ensuring HealthMetricsCanonical table: {ex.Message}");
+        }
+    }
+
+    private static void EnsureHealthMetricsCanonicalTableExists(SqlConnection connection)
+    {
+        var createTableQuery = @"
+            IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCanonical]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[HealthMetricsCanonical](
+                    [MetricType] NVARCHAR(100) NOT NULL,
+                    [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
+                    [MetricTypeName] NVARCHAR(100) NOT NULL DEFAULT '',
+                    [MetricSubtypeName] NVARCHAR(200) NOT NULL DEFAULT '',
+                    [Disabled] BIT NOT NULL DEFAULT 0,
+                    [CreatedDate] DATETIME2 NOT NULL DEFAULT GETDATE(),
+                    [LastUpdated] DATETIME2 NOT NULL DEFAULT GETDATE(),
+                    CONSTRAINT PK_HealthMetricsCanonical PRIMARY KEY CLUSTERED (MetricType, MetricSubtype)
+                );
+                CREATE NONCLUSTERED INDEX IX_HealthMetricsCanonical_MetricType
+                    ON [dbo].[HealthMetricsCanonical](MetricType);
+            END";
+
+        using var command = new SqlCommand(createTableQuery, connection);
+        command.ExecuteNonQuery();
+    }
+
+    private static void SeedHealthMetricsCanonicalTableFromHealthMetrics(SqlConnection connection)
+    {
+        var seedSql = @"
+            SELECT DISTINCT
+                LTRIM(RTRIM(MetricType)) AS MetricType,
+                ISNULL(LTRIM(RTRIM(MetricSubtype)), '') AS MetricSubtype
+            FROM [dbo].[HealthMetrics]
+            WHERE MetricType IS NOT NULL AND LTRIM(RTRIM(MetricType)) <> '';";
+
+        var entries = new List<(string MetricType, string MetricSubtype)>();
+        using (var command = new SqlCommand(seedSql, connection))
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                var metricType = reader["MetricType"] as string ?? string.Empty;
+                var metricSubtype = reader["MetricSubtype"] as string ?? string.Empty;
+                entries.Add((metricType, metricSubtype));
+            }
+        }
+
+        if (entries.Count > 0)
+            EnsureHealthMetricsCanonicalEntries(connection, entries);
+    }
+
+    private static void SeedHealthMetricsCanonicalTableFromCounts(SqlConnection connection)
+    {
+        var hasCountsTable = @"
+            IF OBJECT_ID(N'[dbo].[HealthMetricsCounts]', N'U') IS NULL
+                SELECT 0
+            ELSE
+                SELECT 1;";
+
+        using (var checkCommand = new SqlCommand(hasCountsTable, connection))
+        {
+            var exists = (int)(checkCommand.ExecuteScalar() ?? 0);
+            if (exists == 0)
+                return;
+        }
+
+        var hasColumnsSql = @"
+            SELECT CASE
+                WHEN COL_LENGTH('dbo.HealthMetricsCounts', 'MetricTypeName') IS NOT NULL
+                  AND COL_LENGTH('dbo.HealthMetricsCounts', 'MetricSubtypeName') IS NOT NULL
+                  AND COL_LENGTH('dbo.HealthMetricsCounts', 'Disabled') IS NOT NULL
+                THEN 1 ELSE 0 END;";
+
+        using (var columnCommand = new SqlCommand(hasColumnsSql, connection))
+        {
+            var hasColumns = (int)(columnCommand.ExecuteScalar() ?? 0);
+            if (hasColumns == 0)
+                return;
+        }
+
+        var seedSql = @"
+            SELECT DISTINCT
+                LTRIM(RTRIM(MetricType)) AS MetricType,
+                ISNULL(LTRIM(RTRIM(MetricSubtype)), '') AS MetricSubtype,
+                ISNULL(MetricTypeName, '') AS MetricTypeName,
+                ISNULL(MetricSubtypeName, '') AS MetricSubtypeName,
+                ISNULL(Disabled, 0) AS Disabled
+            FROM [dbo].[HealthMetricsCounts]
+            WHERE MetricType IS NOT NULL AND LTRIM(RTRIM(MetricType)) <> '';";
+
+        var entries = new List<(string MetricType, string MetricSubtype, string MetricTypeName, string MetricSubtypeName, bool Disabled)>();
+        using (var command = new SqlCommand(seedSql, connection))
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                var metricType = reader["MetricType"] as string ?? string.Empty;
+                var metricSubtype = reader["MetricSubtype"] as string ?? string.Empty;
+                var metricTypeName = reader["MetricTypeName"] as string ?? string.Empty;
+                var metricSubtypeName = reader["MetricSubtypeName"] as string ?? string.Empty;
+                var disabledValue = reader["Disabled"] is bool disabled && disabled;
+
+                if (string.IsNullOrWhiteSpace(metricType))
+                    continue;
+
+                var resolvedTypeName = string.IsNullOrWhiteSpace(metricTypeName)
+                    ? FormatMetricDisplayName(metricType)
+                    : metricTypeName;
+                var resolvedSubtypeName = string.IsNullOrWhiteSpace(metricSubtypeName)
+                    ? FormatMetricDisplayName(metricSubtype)
+                    : metricSubtypeName;
+
+                entries.Add((metricType, metricSubtype, resolvedTypeName, resolvedSubtypeName, disabledValue));
+            }
+        }
+
+        if (entries.Count > 0)
+            EnsureHealthMetricsCanonicalEntries(connection, entries);
+    }
+
+    private static string FormatMetricDisplayName(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var words = value.Replace('_', ' ')
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (words.Length == 0)
+            return string.Empty;
+
+        var formatted = new StringBuilder();
+        for (var i = 0; i < words.Length; i++)
+        {
+            var word = words[i].ToLowerInvariant();
+            if (word.Length == 0)
+                continue;
+
+            formatted.Append(char.ToUpperInvariant(word[0]));
+            if (word.Length > 1)
+                formatted.Append(word.Substring(1));
+
+            if (i < words.Length - 1)
+                formatted.Append(' ');
+        }
+
+        return formatted.ToString();
+    }
+
     /// <summary>
     ///     Creates the standardized HealthMetrics table if it doesn't exist
     /// </summary>
@@ -166,6 +331,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                 OptimizeHealthMetricsIndexes();
                 // Ensure the summary counts table exists
                 EnsureHealthMetricsCountsTableExists(connectionString);
+                EnsureHealthMetricsCanonicalTableExists(connectionString);
             }
         }
         catch (Exception ex)
@@ -385,9 +551,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         CREATE TABLE [dbo].[HealthMetricsCounts](
                             [MetricType] NVARCHAR(100) NOT NULL,
                             [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
-                            [MetricTypeName] NVARCHAR(100) NOT NULL DEFAULT '',
-                            [MetricSubtypeName] NVARCHAR(200) NOT NULL DEFAULT '',
-                            [Disabled] BIT NOT NULL DEFAULT 0,
                             [RecordCount] BIGINT NOT NULL DEFAULT 0,
                             [EarliestDateTime] DATETIME2 NULL,
                             [MostRecentDateTime] DATETIME2 NULL,
@@ -423,32 +586,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                             ADD [MostRecentDateTime] DATETIME2 NULL;
                         END
 
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricTypeName')
-                        BEGIN
-                            ALTER TABLE [dbo].[HealthMetricsCounts]
-                            ADD [MetricTypeName] NVARCHAR(100) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricTypeName DEFAULT '';
-
-                            UPDATE [dbo].[HealthMetricsCounts]
-                            SET MetricTypeName = MetricType
-                            WHERE MetricTypeName = '';
-                        END
-
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricSubtypeName')
-                        BEGIN
-                            ALTER TABLE [dbo].[HealthMetricsCounts]
-                            ADD [MetricSubtypeName] NVARCHAR(200) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricSubtypeName DEFAULT '';
-
-                            UPDATE [dbo].[HealthMetricsCounts]
-                            SET MetricSubtypeName = MetricSubtype
-                            WHERE MetricSubtypeName = '';
-                        END
-
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'Disabled')
-                        BEGIN
-                            ALTER TABLE [dbo].[HealthMetricsCounts]
-                            ADD [Disabled] BIT NOT NULL CONSTRAINT DF_HealthMetricsCounts_Disabled DEFAULT 0;
-                        END
-                        
                         -- Add computed columns if they don't exist
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'DaysBetween')
                         BEGIN
@@ -499,9 +636,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         CREATE TABLE [dbo].[HealthMetricsCounts](
                             [MetricType] NVARCHAR(100) NOT NULL,
                             [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
-                            [MetricTypeName] NVARCHAR(100) NOT NULL DEFAULT '',
-                            [MetricSubtypeName] NVARCHAR(200) NOT NULL DEFAULT '',
-                            [Disabled] BIT NOT NULL DEFAULT 0,
                             [RecordCount] BIGINT NOT NULL DEFAULT 0,
                             [EarliestDateTime] DATETIME2 NULL,
                             [MostRecentDateTime] DATETIME2 NULL,
@@ -530,32 +664,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                             ADD [MostRecentDateTime] DATETIME2 NULL;
                         END
 
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricTypeName')
-                        BEGIN
-                            ALTER TABLE [dbo].[HealthMetricsCounts]
-                            ADD [MetricTypeName] NVARCHAR(100) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricTypeName DEFAULT '';
-
-                            UPDATE [dbo].[HealthMetricsCounts]
-                            SET MetricTypeName = MetricType
-                            WHERE MetricTypeName = '';
-                        END
-
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricSubtypeName')
-                        BEGIN
-                            ALTER TABLE [dbo].[HealthMetricsCounts]
-                            ADD [MetricSubtypeName] NVARCHAR(200) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricSubtypeName DEFAULT '';
-
-                            UPDATE [dbo].[HealthMetricsCounts]
-                            SET MetricSubtypeName = MetricSubtype
-                            WHERE MetricSubtypeName = '';
-                        END
-
-                        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'Disabled')
-                        BEGIN
-                            ALTER TABLE [dbo].[HealthMetricsCounts]
-                            ADD [Disabled] BIT NOT NULL CONSTRAINT DF_HealthMetricsCounts_Disabled DEFAULT 0;
-                        END
-                        
                         -- Add computed columns if they don't exist
                         IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'DaysBetween')
                         BEGIN
@@ -592,12 +700,10 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                             RecordCount = source.RecordCount,
                             EarliestDateTime = source.EarliestDateTime,
                             MostRecentDateTime = source.MostRecentDateTime,
-                            MetricTypeName = CASE WHEN target.MetricTypeName IS NULL OR target.MetricTypeName = '' THEN source.MetricType ELSE target.MetricTypeName END,
-                            MetricSubtypeName = CASE WHEN target.MetricSubtypeName IS NULL OR target.MetricSubtypeName = '' THEN source.MetricSubtype ELSE target.MetricSubtypeName END,
                             LastUpdated = GETDATE()
                     WHEN NOT MATCHED THEN
-                        INSERT (MetricType, MetricSubtype, MetricTypeName, MetricSubtypeName, Disabled, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
-                        VALUES (source.MetricType, source.MetricSubtype, source.MetricType, source.MetricSubtype, 0, source.RecordCount, source.EarliestDateTime, source.MostRecentDateTime, GETDATE(), GETDATE())
+                        INSERT (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
+                        VALUES (source.MetricType, source.MetricSubtype, source.RecordCount, source.EarliestDateTime, source.MostRecentDateTime, GETDATE(), GETDATE())
                     WHEN NOT MATCHED BY SOURCE THEN
                         UPDATE SET
                             RecordCount = 0,
@@ -925,33 +1031,51 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                 // Track MetricType/Subtype combinations for summary table update
                 // Store count, min timestamp, and max timestamp for each combination
                 var typeSubtypeData = new Dictionary<(string MetricType, string MetricSubtype), (int Count, DateTime? MinTimestamp, DateTime? MaxTimestamp)>();
+                var canonicalEntries = new List<(string MetricType, string MetricSubtype)>();
+                var canonicalKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                const string canonicalKeySeparator = "\u001F";
+
+                void TrackCanonicalEntry(string metricTypeKey, string metricSubtypeKey)
+                {
+                    if (string.IsNullOrEmpty(metricTypeKey))
+                        return;
+
+                    var normalizedSubtype = metricSubtypeKey ?? string.Empty;
+                    var canonicalKey = $"{metricTypeKey}{canonicalKeySeparator}{normalizedSubtype}";
+                    if (!canonicalKeys.Add(canonicalKey))
+                        return;
+
+                    canonicalEntries.Add((metricTypeKey, normalizedSubtype));
+                }
 
                 foreach (var metric in metrics)
                 {
                     // Parse MetricType to extract base type and subtype
-                    var baseType = metric.MetricType ?? string.Empty;
-                    var subtype = metric.MetricSubtype ?? string.Empty;
+                    var trimmedMetricType = (metric.MetricType ?? string.Empty).Trim();
+                    var baseType = trimmedMetricType;
+                    var subtype = (metric.MetricSubtype ?? string.Empty).Trim();
 
-                    if (!string.IsNullOrEmpty(metric.MetricType))
+                    if (!string.IsNullOrEmpty(trimmedMetricType))
                     {
                         // If subtype not already set, parse it from MetricType
                         if (string.IsNullOrEmpty(subtype))
-                            subtype = MetricTypeParser.GetSubtypeString(metric.MetricType) ?? string.Empty;
+                            subtype = MetricTypeParser.GetSubtypeString(trimmedMetricType)?.Trim() ?? string.Empty;
 
                         // If a subtype exists, update MetricType to be just the base type
                         if (!string.IsNullOrEmpty(subtype))
-                            baseType = MetricTypeParser.GetBaseType(metric.MetricType);
+                            baseType = MetricTypeParser.GetBaseType(trimmedMetricType)?.Trim() ?? string.Empty;
                     }
 
-                    // Only track counts for records with MetricType AND a valid timestamp
-                    // Valid timestamp means: NormalizedTimestamp is not null, OR RawTimestamp is not null and not empty
                     if (!string.IsNullOrEmpty(baseType))
                     {
+                        var subtypeKey = string.IsNullOrEmpty(subtype) ? string.Empty : subtype;
+                        TrackCanonicalEntry(baseType, subtypeKey);
+
                         var hasValidTimestamp = metric.NormalizedTimestamp.HasValue || !string.IsNullOrEmpty(metric.RawTimestamp);
 
                         if (hasValidTimestamp && metric.NormalizedTimestamp.HasValue)
                         {
-                            var key = (MetricType: baseType, MetricSubtype: subtype ?? string.Empty);
+                            var key = (MetricType: baseType, MetricSubtype: subtypeKey);
                             var timestamp = metric.NormalizedTimestamp.Value;
 
                             if (!typeSubtypeData.ContainsKey(key))
@@ -962,8 +1086,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         }
                         else if (hasValidTimestamp)
                         {
-                            // Has RawTimestamp but no NormalizedTimestamp - count it but don't track timestamp
-                            var key = (MetricType: baseType, MetricSubtype: subtype ?? string.Empty);
+                            var key = (MetricType: baseType, MetricSubtype: subtypeKey);
                             if (!typeSubtypeData.ContainsKey(key))
                                 typeSubtypeData[key] = (Count: 0, MinTimestamp: null, MaxTimestamp: null);
                             var current = typeSubtypeData[key];
@@ -998,6 +1121,10 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         sqlCommand.ExecuteNonQuery();
                     }
                 }
+
+                // Persists canonical metadata for new metric combinations
+                if (canonicalEntries.Count > 0)
+                    EnsureHealthMetricsCanonicalEntries(sqlConnection, canonicalEntries);
 
                 // Update the summary counts table for all MetricType/Subtype combinations in this batch
                 if (typeSubtypeData.Count > 0)
@@ -1043,8 +1170,8 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         END,
                         LastUpdated = GETDATE()
                 WHEN NOT MATCHED THEN
-                    INSERT (MetricType, MetricSubtype, MetricTypeName, MetricSubtypeName, Disabled, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
-                    VALUES (source.MetricType, source.MetricSubtype, source.MetricType, source.MetricSubtype, 0, source.IncrementCount, source.MinTimestamp, source.MaxTimestamp, GETDATE(), GETDATE());";
+                    INSERT (MetricType, MetricSubtype, RecordCount, EarliestDateTime, MostRecentDateTime, CreatedDate, LastUpdated)
+                    VALUES (source.MetricType, source.MetricSubtype, source.IncrementCount, source.MinTimestamp, source.MaxTimestamp, GETDATE(), GETDATE());";
 
             // Build the VALUES clause for all combinations
             var valuesList = new List<string>();
@@ -1098,9 +1225,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         CREATE TABLE [dbo].[HealthMetricsCounts](
                             [MetricType] NVARCHAR(100) NOT NULL,
                             [MetricSubtype] NVARCHAR(200) NOT NULL DEFAULT '',
-                            [MetricTypeName] NVARCHAR(100) NOT NULL DEFAULT '',
-                            [MetricSubtypeName] NVARCHAR(200) NOT NULL DEFAULT '',
-                            [Disabled] BIT NOT NULL DEFAULT 0,
                             [RecordCount] BIGINT NOT NULL DEFAULT 0,
                             [EarliestDateTime] DATETIME2 NULL,
                             [MostRecentDateTime] DATETIME2 NULL,
@@ -1130,32 +1254,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         ADD [MostRecentDateTime] DATETIME2 NULL;
                     END
 
-                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricTypeName')
-                    BEGIN
-                        ALTER TABLE [dbo].[HealthMetricsCounts]
-                        ADD [MetricTypeName] NVARCHAR(100) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricTypeName DEFAULT '';
-
-                        UPDATE [dbo].[HealthMetricsCounts]
-                        SET MetricTypeName = MetricType
-                        WHERE MetricTypeName = '';
-                    END
-
-                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'MetricSubtypeName')
-                    BEGIN
-                        ALTER TABLE [dbo].[HealthMetricsCounts]
-                        ADD [MetricSubtypeName] NVARCHAR(200) NOT NULL CONSTRAINT DF_HealthMetricsCounts_MetricSubtypeName DEFAULT '';
-
-                        UPDATE [dbo].[HealthMetricsCounts]
-                        SET MetricSubtypeName = MetricSubtype
-                        WHERE MetricSubtypeName = '';
-                    END
-
-                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'Disabled')
-                    BEGIN
-                        ALTER TABLE [dbo].[HealthMetricsCounts]
-                        ADD [Disabled] BIT NOT NULL CONSTRAINT DF_HealthMetricsCounts_Disabled DEFAULT 0;
-                    END
-                    
                     -- Add computed columns if they don't exist
                     IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetricsCounts]') AND name = 'DaysBetween')
                     BEGIN
@@ -1179,6 +1277,118 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
         {
             Console.WriteLine($"Error creating HealthMetricsCounts table: {ex.Message}");
             // Don't throw - this is a helper table, shouldn't block main operations
+        }
+    }
+
+    private static void EnsureHealthMetricsCanonicalEntries(SqlConnection connection, IEnumerable<(string MetricType, string MetricSubtype)> combos)
+    {
+        try
+        {
+            const string canonicalKeySeparator = "\u001F";
+            var sanitizedEntries = new List<(string MetricType, string MetricSubtype, string MetricTypeName, string MetricSubtypeName, bool Disabled)>();
+            var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var combo in combos)
+            {
+                var metricType = combo.MetricType?.Trim() ?? string.Empty;
+                if (string.IsNullOrEmpty(metricType))
+                    continue;
+
+                var metricSubtype = combo.MetricSubtype?.Trim() ?? string.Empty;
+                var combinedKey = $"{metricType}{canonicalKeySeparator}{metricSubtype}";
+
+                if (!seenKeys.Add(combinedKey))
+                    continue;
+
+                sanitizedEntries.Add((
+                    metricType,
+                    metricSubtype,
+                    FormatMetricDisplayName(metricType),
+                    FormatMetricDisplayName(metricSubtype),
+                    false));
+            }
+
+            if (sanitizedEntries.Count > 0)
+                EnsureHealthMetricsCanonicalEntries(connection, sanitizedEntries);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Error updating HealthMetricsCanonical entries: {ex.Message}");
+        }
+    }
+
+    private static void EnsureHealthMetricsCanonicalEntries(
+        SqlConnection connection,
+        IEnumerable<(string MetricType, string MetricSubtype, string MetricTypeName, string MetricSubtypeName, bool Disabled)> entries)
+    {
+        try
+        {
+            EnsureHealthMetricsCanonicalTableExists(connection);
+
+            const string canonicalKeySeparator = "\u001F";
+            var sanitizedEntries = new List<(string MetricType, string MetricSubtype, string MetricTypeName, string MetricSubtypeName, bool Disabled)>();
+            var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var entry in entries)
+            {
+                var metricType = entry.MetricType?.Trim() ?? string.Empty;
+                if (string.IsNullOrEmpty(metricType))
+                    continue;
+
+                var metricSubtype = entry.MetricSubtype?.Trim() ?? string.Empty;
+                var combinedKey = $"{metricType}{canonicalKeySeparator}{metricSubtype}";
+
+                if (!seenKeys.Add(combinedKey))
+                    continue;
+
+                sanitizedEntries.Add((
+                    metricType,
+                    metricSubtype,
+                    string.IsNullOrWhiteSpace(entry.MetricTypeName) ? FormatMetricDisplayName(metricType) : entry.MetricTypeName.Trim(),
+                    string.IsNullOrWhiteSpace(entry.MetricSubtypeName) ? FormatMetricDisplayName(metricSubtype) : entry.MetricSubtypeName.Trim(),
+                    entry.Disabled));
+            }
+
+            if (sanitizedEntries.Count == 0)
+                return;
+
+            var valuesList = new List<string>();
+            var parameters = new List<SqlParameter>();
+
+            for (var i = 0; i < sanitizedEntries.Count; i++)
+            {
+                var entry = sanitizedEntries[i];
+                var metricTypeParam = $"@CanonicalMetricType{i}";
+                var metricSubtypeParam = $"@CanonicalMetricSubtype{i}";
+                var metricTypeNameParam = $"@CanonicalMetricTypeName{i}";
+                var metricSubtypeNameParam = $"@CanonicalMetricSubtypeName{i}";
+                var disabledParam = $"@CanonicalMetricDisabled{i}";
+
+                valuesList.Add($"({metricTypeParam}, {metricSubtypeParam}, {metricTypeNameParam}, {metricSubtypeNameParam}, {disabledParam})");
+
+                parameters.Add(new SqlParameter(metricTypeParam, entry.MetricType));
+                parameters.Add(new SqlParameter(metricSubtypeParam, entry.MetricSubtype));
+                parameters.Add(new SqlParameter(metricTypeNameParam, entry.MetricTypeName));
+                parameters.Add(new SqlParameter(metricSubtypeNameParam, entry.MetricSubtypeName));
+                parameters.Add(new SqlParameter(disabledParam, entry.Disabled ? 1 : 0));
+            }
+
+            var mergeSql = $@"
+                MERGE [dbo].[HealthMetricsCanonical] AS target
+                USING (VALUES {string.Join(", ", valuesList)}) AS source
+                    (MetricType, MetricSubtype, MetricTypeName, MetricSubtypeName, Disabled)
+                ON target.MetricType = source.MetricType AND target.MetricSubtype = source.MetricSubtype
+                WHEN NOT MATCHED THEN
+                    INSERT (MetricType, MetricSubtype, MetricTypeName, MetricSubtypeName, Disabled, CreatedDate, LastUpdated)
+                    VALUES (source.MetricType, source.MetricSubtype, source.MetricTypeName, source.MetricSubtypeName, source.Disabled, GETDATE(), GETDATE());";
+
+            using var mergeCommand = new SqlCommand(mergeSql, connection);
+            mergeCommand.Parameters.AddRange(parameters.ToArray());
+            mergeCommand.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Error updating HealthMetricsCanonical entries: {ex.Message}");
         }
     }
 

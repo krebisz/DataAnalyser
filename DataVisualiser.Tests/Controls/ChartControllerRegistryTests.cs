@@ -36,6 +36,50 @@ public sealed class ChartControllerRegistryTests
         Assert.Throws<KeyNotFoundException>(() => registry.Get("Missing"));
     }
 
+    [Fact]
+    public void Register_RejectsMissingKey()
+    {
+        var registry = new ChartControllerRegistry();
+
+        Assert.Throws<ArgumentException>(() => registry.Register(new StubController(" ")));
+    }
+
+    [Fact]
+    public void Get_IsCaseInsensitive()
+    {
+        var registry = new ChartControllerRegistry();
+        registry.Register(new StubController(ChartControllerKeys.Main));
+
+        var resolved = registry.Get(ChartControllerKeys.Main.ToUpperInvariant());
+
+        Assert.Equal(ChartControllerKeys.Main, resolved.Key);
+    }
+
+    [Fact]
+    public void All_ReturnsRegistrationOrder()
+    {
+        var registry = new ChartControllerRegistry();
+        var main = new StubController(ChartControllerKeys.Main);
+        var normalized = new StubController(ChartControllerKeys.Normalized);
+        var diffRatio = new StubController(ChartControllerKeys.DiffRatio);
+
+        registry.Register(main);
+        registry.Register(normalized);
+        registry.Register(diffRatio);
+
+        var ordered = registry.All().ToList();
+
+        Assert.Equal(new[] { main, normalized, diffRatio }, ordered);
+    }
+
+    [Fact]
+    public void ChartControllerKeys_All_AreUnique()
+    {
+        var keys = ChartControllerKeys.All;
+
+        Assert.Equal(keys.Length, keys.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
     private sealed class StubController : IChartController
     {
         public StubController(string key)

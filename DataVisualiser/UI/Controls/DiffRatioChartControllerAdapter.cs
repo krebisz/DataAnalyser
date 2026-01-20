@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -15,7 +16,7 @@ using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class DiffRatioChartControllerAdapter : IChartController
+public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDiffRatioChartControllerExtras, IChartSeriesAvailability
 {
     private readonly DiffRatioChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -68,6 +69,19 @@ public sealed class DiffRatioChartControllerAdapter : IChartController
     public void ResetZoom()
     {
         ChartHelper.ResetZoom(_controller.Chart);
+    }
+
+    public bool HasSeries(ChartState state)
+    {
+        return HasSeriesInternal(_controller.Chart.Series);
+    }
+
+    private static bool HasSeriesInternal(System.Collections.IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     public void ClearCache()

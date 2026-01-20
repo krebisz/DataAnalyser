@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Linq;
 using System.Windows.Controls.Primitives;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Helpers;
@@ -9,7 +10,7 @@ using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class MainChartControllerAdapter : IChartController
+public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, IChartSeriesAvailability
 {
     private readonly MainChartController _controller;
     private readonly MainWindowViewModel _viewModel;
@@ -54,6 +55,19 @@ public sealed class MainChartControllerAdapter : IChartController
     public void ResetZoom()
     {
         ChartHelper.ResetZoom(_controller.Chart);
+    }
+
+    public bool HasSeries(ChartState state)
+    {
+        return HasSeriesInternal(_controller.Chart.Series);
+    }
+
+    private static bool HasSeriesInternal(System.Collections.IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     public void SyncDisplayModeSelection()
