@@ -21,9 +21,6 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
-using DataVisualiser.Core.Transforms.Evaluators;
-using DataVisualiser.Core.Transforms.Expressions;
-using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Controls;
@@ -47,9 +44,7 @@ namespace DataVisualiser.UI;
 public partial class MainChartsView : UserControl
 {
     private readonly ChartState _chartState = new();
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _diffRatioSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly MetricState _metricState = new();
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly UiState _uiState = new();
     private readonly LiveChartsChartRenderer _barPieRenderer = new();
     // Placeholder instance since DiffRatioChartController is commented out in XAML.
@@ -69,12 +64,11 @@ public partial class MainChartsView : UserControl
     private WeekdayTrendChartControllerAdapter _weekdayTrendAdapter = null!;
     private DistributionChartControllerAdapter _distributionAdapter = null!;
     private NormalizedChartControllerAdapter _normalizedAdapter = null!;
+    private DiffRatioChartControllerAdapter _diffRatioAdapter = null!;
+    private TransformDataPanelControllerAdapter _transformAdapter = null!;
 
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
-    private bool _isUpdatingDiffRatioSubtypeCombos;
-    private bool _isTransformSelectionPendingLoad;
-    private bool _isUpdatingTransformSubtypeCombos;
 
     private MetricSelectionService _metricSelectionService = null!;
     private SubtypeSelectorManager _selectorManager = null!;
@@ -148,7 +142,7 @@ public partial class MainChartsView : UserControl
 
         _viewModel.SetSelectedSeries(distinctSeries);
         _normalizedAdapter.UpdateSubtypeOptions();
-        UpdateDiffRatioSubtypeOptions();
+        _diffRatioAdapter.UpdateSubtypeOptions();
         _distributionAdapter.UpdateSubtypeOptions();
         _weekdayTrendAdapter.UpdateSubtypeOptions();
 
@@ -172,15 +166,6 @@ public partial class MainChartsView : UserControl
         return _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data1.Any();
     }
 
-    private static ComboBoxItem BuildSeriesComboItem(MetricSeriesSelection selection)
-    {
-        return new ComboBoxItem
-        {
-            Content = selection.DisplayName,
-            Tag = selection
-        };
-    }
-
     private static string? GetSelectedMetricValue(ComboBox combo)
     {
         if (combo.SelectedItem is MetricNameOption option)
@@ -192,30 +177,6 @@ public partial class MainChartsView : UserControl
     private static MetricNameOption? GetSelectedMetricOption(ComboBox combo)
     {
         return combo.SelectedItem as MetricNameOption;
-    }
-
-    private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)
-    {
-        if (combo.SelectedItem is ComboBoxItem item && item.Tag is MetricSeriesSelection selection)
-            return selection;
-
-        return combo.SelectedItem as MetricSeriesSelection;
-    }
-
-    private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
-    {
-        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
-    {
-        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
-        var selectionSubtype = selection.QuerySubtype;
-
-        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -240,7 +201,7 @@ public partial class MainChartsView : UserControl
 
             if (_viewModel.ChartState.IsDiffRatioVisible)
             {
-                ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+                _diffRatioAdapter.Clear(_viewModel.ChartState);
                 _viewModel.SetDiffRatioVisible(false);
             }
         }
@@ -402,11 +363,11 @@ public partial class MainChartsView : UserControl
             MessageBox.Show(msg, "DEBUG - LastContext contents");
         }
 
-        _isTransformSelectionPendingLoad = false;
+        _transformAdapter.CompleteSelectionsPendingLoad();
         _normalizedAdapter.UpdateSubtypeOptions();
-        UpdateDiffRatioSubtypeOptions();
-        UpdateTransformSubtypeOptions();
-        UpdateTransformComputeButtonState();
+        _diffRatioAdapter.UpdateSubtypeOptions();
+        _transformAdapter.UpdateTransformSubtypeOptions();
+        _transformAdapter.UpdateTransformComputeButtonState();
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
         UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
@@ -539,7 +500,7 @@ public partial class MainChartsView : UserControl
 
         if (e.ToggledChartName == "Transform")
         {
-            HandleTransformPanelVisibilityOnlyToggle();
+            _transformAdapter.HandleVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
             return true; // Never reload charts
         }
 
@@ -591,18 +552,6 @@ public partial class MainChartsView : UserControl
         return series.Cast<object>().Any();
     }
 
-    private void HandleTransformPanelVisibilityOnlyToggle()
-    {
-        if (_viewModel.ChartState.IsTransformPanelVisible)
-        {
-            var transformCtx = _viewModel.ChartState.LastContext;
-            if (transformCtx != null && ShouldRenderCharts(transformCtx))
-                PopulateTransformGrids(transformCtx, false);
-
-            UpdateTransformSubtypeOptions();
-        }
-    }
-
     private void UpdateAllChartVisibilities(ChartUpdateRequestedEventArgs e)
     {
         MainChartController.Panel.IsChartVisible = e.ShowMain;
@@ -622,7 +571,7 @@ public partial class MainChartsView : UserControl
         // Transform panel visibility toggle - just update visibility, don't reload charts
         if (e.ToggledChartName == "Transform" && e.IsVisibilityOnlyToggle)
         {
-            HandleTransformPanelVisibilityOnlyToggle();
+            _transformAdapter.HandleVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
             return;
         }
 
@@ -743,13 +692,13 @@ public partial class MainChartsView : UserControl
                 await _normalizedAdapter.RenderAsync(safeCtx);
 
             if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
-                await RenderDiffRatio(safeCtx, metricType, primarySubtype, secondarySubtype);
+                await _diffRatioAdapter.RenderAsync(safeCtx);
         }
         else
         {
             // Clear charts that require secondary data when no secondary data exists
             _normalizedAdapter.Clear(_viewModel.ChartState);
-            ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+            _diffRatioAdapter.Clear(_viewModel.ChartState);
         }
 
         // Charts that don't require secondary data - only render if visible
@@ -761,374 +710,8 @@ public partial class MainChartsView : UserControl
 
         // Populate transform panel grids if visible
         if (_viewModel.ChartState.IsTransformPanelVisible)
-            PopulateTransformGrids(safeCtx);
+            await _transformAdapter.RenderAsync(safeCtx);
     }
-
-    private void PopulateTransformGrids(ChartDataContext ctx, bool resetResults = true)
-    {
-        PopulateTransformGrid(ctx.Data1, TransformDataPanelController.TransformGrid1, TransformDataPanelController.TransformGrid1Title, ctx.DisplayName1 ?? "Primary Data", true);
-
-        var hasSecondary = HasSecondaryData(ctx) && !string.IsNullOrEmpty(ctx.SecondarySubtype) && ctx.Data2 != null;
-
-        if (hasSecondary)
-        {
-            TransformDataPanelController.TransformGrid2Panel.Visibility = Visibility.Visible;
-
-            PopulateTransformGrid(ctx.Data2, TransformDataPanelController.TransformGrid2, TransformDataPanelController.TransformGrid2Title, ctx.DisplayName2 ?? "Secondary Data", false);
-
-            SetBinaryTransformOperationsEnabled(true);
-        }
-        else
-        {
-            TransformDataPanelController.TransformGrid2Panel.Visibility = Visibility.Collapsed;
-            TransformDataPanelController.TransformGrid2.ItemsSource = null;
-            SetBinaryTransformOperationsEnabled(false);
-        }
-
-        if (resetResults)
-            ResetTransformResultState();
-    }
-
-    private void PopulateTransformGrid(IEnumerable<MetricData>? data, DataGrid grid, TextBlock title, string titleText, bool alwaysVisible)
-    {
-        if (data == null && !alwaysVisible)
-            return;
-
-        var rows = data?.Where(d => d.Value.HasValue)
-                       .OrderBy(d => d.NormalizedTimestamp)
-                       .Select(d => new
-                       {
-                           Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                           Value = d.Value!.Value.ToString("F4")
-                       })
-                       .ToList();
-
-        grid.ItemsSource = rows;
-        title.Text = titleText;
-
-        if (grid.Columns.Count >= 2)
-        {
-            grid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            grid.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-        }
-    }
-
-    private void SetBinaryTransformOperationsEnabled(bool enabled)
-    {
-        var binaryItems = TransformDataPanelController.TransformOperationCombo.Items.Cast<ComboBoxItem>().Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
-
-        foreach (var item in binaryItems)
-            item.IsEnabled = enabled;
-    }
-
-    private void ResetTransformResultState()
-    {
-        TransformDataPanelController.TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        TransformDataPanelController.TransformChartContentPanel.Visibility = Visibility.Collapsed;
-        TransformDataPanelController.TransformGrid3.ItemsSource = null;
-        TransformDataPanelController.TransformComputeButton.IsEnabled = false;
-    }
-
-    private void ResetTransformSelectionsPendingLoad()
-    {
-        _isTransformSelectionPendingLoad = true;
-        _viewModel.ChartState.SelectedTransformPrimarySeries = null;
-        _viewModel.ChartState.SelectedTransformSecondarySeries = null;
-
-        if (TransformDataPanelController.TransformPrimarySubtypeCombo == null || TransformDataPanelController.TransformSecondarySubtypeCombo == null)
-            return;
-
-        _isUpdatingTransformSubtypeCombos = true;
-        try
-        {
-            TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Clear();
-            TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Clear();
-            TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = false;
-            TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
-            TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = null;
-            TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
-            TransformDataPanelController.TransformOperationCombo.SelectedItem = null;
-            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
-        }
-        finally
-        {
-            _isUpdatingTransformSubtypeCombos = false;
-        }
-    }
-
-    //private void UpdateTransformSubtypeOptions()
-    //{
-    //    if (TransformDataPanelController.TransformPrimarySubtypeCombo == null || TransformDataPanelController.TransformSecondarySubtypeCombo == null)
-    //        return;
-
-    //    if (_isTransformSelectionPendingLoad)
-    //        return;
-
-    //    _isUpdatingTransformSubtypeCombos = true;
-    //    try
-    //    {
-    //        TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Clear();
-    //        TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Clear();
-
-    //        var selectedSeries = _viewModel.MetricState.SelectedSeries;
-    //        if (selectedSeries.Count == 0)
-    //        {
-    //            TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = false;
-    //            TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
-    //            TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-    //            _viewModel.ChartState.SelectedTransformPrimarySeries = null;
-    //            _viewModel.ChartState.SelectedTransformSecondarySeries = null;
-    //            TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = null;
-    //            TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
-    //            return;
-    //        }
-
-    //        foreach (var selection in selectedSeries)
-    //        {
-    //            TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-    //            TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-    //        }
-
-    //        TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = true;
-
-    //        var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySeries;
-    //        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
-    //        var primaryItem = FindSeriesComboItem(TransformDataPanelController.TransformPrimarySubtypeCombo, primarySelection) ?? TransformDataPanelController.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-    //        TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = primaryItem;
-    //        _viewModel.ChartState.SelectedTransformPrimarySeries = primarySelection;
-
-    //        if (selectedSeries.Count > 1)
-    //        {
-    //            TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
-    //            TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = true;
-
-    //            var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySeries;
-    //            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
-    //            var secondaryItem = FindSeriesComboItem(TransformDataPanelController.TransformSecondarySubtypeCombo, secondarySelection) ?? TransformDataPanelController.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-    //            TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = secondaryItem;
-    //            _viewModel.ChartState.SelectedTransformSecondarySeries = secondarySelection;
-    //        }
-    //        else
-    //        {
-    //            TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-    //            TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
-    //            TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
-    //            _viewModel.ChartState.SelectedTransformSecondarySeries = null;
-    //        }
-
-    //        UpdateTransformComputeButtonState();
-    //    }
-    //    finally
-    //    {
-    //        _isUpdatingTransformSubtypeCombos = false;
-    //    }
-    //}
-
-
-    private void UpdateTransformSubtypeOptions()
-    {
-        if (!CanUpdateTransformSubtypeOptions())
-            return;
-
-        _isUpdatingTransformSubtypeCombos = true;
-        try
-        {
-            ClearTransformSubtypeCombos();
-
-            var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                HandleNoSelectedSeries();
-                return;
-            }
-
-            PopulateTransformSubtypeCombos(selectedSeries);
-            UpdatePrimaryTransformSubtype(selectedSeries);
-            UpdateSecondaryTransformSubtype(selectedSeries);
-
-            UpdateTransformComputeButtonState();
-        }
-        finally
-        {
-            _isUpdatingTransformSubtypeCombos = false;
-        }
-    }
-
-    private void UpdateDiffRatioSubtypeOptions()
-    {
-        if (!CanUpdateDiffRatioSubtypeOptions())
-            return;
-
-        _isUpdatingDiffRatioSubtypeCombos = true;
-        try
-        {
-            ClearDiffRatioSubtypeCombos();
-
-            var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                HandleNoSelectedDiffRatioSeries();
-                return;
-            }
-
-            PopulateDiffRatioSubtypeCombos(selectedSeries);
-            UpdatePrimaryDiffRatioSubtype(selectedSeries);
-            UpdateSecondaryDiffRatioSubtype(selectedSeries);
-        }
-        finally
-        {
-            _isUpdatingDiffRatioSubtypeCombos = false;
-        }
-    }
-
-    private bool CanUpdateDiffRatioSubtypeOptions()
-    {
-        return DiffRatioChartController?.PrimarySubtypeCombo != null && DiffRatioChartController?.SecondarySubtypeCombo != null;
-    }
-
-    private void ClearDiffRatioSubtypeCombos()
-    {
-        DiffRatioChartController.PrimarySubtypeCombo.Items.Clear();
-        DiffRatioChartController.SecondarySubtypeCombo.Items.Clear();
-    }
-
-    private void HandleNoSelectedDiffRatioSeries()
-    {
-        DiffRatioChartController.PrimarySubtypeCombo.IsEnabled = false;
-        DiffRatioChartController.SecondarySubtypeCombo.IsEnabled = false;
-        DiffRatioChartController.SecondarySubtypePanel.Visibility = Visibility.Collapsed;
-
-        _viewModel.ChartState.SelectedDiffRatioPrimarySeries = null;
-        _viewModel.ChartState.SelectedDiffRatioSecondarySeries = null;
-
-        DiffRatioChartController.PrimarySubtypeCombo.SelectedItem = null;
-        DiffRatioChartController.SecondarySubtypeCombo.SelectedItem = null;
-    }
-
-    private void PopulateDiffRatioSubtypeCombos(IReadOnlyList<dynamic> selectedSeries)
-    {
-        foreach (var selection in selectedSeries)
-        {
-            DiffRatioChartController.PrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-            DiffRatioChartController.SecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-        }
-
-        DiffRatioChartController.PrimarySubtypeCombo.IsEnabled = true;
-    }
-
-    private void UpdatePrimaryDiffRatioSubtype(IReadOnlyList<dynamic> selectedSeries)
-    {
-        var primaryCurrent = _viewModel.ChartState.SelectedDiffRatioPrimarySeries;
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
-
-        var primaryItem = FindSeriesComboItem(DiffRatioChartController.PrimarySubtypeCombo, primarySelection) ?? DiffRatioChartController.PrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-        DiffRatioChartController.PrimarySubtypeCombo.SelectedItem = primaryItem;
-        _viewModel.ChartState.SelectedDiffRatioPrimarySeries = primarySelection;
-    }
-
-    private void UpdateSecondaryDiffRatioSubtype(IReadOnlyList<dynamic> selectedSeries)
-    {
-        if (selectedSeries.Count > 1)
-        {
-            DiffRatioChartController.SecondarySubtypePanel.Visibility = Visibility.Visible;
-            DiffRatioChartController.SecondarySubtypeCombo.IsEnabled = true;
-
-            var secondaryCurrent = _viewModel.ChartState.SelectedDiffRatioSecondarySeries;
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
-
-            var secondaryItem = FindSeriesComboItem(DiffRatioChartController.SecondarySubtypeCombo, secondarySelection) ?? DiffRatioChartController.SecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-            DiffRatioChartController.SecondarySubtypeCombo.SelectedItem = secondaryItem;
-            _viewModel.ChartState.SelectedDiffRatioSecondarySeries = secondarySelection;
-        }
-        else
-        {
-            DiffRatioChartController.SecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            DiffRatioChartController.SecondarySubtypeCombo.IsEnabled = false;
-            DiffRatioChartController.SecondarySubtypeCombo.SelectedItem = null;
-            _viewModel.ChartState.SelectedDiffRatioSecondarySeries = null;
-        }
-    }
-
-
-    private bool CanUpdateTransformSubtypeOptions()
-    {
-        if (TransformDataPanelController.TransformPrimarySubtypeCombo == null || TransformDataPanelController.TransformSecondarySubtypeCombo == null)
-            return false;
-
-        return !_isTransformSelectionPendingLoad;
-    }
-
-    private void ClearTransformSubtypeCombos()
-    {
-        TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Clear();
-        TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Clear();
-    }
-
-    private void HandleNoSelectedSeries()
-    {
-        TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = false;
-        TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
-        TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-
-        _viewModel.ChartState.SelectedTransformPrimarySeries = null;
-        _viewModel.ChartState.SelectedTransformSecondarySeries = null;
-
-        TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = null;
-        TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
-    }
-
-    private void PopulateTransformSubtypeCombos(IReadOnlyList<dynamic> selectedSeries)
-    {
-        foreach (var selection in selectedSeries)
-        {
-            TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-
-            TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-        }
-
-        TransformDataPanelController.TransformPrimarySubtypeCombo.IsEnabled = true;
-    }
-
-    private void UpdatePrimaryTransformSubtype(IReadOnlyList<dynamic> selectedSeries)
-    {
-        var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySeries;
-
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
-
-        var primaryItem = FindSeriesComboItem(TransformDataPanelController.TransformPrimarySubtypeCombo, primarySelection) ?? TransformDataPanelController.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-        TransformDataPanelController.TransformPrimarySubtypeCombo.SelectedItem = primaryItem;
-        _viewModel.ChartState.SelectedTransformPrimarySeries = primarySelection;
-    }
-
-    private void UpdateSecondaryTransformSubtype(IReadOnlyList<dynamic> selectedSeries)
-    {
-        if (selectedSeries.Count > 1)
-        {
-            TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
-            TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = true;
-
-            var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySeries;
-
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
-
-            var secondaryItem = FindSeriesComboItem(TransformDataPanelController.TransformSecondarySubtypeCombo, secondarySelection) ?? TransformDataPanelController.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-            TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = secondaryItem;
-            _viewModel.ChartState.SelectedTransformSecondarySeries = secondarySelection;
-        }
-        else
-        {
-            TransformDataPanelController.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            TransformDataPanelController.TransformSecondarySubtypeCombo.IsEnabled = false;
-            TransformDataPanelController.TransformSecondarySubtypeCombo.SelectedItem = null;
-            _viewModel.ChartState.SelectedTransformSecondarySeries = null;
-        }
-    }
-
 
     /// <summary>
     ///     Validates that the chart context is valid and has data to render.
@@ -1181,7 +764,7 @@ public partial class MainChartsView : UserControl
 
             case "DiffRatio":
                 if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
-                    await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
+                    await _diffRatioAdapter.RenderAsync(ctx);
                 break;
 
             case "Distribution":
@@ -1208,295 +791,16 @@ public partial class MainChartsView : UserControl
         await _normalizedAdapter.RenderAsync(ctx);
         await _distributionAdapter.RenderAsync(ctx);
         await _weekdayTrendAdapter.RenderAsync(ctx);
-        await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
+        await _diffRatioAdapter.RenderAsync(ctx);
     }
 
     private void ClearSecondaryChartsAndReturn()
     {
         _normalizedAdapter.Clear(_viewModel.ChartState);
-        ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _diffRatioAdapter.Clear(_viewModel.ChartState);
         _distributionAdapter.Clear(_viewModel.ChartState);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Cartesian, Polar, and Scatter modes are handled by the adapter render check.
-    }
-
-    private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveDiffRatioDataAsync(ChartDataContext ctx)
-    {
-        var primarySelection = ResolveSelectedDiffRatioPrimarySeries(ctx);
-        var secondarySelection = ResolveSelectedDiffRatioSecondarySeries(ctx);
-
-        var primaryData = await ResolveDiffRatioDataAsync(ctx, primarySelection);
-        IReadOnlyList<MetricData>? secondaryData = null;
-
-        if (secondarySelection != null)
-            secondaryData = await ResolveDiffRatioDataAsync(ctx, secondarySelection);
-
-        var displayName1 = ResolveDiffRatioDisplayName(ctx, primarySelection);
-        var displayName2 = ResolveDiffRatioDisplayName(ctx, secondarySelection);
-
-        var diffRatioContext = new ChartDataContext
-        {
-            Data1 = primaryData,
-            Data2 = secondaryData,
-            DisplayName1 = displayName1,
-            DisplayName2 = displayName2,
-            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-            PrimarySubtype = primarySelection?.Subtype,
-            SecondarySubtype = secondarySelection?.Subtype,
-            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-            From = ctx.From,
-            To = ctx.To
-        };
-
-        return (primaryData, secondaryData, diffRatioContext);
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> ResolveDiffRatioDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (ctx.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
-
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildDiffRatioCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_diffRatioSubtypeCache.TryGetValue(cacheKey, out var cached))
-            return cached;
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _diffRatioSubtypeCache[cacheKey] = data;
-        return data;
-    }
-
-    private MetricSeriesSelection? ResolveSelectedDiffRatioPrimarySeries(ChartDataContext ctx)
-    {
-        if (!_isUpdatingDiffRatioSubtypeCombos && DiffRatioChartController.PrimarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.PrimarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedDiffRatioPrimarySeries != null)
-            return _viewModel.ChartState.SelectedDiffRatioPrimarySeries;
-
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-    }
-
-    private MetricSeriesSelection? ResolveSelectedDiffRatioSecondarySeries(ChartDataContext ctx)
-    {
-        if (!_isUpdatingDiffRatioSubtypeCombos && DiffRatioChartController.SecondarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.SecondarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedDiffRatioSecondarySeries != null)
-            return _viewModel.ChartState.SelectedDiffRatioSecondarySeries;
-
-        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
-    }
-
-    private static string ResolveDiffRatioDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
-    }
-
-    private static string BuildDiffRatioCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
-    }
-
-    private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveTransformDataAsync(ChartDataContext ctx)
-    {
-        var primarySelection = ResolveSelectedTransformPrimarySeries(ctx);
-        var secondarySelection = ResolveSelectedTransformSecondarySeries(ctx);
-
-        var primaryData = await ResolveTransformDataAsync(ctx, primarySelection);
-        IReadOnlyList<MetricData>? secondaryData = null;
-
-        if (secondarySelection != null)
-            secondaryData = await ResolveTransformDataAsync(ctx, secondarySelection);
-
-        var displayName1 = ResolveTransformDisplayName(ctx, primarySelection);
-        var displayName2 = ResolveTransformDisplayName(ctx, secondarySelection);
-
-        var transformContext = new ChartDataContext
-        {
-            Data1 = primaryData,
-            Data2 = secondaryData,
-            DisplayName1 = displayName1,
-            DisplayName2 = displayName2,
-            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-            PrimarySubtype = primarySelection?.Subtype,
-            SecondarySubtype = secondarySelection?.Subtype,
-            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-            From = ctx.From,
-            To = ctx.To
-        };
-
-        return (primaryData, secondaryData, transformContext);
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (ctx.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
-
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildTransformCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_transformSubtypeCache.TryGetValue(cacheKey, out var cached))
-            return cached;
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _transformSubtypeCache[cacheKey] = data;
-        return data;
-    }
-
-    private MetricSeriesSelection? ResolveSelectedTransformPrimarySeries(ChartDataContext ctx)
-    {
-        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformPrimarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformPrimarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedTransformPrimarySeries != null)
-            return _viewModel.ChartState.SelectedTransformPrimarySeries;
-
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-    }
-
-    private MetricSeriesSelection? ResolveSelectedTransformSecondarySeries(ChartDataContext ctx)
-    {
-        if (!_isTransformSelectionPendingLoad && TransformDataPanelController.TransformSecondarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformSecondarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedTransformSecondarySeries != null)
-            return _viewModel.ChartState.SelectedTransformSecondarySeries;
-
-        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
-    }
-
-    private static string ResolveTransformDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
-    }
-
-    private static string BuildTransformCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
-    }
-
-    private async Task RenderDiffRatio(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
-    {
-        if (_chartRenderingOrchestrator == null)
-            return;
-
-        var (primaryData, secondaryData, diffRatioContext) = await ResolveDiffRatioDataAsync(ctx);
-        if (primaryData == null || secondaryData == null)
-            return;
-
-        UpdateDiffRatioPanelTitle(diffRatioContext);
-        await _chartRenderingOrchestrator.RenderDiffRatioChartAsync(diffRatioContext, DiffRatioChartController.Chart, _viewModel.ChartState);
-    }
-
-    private async Task RenderDiffRatioFromSelectionAsync()
-    {
-        if (!_viewModel.ChartState.IsDiffRatioVisible || _viewModel.ChartState.LastContext == null)
-            return;
-
-        var ctx = _viewModel.ChartState.LastContext;
-        await RenderDiffRatio(ctx, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
-    }
-
-    private void UpdateDiffRatioPanelTitle(ChartDataContext ctx)
-    {
-        var leftName = ctx.DisplayName1 ?? string.Empty;
-        var rightName = ctx.DisplayName2 ?? string.Empty;
-        var operationSymbol = _viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/";
-
-        DiffRatioChartController.Panel.Title = $"{leftName} {operationSymbol} {rightName}";
-
-        if (_tooltipManager != null)
-        {
-            var label = !string.IsNullOrEmpty(rightName) ? $"{leftName} {operationSymbol} {rightName}" : leftName;
-            _tooltipManager.UpdateChartLabel(DiffRatioChartController.Chart, label);
-        }
     }
 
     private Panel? GetChartPanel(string chartName)
@@ -1588,26 +892,12 @@ public partial class MainChartsView : UserControl
     {
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         _normalizedAdapter.Clear(_viewModel.ChartState);
-        ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _diffRatioAdapter.Clear(_viewModel.ChartState);
         _distributionAdapter.Clear(_viewModel.ChartState);
         _weekdayTrendAdapter.Clear(_viewModel.ChartState);
         ClearBarPieChart();
         _viewModel.ChartState.LastContext = null;
-
-        // Clear transform panel grids
-        ClearTransformGrids();
-    }
-
-    private void ClearTransformGrids()
-    {
-        TransformDataPanelController.TransformGrid1.ItemsSource = null;
-        TransformDataPanelController.TransformGrid2.ItemsSource = null;
-        TransformDataPanelController.TransformGrid3.ItemsSource = null;
-        TransformDataPanelController.TransformGrid2Panel.Visibility = Visibility.Collapsed;
-        TransformDataPanelController.TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        TransformDataPanelController.TransformChartContentPanel.Visibility = Visibility.Collapsed;
-        TransformDataPanelController.TransformComputeButton.IsEnabled = false;
-        ChartHelper.ClearChart(TransformDataPanelController.ChartTransformResult, _viewModel.ChartState.ChartTimestamps);
+        _transformAdapter.Clear(_viewModel.ChartState);
     }
 
     private void ClearBarPieChart()
@@ -1702,6 +992,23 @@ public partial class MainChartsView : UserControl
             _chartUpdateCoordinator,
             () => _strategyCutOverService);
 
+        _diffRatioAdapter = new DiffRatioChartControllerAdapter(
+            DiffRatioChartController,
+            _viewModel,
+            () => _isInitializing,
+            BeginUiBusyScope,
+            _metricSelectionService,
+            () => _chartRenderingOrchestrator,
+            () => _tooltipManager);
+
+        _transformAdapter = new TransformDataPanelControllerAdapter(
+            TransformDataPanelController,
+            _viewModel,
+            () => _isInitializing,
+            BeginUiBusyScope,
+            _metricSelectionService,
+            _chartUpdateCoordinator);
+
         // Wire up MainChartController events
         MainChartController.ToggleRequested += OnMainChartToggleRequested;
         MainChartController.DisplayModeChanged += OnMainChartDisplayModeChanged;
@@ -1711,10 +1018,10 @@ public partial class MainChartsView : UserControl
         WeekdayTrendChartController.AverageToggled += _weekdayTrendAdapter.OnAverageToggled;
         WeekdayTrendChartController.AverageWindowChanged += _weekdayTrendAdapter.OnAverageWindowChanged;
         WeekdayTrendChartController.SubtypeChanged += _weekdayTrendAdapter.OnSubtypeChanged;
-        DiffRatioChartController.ToggleRequested += OnDiffRatioToggleRequested;
-        DiffRatioChartController.OperationToggleRequested += OnDiffRatioOperationToggleRequested;
-        DiffRatioChartController.PrimarySubtypeChanged += OnDiffRatioPrimarySubtypeChanged;
-        DiffRatioChartController.SecondarySubtypeChanged += OnDiffRatioSecondarySubtypeChanged;
+        DiffRatioChartController.ToggleRequested += _diffRatioAdapter.OnToggleRequested;
+        DiffRatioChartController.OperationToggleRequested += _diffRatioAdapter.OnOperationToggleRequested;
+        DiffRatioChartController.PrimarySubtypeChanged += _diffRatioAdapter.OnPrimarySubtypeChanged;
+        DiffRatioChartController.SecondarySubtypeChanged += _diffRatioAdapter.OnSecondarySubtypeChanged;
         BarPieChartController.ToggleRequested += OnBarPieToggleRequested;
         BarPieChartController.DisplayModeChanged += OnBarPieDisplayModeChanged;
         BarPieChartController.BucketCountChanged += OnBarPieBucketCountChanged;
@@ -1728,11 +1035,11 @@ public partial class MainChartsView : UserControl
         DistributionChartController.SubtypeChanged += _distributionAdapter.OnSubtypeChanged;
         DistributionChartController.DisplayModeChanged += _distributionAdapter.OnDisplayModeChanged;
         DistributionChartController.IntervalCountChanged += _distributionAdapter.OnIntervalCountChanged;
-        TransformDataPanelController.ToggleRequested += OnTransformPanelToggleRequested;
-        TransformDataPanelController.OperationChanged += OnTransformOperationChanged;
-        TransformDataPanelController.PrimarySubtypeChanged += OnTransformPrimarySubtypeChanged;
-        TransformDataPanelController.SecondarySubtypeChanged += OnTransformSecondarySubtypeChanged;
-        TransformDataPanelController.ComputeRequested += OnTransformCompute;
+        TransformDataPanelController.ToggleRequested += _transformAdapter.OnToggleRequested;
+        TransformDataPanelController.OperationChanged += _transformAdapter.OnOperationChanged;
+        TransformDataPanelController.PrimarySubtypeChanged += _transformAdapter.OnPrimarySubtypeChanged;
+        TransformDataPanelController.SecondarySubtypeChanged += _transformAdapter.OnSecondarySubtypeChanged;
+        TransformDataPanelController.ComputeRequested += _transformAdapter.OnComputeRequested;
     }
 
     private void ExecuteStartupSequence()
@@ -2064,7 +1371,7 @@ public partial class MainChartsView : UserControl
         // Clear charts on startup to prevent gibberish tick labels
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         _normalizedAdapter.Clear(_viewModel.ChartState);
-        ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _diffRatioAdapter.Clear(_viewModel.ChartState);
         _distributionAdapter.Clear(_viewModel.ChartState);
     }
 
@@ -2107,7 +1414,7 @@ public partial class MainChartsView : UserControl
         MainChartController.Panel.Title = "Metrics: Total";
         NormalizedChartController.Panel.Title = "Metrics: Normalized";
         DiffRatioChartController.Panel.Title = "Difference / Ratio";
-        UpdateDiffRatioOperationButton(); // Initialize button state
+        _diffRatioAdapter.UpdateOperationButton(); // Initialize button state
     }
 
     #endregion
@@ -2259,9 +1566,9 @@ public partial class MainChartsView : UserControl
             _distributionAdapter.ClearCache();
             _weekdayTrendAdapter.ClearCache();
             _normalizedAdapter.ClearCache();
-            _diffRatioSubtypeCache.Clear();
-            _transformSubtypeCache.Clear();
-            ResetTransformSelectionsPendingLoad();
+            _diffRatioAdapter.ClearCache();
+            _transformAdapter.ClearCache();
+            _transformAdapter.ResetSelectionsPendingLoad();
             var dataLoaded = await _viewModel.LoadMetricDataAsync();
             if (!dataLoaded)
             {
@@ -2332,488 +1639,6 @@ public partial class MainChartsView : UserControl
             await RenderBarPieChartAsync();
     }
 
-    private void OnDiffRatioToggleRequested(object? sender, EventArgs e)
-    {
-        _viewModel.ToggleDiffRatio();
-    }
-
-    private async void OnDiffRatioPrimarySubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing || _isUpdatingDiffRatioSubtypeCombos)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.PrimarySubtypeCombo);
-        _viewModel.SetDiffRatioPrimarySeries(selection);
-
-        await RenderDiffRatioFromSelectionAsync();
-    }
-
-    private async void OnDiffRatioSecondarySubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing || _isUpdatingDiffRatioSubtypeCombos)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(DiffRatioChartController.SecondarySubtypeCombo);
-        _viewModel.SetDiffRatioSecondarySeries(selection);
-
-        await RenderDiffRatioFromSelectionAsync();
-    }
-
-    private async void OnDiffRatioOperationToggleRequested(object? sender, EventArgs e)
-    {
-        using var busyScope = BeginUiBusyScope();
-        _viewModel.ToggleDiffRatioOperation();
-        UpdateDiffRatioOperationButton();
-
-        // Re-render the chart with current data if visible
-        await RenderDiffRatioFromSelectionAsync();
-    }
-
-    private void UpdateDiffRatioOperationButton()
-    {
-        var isDifference = _viewModel.ChartState.IsDiffRatioDifferenceMode;
-
-        var operationButton = DiffRatioChartController.OperationToggleButton;
-        operationButton.Content = isDifference ? "/" : "-";
-        operationButton.ToolTip = isDifference ? "Switch to Ratio (/)" : "Switch to Difference (-)";
-
-        if (DiffRatioChartController.Chart.AxisY.Count > 0)
-            DiffRatioChartController.Chart.AxisY[0].Title = isDifference ? "Difference" : "Ratio";
-    }
-
-
-    private void OnTransformPanelToggleRequested(object? sender, EventArgs e)
-    {
-        _viewModel.ToggleTransformPanel();
-    }
-
-    private void OnTransformOperationChanged(object? sender, EventArgs e)
-    {
-        UpdateTransformComputeButtonState();
-    }
-
-    private void OnTransformPrimarySubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_viewModel == null)
-            return;
-
-        if (_isInitializing || _isUpdatingTransformSubtypeCombos)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformPrimarySubtypeCombo);
-        _viewModel.SetTransformPrimarySeries(selection);
-
-        UpdateTransformComputeButtonState();
-    }
-
-    private void OnTransformSecondarySubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_viewModel == null)
-            return;
-
-        if (_isInitializing || _isUpdatingTransformSubtypeCombos)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(TransformDataPanelController.TransformSecondarySubtypeCombo);
-        _viewModel.SetTransformSecondarySeries(selection);
-
-        UpdateTransformComputeButtonState();
-    }
-
-    private void UpdateTransformComputeButtonState()
-    {
-        if (_isTransformSelectionPendingLoad)
-        {
-            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
-            return;
-        }
-
-        if (TransformDataPanelController.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string operationTag)
-        {
-            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
-            return;
-        }
-
-        var ctx = _viewModel.ChartState.LastContext;
-        if (ctx == null)
-        {
-            TransformDataPanelController.TransformComputeButton.IsEnabled = false;
-            return;
-        }
-
-        var hasSecondary = HasSecondaryData(ctx);
-        var hasSecondSubtype = ResolveSelectedTransformSecondarySeries(ctx) != null;
-        var isUnary = operationTag == "Log" || operationTag == "Sqrt";
-        var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
-
-        // Enable compute button if operation matches data availability
-        // For binary operations, require both secondary data AND a second subtype selected
-        TransformDataPanelController.TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) || (isBinary && hasSecondary && hasSecondSubtype);
-    }
-
-    private async void OnTransformCompute(object? sender, EventArgs e)
-    {
-        if (_isTransformSelectionPendingLoad)
-            return;
-
-        if (_viewModel.ChartState.LastContext == null)
-            return;
-
-        var ctx = _viewModel.ChartState.LastContext;
-        if (!TryGetSelectedOperation(out var operationTag))
-            return;
-
-        using var busyScope = BeginUiBusyScope();
-        await ExecuteTransformOperation(ctx, operationTag);
-    }
-
-    /// <summary>
-    ///     Gets the selected transform operation from the combo box.
-    /// </summary>
-    private bool TryGetSelectedOperation(out string operationTag)
-    {
-        operationTag = string.Empty;
-        if (TransformDataPanelController.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string tag)
-            return false;
-
-        operationTag = tag;
-        return true;
-    }
-
-    /// <summary>
-    ///     Executes the appropriate transform operation based on operation type and data availability.
-    /// </summary>
-    private async Task ExecuteTransformOperation(ChartDataContext ctx, string operationTag)
-    {
-        var isUnary = operationTag == "Log" || operationTag == "Sqrt";
-        var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
-        var hasSecondary = HasSecondaryData(ctx) && ResolveSelectedTransformSecondarySeries(ctx) != null;
-
-        var (primaryData, secondaryData, transformContext) = await ResolveTransformDataAsync(ctx);
-        if (primaryData == null)
-            return;
-
-        if (isUnary)
-            await ComputeUnaryTransform(primaryData, operationTag, transformContext);
-        else if (isBinary && hasSecondary && secondaryData != null)
-            await ComputeBinaryTransform(primaryData, secondaryData, operationTag, transformContext);
-    }
-
-    private async Task ComputeUnaryTransform(IEnumerable<MetricData> data, string operation, ChartDataContext transformContext)
-    {
-        // Use ALL data for chart computation (proper normalization)
-        var allDataList = data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-
-        if (allDataList.Count == 0)
-            return;
-
-        // Phase 4: Use new transform expression infrastructure
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0);
-        List<double> computedResults;
-        List<IReadOnlyList<MetricData>> metricsList;
-
-        if (expression == null)
-        {
-            // Fallback to legacy approach if operation not found in registry
-            Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
-            var op = operation switch
-            {
-                "Log" => UnaryOperators.Logarithm,
-                "Sqrt" => UnaryOperators.SquareRoot,
-                _ => x => x
-            };
-            var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
-            computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
-            metricsList = new List<IReadOnlyList<MetricData>>
-            {
-                    allDataList
-            };
-        }
-        else
-        {
-            // Evaluate using new infrastructure
-            Debug.WriteLine($"[Transform] UNARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
-            metricsList = new List<IReadOnlyList<MetricData>>
-            {
-                    allDataList
-            };
-            computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-            Debug.WriteLine($"[Transform] UNARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
-        }
-
-        // Continue with grid and chart rendering
-        await RenderTransformResults(allDataList, computedResults, operation, metricsList, transformContext);
-    }
-
-    /// <summary>
-    ///     Phase 4: Shared method to render transform results (grid and chart) using new infrastructure.
-    /// </summary>
-    private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext)
-    {
-        var resultData = TransformExpressionEvaluator.CreateTransformResultData(dataList, results);
-        PopulateTransformResultGrid(resultData);
-
-        if (resultData.Count == 0)
-            return;
-
-        ShowTransformResultPanels();
-        await PrepareTransformChartLayout();
-        await RenderTransformChart(dataList, results, operation, metrics, transformContext);
-        await FinalizeTransformChartRendering();
-    }
-
-
-    /// <summary>
-    ///     Populates the transform result grid with data.
-    /// </summary>
-    private void PopulateTransformResultGrid(List<object> resultData)
-    {
-        TransformDataPanelController.TransformGrid3.ItemsSource = resultData;
-        if (TransformDataPanelController.TransformGrid3.Columns.Count >= 2)
-        {
-            TransformDataPanelController.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            TransformDataPanelController.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-        }
-    }
-
-    /// <summary>
-    ///     Shows the transform result panels (grid and chart).
-    /// </summary>
-    private void ShowTransformResultPanels()
-    {
-        TransformDataPanelController.TransformGrid3Panel.Visibility = Visibility.Visible;
-        TransformDataPanelController.TransformChartContentPanel.Visibility = Visibility.Visible;
-    }
-
-    /// <summary>
-    ///     Prepares the transform chart layout before rendering.
-    /// </summary>
-    private async Task PrepareTransformChartLayout()
-    {
-        TransformDataPanelController.TransformChartContentPanel.UpdateLayout();
-        await Dispatcher.InvokeAsync(() =>
-                {
-                },
-                DispatcherPriority.Render);
-        await CalculateAndSetTransformChartWidth();
-        Debug.WriteLine($"[TransformChart] Before render - ActualWidth={TransformDataPanelController.ChartTransformResult.ActualWidth}, ActualHeight={TransformDataPanelController.ChartTransformResult.ActualHeight}, IsVisible={TransformDataPanelController.ChartTransformResult.IsVisible}, PanelVisible={TransformDataPanelController.TransformChartContentPanel.Visibility}");
-    }
-
-    /// <summary>
-    ///     Finalizes transform chart rendering with forced updates.
-    /// </summary>
-    private async Task FinalizeTransformChartRendering()
-    {
-        TransformDataPanelController.ChartTransformResult.Update(true, true);
-        TransformDataPanelController.TransformChartContentPanel.UpdateLayout();
-        await Dispatcher.InvokeAsync(() =>
-                {
-                    TransformDataPanelController.ChartTransformResult.InvalidateVisual();
-                    TransformDataPanelController.ChartTransformResult.Update(true, true);
-                },
-                DispatcherPriority.Render);
-        Debug.WriteLine($"[TransformChart] After render - ActualWidth={TransformDataPanelController.ChartTransformResult.ActualWidth}, ActualHeight={TransformDataPanelController.ChartTransformResult.ActualHeight}, SeriesCount={TransformDataPanelController.ChartTransformResult.Series?.Count ?? 0}");
-    }
-
-    /// <summary>
-    ///     Calculates and sets the transform chart container width to fill remaining space.
-    /// </summary>
-    private async Task CalculateAndSetTransformChartWidth()
-    {
-        await Dispatcher.InvokeAsync(() =>
-                {
-                    if (TransformDataPanelController.TransformChartContainer == null)
-                        return;
-
-                    var parentStackPanel = TransformDataPanelController.TransformChartContainer.Parent as FrameworkElement;
-                    if (parentStackPanel?.Parent is not FrameworkElement parentContainer)
-                        return;
-
-                    var usedWidth = CalculateUsedWidthForTransformGrids();
-                    usedWidth += 40; // Margins and spacing (20px left + 10px between grids + 10px before chart)
-
-                    var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
-                    var chartWidth = Math.Max(400, availableWidth - usedWidth - 40); // 40px for window padding
-                    TransformDataPanelController.TransformChartContainer.Width = chartWidth;
-
-                    Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
-                },
-                DispatcherPriority.Render);
-    }
-
-    /// <summary>
-    ///     Calculates the total width used by visible transform grids.
-    /// </summary>
-    private double CalculateUsedWidthForTransformGrids()
-    {
-        double usedWidth = 0;
-
-        // Grid 1 is always visible
-        var grid1StackPanel = TransformDataPanelController.TransformGrid1.Parent as FrameworkElement;
-        usedWidth += grid1StackPanel?.ActualWidth > 0 ? grid1StackPanel.ActualWidth : 250;
-
-        // Grid 2 (if visible)
-        if (TransformDataPanelController.TransformGrid2Panel.IsVisible)
-            usedWidth += TransformDataPanelController.TransformGrid2Panel.ActualWidth > 0 ? TransformDataPanelController.TransformGrid2Panel.ActualWidth : 250;
-
-        // Grid 3 (if visible)
-        if (TransformDataPanelController.TransformGrid3Panel.IsVisible)
-            usedWidth += TransformDataPanelController.TransformGrid3Panel.ActualWidth > 0 ? TransformDataPanelController.TransformGrid3Panel.ActualWidth : 250;
-
-        return usedWidth;
-    }
-
-    /// <summary>
-    ///     Phase 4: Renders transform chart using new infrastructure for label generation.
-    /// </summary>
-    private async Task RenderTransformChart(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext)
-    {
-        if (dataList.Count == 0 || results.Count == 0)
-            return;
-
-        // Get date range from context or data
-        var from = transformContext.From != default ? transformContext.From : dataList.Min(d => d.NormalizedTimestamp);
-        var to = transformContext.To != default ? transformContext.To : dataList.Max(d => d.NormalizedTimestamp);
-
-        // Phase 4: Generate label using new infrastructure
-        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metrics, transformContext);
-
-        // Create strategy using existing pipeline
-        var strategy = new TransformResultStrategy(dataList, results, label, from, to);
-
-        // Use existing chart rendering pipeline
-        // Pass metric type and subtype info for proper label formatting
-        var operationTag = TransformDataPanelController.TransformOperationCombo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() ?? "Transform" : "Transform";
-        var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
-        var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
-
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(TransformDataPanelController.ChartTransformResult, strategy, label, null, 400, transformContext.PrimaryMetricType ?? transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart, transformContext.SecondaryMetricType, displayPrimaryMetricType: transformContext.DisplayPrimaryMetricType, displaySecondaryMetricType: transformContext.DisplaySecondaryMetricType, displayPrimarySubtype: transformContext.DisplayPrimarySubtype, displaySecondarySubtype: transformContext.DisplaySecondarySubtype);
-    }
-
-
-    //private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation, ChartDataContext transformContext)
-    //{
-    //    // Use ALL data for chart computation (proper normalization)
-    //    var allData1List = data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-
-    //    var allData2List = data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-
-    //    if (allData1List.Count == 0 || allData2List.Count == 0)
-    //        return;
-
-    //    // Phase 4: Align data by timestamp (required for expression evaluator)
-    //    var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
-    //    if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
-    //        return;
-
-    //    // Phase 4: Use new transform expression infrastructure
-    //    var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
-    //    List<double> binaryComputedResults;
-    //    List<IReadOnlyList<MetricData>> binaryMetricsList;
-
-    //    if (expression == null)
-    //    {
-    //        // Fallback to legacy approach if operation not found in registry
-    //        Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
-    //        var op = operation switch
-    //        {
-    //                "Add" => BinaryOperators.Sum,
-    //                "Subtract" => BinaryOperators.Difference,
-    //                "Divide" => BinaryOperators.Ratio,
-    //                _ => (a, b) => a
-    //        };
-
-    //        var allValues1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
-    //        var allValues2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
-    //        binaryComputedResults = MathHelper.ApplyBinaryOperation(allValues1, allValues2, op);
-    //        binaryMetricsList = new List<IReadOnlyList<MetricData>>
-    //        {
-    //                alignedData.Item1,
-    //                alignedData.Item2
-    //        };
-    //        Debug.WriteLine($"[Transform] BINARY - Legacy computation completed: {binaryComputedResults.Count} results");
-    //    }
-    //    else
-    //    {
-    //        // Evaluate using new infrastructure
-    //        Debug.WriteLine($"[Transform] BINARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
-    //        binaryMetricsList = new List<IReadOnlyList<MetricData>>
-    //        {
-    //                alignedData.Item1,
-    //                alignedData.Item2
-    //        };
-    //        binaryComputedResults = TransformExpressionEvaluator.Evaluate(expression, binaryMetricsList);
-    //        Debug.WriteLine($"[Transform] BINARY - Evaluated {binaryComputedResults.Count} results using TransformExpressionEvaluator");
-    //    }
-
-    //    // Continue with grid and chart rendering
-    //    await RenderTransformResults(alignedData.Item1, binaryComputedResults, operation, binaryMetricsList, transformContext);
-    //}
-    private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation, ChartDataContext transformContext)
-    {
-        var allData1List = PrepareMetricData(data1);
-        var allData2List = PrepareMetricData(data2);
-
-        if (allData1List.Count == 0 || allData2List.Count == 0)
-            return;
-
-        // IMPORTANT: this is a VALUE TUPLE
-        var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
-
-        if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
-            return;
-
-        var computation = ComputeBinaryResults(alignedData, operation);
-
-        await RenderTransformResults(alignedData.Item1, computation.Results, operation, computation.MetricsList, transformContext);
-    }
-
-    private static List<MetricData> PrepareMetricData(IEnumerable<MetricData> data)
-    {
-        return data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-    }
-
-    private static (List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
-    {
-        var metricsList = new List<IReadOnlyList<MetricData>>
-        {
-                alignedData.Item1,
-                alignedData.Item2
-        };
-
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
-
-        if (expression == null)
-        {
-            Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
-
-            var op = operation switch
-            {
-                "Add" => BinaryOperators.Sum,
-                "Subtract" => BinaryOperators.Difference,
-                "Divide" => BinaryOperators.Ratio,
-                _ => (a, b) => a
-            };
-
-            var values1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
-
-            var values2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
-
-            var results = MathHelper.ApplyBinaryOperation(values1, values2, op);
-
-            Debug.WriteLine($"[Transform] BINARY - Legacy computation completed: {results.Count} results");
-
-            return (results, metricsList);
-        }
-
-        Debug.WriteLine($"[Transform] BINARY - Using NEW infrastructure for operation: {operation}");
-
-        var computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-
-        Debug.WriteLine($"[Transform] BINARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
-
-        return (computedResults, metricsList);
-    }
 
     #endregion
 
@@ -2825,9 +1650,9 @@ public partial class MainChartsView : UserControl
         var mainChart = MainChartController.Chart;
         ChartHelper.ResetZoom(mainChart);
         _normalizedAdapter.ResetZoom();
-        ChartHelper.ResetZoom(DiffRatioChartController.Chart);
+        _diffRatioAdapter.ResetZoom();
         _distributionAdapter.ResetZoom();
-        ChartHelper.ResetZoom(TransformDataPanelController.ChartTransformResult);
+        _transformAdapter.ResetZoom();
         _weekdayTrendAdapter.ResetZoom();
     }
 

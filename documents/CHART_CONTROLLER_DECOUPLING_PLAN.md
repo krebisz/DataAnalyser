@@ -15,11 +15,14 @@ core orchestration logic.
 - 2026-01-16: Completed Distribution migration: rendering, cache, and clear/reset logic now live in adapter; `MainChartsView` delegates to `DistributionChartControllerAdapter`.
 - 2026-01-16: Completed WeekdayTrend migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `WeekdayTrendChartControllerAdapter`.
 - 2026-01-16: Completed Normalized migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `NormalizedChartControllerAdapter`.
+- 2026-01-16: Completed DiffRatio migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `DiffRatioChartControllerAdapter`.
+- 2026-01-20: Completed Transform migration: rendering, compute, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `TransformDataPanelControllerAdapter`.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.
 - Keep rendering engines and computation orchestration untouched; adapters live in UI layer only.
 - Avoid exposing concrete UI controls beyond what is necessary; introduce thin wrappers where needed.
+- Defer registry/factory work until all chart adapters are in place; current scope focuses on per-chart logic extraction.
 
 ## Step 1: Inventory Current Coupling
 Checklist:
@@ -115,11 +118,11 @@ Rollout:
 - Remove placeholder/hard-coded references after migration.
 
 ## Suggested Order of Migration
-1) Distribution (self-contained chart type switching)
-2) WeekdayTrend
-3) Normalized
-4) DiffRatio (most coupled)
-5) Transform panel
+1) Distribution (self-contained chart type switching) (done)
+2) WeekdayTrend (done)
+3) Normalized (done)
+4) DiffRatio (most coupled) (done)
+5) Transform panel (done)
 6) Main chart
 
 ## Completed Migration Checklist (Step 1: Distribution)
@@ -142,11 +145,22 @@ Rollout:
 - Route Normalized UI events in `MainChartsView` to adapter. (done)
 - Keep rendering engines unchanged; only UI orchestration shifts. (on track)
 
-## Next Migration Checklist (Step 4: DiffRatio)
-- Define `DiffRatioChartControllerAdapter` responsibilities (toggle, operation toggle, subtype combos).
-- Move render/data resolution and title updates into adapter.
-- Route DiffRatio UI events in `MainChartsView` to adapter.
-- Keep rendering engines unchanged; only UI orchestration shifts.
+## Completed Migration Checklist (Step 4: DiffRatio)
+- Define `DiffRatioChartControllerAdapter` responsibilities (toggle, operation toggle, subtype combos). (done)
+- Move render/data resolution and title updates into adapter. (done)
+- Route DiffRatio UI events in `MainChartsView` to adapter. (done)
+- Keep rendering engines unchanged; only UI orchestration shifts. (on track)
+
+## Completed Migration Checklist (Step 5: Transform)
+- Define `TransformDataPanelControllerAdapter` responsibilities (toggle, subtype combos, compute). (done)
+- Move transform render/data resolution and UI state into adapter. (done)
+- Route Transform UI events in `MainChartsView` to adapter. (done)
+- Keep rendering engines unchanged; only UI orchestration shifts. (on track)
+
+## Next Migration Checklist (Step 6: Main)
+- Define `MainChartControllerAdapter` responsibilities (toggle, display mode, render/clear/reset).
+- Move main chart render orchestration into adapter.
+- Route main chart UI events in `MainChartsView` to adapter.
 
 ## Risks and Mitigations
 - Risk: Too many UI control dependencies.
