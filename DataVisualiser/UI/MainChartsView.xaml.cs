@@ -49,7 +49,6 @@ public partial class MainChartsView : UserControl
     private readonly ChartState _chartState = new();
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _diffRatioSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly MetricState _metricState = new();
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _normalizedSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _transformSubtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly UiState _uiState = new();
     private readonly LiveChartsChartRenderer _barPieRenderer = new();
@@ -69,11 +68,11 @@ public partial class MainChartsView : UserControl
     private bool _isBarPieVisible;
     private WeekdayTrendChartControllerAdapter _weekdayTrendAdapter = null!;
     private DistributionChartControllerAdapter _distributionAdapter = null!;
+    private NormalizedChartControllerAdapter _normalizedAdapter = null!;
 
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isUpdatingDiffRatioSubtypeCombos;
-    private bool _isUpdatingNormalizedSubtypeCombos;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
 
@@ -128,43 +127,6 @@ public partial class MainChartsView : UserControl
             _uiState.IsUiBusy = false;
     }
 
-    #region Normalization mode UI handling
-
-    private async void OnNormalizationModeChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing)
-            return;
-
-        try
-        {
-            if (NormalizedChartController.NormZeroToOneRadio.IsChecked == true)
-                _viewModel.SetNormalizationMode(NormalizationMode.ZeroToOne);
-            else if (NormalizedChartController.NormPercentOfMaxRadio.IsChecked == true)
-                _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
-            else if (NormalizedChartController.NormRelativeToMaxRadio.IsChecked == true)
-                _viewModel.SetNormalizationMode(NormalizationMode.RelativeToMax);
-
-            if (_viewModel.ChartState.IsNormalizedVisible && _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
-            {
-                using var busyScope = BeginUiBusyScope();
-                var ctx = _viewModel.ChartState.LastContext;
-                var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
-                if (primaryData == null || secondaryData == null)
-                    return;
-
-                var normalizedStrategy = CreateNormalizedStrategy(normalizedContext, primaryData, secondaryData, normalizedContext.DisplayName1, normalizedContext.DisplayName2, normalizedContext.From, normalizedContext.To, _viewModel.ChartState.SelectedNormalizationMode);
-                UpdateNormalizedPanelTitle(normalizedContext);
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(NormalizedChartController.Chart, normalizedStrategy, $"{normalizedContext.DisplayName1} ~ {normalizedContext.DisplayName2}", minHeight: 400, metricType: normalizedContext.PrimaryMetricType ?? normalizedContext.MetricType, primarySubtype: normalizedContext.PrimarySubtype, secondarySubtype: normalizedContext.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: normalizedContext.SecondaryMetricType, displayPrimaryMetricType: normalizedContext.DisplayPrimaryMetricType, displaySecondaryMetricType: normalizedContext.DisplaySecondaryMetricType, displayPrimarySubtype: normalizedContext.DisplayPrimarySubtype, displaySecondarySubtype: normalizedContext.DisplaySecondarySubtype);
-            }
-        }
-        catch
-        {
-            // intentional: mode change shouldn't hard-fail the UI
-        }
-    }
-
-    #endregion
-
     private void OnMainChartDisplayModeChanged(object? sender, EventArgs e)
     {
         if (_isInitializing)
@@ -185,7 +147,7 @@ public partial class MainChartsView : UserControl
         var selectedSubtypeCount = CountSelectedSubtypes(distinctSeries);
 
         _viewModel.SetSelectedSeries(distinctSeries);
-        UpdateNormalizedSubtypeOptions();
+        _normalizedAdapter.UpdateSubtypeOptions();
         UpdateDiffRatioSubtypeOptions();
         _distributionAdapter.UpdateSubtypeOptions();
         _weekdayTrendAdapter.UpdateSubtypeOptions();
@@ -272,7 +234,7 @@ public partial class MainChartsView : UserControl
         {
             if (_viewModel.ChartState.IsNormalizedVisible)
             {
-                ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+                _normalizedAdapter.Clear(_viewModel.ChartState);
                 _viewModel.SetNormalizedVisible(false);
             }
 
@@ -441,7 +403,7 @@ public partial class MainChartsView : UserControl
         }
 
         _isTransformSelectionPendingLoad = false;
-        UpdateNormalizedSubtypeOptions();
+        _normalizedAdapter.UpdateSubtypeOptions();
         UpdateDiffRatioSubtypeOptions();
         UpdateTransformSubtypeOptions();
         UpdateTransformComputeButtonState();
@@ -778,7 +740,7 @@ public partial class MainChartsView : UserControl
         if (hasSecondaryData)
         {
             if (_viewModel.ChartState.IsNormalizedVisible)
-                await RenderNormalized(safeCtx, metricType, primarySubtype, secondarySubtype);
+                await _normalizedAdapter.RenderAsync(safeCtx);
 
             if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
                 await RenderDiffRatio(safeCtx, metricType, primarySubtype, secondarySubtype);
@@ -786,7 +748,7 @@ public partial class MainChartsView : UserControl
         else
         {
             // Clear charts that require secondary data when no secondary data exists
-            ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+            _normalizedAdapter.Clear(_viewModel.ChartState);
             ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         }
 
@@ -990,103 +952,6 @@ public partial class MainChartsView : UserControl
         finally
         {
             _isUpdatingTransformSubtypeCombos = false;
-        }
-    }
-
-    private void UpdateNormalizedSubtypeOptions()
-    {
-        if (!CanUpdateNormalizedSubtypeOptions())
-            return;
-
-        _isUpdatingNormalizedSubtypeCombos = true;
-        try
-        {
-            ClearNormalizedSubtypeCombos();
-
-            var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                HandleNoSelectedNormalizedSeries();
-                return;
-            }
-
-            PopulateNormalizedSubtypeCombos(selectedSeries);
-            UpdatePrimaryNormalizedSubtype(selectedSeries);
-            UpdateSecondaryNormalizedSubtype(selectedSeries);
-        }
-        finally
-        {
-            _isUpdatingNormalizedSubtypeCombos = false;
-        }
-    }
-
-    private bool CanUpdateNormalizedSubtypeOptions()
-    {
-        return NormalizedChartController?.NormalizedPrimarySubtypeCombo != null && NormalizedChartController?.NormalizedSecondarySubtypeCombo != null;
-    }
-
-    private void ClearNormalizedSubtypeCombos()
-    {
-        NormalizedChartController.NormalizedPrimarySubtypeCombo.Items.Clear();
-        NormalizedChartController.NormalizedSecondarySubtypeCombo.Items.Clear();
-    }
-
-    private void HandleNoSelectedNormalizedSeries()
-    {
-        NormalizedChartController.NormalizedPrimarySubtypeCombo.IsEnabled = false;
-        NormalizedChartController.NormalizedSecondarySubtypeCombo.IsEnabled = false;
-        NormalizedChartController.NormalizedSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-
-        _viewModel.ChartState.SelectedNormalizedPrimarySeries = null;
-        _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
-
-        NormalizedChartController.NormalizedPrimarySubtypeCombo.SelectedItem = null;
-        NormalizedChartController.NormalizedSecondarySubtypeCombo.SelectedItem = null;
-    }
-
-    private void PopulateNormalizedSubtypeCombos(IReadOnlyList<dynamic> selectedSeries)
-    {
-        foreach (var selection in selectedSeries)
-        {
-            NormalizedChartController.NormalizedPrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-            NormalizedChartController.NormalizedSecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-        }
-
-        NormalizedChartController.NormalizedPrimarySubtypeCombo.IsEnabled = true;
-    }
-
-    private void UpdatePrimaryNormalizedSubtype(IReadOnlyList<dynamic> selectedSeries)
-    {
-        var primaryCurrent = _viewModel.ChartState.SelectedNormalizedPrimarySeries;
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
-
-        var primaryItem = FindSeriesComboItem(NormalizedChartController.NormalizedPrimarySubtypeCombo, primarySelection) ?? NormalizedChartController.NormalizedPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-        NormalizedChartController.NormalizedPrimarySubtypeCombo.SelectedItem = primaryItem;
-        _viewModel.ChartState.SelectedNormalizedPrimarySeries = primarySelection;
-    }
-
-    private void UpdateSecondaryNormalizedSubtype(IReadOnlyList<dynamic> selectedSeries)
-    {
-        if (selectedSeries.Count > 1)
-        {
-            NormalizedChartController.NormalizedSecondarySubtypePanel.Visibility = Visibility.Visible;
-            NormalizedChartController.NormalizedSecondarySubtypeCombo.IsEnabled = true;
-
-            var secondaryCurrent = _viewModel.ChartState.SelectedNormalizedSecondarySeries;
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
-
-            var secondaryItem = FindSeriesComboItem(NormalizedChartController.NormalizedSecondarySubtypeCombo, secondarySelection) ?? NormalizedChartController.NormalizedSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-            NormalizedChartController.NormalizedSecondarySubtypeCombo.SelectedItem = secondaryItem;
-            _viewModel.ChartState.SelectedNormalizedSecondarySeries = secondarySelection;
-        }
-        else
-        {
-            NormalizedChartController.NormalizedSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            NormalizedChartController.NormalizedSecondarySubtypeCombo.IsEnabled = false;
-            NormalizedChartController.NormalizedSecondarySubtypeCombo.SelectedItem = null;
-            _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
         }
     }
 
@@ -1311,7 +1176,7 @@ public partial class MainChartsView : UserControl
 
             case "Norm":
                 if (_viewModel.ChartState.IsNormalizedVisible && hasSecondaryData)
-                    await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
+                    await _normalizedAdapter.RenderAsync(ctx);
                 break;
 
             case "DiffRatio":
@@ -1340,7 +1205,7 @@ public partial class MainChartsView : UserControl
         var primarySubtype = ctx.PrimarySubtype;
         var secondarySubtype = ctx.SecondarySubtype;
 
-        await RenderNormalized(ctx, metricType, primarySubtype, secondarySubtype);
+        await _normalizedAdapter.RenderAsync(ctx);
         await _distributionAdapter.RenderAsync(ctx);
         await _weekdayTrendAdapter.RenderAsync(ctx);
         await RenderDiffRatio(ctx, metricType, primarySubtype, secondarySubtype);
@@ -1348,145 +1213,11 @@ public partial class MainChartsView : UserControl
 
     private void ClearSecondaryChartsAndReturn()
     {
-        ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _normalizedAdapter.Clear(_viewModel.ChartState);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         _distributionAdapter.Clear(_viewModel.ChartState);
         // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
         // Cartesian, Polar, and Scatter modes are handled by the adapter render check.
-    }
-
-    private async Task RenderNormalized(ChartDataContext ctx, string? metricType, string? primarySubtype, string? secondarySubtype)
-    {
-        if (_chartRenderingOrchestrator == null)
-            return;
-
-        var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
-        if (primaryData == null || secondaryData == null)
-            return;
-
-        UpdateNormalizedPanelTitle(normalizedContext);
-        await _chartRenderingOrchestrator.RenderNormalizedChartAsync(normalizedContext, NormalizedChartController.Chart, _viewModel.ChartState);
-    }
-
-    private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveNormalizedDataAsync(ChartDataContext ctx)
-    {
-        var primarySelection = ResolveSelectedNormalizedPrimarySeries(ctx);
-        var secondarySelection = ResolveSelectedNormalizedSecondarySeries(ctx);
-
-        var primaryData = await ResolveNormalizedDataAsync(ctx, primarySelection);
-        IReadOnlyList<MetricData>? secondaryData = null;
-
-        if (secondarySelection != null)
-            secondaryData = await ResolveNormalizedDataAsync(ctx, secondarySelection);
-
-        var displayName1 = ResolveNormalizedDisplayName(ctx, primarySelection);
-        var displayName2 = ResolveNormalizedDisplayName(ctx, secondarySelection);
-
-        var normalizedContext = new ChartDataContext
-        {
-            Data1 = primaryData,
-            Data2 = secondaryData,
-            DisplayName1 = displayName1,
-            DisplayName2 = displayName2,
-            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-            PrimarySubtype = primarySelection?.Subtype,
-            SecondarySubtype = secondarySelection?.Subtype,
-            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-            From = ctx.From,
-            To = ctx.To
-        };
-
-        return (primaryData, secondaryData, normalizedContext);
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> ResolveNormalizedDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (ctx.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
-
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildNormalizedCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_normalizedSubtypeCache.TryGetValue(cacheKey, out var cached))
-            return cached;
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _normalizedSubtypeCache[cacheKey] = data;
-        return data;
-    }
-
-    private MetricSeriesSelection? ResolveSelectedNormalizedPrimarySeries(ChartDataContext ctx)
-    {
-        if (!_isUpdatingNormalizedSubtypeCombos && NormalizedChartController.NormalizedPrimarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedPrimarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedNormalizedPrimarySeries != null)
-            return _viewModel.ChartState.SelectedNormalizedPrimarySeries;
-
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-    }
-
-    private MetricSeriesSelection? ResolveSelectedNormalizedSecondarySeries(ChartDataContext ctx)
-    {
-        if (!_isUpdatingNormalizedSubtypeCombos && NormalizedChartController.NormalizedSecondarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedSecondarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedNormalizedSecondarySeries != null)
-            return _viewModel.ChartState.SelectedNormalizedSecondarySeries;
-
-        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
-    }
-
-    private static string ResolveNormalizedDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
-    }
-
-    private static string BuildNormalizedCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveDiffRatioDataAsync(ChartDataContext ctx)
@@ -1744,15 +1475,6 @@ public partial class MainChartsView : UserControl
         await _chartRenderingOrchestrator.RenderDiffRatioChartAsync(diffRatioContext, DiffRatioChartController.Chart, _viewModel.ChartState);
     }
 
-    private async Task RenderNormalizedFromSelectionAsync()
-    {
-        if (!_viewModel.ChartState.IsNormalizedVisible || _viewModel.ChartState.LastContext == null)
-            return;
-
-        var ctx = _viewModel.ChartState.LastContext;
-        await RenderNormalized(ctx, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
-    }
-
     private async Task RenderDiffRatioFromSelectionAsync()
     {
         if (!_viewModel.ChartState.IsDiffRatioVisible || _viewModel.ChartState.LastContext == null)
@@ -1760,13 +1482,6 @@ public partial class MainChartsView : UserControl
 
         var ctx = _viewModel.ChartState.LastContext;
         await RenderDiffRatio(ctx, ctx.MetricType, ctx.PrimarySubtype, ctx.SecondarySubtype);
-    }
-
-    private void UpdateNormalizedPanelTitle(ChartDataContext ctx)
-    {
-        var leftName = ctx.DisplayName1 ?? string.Empty;
-        var rightName = ctx.DisplayName2 ?? string.Empty;
-        NormalizedChartController.Panel.Title = $"{leftName} ~ {rightName}";
     }
 
     private void UpdateDiffRatioPanelTitle(ChartDataContext ctx)
@@ -1850,26 +1565,6 @@ public partial class MainChartsView : UserControl
         return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
     }
 
-    private IChartComputationStrategy CreateNormalizedStrategy(ChartDataContext ctx, IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string label1, string label2, DateTime from, DateTime to, NormalizationMode normalizationMode)
-    {
-        // Use unified cut-over service
-        if (_strategyCutOverService == null)
-            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
-
-        var parameters = new StrategyCreationParameters
-        {
-            LegacyData1 = data1,
-            LegacyData2 = data2,
-            Label1 = label1,
-            Label2 = label2,
-            From = from,
-            To = to,
-            NormalizationMode = normalizationMode
-        };
-
-        return _strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
-    }
-
     private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
     {
         var panel = GetChartPanel(e.ChartName);
@@ -1892,7 +1587,7 @@ public partial class MainChartsView : UserControl
     private void ClearAllCharts()
     {
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _normalizedAdapter.Clear(_viewModel.ChartState);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         _distributionAdapter.Clear(_viewModel.ChartState);
         _weekdayTrendAdapter.Clear(_viewModel.ChartState);
@@ -1997,6 +1692,16 @@ public partial class MainChartsView : UserControl
             () => _strategyCutOverService,
             _weekdayTrendChartUpdateCoordinator);
 
+        _normalizedAdapter = new NormalizedChartControllerAdapter(
+            NormalizedChartController,
+            _viewModel,
+            () => _isInitializing,
+            BeginUiBusyScope,
+            _metricSelectionService,
+            () => _chartRenderingOrchestrator,
+            _chartUpdateCoordinator,
+            () => _strategyCutOverService);
+
         // Wire up MainChartController events
         MainChartController.ToggleRequested += OnMainChartToggleRequested;
         MainChartController.DisplayModeChanged += OnMainChartDisplayModeChanged;
@@ -2013,10 +1718,10 @@ public partial class MainChartsView : UserControl
         BarPieChartController.ToggleRequested += OnBarPieToggleRequested;
         BarPieChartController.DisplayModeChanged += OnBarPieDisplayModeChanged;
         BarPieChartController.BucketCountChanged += OnBarPieBucketCountChanged;
-        NormalizedChartController.ToggleRequested += OnChartNormToggleRequested;
-        NormalizedChartController.NormalizationModeChanged += OnNormalizationModeChanged;
-        NormalizedChartController.PrimarySubtypeChanged += OnNormalizedPrimarySubtypeChanged;
-        NormalizedChartController.SecondarySubtypeChanged += OnNormalizedSecondarySubtypeChanged;
+        NormalizedChartController.ToggleRequested += _normalizedAdapter.OnToggleRequested;
+        NormalizedChartController.NormalizationModeChanged += _normalizedAdapter.OnNormalizationModeChanged;
+        NormalizedChartController.PrimarySubtypeChanged += _normalizedAdapter.OnPrimarySubtypeChanged;
+        NormalizedChartController.SecondarySubtypeChanged += _normalizedAdapter.OnSecondarySubtypeChanged;
         DistributionChartController.ToggleRequested += _distributionAdapter.OnToggleRequested;
         DistributionChartController.ChartTypeToggleRequested += _distributionAdapter.OnChartTypeToggleRequested;
         DistributionChartController.ModeChanged += _distributionAdapter.OnModeChanged;
@@ -2358,7 +2063,7 @@ public partial class MainChartsView : UserControl
     {
         // Clear charts on startup to prevent gibberish tick labels
         ChartHelper.ClearChart(MainChartController.Chart, _viewModel.ChartState.ChartTimestamps);
-        ChartHelper.ClearChart(NormalizedChartController.Chart, _viewModel.ChartState.ChartTimestamps);
+        _normalizedAdapter.Clear(_viewModel.ChartState);
         ChartHelper.ClearChart(DiffRatioChartController.Chart, _viewModel.ChartState.ChartTimestamps);
         _distributionAdapter.Clear(_viewModel.ChartState);
     }
@@ -2553,7 +2258,7 @@ public partial class MainChartsView : UserControl
         {
             _distributionAdapter.ClearCache();
             _weekdayTrendAdapter.ClearCache();
-            _normalizedSubtypeCache.Clear();
+            _normalizedAdapter.ClearCache();
             _diffRatioSubtypeCache.Clear();
             _transformSubtypeCache.Clear();
             ResetTransformSelectionsPendingLoad();
@@ -2601,11 +2306,6 @@ public partial class MainChartsView : UserControl
         _viewModel.ToggleMain();
     }
 
-    private void OnChartNormToggleRequested(object? sender, EventArgs e)
-    {
-        _viewModel.ToggleNorm();
-    }
-
     private async void OnBarPieToggleRequested(object? sender, EventArgs e)
     {
         _isBarPieVisible = !_isBarPieVisible;
@@ -2630,28 +2330,6 @@ public partial class MainChartsView : UserControl
 
         if (_isBarPieVisible)
             await RenderBarPieChartAsync();
-    }
-
-    private async void OnNormalizedPrimarySubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing || _isUpdatingNormalizedSubtypeCombos)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedPrimarySubtypeCombo);
-        _viewModel.SetNormalizedPrimarySeries(selection);
-
-        await RenderNormalizedFromSelectionAsync();
-    }
-
-    private async void OnNormalizedSecondarySubtypeChanged(object? sender, EventArgs e)
-    {
-        if (_isInitializing || _isUpdatingNormalizedSubtypeCombos)
-            return;
-
-        var selection = GetSeriesSelectionFromCombo(NormalizedChartController.NormalizedSecondarySubtypeCombo);
-        _viewModel.SetNormalizedSecondarySeries(selection);
-
-        await RenderNormalizedFromSelectionAsync();
     }
 
     private void OnDiffRatioToggleRequested(object? sender, EventArgs e)
@@ -3146,7 +2824,7 @@ public partial class MainChartsView : UserControl
         using var busyScope = BeginUiBusyScope();
         var mainChart = MainChartController.Chart;
         ChartHelper.ResetZoom(mainChart);
-        ChartHelper.ResetZoom(NormalizedChartController.Chart);
+        _normalizedAdapter.ResetZoom();
         ChartHelper.ResetZoom(DiffRatioChartController.Chart);
         _distributionAdapter.ResetZoom();
         ChartHelper.ResetZoom(TransformDataPanelController.ChartTransformResult);

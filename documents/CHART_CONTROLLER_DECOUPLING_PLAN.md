@@ -14,6 +14,7 @@ core orchestration logic.
 - 2026-01-16: Wired Distribution events to adapter; moved Distribution UI state handling (mode, interval, subtype, chart-type visibility) into adapter. Rendering still delegated from `MainChartsView`.
 - 2026-01-16: Completed Distribution migration: rendering, cache, and clear/reset logic now live in adapter; `MainChartsView` delegates to `DistributionChartControllerAdapter`.
 - 2026-01-16: Completed WeekdayTrend migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `WeekdayTrendChartControllerAdapter`.
+- 2026-01-16: Completed Normalized migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `NormalizedChartControllerAdapter`.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.
@@ -135,10 +136,16 @@ Rollout:
 - Route WeekdayTrend UI events in `MainChartsView` to adapter (no direct control access). (done)
 - Keep rendering engines unchanged; only UI orchestration shifts. (on track)
 
-## Next Migration Checklist (Step 3: Normalized)
-- Define `NormalizedChartControllerAdapter` responsibilities (toggle, subtype combos, normalization mode).
+## Completed Migration Checklist (Step 3: Normalized)
+- Define `NormalizedChartControllerAdapter` responsibilities (toggle, subtype combos, normalization mode). (done)
+- Move render/data resolution and title updates into adapter. (done)
+- Route Normalized UI events in `MainChartsView` to adapter. (done)
+- Keep rendering engines unchanged; only UI orchestration shifts. (on track)
+
+## Next Migration Checklist (Step 4: DiffRatio)
+- Define `DiffRatioChartControllerAdapter` responsibilities (toggle, operation toggle, subtype combos).
 - Move render/data resolution and title updates into adapter.
-- Route Normalized UI events in `MainChartsView` to adapter.
+- Route DiffRatio UI events in `MainChartsView` to adapter.
 - Keep rendering engines unchanged; only UI orchestration shifts.
 
 ## Risks and Mitigations
