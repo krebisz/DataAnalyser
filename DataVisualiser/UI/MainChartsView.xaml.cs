@@ -67,6 +67,7 @@ public partial class MainChartsView : UserControl
     private DiffRatioChartControllerAdapter _diffRatioAdapter = null!;
     private TransformDataPanelControllerAdapter _transformAdapter = null!;
     private MainChartControllerAdapter _mainAdapter = null!;
+    private IChartControllerRegistry? _chartControllerRegistry;
 
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
@@ -761,14 +762,14 @@ public partial class MainChartsView : UserControl
 
     private Panel? GetChartPanel(string chartName)
     {
-        return chartName switch
+        try
         {
-            "Norm" => NormalizedChartController.Panel.ChartContentPanel,
-            "DiffRatio" => DiffRatioChartController.Panel.ChartContentPanel,
-            "Distribution" => DistributionChartController.Panel.ChartContentPanel,
-            "WeeklyTrend" => WeekdayTrendChartController.Panel.ChartContentPanel,
-            _ => null
-        };
+            return ResolveController(chartName).Panel.ChartContentPanel;
+        }
+        catch (KeyNotFoundException)
+        {
+            return null;
+        }
     }
 
     private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<MetricData> data, string label, DateTime from, DateTime to)
@@ -846,14 +847,9 @@ public partial class MainChartsView : UserControl
 
     private void ClearAllCharts()
     {
-        _mainAdapter.Clear(_viewModel.ChartState);
-        _normalizedAdapter.Clear(_viewModel.ChartState);
-        _diffRatioAdapter.Clear(_viewModel.ChartState);
-        _distributionAdapter.Clear(_viewModel.ChartState);
-        _weekdayTrendAdapter.Clear(_viewModel.ChartState);
+        ClearRegisteredCharts();
         ClearBarPieChart();
         _viewModel.ChartState.LastContext = null;
-        _transformAdapter.Clear(_viewModel.ChartState);
     }
 
     private void ClearBarPieChart()
@@ -971,6 +967,9 @@ public partial class MainChartsView : UserControl
             _metricSelectionService,
             _chartUpdateCoordinator);
 
+        _chartControllerRegistry = BuildChartControllerRegistry();
+        ValidateChartControllerRegistry(_chartControllerRegistry);
+
         // Wire up MainChartController events
         MainChartController.ToggleRequested += _mainAdapter.OnToggleRequested;
         MainChartController.DisplayModeChanged += _mainAdapter.OnDisplayModeChanged;
@@ -1002,6 +1001,41 @@ public partial class MainChartsView : UserControl
         TransformDataPanelController.PrimarySubtypeChanged += _transformAdapter.OnPrimarySubtypeChanged;
         TransformDataPanelController.SecondarySubtypeChanged += _transformAdapter.OnSecondarySubtypeChanged;
         TransformDataPanelController.ComputeRequested += _transformAdapter.OnComputeRequested;
+    }
+
+    private IChartControllerRegistry BuildChartControllerRegistry()
+    {
+        var registry = new ChartControllerRegistry();
+        registry.Register(_mainAdapter);
+        registry.Register(_normalizedAdapter);
+        registry.Register(_diffRatioAdapter);
+        registry.Register(_distributionAdapter);
+        registry.Register(_weekdayTrendAdapter);
+        registry.Register(_transformAdapter);
+        return registry;
+    }
+
+    private static void ValidateChartControllerRegistry(IChartControllerRegistry registry)
+    {
+        foreach (var key in ChartControllerKeys.All)
+            _ = registry.Get(key);
+    }
+
+    private IChartController ResolveController(string key)
+    {
+        if (_chartControllerRegistry != null)
+            return _chartControllerRegistry.Get(key);
+
+        return key switch
+        {
+            ChartControllerKeys.Main => _mainAdapter,
+            ChartControllerKeys.Normalized => _normalizedAdapter,
+            ChartControllerKeys.DiffRatio => _diffRatioAdapter,
+            ChartControllerKeys.Distribution => _distributionAdapter,
+            ChartControllerKeys.WeeklyTrend => _weekdayTrendAdapter,
+            ChartControllerKeys.Transform => _transformAdapter,
+            _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
+        };
     }
 
     private void ExecuteStartupSequence()
@@ -1329,10 +1363,41 @@ public partial class MainChartsView : UserControl
     private void ClearChartsOnStartup()
     {
         // Clear charts on startup to prevent gibberish tick labels
-        _mainAdapter.Clear(_viewModel.ChartState);
-        _normalizedAdapter.Clear(_viewModel.ChartState);
-        _diffRatioAdapter.Clear(_viewModel.ChartState);
-        _distributionAdapter.Clear(_viewModel.ChartState);
+        ClearRegisteredCharts();
+    }
+
+    private void ClearRegisteredCharts()
+    {
+        if (_chartControllerRegistry == null)
+        {
+            _mainAdapter.Clear(_viewModel.ChartState);
+            _normalizedAdapter.Clear(_viewModel.ChartState);
+            _diffRatioAdapter.Clear(_viewModel.ChartState);
+            _distributionAdapter.Clear(_viewModel.ChartState);
+            _weekdayTrendAdapter.Clear(_viewModel.ChartState);
+            _transformAdapter.Clear(_viewModel.ChartState);
+            return;
+        }
+
+        foreach (var controller in _chartControllerRegistry.All())
+            controller.Clear(_viewModel.ChartState);
+    }
+
+    private void ResetRegisteredChartsZoom()
+    {
+        if (_chartControllerRegistry == null)
+        {
+            _mainAdapter.ResetZoom();
+            _normalizedAdapter.ResetZoom();
+            _diffRatioAdapter.ResetZoom();
+            _distributionAdapter.ResetZoom();
+            _transformAdapter.ResetZoom();
+            _weekdayTrendAdapter.ResetZoom();
+            return;
+        }
+
+        foreach (var controller in _chartControllerRegistry.All())
+            controller.ResetZoom();
     }
 
     private void DisableAxisLabelsWhenNoData()
@@ -1602,12 +1667,7 @@ public partial class MainChartsView : UserControl
     private void OnResetZoom(object sender, RoutedEventArgs e)
     {
         using var busyScope = BeginUiBusyScope();
-        _mainAdapter.ResetZoom();
-        _normalizedAdapter.ResetZoom();
-        _diffRatioAdapter.ResetZoom();
-        _distributionAdapter.ResetZoom();
-        _transformAdapter.ResetZoom();
-        _weekdayTrendAdapter.ResetZoom();
+        ResetRegisteredChartsZoom();
     }
 
     private void OnClear(object sender, RoutedEventArgs e)

@@ -18,6 +18,7 @@ core orchestration logic.
 - 2026-01-16: Completed DiffRatio migration: rendering, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `DiffRatioChartControllerAdapter`.
 - 2026-01-20: Completed Transform migration: rendering, compute, cache, UI handlers, and clear/reset logic now live in adapter; `MainChartsView` delegates to `TransformDataPanelControllerAdapter`.
 - 2026-01-20: Completed Main migration: rendering, display mode handling, and clear/reset logic now live in adapter; `MainChartsView` delegates to `MainChartControllerAdapter`.
+- 2026-01-20: Added registry guards, key catalog, registry-based clear/reset paths, and resolver seam; registry remains a mirror for now.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.
@@ -166,6 +167,46 @@ Rollout:
 
 ## Next Steps
 - Start registry/factory work (Step 4) now that all per-chart adapters are in place.
+
+## Step-by-Step Plan to Mitigate Registry/Factory Risks
+1) Snapshot current behavior: list all chart keys, visibility toggles, and render entry points in `MainChartsView`. Capture any special cases (visibility-only toggles, secondary-data gating).
+2) Introduce registry types without wiring changes: add `IChartControllerRegistry` and a simple `ChartControllerRegistry` that can register and return adapters. Do not modify existing call sites yet.
+3) Build a single adapter factory method in `MainChartsView` (or a dedicated factory) that constructs all adapters in the current order, then registers them. Keep existing fields intact; registry is a mirror only.
+4) Add validation at startup: after registration, verify expected keys are present and log/throw if any are missing. This prevents silent no-ops.
+5) Add guard checks in the registry:
+   - `Get` throws with a clear message when a key is missing.
+   - `Register` rejects duplicates (case-insensitive) and null adapters.
+   - `All()` returns a stable order (registration order).
+6) Introduce seam: a small `IChartKeyCatalog` (or static key list) to centralize expected keys and avoid string drift.
+7) Migrate non-critical paths first: switch passive operations to registry loops (e.g., `ClearAllCharts`, `ResetZoom`, `ClearChartsOnStartup`). Validate behavior remains unchanged.
+8) Add a compatibility seam: a thin adapter resolver in `MainChartsView` (e.g., `GetController("Main")`) so call sites can be swapped one-by-one while keeping old fields as fallback.
+9) Migrate visibility wiring: route panel visibility updates through registry lookups by key. Keep existing conditional logic intact to preserve visibility-only toggle behavior.
+10) Add explicit guards for visibility-only toggles: ensure the transform panel toggle remains a visibility-only path and does not trigger full renders.
+11) Migrate render orchestration last: replace direct adapter calls with registry lookups, keeping existing gating checks (secondary data, chart visibility) unchanged.
+12) Add data-gating guards in loops: for adapters requiring secondary data, skip render when missing and clear if needed (match current behavior).
+13) Add a temporary compatibility shim: keep old fields during migration and assert both code paths are equivalent for a short period (log when they diverge).
+14) Remove duplicated paths: once behavior is verified, delete old field references and rely solely on registry.
+15) Add minimal tests: registry registration/lookup, presence of all keys, and a smoke test that toggling a chart still renders the same path.
+
+## Registry Snapshot (Before Wiring Changes)
+Keys: `Main`, `Norm`, `DiffRatio`, `Distribution`, `WeeklyTrend`, `Transform`, plus non-adapter `BarPie`.
+Visibility toggles:
+- `Main` -> `_viewModel.ToggleMain`, `MainChartController.Panel.IsChartVisible`
+- `Norm` -> `_viewModel.ToggleNormalized`
+- `DiffRatio` -> `_viewModel.ToggleDiffRatio`
+- `Distribution` -> `_viewModel.ToggleDistribution` (+ polar/cartesian toggle)
+- `WeeklyTrend` -> `_viewModel.ToggleWeeklyTrend` (+ chart type toggle)
+- `Transform` -> `_viewModel.ToggleTransformPanel` (visibility-only toggle path)
+Render entry points:
+- `Main` -> `_mainAdapter.RenderAsync`
+- `Norm` -> `_normalizedAdapter.RenderAsync` (requires secondary data)
+- `DiffRatio` -> `_diffRatioAdapter.RenderAsync` (requires secondary data)
+- `Distribution` -> `_distributionAdapter.RenderAsync`
+- `WeeklyTrend` -> `_weekdayTrendAdapter.RenderAsync`
+- `Transform` -> `_transformAdapter.RenderAsync` (grids only unless compute)
+Special cases:
+- Transform visibility-only toggle must not trigger full re-render.
+- Secondary-data gating clears `Norm`/`DiffRatio` when secondary data disappears.
 
 ## Risks and Mitigations
 - Risk: Too many UI control dependencies.
