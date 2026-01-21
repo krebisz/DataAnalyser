@@ -19,15 +19,15 @@ public static class CmsConfiguration
     /// </summary>
     public static bool UseCmsForSingleMetric { get; set; } = true; // ENABLED for testing
 
-    public static bool UseCmsForMultiMetric { get; set; }
-    public static bool UseCmsForCombinedMetric { get; set; }
-    public static bool UseCmsForDifference { get; set; }
-    public static bool UseCmsForRatio { get; set; }
-    public static bool UseCmsForNormalized { get; set; }
-    public static bool UseCmsForWeeklyDistribution { get; set; }
-    public static bool UseCmsForWeekdayTrend { get; set; }
-    public static bool UseCmsForHourlyDistribution { get; set; }
-    public static bool UseCmsForBarPie { get; set; }
+    public static bool UseCmsForMultiMetric { get; set; } = true;
+    public static bool UseCmsForCombinedMetric { get; set; } = true;
+    public static bool UseCmsForDifference { get; set; } = true;
+    public static bool UseCmsForRatio { get; set; } = true;
+    public static bool UseCmsForNormalized { get; set; } = true;
+    public static bool UseCmsForWeeklyDistribution { get; set; } = true;
+    public static bool UseCmsForWeekdayTrend { get; set; } = true;
+    public static bool UseCmsForHourlyDistribution { get; set; } = true;
+    public static bool UseCmsForBarPie { get; set; } = true;
 
     /// <summary>
     ///     Checks if CMS should be used for a specific strategy type.

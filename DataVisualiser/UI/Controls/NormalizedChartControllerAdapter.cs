@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
@@ -31,6 +32,7 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, ICanonicalMetricSeries?> _subtypeCmsCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isUpdatingSubtypeCombos;
 
     public NormalizedChartControllerAdapter(
@@ -95,6 +97,7 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
     public void ClearCache()
     {
         _subtypeCache.Clear();
+        _subtypeCmsCache.Clear();
     }
 
     public void UpdateSubtypeOptions()
@@ -215,10 +218,15 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
         var primarySelection = ResolveSelectedNormalizedPrimarySeries(ctx);
         var secondarySelection = ResolveSelectedNormalizedSecondarySeries(ctx);
 
-        var primaryData = await ResolveNormalizedDataAsync(ctx, primarySelection);
+        var (primaryData, primaryCms) = await ResolveNormalizedSeriesAsync(ctx, primarySelection);
         IReadOnlyList<MetricData>? secondaryData = null;
+        ICanonicalMetricSeries? secondaryCms = null;
         if (secondarySelection != null)
-            secondaryData = await ResolveNormalizedDataAsync(ctx, secondarySelection);
+        {
+            var resolvedSecondary = await ResolveNormalizedSeriesAsync(ctx, secondarySelection);
+            secondaryData = resolvedSecondary.Data;
+            secondaryCms = resolvedSecondary.Cms;
+        }
 
         var displayName1 = ResolveNormalizedDisplayName(ctx, primarySelection);
         var displayName2 = ResolveNormalizedDisplayName(ctx, secondarySelection);
@@ -227,6 +235,8 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
         {
             Data1 = primaryData,
             Data2 = secondaryData,
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
             DisplayName1 = displayName1,
             DisplayName2 = displayName2,
             MetricType = primarySelection?.MetricType ?? ctx.MetricType,
@@ -245,29 +255,30 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
         return (primaryData, secondaryData, normalizedContext);
     }
 
-    private async Task<IReadOnlyList<MetricData>?> ResolveNormalizedDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveNormalizedSeriesAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         if (selectedSeries == null)
-            return null;
+            return (null, null);
 
         if (ctx.Data1 != null && IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         if (ctx.Data2 != null && IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2;
+            return (ctx.Data2, ctx.SecondaryCms as ICanonicalMetricSeries);
 
         if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
         var cacheKey = BuildNormalizedCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_subtypeCache.TryGetValue(cacheKey, out var cached))
-            return cached;
+        if (_subtypeCache.TryGetValue(cacheKey, out var cached) && _subtypeCmsCache.TryGetValue(cacheKey, out var cachedCms))
+            return (cached, cachedCms);
 
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
+        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
         _subtypeCache[cacheKey] = data;
-        return data;
+        _subtypeCmsCache[cacheKey] = primaryCms;
+        return (data, primaryCms);
     }
 
     private MetricSeriesSelection? ResolveSelectedNormalizedPrimarySeries(ChartDataContext ctx)

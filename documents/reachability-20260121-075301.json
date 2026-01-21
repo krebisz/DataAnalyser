@@ -1,0 +1,103 @@
+{
+  "ExportedAtUtc": "2026-01-21T07:53:01.8745142Z",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2024-01-16T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeriesCount": 3,
+    "DistinctSelectedSeriesCount": 3,
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "weight",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Total",
+        "DisplayName": "Weight - Total",
+        "DisplayKey": "Weight:weight"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "body_fat_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat (mass)",
+        "DisplayName": "Weight - Fat (mass)",
+        "DisplayKey": "Weight:body_fat_mass"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "total_body_water",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Water",
+        "DisplayName": "Weight - Water",
+        "DisplayKey": "Weight:total_body_water"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": false,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": false,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 0,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 25
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "Bar"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [
+    {
+      "StrategyType": 2,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 183,
+      "SecondarySamples": 183,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-16T00:00:00",
+      "TimestampUtc": "2026-01-21T07:52:36.0618301Z"
+    },
+    {
+      "StrategyType": 2,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 183,
+      "SecondarySamples": 183,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-16T00:00:00",
+      "TimestampUtc": "2026-01-21T07:52:36.0642346Z"
+    }
+  ]
+}

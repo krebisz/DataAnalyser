@@ -11,6 +11,7 @@ using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
+using DataFileReader.Canonical;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration;
@@ -437,16 +438,17 @@ public sealed class ChartRenderingOrchestrator
     private async Task RenderDistribution(ChartDataContext ctx, CartesianChart chartDistribution, ChartState chartState, DistributionMode mode)
     {
         var settings = chartState.GetDistributionSettings(mode);
+        var cmsSeries = ctx.PrimaryCms as ICanonicalMetricSeries;
         switch (mode)
         {
             case DistributionMode.Weekly:
-                await _weeklyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+                await _weeklyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount, cmsSeries);
                 break;
             case DistributionMode.Hourly:
-                await _hourlyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+                await _hourlyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount, cmsSeries);
                 break;
             default:
-                await _weeklyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+                await _weeklyDistributionService.UpdateDistributionChartAsync(chartDistribution, ctx.Data1!, ctx.DisplayName1, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount, cmsSeries);
                 break;
         }
     }

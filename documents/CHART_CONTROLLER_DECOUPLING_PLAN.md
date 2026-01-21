@@ -23,6 +23,7 @@ core orchestration logic.
 - 2026-01-20: BarPie now participates in ViewModel visibility toggles (`ShowBarPie` in update args; `ToggleBarPie`), and `MainChartsView` handles BarPie in visibility/render paths alongside other charts.
 - 2026-01-20: Added adapter-level tests for BarPie controller behavior.
 - 2026-01-20: Introduced `ChartControllerFactory` seam so `MainChartsView` no longer instantiates adapters directly.
+- 2026-01-21: Phase 3.5 reachability evidence captured in `documents/reachability-20260121-074430.json`, `documents/reachability-20260121-074900.json`, `documents/reachability-20260121-075301.json`, `documents/reachability-20260121-085510.json`.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.

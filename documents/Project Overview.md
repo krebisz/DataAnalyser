@@ -173,11 +173,11 @@ This section reflects **observed implementation state**, not aspiration.
 ---
 
 ### Phase 3.5 — Orchestration Layer Assessment  
-**In Progress (~70%)**
+**Complete**
 
 - Unified cut-over mechanism implemented
 - CMS preserved through orchestration
-- Execution reachability verification pending
+- Execution reachability verification complete (see `documents/reachability-20260121-074430.json`, `documents/reachability-20260121-074900.json`, `documents/reachability-20260121-075301.json`, `documents/reachability-20260121-085510.json`)
 
 ---
 

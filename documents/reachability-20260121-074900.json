@@ -1,0 +1,249 @@
+{
+  "ExportedAtUtc": "2026-01-21T07:49:00.6549855Z",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2024-01-01T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeriesCount": 2,
+    "DistinctSelectedSeriesCount": 2,
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "weight",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Total",
+        "DisplayName": "Weight - Total",
+        "DisplayKey": "Weight:weight"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "fat_free_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat Free (mass)",
+        "DisplayName": "Weight - Fat Free (mass)",
+        "DisplayKey": "Weight:fat_free_mass"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": true,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": true,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": true,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 1,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 15
+    },
+    "IsDistributionPolarMode": true,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "Pie"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [
+    {
+      "StrategyType": 1,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 163,
+      "SecondarySamples": 161,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:45:41.6141953Z"
+    },
+    {
+      "StrategyType": 1,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 163,
+      "SecondarySamples": 161,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:45:41.6170723Z"
+    },
+    {
+      "StrategyType": 5,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:45:52.8917772Z"
+    },
+    {
+      "StrategyType": 5,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:46:20.8149338Z"
+    },
+    {
+      "StrategyType": 5,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:46:26.2757959Z"
+    },
+    {
+      "StrategyType": 5,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:46:31.2067921Z"
+    },
+    {
+      "StrategyType": 7,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:47:23.8411291Z"
+    },
+    {
+      "StrategyType": 7,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 163,
+      "SecondarySamples": 161,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:47:26.5216916Z"
+    },
+    {
+      "StrategyType": 7,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 163,
+      "SecondarySamples": 161,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:47:30.443971Z"
+    },
+    {
+      "StrategyType": 7,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 163,
+      "SecondarySamples": 161,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:47:37.933356Z"
+    },
+    {
+      "StrategyType": 6,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:47:42.3238103Z"
+    },
+    {
+      "StrategyType": 6,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:48:02.6563496Z"
+    },
+    {
+      "StrategyType": 6,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:48:08.4203117Z"
+    },
+    {
+      "StrategyType": 8,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:48:10.6809733Z"
+    },
+    {
+      "StrategyType": 8,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:48:11.7354915Z"
+    },
+    {
+      "StrategyType": 8,
+      "UsedCms": false,
+      "PrimaryCmsAvailable": false,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 0,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-01T00:00:00",
+      "TimestampUtc": "2026-01-21T07:48:20.1825242Z"
+    }
+  ]
+}

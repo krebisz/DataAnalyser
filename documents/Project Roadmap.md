@@ -2,7 +2,7 @@
 **Status:** Sequencing & Execution Authority  
 **Scope:** Phase ordering, execution dependencies, and closure criteria  
 **Authority:** Subordinate to Project Bible.md and SYSTEM_MAP.md  
-**Last Updated:** 2026-01-16  
+**Last Updated:** 2026-01-21  
 **Change Note:** Phase 6 decomposed into explicit exploratory & confidence sub-phases
 
 ---
@@ -75,13 +75,14 @@ It defines **order, discipline, and exit conditions**.
 ---
 
 ### Phase 3.5 — Orchestration Layer Assessment (CRITICAL)  
-**Status:** IN PROGRESS (~70%)
+**Status:** COMPLETE
 
 **Objective**
 - Ensure CMS strategies are actually executed in live pipelines
 
 **Closure Condition**
 - CMS execution is observable and provable for all strategies
+- Evidence: `documents/reachability-20260121-074430.json`, `documents/reachability-20260121-074900.json`, `documents/reachability-20260121-075301.json`, `documents/reachability-20260121-085510.json`
 
 ---
 
@@ -269,11 +270,10 @@ This policy protects both delivery discipline and long-term trust.
 
 ## 6. Current Critical Path (Authoritative)
 
-1. Close Phase 3.5 (prove CMS reachability)
-2. Close Phase 4C (weekly / temporal parity)
-3. Complete Phase 3 (remaining strategy wiring)
-4. Close Phase 4 (full parity)
-5. Open Phase 6 deliberately
+1. Close Phase 4C (weekly / temporal parity)
+2. Complete Phase 3 (remaining strategy wiring)
+3. Close Phase 4 (full parity)
+4. Open Phase 6 deliberately
 
 ---
 

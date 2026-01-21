@@ -33,6 +33,7 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
     private readonly Func<ToolTip?> _getPolarTooltip;
     private bool _isUpdatingSubtypeCombo;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, ICanonicalMetricSeries?> _subtypeCmsCache = new(StringComparer.OrdinalIgnoreCase);
 
     public DistributionChartControllerAdapter(
         DistributionChartController controller,
@@ -105,6 +106,7 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
     public void ClearCache()
     {
         _subtypeCache.Clear();
+        _subtypeCmsCache.Clear();
     }
 
     public void InitializeControls()
@@ -396,15 +398,15 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
             return;
 
         var selectedSeries = ResolveSelectedDistributionSeries(ctx);
-        var data = await ResolveDistributionDataAsync(ctx, selectedSeries);
-        if (data == null || data.Count == 0)
+        var (data, cmsSeries) = await ResolveDistributionDataAsync(ctx, selectedSeries);
+        if (data == null || (data.Count == 0 && cmsSeries == null))
             return;
 
         var displayName = ResolveDistributionDisplayName(ctx, selectedSeries);
 
         if (_viewModel.ChartState.IsDistributionPolarMode)
         {
-            await RenderDistributionPolarChartAsync(ctx, mode, data, displayName);
+            await RenderDistributionPolarChartAsync(ctx, mode, data, displayName, cmsSeries);
             return;
         }
 
@@ -416,6 +418,7 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
         {
             var distributionContext = new ChartDataContext
             {
+                PrimaryCms = cmsSeries,
                 Data1 = data,
                 DisplayName1 = displayName,
                 MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
@@ -431,13 +434,13 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
         }
 
         var service = GetDistributionService(mode);
-        await service.UpdateDistributionChartAsync(chart, data, displayName, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount);
+        await service.UpdateDistributionChartAsync(chart, data, displayName, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount, cmsSeries);
     }
 
-    private async Task RenderDistributionPolarChartAsync(ChartDataContext ctx, DistributionMode mode, IReadOnlyList<MetricData> data, string displayName)
+    private async Task RenderDistributionPolarChartAsync(ChartDataContext ctx, DistributionMode mode, IReadOnlyList<MetricData> data, string displayName, ICanonicalMetricSeries? cmsSeries)
     {
         var service = GetDistributionService(mode);
-        var rangeResult = await service.ComputeSimpleRangeAsync(data, displayName, ctx.From, ctx.To);
+        var rangeResult = await service.ComputeSimpleRangeAsync(data, displayName, ctx.From, ctx.To, cmsSeries);
         if (rangeResult == null)
             return;
 
@@ -448,32 +451,33 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
         _controller.PolarChart.InvalidateVisual();
     }
 
-    private async Task<IReadOnlyList<MetricData>?> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         if (ctx.Data1 == null)
-            return null;
+            return (null, null);
 
         if (selectedSeries == null)
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
+            return (ctx.Data2 ?? ctx.Data1, ctx.SecondaryCms as ICanonicalMetricSeries);
 
         if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
         var cacheKey = BuildDistributionCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_subtypeCache.TryGetValue(cacheKey, out var cached))
-            return cached;
+        if (_subtypeCache.TryGetValue(cacheKey, out var cached) && _subtypeCmsCache.TryGetValue(cacheKey, out var cachedCms))
+            return (cached, cachedCms);
 
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
+        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
         _subtypeCache[cacheKey] = data;
-        return data;
+        _subtypeCmsCache[cacheKey] = primaryCms;
+        return (data, primaryCms);
     }
 
     private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)

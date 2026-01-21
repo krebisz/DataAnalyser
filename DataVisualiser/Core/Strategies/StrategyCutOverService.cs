@@ -4,6 +4,7 @@ using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Reachability;
 using DataVisualiser.Core.Strategies.Factories;
 using DataVisualiser.Core.Validation.Parity;
 using ParityResult = DataVisualiser.Core.Validation.ParityResult;
@@ -18,9 +19,12 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
 {
     private readonly Dictionary<StrategyType, IStrategyFactory> _factories;
 
-    public StrategyCutOverService(IDataPreparationService dataPreparation)
+    private readonly IStrategyReachabilityProbe _reachabilityProbe;
+
+    public StrategyCutOverService(IDataPreparationService dataPreparation, IStrategyReachabilityProbe? reachabilityProbe = null)
     {
         _ = dataPreparation ?? throw new ArgumentNullException(nameof(dataPreparation));
+        _reachabilityProbe = reachabilityProbe ?? NullStrategyReachabilityProbe.Instance;
 
         // Initialize factories
         _factories = new Dictionary<StrategyType, IStrategyFactory>
@@ -88,6 +92,7 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         var useCms = ShouldUseCms(strategyType, ctx);
         Debug.WriteLine($"[CMS] {strategyType}: PrimarySamples={GetSampleCount(ctx.PrimaryCms, ctx.From, ctx.To)} (filtered), TotalPrimarySamples={GetSampleCount(ctx.PrimaryCms)}, SecondarySamples={GetSampleCount(ctx.SecondaryCms, ctx.From, ctx.To)} (filtered), TotalSecondarySamples={GetSampleCount(ctx.SecondaryCms)}");
         Debug.WriteLine($"[CutOver] Strategy={strategyType}, UseCms={useCms}, PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}, DateRange=[{ctx.From:yyyy-MM-dd} to {ctx.To:yyyy-MM-dd}]");
+        _reachabilityProbe.Record(StrategyReachabilityRecord.Create(strategyType, useCms, ctx, GetSampleCount(ctx.PrimaryCms, ctx.From, ctx.To), GetSampleCount(ctx.SecondaryCms, ctx.From, ctx.To)));
 
         if (useCms)
             return CreateCmsStrategy(strategyType, ctx, parameters);

@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -19,6 +21,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Core.Strategies.Reachability;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Controls;
@@ -929,7 +932,7 @@ public partial class MainChartsView : UserControl
             panel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void OnErrorOccured(object? sender, ErrorEventArgs e)
+    private void OnErrorOccured(object? sender, DataVisualiser.UI.Events.ErrorEventArgs e)
     {
         if (_isChangingResolution)
         {
@@ -1256,7 +1259,7 @@ public partial class MainChartsView : UserControl
     private WeeklyDistributionService CreateWeeklyDistributionService()
     {
         var dataPreparationService = new DataPreparationService();
-        var strategyCutOverService = new StrategyCutOverService(dataPreparationService);
+        var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
 
         return new WeeklyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
     }
@@ -1264,7 +1267,7 @@ public partial class MainChartsView : UserControl
     private HourlyDistributionService CreateHourlyDistributionService()
     {
         var dataPreparationService = new DataPreparationService();
-        var strategyCutOverService = new StrategyCutOverService(dataPreparationService);
+        var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
 
         return new HourlyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
     }
@@ -1272,7 +1275,7 @@ public partial class MainChartsView : UserControl
     private ChartRenderingOrchestrator CreateChartRenderingOrchestrator()
     {
         var dataPreparationService = new DataPreparationService();
-        _strategyCutOverService = new StrategyCutOverService(dataPreparationService);
+        _strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
 
         var metricSelectionService = new MetricSelectionService(_connectionString);
         return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService, _strategyCutOverService, metricSelectionService, _connectionString);
@@ -1745,6 +1748,112 @@ public partial class MainChartsView : UserControl
         }
 
         ResolutionCombo.SelectedItem = defaultResolution;
+    }
+
+    private void OnExportReachability(object sender, RoutedEventArgs e)
+    {
+        var records = StrategyReachabilityStoreProbe.Default.Snapshot();
+        var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
+        var distinctSeries = GetDistinctSelectedSeries();
+
+        if (records.Count == 0)
+        {
+            MessageBox.Show("No reachability records captured yet. Load data and render charts, then export again.", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var selectedDistributionSettings = _viewModel.ChartState.GetDistributionSettings(_viewModel.ChartState.SelectedDistributionMode);
+        var exportPayload = new
+        {
+            ExportedAtUtc = DateTime.UtcNow,
+            MetricState = new
+            {
+                _viewModel.MetricState.SelectedMetricType,
+                _viewModel.MetricState.FromDate,
+                _viewModel.MetricState.ToDate,
+                _viewModel.MetricState.ResolutionTableName,
+                SelectedSeriesCount = selectedSeries.Count,
+                DistinctSelectedSeriesCount = distinctSeries.Count,
+                SelectedSeries = selectedSeries.Select(series => new
+                {
+                    series.MetricType,
+                    series.Subtype,
+                    series.DisplayMetricType,
+                    series.DisplaySubtype,
+                    series.DisplayName,
+                    series.DisplayKey
+                })
+            },
+            ChartState = new
+            {
+                _viewModel.ChartState.IsMainVisible,
+                _viewModel.ChartState.IsNormalizedVisible,
+                _viewModel.ChartState.IsDiffRatioVisible,
+                _viewModel.ChartState.IsDistributionVisible,
+                _viewModel.ChartState.IsWeeklyTrendVisible,
+                _viewModel.ChartState.IsTransformPanelVisible,
+                _viewModel.ChartState.IsBarPieVisible,
+                _viewModel.ChartState.MainChartDisplayMode,
+                _viewModel.ChartState.IsDiffRatioDifferenceMode,
+                _viewModel.ChartState.SelectedDistributionMode,
+                SelectedDistributionSettings = new
+                {
+                    selectedDistributionSettings.UseFrequencyShading,
+                    selectedDistributionSettings.IntervalCount
+                },
+                _viewModel.ChartState.IsDistributionPolarMode,
+                _viewModel.ChartState.WeekdayTrendChartMode,
+                _viewModel.ChartState.WeekdayTrendAverageWindow,
+                _viewModel.ChartState.ShowMonday,
+                _viewModel.ChartState.ShowTuesday,
+                _viewModel.ChartState.ShowWednesday,
+                _viewModel.ChartState.ShowThursday,
+                _viewModel.ChartState.ShowFriday,
+                _viewModel.ChartState.ShowSaturday,
+                _viewModel.ChartState.ShowSunday,
+                _viewModel.ChartState.ShowAverage,
+                _viewModel.ChartState.BarPieBucketCount,
+                BarPieMode = BarPieChartController.PieModeRadio.IsChecked == true ? "Pie" : "Bar"
+            },
+            CmsConfiguration = new
+            {
+                CmsConfiguration.UseCmsData,
+                CmsConfiguration.UseCmsForSingleMetric,
+                CmsConfiguration.UseCmsForMultiMetric,
+                CmsConfiguration.UseCmsForCombinedMetric,
+                CmsConfiguration.UseCmsForDifference,
+                CmsConfiguration.UseCmsForRatio,
+                CmsConfiguration.UseCmsForNormalized,
+                CmsConfiguration.UseCmsForWeeklyDistribution,
+                CmsConfiguration.UseCmsForWeekdayTrend,
+                CmsConfiguration.UseCmsForHourlyDistribution,
+                CmsConfiguration.UseCmsForBarPie
+            },
+            ReachabilityRecords = records
+        };
+
+        var targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "documents");
+        Directory.CreateDirectory(targetDir);
+        var fileName = $"reachability-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json";
+        var filePath = Path.Combine(targetDir, fileName);
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+
+        try
+        {
+            File.WriteAllText(filePath, JsonSerializer.Serialize(exportPayload, options));
+            if (!File.Exists(filePath))
+                throw new IOException("Export completed without creating the output file.");
+
+            MessageBox.Show($"Reachability snapshot exported to:\n{filePath}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to export reachability snapshot:\n{ex.Message}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     /// <summary>

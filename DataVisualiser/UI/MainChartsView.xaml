@@ -50,6 +50,10 @@
                             Click="OnClear"
                             Margin="{StaticResource ControlMargin}"
                             Padding="{StaticResource ButtonPadding}" />
+                    <Button Content="Export Reachability"
+                            Click="OnExportReachability"
+                            Margin="{StaticResource ControlMargin}"
+                            Padding="{StaticResource ButtonPadding}" />
                 </StackPanel>
 
                 <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
