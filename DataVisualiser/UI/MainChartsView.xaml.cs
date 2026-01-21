@@ -9,9 +9,11 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
 using System.Windows.Media;
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration;
+using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
@@ -22,6 +24,9 @@ using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Core.Strategies.Reachability;
+using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Core.Transforms.Expressions;
+using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Controls;
@@ -1750,17 +1755,23 @@ public partial class MainChartsView : UserControl
         ResolutionCombo.SelectedItem = defaultResolution;
     }
 
-    private void OnExportReachability(object sender, RoutedEventArgs e)
+    private async void OnExportReachability(object sender, RoutedEventArgs e)
     {
         var records = StrategyReachabilityStoreProbe.Default.Snapshot();
         var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
         var distinctSeries = GetDistinctSelectedSeries();
+        var paritySnapshot = await BuildDistributionParitySnapshotAsync(_viewModel.ChartState.LastContext);
+        var combinedParitySnapshot = BuildCombinedMetricParitySnapshot(_viewModel.ChartState.LastContext);
+        var singleParitySnapshot = BuildSingleMetricParitySnapshot(_viewModel.ChartState.LastContext);
+        var multiParitySnapshot = BuildMultiMetricParitySnapshot(_viewModel.ChartState.LastContext);
+        var normalizedParitySnapshot = BuildNormalizedParitySnapshot(_viewModel.ChartState.LastContext);
+        var weekdayTrendParitySnapshot = BuildWeekdayTrendParitySnapshot(_viewModel.ChartState.LastContext);
+        var transformParitySnapshot = await BuildTransformParitySnapshotAsync(_viewModel.ChartState.LastContext);
+        var paritySummary = BuildParitySummary(paritySnapshot, combinedParitySnapshot, singleParitySnapshot, multiParitySnapshot, normalizedParitySnapshot, weekdayTrendParitySnapshot, transformParitySnapshot);
+        var parityWarnings = BuildParityWarnings(paritySnapshot, combinedParitySnapshot, singleParitySnapshot, multiParitySnapshot, normalizedParitySnapshot, weekdayTrendParitySnapshot, transformParitySnapshot, selectedSeries.Count);
 
         if (records.Count == 0)
-        {
-            MessageBox.Show("No reachability records captured yet. Load data and render charts, then export again.", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+            MessageBox.Show("No reachability records captured yet. Export will include parity data if available.", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
 
         var selectedDistributionSettings = _viewModel.ChartState.GetDistributionSettings(_viewModel.ChartState.SelectedDistributionMode);
         var exportPayload = new
@@ -1829,8 +1840,20 @@ public partial class MainChartsView : UserControl
                 CmsConfiguration.UseCmsForHourlyDistribution,
                 CmsConfiguration.UseCmsForBarPie
             },
-            ReachabilityRecords = records
+            ReachabilityRecords = records,
+            DistributionParity = paritySnapshot,
+            CombinedMetricParity = combinedParitySnapshot,
+            SingleMetricParity = singleParitySnapshot,
+            MultiMetricParity = multiParitySnapshot,
+            NormalizedParity = normalizedParitySnapshot,
+            WeekdayTrendParity = weekdayTrendParitySnapshot,
+            TransformParity = transformParitySnapshot,
+            ParitySummary = paritySummary,
+            ParityWarnings = parityWarnings
         };
+
+        if (parityWarnings.Count > 0)
+            MessageBox.Show($"Export will include parity warnings:\n- {string.Join("\n- ", parityWarnings)}", "Parity Warnings", MessageBoxButton.OK, MessageBoxImage.Warning);
 
         var targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "documents");
         Directory.CreateDirectory(targetDir);
@@ -1854,6 +1877,720 @@ public partial class MainChartsView : UserControl
         {
             MessageBox.Show($"Failed to export reachability snapshot:\n{ex.Message}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private sealed class DistributionParitySnapshot
+    {
+        public string Status { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public object? Selection { get; set; }
+        public string? DataSource { get; set; }
+        public int LegacySamples { get; set; }
+        public int CmsSamplesTotal { get; set; }
+        public int CmsSamplesInRange { get; set; }
+        public ParityResultSnapshot? Weekly { get; set; }
+        public ParityResultSnapshot? Hourly { get; set; }
+    }
+
+    private sealed class ParityResultSnapshot
+    {
+        public bool Passed { get; set; }
+        public string? Message { get; set; }
+        public object? Details { get; set; }
+        public string? Error { get; set; }
+    }
+
+    private sealed class ParitySummarySnapshot
+    {
+        public string Status { get; set; } = string.Empty;
+        public bool? OverallPassed { get; set; }
+        public bool? WeeklyPassed { get; set; }
+        public bool? HourlyPassed { get; set; }
+        public bool? CombinedMetricPassed { get; set; }
+        public bool? SingleMetricPassed { get; set; }
+        public bool? MultiMetricPassed { get; set; }
+        public bool? NormalizedPassed { get; set; }
+        public bool? WeekdayTrendPassed { get; set; }
+        public bool? TransformPassed { get; set; }
+        public string[] StrategiesEvaluated { get; set; } = Array.Empty<string>();
+    }
+
+    private static ParitySummarySnapshot BuildParitySummary(DistributionParitySnapshot distributionSnapshot, CombinedMetricParitySnapshot combinedSnapshot, SimpleParitySnapshot singleSnapshot, SimpleParitySnapshot multiSnapshot, SimpleParitySnapshot normalizedSnapshot, SimpleParitySnapshot weekdayTrendSnapshot, TransformParitySnapshot transformSnapshot)
+    {
+        var weeklyPassed = distributionSnapshot.Weekly?.Passed;
+        var hourlyPassed = distributionSnapshot.Hourly?.Passed;
+        var combinedPassed = combinedSnapshot.Result?.Passed;
+        var singlePassed = singleSnapshot.Result?.Passed;
+        var multiPassed = multiSnapshot.Result?.Passed;
+        var normalizedPassed = normalizedSnapshot.Result?.Passed;
+        var weekdayTrendPassed = weekdayTrendSnapshot.Result?.Passed;
+        var transformPassed = transformSnapshot.Result?.Passed;
+        var completed = string.Equals(distributionSnapshot.Status, "Completed", StringComparison.OrdinalIgnoreCase);
+
+        return new ParitySummarySnapshot
+        {
+            Status = distributionSnapshot.Status,
+            WeeklyPassed = weeklyPassed,
+            HourlyPassed = hourlyPassed,
+            CombinedMetricPassed = combinedPassed,
+            SingleMetricPassed = singlePassed,
+            MultiMetricPassed = multiPassed,
+            NormalizedPassed = normalizedPassed,
+            WeekdayTrendPassed = weekdayTrendPassed,
+            TransformPassed = transformPassed,
+            OverallPassed = completed && weeklyPassed == true && hourlyPassed == true
+                            && (combinedPassed != false)
+                            && (singlePassed != false)
+                            && (multiPassed != false)
+                            && (normalizedPassed != false)
+                            && (weekdayTrendPassed != false)
+                            && (transformPassed != false),
+            StrategiesEvaluated = new[] { "WeeklyDistribution", "HourlyDistribution", "CombinedMetric", "SingleMetric", "MultiMetric", "Normalized", "WeekdayTrend", "Transform" }
+        };
+    }
+
+    private static IReadOnlyList<string> BuildParityWarnings(DistributionParitySnapshot distributionSnapshot, CombinedMetricParitySnapshot combinedSnapshot, SimpleParitySnapshot singleSnapshot, SimpleParitySnapshot multiSnapshot, SimpleParitySnapshot normalizedSnapshot, SimpleParitySnapshot weekdayTrendSnapshot, TransformParitySnapshot transformSnapshot, int selectedSeriesCount)
+    {
+        var warnings = new List<string>();
+
+        AddWarningIfUnavailable(warnings, "WeeklyDistribution", distributionSnapshot.Status, distributionSnapshot.Reason);
+        AddWarningIfUnavailable(warnings, "CombinedMetric", combinedSnapshot.Status, combinedSnapshot.Reason);
+        AddWarningIfUnavailable(warnings, "SingleMetric", singleSnapshot.Status, singleSnapshot.Reason);
+        AddWarningIfUnavailable(warnings, "MultiMetric", multiSnapshot.Status, multiSnapshot.Reason);
+        AddWarningIfUnavailable(warnings, "Normalized", normalizedSnapshot.Status, normalizedSnapshot.Reason);
+        AddWarningIfUnavailable(warnings, "WeekdayTrend", weekdayTrendSnapshot.Status, weekdayTrendSnapshot.Reason);
+        AddWarningIfUnavailable(warnings, "Transform", transformSnapshot.Status, transformSnapshot.Reason);
+
+        if (selectedSeriesCount < 2)
+            warnings.Add("Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series.");
+
+        return warnings;
+    }
+
+    private static void AddWarningIfUnavailable(List<string> warnings, string label, string status, string? reason)
+    {
+        if (string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var detail = string.IsNullOrWhiteSpace(reason) ? "Unavailable" : reason;
+        warnings.Add($"{label} parity not completed: {detail}");
+    }
+
+    private async Task<DistributionParitySnapshot> BuildDistributionParitySnapshotAsync(ChartDataContext? ctx)
+    {
+        if (ctx == null || ctx.From == default || ctx.To == default)
+        {
+            var snapshot = new DistributionParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "No chart context available"
+            };
+            Debug.WriteLine($"[ParityExport] {snapshot.Status}: {snapshot.Reason}");
+            return snapshot;
+        }
+
+        var selection = ResolveDistributionSelection(ctx);
+        if (selection == null)
+        {
+            var snapshot = new DistributionParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "No distribution series selected"
+            };
+            Debug.WriteLine($"[ParityExport] {snapshot.Status}: {snapshot.Reason}");
+            return snapshot;
+        }
+
+        var resolutionTableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var (legacyData, cmsSeries, dataSource) = await ResolveDistributionParityDataAsync(ctx, selection, resolutionTableName);
+        if (legacyData == null || legacyData.Count == 0)
+        {
+            var snapshot = new DistributionParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "No legacy distribution data available",
+                DataSource = dataSource
+            };
+            Debug.WriteLine($"[ParityExport] {snapshot.Status}: {snapshot.Reason} (Source={dataSource})");
+            return snapshot;
+        }
+
+        var cmsSampleTotal = CountCmsSamples(cmsSeries);
+        var cmsSampleInRange = CountCmsSamples(cmsSeries, ctx.From, ctx.To);
+
+        if (cmsSeries == null)
+        {
+            var snapshot = new DistributionParitySnapshot
+            {
+                Status = "CmsUnavailable",
+                DataSource = dataSource,
+                CmsSamplesTotal = cmsSampleTotal,
+                CmsSamplesInRange = cmsSampleInRange
+            };
+            Debug.WriteLine($"[ParityExport] {snapshot.Status}: CMS series unavailable (Source={dataSource})");
+            return snapshot;
+        }
+
+        var strategyCutOverService = _strategyCutOverService ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
+
+        var displayName = selection.DisplayName ?? ctx.DisplayName1 ?? string.Empty;
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = legacyData,
+            Label1 = displayName,
+            From = ctx.From,
+            To = ctx.To
+        };
+
+        var parityContext = new ChartDataContext
+        {
+            PrimaryCms = cmsSeries,
+            Data1 = legacyData,
+            DisplayName1 = displayName,
+            MetricType = selection.MetricType ?? ctx.MetricType,
+            PrimaryMetricType = selection.MetricType ?? ctx.PrimaryMetricType,
+            PrimarySubtype = selection.Subtype,
+            DisplayPrimaryMetricType = selection.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+            DisplayPrimarySubtype = selection.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+            From = ctx.From,
+            To = ctx.To
+        };
+
+        var weeklyParity = ExecuteParitySafe(strategyCutOverService, StrategyType.WeeklyDistribution, parityContext, parameters);
+        var hourlyParity = ExecuteParitySafe(strategyCutOverService, StrategyType.HourlyDistribution, parityContext, parameters);
+
+        return new DistributionParitySnapshot
+        {
+            Status = "Completed",
+            Selection = new
+            {
+                selection.MetricType,
+                selection.Subtype,
+                selection.DisplayMetricType,
+                selection.DisplaySubtype,
+                selection.DisplayName,
+                selection.DisplayKey
+            },
+            DataSource = dataSource,
+            LegacySamples = legacyData.Count,
+            CmsSamplesTotal = cmsSampleTotal,
+            CmsSamplesInRange = cmsSampleInRange,
+            Weekly = weeklyParity,
+            Hourly = hourlyParity
+        };
+    }
+
+    private sealed class CombinedMetricParitySnapshot
+    {
+        public string Status { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public ParityResultSnapshot? Result { get; set; }
+    }
+
+    private sealed class SimpleParitySnapshot
+    {
+        public string Status { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public ParityResultSnapshot? Result { get; set; }
+    }
+
+    private CombinedMetricParitySnapshot BuildCombinedMetricParitySnapshot(ChartDataContext? ctx)
+    {
+        if (ctx == null || ctx.Data1 == null || ctx.Data2 == null)
+        {
+            return new CombinedMetricParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "Combined metric requires primary and secondary data"
+            };
+        }
+
+        if (ctx.PrimaryCms is not ICanonicalMetricSeries || ctx.SecondaryCms is not ICanonicalMetricSeries)
+        {
+            return new CombinedMetricParitySnapshot
+            {
+                Status = "CmsUnavailable",
+                Reason = "Combined metric CMS series missing"
+            };
+        }
+
+        var strategyCutOverService = _strategyCutOverService ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = ctx.Data1,
+            LegacyData2 = ctx.Data2,
+            Label1 = ctx.DisplayName1,
+            Label2 = ctx.DisplayName2,
+            From = ctx.From,
+            To = ctx.To
+        };
+
+        var result = ExecuteParitySafe(strategyCutOverService, StrategyType.CombinedMetric, ctx, parameters);
+
+        return new CombinedMetricParitySnapshot
+        {
+            Status = "Completed",
+            Result = result
+        };
+    }
+
+    private SimpleParitySnapshot BuildSingleMetricParitySnapshot(ChartDataContext? ctx)
+    {
+        if (ctx == null || ctx.Data1 == null)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "Primary series required"
+            };
+        }
+
+        if (ctx.PrimaryCms is not ICanonicalMetricSeries)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "CmsUnavailable",
+                Reason = "Primary CMS series missing"
+            };
+        }
+
+        var strategyCutOverService = _strategyCutOverService ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = ctx.Data1,
+            Label1 = ctx.DisplayName1,
+            From = ctx.From,
+            To = ctx.To
+        };
+
+        var result = ExecuteParitySafe(strategyCutOverService, StrategyType.SingleMetric, ctx, parameters);
+
+        return new SimpleParitySnapshot
+        {
+            Status = "Completed",
+            Result = result
+        };
+    }
+
+    private SimpleParitySnapshot BuildMultiMetricParitySnapshot(ChartDataContext? ctx)
+    {
+        if (ctx == null || ctx.Data1 == null)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "Primary series required"
+            };
+        }
+
+        if (ctx.PrimaryCms is not ICanonicalMetricSeries)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "CmsUnavailable",
+                Reason = "Primary CMS series missing"
+            };
+        }
+
+        var strategyCutOverService = _strategyCutOverService ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries = new List<IEnumerable<MetricData>> { ctx.Data1, ctx.Data2 ?? Array.Empty<MetricData>() },
+            Labels = new List<string> { ctx.DisplayName1, ctx.DisplayName2 },
+            From = ctx.From,
+            To = ctx.To
+        };
+
+        var result = ExecuteParitySafe(strategyCutOverService, StrategyType.MultiMetric, ctx, parameters);
+
+        return new SimpleParitySnapshot
+        {
+            Status = "Completed",
+            Result = result
+        };
+    }
+
+    private SimpleParitySnapshot BuildNormalizedParitySnapshot(ChartDataContext? ctx)
+    {
+        if (ctx == null || ctx.Data1 == null || ctx.Data2 == null)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "Primary and secondary series required"
+            };
+        }
+
+        if (ctx.PrimaryCms is not ICanonicalMetricSeries || ctx.SecondaryCms is not ICanonicalMetricSeries)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "CmsUnavailable",
+                Reason = "CMS series missing"
+            };
+        }
+
+        var strategyCutOverService = _strategyCutOverService ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = ctx.Data1,
+            LegacyData2 = ctx.Data2,
+            Label1 = ctx.DisplayName1,
+            Label2 = ctx.DisplayName2,
+            From = ctx.From,
+            To = ctx.To,
+            NormalizationMode = _viewModel.ChartState.SelectedNormalizationMode
+        };
+
+        var result = ExecuteParitySafe(strategyCutOverService, StrategyType.Normalized, ctx, parameters);
+
+        return new SimpleParitySnapshot
+        {
+            Status = "Completed",
+            Result = result
+        };
+    }
+
+    private SimpleParitySnapshot BuildWeekdayTrendParitySnapshot(ChartDataContext? ctx)
+    {
+        if (ctx == null || ctx.Data1 == null)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "Primary series required"
+            };
+        }
+
+        if (ctx.PrimaryCms is not ICanonicalMetricSeries)
+        {
+            return new SimpleParitySnapshot
+            {
+                Status = "CmsUnavailable",
+                Reason = "Primary CMS series missing"
+            };
+        }
+
+        var strategyCutOverService = _strategyCutOverService ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = ctx.Data1,
+            Label1 = ctx.DisplayName1,
+            From = ctx.From,
+            To = ctx.To
+        };
+
+        var result = ExecuteParitySafe(strategyCutOverService, StrategyType.WeekdayTrend, ctx, parameters);
+
+        return new SimpleParitySnapshot
+        {
+            Status = "Completed",
+            Result = result
+        };
+    }
+
+    private sealed class TransformParitySnapshot
+    {
+        public string Status { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public string? Operation { get; set; }
+        public bool IsUnary { get; set; }
+        public bool ExpressionAvailable { get; set; }
+        public int LegacySamples { get; set; }
+        public int NewSamples { get; set; }
+        public ParityResultSnapshot? Result { get; set; }
+    }
+
+    private async Task<TransformParitySnapshot> BuildTransformParitySnapshotAsync(ChartDataContext? ctx)
+    {
+        if (ctx == null)
+        {
+            return new TransformParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "No chart context available"
+            };
+        }
+
+        var operation = GetSelectedTransformOperation();
+        if (string.IsNullOrWhiteSpace(operation))
+        {
+            return new TransformParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "No transform operation selected"
+            };
+        }
+
+        var (primarySelection, secondarySelection) = ResolveTransformSelections(ctx);
+        var primaryData = await ResolveTransformParityDataAsync(ctx, primarySelection);
+        if (primaryData == null || primaryData.Count == 0)
+        {
+            return new TransformParitySnapshot
+            {
+                Status = "Unavailable",
+                Reason = "No primary data available for transform"
+            };
+        }
+
+        var isUnary = IsUnaryTransform(operation);
+        IReadOnlyList<MetricData>? secondaryData = null;
+        if (!isUnary)
+        {
+            secondaryData = await ResolveTransformParityDataAsync(ctx, secondarySelection);
+            if (secondaryData == null || secondaryData.Count == 0)
+            {
+                return new TransformParitySnapshot
+                {
+                    Status = "Unavailable",
+                    Reason = "No secondary data available for binary transform"
+                };
+            }
+        }
+
+        var result = isUnary
+            ? ComputeUnaryTransformParity(primaryData, operation)
+            : ComputeBinaryTransformParity(primaryData, secondaryData!, operation);
+
+        return new TransformParitySnapshot
+        {
+            Status = "Completed",
+            Operation = operation,
+            IsUnary = isUnary,
+            ExpressionAvailable = result.ExpressionAvailable,
+            LegacySamples = result.LegacySamples,
+            NewSamples = result.NewSamples,
+            Result = result.Result
+        };
+    }
+
+    private string? GetSelectedTransformOperation()
+    {
+        if (TransformDataPanelController.TransformOperationCombo.SelectedItem is ComboBoxItem item)
+            return item.Tag?.ToString();
+
+        return null;
+    }
+
+    private static bool IsUnaryTransform(string operation)
+    {
+        return string.Equals(operation, "Log", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(operation, "Sqrt", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private(MetricSeriesSelection? Primary, MetricSeriesSelection? Secondary) ResolveTransformSelections(ChartDataContext ctx)
+    {
+        var primary = _viewModel.ChartState.SelectedTransformPrimarySeries;
+        var secondary = _viewModel.ChartState.SelectedTransformSecondarySeries;
+
+        if (primary != null || secondary != null)
+            return (primary, secondary);
+
+        var primaryMetricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+        var primarySelection = string.IsNullOrWhiteSpace(primaryMetricType)
+            ? null
+            : new MetricSeriesSelection(primaryMetricType, ctx.PrimarySubtype);
+
+        MetricSeriesSelection? secondarySelection = null;
+        if (!string.IsNullOrWhiteSpace(ctx.SecondaryMetricType))
+            secondarySelection = new MetricSeriesSelection(ctx.SecondaryMetricType, ctx.SecondarySubtype);
+
+        return (primarySelection, secondarySelection);
+    }
+
+    private async Task<IReadOnlyList<MetricData>?> ResolveTransformParityDataAsync(ChartDataContext ctx, MetricSeriesSelection? selection)
+    {
+        if (selection == null)
+            return null;
+
+        if (ctx.Data1 != null && IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return ctx.Data1;
+
+        if (ctx.Data2 != null && IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return ctx.Data2;
+
+        if (string.IsNullOrWhiteSpace(selection.MetricType))
+            return ctx.Data1;
+
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, ctx.From, ctx.To, tableName);
+        return primaryData.ToList();
+    }
+
+    private static (ParityResultSnapshot Result, int LegacySamples, int NewSamples, bool ExpressionAvailable) ComputeUnaryTransformParity(IReadOnlyList<MetricData> data, string operation)
+    {
+        var prepared = data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+        if (prepared.Count == 0)
+        {
+            return (new ParityResultSnapshot { Passed = false, Error = "No valid data points" }, 0, 0, false);
+        }
+
+        var values = prepared.Select(d => (double)d.Value!.Value).ToList();
+        var legacyOp = operation switch
+        {
+            "Log" => UnaryOperators.Logarithm,
+            "Sqrt" => UnaryOperators.SquareRoot,
+            _ => (Func<double, double>)(x => x)
+        };
+
+        var legacy = MathHelper.ApplyUnaryOperation(values, legacyOp);
+
+        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0);
+        var expressionAvailable = expression != null;
+        var modern = expression != null
+            ? TransformExpressionEvaluator.Evaluate(expression, new List<IReadOnlyList<MetricData>> { prepared })
+            : legacy;
+
+        var parity = CompareTransformResults(legacy, modern, prepared.Count);
+
+        return (parity, legacy.Count, modern.Count, expressionAvailable);
+    }
+
+    private static (ParityResultSnapshot Result, int LegacySamples, int NewSamples, bool ExpressionAvailable) ComputeBinaryTransformParity(IReadOnlyList<MetricData> data1, IReadOnlyList<MetricData> data2, string operation)
+    {
+        var prepared1 = data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+        var prepared2 = data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+
+        var (aligned1, aligned2) = TransformExpressionEvaluator.AlignMetricsByTimestamp(prepared1, prepared2);
+        if (aligned1.Count == 0 || aligned2.Count == 0)
+        {
+            return (new ParityResultSnapshot { Passed = false, Error = "No aligned data points" }, 0, 0, false);
+        }
+
+        var values1 = aligned1.Select(d => (double)d.Value!.Value).ToList();
+        var values2 = aligned2.Select(d => (double)d.Value!.Value).ToList();
+
+        var legacyOp = operation switch
+        {
+            "Add" => BinaryOperators.Sum,
+            "Subtract" => BinaryOperators.Difference,
+            _ => (Func<double, double, double>)((a, b) => a)
+        };
+
+        var legacy = MathHelper.ApplyBinaryOperation(values1, values2, legacyOp);
+
+        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
+        var expressionAvailable = expression != null;
+        var modern = expression != null
+            ? TransformExpressionEvaluator.Evaluate(expression, new List<IReadOnlyList<MetricData>> { aligned1, aligned2 })
+            : legacy;
+
+        var parity = CompareTransformResults(legacy, modern, legacy.Count);
+
+        return (parity, legacy.Count, modern.Count, expressionAvailable);
+    }
+
+    private static ParityResultSnapshot CompareTransformResults(IReadOnlyList<double> legacy, IReadOnlyList<double> modern, int expectedCount)
+    {
+        if (legacy.Count != modern.Count)
+        {
+            return new ParityResultSnapshot
+            {
+                Passed = false,
+                Error = $"Result count mismatch: legacy={legacy.Count}, new={modern.Count}"
+            };
+        }
+
+        var epsilon = 1e-6;
+        for (var i = 0; i < legacy.Count; i++)
+        {
+            var l = legacy[i];
+            var n = modern[i];
+            if (double.IsNaN(l) && double.IsNaN(n))
+                continue;
+
+            if (Math.Abs(l - n) > epsilon)
+            {
+                return new ParityResultSnapshot
+                {
+                    Passed = false,
+                    Error = $"Value mismatch at index {i}: legacy={l}, new={n}"
+                };
+            }
+        }
+
+        return new ParityResultSnapshot
+        {
+            Passed = true,
+            Message = "Transform parity validation passed"
+        };
+    }
+
+    private MetricSeriesSelection? ResolveDistributionSelection(ChartDataContext ctx)
+    {
+        if (_viewModel.ChartState.SelectedDistributionSeries != null)
+            return _viewModel.ChartState.SelectedDistributionSeries;
+
+        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
+
+        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+    }
+
+    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms, string DataSource)> ResolveDistributionParityDataAsync(ChartDataContext ctx, MetricSeriesSelection selection, string tableName)
+    {
+        if (ctx.Data1 != null && IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries, "ChartContext.Primary");
+
+        if (ctx.Data2 != null && IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return (ctx.Data2, ctx.SecondaryCms as ICanonicalMetricSeries, "ChartContext.Secondary");
+
+        if (string.IsNullOrWhiteSpace(selection.MetricType))
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries, "ChartContext.Fallback");
+
+        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, ctx.From, ctx.To, tableName);
+        return (primaryData.ToList(), primaryCms, "MetricSelectionService");
+    }
+
+    private static ParityResultSnapshot ExecuteParitySafe(IStrategyCutOverService strategyCutOverService, StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
+    {
+        try
+        {
+            var legacy = strategyCutOverService.CreateLegacyStrategy(strategyType, parameters);
+            var cms = strategyCutOverService.CreateCmsStrategy(strategyType, ctx, parameters);
+            var result = strategyCutOverService.ValidateParity(legacy, cms);
+
+            return new ParityResultSnapshot
+            {
+                Passed = result.Passed,
+                Message = result.Message,
+                Details = result.Details
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ParityResultSnapshot
+            {
+                Passed = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
+    {
+        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
+        var selectionSubtype = selection.QuerySubtype;
+
+        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int CountCmsSamples(ICanonicalMetricSeries? series, DateTime? from = null, DateTime? to = null)
+    {
+        if (series?.Samples == null)
+            return 0;
+
+        if (!from.HasValue || !to.HasValue)
+            return series.Samples.Count(s => s.Value.HasValue);
+
+        var toEndOfDay = to.Value.Date.AddDays(1).AddTicks(-1);
+        var fromStartOfDay = from.Value.Date;
+
+        return series.Samples.Count(s => s.Value.HasValue && s.Timestamp.LocalDateTime >= fromStartOfDay && s.Timestamp.LocalDateTime <= toEndOfDay);
     }
 
     /// <summary>

@@ -1,0 +1,170 @@
+{
+  "ExportedAtUtc": "2026-01-21T14:22:55.4451896Z",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2024-01-15T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeriesCount": 2,
+    "DistinctSelectedSeriesCount": 2,
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "weight",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Total",
+        "DisplayName": "Weight - Total",
+        "DisplayKey": "Weight:weight"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "fat_free_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat Free (mass)",
+        "DisplayName": "Weight - Fat Free (mass)",
+        "DisplayKey": "Weight:fat_free_mass"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": false,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": true,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 0,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 25
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "Bar"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [
+    {
+      "StrategyType": 1,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 183,
+      "SecondarySamples": 181,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-15T00:00:00",
+      "TimestampUtc": "2026-01-21T14:22:09.4100607Z"
+    },
+    {
+      "StrategyType": 1,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 183,
+      "SecondarySamples": 181,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-15T00:00:00",
+      "TimestampUtc": "2026-01-21T14:22:09.4140236Z"
+    }
+  ],
+  "DistributionParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Selection": {
+      "MetricType": "Weight",
+      "Subtype": "weight",
+      "DisplayMetricType": "Weight",
+      "DisplaySubtype": "Total",
+      "DisplayName": "Weight - Total",
+      "DisplayKey": "Weight:weight"
+    },
+    "DataSource": "ChartContext.Primary",
+    "LegacySamples": 183,
+    "CmsSamplesTotal": 183,
+    "CmsSamplesInRange": 183,
+    "Weekly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    },
+    "Hourly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "CombinedMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": false,
+      "Message": "[TemporalParity] Timestamp mismatch at index 0 in series \u0027Primary\u0027: legacy=2023-08-16T19:05:05.8233333, cms=2023-08-16T17:05:05.8233333Z",
+      "Details": {
+        "FailureCount": 1,
+        "Failures": [
+          {
+            "Layer": 1,
+            "Message": "Timestamp mismatch at index 0 in series \u0027Primary\u0027: legacy=2023-08-16T19:05:05.8233333, cms=2023-08-16T17:05:05.8233333Z"
+          }
+        ]
+      },
+      "Error": null
+    }
+  },
+  "TransformParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Operation": "Add",
+    "IsUnary": false,
+    "ExpressionAvailable": true,
+    "LegacySamples": 181,
+    "NewSamples": 181,
+    "Result": {
+      "Passed": true,
+      "Message": "Transform parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "ParitySummary": {
+    "Status": "Completed",
+    "OverallPassed": false,
+    "WeeklyPassed": true,
+    "HourlyPassed": true,
+    "CombinedMetricPassed": false,
+    "TransformPassed": true,
+    "StrategiesEvaluated": [
+      "WeeklyDistribution",
+      "HourlyDistribution",
+      "CombinedMetric",
+      "Transform"
+    ]
+  }
+}

@@ -7,7 +7,7 @@ namespace DataVisualiser.Tests.Strategies;
 public sealed class SingleMetricStrategyTests
 {
     private static readonly DateTime From = new(2024, 01, 01);
-    private static readonly DateTime To = new(2024, 01, 10);
+    private static readonly DateTime To = From.AddDays(9).AddHours(23).AddMinutes(59).AddSeconds(59);
 
     [Fact]
     public void Compute_ShouldReturnNull_WhenDataIsEmpty()

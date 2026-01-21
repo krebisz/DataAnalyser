@@ -1,0 +1,158 @@
+{
+  "ExportedAtUtc": "2026-01-21T11:42:15.2496273Z",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2024-01-17T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeriesCount": 1,
+    "DistinctSelectedSeriesCount": 1,
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "weight",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Total",
+        "DisplayName": "Weight - Total",
+        "DisplayKey": "Weight:weight"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": false,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": true,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": false,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 1,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 15
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "Bar"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [
+    {
+      "StrategyType": 0,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 187,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-17T00:00:00",
+      "TimestampUtc": "2026-01-21T11:41:47.6843516Z"
+    },
+    {
+      "StrategyType": 0,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 187,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-17T00:00:00",
+      "TimestampUtc": "2026-01-21T11:41:47.6863111Z"
+    },
+    {
+      "StrategyType": 6,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 187,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-17T00:00:00",
+      "TimestampUtc": "2026-01-21T11:41:55.9093817Z"
+    },
+    {
+      "StrategyType": 8,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 187,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-17T00:00:00",
+      "TimestampUtc": "2026-01-21T11:42:07.3710514Z"
+    },
+    {
+      "StrategyType": 8,
+      "UsedCms": true,
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 187,
+      "SecondarySamples": 0,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2024-01-17T00:00:00",
+      "TimestampUtc": "2026-01-21T11:42:07.8148056Z"
+    }
+  ],
+  "DistributionParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Selection": {
+      "MetricType": "Weight",
+      "Subtype": "weight",
+      "DisplayMetricType": "Weight",
+      "DisplaySubtype": "Total",
+      "DisplayName": "Weight - Total",
+      "DisplayKey": "Weight:weight"
+    },
+    "DataSource": "ChartContext.Primary",
+    "LegacySamples": 187,
+    "CmsSamplesTotal": 187,
+    "CmsSamplesInRange": 187,
+    "Weekly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    },
+    "Hourly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "ParitySummary": {
+    "Status": "Completed",
+    "OverallPassed": true,
+    "WeeklyPassed": true,
+    "HourlyPassed": true,
+    "StrategiesEvaluated": [
+      "WeeklyDistribution",
+      "HourlyDistribution"
+    ]
+  }
+}

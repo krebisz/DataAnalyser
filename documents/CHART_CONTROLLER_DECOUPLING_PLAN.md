@@ -24,6 +24,9 @@ core orchestration logic.
 - 2026-01-20: Added adapter-level tests for BarPie controller behavior.
 - 2026-01-20: Introduced `ChartControllerFactory` seam so `MainChartsView` no longer instantiates adapters directly.
 - 2026-01-21: Phase 3.5 reachability evidence captured in `documents/reachability-20260121-074430.json`, `documents/reachability-20260121-074900.json`, `documents/reachability-20260121-075301.json`, `documents/reachability-20260121-085510.json`.
+- 2026-01-21: Phase 4C parity evidence captured in `documents/reachability-20260121-102817.json` (weekly/hourly distribution parity snapshot).
+- 2026-01-21: Phase 4C parity summary updated with `documents/reachability-20260121-114215.json` (latest parity + summary export).
+- 2026-01-21: Phase 3 parity coverage evidence captured in `documents/reachability-20260121-160503.json`.
 
 ## Technical Decisions (Living)
 - Prefer a scaffold-style UI contract (e.g., `IChartPanelScaffold`) to standardize panel wiring while keeping rendering logic unchanged.

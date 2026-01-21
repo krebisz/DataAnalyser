@@ -264,7 +264,7 @@ public class DataFetcher
                         ToDate = to
                 });
 
-        return results;
+        return NormalizeMetricTimestamps(results);
     }
 
     /// <summary>
@@ -573,7 +573,29 @@ public class DataFetcher
                 break;
         }
 
-        return await conn.QueryAsync<MetricData>(sql.ToString(), parameters);
+        var results = await conn.QueryAsync<MetricData>(sql.ToString(), parameters);
+        return NormalizeMetricTimestamps(results);
+    }
+
+    private static IEnumerable<MetricData> NormalizeMetricTimestamps(IEnumerable<MetricData> source)
+    {
+        return source.Select(data => new MetricData
+        {
+                NormalizedTimestamp = NormalizeToLocal(data.NormalizedTimestamp),
+                Value = data.Value,
+                Unit = data.Unit,
+                Provider = data.Provider
+        });
+    }
+
+    private static DateTime NormalizeToLocal(DateTime timestamp)
+    {
+        return timestamp.Kind switch
+        {
+                DateTimeKind.Utc => timestamp.ToLocalTime(),
+                DateTimeKind.Unspecified => DateTime.SpecifyKind(timestamp, DateTimeKind.Local),
+                _ => timestamp
+        };
     }
 
     private static QueryMode ResolveQueryMode(

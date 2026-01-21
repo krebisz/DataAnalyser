@@ -25,7 +25,7 @@ public sealed class DataPreparationService : IDataPreparationService
         if (cms == null || cms.Samples.Count == 0)
             return Array.Empty<MetricSample>();
 
-        return cms.Samples.Where(s => s.Value.HasValue && s.Timestamp.DateTime >= from && s.Timestamp.DateTime <= to).OrderBy(s => s.Timestamp).ToList();
+        return cms.Samples.Where(s => s.Value.HasValue && s.Timestamp.LocalDateTime >= from && s.Timestamp.LocalDateTime <= to).OrderBy(s => s.Timestamp.LocalDateTime).ToList();
     }
 
     public IReadOnlyList<MetricData> ConvertCmsToLegacy(ICanonicalMetricSeries cms, DateTime from, DateTime to)

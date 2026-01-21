@@ -373,7 +373,7 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
             if (!sample.Value.HasValue)
                 continue;
 
-            var timestamp = sample.Timestamp.UtcDateTime;
+            var timestamp = sample.Timestamp.LocalDateTime;
             var index = ResolveBucketIndex(timestamp, plan);
             if (index < 0 || index >= sums.Length)
                 continue;

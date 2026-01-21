@@ -22,10 +22,10 @@ public static class CmsConversionHelper
         if (cms == null)
             throw new ArgumentNullException(nameof(cms));
 
-        return cms.Samples.Where(s => s.Value.HasValue && (!from.HasValue || s.Timestamp.DateTime >= from.Value) && (!to.HasValue || s.Timestamp.DateTime <= to.Value))
+        return cms.Samples.Where(s => s.Value.HasValue && (!from.HasValue || s.Timestamp.LocalDateTime >= from.Value) && (!to.HasValue || s.Timestamp.LocalDateTime <= to.Value))
                   .Select(s => new MetricData
                   {
-                          NormalizedTimestamp = s.Timestamp.DateTime,
+                          NormalizedTimestamp = s.Timestamp.LocalDateTime,
                           Value = s.Value,
                           Unit = cms.Unit.Symbol,
                           Provider = cms.Provenance.SourceProvider

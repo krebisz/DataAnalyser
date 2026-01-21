@@ -22,8 +22,8 @@ public class CombinedMetricParityTests
     public void Parity_ShouldPass_WithIdenticalData()
     {
         // Arrange
-        var from = DateTime.UtcNow.AddDays(-10);
-        var to = DateTime.UtcNow;
+        var from = DateTime.Now.Date.AddDays(-10);
+        var to = from.AddDays(9).AddHours(23).AddMinutes(59).AddSeconds(59);
         var interval = TimeSpan.FromDays(1);
 
         // Create matching legacy data
@@ -75,8 +75,8 @@ public class CombinedMetricParityTests
     public void Parity_ShouldPass_WithEmptyData()
     {
         // Arrange
-        var from = DateTime.UtcNow.AddDays(-10);
-        var to = DateTime.UtcNow;
+        var from = DateTime.Now.Date.AddDays(-10);
+        var to = from.AddDays(9).AddHours(23).AddMinutes(59).AddSeconds(59);
 
         var context = new StrategyParityContext
         {
@@ -115,8 +115,8 @@ public class CombinedMetricParityTests
     public void Parity_ShouldPass_WithMismatchedCounts()
     {
         // Arrange
-        var from = DateTime.UtcNow.AddDays(-10);
-        var to = DateTime.UtcNow;
+        var from = DateTime.Now.Date.AddDays(-10);
+        var to = from.AddDays(9).AddHours(23).AddMinutes(59).AddSeconds(59);
         var interval = TimeSpan.FromDays(1);
 
         // Left has 10 points, right has 8 points (should align to min)

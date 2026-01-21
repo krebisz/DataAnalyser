@@ -4,6 +4,7 @@ using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Core.Validation.Parity;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.State;
 using Moq;
@@ -111,6 +112,47 @@ public sealed class StrategyCutOverServiceTests
         Assert.Equal(legacy.Count, result!.PrimaryRawValues.Count);
     }
 
+    [Fact]
+    public void ShouldUseCms_ShouldReturnFalse_WhenCombinedMetricFlagDisabled()
+    {
+        using var _ = new CmsConfigurationScope(true, true, false);
+        var service = CreateService();
+
+        var ctx = new ChartDataContext
+        {
+                PrimaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(2).Build(),
+                SecondaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(2).Build(),
+                From = From,
+                To = To
+        };
+
+        var result = service.ShouldUseCms(StrategyType.CombinedMetric, ctx);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void GetParityHarness_ShouldReturnChartComputationHarness_ForCoreStrategies()
+    {
+        var service = CreateService();
+        var method = typeof(StrategyCutOverService).GetMethod("GetParityHarness", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.NotNull(method);
+
+        var types = new[]
+        {
+            StrategyType.SingleMetric,
+            StrategyType.MultiMetric,
+            StrategyType.Normalized,
+            StrategyType.WeekdayTrend
+        };
+
+        foreach (var strategyType in types)
+        {
+            var harness = method!.Invoke(service, new object?[] { strategyType });
+            Assert.IsType<ChartComputationParityHarness>(harness);
+        }
+    }
+
     private static StrategyCutOverService CreateService()
     {
         var dataPreparation = new Mock<IDataPreparationService>();
@@ -121,20 +163,24 @@ public sealed class StrategyCutOverServiceTests
     {
         private readonly bool _useCmsData;
         private readonly bool _useCmsForSingleMetric;
+        private readonly bool _useCmsForCombinedMetric;
 
-        public CmsConfigurationScope(bool useCmsData, bool useCmsForSingleMetric)
+        public CmsConfigurationScope(bool useCmsData, bool useCmsForSingleMetric, bool useCmsForCombinedMetric = true)
         {
             _useCmsData = CmsConfiguration.UseCmsData;
             _useCmsForSingleMetric = CmsConfiguration.UseCmsForSingleMetric;
+            _useCmsForCombinedMetric = CmsConfiguration.UseCmsForCombinedMetric;
 
             CmsConfiguration.UseCmsData = useCmsData;
             CmsConfiguration.UseCmsForSingleMetric = useCmsForSingleMetric;
+            CmsConfiguration.UseCmsForCombinedMetric = useCmsForCombinedMetric;
         }
 
         public void Dispose()
         {
             CmsConfiguration.UseCmsData = _useCmsData;
             CmsConfiguration.UseCmsForSingleMetric = _useCmsForSingleMetric;
+            CmsConfiguration.UseCmsForCombinedMetric = _useCmsForCombinedMetric;
         }
     }
 }

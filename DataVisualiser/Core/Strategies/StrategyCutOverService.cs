@@ -170,17 +170,17 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         var fromStartOfDay = from.Date;
 
         // Count samples within the date range (compare dates, not times)
-        var filteredCount = cmsSeries.Samples.Count(s => s.Value.HasValue && s.Timestamp.DateTime >= fromStartOfDay && s.Timestamp.DateTime <= toEndOfDay);
+        var filteredCount = cmsSeries.Samples.Count(s => s.Value.HasValue && s.Timestamp.LocalDateTime >= fromStartOfDay && s.Timestamp.LocalDateTime <= toEndOfDay);
 
         // Debug: Show sample range if available
         if (totalSamples > 0)
         {
             var firstSample = cmsSeries.Samples.First();
             var lastSample = cmsSeries.Samples.Last();
-            var samplesInRange = cmsSeries.Samples.Where(s => s.Value.HasValue && s.Timestamp.DateTime >= fromStartOfDay && s.Timestamp.DateTime <= toEndOfDay).Take(5).ToList();
-            Debug.WriteLine($"[HasSufficientCmsSamples] Total={totalSamples}, ValidValues={validValueSamples}, Filtered={filteredCount}, Range=[{fromStartOfDay:yyyy-MM-dd} to {toEndOfDay:yyyy-MM-dd HH:mm:ss}], FirstSample={firstSample.Timestamp.DateTime:yyyy-MM-dd HH:mm:ss}, LastSample={lastSample.Timestamp.DateTime:yyyy-MM-dd HH:mm:ss}");
+            var samplesInRange = cmsSeries.Samples.Where(s => s.Value.HasValue && s.Timestamp.LocalDateTime >= fromStartOfDay && s.Timestamp.LocalDateTime <= toEndOfDay).Take(5).ToList();
+            Debug.WriteLine($"[HasSufficientCmsSamples] Total={totalSamples}, ValidValues={validValueSamples}, Filtered={filteredCount}, Range=[{fromStartOfDay:yyyy-MM-dd} to {toEndOfDay:yyyy-MM-dd HH:mm:ss}], FirstSample={firstSample.Timestamp.LocalDateTime:yyyy-MM-dd HH:mm:ss}, LastSample={lastSample.Timestamp.LocalDateTime:yyyy-MM-dd HH:mm:ss}");
             if (samplesInRange.Any())
-                Debug.WriteLine($"[HasSufficientCmsSamples] Sample timestamps in range: {string.Join(", ", samplesInRange.Select(s => s.Timestamp.DateTime.ToString("yyyy-MM-dd HH:mm:ss")))}");
+                Debug.WriteLine($"[HasSufficientCmsSamples] Sample timestamps in range: {string.Join(", ", samplesInRange.Select(s => s.Timestamp.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")))}");
         }
 
         return filteredCount >= minSamples;
@@ -200,7 +200,7 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         {
             var toEndOfDay = to.Value.Date.AddDays(1).AddTicks(-1);
             var fromStartOfDay = from.Value.Date;
-            return cmsSeries.Samples.Count(s => s.Value.HasValue && s.Timestamp.DateTime >= fromStartOfDay && s.Timestamp.DateTime <= toEndOfDay);
+            return cmsSeries.Samples.Count(s => s.Value.HasValue && s.Timestamp.LocalDateTime >= fromStartOfDay && s.Timestamp.LocalDateTime <= toEndOfDay);
         }
 
         return cmsSeries.Samples.Count;
@@ -239,9 +239,13 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
     {
         return strategyType switch
         {
+                StrategyType.SingleMetric => new ChartComputationParityHarness(),
                 StrategyType.CombinedMetric => new CombinedMetricParityHarness(),
+                StrategyType.MultiMetric => new ChartComputationParityHarness(),
+                StrategyType.Normalized => new ChartComputationParityHarness(),
                 StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
                 StrategyType.HourlyDistribution => new HourlyDistributionParityHarness(),
+                StrategyType.WeekdayTrend => new ChartComputationParityHarness(),
                 // TODO: Add harnesses for other strategy types as they become available
                 _ => null
         };
@@ -313,3 +317,4 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         };
     }
 }
+

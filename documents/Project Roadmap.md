@@ -61,8 +61,8 @@ It defines **order, discipline, and exit conditions**.
 ---
 
 ### Phase 3 — Strategy Migration  
-**Status:** IN PROGRESS (~55%)  
-**Blocked By:** Phase 3.5 and Phase 4C
+**Status:** COMPLETE  
+**Blocked By:** None
 
 **Objective**
 - Migrate computation strategies to CMS-based execution
@@ -71,6 +71,7 @@ It defines **order, discipline, and exit conditions**.
 - All strategies are CMS-capable
 - All strategies are reachable via orchestration
 - Parity coverage exists for all strategies
+- Evidence: `documents/reachability-20260121-160503.json`
 
 ---
 
@@ -87,11 +88,14 @@ It defines **order, discipline, and exit conditions**.
 ---
 
 ### Phase 4 — Parity Validation (CRITICAL)  
-**Status:** PARTIALLY COMPLETE (~80%)  
-**Blocked By:** Phase 4C
+**Status:** COMPLETE  
+**Blocked By:** None
 
 **Objective**
 - Prove CMS behavior is numerically, structurally, and semantically identical to legacy behavior
+
+**Evidence**
+- `documents/reachability-20260121-151124.json`
 
 ---
 
@@ -100,6 +104,7 @@ It defines **order, discipline, and exit conditions**.
 
 **Closure Condition**
 - All parity tests pass deterministically
+- Difference/Ratio parity is N/A (strategies deprecated)
 
 ---
 
@@ -112,12 +117,13 @@ It defines **order, discipline, and exit conditions**.
 ---
 
 #### Phase 4C — Weekly / Temporal Strategy Migration  
-**Status:** IN PROGRESS (BLOCKING)
+**Status:** COMPLETE
 
 **Closure Condition**
 - CMS strategies reachable via services
 - Parity verified in pipeline context
 - Legacy path preserved behind explicit flag
+- Evidence: `documents/reachability-20260121-114215.json`
 
 ---
 
@@ -270,10 +276,7 @@ This policy protects both delivery discipline and long-term trust.
 
 ## 6. Current Critical Path (Authoritative)
 
-1. Close Phase 4C (weekly / temporal parity)
-2. Complete Phase 3 (remaining strategy wiring)
-3. Close Phase 4 (full parity)
-4. Open Phase 6 deliberately
+1. Open Phase 6 deliberately
 
 ---
 

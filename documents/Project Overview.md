@@ -163,12 +163,13 @@ This section reflects **observed implementation state**, not aspiration.
 ---
 
 ### Phase 3 — Strategy Migration  
-**In Progress (~55%)**
+**Complete**
 
-- CMS strategies implemented for a subset of strategies
+- CMS strategies implemented for all strategies
 - Parallel legacy execution maintained
 - Factory consolidation completed
-- Orchestration migration ongoing
+- Orchestration migration complete
+- Parity coverage evidence: `documents/reachability-20260121-160503.json`
 
 ---
 
@@ -182,11 +183,13 @@ This section reflects **observed implementation state**, not aspiration.
 ---
 
 ### Phase 4 — Consumer Adoption & Visualization Integration  
-**In Progress (~80%)**
+**Complete**
 
 - CMS consumed explicitly by visualization pipeline
 - UI migration largely complete
 - Parity treated as a phase obligation
+- Phase 4 parity evidence: `documents/reachability-20260121-151124.json`
+- Difference/Ratio parity marked N/A (strategies deprecated)
 
 ---
 

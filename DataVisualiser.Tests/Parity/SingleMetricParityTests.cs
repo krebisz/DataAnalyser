@@ -14,8 +14,8 @@ public class SingleMetricParityTests
     public void Parity_ShouldPass_WithIdenticalData()
     {
         // Arrange
-        var from = DateTime.UtcNow.AddDays(-10);
-        var to = DateTime.UtcNow;
+        var from = DateTime.Now.Date.AddDays(-10);
+        var to = from.AddDays(9).AddHours(23).AddMinutes(59).AddSeconds(59);
         var interval = TimeSpan.FromDays(1);
 
         // Create matching legacy data
@@ -58,8 +58,8 @@ public class SingleMetricParityTests
     public void Parity_ShouldPass_WithEmptyData()
     {
         // Arrange
-        var from = DateTime.UtcNow.AddDays(-10);
-        var to = DateTime.UtcNow;
+        var from = DateTime.Now.Date.AddDays(-10);
+        var to = from.AddDays(9).AddHours(23).AddMinutes(59).AddSeconds(59);
 
         // Act
         var legacyStrategy = new SingleMetricStrategy(Array.Empty<MetricData>(), "Test", from, to);
@@ -78,8 +78,8 @@ public class SingleMetricParityTests
     public void Parity_ShouldPass_WithNullValues()
     {
         // Arrange
-        var from = DateTime.UtcNow.AddDays(-10);
-        var to = DateTime.UtcNow;
+        var from = DateTime.Now.Date.AddDays(-10);
+        var to = from.AddDays(9).AddHours(23).AddMinutes(59).AddSeconds(59);
         var interval = TimeSpan.FromDays(1);
 
         // Create data with some null values

@@ -11,14 +11,29 @@ public sealed class CmsConversionHelperTests
     {
         var cms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(Start).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(3).WithUnit("kg").Build();
 
-        var from = Start.UtcDateTime.AddDays(1);
-        var to = Start.UtcDateTime.AddDays(1);
+        var from = Start.LocalDateTime.AddDays(1);
+        var to = Start.LocalDateTime.AddDays(1);
 
         var result = CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).ToList();
 
         Assert.Single(result);
         Assert.Equal(from, result[0].NormalizedTimestamp);
         Assert.Equal("kg", result[0].Unit);
+    }
+
+    [Fact]
+    public void ConvertSamplesToHealthMetricData_ShouldUseLocalTimestamps()
+    {
+        var cms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(Start).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(1).Build();
+
+        var sample = cms.Samples.First();
+        var from = sample.Timestamp.LocalDateTime;
+        var to = sample.Timestamp.LocalDateTime;
+
+        var result = CmsConversionHelper.ConvertSamplesToHealthMetricData(cms, from, to).ToList();
+
+        Assert.Single(result);
+        Assert.Equal(sample.Timestamp.LocalDateTime, result[0].NormalizedTimestamp);
     }
 
     [Fact]
