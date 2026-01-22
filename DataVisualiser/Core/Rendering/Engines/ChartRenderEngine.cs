@@ -357,18 +357,16 @@ public sealed class ChartRenderEngine
         return values.Any(value => !double.IsNaN(value) && !double.IsInfinity(value));
     }
 
-    private static (int Valid, int NaN) GetValueStats(IList<double> values)
+    private static(int Valid, int NaN) GetValueStats(IList<double> values)
     {
         var valid = 0;
         var nan = 0;
 
         foreach (var value in values)
-        {
             if (double.IsNaN(value) || double.IsInfinity(value))
                 nan++;
             else
                 valid++;
-        }
 
         return (valid, nan);
     }
@@ -383,9 +381,7 @@ public sealed class ChartRenderEngine
         series.StrokeThickness = lineThickness;
         series.Stroke = new SolidColorBrush(color);
         series.DataLabels = false;
-        series.Fill = isStacked
-                ? new SolidColorBrush(Color.FromArgb(110, color.R, color.G, color.B))
-                : Brushes.Transparent;
+        series.Fill = isStacked ? new SolidColorBrush(Color.FromArgb(110, color.R, color.G, color.B)) : Brushes.Transparent;
         series.LineSmoothness = 0;
 
         if (series is StackedAreaSeries stackedArea)

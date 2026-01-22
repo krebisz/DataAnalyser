@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace DataVisualiser.UI.Controls;
 
 public interface IChartControllerRegistry

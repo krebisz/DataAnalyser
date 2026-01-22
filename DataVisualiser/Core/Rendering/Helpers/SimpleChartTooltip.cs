@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -12,6 +11,8 @@ namespace DataVisualiser.Core.Rendering.Helpers;
 
 public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyPropertyChanged
 {
+    public static readonly DependencyProperty DataProperty = DependencyProperty.Register(nameof(Data), typeof(TooltipData), typeof(SimpleChartTooltip), new PropertyMetadata(null, OnDataChanged));
+
     private readonly StackPanel _root;
     private TooltipSelectionMode? _selectionMode;
 
@@ -19,9 +20,9 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
     {
         _root = new StackPanel
         {
-            Orientation = Orientation.Vertical,
-            Margin = new Thickness(6),
-            Background = new SolidColorBrush(Color.FromRgb(230, 230, 230))
+                Orientation = Orientation.Vertical,
+                Margin = new Thickness(6),
+                Background = new SolidColorBrush(Color.FromRgb(230, 230, 230))
         };
 
         Content = _root;
@@ -32,10 +33,6 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         get => (TooltipData?)GetValue(DataProperty);
         set => SetValue(DataProperty, value);
     }
-
-    public static readonly DependencyProperty DataProperty =
-            DependencyProperty.Register(nameof(Data), typeof(TooltipData), typeof(SimpleChartTooltip),
-                    new PropertyMetadata(null, OnDataChanged));
 
     public TooltipSelectionMode? SelectionMode
     {
@@ -70,9 +67,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
 
         if (data.SharedValue.HasValue)
         {
-            var sharedText = data.XFormatter != null
-                    ? data.XFormatter(data.SharedValue.Value)
-                    : MathHelper.FormatDisplayedValue(data.SharedValue.Value);
+            var sharedText = data.XFormatter != null ? data.XFormatter(data.SharedValue.Value) : MathHelper.FormatDisplayedValue(data.SharedValue.Value);
 
             _root.Children.Add(CreateTextBlock(sharedText, FontWeights.Bold));
         }
@@ -98,9 +93,9 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
     {
         return new TextBlock
         {
-            Text = text,
-            FontWeight = weight,
-            Margin = new Thickness(0, 2, 0, 0)
+                Text = text,
+                FontWeight = weight,
+                Margin = new Thickness(0, 2, 0, 0)
         };
     }
 
@@ -108,24 +103,24 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
     {
         var row = new StackPanel
         {
-            Orientation = Orientation.Horizontal,
-            Margin = new Thickness(0, 2, 0, 0)
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 2, 0, 0)
         };
 
         var key = new Rectangle
         {
-            Width = 10,
-            Height = 10,
-            Fill = color,
-            Stroke = Brushes.Black,
-            StrokeThickness = 0.5,
-            Margin = new Thickness(0, 2, 6, 0)
+                Width = 10,
+                Height = 10,
+                Fill = color,
+                Stroke = Brushes.Black,
+                StrokeThickness = 0.5,
+                Margin = new Thickness(0, 2, 6, 0)
         };
 
         var textBlock = new TextBlock
         {
-            Text = text,
-            FontWeight = FontWeights.Normal
+                Text = text,
+                FontWeight = FontWeights.Normal
         };
 
         row.Children.Add(key);

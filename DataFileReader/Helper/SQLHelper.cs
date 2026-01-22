@@ -1,5 +1,6 @@
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Security.Cryptography;
 using System.Text;
 using DataFileReader.Class;
 using Newtonsoft.Json;
@@ -212,12 +213,8 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                 if (string.IsNullOrWhiteSpace(metricType))
                     continue;
 
-                var resolvedTypeName = string.IsNullOrWhiteSpace(metricTypeName)
-                    ? FormatMetricDisplayName(metricType)
-                    : metricTypeName;
-                var resolvedSubtypeName = string.IsNullOrWhiteSpace(metricSubtypeName)
-                    ? FormatMetricDisplayName(metricSubtype)
-                    : metricSubtypeName;
+                var resolvedTypeName = string.IsNullOrWhiteSpace(metricTypeName) ? FormatMetricDisplayName(metricType) : metricTypeName;
+                var resolvedSubtypeName = string.IsNullOrWhiteSpace(metricSubtypeName) ? FormatMetricDisplayName(metricSubtype) : metricSubtypeName;
 
                 entries.Add((metricType, metricSubtype, resolvedTypeName, resolvedSubtypeName, disabledValue));
             }
@@ -232,8 +229,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
         if (string.IsNullOrWhiteSpace(value))
             return string.Empty;
 
-        var words = value.Replace('_', ' ')
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var words = value.Replace('_', ' ').Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         if (words.Length == 0)
             return string.Empty;
@@ -844,14 +840,12 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
         }
     }
 
-    private static Guid? GetOrCreateMetaDataId(
-            SqlConnection connection,
-            string metadataJson)
+    private static Guid? GetOrCreateMetaDataId(SqlConnection connection, string metadataJson)
     {
         if (string.IsNullOrWhiteSpace(metadataJson))
             return null;
 
-        var hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(metadataJson));
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(metadataJson));
         var referenceValue = ComputeStructuralReferenceValue(metadataJson);
 
         var sql = @"
@@ -898,8 +892,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
 
             HierarchyRefValCalculator.AssignStructuralReferenceValues(hierarchyObjectList.HierarchyObjects);
 
-            var root = hierarchyObjectList.HierarchyObjects.FirstOrDefault(x => x.ParentID is null && x.Path == "Root")
-                       ?? hierarchyObjectList.HierarchyObjects.OrderBy(x => x.Level ?? 0).FirstOrDefault();
+            var root = hierarchyObjectList.HierarchyObjects.FirstOrDefault(x => x.ParentID is null && x.Path == "Root") ?? hierarchyObjectList.HierarchyObjects.OrderBy(x => x.Level ?? 0).FirstOrDefault();
 
             return root?.ReferenceValue;
         }
@@ -1106,16 +1099,11 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                         sqlCommand.Parameters.AddWithValue("@Unit", (object)metric.Unit ?? DBNull.Value);
 
                         // Serialize additional fields to JSON
-                        var metadataJson = metric.AdditionalFields.Count > 0
-                                ? JsonConvert.SerializeObject(metric.AdditionalFields)
-                                : null;
+                        var metadataJson = metric.AdditionalFields.Count > 0 ? JsonConvert.SerializeObject(metric.AdditionalFields) : null;
 
-                        var metaDataId = metadataJson != null
-                                ? GetOrCreateMetaDataId(sqlConnection, metadataJson)
-                                : null;
+                        var metaDataId = metadataJson != null ? GetOrCreateMetaDataId(sqlConnection, metadataJson) : null;
 
-                        sqlCommand.Parameters.AddWithValue("@MetaDataId",
-                                (object?)metaDataId ?? DBNull.Value);
+                        sqlCommand.Parameters.AddWithValue("@MetaDataId", (object?)metaDataId ?? DBNull.Value);
 
 
                         sqlCommand.ExecuteNonQuery();
@@ -1300,12 +1288,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                 if (!seenKeys.Add(combinedKey))
                     continue;
 
-                sanitizedEntries.Add((
-                    metricType,
-                    metricSubtype,
-                    FormatMetricDisplayName(metricType),
-                    FormatMetricDisplayName(metricSubtype),
-                    false));
+                sanitizedEntries.Add((metricType, metricSubtype, FormatMetricDisplayName(metricType), FormatMetricDisplayName(metricSubtype), false));
             }
 
             if (sanitizedEntries.Count > 0)
@@ -1317,9 +1300,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
         }
     }
 
-    private static void EnsureHealthMetricsCanonicalEntries(
-        SqlConnection connection,
-        IEnumerable<(string MetricType, string MetricSubtype, string MetricTypeName, string MetricSubtypeName, bool Disabled)> entries)
+    private static void EnsureHealthMetricsCanonicalEntries(SqlConnection connection, IEnumerable<(string MetricType, string MetricSubtype, string MetricTypeName, string MetricSubtypeName, bool Disabled)> entries)
     {
         try
         {
@@ -1341,12 +1322,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                 if (!seenKeys.Add(combinedKey))
                     continue;
 
-                sanitizedEntries.Add((
-                    metricType,
-                    metricSubtype,
-                    string.IsNullOrWhiteSpace(entry.MetricTypeName) ? FormatMetricDisplayName(metricType) : entry.MetricTypeName.Trim(),
-                    string.IsNullOrWhiteSpace(entry.MetricSubtypeName) ? FormatMetricDisplayName(metricSubtype) : entry.MetricSubtypeName.Trim(),
-                    entry.Disabled));
+                sanitizedEntries.Add((metricType, metricSubtype, string.IsNullOrWhiteSpace(entry.MetricTypeName) ? FormatMetricDisplayName(metricType) : entry.MetricTypeName.Trim(), string.IsNullOrWhiteSpace(entry.MetricSubtypeName) ? FormatMetricDisplayName(metricSubtype) : entry.MetricSubtypeName.Trim(), entry.Disabled));
             }
 
             if (sanitizedEntries.Count == 0)
@@ -1557,40 +1533,14 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
         return results;
     }
 
-    public static void InsertHealthMetricsHour(
-            string? metricType = null,
-            string? metricSubtype = null,
-            DateTime? fromDate = null,
-            DateTime? toDate = null,
-            bool overwriteExisting = false)
+    public static void InsertHealthMetricsHour(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null, bool overwriteExisting = false)
     {
-        ExecuteHealthMetricsAggregation(
-                "[dbo].[HealthMetricsHour]",
-                "DATEADD(HOUR, DATEDIFF(HOUR, 0, NormalizedTimestamp), 0)",
-                "HourStart",
-                metricType,
-                metricSubtype,
-                fromDate,
-                toDate,
-                overwriteExisting);
+        ExecuteHealthMetricsAggregation("[dbo].[HealthMetricsHour]", "DATEADD(HOUR, DATEDIFF(HOUR, 0, NormalizedTimestamp), 0)", "HourStart", metricType, metricSubtype, fromDate, toDate, overwriteExisting);
     }
 
-    public static void InsertHealthMetricsDay(
-            string? metricType = null,
-            string? metricSubtype = null,
-            DateTime? fromDate = null,
-            DateTime? toDate = null,
-            bool overwriteExisting = false)
+    public static void InsertHealthMetricsDay(string? metricType = null, string? metricSubtype = null, DateTime? fromDate = null, DateTime? toDate = null, bool overwriteExisting = false)
     {
-        ExecuteHealthMetricsAggregation(
-                "[dbo].[HealthMetricsDay]",
-                "DATEADD(DAY, DATEDIFF(DAY, 0, NormalizedTimestamp), 0)",
-                "DayStart",
-                metricType,
-                metricSubtype,
-                fromDate,
-                toDate,
-                overwriteExisting);
+        ExecuteHealthMetricsAggregation("[dbo].[HealthMetricsDay]", "DATEADD(DAY, DATEDIFF(DAY, 0, NormalizedTimestamp), 0)", "DayStart", metricType, metricSubtype, fromDate, toDate, overwriteExisting);
     }
 
 

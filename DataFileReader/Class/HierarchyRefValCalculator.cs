@@ -10,10 +10,7 @@ public static class HierarchyRefValCalculator
         if (nodes is null)
             throw new ArgumentNullException(nameof(nodes));
 
-        var childrenIndex = nodes
-            .Where(n => n.ParentID.HasValue)
-            .GroupBy(n => n.ParentID!.Value)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        var childrenIndex = nodes.Where(n => n.ParentID.HasValue).GroupBy(n => n.ParentID!.Value).ToDictionary(g => g.Key, g => g.ToList());
 
         var memo = new Dictionary<int, string>();
 
@@ -21,10 +18,7 @@ public static class HierarchyRefValCalculator
             node.ReferenceValue = ComputeRefVal(node, childrenIndex, memo);
     }
 
-    private static string ComputeRefVal(
-        HierarchyObject node,
-        IReadOnlyDictionary<int, List<HierarchyObject>> childrenIndex,
-        Dictionary<int, string> memo)
+    private static string ComputeRefVal(HierarchyObject node, IReadOnlyDictionary<int, List<HierarchyObject>> childrenIndex, Dictionary<int, string> memo)
     {
         if (memo.TryGetValue(node.ID, out var cached))
             return cached;
@@ -51,36 +45,22 @@ public static class HierarchyRefValCalculator
         return refVal;
     }
 
-    private static string ComputeContainerPayload(
-        HierarchyObject node,
-        IReadOnlyDictionary<int, List<HierarchyObject>> childrenIndex,
-        Dictionary<int, string> memo)
+    private static string ComputeContainerPayload(HierarchyObject node, IReadOnlyDictionary<int, List<HierarchyObject>> childrenIndex, Dictionary<int, string> memo)
     {
         childrenIndex.TryGetValue(node.ID, out var children);
         children ??= new List<HierarchyObject>();
 
-        var childRefs = children
-            .Select(c => (Name: c.Name, Ref: ComputeRefVal(c, childrenIndex, memo)))
-            .OrderBy(x => x.Name, StringComparer.Ordinal)
-            .ThenBy(x => x.Ref, StringComparer.Ordinal)
-            .Select(x => x.Ref)
-            .ToList();
+        var childRefs = children.Select(c => (c.Name, Ref: ComputeRefVal(c, childrenIndex, memo))).OrderBy(x => x.Name, StringComparer.Ordinal).ThenBy(x => x.Ref, StringComparer.Ordinal).Select(x => x.Ref).ToList();
 
         return $"C|{node.Name}|{childRefs.Count}|{string.Join(",", childRefs)}";
     }
 
-    private static string ComputeArrayPayload(
-        HierarchyObject node,
-        IReadOnlyDictionary<int, List<HierarchyObject>> childrenIndex,
-        Dictionary<int, string> memo)
+    private static string ComputeArrayPayload(HierarchyObject node, IReadOnlyDictionary<int, List<HierarchyObject>> childrenIndex, Dictionary<int, string> memo)
     {
         childrenIndex.TryGetValue(node.ID, out var children);
         children ??= new List<HierarchyObject>();
 
-        var childRefs = children
-            .OrderBy(c => c.ID)
-            .Select(c => ComputeRefVal(c, childrenIndex, memo))
-            .ToList();
+        var childRefs = children.OrderBy(c => c.ID).Select(c => ComputeRefVal(c, childrenIndex, memo)).ToList();
 
         return $"A|{node.Name}|{childRefs.Count}|{string.Join(",", childRefs)}";
     }
@@ -96,4 +76,3 @@ public static class HierarchyRefValCalculator
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }
-

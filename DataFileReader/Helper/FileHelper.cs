@@ -1,20 +1,15 @@
-﻿using System.IO;
-
-namespace DataFileReader.Helper;
+﻿namespace DataFileReader.Helper;
 
 public static class FileHelper
 {
     public static List<string> GetFileList(string directory)
     {
-        List<string> fileList = new List<string>();
+        var fileList = new List<string>();
 
-        string[] files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+        var files = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-        foreach (string file in files)
-        {
-            
+        foreach (var file in files)
             fileList.Add(file);
-        }
 
         return fileList;
     }
@@ -56,15 +51,14 @@ public static class FileHelper
 
     public static int DeleteEmptyFiles(List<string> fileList)
     {
-        int filesDeleted = 0;
+        var filesDeleted = 0;
 
         foreach (var file in fileList)
-        {
             try
             {
                 if (File.Exists(file))
                 {
-                    long sizeInBytes = new FileInfo(file).Length;
+                    var sizeInBytes = new FileInfo(file).Length;
 
                     if (sizeInBytes == 0)
                     {
@@ -77,7 +71,6 @@ public static class FileHelper
             {
                 // Ignore errors
             }
-        }
 
         return filesDeleted;
     }

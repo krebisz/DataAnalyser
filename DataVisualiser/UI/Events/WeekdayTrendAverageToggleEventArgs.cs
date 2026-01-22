@@ -1,5 +1,3 @@
-using System;
-
 namespace DataVisualiser.UI.Events;
 
 public sealed class WeekdayTrendAverageToggleEventArgs : EventArgs

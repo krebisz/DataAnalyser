@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.UI;
 using DataVisualiser.UI.Defaults;
 
 namespace DataVisualiser.UI.Controls;
@@ -24,15 +23,15 @@ public partial class BarPieChartController : UserControl, IChartPanelScaffold
         PanelController.SetBehavioralControls(BehavioralControlsPanel);
     }
 
-    public ChartPanelController Panel => PanelController;
-
-    public Button ToggleButton => PanelController.ToggleButtonControl;
-
     public RadioButton BarModeRadio => BarModeRadioControl;
 
     public RadioButton PieModeRadio => PieModeRadioControl;
 
     public ComboBox BucketCountCombo => BucketCountComboControl;
+
+    public ChartPanelController Panel => PanelController;
+
+    public Button ToggleButton => PanelController.ToggleButtonControl;
 
     public string Title
     {
@@ -53,8 +52,6 @@ public partial class BarPieChartController : UserControl, IChartPanelScaffold
     }
 
     public event EventHandler? ToggleRequested;
-    public event EventHandler? DisplayModeChanged;
-    public event EventHandler? BucketCountChanged;
 
     public void SetHeaderControls(UIElement? controls)
     {
@@ -70,4 +67,7 @@ public partial class BarPieChartController : UserControl, IChartPanelScaffold
     {
         PanelController.SetChartContent(chart);
     }
+
+    public event EventHandler? DisplayModeChanged;
+    public event EventHandler? BucketCountChanged;
 }

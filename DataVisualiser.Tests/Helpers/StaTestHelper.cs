@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-
 namespace DataVisualiser.Tests.Helpers;
 
 public static class StaTestHelper

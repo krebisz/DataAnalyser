@@ -51,13 +51,17 @@ public sealed class LegendToggleManager
     {
         var itemsControl = new ItemsControl
         {
-            HorizontalAlignment = HorizontalAlignment.Left
+                HorizontalAlignment = HorizontalAlignment.Left
         };
 
         itemsControl.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(StackPanel)));
 
         var toggleFactory = new FrameworkElementFactory(typeof(ToggleButton));
-        toggleFactory.SetBinding(ToggleButton.IsCheckedProperty, new Binding(nameof(LegendItem.IsVisible)) { Mode = BindingMode.TwoWay });
+        toggleFactory.SetBinding(ToggleButton.IsCheckedProperty,
+                new Binding(nameof(LegendItem.IsVisible))
+                {
+                        Mode = BindingMode.TwoWay
+                });
         toggleFactory.AddHandler(ButtonBase.ClickEvent, toggleHandler);
         toggleFactory.SetValue(Control.BackgroundProperty, Brushes.Transparent);
         toggleFactory.SetValue(Control.BorderThicknessProperty, new Thickness(0));
@@ -87,7 +91,7 @@ public sealed class LegendToggleManager
 
         itemsControl.ItemTemplate = new DataTemplate
         {
-            VisualTree = toggleFactory
+                VisualTree = toggleFactory
         };
 
         return itemsControl;
@@ -97,13 +101,13 @@ public sealed class LegendToggleManager
     {
         return new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x11, 0x11, 0x11)),
-            CornerRadius = new CornerRadius(4),
-            Padding = new Thickness(6),
-            Margin = new Thickness(0, 10, 10, 0),
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Top,
-            Child = itemsControl
+                Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x11, 0x11, 0x11)),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(6),
+                Margin = new Thickness(0, 10, 10, 0),
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Child = itemsControl
         };
     }
 

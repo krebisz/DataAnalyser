@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -26,23 +22,17 @@ namespace DataVisualiser.UI.Controls;
 
 public sealed class TransformDataPanelControllerAdapter : IChartController, IChartCacheController, ITransformPanelControllerExtras, ICartesianChartSurface
 {
-    private readonly TransformDataPanelController _controller;
-    private readonly MainWindowViewModel _viewModel;
-    private readonly Func<bool> _isInitializing;
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly MetricSelectionService _metricSelectionService;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
+    private readonly TransformDataPanelController _controller;
+    private readonly Func<bool> _isInitializing;
+    private readonly MetricSelectionService _metricSelectionService;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly MainWindowViewModel _viewModel;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
 
-    public TransformDataPanelControllerAdapter(
-        TransformDataPanelController controller,
-        MainWindowViewModel viewModel,
-        Func<bool> isInitializing,
-        Func<IDisposable> beginUiBusyScope,
-        MetricSelectionService metricSelectionService,
-        ChartUpdateCoordinator chartUpdateCoordinator)
+    public TransformDataPanelControllerAdapter(TransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ChartUpdateCoordinator chartUpdateCoordinator)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -52,12 +42,18 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
     }
 
+    public CartesianChart Chart => _controller.ChartTransformResult;
+
+    public void ClearCache()
+    {
+        _subtypeCache.Clear();
+    }
+
     public string Key => "Transform";
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => false;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
-    public LiveCharts.Wpf.CartesianChart Chart => _controller.ChartTransformResult;
 
     public void Initialize()
     {
@@ -80,11 +76,6 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
     public void ResetZoom()
     {
         ChartHelper.ResetZoom(_controller.ChartTransformResult);
-    }
-
-    public void ClearCache()
-    {
-        _subtypeCache.Clear();
     }
 
     public void CompleteSelectionsPendingLoad()
@@ -271,8 +262,8 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
                        .OrderBy(d => d.NormalizedTimestamp)
                        .Select(d => new
                        {
-                           Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                           Value = d.Value!.Value.ToString("F4")
+                               Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                               Value = d.Value!.Value.ToString("F4")
                        })
                        .ToList();
 
@@ -345,12 +336,9 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
     {
         var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySeries;
 
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
-            ? primaryCurrent
-            : selectedSeries[0];
+        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
 
-        var primaryItem = FindSeriesComboItem(_controller.TransformPrimarySubtypeCombo, primarySelection)
-            ?? _controller.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+        var primaryItem = FindSeriesComboItem(_controller.TransformPrimarySubtypeCombo, primarySelection) ?? _controller.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
         _controller.TransformPrimarySubtypeCombo.SelectedItem = primaryItem;
         _viewModel.ChartState.SelectedTransformPrimarySeries = primarySelection;
@@ -365,12 +353,9 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
 
             var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySeries;
 
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
-                ? secondaryCurrent
-                : selectedSeries[1];
+            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
 
-            var secondaryItem = FindSeriesComboItem(_controller.TransformSecondarySubtypeCombo, secondarySelection)
-                ?? _controller.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            var secondaryItem = FindSeriesComboItem(_controller.TransformSecondarySubtypeCombo, secondarySelection) ?? _controller.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
             _controller.TransformSecondarySubtypeCombo.SelectedItem = secondaryItem;
             _viewModel.ChartState.SelectedTransformSecondarySeries = secondarySelection;
@@ -426,15 +411,15 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
             Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
             var op = operation switch
             {
-                "Log" => UnaryOperators.Logarithm,
-                "Sqrt" => UnaryOperators.SquareRoot,
-                _ => x => x
+                    "Log" => UnaryOperators.Logarithm,
+                    "Sqrt" => UnaryOperators.SquareRoot,
+                    _ => x => x
             };
             var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
             computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
             metricsList = new List<IReadOnlyList<MetricData>>
             {
-                allDataList
+                    allDataList
             };
         }
         else
@@ -442,7 +427,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
             Debug.WriteLine($"[Transform] UNARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
             metricsList = new List<IReadOnlyList<MetricData>>
             {
-                allDataList
+                    allDataList
             };
             computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
             Debug.WriteLine($"[Transform] UNARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
@@ -560,22 +545,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
         var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
         var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
-            _controller.ChartTransformResult,
-            strategy,
-            label,
-            null,
-            400,
-            transformContext.PrimaryMetricType ?? transformContext.MetricType,
-            transformContext.PrimarySubtype,
-            transformContext.SecondarySubtype,
-            operationType,
-            isOperationChart,
-            transformContext.SecondaryMetricType,
-            displayPrimaryMetricType: transformContext.DisplayPrimaryMetricType,
-            displaySecondaryMetricType: transformContext.DisplaySecondaryMetricType,
-            displayPrimarySubtype: transformContext.DisplayPrimarySubtype,
-            displaySecondarySubtype: transformContext.DisplaySecondarySubtype);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(_controller.ChartTransformResult, strategy, label, null, 400, transformContext.PrimaryMetricType ?? transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart, transformContext.SecondaryMetricType, transformContext.DisplayPrimaryMetricType, transformContext.DisplaySecondaryMetricType, transformContext.DisplayPrimarySubtype, transformContext.DisplaySecondarySubtype);
     }
 
     private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation, ChartDataContext transformContext)
@@ -601,12 +571,12 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
         return data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
     }
 
-    private static (List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
+    private static(List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
     {
         var metricsList = new List<IReadOnlyList<MetricData>>
         {
-            alignedData.Item1,
-            alignedData.Item2
+                alignedData.Item1,
+                alignedData.Item2
         };
 
         var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
@@ -617,10 +587,10 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
 
             var op = operation switch
             {
-                "Add" => BinaryOperators.Sum,
-                "Subtract" => BinaryOperators.Difference,
-                "Divide" => BinaryOperators.Ratio,
-                _ => (a, b) => a
+                    "Add" => BinaryOperators.Sum,
+                    "Subtract" => BinaryOperators.Difference,
+                    "Divide" => BinaryOperators.Ratio,
+                    _ => (a, b) => a
             };
 
             var values1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
@@ -659,21 +629,21 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
 
         var transformContext = new ChartDataContext
         {
-            Data1 = primaryData,
-            Data2 = secondaryData,
-            DisplayName1 = displayName1,
-            DisplayName2 = displayName2,
-            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-            PrimarySubtype = primarySelection?.Subtype,
-            SecondarySubtype = secondarySelection?.Subtype,
-            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-            From = ctx.From,
-            To = ctx.To
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                DisplayName1 = displayName1,
+                DisplayName2 = displayName2,
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
         };
 
         return (primaryData, secondaryData, transformContext);
@@ -790,15 +760,14 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
     {
         return new ComboBoxItem
         {
-            Content = selection.DisplayName,
-            Tag = selection
+                Content = selection.DisplayName,
+                Tag = selection
         };
     }
 
     private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
     {
-        return combo.Items.OfType<ComboBoxItem>()
-            .FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
+        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
     }
 
     private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)

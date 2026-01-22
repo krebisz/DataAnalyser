@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Linq;
+using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -12,7 +8,6 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
-using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
@@ -23,27 +18,19 @@ namespace DataVisualiser.UI.Controls;
 
 public sealed class NormalizedChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IChartSeriesAvailability, ICartesianChartSurface
 {
-    private readonly NormalizedChartController _controller;
-    private readonly MainWindowViewModel _viewModel;
-    private readonly Func<bool> _isInitializing;
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly MetricSelectionService _metricSelectionService;
-    private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
+    private readonly NormalizedChartController _controller;
+    private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
+    private readonly Func<bool> _isInitializing;
+    private readonly MetricSelectionService _metricSelectionService;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, ICanonicalMetricSeries?> _subtypeCmsCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombos;
 
-    public NormalizedChartControllerAdapter(
-        NormalizedChartController controller,
-        MainWindowViewModel viewModel,
-        Func<bool> isInitializing,
-        Func<IDisposable> beginUiBusyScope,
-        MetricSelectionService metricSelectionService,
-        Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator,
-        ChartUpdateCoordinator chartUpdateCoordinator,
-        Func<IStrategyCutOverService?> getStrategyCutOverService)
+    public NormalizedChartControllerAdapter(NormalizedChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, ChartUpdateCoordinator chartUpdateCoordinator, Func<IStrategyCutOverService?> getStrategyCutOverService)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -55,12 +42,19 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
         _getStrategyCutOverService = getStrategyCutOverService ?? throw new ArgumentNullException(nameof(getStrategyCutOverService));
     }
 
+    public CartesianChart Chart => _controller.Chart;
+
+    public void ClearCache()
+    {
+        _subtypeCache.Clear();
+        _subtypeCmsCache.Clear();
+    }
+
     public string Key => "Norm";
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => true;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
-    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
 
     public void Initialize()
     {
@@ -84,20 +78,6 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
     public bool HasSeries(ChartState state)
     {
         return HasSeriesInternal(_controller.Chart.Series);
-    }
-
-    private static bool HasSeriesInternal(System.Collections.IEnumerable? series)
-    {
-        if (series == null)
-            return false;
-
-        return series.Cast<object>().Any();
-    }
-
-    public void ClearCache()
-    {
-        _subtypeCache.Clear();
-        _subtypeCmsCache.Clear();
     }
 
     public void UpdateSubtypeOptions()
@@ -125,6 +105,14 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
         {
             _isUpdatingSubtypeCombos = false;
         }
+    }
+
+    private static bool HasSeriesInternal(IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     public void OnToggleRequested(object? sender, EventArgs e)
@@ -233,23 +221,23 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
 
         var normalizedContext = new ChartDataContext
         {
-            Data1 = primaryData,
-            Data2 = secondaryData,
-            PrimaryCms = primaryCms,
-            SecondaryCms = secondaryCms,
-            DisplayName1 = displayName1,
-            DisplayName2 = displayName2,
-            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-            PrimarySubtype = primarySelection?.Subtype,
-            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-            SecondarySubtype = secondarySelection?.Subtype,
-            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-            From = ctx.From,
-            To = ctx.To
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                PrimaryCms = primaryCms,
+                SecondaryCms = secondaryCms,
+                DisplayName1 = displayName1,
+                DisplayName2 = displayName2,
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
         };
 
         return (primaryData, secondaryData, normalizedContext);
@@ -353,13 +341,13 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = data1,
-            LegacyData2 = data2,
-            Label1 = label1,
-            Label2 = label2,
-            From = from,
-            To = to,
-            NormalizationMode = normalizationMode
+                LegacyData1 = data1,
+                LegacyData2 = data2,
+                Label1 = label1,
+                Label2 = label2,
+                From = from,
+                To = to,
+                NormalizationMode = normalizationMode
         };
 
         return strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
@@ -403,12 +391,9 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
     private void UpdatePrimaryNormalizedSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
     {
         var primaryCurrent = _viewModel.ChartState.SelectedNormalizedPrimarySeries;
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
-            ? primaryCurrent
-            : selectedSeries[0];
+        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
 
-        var primaryItem = FindSeriesComboItem(_controller.NormalizedPrimarySubtypeCombo, primarySelection)
-            ?? _controller.NormalizedPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+        var primaryItem = FindSeriesComboItem(_controller.NormalizedPrimarySubtypeCombo, primarySelection) ?? _controller.NormalizedPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
         _controller.NormalizedPrimarySubtypeCombo.SelectedItem = primaryItem;
         _viewModel.ChartState.SelectedNormalizedPrimarySeries = primarySelection;
@@ -422,12 +407,9 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
             _controller.NormalizedSecondarySubtypeCombo.IsEnabled = true;
 
             var secondaryCurrent = _viewModel.ChartState.SelectedNormalizedSecondarySeries;
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
-                ? secondaryCurrent
-                : selectedSeries[1];
+            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
 
-            var secondaryItem = FindSeriesComboItem(_controller.NormalizedSecondarySubtypeCombo, secondarySelection)
-                ?? _controller.NormalizedSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            var secondaryItem = FindSeriesComboItem(_controller.NormalizedSecondarySubtypeCombo, secondarySelection) ?? _controller.NormalizedSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
             _controller.NormalizedSecondarySubtypeCombo.SelectedItem = secondaryItem;
             _viewModel.ChartState.SelectedNormalizedSecondarySeries = secondarySelection;
@@ -445,15 +427,14 @@ public sealed class NormalizedChartControllerAdapter : IChartController, IChartS
     {
         return new ComboBoxItem
         {
-            Content = selection.DisplayName,
-            Tag = selection
+                Content = selection.DisplayName,
+                Tag = selection
         };
     }
 
     private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
     {
-        return combo.Items.OfType<ComboBoxItem>()
-            .FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
+        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
     }
 
     private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)

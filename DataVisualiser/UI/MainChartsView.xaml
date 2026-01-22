@@ -152,7 +152,7 @@
                 <!-- <controls:DiffRatioChartController x:Name="DiffRatioChartController" /> -->
 
                 <!-- ========== CHART BAR / PIE ========== -->
-                 <controls:BarPieChartController x:Name="BarPieChartController" /> 
+                <controls:BarPieChartController x:Name="BarPieChartController" />
 
                 <!-- ========== CHART WEEKDAY TREND ========== -->
                 <controls:WeekdayTrendChartController x:Name="WeekdayTrendChartController" />

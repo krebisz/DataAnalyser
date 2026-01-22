@@ -1,7 +1,7 @@
 using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Core.Validation.Parity;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.Core.Validation.Parity;
 
 namespace DataVisualiser.Tests.Parity;
 

@@ -1,5 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 
+namespace DataFileReader.Class;
+
 public class HierarchyObject
 {
     public HierarchyObject() : this(0, string.Empty, string.Empty, 0, null, string.Empty)

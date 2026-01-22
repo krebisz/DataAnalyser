@@ -1,5 +1,5 @@
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
-using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
@@ -11,7 +11,6 @@ using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
-using DataFileReader.Canonical;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration;
@@ -30,9 +29,9 @@ public sealed class ChartRenderingOrchestrator
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
     private readonly string? _connectionString;
     private readonly HourlyDistributionService _hourlyDistributionService;
+    private readonly MetricSelectionService? _metricSelectionService;
     private readonly IStrategyCutOverService _strategyCutOverService;
     private readonly WeeklyDistributionService _weeklyDistributionService;
-    private readonly MetricSelectionService? _metricSelectionService;
 
     public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
     {
@@ -51,8 +50,8 @@ public sealed class ChartRenderingOrchestrator
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _connectionString = connectionString;
-
     }
+
     /// <summary>
     ///     Renders all charts based on the provided context and visibility state.
     /// </summary>
@@ -207,7 +206,7 @@ public sealed class ChartRenderingOrchestrator
         await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels, isStacked, isCumulative);
     }
 
-    private static (bool IsStacked, bool IsCumulative) ResolveMainChartDisplayMode(MainChartDisplayMode mode)
+    private static(bool IsStacked, bool IsCumulative) ResolveMainChartDisplayMode(MainChartDisplayMode mode)
     {
         return mode switch
         {
@@ -319,10 +318,16 @@ public sealed class ChartRenderingOrchestrator
 
         if (TryBuildDiffRatioSeries(ctx, isDifferenceMode, out var derivedData, out var derivedValues))
         {
-            var derivedLabel = TransformExpressionEvaluator.GenerateTransformLabel(operation, new List<IReadOnlyList<MetricData>> { ctx.Data1, ctx.Data2 }, ctx);
+            var derivedLabel = TransformExpressionEvaluator.GenerateTransformLabel(operation,
+                    new List<IReadOnlyList<MetricData>>
+                    {
+                            ctx.Data1,
+                            ctx.Data2
+                    },
+                    ctx);
             var derivedStrategy = new TransformResultStrategy(derivedData, derivedValues, derivedLabel, ctx.From, ctx.To);
 
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, derivedStrategy, derivedLabel, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, derivedStrategy, derivedLabel, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, ctx.DisplayPrimaryMetricType, ctx.DisplaySecondaryMetricType, ctx.DisplayPrimarySubtype, ctx.DisplaySecondarySubtype);
             return;
         }
 
@@ -338,7 +343,7 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = new TransformResultStrategy(alignedData.Item1, computation.Results, label, ctx.From, ctx.To);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, ctx.DisplayPrimaryMetricType, ctx.DisplaySecondaryMetricType, ctx.DisplayPrimarySubtype, ctx.DisplaySecondarySubtype);
     }
 
     private static bool TryBuildDiffRatioSeries(ChartDataContext ctx, bool isDifferenceMode, out List<MetricData> data, out List<double> values)
@@ -355,10 +360,7 @@ public sealed class ChartRenderingOrchestrator
         if (count == 0)
             return false;
 
-        var sample = ctx.Data1.FirstOrDefault(d => d.Value.HasValue)
-                     ?? ctx.Data2.FirstOrDefault(d => d.Value.HasValue)
-                     ?? ctx.Data1.FirstOrDefault()
-                     ?? ctx.Data2.FirstOrDefault();
+        var sample = ctx.Data1.FirstOrDefault(d => d.Value.HasValue) ?? ctx.Data2.FirstOrDefault(d => d.Value.HasValue) ?? ctx.Data1.FirstOrDefault() ?? ctx.Data2.FirstOrDefault();
 
         data = new List<MetricData>(count);
         values = new List<double>(count);
@@ -495,14 +497,7 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
     /// </summary>
-    private async Task LoadAdditionalSubtypesAsync(
-            List<IEnumerable<MetricData>> series,
-            List<string> labels,
-            string? metricType,
-            DateTime from,
-            DateTime to,
-            IReadOnlyList<MetricSeriesSelection>? selectedSeries,
-            string? resolutionTableName)
+    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, string? metricType, DateTime from, DateTime to, IReadOnlyList<MetricSeriesSelection>? selectedSeries, string? resolutionTableName)
     {
         if (selectedSeries == null || selectedSeries.Count <= 2 || string.IsNullOrEmpty(_connectionString))
             return;
@@ -528,13 +523,7 @@ public sealed class ChartRenderingOrchestrator
 
             try
             {
-                var (primary, _) = await metricSelectionService.LoadMetricDataAsync(
-                        selection.MetricType,
-                        selection.QuerySubtype,
-                        null,
-                        from,
-                        to,
-                        tableName);
+                var (primary, _) = await metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
 
                 if (primary.Any())
                 {
@@ -548,5 +537,4 @@ public sealed class ChartRenderingOrchestrator
             }
         }
     }
-
 }

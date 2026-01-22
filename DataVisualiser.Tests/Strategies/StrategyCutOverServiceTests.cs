@@ -1,3 +1,4 @@
+using System.Reflection;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services.Abstractions;
@@ -6,7 +7,6 @@ using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Core.Validation.Parity;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.State;
 using Moq;
 
 namespace DataVisualiser.Tests.Strategies;
@@ -135,20 +135,24 @@ public sealed class StrategyCutOverServiceTests
     public void GetParityHarness_ShouldReturnChartComputationHarness_ForCoreStrategies()
     {
         var service = CreateService();
-        var method = typeof(StrategyCutOverService).GetMethod("GetParityHarness", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var method = typeof(StrategyCutOverService).GetMethod("GetParityHarness", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.NotNull(method);
 
         var types = new[]
         {
-            StrategyType.SingleMetric,
-            StrategyType.MultiMetric,
-            StrategyType.Normalized,
-            StrategyType.WeekdayTrend
+                StrategyType.SingleMetric,
+                StrategyType.MultiMetric,
+                StrategyType.Normalized,
+                StrategyType.WeekdayTrend
         };
 
         foreach (var strategyType in types)
         {
-            var harness = method!.Invoke(service, new object?[] { strategyType });
+            var harness = method!.Invoke(service,
+                    new object?[]
+                    {
+                            strategyType
+                    });
             Assert.IsType<ChartComputationParityHarness>(harness);
         }
     }
@@ -162,8 +166,8 @@ public sealed class StrategyCutOverServiceTests
     private sealed class CmsConfigurationScope : IDisposable
     {
         private readonly bool _useCmsData;
-        private readonly bool _useCmsForSingleMetric;
         private readonly bool _useCmsForCombinedMetric;
+        private readonly bool _useCmsForSingleMetric;
 
         public CmsConfigurationScope(bool useCmsData, bool useCmsForSingleMetric, bool useCmsForCombinedMetric = true)
         {

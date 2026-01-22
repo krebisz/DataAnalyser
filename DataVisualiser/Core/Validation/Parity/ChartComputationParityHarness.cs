@@ -53,8 +53,8 @@ public sealed class ChartComputationParityHarness : IStrategyParityHarness
     {
         var failure = new ParityFailure
         {
-            Layer = layer,
-            Message = message
+                Layer = layer,
+                Message = message
         };
 
         if (ctx.Mode == ParityMode.Strict)

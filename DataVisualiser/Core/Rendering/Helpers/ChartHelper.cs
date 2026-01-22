@@ -1094,14 +1094,14 @@ public static class ChartHelper
         if (range <= 0 || double.IsNaN(range) || double.IsInfinity(range))
             return null;
 
-        var midValue = minValue < 0 && maxValue > 0 ? 0 : minValue + (range / 2.0);
+        var midValue = minValue < 0 && maxValue > 0 ? 0 : minValue + range / 2.0;
         var midOffset = (midValue - minValue) / range;
 
         var brush = new LinearGradientBrush
         {
-            StartPoint = new Point(0, 1),
-            EndPoint = new Point(0, 0),
-            SpreadMethod = GradientSpreadMethod.Pad
+                StartPoint = new Point(0, 1),
+                EndPoint = new Point(0, 0),
+                SpreadMethod = GradientSpreadMethod.Pad
         };
 
         brush.GradientStops.Add(new GradientStop(Color.FromRgb(0x2B, 0x6C, 0xB0), 0.0));
@@ -1159,18 +1159,4 @@ public static class ChartHelper
 
         chart.Height = calculatedHeight;
     }
-}
-
-public sealed class ChartStackingTooltipState
-{
-    public ChartStackingTooltipState(bool includeTotal, bool isCumulative, IReadOnlyList<SeriesResult>? originalSeries = null)
-    {
-        IncludeTotal = includeTotal;
-        IsCumulative = isCumulative;
-        OriginalSeries = originalSeries;
-    }
-
-    public bool IncludeTotal { get; }
-    public bool IsCumulative { get; }
-    public IReadOnlyList<SeriesResult>? OriginalSeries { get; }
 }

@@ -64,4 +64,3 @@ public class HierarchyRefValTests
         Assert.NotEqual(n1.ReferenceValue, n2.ReferenceValue);
     }
 }
-

@@ -34,7 +34,9 @@ public class WeeklyDistributionService : BaseDistributionService
         Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> tooltipData;
         Dictionary<int, double>? averages = null;
         if (useFrequencyShading)
+        {
             tooltipData = CalculateTooltipData(result, extendedResult, intervalCount);
+        }
         else
         {
             tooltipData = CalculateSimpleRangeTooltipData(result, extendedResult);

@@ -2,8 +2,9 @@
 using System.Data;
 using DataFileReader.Class;
 using DataFileReader.Helper;
-using DataFileReader.Parsers;
 using Newtonsoft.Json.Linq;
+
+namespace DataFileReader.Parsers;
 
 public class LegacyJsonParser : IHealthFileParser
 {

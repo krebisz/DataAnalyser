@@ -4,8 +4,6 @@ using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Data.QueryBuilders;
 using DataVisualiser.Shared.Models;
 using Microsoft.Data.SqlClient;
-using DataVisualiser.Core.Data;
-
 
 namespace DataVisualiser.Core.Data.Repositories;
 
@@ -152,7 +150,11 @@ public class DataFetcher
                 WHERE (@MetricType IS NULL OR c.MetricType = @MetricType)
                 ORDER BY c.MetricType, c.MetricSubtype";
 
-        var rows = await conn.QueryAsync<HealthMetricsCountEntry>(sql, new { MetricType = metricType });
+        var rows = await conn.QueryAsync<HealthMetricsCountEntry>(sql,
+                new
+                {
+                        MetricType = metricType
+                });
         return rows.ToList();
     }
 
@@ -394,7 +396,11 @@ public class DataFetcher
                       AND c.RecordCount > 0
                     ORDER BY c.MetricSubtype";
 
-            var rows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(sql, new { MetricType = baseType });
+            var rows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(sql,
+                    new
+                    {
+                            MetricType = baseType
+                    });
             return rows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
         }
 
@@ -411,7 +417,11 @@ public class DataFetcher
                 GROUP BY t.MetricSubtype
                 ORDER BY t.MetricSubtype";
 
-        var tableRows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(tableSql, new { MetricType = baseType });
+        var tableRows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(tableSql,
+                new
+                {
+                        MetricType = baseType
+                });
         return tableRows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
     }
 
@@ -532,16 +542,7 @@ public class DataFetcher
     ///     Maximum number of records to return. If null, returns all records. Used for performance
     ///     optimization with large datasets.
     /// </param>
-
-    public async Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(
-            string baseType,
-            string? subtype = null,
-            DateTime? from = null,
-            DateTime? to = null,
-            string tableName = DataAccessDefaults.DefaultTableName,
-            int? maxRecords = null,
-            SamplingMode samplingMode = SamplingMode.None,
-            int? targetSamples = null)
+    public async Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype = null, DateTime? from = null, DateTime? to = null, string tableName = DataAccessDefaults.DefaultTableName, int? maxRecords = null, SamplingMode samplingMode = SamplingMode.None, int? targetSamples = null)
     {
         ValidateArguments(baseType, from, to);
 
@@ -598,14 +599,9 @@ public class DataFetcher
         };
     }
 
-    private static QueryMode ResolveQueryMode(
-            SamplingMode samplingMode,
-            int? targetSamples,
-            int? maxRecords)
+    private static QueryMode ResolveQueryMode(SamplingMode samplingMode, int? targetSamples, int? maxRecords)
     {
-        if (samplingMode == SamplingMode.UniformOverTime
-         && targetSamples.HasValue
-         && targetSamples.Value > 0)
+        if (samplingMode == SamplingMode.UniformOverTime && targetSamples.HasValue && targetSamples.Value > 0)
             return QueryMode.Sampled;
 
         if (maxRecords.HasValue && maxRecords.Value > 0)
@@ -614,23 +610,7 @@ public class DataFetcher
         return QueryMode.Unbounded;
     }
 
-    private enum QueryMode
-    {
-        Sampled,
-        Limited,
-        Unbounded
-    }
-
-    private static void BuildSamplingQuery(
-            StringBuilder sql,
-            DynamicParameters parameters,
-            string tableName,
-            string providerColumn,
-            int targetSamples,
-            string baseType,
-            string? subtype,
-            DateTime? from,
-            DateTime? to)
+    private static void BuildSamplingQuery(StringBuilder sql, DynamicParameters parameters, string tableName, string providerColumn, int targetSamples, string baseType, string? subtype, DateTime? from, DateTime? to)
     {
         sql.Append($@"
         WITH OrderedData AS (
@@ -666,11 +646,7 @@ public class DataFetcher
         parameters.Add("@TargetSamples", targetSamples);
     }
 
-    private static void BuildLimitedQuery(
-            StringBuilder sql,
-            string tableName,
-            string providerColumn,
-            int maxRecords)
+    private static void BuildLimitedQuery(StringBuilder sql, string tableName, string providerColumn, int maxRecords)
     {
         sql.Append($@"
         SELECT TOP {maxRecords}
@@ -682,10 +658,7 @@ public class DataFetcher
         WHERE 1=1");
     }
 
-    private static void BuildUnboundedQuery(
-            StringBuilder sql,
-            string tableName,
-            string providerColumn)
+    private static void BuildUnboundedQuery(StringBuilder sql, string tableName, string providerColumn)
     {
         sql.Append($@"
         SELECT
@@ -697,13 +670,7 @@ public class DataFetcher
         WHERE 1=1");
     }
 
-    private static void ApplyCommonFilters(
-            StringBuilder sql,
-            DynamicParameters parameters,
-            string baseType,
-            string? subtype,
-            DateTime? from,
-            DateTime? to)
+    private static void ApplyCommonFilters(StringBuilder sql, DynamicParameters parameters, string baseType, string? subtype, DateTime? from, DateTime? to)
     {
         SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
         SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
@@ -712,10 +679,7 @@ public class DataFetcher
         sql.Append(" AND Value IS NOT NULL ORDER BY NormalizedTimestamp");
     }
 
-    private static void ValidateArguments(
-            string baseType,
-            DateTime? from,
-            DateTime? to)
+    private static void ValidateArguments(string baseType, DateTime? from, DateTime? to)
     {
         if (string.IsNullOrWhiteSpace(baseType))
             throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
@@ -723,7 +687,6 @@ public class DataFetcher
         if (from.HasValue && to.HasValue && from.Value > to.Value)
             throw new ArgumentException("'from' date must be earlier than or equal to 'to' date.", nameof(from));
     }
-
 
 
     /// <summary>
@@ -852,5 +815,12 @@ public class DataFetcher
                 });
 
         return results.ToDictionary(r => r.MetricSubtype, r => r.RecordCount);
+    }
+
+    private enum QueryMode
+    {
+        Sampled,
+        Limited,
+        Unbounded
     }
 }

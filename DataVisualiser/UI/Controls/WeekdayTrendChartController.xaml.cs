@@ -14,8 +14,8 @@ namespace DataVisualiser.UI.Controls;
 public partial class WeekdayTrendChartController : UserControl
 {
     private readonly CartesianChart _cartesianChart;
-    private readonly CartesianChart _polarChart;
     private readonly LegendToggleManager _cartesianLegendManager;
+    private readonly CartesianChart _polarChart;
     private readonly LegendToggleManager _polarLegendManager;
 
     public WeekdayTrendChartController()
@@ -179,13 +179,23 @@ public partial class WeekdayTrendChartController : UserControl
         cartesianLegendItems = LegendToggleManager.CreateLegendItemsControl(OnLegendItemToggle);
         var cartesianLegendContainer = LegendToggleManager.CreateLegendContainer(cartesianLegendItems);
         var cartesianGrid = new Grid();
-        cartesianGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        cartesianGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        cartesianGrid.ColumnDefinitions.Add(new ColumnDefinition
+        {
+                Width = new GridLength(1, GridUnitType.Star)
+        });
+        cartesianGrid.ColumnDefinitions.Add(new ColumnDefinition
+        {
+                Width = GridLength.Auto
+        });
         Grid.SetColumn(cartesianChart, 0);
         Grid.SetColumn(cartesianLegendContainer, 1);
         cartesianGrid.Children.Add(cartesianChart);
         cartesianGrid.Children.Add(cartesianLegendContainer);
-        cartesianGrid.SetBinding(UIElement.VisibilityProperty, new Binding(nameof(Visibility)) { Source = cartesianChart });
+        cartesianGrid.SetBinding(VisibilityProperty,
+                new Binding(nameof(Visibility))
+                {
+                        Source = cartesianChart
+                });
         panel.Children.Add(cartesianGrid);
 
         polarChart = new CartesianChart
@@ -212,13 +222,23 @@ public partial class WeekdayTrendChartController : UserControl
         polarLegendItems = LegendToggleManager.CreateLegendItemsControl(OnLegendItemToggle);
         var polarLegendContainer = LegendToggleManager.CreateLegendContainer(polarLegendItems);
         var polarGrid = new Grid();
-        polarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        polarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        polarGrid.ColumnDefinitions.Add(new ColumnDefinition
+        {
+                Width = new GridLength(1, GridUnitType.Star)
+        });
+        polarGrid.ColumnDefinitions.Add(new ColumnDefinition
+        {
+                Width = GridLength.Auto
+        });
         Grid.SetColumn(polarChart, 0);
         Grid.SetColumn(polarLegendContainer, 1);
         polarGrid.Children.Add(polarChart);
         polarGrid.Children.Add(polarLegendContainer);
-        polarGrid.SetBinding(UIElement.VisibilityProperty, new Binding(nameof(Visibility)) { Source = polarChart });
+        polarGrid.SetBinding(VisibilityProperty,
+                new Binding(nameof(Visibility))
+                {
+                        Source = polarChart
+                });
         panel.Children.Add(polarGrid);
 
         return panel;

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Threading;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Shared.Models;
 
@@ -13,11 +14,11 @@ namespace DataVisualiser.UI.Admin;
 public partial class AdminMetricsManagerView : UserControl
 {
     private const string AllMetricTypesToken = "(All)";
-    private readonly ObservableCollection<EditableHealthMetricsCountEntry> _rows = new();
     private readonly DataFetcher _dataFetcher;
-    private bool _isLoading;
-    private bool _hideDisabled;
+    private readonly ObservableCollection<EditableHealthMetricsCountEntry> _rows = new();
     private bool _filterRefreshPending;
+    private bool _hideDisabled;
+    private bool _isLoading;
 
     public AdminMetricsManagerView()
     {
@@ -31,8 +32,7 @@ public partial class AdminMetricsManagerView : UserControl
 
     private static string GetConnectionString()
     {
-        return ConfigurationManager.AppSettings["HealthDB"]
-               ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
+        return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -108,7 +108,11 @@ public partial class AdminMetricsManagerView : UserControl
             _isLoading = true;
             var metricTypes = await _dataFetcher.GetCountsMetricTypesForAdmin();
 
-            MetricTypeCombo.ItemsSource = new[] { AllMetricTypesToken }.Concat(metricTypes).ToList();
+            MetricTypeCombo.ItemsSource = new[]
+                    {
+                            AllMetricTypesToken
+                    }.Concat(metricTypes)
+                     .ToList();
             MetricTypeCombo.SelectedIndex = 0;
         }
         catch (Exception ex)
@@ -134,9 +138,7 @@ public partial class AdminMetricsManagerView : UserControl
             var selected = MetricTypeCombo.SelectedItem as string;
             var metricType = string.Equals(selected, AllMetricTypesToken, StringComparison.OrdinalIgnoreCase) ? null : selected;
 
-            StatusText.Text = metricType == null
-                    ? "Loading all metric/submetric rows..."
-                    : $"Loading rows for {metricType}...";
+            StatusText.Text = metricType == null ? "Loading all metric/submetric rows..." : $"Loading rows for {metricType}...";
 
             var rows = await _dataFetcher.GetHealthMetricsCountsForAdmin(metricType);
 
@@ -167,10 +169,7 @@ public partial class AdminMetricsManagerView : UserControl
 
     private void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(EditableHealthMetricsCountEntry.IsDirty)
-            or nameof(EditableHealthMetricsCountEntry.MetricTypeName)
-            or nameof(EditableHealthMetricsCountEntry.MetricSubtypeName)
-            or nameof(EditableHealthMetricsCountEntry.Disabled))
+        if (e.PropertyName is nameof(EditableHealthMetricsCountEntry.IsDirty) or nameof(EditableHealthMetricsCountEntry.MetricTypeName) or nameof(EditableHealthMetricsCountEntry.MetricSubtypeName) or nameof(EditableHealthMetricsCountEntry.Disabled))
         {
             UpdateSaveButtonState();
             if (e.PropertyName == nameof(EditableHealthMetricsCountEntry.Disabled))
@@ -186,10 +185,11 @@ public partial class AdminMetricsManagerView : UserControl
         _filterRefreshPending = true;
         FilterStatusText.Visibility = Visibility.Visible;
         Dispatcher.BeginInvoke(new Action(() =>
-        {
-            _filterRefreshPending = false;
-            RefreshRowFilter();
-        }), System.Windows.Threading.DispatcherPriority.Background);
+                {
+                    _filterRefreshPending = false;
+                    RefreshRowFilter();
+                }),
+                DispatcherPriority.Background);
     }
 
     private void RefreshRowFilter()
@@ -207,9 +207,7 @@ public partial class AdminMetricsManagerView : UserControl
             return;
         }
 
-        view.Filter = _hideDisabled
-            ? item => item is EditableHealthMetricsCountEntry entry && !entry.Disabled
-            : null;
+        view.Filter = _hideDisabled ? item => item is EditableHealthMetricsCountEntry entry && !entry.Disabled : null;
 
         view.Refresh();
         FilterStatusText.Visibility = Visibility.Collapsed;
@@ -233,10 +231,10 @@ public partial class AdminMetricsManagerView : UserControl
     private sealed class EditableHealthMetricsCountEntry : INotifyPropertyChanged
     {
         private readonly HealthMetricsCountEntry _original;
-        private string _metricTypeName;
-        private string _metricSubtypeName;
         private bool _disabled;
         private bool _isDirty;
+        private string _metricSubtypeName;
+        private string _metricTypeName;
 
         public EditableHealthMetricsCountEntry(HealthMetricsCountEntry source)
         {
@@ -308,15 +306,17 @@ public partial class AdminMetricsManagerView : UserControl
             }
         }
 
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         public HealthMetricsCountEntry ToUpdate()
         {
             return new HealthMetricsCountEntry
             {
-                MetricType = MetricType,
-                MetricSubtype = MetricSubtype,
-                MetricTypeName = MetricTypeName,
-                MetricSubtypeName = MetricSubtypeName,
-                Disabled = Disabled
+                    MetricType = MetricType,
+                    MetricSubtype = MetricSubtype,
+                    MetricTypeName = MetricTypeName,
+                    MetricSubtypeName = MetricSubtypeName,
+                    Disabled = Disabled
             };
         }
 
@@ -330,15 +330,12 @@ public partial class AdminMetricsManagerView : UserControl
 
         private void RecomputeDirty()
         {
-            IsDirty =
-                !string.Equals((_original.MetricTypeName ?? string.Empty), MetricTypeName, StringComparison.Ordinal) ||
-                !string.Equals((_original.MetricSubtypeName ?? string.Empty), MetricSubtypeName, StringComparison.Ordinal) ||
-                _original.Disabled != Disabled;
+            IsDirty = !string.Equals(_original.MetricTypeName ?? string.Empty, MetricTypeName, StringComparison.Ordinal) || !string.Equals(_original.MetricSubtypeName ?? string.Empty, MetricSubtypeName, StringComparison.Ordinal) || _original.Disabled != Disabled;
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-
         private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

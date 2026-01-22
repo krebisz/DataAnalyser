@@ -12,12 +12,12 @@ public static class ChartControllerKeys
 
     public static readonly string[] All =
     {
-        Main,
-        Normalized,
-        DiffRatio,
-        Distribution,
-        WeeklyTrend,
-        Transform,
-        BarPie
+            Main,
+            Normalized,
+            DiffRatio,
+            Distribution,
+            WeeklyTrend,
+            Transform,
+            BarPie
     };
 }

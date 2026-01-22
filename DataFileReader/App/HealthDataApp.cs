@@ -10,9 +10,7 @@ public sealed class HealthDataApp
     private readonly MetricAggregator _aggregator;
     private readonly FileProcessingService _fileProcessor;
 
-    public HealthDataApp(
-        MetricAggregator aggregator,
-        FileProcessingService fileProcessor)
+    public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor)
     {
         _aggregator = aggregator ?? throw new ArgumentNullException(nameof(aggregator));
         _fileProcessor = fileProcessor ?? throw new ArgumentNullException(nameof(fileProcessor));
@@ -33,7 +31,6 @@ public sealed class HealthDataApp
     private void RunMainLoop()
     {
         while (true)
-        {
             switch (ReadOption())
             {
                 case AppOption.AggregateMetrics:
@@ -60,7 +57,6 @@ public sealed class HealthDataApp
                     Console.WriteLine("Invalid option. Please try again.");
                     break;
             }
-        }
     }
 
     // ----------------------------
@@ -86,12 +82,12 @@ public sealed class HealthDataApp
 
         return Console.ReadLine()?.Trim() switch
         {
-            "1" => AppOption.AggregateMetrics,
-            "2" => AppOption.ProcessFiles,
-            "3" => AppOption.RemoveJunkFiles,
-            "4" => AppOption.CleanDatabase,
-            "5" => AppOption.Exit,
-            _ => AppOption.Invalid
+                "1" => AppOption.AggregateMetrics,
+                "2" => AppOption.ProcessFiles,
+                "3" => AppOption.RemoveJunkFiles,
+                "4" => AppOption.CleanDatabase,
+                "5" => AppOption.Exit,
+                _ => AppOption.Invalid
         };
     }
 
@@ -144,9 +140,7 @@ public sealed class HealthDataApp
         var rootDirectory = GetRootDirectory();
 
         if (rootDirectory is null)
-        {
             return;
-        }
 
         var allFiles = FileHelper.GetFileList(rootDirectory);
         var processedFiles = SQLHelper.GetProcessedFiles();
@@ -156,9 +150,7 @@ public sealed class HealthDataApp
         var skipped = allFiles.Count - newFiles.Count;
 
         if (skipped > 0)
-        {
             Console.WriteLine($"Skipping {skipped} already processed file(s)");
-        }
 
         Console.WriteLine($"Processing {newFiles.Count} new file(s)...");
 

@@ -1,7 +1,7 @@
 ﻿using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Tests.Helpers;
 
-namespace DataVisualiser.Tests.Charts.Strategies;
+namespace DataVisualiser.Tests.Strategies;
 
 public class CmsWeeklyDistributionStrategyTests
 {

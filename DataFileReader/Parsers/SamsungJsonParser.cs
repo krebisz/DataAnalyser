@@ -1,5 +1,6 @@
 ﻿using DataFileReader.Helper;
-using DataFileReader.Parsers;
+
+namespace DataFileReader.Parsers;
 
 public class SamsungJsonParser : IHealthFileParser
 {

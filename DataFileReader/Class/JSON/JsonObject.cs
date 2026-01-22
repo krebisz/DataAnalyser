@@ -2,6 +2,8 @@
 using System.Text;
 using Newtonsoft.Json;
 
+namespace DataFileReader.Class.JSON;
+
 public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
 {
     protected static readonly JsonSerializerSettings JSON_SETTINGS = new()

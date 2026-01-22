@@ -1,3 +1,5 @@
+using System.Windows.Controls.Primitives;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Controls;
 using DataVisualiser.UI.State;
 
@@ -69,7 +71,13 @@ public sealed class ChartControllerRegistryTests
 
         var ordered = registry.All().ToList();
 
-        Assert.Equal(new[] { main, normalized, diffRatio }, ordered);
+        Assert.Equal(new[]
+                {
+                        main,
+                        normalized,
+                        diffRatio
+                },
+                ordered);
     }
 
     [Fact]
@@ -91,13 +99,13 @@ public sealed class ChartControllerRegistryTests
         public bool RequiresPrimaryData => false;
         public bool RequiresSecondaryData => false;
         public ChartPanelController Panel => null!;
-        public System.Windows.Controls.Primitives.ButtonBase ToggleButton => null!;
+        public ButtonBase ToggleButton => null!;
 
         public void Initialize()
         {
         }
 
-        public Task RenderAsync(DataVisualiser.Core.Orchestration.ChartDataContext context)
+        public Task RenderAsync(ChartDataContext context)
         {
             return Task.CompletedTask;
         }

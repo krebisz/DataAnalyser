@@ -8,31 +8,49 @@ public sealed class ChartComputationParityHarnessTests
     public void Validate_ShouldPass_WhenSeriesMatch()
     {
         var harness = new ChartComputationParityHarness();
-        var context = new StrategyParityContext { StrategyName = "Test", MetricIdentity = "Metric" };
+        var context = new StrategyParityContext
+        {
+                StrategyName = "Test",
+                MetricIdentity = "Metric"
+        };
 
         var legacy = new LegacyExecutionResult
         {
-            Series = new List<ParitySeries>
-            {
-                new()
+                Series = new List<ParitySeries>
                 {
-                    SeriesKey = "Primary",
-                    Points = new List<ParityPoint>
-                    {
-                        new() { Time = new DateTime(2024, 01, 01), Value = 1.0 },
-                        new() { Time = new DateTime(2024, 01, 02), Value = 2.0 }
-                    }
+                        new()
+                        {
+                                SeriesKey = "Primary",
+                                Points = new List<ParityPoint>
+                                {
+                                        new()
+                                        {
+                                                Time = new DateTime(2024, 01, 01),
+                                                Value = 1.0
+                                        },
+                                        new()
+                                        {
+                                                Time = new DateTime(2024, 01, 02),
+                                                Value = 2.0
+                                        }
+                                }
+                        }
                 }
-            }
         };
 
         var cms = new CmsExecutionResult
         {
-            Series = legacy.Series.Select(s => new ParitySeries
-            {
-                SeriesKey = s.SeriesKey,
-                Points = s.Points.Select(p => new ParityPoint { Time = p.Time, Value = p.Value }).ToList()
-            }).ToList()
+                Series = legacy.Series.Select(s => new ParitySeries
+                               {
+                                       SeriesKey = s.SeriesKey,
+                                       Points = s.Points.Select(p => new ParityPoint
+                                                 {
+                                                         Time = p.Time,
+                                                         Value = p.Value
+                                                 })
+                                                 .ToList()
+                               })
+                               .ToList()
         };
 
         var result = harness.Validate(context, () => legacy, () => cms);
@@ -44,36 +62,48 @@ public sealed class ChartComputationParityHarnessTests
     public void Validate_ShouldFail_OnTimestampMismatch()
     {
         var harness = new ChartComputationParityHarness();
-        var context = new StrategyParityContext { StrategyName = "Test", MetricIdentity = "Metric" };
+        var context = new StrategyParityContext
+        {
+                StrategyName = "Test",
+                MetricIdentity = "Metric"
+        };
 
         var legacy = new LegacyExecutionResult
         {
-            Series = new List<ParitySeries>
-            {
-                new()
+                Series = new List<ParitySeries>
                 {
-                    SeriesKey = "Primary",
-                    Points = new List<ParityPoint>
-                    {
-                        new() { Time = new DateTime(2024, 01, 01), Value = 1.0 }
-                    }
+                        new()
+                        {
+                                SeriesKey = "Primary",
+                                Points = new List<ParityPoint>
+                                {
+                                        new()
+                                        {
+                                                Time = new DateTime(2024, 01, 01),
+                                                Value = 1.0
+                                        }
+                                }
+                        }
                 }
-            }
         };
 
         var cms = new CmsExecutionResult
         {
-            Series = new List<ParitySeries>
-            {
-                new()
+                Series = new List<ParitySeries>
                 {
-                    SeriesKey = "Primary",
-                    Points = new List<ParityPoint>
-                    {
-                        new() { Time = new DateTime(2024, 01, 02), Value = 1.0 }
-                    }
+                        new()
+                        {
+                                SeriesKey = "Primary",
+                                Points = new List<ParityPoint>
+                                {
+                                        new()
+                                        {
+                                                Time = new DateTime(2024, 01, 02),
+                                                Value = 1.0
+                                        }
+                                }
+                        }
                 }
-            }
         };
 
         var result = harness.Validate(context, () => legacy, () => cms);

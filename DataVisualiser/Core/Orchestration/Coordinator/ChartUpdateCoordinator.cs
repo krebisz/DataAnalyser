@@ -63,19 +63,15 @@ public class ChartUpdateCoordinator
         // -------------------------
         // Phase 2: Build render model
         // -------------------------
-        var cumulativeBundle = isCumulative ? BuildCumulativeSeries(result, strategy, primaryLabel, secondaryLabel) : (RenderSeries: (List<SeriesResult>?)null, OriginalSeries: (List<SeriesResult>?)null);
+        var cumulativeBundle = isCumulative ? BuildCumulativeSeries(result, strategy, primaryLabel, secondaryLabel) : (RenderSeries: null, OriginalSeries: null);
         var renderSeries = cumulativeBundle.RenderSeries;
 
         var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart, secondaryMetricType, displayPrimaryMetricType, displaySecondaryMetricType, displayPrimarySubtype, displaySecondarySubtype, isStacked, renderSeries);
 
         if (isStacked || isCumulative)
-        {
             targetChart.Tag = new ChartStackingTooltipState(true, isCumulative, isCumulative ? cumulativeBundle.OriginalSeries : null);
-        }
         else if (targetChart.Tag is ChartStackingTooltipState)
-        {
             targetChart.Tag = null;
-        }
 
         // -------------------------
         // Phase 3: Render + post-render sync
@@ -158,7 +154,7 @@ public class ChartUpdateCoordinator
         };
     }
 
-    private (List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeries(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)
+    private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeries(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)
     {
         if (result.Series != null && result.Series.Count > 0)
             return BuildCumulativeSeriesFromMulti(result.Series);
@@ -166,7 +162,7 @@ public class ChartUpdateCoordinator
         return BuildCumulativeSeriesFromLegacy(result, strategy, primaryLabel, secondaryLabel);
     }
 
-    private (List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromMulti(IReadOnlyList<SeriesResult> seriesResults)
+    private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromMulti(IReadOnlyList<SeriesResult> seriesResults)
     {
         var mainTimeline = seriesResults.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
         if (mainTimeline.Count == 0)
@@ -207,7 +203,7 @@ public class ChartUpdateCoordinator
         return (cumulativeSeries, originalSeries);
     }
 
-    private (List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromLegacy(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)
+    private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromLegacy(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)
     {
         var timeline = result.Timestamps ?? new List<DateTime>();
         if (timeline.Count == 0)
@@ -510,10 +506,8 @@ public class ChartUpdateCoordinator
     {
         var timeline = model.Timestamps;
         if (timeline == null || timeline.Count == 0)
-        {
             if (model.Series != null)
                 timeline = model.Series.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
-        }
 
         return timeline ?? new List<DateTime>();
     }

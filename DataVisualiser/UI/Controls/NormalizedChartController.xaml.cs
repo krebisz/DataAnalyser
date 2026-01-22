@@ -46,15 +46,15 @@ public partial class NormalizedChartController : UserControl
 
     public WpfCartesianChart Chart => ChartNormControl;
 
-    public event EventHandler? ToggleRequested;
-
-    public event EventHandler? NormalizationModeChanged;
-
     public ComboBox NormalizedPrimarySubtypeCombo => NormalizedPrimarySubtypeComboControl;
 
     public ComboBox NormalizedSecondarySubtypeCombo => NormalizedSecondarySubtypeComboControl;
 
     public StackPanel NormalizedSecondarySubtypePanel => NormalizedSecondarySubtypePanelControl;
+
+    public event EventHandler? ToggleRequested;
+
+    public event EventHandler? NormalizationModeChanged;
 
     public event EventHandler? PrimarySubtypeChanged;
 

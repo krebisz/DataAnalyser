@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.State;

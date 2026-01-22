@@ -1,6 +1,6 @@
-namespace DataVisualiser.UI.Events;
-
 using DataVisualiser.Shared.Models;
+
+namespace DataVisualiser.UI.Events;
 
 public class MetricTypesLoadedEventArgs : EventArgs
 {

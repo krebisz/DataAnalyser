@@ -79,13 +79,9 @@ public sealed class ChartDataContextBuilder
                 SecondarySubtype = secondarySelection?.Subtype,
 
                 DisplayPrimaryMetricType = string.IsNullOrWhiteSpace(primarySelection.DisplayMetricType) ? primarySelection.MetricType : primarySelection.DisplayMetricType,
-                DisplaySecondaryMetricType = secondarySelection == null
-                        ? null
-                        : string.IsNullOrWhiteSpace(secondarySelection.DisplayMetricType) ? secondarySelection.MetricType : secondarySelection.DisplayMetricType,
+                DisplaySecondaryMetricType = secondarySelection == null ? null : string.IsNullOrWhiteSpace(secondarySelection.DisplayMetricType) ? secondarySelection.MetricType : secondarySelection.DisplayMetricType,
                 DisplayPrimarySubtype = string.IsNullOrWhiteSpace(primarySelection.DisplaySubtype) ? primarySelection.Subtype : primarySelection.DisplaySubtype,
-                DisplaySecondarySubtype = secondarySelection == null
-                        ? null
-                        : string.IsNullOrWhiteSpace(secondarySelection.DisplaySubtype) ? secondarySelection.Subtype : secondarySelection.DisplaySubtype,
+                DisplaySecondarySubtype = secondarySelection == null ? null : string.IsNullOrWhiteSpace(secondarySelection.DisplaySubtype) ? secondarySelection.Subtype : secondarySelection.DisplaySubtype,
 
                 From = from,
                 To = to,

@@ -100,19 +100,19 @@ public class HierarchyObjectList
     {
         return classID switch
         {
-            "Container" => "object",
-            "Array" => "array",
-            _ => token.Type switch
-            {
-                JTokenType.Integer => "number",
-                JTokenType.Float => "number",
-                JTokenType.String => "string",
-                JTokenType.Boolean => "bool",
-                JTokenType.Date => "date",
-                JTokenType.Null => "null",
-                JTokenType.Undefined => "null",
-                _ => token.Type.ToString().ToLowerInvariant()
-            }
+                "Container" => "object",
+                "Array" => "array",
+                _ => token.Type switch
+                {
+                        JTokenType.Integer => "number",
+                        JTokenType.Float => "number",
+                        JTokenType.String => "string",
+                        JTokenType.Boolean => "bool",
+                        JTokenType.Date => "date",
+                        JTokenType.Null => "null",
+                        JTokenType.Undefined => "null",
+                        _ => token.Type.ToString().ToLowerInvariant()
+                }
         };
     }
 

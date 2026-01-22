@@ -13,17 +13,17 @@ public sealed class ParityExportShapeTests
 
         var expected = new[]
         {
-            "Status",
-            "OverallPassed",
-            "WeeklyPassed",
-            "HourlyPassed",
-            "CombinedMetricPassed",
-            "SingleMetricPassed",
-            "MultiMetricPassed",
-            "NormalizedPassed",
-            "WeekdayTrendPassed",
-            "TransformPassed",
-            "StrategiesEvaluated"
+                "Status",
+                "OverallPassed",
+                "WeeklyPassed",
+                "HourlyPassed",
+                "CombinedMetricPassed",
+                "SingleMetricPassed",
+                "MultiMetricPassed",
+                "NormalizedPassed",
+                "WeekdayTrendPassed",
+                "TransformPassed",
+                "StrategiesEvaluated"
         };
 
         foreach (var name in expected)
@@ -42,17 +42,18 @@ public sealed class ParityExportShapeTests
         var simple = CreateSnapshot("SimpleParitySnapshot", "Completed", null);
         var transform = CreateSnapshot("TransformParitySnapshot", "Completed", null);
 
-        var result = buildWarnings!.Invoke(null, new[]
-        {
-            distribution,
-            combined,
-            simple,
-            simple,
-            simple,
-            simple,
-            transform,
-            1
-        });
+        var result = buildWarnings!.Invoke(null,
+                new[]
+                {
+                        distribution,
+                        combined,
+                        simple,
+                        simple,
+                        simple,
+                        simple,
+                        transform,
+                        1
+                });
 
         var warnings = Assert.IsAssignableFrom<IReadOnlyList<string>>(result);
         Assert.NotEmpty(warnings);
@@ -68,7 +69,7 @@ public sealed class ParityExportShapeTests
     private static object CreateSnapshot(string typeName, string status, string? reason)
     {
         var type = GetNestedType(typeName);
-        var instance = Activator.CreateInstance(type, nonPublic: true)!;
+        var instance = Activator.CreateInstance(type, true)!;
 
         type.GetProperty("Status")?.SetValue(instance, status);
         if (reason != null)

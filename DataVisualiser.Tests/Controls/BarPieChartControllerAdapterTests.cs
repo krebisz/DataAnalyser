@@ -1,4 +1,3 @@
-using System;
 using System.Windows.Controls;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
@@ -15,7 +14,10 @@ public sealed class BarPieChartControllerAdapterTests
     {
         StaTestHelper.Run(() =>
         {
-            var chartState = new ChartState { BarPieBucketCount = 5 };
+            var chartState = new ChartState
+            {
+                    BarPieBucketCount = 5
+            };
             var metricState = new MetricState();
             var uiState = new UiState();
             var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
@@ -35,7 +37,10 @@ public sealed class BarPieChartControllerAdapterTests
     {
         StaTestHelper.Run(() =>
         {
-            var chartState = new ChartState { IsBarPieVisible = false };
+            var chartState = new ChartState
+            {
+                    IsBarPieVisible = false
+            };
             var metricState = new MetricState();
             var uiState = new UiState();
             var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");

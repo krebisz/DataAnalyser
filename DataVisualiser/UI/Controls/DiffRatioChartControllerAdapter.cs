@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Linq;
+using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -19,24 +15,17 @@ namespace DataVisualiser.UI.Controls;
 
 public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDiffRatioChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
 {
-    private readonly DiffRatioChartController _controller;
-    private readonly MainWindowViewModel _viewModel;
-    private readonly Func<bool> _isInitializing;
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly MetricSelectionService _metricSelectionService;
+    private readonly DiffRatioChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly Func<ChartTooltipManager?> _getTooltipManager;
+    private readonly Func<bool> _isInitializing;
+    private readonly MetricSelectionService _metricSelectionService;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombos;
 
-    public DiffRatioChartControllerAdapter(
-        DiffRatioChartController controller,
-        MainWindowViewModel viewModel,
-        Func<bool> isInitializing,
-        Func<IDisposable> beginUiBusyScope,
-        MetricSelectionService metricSelectionService,
-        Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator,
-        Func<ChartTooltipManager?> getTooltipManager)
+    public DiffRatioChartControllerAdapter(DiffRatioChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, Func<ChartTooltipManager?> getTooltipManager)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -47,12 +36,18 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
         _getTooltipManager = getTooltipManager ?? throw new ArgumentNullException(nameof(getTooltipManager));
     }
 
+    public CartesianChart Chart => _controller.Chart;
+
+    public void ClearCache()
+    {
+        _subtypeCache.Clear();
+    }
+
     public string Key => "DiffRatio";
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => true;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
-    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
 
     public void Initialize()
     {
@@ -76,19 +71,6 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
     public bool HasSeries(ChartState state)
     {
         return HasSeriesInternal(_controller.Chart.Series);
-    }
-
-    private static bool HasSeriesInternal(System.Collections.IEnumerable? series)
-    {
-        if (series == null)
-            return false;
-
-        return series.Cast<object>().Any();
-    }
-
-    public void ClearCache()
-    {
-        _subtypeCache.Clear();
     }
 
     public void UpdateSubtypeOptions()
@@ -128,6 +110,14 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
 
         if (_controller.Chart.AxisY.Count > 0)
             _controller.Chart.AxisY[0].Title = isDifference ? "Difference" : "Ratio";
+    }
+
+    private static bool HasSeriesInternal(IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     public void OnToggleRequested(object? sender, EventArgs e)
@@ -204,21 +194,21 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
 
         var diffRatioContext = new ChartDataContext
         {
-            Data1 = primaryData,
-            Data2 = secondaryData,
-            DisplayName1 = displayName1,
-            DisplayName2 = displayName2,
-            MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-            SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-            PrimarySubtype = primarySelection?.Subtype,
-            SecondarySubtype = secondarySelection?.Subtype,
-            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-            From = ctx.From,
-            To = ctx.To
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                DisplayName1 = displayName1,
+                DisplayName2 = displayName2,
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
         };
 
         return (primaryData, secondaryData, diffRatioContext);
@@ -362,12 +352,9 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
     private void UpdatePrimaryDiffRatioSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
     {
         var primaryCurrent = _viewModel.ChartState.SelectedDiffRatioPrimarySeries;
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
-            ? primaryCurrent
-            : selectedSeries[0];
+        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
 
-        var primaryItem = FindSeriesComboItem(_controller.PrimarySubtypeCombo, primarySelection)
-            ?? _controller.PrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+        var primaryItem = FindSeriesComboItem(_controller.PrimarySubtypeCombo, primarySelection) ?? _controller.PrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
         _controller.PrimarySubtypeCombo.SelectedItem = primaryItem;
         _viewModel.ChartState.SelectedDiffRatioPrimarySeries = primarySelection;
@@ -381,12 +368,9 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
             _controller.SecondarySubtypeCombo.IsEnabled = true;
 
             var secondaryCurrent = _viewModel.ChartState.SelectedDiffRatioSecondarySeries;
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase))
-                ? secondaryCurrent
-                : selectedSeries[1];
+            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
 
-            var secondaryItem = FindSeriesComboItem(_controller.SecondarySubtypeCombo, secondarySelection)
-                ?? _controller.SecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            var secondaryItem = FindSeriesComboItem(_controller.SecondarySubtypeCombo, secondarySelection) ?? _controller.SecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
             _controller.SecondarySubtypeCombo.SelectedItem = secondaryItem;
             _viewModel.ChartState.SelectedDiffRatioSecondarySeries = secondarySelection;
@@ -404,15 +388,14 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
     {
         return new ComboBoxItem
         {
-            Content = selection.DisplayName,
-            Tag = selection
+                Content = selection.DisplayName,
+                Tag = selection
         };
     }
 
     private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
     {
-        return combo.Items.OfType<ComboBoxItem>()
-            .FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
+        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
     }
 
     private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)

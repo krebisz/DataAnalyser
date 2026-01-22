@@ -14,4 +14,3 @@ public sealed class HealthMetricsCountEntry
     public DateTime? EarliestDateTime { get; init; }
     public DateTime? MostRecentDateTime { get; init; }
 }
-

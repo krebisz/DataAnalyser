@@ -1,15 +1,14 @@
-using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using DataVisualiser.UI.Defaults;
+using DataVisualiser.Shared.Helpers;
 using DataVisualiser.UI.Controls;
+using DataVisualiser.UI.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
-using DataVisualiser.Shared.Helpers;
 
 namespace DataVisualiser.UI.Rendering.LiveCharts;
 
@@ -41,44 +40,48 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         var grid = new Grid
         {
-            Margin = ChartUiDefaults.ChartContentMargin
+                Margin = ChartUiDefaults.ChartContentMargin
         };
 
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition
+        {
+                Width = new GridLength(1, GridUnitType.Star)
+        });
 
         if (model.Legend?.IsVisible == true)
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                    Width = GridLength.Auto
+            });
 
         var uniform = new UniformGrid
         {
-            Columns = columnCount
+                Columns = columnCount
         };
 
         foreach (var facet in model.Facets)
         {
             var panel = new StackPanel
             {
-                Orientation = Orientation.Vertical,
-                Margin = new Thickness(10),
-                HorizontalAlignment = HorizontalAlignment.Center
+                    Orientation = Orientation.Vertical,
+                    Margin = new Thickness(10),
+                    HorizontalAlignment = HorizontalAlignment.Center
             };
 
             if (!string.IsNullOrWhiteSpace(facet.Title))
-            {
                 panel.Children.Add(new TextBlock
                 {
-                    Text = facet.Title,
-                    FontWeight = FontWeights.Bold,
-                    Margin = new Thickness(0, 0, 0, 6)
+                        Text = facet.Title,
+                        FontWeight = FontWeights.Bold,
+                        Margin = new Thickness(0, 0, 0, 6)
                 });
-            }
 
             var pieChart = new PieChart
             {
-                LegendLocation = LegendLocation.None,
-                Hoverable = model.Interactions?.Hoverable ?? ChartUiDefaults.DefaultHoverable,
-                Width = pieSize,
-                Height = pieSize
+                    LegendLocation = LegendLocation.None,
+                    Hoverable = model.Interactions?.Hoverable ?? ChartUiDefaults.DefaultHoverable,
+                    Width = pieSize,
+                    Height = pieSize
             };
 
             foreach (var series in facet.Series)
@@ -90,12 +93,15 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
                 var sliceBrush = CreateBrush(series.Color);
                 pieChart.Series.Add(new PieSeries
                 {
-                    Title = series.Name ?? string.Empty,
-                    Values = new ChartValues<double> { value.Value },
-                    DataLabels = true,
-                    Fill = sliceBrush,
-                    Stroke = sliceBrush,
-                    LabelPoint = point => $"{series.Name}: {MathHelper.FormatDisplayedValue(point.Y)} ({point.Participation:P0})"
+                        Title = series.Name ?? string.Empty,
+                        Values = new ChartValues<double>
+                        {
+                                value.Value
+                        },
+                        DataLabels = true,
+                        Fill = sliceBrush,
+                        Stroke = sliceBrush,
+                        LabelPoint = point => $"{series.Name}: {MathHelper.FormatDisplayedValue(point.Y)} ({point.Participation:P0})"
                 });
             }
 
@@ -116,6 +122,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
                 grid.Children.Add(legendContainer);
             }
         }
+
         return grid;
     }
 
@@ -126,12 +133,12 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         var chart = new CartesianChart
         {
-            LegendLocation = GetLegendLocation(model.Legend),
-            Zoom = GetZoomOptions(model.Interactions),
-            Pan = GetPanOptions(model.Interactions),
-            Hoverable = model.Interactions?.Hoverable ?? ChartUiDefaults.DefaultHoverable,
-            Margin = ChartUiDefaults.ChartContentMargin,
-            MinHeight = ChartUiDefaults.ChartMinHeight
+                LegendLocation = GetLegendLocation(model.Legend),
+                Zoom = GetZoomOptions(model.Interactions),
+                Pan = GetPanOptions(model.Interactions),
+                Hoverable = model.Interactions?.Hoverable ?? ChartUiDefaults.DefaultHoverable,
+                Margin = ChartUiDefaults.ChartContentMargin,
+                MinHeight = ChartUiDefaults.ChartMinHeight
         };
 
         foreach (var series in model.Series)
@@ -146,21 +153,21 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
                 case ChartSeriesType.Column:
                     chart.Series.Add(new ColumnSeries
                     {
-                        Title = series.Name ?? string.Empty,
-                        Values = values,
-                        Fill = seriesBrush,
-                        Stroke = seriesBrush,
-                        LabelPoint = point => MathHelper.FormatDisplayedValue(point.Y)
+                            Title = series.Name ?? string.Empty,
+                            Values = values,
+                            Fill = seriesBrush,
+                            Stroke = seriesBrush,
+                            LabelPoint = point => MathHelper.FormatDisplayedValue(point.Y)
                     });
                     break;
                 case ChartSeriesType.Line:
                 default:
                     chart.Series.Add(new LineSeries
                     {
-                        Title = series.Name ?? string.Empty,
-                        Values = values,
-                        Stroke = seriesBrush ?? Brushes.Gray,
-                        Fill = Brushes.Transparent
+                            Title = series.Name ?? string.Empty,
+                            Values = values,
+                            Stroke = seriesBrush ?? Brushes.Gray,
+                            Fill = Brushes.Transparent
                     });
                     break;
             }
@@ -171,7 +178,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             var axisModel = model.AxesX[0];
             var axis = new Axis
             {
-                Title = axisModel.Title ?? string.Empty
+                    Title = axisModel.Title ?? string.Empty
             };
             if (axisModel.Labels != null)
                 axis.Labels = axisModel.Labels.ToArray();
@@ -187,7 +194,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             var axisModel = model.AxesY[0];
             var axis = new Axis
             {
-                Title = axisModel.Title ?? string.Empty
+                    Title = axisModel.Title ?? string.Empty
             };
             if (axisModel.Labels != null)
                 axis.Labels = axisModel.Labels.ToArray();
@@ -204,8 +211,14 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
 
             var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                    Width = new GridLength(1, GridUnitType.Star)
+            });
+            grid.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                    Width = GridLength.Auto
+            });
             Grid.SetColumn(chart, 0);
             Grid.SetColumn(legendContainer, 1);
             grid.Children.Add(chart);
@@ -223,11 +236,11 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         return legend.Placement switch
         {
-            ChartLegendPlacement.Left => LegendLocation.Left,
-            ChartLegendPlacement.Right => LegendLocation.Right,
-            ChartLegendPlacement.Top => LegendLocation.Top,
-            ChartLegendPlacement.Bottom => LegendLocation.Bottom,
-            _ => LegendLocation.Right
+                ChartLegendPlacement.Left => LegendLocation.Left,
+                ChartLegendPlacement.Right => LegendLocation.Right,
+                ChartLegendPlacement.Top => LegendLocation.Top,
+                ChartLegendPlacement.Bottom => LegendLocation.Bottom,
+                _ => LegendLocation.Right
         };
     }
 
@@ -265,9 +278,9 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
     {
         return columnCount switch
         {
-            <= 3 => 240,
-            4 => 200,
-            _ => 160
+                <= 3 => 240,
+                4 => 200,
+                _ => 160
         };
     }
 
@@ -277,14 +290,12 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         if (firstFacet == null || firstFacet.Series.Count == 0)
             return null;
 
-        var entries = firstFacet.Series
-            .Select(series => new LegendEntry(series.Name ?? "Series", CreateBrush(series.Color) ?? Brushes.Gray))
-            .ToList();
+        var entries = firstFacet.Series.Select(series => new LegendEntry(series.Name ?? "Series", CreateBrush(series.Color) ?? Brushes.Gray)).ToList();
 
         var itemsControl = new ItemsControl
         {
-            HorizontalAlignment = HorizontalAlignment.Left,
-            ItemsSource = entries
+                HorizontalAlignment = HorizontalAlignment.Left,
+                ItemsSource = entries
         };
 
         itemsControl.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(StackPanel)));
@@ -296,13 +307,13 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         var rectFactory = new FrameworkElementFactory(typeof(Rectangle));
         rectFactory.SetValue(FrameworkElement.WidthProperty, 12.0);
         rectFactory.SetValue(FrameworkElement.HeightProperty, 12.0);
-        rectFactory.SetBinding(Shape.FillProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Stroke)));
+        rectFactory.SetBinding(Shape.FillProperty, new Binding(nameof(LegendEntry.Stroke)));
         rectFactory.SetValue(Shape.StrokeProperty, Brushes.White);
         rectFactory.SetValue(Shape.StrokeThicknessProperty, 0.5);
         rectFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 6, 0));
 
         var textFactory = new FrameworkElementFactory(typeof(TextBlock));
-        textFactory.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Title)));
+        textFactory.SetBinding(TextBlock.TextProperty, new Binding(nameof(LegendEntry.Title)));
         textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.White);
         textFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Left);
 
@@ -311,24 +322,20 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         itemsControl.ItemTemplate = new DataTemplate
         {
-            VisualTree = stackFactory
+                VisualTree = stackFactory
         };
 
         return itemsControl;
     }
 
-    private sealed record LegendEntry(string Title, Brush Stroke);
-
     private static ItemsControl BuildSeriesLegendItemsControl(SeriesCollection seriesCollection)
     {
-        var entries = seriesCollection.OfType<Series>()
-            .Select(series => new LegendEntry(string.IsNullOrWhiteSpace(series.Title) ? "Series" : series.Title, series.Stroke ?? Brushes.Gray))
-            .ToList();
+        var entries = seriesCollection.OfType<Series>().Select(series => new LegendEntry(string.IsNullOrWhiteSpace(series.Title) ? "Series" : series.Title, series.Stroke ?? Brushes.Gray)).ToList();
 
         var itemsControl = new ItemsControl
         {
-            HorizontalAlignment = HorizontalAlignment.Left,
-            ItemsSource = entries
+                HorizontalAlignment = HorizontalAlignment.Left,
+                ItemsSource = entries
         };
 
         itemsControl.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(StackPanel)));
@@ -340,13 +347,13 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         var rectFactory = new FrameworkElementFactory(typeof(Rectangle));
         rectFactory.SetValue(FrameworkElement.WidthProperty, 12.0);
         rectFactory.SetValue(FrameworkElement.HeightProperty, 12.0);
-        rectFactory.SetBinding(Shape.FillProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Stroke)));
+        rectFactory.SetBinding(Shape.FillProperty, new Binding(nameof(LegendEntry.Stroke)));
         rectFactory.SetValue(Shape.StrokeProperty, Brushes.White);
         rectFactory.SetValue(Shape.StrokeThicknessProperty, 0.5);
         rectFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 6, 0));
 
         var textFactory = new FrameworkElementFactory(typeof(TextBlock));
-        textFactory.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding(nameof(LegendEntry.Title)));
+        textFactory.SetBinding(TextBlock.TextProperty, new Binding(nameof(LegendEntry.Title)));
         textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.White);
         textFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Left);
 
@@ -355,7 +362,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         itemsControl.ItemTemplate = new DataTemplate
         {
-            VisualTree = stackFactory
+                VisualTree = stackFactory
         };
 
         return itemsControl;
@@ -370,4 +377,6 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         brush.Freeze();
         return brush;
     }
+
+    private sealed record LegendEntry(string Title, Brush Stroke);
 }

@@ -77,7 +77,7 @@
                     <lvc:CartesianChart.AxisY>
                         <lvc:Axis Title="{x:Static ui:ChartUiDefaults.AxisTitleRelative}"
                                   ShowLabels="True" />
-                                    </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart.AxisY>
                 </lvc:CartesianChart>
 
                 <Border Grid.Column="1"

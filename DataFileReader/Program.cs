@@ -2,6 +2,8 @@ using DataFileReader.App;
 using DataFileReader.Parsers;
 using DataFileReader.Services;
 
+namespace DataFileReader;
+
 internal class Program
 {
     private static void Main(string[] args)

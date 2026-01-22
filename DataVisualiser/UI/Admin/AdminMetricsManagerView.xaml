@@ -18,32 +18,33 @@
                     <Border Background="#FF747171" Padding="8" CornerRadius="4">
                         <DockPanel LastChildFill="False">
                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                <TextBlock Text="Metric Type:" Foreground="White" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBlock Text="Metric Type:" Foreground="White" VerticalAlignment="Center"
+                                           Margin="0,0,6,0" />
                                 <ComboBox x:Name="MetricTypeCombo"
                                           Width="320"
                                           IsEditable="False"
                                           SelectionChanged="OnMetricTypeSelectionChanged" />
                             </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                            <CheckBox x:Name="HideDisabledCheckBox"
-                                      Content="Hide disabled"
-                                      Foreground="White"
-                                      VerticalAlignment="Center"
-                                      Margin="0,0,10,0"
-                                      Checked="OnHideDisabledToggled"
-                                      Unchecked="OnHideDisabledToggled" />
-                            <TextBlock x:Name="FilterStatusText"
-                                       Text="Updating list..."
-                                       Foreground="White"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,10,0"
-                                       Visibility="Collapsed" />
-                            <Button x:Name="ReloadButton"
-                                    Content="Reload"
-                                    Margin="6,0,0,0"
-                                    Padding="10,4"
-                                    Click="OnReloadClicked" />
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                <CheckBox x:Name="HideDisabledCheckBox"
+                                          Content="Hide disabled"
+                                          Foreground="White"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,10,0"
+                                          Checked="OnHideDisabledToggled"
+                                          Unchecked="OnHideDisabledToggled" />
+                                <TextBlock x:Name="FilterStatusText"
+                                           Text="Updating list..."
+                                           Foreground="White"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"
+                                           Visibility="Collapsed" />
+                                <Button x:Name="ReloadButton"
+                                        Content="Reload"
+                                        Margin="6,0,0,0"
+                                        Padding="10,4"
+                                        Click="OnReloadClicked" />
                                 <Button x:Name="SaveButton"
                                         Content="Save"
                                         Margin="6,0,0,0"
@@ -71,13 +72,23 @@
                               GridLinesVisibility="Horizontal"
                               AlternatingRowBackground="#FFEDEDED">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="MetricType" Binding="{Binding MetricType}" IsReadOnly="True" Width="200" />
-                            <DataGridTextColumn Header="MetricSubtype" Binding="{Binding MetricSubtype}" IsReadOnly="True" Width="220" />
-                            <DataGridTextColumn Header="MetricTypeName" Binding="{Binding MetricTypeName, UpdateSourceTrigger=PropertyChanged}" Width="220" />
-                            <DataGridTextColumn Header="MetricSubtypeName" Binding="{Binding MetricSubtypeName, UpdateSourceTrigger=PropertyChanged}" Width="240" />
-                            <DataGridCheckBoxColumn Header="Disabled" Binding="{Binding Disabled, UpdateSourceTrigger=PropertyChanged}" Width="80" />
-                            <DataGridTextColumn Header="Count" Binding="{Binding RecordCount}" IsReadOnly="True" Width="90" />
-                            <DataGridTextColumn Header="MostRecent" Binding="{Binding MostRecentDateTime}" IsReadOnly="True" Width="160" />
+                            <DataGridTextColumn Header="MetricType" Binding="{Binding MetricType}" IsReadOnly="True"
+                                                Width="200" />
+                            <DataGridTextColumn Header="MetricSubtype" Binding="{Binding MetricSubtype}"
+                                                IsReadOnly="True" Width="220" />
+                            <DataGridTextColumn Header="MetricTypeName"
+                                                Binding="{Binding MetricTypeName, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="220" />
+                            <DataGridTextColumn Header="MetricSubtypeName"
+                                                Binding="{Binding MetricSubtypeName, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="240" />
+                            <DataGridCheckBoxColumn Header="Disabled"
+                                                    Binding="{Binding Disabled, UpdateSourceTrigger=PropertyChanged}"
+                                                    Width="80" />
+                            <DataGridTextColumn Header="Count" Binding="{Binding RecordCount}" IsReadOnly="True"
+                                                Width="90" />
+                            <DataGridTextColumn Header="MostRecent" Binding="{Binding MostRecentDateTime}"
+                                                IsReadOnly="True" Width="160" />
                         </DataGrid.Columns>
                     </DataGrid>
 

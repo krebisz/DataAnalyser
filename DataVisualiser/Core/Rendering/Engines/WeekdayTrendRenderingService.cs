@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media;
@@ -297,9 +295,7 @@ public sealed class WeekdayTrendRenderingService
                 continue;
 
             foreach (var point in entry.Value.Points)
-            {
                 points.Add((point.Date.Ticks, point.Value));
-            }
         }
 
         if (points.Count == 0)

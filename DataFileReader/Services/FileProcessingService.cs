@@ -18,7 +18,6 @@ public class FileProcessingService
         var metricsInserted = 0;
 
         foreach (var file in fileList)
-        {
             try
             {
                 var fileInfo = new FileInfo(file);
@@ -56,10 +55,7 @@ public class FileProcessingService
             {
                 Console.WriteLine($"Error processing {file}: {ex.Message}");
             }
-        }
 
         return new FileProcessingResult(processed, metricsInserted);
     }
 }
-
-public record FileProcessingResult(int FilesProcessed, int MetricsInserted);

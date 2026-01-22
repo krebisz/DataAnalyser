@@ -10,13 +10,13 @@ public sealed class ChartVisibilityHelperTests
     {
         var state = new ChartState
         {
-            IsMainVisible = true,
-            IsNormalizedVisible = true,
-            IsDiffRatioVisible = true,
-            IsDistributionVisible = true,
-            IsWeeklyTrendVisible = true,
-            IsTransformPanelVisible = true,
-            IsBarPieVisible = true
+                IsMainVisible = true,
+                IsNormalizedVisible = true,
+                IsDiffRatioVisible = true,
+                IsDistributionVisible = true,
+                IsWeeklyTrendVisible = true,
+                IsTransformPanelVisible = true,
+                IsBarPieVisible = true
         };
 
         var hidden = ChartVisibilityHelper.GetHiddenChartKeys(state);
@@ -29,13 +29,13 @@ public sealed class ChartVisibilityHelperTests
     {
         var state = new ChartState
         {
-            IsMainVisible = false,
-            IsNormalizedVisible = true,
-            IsDiffRatioVisible = false,
-            IsDistributionVisible = true,
-            IsWeeklyTrendVisible = false,
-            IsTransformPanelVisible = false,
-            IsBarPieVisible = false
+                IsMainVisible = false,
+                IsNormalizedVisible = true,
+                IsDiffRatioVisible = false,
+                IsDistributionVisible = true,
+                IsWeeklyTrendVisible = false,
+                IsTransformPanelVisible = false,
+                IsBarPieVisible = false
         };
 
         var hidden = ChartVisibilityHelper.GetHiddenChartKeys(state);

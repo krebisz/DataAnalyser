@@ -2,6 +2,8 @@
 using DataFileReader.Helper;
 using DataFileReader.Ingestion;
 
+namespace DataFileReader;
+
 public static class ShadowValidate_SamsungHealthCsv
 {
     public static void Run(string filePath, string fileContent)

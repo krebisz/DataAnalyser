@@ -49,8 +49,14 @@ public partial class MainChartController : UserControl
         var legendItems = LegendToggleManager.CreateLegendItemsControl(OnLegendItemToggle);
         var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
         var chartGrid = new Grid();
-        chartGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        chartGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        chartGrid.ColumnDefinitions.Add(new ColumnDefinition
+        {
+                Width = new GridLength(1, GridUnitType.Star)
+        });
+        chartGrid.ColumnDefinitions.Add(new ColumnDefinition
+        {
+                Width = GridLength.Auto
+        });
         Grid.SetColumn(Chart, 0);
         Grid.SetColumn(legendContainer, 1);
         chartGrid.Children.Add(Chart);

@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -10,7 +7,6 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
-using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Events;
@@ -22,24 +18,17 @@ namespace DataVisualiser.UI.Controls;
 
 public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IWeekdayTrendChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
 {
-    private readonly WeekdayTrendChartController _controller;
-    private readonly MainWindowViewModel _viewModel;
-    private readonly Func<bool> _isInitializing;
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly MetricSelectionService _metricSelectionService;
+    private readonly WeekdayTrendChartController _controller;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
-    private readonly WeekdayTrendChartUpdateCoordinator _updateCoordinator;
+    private readonly Func<bool> _isInitializing;
+    private readonly MetricSelectionService _metricSelectionService;
     private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly WeekdayTrendChartUpdateCoordinator _updateCoordinator;
+    private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombo;
 
-    public WeekdayTrendChartControllerAdapter(
-        WeekdayTrendChartController controller,
-        MainWindowViewModel viewModel,
-        Func<bool> isInitializing,
-        Func<IDisposable> beginUiBusyScope,
-        MetricSelectionService metricSelectionService,
-        Func<IStrategyCutOverService?> getStrategyCutOverService,
-        WeekdayTrendChartUpdateCoordinator updateCoordinator)
+    public WeekdayTrendChartControllerAdapter(WeekdayTrendChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<IStrategyCutOverService?> getStrategyCutOverService, WeekdayTrendChartUpdateCoordinator updateCoordinator)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -50,26 +39,22 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         _updateCoordinator = updateCoordinator ?? throw new ArgumentNullException(nameof(updateCoordinator));
     }
 
+    public CartesianChart PolarChart => _controller.PolarChart;
+    public CartesianChart Chart => _controller.Chart;
+
+    public void ClearCache()
+    {
+        _subtypeCache.Clear();
+    }
+
     public string Key => "WeeklyTrend";
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => false;
     public ChartPanelController Panel => _controller.Panel;
     public ButtonBase ToggleButton => _controller.ToggleButton;
-    public LiveCharts.Wpf.CartesianChart Chart => _controller.Chart;
-    public LiveCharts.Wpf.CartesianChart PolarChart => _controller.PolarChart;
 
     public void Initialize()
     {
-    }
-
-    public void InitializeControls()
-    {
-        _controller.AverageWindowCombo.Items.Clear();
-        AddWeekdayTrendAverageOption("Running Mean", WeekdayTrendAverageWindow.RunningMean);
-        AddWeekdayTrendAverageOption("Weekly", WeekdayTrendAverageWindow.Weekly);
-        AddWeekdayTrendAverageOption("Monthly", WeekdayTrendAverageWindow.Monthly);
-
-        SelectWeekdayTrendAverageWindow(_viewModel.ChartState.WeekdayTrendAverageWindow);
     }
 
     public Task RenderAsync(ChartDataContext context)
@@ -91,22 +76,7 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
 
     public bool HasSeries(ChartState state)
     {
-        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar
-            ? HasSeriesInternal(_controller.PolarChart.Series)
-            : HasSeriesInternal(_controller.Chart.Series);
-    }
-
-    private static bool HasSeriesInternal(System.Collections.IEnumerable? series)
-    {
-        if (series == null)
-            return false;
-
-        return series.Cast<object>().Any();
-    }
-
-    public void ClearCache()
-    {
-        _subtypeCache.Clear();
+        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar ? HasSeriesInternal(_controller.PolarChart.Series) : HasSeriesInternal(_controller.Chart.Series);
     }
 
     public void UpdateSubtypeOptions()
@@ -135,9 +105,7 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
             combo.IsEnabled = true;
 
             var current = _viewModel.ChartState.SelectedWeekdayTrendSeries;
-            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase))
-                ? current
-                : selectedSeries[0];
+            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? current : selectedSeries[0];
             var weekdayItem = FindSeriesComboItem(combo, seriesSelection) ?? combo.Items.OfType<ComboBoxItem>().FirstOrDefault();
             combo.SelectedItem = weekdayItem;
 
@@ -150,6 +118,16 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         {
             _isUpdatingSubtypeCombo = false;
         }
+    }
+
+    public void InitializeControls()
+    {
+        _controller.AverageWindowCombo.Items.Clear();
+        AddWeekdayTrendAverageOption("Running Mean", WeekdayTrendAverageWindow.RunningMean);
+        AddWeekdayTrendAverageOption("Weekly", WeekdayTrendAverageWindow.Weekly);
+        AddWeekdayTrendAverageOption("Monthly", WeekdayTrendAverageWindow.Monthly);
+
+        SelectWeekdayTrendAverageWindow(_viewModel.ChartState.WeekdayTrendAverageWindow);
     }
 
     public void UpdateChartTypeVisibility()
@@ -174,6 +152,14 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
             _controller.PolarChart.Visibility = Visibility.Collapsed;
             _controller.ChartTypeToggleButton.Content = mode == WeekdayTrendChartMode.Scatter ? "Cartesian" : "Polar";
         }
+    }
+
+    private static bool HasSeriesInternal(IEnumerable? series)
+    {
+        if (series == null)
+            return false;
+
+        return series.Cast<object>().Any();
     }
 
     public void OnToggleRequested(object? sender, EventArgs e)
@@ -250,21 +236,19 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
     {
         _controller.AverageWindowCombo.Items.Add(new ComboBoxItem
         {
-            Content = label,
-            Tag = window
+                Content = label,
+                Tag = window
         });
     }
 
     private void SelectWeekdayTrendAverageWindow(WeekdayTrendAverageWindow window)
     {
         foreach (var item in _controller.AverageWindowCombo.Items.OfType<ComboBoxItem>())
-        {
             if (item.Tag is WeekdayTrendAverageWindow option && option == window)
             {
                 _controller.AverageWindowCombo.SelectedItem = item;
                 break;
             }
-        }
     }
 
     private async Task RenderWeekdayTrendAsync(ChartDataContext ctx)
@@ -280,15 +264,15 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSeries);
         var trendContext = new ChartDataContext
         {
-            Data1 = data,
-            DisplayName1 = displayName,
-            MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-            PrimarySubtype = selectedSeries?.Subtype,
-            DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            From = ctx.From,
-            To = ctx.To
+                Data1 = data,
+                DisplayName1 = displayName,
+                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+                PrimarySubtype = selectedSeries?.Subtype,
+                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                From = ctx.From,
+                To = ctx.To
         };
 
         var result = ComputeWeekdayTrend(trendContext);
@@ -363,10 +347,10 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
-            Label1 = ctx.DisplayName1,
-            From = ctx.From,
-            To = ctx.To
+                LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
+                Label1 = ctx.DisplayName1,
+                From = ctx.From,
+                To = ctx.To
         };
 
         var strategy = strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
@@ -384,15 +368,14 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
     {
         return new ComboBoxItem
         {
-            Content = selection.DisplayName,
-            Tag = selection
+                Content = selection.DisplayName,
+                Tag = selection
         };
     }
 
     private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
     {
-        return combo.Items.OfType<ComboBoxItem>()
-            .FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
+        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
     }
 
     private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)

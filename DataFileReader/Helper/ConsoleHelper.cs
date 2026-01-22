@@ -1,6 +1,6 @@
-﻿using System.Data;
+﻿using System.Configuration;
+using System.Data;
 using System.Text;
-using System.Configuration;
 using DataFileReader.Class;
 
 namespace DataFileReader.Helper;

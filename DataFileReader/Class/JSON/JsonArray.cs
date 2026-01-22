@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 
+namespace DataFileReader.Class.JSON;
+
 public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
 {
     public List<IJson> Elements { get; set; } = new();
