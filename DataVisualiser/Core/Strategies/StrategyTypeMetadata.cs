@@ -7,15 +7,15 @@ public static class StrategyTypeMetadata
 {
     private static readonly IReadOnlyDictionary<StrategyType, StrategyTypeInfo> Infos = new Dictionary<StrategyType, StrategyTypeInfo>
     {
-        { StrategyType.SingleMetric, new StrategyTypeInfo("SingleMetricStrategy", () => new ChartComputationParityHarness()) },
-        { StrategyType.CombinedMetric, new StrategyTypeInfo("CombinedMetricStrategy", () => new CombinedMetricParityHarness()) },
-        { StrategyType.MultiMetric, new StrategyTypeInfo("MultiMetricStrategy", () => new ChartComputationParityHarness()) },
-        { StrategyType.Difference, new StrategyTypeInfo("DifferenceStrategy", null) },
-        { StrategyType.Ratio, new StrategyTypeInfo("RatioStrategy", null) },
-        { StrategyType.Normalized, new StrategyTypeInfo("NormalizedStrategy", () => new ChartComputationParityHarness()) },
-        { StrategyType.WeeklyDistribution, new StrategyTypeInfo("WeeklyDistributionStrategy", () => new WeeklyDistributionParityHarness()) },
-        { StrategyType.HourlyDistribution, new StrategyTypeInfo("HourlyDistributionStrategy", () => new HourlyDistributionParityHarness()) },
-        { StrategyType.WeekdayTrend, new StrategyTypeInfo("WeekdayTrendStrategy", () => new ChartComputationParityHarness()) }
+            { StrategyType.SingleMetric, new StrategyTypeInfo("SingleMetricStrategy", () => new ChartComputationParityHarness()) },
+            { StrategyType.CombinedMetric, new StrategyTypeInfo("CombinedMetricStrategy", () => new CombinedMetricParityHarness()) },
+            { StrategyType.MultiMetric, new StrategyTypeInfo("MultiMetricStrategy", () => new ChartComputationParityHarness()) },
+            { StrategyType.Difference, new StrategyTypeInfo("DifferenceStrategy", null) },
+            { StrategyType.Ratio, new StrategyTypeInfo("RatioStrategy", null) },
+            { StrategyType.Normalized, new StrategyTypeInfo("NormalizedStrategy", () => new ChartComputationParityHarness()) },
+            { StrategyType.WeeklyDistribution, new StrategyTypeInfo("WeeklyDistributionStrategy", () => new WeeklyDistributionParityHarness()) },
+            { StrategyType.HourlyDistribution, new StrategyTypeInfo("HourlyDistributionStrategy", () => new HourlyDistributionParityHarness()) },
+            { StrategyType.WeekdayTrend, new StrategyTypeInfo("WeekdayTrendStrategy", () => new ChartComputationParityHarness()) }
     };
 
     public static string? GetConfigName(StrategyType strategyType)

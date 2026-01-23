@@ -62,7 +62,7 @@ public class MetricSelectionService
 
     //    return (PrimaryCms: primaryCmsTask?.Result.FirstOrDefault(), SecondaryCms: secondaryCmsTask?.Result.FirstOrDefault(), PrimaryLegacy: primaryLegacyTask.Result, SecondaryLegacy: secondaryLegacyTask.Result);
     //}
-    public async Task<( ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName)
+    public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName)
     {
         var dataFetcher = new DataFetcher(_connectionString);
         var cmsService = new CmsDataService(_connectionString);
@@ -84,7 +84,7 @@ public class MetricSelectionService
         return (PrimaryCms: cmsTasks.Primary?.Result.FirstOrDefault(), SecondaryCms: cmsTasks.Secondary?.Result.FirstOrDefault(), PrimaryLegacy: legacyTasks.Primary.Result, SecondaryLegacy: legacyTasks.Secondary.Result);
     }
 
-    private static( Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(DataFetcher dataFetcher, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
+    private static(Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(DataFetcher dataFetcher, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
     {
         var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
 
@@ -93,7 +93,7 @@ public class MetricSelectionService
         return (primaryTask, secondaryTask);
     }
 
-    private static async Task<( Task<IReadOnlyList<ICanonicalMetricSeries>>? Primary, Task<IReadOnlyList<ICanonicalMetricSeries>>? Secondary)> StartCmsLoadTasksAsync(CmsDataService cmsService, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
+    private static async Task<(Task<IReadOnlyList<ICanonicalMetricSeries>>? Primary, Task<IReadOnlyList<ICanonicalMetricSeries>>? Secondary)> StartCmsLoadTasksAsync(CmsDataService cmsService, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
     {
         Task<IReadOnlyList<ICanonicalMetricSeries>>? primaryTask = null;
         Task<IReadOnlyList<ICanonicalMetricSeries>>? secondaryTask = null;

@@ -7,7 +7,6 @@ using System.Windows.Shapes;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.UI.Controls;
 using DataVisualiser.UI.Defaults;
-using DataVisualiser.UI.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 

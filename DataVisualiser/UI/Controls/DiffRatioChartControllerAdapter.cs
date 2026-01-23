@@ -236,7 +236,9 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IDiffRat
 
     private MetricSeriesSelection? ResolveSelectedDiffRatioPrimarySeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos, _controller.PrimarySubtypeCombo, _viewModel.ChartState.SelectedDiffRatioPrimarySeries,
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos,
+                _controller.PrimarySubtypeCombo,
+                _viewModel.ChartState.SelectedDiffRatioPrimarySeries,
                 () =>
                 {
                     var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
@@ -249,7 +251,9 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IDiffRat
 
     private MetricSeriesSelection? ResolveSelectedDiffRatioSecondarySeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos, _controller.SecondarySubtypeCombo, _viewModel.ChartState.SelectedDiffRatioSecondarySeries,
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos,
+                _controller.SecondarySubtypeCombo,
+                _viewModel.ChartState.SelectedDiffRatioSecondarySeries,
                 () =>
                 {
                     var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
@@ -358,5 +362,4 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IDiffRat
             _viewModel.ChartState.SelectedDiffRatioSecondarySeries = null;
         }
     }
-
 }

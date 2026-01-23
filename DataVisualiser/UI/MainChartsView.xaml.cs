@@ -2366,7 +2366,7 @@ public partial class MainChartsView : UserControl
         {
                 "Log" => UnaryOperators.Logarithm,
                 "Sqrt" => UnaryOperators.SquareRoot,
-                _ => (Func<double, double>)(x => x)
+                _ => x => x
         };
 
         var legacy = MathHelper.ApplyUnaryOperation(values, legacyOp);
@@ -2406,7 +2406,7 @@ public partial class MainChartsView : UserControl
         {
                 "Add" => BinaryOperators.Sum,
                 "Subtract" => BinaryOperators.Difference,
-                _ => (Func<double, double, double>)((a, b) => a)
+                _ => (a, b) => a
         };
 
         var legacy = MathHelper.ApplyBinaryOperation(values1, values2, legacyOp);

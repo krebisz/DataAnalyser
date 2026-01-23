@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Controls;
 using DataFileReader.Canonical;
 using DataVisualiser.Shared.Models;
@@ -9,8 +6,8 @@ namespace DataVisualiser.UI.Controls;
 
 public sealed class MetricSeriesSelectionCache
 {
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _dataCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, ICanonicalMetricSeries?> _cmsCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IReadOnlyList<MetricData>> _dataCache = new(StringComparer.OrdinalIgnoreCase);
 
     public void Clear()
     {
@@ -75,8 +72,8 @@ public sealed class MetricSeriesSelectionCache
     {
         return new ComboBoxItem
         {
-            Content = selection.DisplayName,
-            Tag = selection
+                Content = selection.DisplayName,
+                Tag = selection
         };
     }
 

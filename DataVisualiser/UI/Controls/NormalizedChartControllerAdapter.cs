@@ -260,7 +260,9 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
 
     private MetricSeriesSelection? ResolveSelectedNormalizedPrimarySeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos, _controller.NormalizedPrimarySubtypeCombo, _viewModel.ChartState.SelectedNormalizedPrimarySeries,
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos,
+                _controller.NormalizedPrimarySubtypeCombo,
+                _viewModel.ChartState.SelectedNormalizedPrimarySeries,
                 () =>
                 {
                     var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
@@ -273,7 +275,9 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
 
     private MetricSeriesSelection? ResolveSelectedNormalizedSecondarySeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos, _controller.NormalizedSecondarySubtypeCombo, _viewModel.ChartState.SelectedNormalizedSecondarySeries,
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos,
+                _controller.NormalizedSecondarySubtypeCombo,
+                _viewModel.ChartState.SelectedNormalizedSecondarySeries,
                 () =>
                 {
                     var metricType = ctx.SecondaryMetricType;
@@ -394,5 +398,4 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
             _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
         }
     }
-
 }

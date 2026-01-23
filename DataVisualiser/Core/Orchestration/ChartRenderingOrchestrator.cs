@@ -404,7 +404,7 @@ public sealed class ChartRenderingOrchestrator
         return alignedData;
     }
 
-    private static( List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
+    private static(List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
     {
         var metricsList = new List<IReadOnlyList<MetricData>>
         {

@@ -8,8 +8,8 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.Events;
+using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;
@@ -228,8 +228,8 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
     {
         _controller.AverageWindowCombo.Items.Add(new ComboBoxItem
         {
-            Content = label,
-            Tag = window
+                Content = label,
+                Tag = window
         });
     }
 
@@ -256,15 +256,15 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
         var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSeries);
         var trendContext = new ChartDataContext
         {
-            Data1 = data,
-            DisplayName1 = displayName,
-            MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-            PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-            PrimarySubtype = selectedSeries?.Subtype,
-            DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-            DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            From = ctx.From,
-            To = ctx.To
+                Data1 = data,
+                DisplayName1 = displayName,
+                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+                PrimarySubtype = selectedSeries?.Subtype,
+                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                From = ctx.From,
+                To = ctx.To
         };
 
         var result = ComputeWeekdayTrend(trendContext);
@@ -302,7 +302,9 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
 
     private MetricSeriesSelection? ResolveSelectedWeekdayTrendSeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo, _controller.SubtypeCombo, _viewModel.ChartState.SelectedWeekdayTrendSeries,
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo,
+                _controller.SubtypeCombo,
+                _viewModel.ChartState.SelectedWeekdayTrendSeries,
                 () =>
                 {
                     var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
@@ -335,10 +337,10 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
 
         var parameters = new StrategyCreationParameters
         {
-            LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
-            Label1 = ctx.DisplayName1,
-            From = ctx.From,
-            To = ctx.To
+                LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
+                Label1 = ctx.DisplayName1,
+                From = ctx.From,
+                To = ctx.To
         };
 
         var strategy = strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
@@ -351,5 +353,4 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
     {
         _updateCoordinator.UpdateChart(result, _viewModel.ChartState, _controller.Chart, _controller.PolarChart);
     }
-
 }

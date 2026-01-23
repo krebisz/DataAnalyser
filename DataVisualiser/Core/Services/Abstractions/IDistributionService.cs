@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Shared.Models;

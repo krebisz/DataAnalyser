@@ -13,12 +13,12 @@ public static class ChartUiHelper
         var selectedResolution = resolutionCombo.SelectedItem?.ToString() ?? "All";
         return selectedResolution switch
         {
-            "Hourly" => DataAccessDefaults.HealthMetricsHourTable,
-            "Daily" => DataAccessDefaults.HealthMetricsDayTable,
-            "Weekly" => DataAccessDefaults.HealthMetricsWeekTable,
-            "Monthly" => DataAccessDefaults.HealthMetricsMonthTable,
-            "Yearly" => DataAccessDefaults.HealthMetricsYearTable,
-            _ => DataAccessDefaults.DefaultTableName
+                "Hourly" => DataAccessDefaults.HealthMetricsHourTable,
+                "Daily" => DataAccessDefaults.HealthMetricsDayTable,
+                "Weekly" => DataAccessDefaults.HealthMetricsWeekTable,
+                "Monthly" => DataAccessDefaults.HealthMetricsMonthTable,
+                "Yearly" => DataAccessDefaults.HealthMetricsYearTable,
+                _ => DataAccessDefaults.DefaultTableName
         };
     }
 
@@ -29,8 +29,8 @@ public static class ChartUiHelper
         var display2 = subtypeCombo2 != null ? GetDisplayNameFromCombo(subtypeCombo2, baseMetric) : baseMetric;
         return new[]
         {
-            display1,
-            display2
+                display1,
+                display2
         };
     }
 

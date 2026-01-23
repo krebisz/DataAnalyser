@@ -75,7 +75,6 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
     }
 
 
-
     public void OnToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleMain();

@@ -437,7 +437,9 @@ public sealed class DistributionChartControllerAdapter : IChartController, IDist
 
     private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo, _controller.SubtypeCombo, _viewModel.ChartState.SelectedDistributionSeries,
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo,
+                _controller.SubtypeCombo,
+                _viewModel.ChartState.SelectedDistributionSeries,
                 () =>
                 {
                     var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
