@@ -14,13 +14,14 @@ using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class TransformDataPanelControllerAdapter : IChartController, IChartCacheController, ITransformPanelControllerExtras, ICartesianChartSurface
+public sealed class TransformDataPanelControllerAdapter : IChartController, ITransformPanelControllerExtras, ICartesianChartSurface
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
@@ -75,7 +76,17 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ICha
 
     public void ResetZoom()
     {
-        ChartHelper.ResetZoom(_controller.ChartTransformResult);
+        ChartUiHelper.ResetZoom(_controller.ChartTransformResult);
+    }
+
+    public bool HasSeries(ChartState state)
+    {
+        return ChartSeriesHelper.HasSeries(_controller.ChartTransformResult.Series);
+    }
+
+    public void UpdateSubtypeOptions()
+    {
+        UpdateTransformSubtypeOptions();
     }
 
     public void CompleteSelectionsPendingLoad()

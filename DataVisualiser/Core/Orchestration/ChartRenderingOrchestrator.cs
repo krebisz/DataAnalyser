@@ -3,6 +3,7 @@ using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Core.Transforms.Evaluators;
@@ -28,12 +29,12 @@ public sealed class ChartRenderingOrchestrator
 {
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
     private readonly string? _connectionString;
-    private readonly HourlyDistributionService _hourlyDistributionService;
+    private readonly IDistributionService _hourlyDistributionService;
     private readonly MetricSelectionService? _metricSelectionService;
     private readonly IStrategyCutOverService _strategyCutOverService;
-    private readonly WeeklyDistributionService _weeklyDistributionService;
+    private readonly IDistributionService _weeklyDistributionService;
 
-    public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
+    public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, string? connectionString = null)
     {
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
         _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));
@@ -42,7 +43,7 @@ public sealed class ChartRenderingOrchestrator
         _connectionString = connectionString;
     }
 
-    public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, MetricSelectionService metricSelectionService, string? connectionString = null)
+    public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, MetricSelectionService metricSelectionService, string? connectionString = null)
     {
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
         _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));

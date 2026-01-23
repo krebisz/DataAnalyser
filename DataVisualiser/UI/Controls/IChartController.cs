@@ -16,4 +16,7 @@ public interface IChartController
     Task RenderAsync(ChartDataContext context);
     void Clear(ChartState state);
     void ResetZoom();
+    bool HasSeries(ChartState state);
+    void UpdateSubtypeOptions();
+    void ClearCache();
 }

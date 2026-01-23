@@ -17,6 +17,7 @@ using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Reachability;
@@ -27,6 +28,7 @@ using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Controls;
 using DataVisualiser.UI.Events;
+using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveChartsCore.Kernel;
@@ -34,7 +36,6 @@ using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.WPF;
 using CartesianChart = LiveCharts.Wpf.CartesianChart;
-using ChartHelper = DataVisualiser.Core.Rendering.Helpers.ChartHelper;
 using ErrorEventArgs = DataVisualiser.UI.Events.ErrorEventArgs;
 
 namespace DataVisualiser.UI;
@@ -60,7 +61,7 @@ public partial class MainChartsView : UserControl
     private DistributionChartControllerAdapter _distributionAdapter = null!;
     private DistributionPolarRenderingService _distributionPolarRenderingService = null!;
     private ToolTip _distributionPolarTooltip = null!;
-    private HourlyDistributionService _hourlyDistributionService = null!;
+    private IDistributionService _hourlyDistributionService = null!;
     private bool _isChangingResolution;
 
     private bool _isInitializing = true;
@@ -78,7 +79,7 @@ public partial class MainChartsView : UserControl
     private MainWindowViewModel _viewModel = null!;
     private WeekdayTrendChartControllerAdapter _weekdayTrendAdapter = null!;
     private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
-    private WeeklyDistributionService _weeklyDistributionService = null!;
+    private IDistributionService _weeklyDistributionService = null!;
 
     public MainChartsView()
     {
@@ -517,10 +518,7 @@ public partial class MainChartsView : UserControl
         if (!IsKnownChartKey(chartName))
             return false;
 
-        if (ResolveController(chartName) is IChartSeriesAvailability availability)
-            return availability.HasSeries(_viewModel.ChartState);
-
-        return false;
+        return ResolveController(chartName).HasSeries(_viewModel.ChartState);
     }
 
     private void UpdateAllChartVisibilities(ChartUpdateRequestedEventArgs e)
@@ -550,14 +548,12 @@ public partial class MainChartsView : UserControl
 
     private void UpdateSubtypeOptions(string key)
     {
-        if (ResolveController(key) is IChartSubtypeOptionsController controller)
-            controller.UpdateSubtypeOptions();
+        ResolveController(key).UpdateSubtypeOptions();
     }
 
     private void ClearChartCache(string key)
     {
-        if (ResolveController(key) is IChartCacheController controller)
-            controller.ClearCache();
+        ResolveController(key).ClearCache();
     }
 
     private void InitializeDistributionControlsFromRegistry()
@@ -1228,7 +1224,7 @@ public partial class MainChartsView : UserControl
         return new DistributionPolarRenderingService();
     }
 
-    private WeeklyDistributionService CreateWeeklyDistributionService()
+    private IDistributionService CreateWeeklyDistributionService()
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
@@ -1236,7 +1232,7 @@ public partial class MainChartsView : UserControl
         return new WeeklyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
     }
 
-    private HourlyDistributionService CreateHourlyDistributionService()
+    private IDistributionService CreateHourlyDistributionService()
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
@@ -1275,7 +1271,7 @@ public partial class MainChartsView : UserControl
         // Set initial resolution selection
         ResolutionCombo.SelectedItem = "All";
 
-        _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
+        _viewModel.MetricState.ResolutionTableName = ChartUiHelper.GetTableNameFromResolution(ResolutionCombo);
 
         _viewModel.LoadMetricsCommand.Execute(null);
     }
@@ -1401,10 +1397,10 @@ public partial class MainChartsView : UserControl
 
     private void InitializeChartBehavior()
     {
-        ChartHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Main));
+        ChartUiHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Main));
         InitializeDistributionChartBehavior(GetCartesianChart(ChartControllerKeys.Distribution));
-        ChartHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Normalized));
-        ChartHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.DiffRatio));
+        ChartUiHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Normalized));
+        ChartUiHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.DiffRatio));
     }
 
     private void InitializeDistributionPolarTooltip()
@@ -1424,7 +1420,7 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void InitializeDistributionChartBehavior(CartesianChart chart)
     {
-        ChartHelper.InitializeChartBehavior(chart);
+        ChartUiHelper.InitializeChartBehavior(chart);
     }
 
     private void ClearChartsOnStartup()
@@ -1545,7 +1541,7 @@ public partial class MainChartsView : UserControl
         SubtypeCombo.Items.Clear();
         SubtypeCombo.IsEnabled = false;
 
-        _viewModel.MetricState.ResolutionTableName = ChartHelper.GetTableNameFromResolution(ResolutionCombo);
+        _viewModel.MetricState.ResolutionTableName = ChartUiHelper.GetTableNameFromResolution(ResolutionCombo);
         _viewModel.LoadMetricsCommand.Execute(null);
 
         // Ensure chart buttons reflect the absence of subtypes

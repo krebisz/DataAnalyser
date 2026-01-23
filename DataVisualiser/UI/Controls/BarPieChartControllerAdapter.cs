@@ -13,7 +13,7 @@ using DataVisualiser.UI.Rendering;
 using DataVisualiser.UI.Rendering.LiveCharts;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
-using UiChartRenderModel = DataVisualiser.UI.Rendering.ChartRenderModel;
+using UiChartRenderModel = DataVisualiser.UI.Rendering.UiChartRenderModel;
 
 namespace DataVisualiser.UI.Controls;
 
@@ -77,6 +77,19 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
     }
 
     public void ResetZoom()
+    {
+    }
+
+    public bool HasSeries(ChartState state)
+    {
+        return false;
+    }
+
+    public void UpdateSubtypeOptions()
+    {
+    }
+
+    public void ClearCache()
     {
     }
 

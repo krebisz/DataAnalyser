@@ -1,6 +1,6 @@
 namespace DataVisualiser.UI.Rendering;
 
-public sealed class ChartRenderModel
+public sealed class UiChartRenderModel
 {
     public string? Title { get; init; }
     public bool IsVisible { get; init; }

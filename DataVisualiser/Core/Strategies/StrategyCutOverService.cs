@@ -51,19 +51,7 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         }
 
         // Check strategy-specific configuration
-        var strategyName = strategyType switch
-        {
-                StrategyType.SingleMetric => "SingleMetricStrategy",
-                StrategyType.CombinedMetric => "CombinedMetricStrategy",
-                StrategyType.MultiMetric => "MultiMetricStrategy",
-                StrategyType.Difference => "DifferenceStrategy",
-                StrategyType.Ratio => "RatioStrategy",
-                StrategyType.Normalized => "NormalizedStrategy",
-                StrategyType.WeeklyDistribution => "WeeklyDistributionStrategy",
-                StrategyType.WeekdayTrend => "WeekdayTrendStrategy",
-                StrategyType.HourlyDistribution => "HourlyDistributionStrategy",
-                _ => null
-        };
+        var strategyName = StrategyTypeMetadata.GetConfigName(strategyType);
 
         if (strategyName != null && !CmsConfiguration.ShouldUseCms(strategyName))
         {
@@ -237,18 +225,10 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
 
     private IStrategyParityHarness? GetParityHarness(StrategyType? strategyType)
     {
-        return strategyType switch
-        {
-                StrategyType.SingleMetric => new ChartComputationParityHarness(),
-                StrategyType.CombinedMetric => new CombinedMetricParityHarness(),
-                StrategyType.MultiMetric => new ChartComputationParityHarness(),
-                StrategyType.Normalized => new ChartComputationParityHarness(),
-                StrategyType.WeeklyDistribution => new WeeklyDistributionParityHarness(),
-                StrategyType.HourlyDistribution => new HourlyDistributionParityHarness(),
-                StrategyType.WeekdayTrend => new ChartComputationParityHarness(),
-                // TODO: Add harnesses for other strategy types as they become available
-                _ => null
-        };
+        if (!strategyType.HasValue)
+            return null;
+
+        return StrategyTypeMetadata.CreateParityHarness(strategyType.Value);
     }
 
     private ParityResult PerformBasicValidation(IChartComputationStrategy legacyStrategy, IChartComputationStrategy cmsStrategy)

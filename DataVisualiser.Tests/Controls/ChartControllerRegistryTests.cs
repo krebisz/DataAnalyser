@@ -117,5 +117,18 @@ public sealed class ChartControllerRegistryTests
         public void ResetZoom()
         {
         }
+
+        public bool HasSeries(ChartState state)
+        {
+            return false;
+        }
+
+        public void UpdateSubtypeOptions()
+        {
+        }
+
+        public void ClearCache()
+        {
+        }
     }
 }

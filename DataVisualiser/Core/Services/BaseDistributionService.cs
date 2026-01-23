@@ -21,7 +21,7 @@ namespace DataVisualiser.Core.Services;
 ///     Base class for distribution services (weekly, hourly, etc.)
 ///     Contains all common functionality shared between distribution chart types
 /// </summary>
-public abstract class BaseDistributionService
+public abstract class BaseDistributionService : IDistributionService
 {
     protected readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
     protected readonly IFrequencyShadingRenderer _frequencyRenderer;

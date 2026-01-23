@@ -1,14 +1,14 @@
-using System.Collections;
 using System.Windows.Controls.Primitives;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
+public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, ICartesianChartSurface
 {
     private readonly MainChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
@@ -50,12 +50,20 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
 
     public void ResetZoom()
     {
-        ChartHelper.ResetZoom(_controller.Chart);
+        ChartUiHelper.ResetZoom(_controller.Chart);
     }
 
     public bool HasSeries(ChartState state)
     {
-        return HasSeriesInternal(_controller.Chart.Series);
+        return ChartSeriesHelper.HasSeries(_controller.Chart.Series);
+    }
+
+    public void UpdateSubtypeOptions()
+    {
+    }
+
+    public void ClearCache()
+    {
     }
 
     public void SyncDisplayModeSelection()
@@ -66,13 +74,7 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
         _controller.DisplayStackedRadio.IsChecked = mode == MainChartDisplayMode.Stacked;
     }
 
-    private static bool HasSeriesInternal(IEnumerable? series)
-    {
-        if (series == null)
-            return false;
 
-        return series.Cast<object>().Any();
-    }
 
     public void OnToggleRequested(object? sender, EventArgs e)
     {

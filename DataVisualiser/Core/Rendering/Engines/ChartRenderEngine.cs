@@ -133,9 +133,9 @@ public sealed class ChartRenderEngine
     {
         var seriesColor = ColourPalette.Next(targetChart);
 
-        var alignedRaw = AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
+        var alignedRaw = SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
 
-        var alignedSmoothed = seriesResult.Smoothed != null ? AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline) : null;
+        var alignedSmoothed = seriesResult.Smoothed != null ? SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline) : null;
 
         TryRenderSeries(targetChart, seriesResult, alignedSmoothed, seriesColor, seriesMode, true, isStacked);
 
@@ -341,7 +341,7 @@ public sealed class ChartRenderEngine
 
         if (seriesResult.Smoothed != null && seriesResult.Smoothed.Count > 0)
         {
-            var alignedSmoothed = AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline);
+            var alignedSmoothed = SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline);
             if (HasAnyValidValue(alignedSmoothed))
             {
                 usedSmoothed = true;
@@ -349,7 +349,7 @@ public sealed class ChartRenderEngine
             }
         }
 
-        return AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
+        return SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
     }
 
     private static bool HasAnyValidValue(IList<double> values)
@@ -527,58 +527,4 @@ public sealed class ChartRenderEngine
     ///     Aligns a series' values to the main timeline by interpolating/mapping values.
     ///     Uses forward-fill for missing values (carries last known value forward).
     /// </summary>
-    private static List<double> AlignSeriesToTimeline(List<DateTime> seriesTimestamps, List<double> seriesValues, List<DateTime> mainTimeline)
-    {
-        if (seriesTimestamps.Count == 0 || seriesValues.Count == 0)
-            return mainTimeline.Select(_ => double.NaN).ToList();
-
-        var count = Math.Min(seriesTimestamps.Count, seriesValues.Count);
-        if (count == 0)
-            return mainTimeline.Select(_ => double.NaN).ToList();
-
-        // Create a dictionary for quick lookup
-        var valueMap = new Dictionary<DateTime, double>();
-        for (var i = 0; i < count; i++)
-        {
-            var ts = seriesTimestamps[i];
-            var val = seriesValues[i];
-            // Use the latest value if there are duplicate timestamps
-            valueMap[ts] = val;
-        }
-
-        var aligned = new List<double>(mainTimeline.Count);
-        var lastValue = double.NaN;
-
-        foreach (var timestamp in mainTimeline)
-                // Try exact match first
-            if (valueMap.TryGetValue(timestamp, out var exactValue))
-            {
-                aligned.Add(exactValue);
-                lastValue = exactValue;
-            }
-            else
-            {
-                // Try to find nearest timestamp (within same day for simplicity)
-                var day = timestamp.Date;
-                var dayMatch = valueMap.Keys.FirstOrDefault(ts => ts.Date == day);
-
-                if (dayMatch != default && valueMap.TryGetValue(dayMatch, out var dayValue))
-                {
-                    aligned.Add(dayValue);
-                    lastValue = dayValue;
-                }
-                else if (!double.IsNaN(lastValue))
-                {
-                    // Forward fill: use last known value
-                    aligned.Add(lastValue);
-                }
-                else
-                {
-                    // No value available
-                    aligned.Add(double.NaN);
-                }
-            }
-
-        return aligned;
-    }
 }

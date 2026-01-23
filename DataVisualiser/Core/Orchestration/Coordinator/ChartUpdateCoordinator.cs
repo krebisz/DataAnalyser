@@ -175,8 +175,8 @@ public class ChartUpdateCoordinator
 
         foreach (var series in seriesResults)
         {
-            var alignedRaw = AlignSeriesToTimeline(series.Timestamps, series.RawValues, mainTimeline);
-            var alignedSmooth = AlignSeriesToTimeline(series.Timestamps, series.Smoothed ?? series.RawValues, mainTimeline);
+            var alignedRaw = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.RawValues, mainTimeline);
+            var alignedSmooth = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.Smoothed ?? series.RawValues, mainTimeline);
 
             originalSeries.Add(new SeriesResult
             {
@@ -309,7 +309,7 @@ public class ChartUpdateCoordinator
         {
             foreach (var series in model.Series)
             {
-                var aligned = AlignSeriesToTimeline(series.Timestamps, series.RawValues, timestamps);
+                var aligned = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.RawValues, timestamps);
                 for (var i = 0; i < aligned.Count; i++)
                 {
                     var value = aligned[i];
@@ -452,7 +452,7 @@ public class ChartUpdateCoordinator
                 if (series.Smoothed == null)
                     continue;
 
-                var aligned = AlignSeriesToTimeline(series.Timestamps, series.Smoothed, timestamps);
+                var aligned = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.Smoothed, timestamps);
                 for (var i = 0; i < aligned.Count; i++)
                 {
                     var value = aligned[i];
@@ -510,51 +510,6 @@ public class ChartUpdateCoordinator
                 timeline = model.Series.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
 
         return timeline ?? new List<DateTime>();
-    }
-
-    private static List<double> AlignSeriesToTimeline(List<DateTime> seriesTimestamps, List<double> seriesValues, List<DateTime> mainTimeline)
-    {
-        if (seriesTimestamps.Count == 0 || seriesValues.Count == 0)
-            return mainTimeline.Select(_ => double.NaN).ToList();
-
-        var count = Math.Min(seriesTimestamps.Count, seriesValues.Count);
-        if (count == 0)
-            return mainTimeline.Select(_ => double.NaN).ToList();
-
-        var valueMap = new Dictionary<DateTime, double>();
-        for (var i = 0; i < count; i++)
-            valueMap[seriesTimestamps[i]] = seriesValues[i];
-
-        var aligned = new List<double>(mainTimeline.Count);
-        var lastValue = double.NaN;
-
-        foreach (var timestamp in mainTimeline)
-            if (valueMap.TryGetValue(timestamp, out var exactValue))
-            {
-                aligned.Add(exactValue);
-                lastValue = exactValue;
-            }
-            else
-            {
-                var day = timestamp.Date;
-                var dayMatch = valueMap.Keys.FirstOrDefault(ts => ts.Date == day);
-
-                if (dayMatch != default && valueMap.TryGetValue(dayMatch, out var dayValue))
-                {
-                    aligned.Add(dayValue);
-                    lastValue = dayValue;
-                }
-                else if (!double.IsNaN(lastValue))
-                {
-                    aligned.Add(lastValue);
-                }
-                else
-                {
-                    aligned.Add(double.NaN);
-                }
-            }
-
-        return aligned;
     }
 
     /// <summary>

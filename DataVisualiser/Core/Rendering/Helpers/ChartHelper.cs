@@ -30,38 +30,6 @@ public static class ChartHelper
         };
     }
 
-    /// <summary>
-    ///     Gets the table name based on the selected resolution.
-    /// </summary>
-    public static string GetTableNameFromResolution(ComboBox ResolutionCombo)
-    {
-        var selectedResolution = ResolutionCombo.SelectedItem?.ToString() ?? "All";
-        return selectedResolution switch
-        {
-                "Hourly" => DataAccessDefaults.HealthMetricsHourTable,
-                "Daily" => DataAccessDefaults.HealthMetricsDayTable,
-                "Weekly" => DataAccessDefaults.HealthMetricsWeekTable,
-                "Monthly" => DataAccessDefaults.HealthMetricsMonthTable,
-                "Yearly" => DataAccessDefaults.HealthMetricsYearTable,
-                _ => DataAccessDefaults.DefaultTableName // Default to "All" which uses HealthMetrics
-        };
-    }
-
-    /// <summary>
-    ///     Gets chart titles from combo boxes, using subtype if available, otherwise base metric type.
-    /// </summary>
-    public static string[] GetChartTitlesFromCombos(ComboBox TablesCombo, ComboBox SubtypeCombo, ComboBox? SubtypeCombo2)
-    {
-        var baseMetric = GetDisplayValueFromCombo(TablesCombo);
-        var display1 = GetDisplayNameFromCombo(SubtypeCombo, baseMetric);
-        var display2 = SubtypeCombo2 != null ? GetDisplayNameFromCombo(SubtypeCombo2, baseMetric) : baseMetric;
-        return new[]
-        {
-                display1,
-                display2
-        };
-    }
-
     public static LineSeries? CreateLineSeries(string title, int pointSize, int lineThickness, Color colour, bool dataLabels = false)
     {
         var smoothedSeries = new LineSeries
@@ -692,84 +660,6 @@ public static class ChartHelper
         {
             // Section or axis may have been disposed - ignore
         }
-    }
-
-    /// <summary>
-    ///     Gets the selected subtype from a ComboBox, filtering out "(All)" option.
-    /// </summary>
-    public static string? GetSubMetricType(ComboBox subMetricTypeCombo)
-    {
-        if (!subMetricTypeCombo.IsEnabled || subMetricTypeCombo.SelectedItem == null)
-            return null;
-
-        var subtypeValue = GetValueFromCombo(subMetricTypeCombo);
-        if (string.IsNullOrEmpty(subtypeValue) || subtypeValue == "(All)")
-            return null;
-
-        return subtypeValue;
-    }
-
-    /// <summary>
-    ///     Gets the selected subtype from a ComboBox, with optional fallback to base type.
-    /// </summary>
-    public static string GetDisplayNameFromCombo(ComboBox combo, string baseType)
-    {
-        if (combo.IsEnabled && combo.SelectedItem != null)
-        {
-            var selected = GetDisplayValueFromCombo(combo);
-            if (!string.IsNullOrEmpty(selected) && selected != "(All)")
-                return selected;
-        }
-
-        return baseType;
-    }
-
-    private static string GetDisplayValueFromCombo(ComboBox combo)
-    {
-        if (combo.SelectedItem is MetricNameOption option)
-            return option.Display;
-
-        return combo.SelectedItem?.ToString() ?? string.Empty;
-    }
-
-    private static string? GetValueFromCombo(ComboBox combo)
-    {
-        if (combo.SelectedItem is MetricNameOption option)
-            return option.Value;
-
-        return combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
-    }
-
-    public static void ResetZoom(CartesianChart? chart)
-    {
-        if (chart == null)
-            return;
-
-        ResetZoom(ref chart);
-    }
-
-    public static void ResetZoom(ref CartesianChart chart)
-    {
-        if (chart != null && chart.AxisX != null && chart.AxisX.Count > 0)
-        {
-            var axis = chart.AxisX[0];
-            if (axis != null)
-            {
-                axis.MinValue = double.NaN;
-                axis.MaxValue = double.NaN;
-            }
-        }
-    }
-
-    /// <summary>
-    ///     Initializes common chart behavior settings (zoom and pan options).
-    /// </summary>
-    public static void InitializeChartBehavior(CartesianChart chart)
-    {
-        if (chart == null)
-            return;
-        chart.Zoom = ZoomingOptions.X;
-        chart.Pan = PanningOptions.X;
     }
 
     /// <summary>

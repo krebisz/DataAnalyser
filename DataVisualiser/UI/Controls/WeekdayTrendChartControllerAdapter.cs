@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -9,6 +8,7 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
@@ -16,14 +16,14 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IWeekdayTrendChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
+public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeekdayTrendChartControllerExtras, ICartesianChartSurface
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly WeekdayTrendChartController _controller;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly WeekdayTrendChartUpdateCoordinator _updateCoordinator;
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombo;
@@ -44,7 +44,7 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
 
     public void ClearCache()
     {
-        _subtypeCache.Clear();
+        _selectionCache.Clear();
     }
 
     public string Key => "WeeklyTrend";
@@ -70,13 +70,13 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
 
     public void ResetZoom()
     {
-        ChartHelper.ResetZoom(_controller.Chart);
-        ChartHelper.ResetZoom(_controller.PolarChart);
+        ChartUiHelper.ResetZoom(_controller.Chart);
+        ChartUiHelper.ResetZoom(_controller.PolarChart);
     }
 
     public bool HasSeries(ChartState state)
     {
-        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar ? HasSeriesInternal(_controller.PolarChart.Series) : HasSeriesInternal(_controller.Chart.Series);
+        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar ? ChartSeriesHelper.HasSeries(_controller.PolarChart.Series) : ChartSeriesHelper.HasSeries(_controller.Chart.Series);
     }
 
     public void UpdateSubtypeOptions()
@@ -100,13 +100,13 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
             }
 
             foreach (var selection in selectedSeries)
-                combo.Items.Add(BuildSeriesComboItem(selection));
+                combo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
 
             combo.IsEnabled = true;
 
             var current = _viewModel.ChartState.SelectedWeekdayTrendSeries;
             var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? current : selectedSeries[0];
-            var weekdayItem = FindSeriesComboItem(combo, seriesSelection) ?? combo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            var weekdayItem = MetricSeriesSelectionCache.FindSeriesComboItem(combo, seriesSelection) ?? combo.Items.OfType<ComboBoxItem>().FirstOrDefault();
             combo.SelectedItem = weekdayItem;
 
             if (_isInitializing())
@@ -152,14 +152,6 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
             _controller.PolarChart.Visibility = Visibility.Collapsed;
             _controller.ChartTypeToggleButton.Content = mode == WeekdayTrendChartMode.Scatter ? "Cartesian" : "Polar";
         }
-    }
-
-    private static bool HasSeriesInternal(IEnumerable? series)
-    {
-        if (series == null)
-            return false;
-
-        return series.Cast<object>().Any();
     }
 
     public void OnToggleRequested(object? sender, EventArgs e)
@@ -214,7 +206,7 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         if (_isInitializing() || _isUpdatingSubtypeCombo)
             return;
 
-        var selection = GetSeriesSelectionFromCombo(_controller.SubtypeCombo);
+        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.SubtypeCombo);
         _viewModel.SetWeekdayTrendSeries(selection);
     }
 
@@ -236,8 +228,8 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
     {
         _controller.AverageWindowCombo.Items.Add(new ComboBoxItem
         {
-                Content = label,
-                Tag = window
+            Content = label,
+            Tag = window
         });
     }
 
@@ -264,15 +256,15 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSeries);
         var trendContext = new ChartDataContext
         {
-                Data1 = data,
-                DisplayName1 = displayName,
-                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-                PrimarySubtype = selectedSeries?.Subtype,
-                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                From = ctx.From,
-                To = ctx.To
+            Data1 = data,
+            DisplayName1 = displayName,
+            MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
+            PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+            PrimarySubtype = selectedSeries?.Subtype,
+            DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+            DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+            From = ctx.From,
+            To = ctx.To
         };
 
         var result = ComputeWeekdayTrend(trendContext);
@@ -288,36 +280,37 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         if (selectedSeries == null)
             return ctx.Data1;
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.Data1;
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2 ?? ctx.Data1;
 
         if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
             return ctx.Data1;
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildWeekdayTrendCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_subtypeCache.TryGetValue(cacheKey, out var cached))
+        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
+        if (_selectionCache.TryGetData(cacheKey, out var cached))
             return cached;
 
         var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
-        _subtypeCache[cacheKey] = data;
+        _selectionCache.SetData(cacheKey, data);
         return data;
     }
 
     private MetricSeriesSelection? ResolveSelectedWeekdayTrendSeries(ChartDataContext ctx)
     {
-        if (_viewModel.ChartState.SelectedWeekdayTrendSeries != null)
-            return _viewModel.ChartState.SelectedWeekdayTrendSeries;
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo, _controller.SubtypeCombo, _viewModel.ChartState.SelectedWeekdayTrendSeries,
+                () =>
+                {
+                    var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+                    if (string.IsNullOrWhiteSpace(metricType))
+                        return null;
 
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+                    return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+                });
     }
 
     private static string ResolveWeekdayTrendDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
@@ -325,18 +318,13 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         if (selectedSeries == null)
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.DisplayName2;
 
         return selectedSeries.DisplayName;
-    }
-
-    private static string BuildWeekdayTrendCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
     private WeekdayTrendResult? ComputeWeekdayTrend(ChartDataContext ctx)
@@ -347,10 +335,10 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
 
         var parameters = new StrategyCreationParameters
         {
-                LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
-                Label1 = ctx.DisplayName1,
-                From = ctx.From,
-                To = ctx.To
+            LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
+            Label1 = ctx.DisplayName1,
+            From = ctx.From,
+            To = ctx.To
         };
 
         var strategy = strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
@@ -364,36 +352,4 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IChar
         _updateCoordinator.UpdateChart(result, _viewModel.ChartState, _controller.Chart, _controller.PolarChart);
     }
 
-    private static ComboBoxItem BuildSeriesComboItem(MetricSeriesSelection selection)
-    {
-        return new ComboBoxItem
-        {
-                Content = selection.DisplayName,
-                Tag = selection
-        };
-    }
-
-    private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
-    {
-        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)
-    {
-        if (combo.SelectedItem is ComboBoxItem item && item.Tag is MetricSeriesSelection selection)
-            return selection;
-
-        return combo.SelectedItem as MetricSeriesSelection;
-    }
-
-    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
-    {
-        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
-        var selectionSubtype = selection.QuerySubtype;
-
-        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-    }
 }

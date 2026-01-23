@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -8,7 +7,9 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveChartsCore;
@@ -19,23 +20,22 @@ using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class DistributionChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDistributionChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface, IPolarChartSurface
+public sealed class DistributionChartControllerAdapter : IChartController, IDistributionChartControllerExtras, ICartesianChartSurface, IPolarChartSurface
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly DistributionChartController _controller;
     private readonly DistributionPolarRenderingService _distributionPolarRenderingService;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly Func<ToolTip?> _getPolarTooltip;
-    private readonly HourlyDistributionService _hourlyDistributionService;
+    private readonly IDistributionService _hourlyDistributionService;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, ICanonicalMetricSeries?> _subtypeCmsCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
-    private readonly WeeklyDistributionService _weeklyDistributionService;
+    private readonly IDistributionService _weeklyDistributionService;
     private bool _isUpdatingSubtypeCombo;
 
-    public DistributionChartControllerAdapter(DistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, WeeklyDistributionService weeklyDistributionService, HourlyDistributionService hourlyDistributionService, DistributionPolarRenderingService distributionPolarRenderingService, Func<ToolTip?> getPolarTooltip)
+    public DistributionChartControllerAdapter(DistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, DistributionPolarRenderingService distributionPolarRenderingService, Func<ToolTip?> getPolarTooltip)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -53,8 +53,7 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
 
     public void ClearCache()
     {
-        _subtypeCache.Clear();
-        _subtypeCmsCache.Clear();
+        _selectionCache.Clear();
     }
 
     public string Key => "Distribution";
@@ -80,13 +79,13 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
 
     public void ResetZoom()
     {
-        ChartHelper.ResetZoom(_controller.Chart);
+        ChartUiHelper.ResetZoom(_controller.Chart);
         _controller.PolarChart.FitToBounds = true;
     }
 
     public bool HasSeries(ChartState state)
     {
-        return state.IsDistributionPolarMode ? HasSeriesInternal(_controller.PolarChart.Series) : HasSeriesInternal(_controller.Chart.Series);
+        return state.IsDistributionPolarMode ? ChartSeriesHelper.HasSeries(_controller.PolarChart.Series) : ChartSeriesHelper.HasSeries(_controller.Chart.Series);
     }
 
     public void UpdateSubtypeOptions()
@@ -109,13 +108,13 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
             }
 
             foreach (var selection in selectedSeries)
-                _controller.SubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+                _controller.SubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
 
             _controller.SubtypeCombo.IsEnabled = true;
 
             var current = _viewModel.ChartState.SelectedDistributionSeries;
             var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? current : selectedSeries[0];
-            var distributionItem = FindSeriesComboItem(_controller.SubtypeCombo, seriesSelection) ?? _controller.SubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            var distributionItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.SubtypeCombo, seriesSelection) ?? _controller.SubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
             _controller.SubtypeCombo.SelectedItem = distributionItem;
 
             if (_isInitializing())
@@ -183,14 +182,6 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
     }
 
     public PolarChart PolarChart => _controller.PolarChart;
-
-    private static bool HasSeriesInternal(IEnumerable? series)
-    {
-        if (series == null)
-            return false;
-
-        return series.Cast<object>().Any();
-    }
 
     public void ApplyModeDefinition(DistributionMode mode)
     {
@@ -303,7 +294,7 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
         if (_isInitializing() || _isUpdatingSubtypeCombo)
             return;
 
-        var selection = GetSeriesSelectionFromCombo(_controller.SubtypeCombo);
+        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.SubtypeCombo);
         _viewModel.SetDistributionSeries(selection);
     }
 
@@ -355,28 +346,6 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
                 intervalCount = 0;
                 return false;
         }
-    }
-
-    private static ComboBoxItem BuildSeriesComboItem(MetricSeriesSelection selection)
-    {
-        return new ComboBoxItem
-        {
-                Content = selection.DisplayName,
-                Tag = selection
-        };
-    }
-
-    private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
-    {
-        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)
-    {
-        if (combo.SelectedItem is ComboBoxItem item && item.Tag is MetricSeriesSelection selection)
-            return selection;
-
-        return combo.SelectedItem as MetricSeriesSelection;
     }
 
     private async Task RenderDistributionChartAsync(ChartDataContext ctx, DistributionMode mode)
@@ -446,37 +415,37 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
         if (selectedSeries == null)
             return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return (ctx.Data2 ?? ctx.Data1, ctx.SecondaryCms as ICanonicalMetricSeries);
 
         if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
             return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildDistributionCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_subtypeCache.TryGetValue(cacheKey, out var cached) && _subtypeCmsCache.TryGetValue(cacheKey, out var cachedCms))
+        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
+        if (_selectionCache.TryGetDataWithCms(cacheKey, out var cached, out var cachedCms))
             return (cached, cachedCms);
 
         var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
-        _subtypeCache[cacheKey] = data;
-        _subtypeCmsCache[cacheKey] = primaryCms;
+        _selectionCache.SetDataWithCms(cacheKey, data, primaryCms);
         return (data, primaryCms);
     }
 
     private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)
     {
-        if (_viewModel.ChartState.SelectedDistributionSeries != null)
-            return _viewModel.ChartState.SelectedDistributionSeries;
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo, _controller.SubtypeCombo, _viewModel.ChartState.SelectedDistributionSeries,
+                () =>
+                {
+                    var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+                    if (string.IsNullOrWhiteSpace(metricType))
+                        return null;
 
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+                    return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+                });
     }
 
     private static string ResolveDistributionDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
@@ -484,21 +453,16 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
         if (selectedSeries == null)
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.DisplayName2;
 
         return selectedSeries.DisplayName;
     }
 
-    private static string BuildDistributionCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
-    }
-
-    private BaseDistributionService GetDistributionService(DistributionMode mode)
+    private IDistributionService GetDistributionService(DistributionMode mode)
     {
         return mode switch
         {
@@ -506,17 +470,6 @@ public sealed class DistributionChartControllerAdapter : IChartController, IChar
                 DistributionMode.Hourly => _hourlyDistributionService,
                 _ => _weeklyDistributionService
         };
-    }
-
-    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
-    {
-        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
-        var selectionSubtype = selection.QuerySubtype;
-
-        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     private void ClearDistributionPolarChart()

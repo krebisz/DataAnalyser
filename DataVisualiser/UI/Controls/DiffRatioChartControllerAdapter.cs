@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -7,13 +6,14 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSubtypeOptionsController, IChartCacheController, IDiffRatioChartControllerExtras, IChartSeriesAvailability, ICartesianChartSurface
+public sealed class DiffRatioChartControllerAdapter : IChartController, IDiffRatioChartControllerExtras, ICartesianChartSurface
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly DiffRatioChartController _controller;
@@ -21,7 +21,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
     private readonly Func<ChartTooltipManager?> _getTooltipManager;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombos;
 
@@ -40,7 +40,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
 
     public void ClearCache()
     {
-        _subtypeCache.Clear();
+        _selectionCache.Clear();
     }
 
     public string Key => "DiffRatio";
@@ -65,12 +65,12 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
 
     public void ResetZoom()
     {
-        ChartHelper.ResetZoom(_controller.Chart);
+        ChartUiHelper.ResetZoom(_controller.Chart);
     }
 
     public bool HasSeries(ChartState state)
     {
-        return HasSeriesInternal(_controller.Chart.Series);
+        return ChartSeriesHelper.HasSeries(_controller.Chart.Series);
     }
 
     public void UpdateSubtypeOptions()
@@ -112,14 +112,6 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
             _controller.Chart.AxisY[0].Title = isDifference ? "Difference" : "Ratio";
     }
 
-    private static bool HasSeriesInternal(IEnumerable? series)
-    {
-        if (series == null)
-            return false;
-
-        return series.Cast<object>().Any();
-    }
-
     public void OnToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleDiffRatio();
@@ -130,7 +122,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
         if (_isInitializing() || _isUpdatingSubtypeCombos)
             return;
 
-        var selection = GetSeriesSelectionFromCombo(_controller.PrimarySubtypeCombo);
+        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.PrimarySubtypeCombo);
         _viewModel.SetDiffRatioPrimarySeries(selection);
 
         await RenderDiffRatioFromSelectionAsync();
@@ -141,7 +133,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
         if (_isInitializing() || _isUpdatingSubtypeCombos)
             return;
 
-        var selection = GetSeriesSelectionFromCombo(_controller.SecondarySubtypeCombo);
+        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.SecondarySubtypeCombo);
         _viewModel.SetDiffRatioSecondarySeries(selection);
 
         await RenderDiffRatioFromSelectionAsync();
@@ -222,62 +214,50 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
         if (selectedSeries == null)
             return ctx.Data1;
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.Data1;
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2 ?? ctx.Data1;
 
         if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
             return ctx.Data1;
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildDiffRatioCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_subtypeCache.TryGetValue(cacheKey, out var cached))
+        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
+        if (_selectionCache.TryGetData(cacheKey, out var cached))
             return cached;
 
         var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
-        _subtypeCache[cacheKey] = data;
+        _selectionCache.SetData(cacheKey, data);
         return data;
     }
 
     private MetricSeriesSelection? ResolveSelectedDiffRatioPrimarySeries(ChartDataContext ctx)
     {
-        if (!_isUpdatingSubtypeCombos && _controller.PrimarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(_controller.PrimarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos, _controller.PrimarySubtypeCombo, _viewModel.ChartState.SelectedDiffRatioPrimarySeries,
+                () =>
+                {
+                    var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
+                    if (string.IsNullOrWhiteSpace(metricType))
+                        return null;
 
-        if (_viewModel.ChartState.SelectedDiffRatioPrimarySeries != null)
-            return _viewModel.ChartState.SelectedDiffRatioPrimarySeries;
-
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+                    return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
+                });
     }
 
     private MetricSeriesSelection? ResolveSelectedDiffRatioSecondarySeries(ChartDataContext ctx)
     {
-        if (!_isUpdatingSubtypeCombos && _controller.SecondarySubtypeCombo != null)
-        {
-            var selection = GetSeriesSelectionFromCombo(_controller.SecondarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
+        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos, _controller.SecondarySubtypeCombo, _viewModel.ChartState.SelectedDiffRatioSecondarySeries,
+                () =>
+                {
+                    var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
+                    if (string.IsNullOrWhiteSpace(metricType))
+                        return null;
 
-        if (_viewModel.ChartState.SelectedDiffRatioSecondarySeries != null)
-            return _viewModel.ChartState.SelectedDiffRatioSecondarySeries;
-
-        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
+                    return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
+                });
     }
 
     private static string ResolveDiffRatioDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
@@ -285,18 +265,13 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
         if (selectedSeries == null)
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.DisplayName2;
 
         return selectedSeries.DisplayName;
-    }
-
-    private static string BuildDiffRatioCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
     }
 
     private void UpdateDiffRatioPanelTitle(ChartDataContext ctx)
@@ -342,8 +317,8 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
     {
         foreach (var selection in selectedSeries)
         {
-            _controller.PrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
-            _controller.SecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+            _controller.PrimarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
+            _controller.SecondarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
         }
 
         _controller.PrimarySubtypeCombo.IsEnabled = true;
@@ -354,7 +329,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
         var primaryCurrent = _viewModel.ChartState.SelectedDiffRatioPrimarySeries;
         var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
 
-        var primaryItem = FindSeriesComboItem(_controller.PrimarySubtypeCombo, primarySelection) ?? _controller.PrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+        var primaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.PrimarySubtypeCombo, primarySelection) ?? _controller.PrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
         _controller.PrimarySubtypeCombo.SelectedItem = primaryItem;
         _viewModel.ChartState.SelectedDiffRatioPrimarySeries = primarySelection;
@@ -370,7 +345,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
             var secondaryCurrent = _viewModel.ChartState.SelectedDiffRatioSecondarySeries;
             var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
 
-            var secondaryItem = FindSeriesComboItem(_controller.SecondarySubtypeCombo, secondarySelection) ?? _controller.SecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            var secondaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.SecondarySubtypeCombo, secondarySelection) ?? _controller.SecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
             _controller.SecondarySubtypeCombo.SelectedItem = secondaryItem;
             _viewModel.ChartState.SelectedDiffRatioSecondarySeries = secondarySelection;
@@ -384,36 +359,4 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IChartSu
         }
     }
 
-    private static ComboBoxItem BuildSeriesComboItem(MetricSeriesSelection selection)
-    {
-        return new ComboBoxItem
-        {
-                Content = selection.DisplayName,
-                Tag = selection
-        };
-    }
-
-    private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
-    {
-        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)
-    {
-        if (combo.SelectedItem is ComboBoxItem item && item.Tag is MetricSeriesSelection selection)
-            return selection;
-
-        return combo.SelectedItem as MetricSeriesSelection;
-    }
-
-    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
-    {
-        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
-        var selectionSubtype = selection.QuerySubtype;
-
-        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-    }
 }

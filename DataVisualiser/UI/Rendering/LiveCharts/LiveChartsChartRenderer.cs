@@ -7,6 +7,7 @@ using System.Windows.Shapes;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.UI.Controls;
 using DataVisualiser.UI.Defaults;
+using DataVisualiser.UI.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -14,7 +15,7 @@ namespace DataVisualiser.UI.Rendering.LiveCharts;
 
 public sealed class LiveChartsChartRenderer : IChartRenderer
 {
-    public void Apply(IChartSurface surface, ChartRenderModel model)
+    public void Apply(IChartSurface surface, UiChartRenderModel model)
     {
         if (surface == null)
             throw new ArgumentNullException(nameof(surface));
@@ -33,7 +34,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         surface.SetChartContent(BuildSingleChartContent(model));
     }
 
-    private static UIElement BuildFacetPieContent(ChartRenderModel model)
+    private static UIElement BuildFacetPieContent(UiChartRenderModel model)
     {
         var columnCount = Math.Min(5, Math.Max(1, model.Facets.Count));
         var pieSize = GetFacetPieSize(columnCount);
@@ -126,7 +127,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         return grid;
     }
 
-    private static UIElement BuildSingleChartContent(ChartRenderModel model)
+    private static UIElement BuildSingleChartContent(UiChartRenderModel model)
     {
         if (model.Series.Count == 0)
             return new Grid();
@@ -284,7 +285,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         };
     }
 
-    private static ItemsControl? BuildFacetLegendItems(ChartRenderModel model)
+    private static ItemsControl? BuildFacetLegendItems(UiChartRenderModel model)
     {
         var firstFacet = model.Facets.FirstOrDefault();
         if (firstFacet == null || firstFacet.Series.Count == 0)
