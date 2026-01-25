@@ -28,7 +28,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
     private readonly TransformDataPanelController _controller;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
-    private readonly Dictionary<string, IReadOnlyList<MetricData>> _subtypeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
@@ -47,7 +47,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 
     public void ClearCache()
     {
-        _subtypeCache.Clear();
+        _selectionCache.Clear();
     }
 
     public string Key => "Transform";
@@ -206,7 +206,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         if (_isInitializing() || _isUpdatingTransformSubtypeCombos)
             return;
 
-        var selection = GetSeriesSelectionFromCombo(_controller.TransformPrimarySubtypeCombo);
+        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformPrimarySubtypeCombo);
         _viewModel.SetTransformPrimarySeries(selection);
 
         UpdateTransformComputeButtonState();
@@ -217,7 +217,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         if (_isInitializing() || _isUpdatingTransformSubtypeCombos)
             return;
 
-        var selection = GetSeriesSelectionFromCombo(_controller.TransformSecondarySubtypeCombo);
+        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformSecondarySubtypeCombo);
         _viewModel.SetTransformSecondarySeries(selection);
 
         UpdateTransformComputeButtonState();
@@ -335,9 +335,9 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
     {
         foreach (var selection in selectedSeries)
         {
-            _controller.TransformPrimarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+            _controller.TransformPrimarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
 
-            _controller.TransformSecondarySubtypeCombo.Items.Add(BuildSeriesComboItem(selection));
+            _controller.TransformSecondarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
         }
 
         _controller.TransformPrimarySubtypeCombo.IsEnabled = true;
@@ -349,7 +349,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 
         var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
 
-        var primaryItem = FindSeriesComboItem(_controller.TransformPrimarySubtypeCombo, primarySelection) ?? _controller.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+        var primaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.TransformPrimarySubtypeCombo, primarySelection) ?? _controller.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
         _controller.TransformPrimarySubtypeCombo.SelectedItem = primaryItem;
         _viewModel.ChartState.SelectedTransformPrimarySeries = primarySelection;
@@ -366,7 +366,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 
             var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
 
-            var secondaryItem = FindSeriesComboItem(_controller.TransformSecondarySubtypeCombo, secondarySelection) ?? _controller.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
+            var secondaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.TransformSecondarySubtypeCombo, secondarySelection) ?? _controller.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
 
             _controller.TransformSecondarySubtypeCombo.SelectedItem = secondaryItem;
             _viewModel.ChartState.SelectedTransformSecondarySeries = secondarySelection;
@@ -668,23 +668,23 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         if (selectedSeries == null)
             return ctx.Data1;
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.Data1;
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2 ?? ctx.Data1;
 
         if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
             return ctx.Data1;
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = BuildTransformCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_subtypeCache.TryGetValue(cacheKey, out var cached))
+        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
+        if (_selectionCache.TryGetData(cacheKey, out var cached))
             return cached;
 
         var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
-        _subtypeCache[cacheKey] = data;
+        _selectionCache.SetData(cacheKey, data);
         return data;
     }
 
@@ -692,7 +692,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
     {
         if (!_isTransformSelectionPendingLoad && _controller.TransformPrimarySubtypeCombo != null)
         {
-            var selection = GetSeriesSelectionFromCombo(_controller.TransformPrimarySubtypeCombo);
+            var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformPrimarySubtypeCombo);
             if (selection != null)
                 return selection;
         }
@@ -711,7 +711,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
     {
         if (!_isTransformSelectionPendingLoad && _controller.TransformSecondarySubtypeCombo != null)
         {
-            var selection = GetSeriesSelectionFromCombo(_controller.TransformSecondarySubtypeCombo);
+            var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformSecondarySubtypeCombo);
             if (selection != null)
                 return selection;
         }
@@ -731,19 +731,15 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         if (selectedSeries == null)
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.DisplayName1;
 
-        if (IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.DisplayName2;
 
         return selectedSeries.DisplayName;
     }
 
-    private static string BuildTransformCacheKey(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName)
-    {
-        return $"{selection.DisplayKey}|{from:O}|{to:O}|{tableName}";
-    }
 
     private void ClearTransformGrids(ChartState state)
     {
@@ -767,36 +763,4 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         return ctx.Data2 != null && ctx.Data2.Any();
     }
 
-    private static ComboBoxItem BuildSeriesComboItem(MetricSeriesSelection selection)
-    {
-        return new ComboBoxItem
-        {
-                Content = selection.DisplayName,
-                Tag = selection
-        };
-    }
-
-    private static ComboBoxItem? FindSeriesComboItem(ComboBox combo, MetricSeriesSelection selection)
-    {
-        return combo.Items.OfType<ComboBoxItem>().FirstOrDefault(item => item.Tag is MetricSeriesSelection candidate && string.Equals(candidate.DisplayKey, selection.DisplayKey, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static MetricSeriesSelection? GetSeriesSelectionFromCombo(ComboBox combo)
-    {
-        if (combo.SelectedItem is ComboBoxItem item && item.Tag is MetricSeriesSelection selection)
-            return selection;
-
-        return combo.SelectedItem as MetricSeriesSelection;
-    }
-
-    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
-    {
-        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
-        var selectionSubtype = selection.QuerySubtype;
-
-        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-    }
 }
