@@ -195,4 +195,33 @@ public class MetricSelectionService
 
         return dateRange;
     }
+
+    /// <summary>
+    ///     Loads a date range for the selected metric type, using the union of all selected subtypes.
+    ///     Fast path uses HealthMetricsCounts; falls back to table scan only if needed.
+    /// </summary>
+    public async Task<(DateTime MinDate, DateTime MaxDate)?> LoadDateRangeForSelectionsAsync(string metricType, IReadOnlyCollection<MetricSeriesSelection> selections, string tableName)
+    {
+        if (string.IsNullOrWhiteSpace(metricType))
+            throw new ArgumentException("Metric type cannot be null or empty.", nameof(metricType));
+
+        var subtypes = selections?
+                .Where(selection => string.Equals(selection.MetricType, metricType, StringComparison.OrdinalIgnoreCase))
+                .Select(selection => selection.QuerySubtype)
+                .Where(subtype => !string.IsNullOrWhiteSpace(subtype) && !string.Equals(subtype, "(All)", StringComparison.OrdinalIgnoreCase))
+                .Select(subtype => subtype!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+                      ?? new List<string>();
+
+        var dataFetcher = new DataFetcher(_connectionString);
+
+        // Fast path: aggregated counts table.
+        var countsRange = await dataFetcher.GetBaseTypeDateRangeFromCounts(metricType, subtypes);
+        if (countsRange.HasValue)
+            return countsRange;
+
+        // Fallback: raw table scan using subtype union.
+        return await dataFetcher.GetBaseTypeDateRangeForSubtypes(metricType, subtypes, tableName);
+    }
 }

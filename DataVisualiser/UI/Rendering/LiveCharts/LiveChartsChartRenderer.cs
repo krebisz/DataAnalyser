@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -14,7 +16,7 @@ namespace DataVisualiser.UI.Rendering.LiveCharts;
 
 public sealed class LiveChartsChartRenderer : IChartRenderer
 {
-    public void Apply(IChartSurface surface, UiChartRenderModel model)
+    public Task ApplyAsync(IChartSurface surface, UiChartRenderModel model, CancellationToken cancellationToken = default)
     {
         if (surface == null)
             throw new ArgumentNullException(nameof(surface));
@@ -27,10 +29,11 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         if (model.Facets.Count > 0)
         {
             surface.SetChartContent(BuildFacetPieContent(model));
-            return;
+            return Task.CompletedTask;
         }
 
         surface.SetChartContent(BuildSingleChartContent(model));
+        return Task.CompletedTask;
     }
 
     private static UIElement BuildFacetPieContent(UiChartRenderModel model)
@@ -278,9 +281,9 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
     {
         return columnCount switch
         {
-                <= 3 => 240,
-                4 => 200,
-                _ => 160
+                <= 3 => 360,
+                4 => 300,
+                _ => 240
         };
     }
 

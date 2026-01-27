@@ -29,6 +29,7 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Controls;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.Helpers;
+using DataVisualiser.UI.Rendering;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveChartsCore.Kernel;
@@ -45,6 +46,8 @@ public partial class MainChartsView : UserControl
     private readonly IChartControllerFactory _chartControllerFactory = new ChartControllerFactory();
 
     private readonly ChartState _chartState = new();
+    private readonly IChartRendererResolver _chartRendererResolver = new ChartRendererResolver();
+    private readonly IChartSurfaceFactory _chartSurfaceFactory;
 
     // Placeholder instance since DiffRatioChartController is commented out in XAML.
     private readonly MetricState _metricState = new();
@@ -83,6 +86,7 @@ public partial class MainChartsView : UserControl
 
     public MainChartsView()
     {
+        _chartSurfaceFactory = new ChartSurfaceFactory(_chartRendererResolver);
         InitializeComponent();
 
         InitializeInfrastructure();
@@ -154,6 +158,11 @@ public partial class MainChartsView : UserControl
         return _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data1.Any();
     }
 
+    private bool ShouldRefreshDateRangeForCurrentSelection()
+    {
+        return !string.IsNullOrWhiteSpace(_viewModel.MetricState.SelectedMetricType);
+    }
+
     private static string? GetSelectedMetricValue(ComboBox combo)
     {
         if (combo.SelectedItem is MetricNameOption option)
@@ -195,8 +204,8 @@ public partial class MainChartsView : UserControl
         }
 
         // Update button enabled states (this is UI-only, not part of the rendering pipeline)
-        ResolveController(ChartControllerKeys.Normalized).ToggleButton.IsEnabled = canToggle;
-        ResolveController(ChartControllerKeys.DiffRatio).ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.Normalized).SetToggleEnabled(canToggle);
+        ResolveController(ChartControllerKeys.DiffRatio).SetToggleEnabled(canToggle);
     }
 
     /// <summary>
@@ -208,11 +217,11 @@ public partial class MainChartsView : UserControl
         var hasPrimaryData = selectedSubtypeCount >= 1;
         var canToggle = hasPrimaryData && HasLoadedData();
 
-        ResolveController(ChartControllerKeys.Main).ToggleButton.IsEnabled = HasLoadedData();
-        ResolveController(ChartControllerKeys.WeeklyTrend).ToggleButton.IsEnabled = canToggle;
-        ResolveController(ChartControllerKeys.Distribution).ToggleButton.IsEnabled = canToggle;
-        ResolveController(ChartControllerKeys.Transform).ToggleButton.IsEnabled = canToggle;
-        ResolveController(ChartControllerKeys.BarPie).ToggleButton.IsEnabled = canToggle;
+        ResolveController(ChartControllerKeys.Main).SetToggleEnabled(HasLoadedData());
+        ResolveController(ChartControllerKeys.WeeklyTrend).SetToggleEnabled(canToggle);
+        ResolveController(ChartControllerKeys.Distribution).SetToggleEnabled(canToggle);
+        ResolveController(ChartControllerKeys.Transform).SetToggleEnabled(canToggle);
+        ResolveController(ChartControllerKeys.BarPie).SetToggleEnabled(canToggle);
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -282,7 +291,8 @@ public partial class MainChartsView : UserControl
 
         BuildDynamicSubtypeControls(subtypeListLocal);
         UpdateSelectedSubtypesInViewModel();
-        _ = LoadDateRangeForSelectedMetrics();
+        if (!HasLoadedData() && ShouldRefreshDateRangeForCurrentSelection())
+            _ = LoadDateRangeForSelectedMetrics();
     }
 
     private void BuildDynamicSubtypeControls(IEnumerable<MetricNameOption> subtypes)
@@ -538,7 +548,7 @@ public partial class MainChartsView : UserControl
 
     private void SetChartVisibility(string key, bool isVisible)
     {
-        ResolveController(key).Panel.IsChartVisible = isVisible;
+        ResolveController(key).SetVisible(isVisible);
     }
 
     private static bool IsKnownChartKey(string key)
@@ -847,7 +857,7 @@ public partial class MainChartsView : UserControl
     {
         try
         {
-            return ResolveController(chartName).Panel.ChartContentPanel;
+            return ResolveController(chartName) is IWpfChartPanelHost host ? host.ChartContentPanel : null;
         }
         catch (KeyNotFoundException)
         {
@@ -998,7 +1008,30 @@ public partial class MainChartsView : UserControl
     {
         WireViewModelEvents();
 
-        var factoryResult = _chartControllerFactory.Create(new ChartControllerFactoryContext(MainChartController, NormalizedChartController, DiffRatioChartController, DistributionChartController, WeekdayTrendChartController, TransformDataPanelController, BarPieChartController, _viewModel, () => _isInitializing, BeginUiBusyScope, _metricSelectionService, () => _chartRenderingOrchestrator, _chartUpdateCoordinator, () => _strategyCutOverService, _weekdayTrendChartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService, _distributionPolarRenderingService, () => _distributionPolarTooltip, () => _tooltipManager));
+        var factoryResult = _chartControllerFactory.Create(
+            new ChartControllerFactoryContext(
+                MainChartController,
+                NormalizedChartController,
+                DiffRatioChartController,
+                DistributionChartController,
+                WeekdayTrendChartController,
+                TransformDataPanelController,
+                BarPieChartController,
+                _viewModel,
+                () => _isInitializing,
+                BeginUiBusyScope,
+                _metricSelectionService,
+                () => _chartRenderingOrchestrator,
+                _chartUpdateCoordinator,
+                () => _strategyCutOverService,
+                _weekdayTrendChartUpdateCoordinator,
+                _weeklyDistributionService,
+                _hourlyDistributionService,
+                _distributionPolarRenderingService,
+                () => _distributionPolarTooltip,
+                () => _tooltipManager,
+                _chartRendererResolver,
+                _chartSurfaceFactory));
 
         _mainAdapter = factoryResult.Main;
         _normalizedAdapter = factoryResult.Normalized;
@@ -1048,11 +1081,11 @@ public partial class MainChartsView : UserControl
         foreach (var key in ChartControllerKeys.All)
         {
             var controller = registry.Get(key);
-            if (controller.Panel == null)
-                throw new InvalidOperationException($"Chart controller '{key}' returned a null Panel.");
+            if (controller == null)
+                throw new InvalidOperationException($"Chart controller registry returned null for key '{key}'.");
 
-            if (controller.ToggleButton == null)
-                throw new InvalidOperationException($"Chart controller '{key}' returned a null ToggleButton.");
+            if (controller is IWpfChartPanelHost host && host.ChartContentPanel == null)
+                throw new InvalidOperationException($"Chart controller '{key}' returned a null ChartContentPanel.");
         }
     }
 
@@ -1075,7 +1108,7 @@ public partial class MainChartsView : UserControl
         };
     }
 
-    private CartesianChart GetCartesianChart(string key)
+    private CartesianChart GetWpfCartesianChart(string key)
     {
         if (_chartControllerRegistry == null && _mainAdapter == null)
             return key switch
@@ -1088,8 +1121,8 @@ public partial class MainChartsView : UserControl
                     _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
             };
 
-        if (ResolveController(key) is ICartesianChartSurface cartesian)
-            return cartesian.Chart;
+        if (ResolveController(key) is IWpfCartesianChartHost host)
+            return host.Chart;
 
         throw new InvalidOperationException($"Chart controller '{key}' does not expose a Cartesian chart.");
     }
@@ -1325,17 +1358,17 @@ public partial class MainChartsView : UserControl
 
         var chartLabels = new Dictionary<CartesianChart, string>
         {
-                { GetCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main },
-                { GetCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized },
-                { GetCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio },
-                { GetCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform }
+                { GetWpfCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main },
+                { GetWpfCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized },
+                { GetWpfCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio },
+                { GetWpfCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform }
         };
 
         _tooltipManager = new ChartTooltipManager(parentWindow, chartLabels);
-        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main);
-        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized);
-        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio);
-        _tooltipManager.AttachChart(GetCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform);
+        _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main);
+        _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized);
+        _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio);
+        _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform);
     }
 
     private void WireViewModelEvents()
@@ -1397,10 +1430,10 @@ public partial class MainChartsView : UserControl
 
     private void InitializeChartBehavior()
     {
-        ChartUiHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Main));
-        InitializeDistributionChartBehavior(GetCartesianChart(ChartControllerKeys.Distribution));
-        ChartUiHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.Normalized));
-        ChartUiHelper.InitializeChartBehavior(GetCartesianChart(ChartControllerKeys.DiffRatio));
+        ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Main));
+        InitializeDistributionChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Distribution));
+        ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Normalized));
+        ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.DiffRatio));
     }
 
     private void InitializeDistributionPolarTooltip()
@@ -1457,10 +1490,10 @@ public partial class MainChartsView : UserControl
 
     private void DisableAxisLabelsWhenNoData()
     {
-        DisableAxisLabels(GetCartesianChart(ChartControllerKeys.Main));
-        DisableAxisLabels(GetCartesianChart(ChartControllerKeys.Normalized));
-        DisableAxisLabels(GetCartesianChart(ChartControllerKeys.DiffRatio));
-        DisableDistributionAxisLabels(GetCartesianChart(ChartControllerKeys.Distribution));
+        DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Main));
+        DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Normalized));
+        DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.DiffRatio));
+        DisableDistributionAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Distribution));
         DisableDistributionPolarAxisLabels();
     }
 
@@ -1492,9 +1525,9 @@ public partial class MainChartsView : UserControl
 
     private void SetDefaultChartTitles()
     {
-        ResolveController(ChartControllerKeys.Main).Panel.Title = "Metrics: Total";
-        ResolveController(ChartControllerKeys.Normalized).Panel.Title = "Metrics: Normalized";
-        ResolveController(ChartControllerKeys.DiffRatio).Panel.Title = "Difference / Ratio";
+        ResolveController(ChartControllerKeys.Main).SetTitle("Metrics: Total");
+        ResolveController(ChartControllerKeys.Normalized).SetTitle("Metrics: Normalized");
+        ResolveController(ChartControllerKeys.DiffRatio).SetTitle("Difference / Ratio");
         UpdateDiffRatioOperationButton(); // Initialize button state
     }
 
@@ -1574,7 +1607,10 @@ public partial class MainChartsView : UserControl
     {
         UpdateSelectedSubtypesInViewModel();
 
-        if (!string.IsNullOrWhiteSpace(_viewModel.MetricState.SelectedMetricType))
+        if (HasLoadedData())
+            return;
+
+        if (ShouldRefreshDateRangeForCurrentSelection())
             await LoadDateRangeForSelectedMetrics();
     }
 
@@ -2602,9 +2638,9 @@ public partial class MainChartsView : UserControl
         _viewModel.ChartState.LeftTitle = leftName;
         _viewModel.ChartState.RightTitle = rightName;
 
-        ResolveController(ChartControllerKeys.Main).Panel.Title = $"{leftName} vs. {rightName}";
-        ResolveController(ChartControllerKeys.Normalized).Panel.Title = $"{leftName} ~ {rightName}";
-        ResolveController(ChartControllerKeys.DiffRatio).Panel.Title = $"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}";
+        ResolveController(ChartControllerKeys.Main).SetTitle($"{leftName} vs. {rightName}");
+        ResolveController(ChartControllerKeys.Normalized).SetTitle($"{leftName} ~ {rightName}");
+        ResolveController(ChartControllerKeys.DiffRatio).SetTitle($"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}");
     }
 
     private void UpdateChartLabels()
@@ -2620,10 +2656,10 @@ public partial class MainChartsView : UserControl
         var label2 = secondary?.DisplayName ?? string.Empty;
 
         var chartMainLabel = !string.IsNullOrEmpty(label2) ? $"{label1} vs {label2}" : label1;
-        _tooltipManager.UpdateChartLabel(GetCartesianChart(ChartControllerKeys.Main), chartMainLabel);
+        _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.Main), chartMainLabel);
 
         var chartDiffRatioLabel = !string.IsNullOrEmpty(label2) ? $"{label1} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {label2}" : label1;
-        _tooltipManager.UpdateChartLabel(GetCartesianChart(ChartControllerKeys.DiffRatio), chartDiffRatioLabel);
+        _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), chartDiffRatioLabel);
     }
 
     private void UpdateChartTitlesFromCombos()

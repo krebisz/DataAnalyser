@@ -2,6 +2,7 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.Controls;
+using DataVisualiser.UI.Rendering;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 
@@ -23,7 +24,9 @@ public sealed class BarPieChartControllerAdapterTests
             var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
             var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
             var controller = new BarPieChartController();
-            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService);
+            var rendererResolver = new ChartRendererResolver();
+            var surfaceFactory = new ChartSurfaceFactory(rendererResolver);
+            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, rendererResolver, surfaceFactory);
 
             adapter.InitializeControls();
 
@@ -46,7 +49,9 @@ public sealed class BarPieChartControllerAdapterTests
             var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
             var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
             var controller = new BarPieChartController();
-            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService);
+            var rendererResolver = new ChartRendererResolver();
+            var surfaceFactory = new ChartSurfaceFactory(rendererResolver);
+            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, rendererResolver, surfaceFactory);
 
             bool? showBarPie = null;
             viewModel.ChartUpdateRequested += (_, args) =>

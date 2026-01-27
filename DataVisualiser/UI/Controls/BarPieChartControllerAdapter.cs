@@ -1,5 +1,4 @@
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration;
@@ -10,28 +9,37 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Defaults;
 using DataVisualiser.UI.Rendering;
-using DataVisualiser.UI.Rendering.LiveCharts;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using UiChartRenderModel = DataVisualiser.UI.Rendering.UiChartRenderModel;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChartControllerExtras
+public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChartControllerExtras, IWpfChartPanelHost
 {
     private readonly BarPieChartController _controller;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
-    private readonly LiveChartsChartRenderer _renderer = new();
+    private readonly IChartRendererResolver _rendererResolver;
+    private readonly IChartSurfaceFactory _surfaceFactory;
     private readonly MainWindowViewModel _viewModel;
-    private ChartPanelSurface? _surface;
+    private IChartRenderer? _renderer;
+    private IChartSurface? _surface;
 
-    public BarPieChartControllerAdapter(BarPieChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, MetricSelectionService metricSelectionService)
+    public BarPieChartControllerAdapter(
+        BarPieChartController controller,
+        MainWindowViewModel viewModel,
+        Func<bool> isInitializing,
+        MetricSelectionService metricSelectionService,
+        IChartRendererResolver rendererResolver,
+        IChartSurfaceFactory surfaceFactory)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
+        _rendererResolver = rendererResolver ?? throw new ArgumentNullException(nameof(rendererResolver));
+        _surfaceFactory = surfaceFactory ?? throw new ArgumentNullException(nameof(surfaceFactory));
     }
 
     public void InitializeControls()
@@ -58,11 +66,25 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
     public string Key => ChartControllerKeys.BarPie;
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => false;
-    public ChartPanelController Panel => _controller.Panel;
-    public ButtonBase ToggleButton => _controller.ToggleButton;
+    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
 
     public void Initialize()
     {
+    }
+
+    public void SetVisible(bool isVisible)
+    {
+        _controller.Panel.IsChartVisible = isVisible;
+    }
+
+    public void SetTitle(string? title)
+    {
+        _controller.Panel.Title = title ?? string.Empty;
+    }
+
+    public void SetToggleEnabled(bool isEnabled)
+    {
+        _controller.ToggleButton.IsEnabled = isEnabled;
     }
 
     public Task RenderAsync(ChartDataContext context)
@@ -72,8 +94,8 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
 
     public void Clear(ChartState state)
     {
-        EnsureSurface();
-        _renderer.Apply(_surface!, CreateEmptyBarPieModel());
+        EnsureSurfaceAndRenderer();
+        _ = _renderer!.ApplyAsync(_surface!, CreateEmptyBarPieModel());
     }
 
     public void ResetZoom()
@@ -119,24 +141,25 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
             await RenderBarPieChartAsync();
     }
 
-    private void EnsureSurface()
+    private void EnsureSurfaceAndRenderer()
     {
-        _surface ??= new ChartPanelSurface(_controller.Panel);
+        _surface ??= _surfaceFactory.Create(Key, _controller.Panel);
+        _renderer ??= _rendererResolver.ResolveRenderer(Key);
     }
 
     private async Task RenderBarPieChartAsync()
     {
-        EnsureSurface();
+        EnsureSurfaceAndRenderer();
 
         if (!_viewModel.ChartState.IsBarPieVisible)
         {
-            _renderer.Apply(_surface!, CreateEmptyBarPieModel());
+            await _renderer!.ApplyAsync(_surface!, CreateEmptyBarPieModel());
             return;
         }
 
         var isPieMode = _controller.PieModeRadio.IsChecked == true;
         var model = await BuildBarPieRenderModelAsync(isPieMode);
-        _renderer.Apply(_surface!, model);
+        await _renderer!.ApplyAsync(_surface!, model);
     }
 
     private async Task<UiChartRenderModel> BuildBarPieRenderModelAsync(bool isPieMode)

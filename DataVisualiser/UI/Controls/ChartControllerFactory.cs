@@ -19,7 +19,13 @@ public sealed class ChartControllerFactory : IChartControllerFactory
 
         var transformAdapter = new TransformDataPanelControllerAdapter(context.TransformDataPanelController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.ChartUpdateCoordinator);
 
-        var barPieAdapter = new BarPieChartControllerAdapter(context.BarPieChartController, context.ViewModel, context.IsInitializing, context.MetricSelectionService);
+        var barPieAdapter = new BarPieChartControllerAdapter(
+            context.BarPieChartController,
+            context.ViewModel,
+            context.IsInitializing,
+            context.MetricSelectionService,
+            context.ChartRendererResolver,
+            context.ChartSurfaceFactory);
 
         var registry = new ChartControllerRegistry();
         registry.Register(mainAdapter);

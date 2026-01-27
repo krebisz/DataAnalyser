@@ -61,7 +61,8 @@ public sealed class WeekdayTrendRenderingService
         {
                 Title = result.Unit ?? ChartRenderDefaults.AxisTitleValue,
                 MinValue = result.GlobalMin,
-                MaxValue = result.GlobalMax
+                MaxValue = result.GlobalMax,
+                LabelFormatter = value => MathHelper.FormatDisplayedValue(value)
         });
 
         for (var dayIndex = 0; dayIndex <= BucketCount - 1; dayIndex++)
@@ -135,7 +136,8 @@ public sealed class WeekdayTrendRenderingService
         {
                 Title = result.Unit ?? ChartRenderDefaults.AxisTitleValue,
                 MinValue = result.GlobalMin,
-                MaxValue = result.GlobalMax
+                MaxValue = result.GlobalMax,
+                LabelFormatter = value => MathHelper.FormatDisplayedValue(value)
         });
 
         // Convert each day's data to polar-like coordinates
@@ -194,7 +196,8 @@ public sealed class WeekdayTrendRenderingService
         {
                 Title = result.Unit ?? ChartRenderDefaults.AxisTitleValue,
                 MinValue = result.GlobalMin,
-                MaxValue = result.GlobalMax
+                MaxValue = result.GlobalMax,
+                LabelFormatter = value => MathHelper.FormatDisplayedValue(value)
         });
 
         for (var dayIndex = 0; dayIndex <= BucketCount - 1; dayIndex++)

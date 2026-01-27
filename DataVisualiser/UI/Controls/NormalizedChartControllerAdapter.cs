@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
@@ -16,7 +15,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class NormalizedChartControllerAdapter : IChartController, ICartesianChartSurface
+public sealed class NormalizedChartControllerAdapter : IChartController, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
@@ -51,11 +50,25 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
     public string Key => "Norm";
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => true;
-    public ChartPanelController Panel => _controller.Panel;
-    public ButtonBase ToggleButton => _controller.ToggleButton;
+    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
 
     public void Initialize()
     {
+    }
+
+    public void SetVisible(bool isVisible)
+    {
+        _controller.Panel.IsChartVisible = isVisible;
+    }
+
+    public void SetTitle(string? title)
+    {
+        _controller.Panel.Title = title ?? string.Empty;
+    }
+
+    public void SetToggleEnabled(bool isEnabled)
+    {
+        _controller.ToggleButton.IsEnabled = isEnabled;
     }
 
     public Task RenderAsync(ChartDataContext context)

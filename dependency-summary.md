@@ -1,6 +1,6 @@
 ﻿# Dependency Summary
 
-Generated: 2026-01-11 11:25:31
+Generated: 2026-01-26 14:14:05
 Root: .
 
 This file is auto-generated.
@@ -29,7 +29,6 @@ No inference. No semantic interpretation.
 - Newtonsoft.Json (13.0.3)
 - OpenAI (2.2.0)
 - RestClient (3.1024.23771)
-- RestSharp (112.1.1-alpha.0.4)
 - System.Configuration.ConfigurationManager (10.0.0-preview.1.25080.5)
 - System.Data.SqlClient (4.9.0)
 

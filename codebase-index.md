@@ -1,7 +1,7 @@
 ﻿# Codebase Index
 
-Generated: 2026-01-11 11:25:12  
-Root: C:\Development\POCs\DataFileReaderRedux
+Generated: 2026-01-26 14:23:01  
+Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
 
@@ -16,6 +16,8 @@ This file is auto-generated.
 |------|------|------------|-----------|------|
 | class | AsyncRelayCommand | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\AsyncRelayCommand.cs |
 | class | AsyncRelayCommandTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\AsyncRelayCommandTests.cs |
+| class | BarPieChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\BarPieChartControllerAdapter.cs |
+| class | BarPieChartControllerAdapterTests | public | DataVisualiser.Tests.Controls | .\DataVisualiser.Tests\Controls\BarPieChartControllerAdapterTests.cs |
 | class | BaseDistributionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\BaseDistributionService.cs |
 | class | BaseDistributionServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\BaseDistributionServiceTests.cs |
 | class | BinaryOperatorRegistry | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\BinaryOperatorRegistry.cs |
@@ -31,12 +33,25 @@ This file is auto-generated.
 | class | CanonicalMetricMapping | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricMapping.cs |
 | class | CanonicalMetricMappingStore | internal | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricMappingStore.cs |
 | class | CanonicalMetricSeries | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\CanonicalMetricSeries.cs |
+| class | ChartAxisModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartAxisModel.cs |
 | class | ChartComputationEngine | public | DataVisualiser.Core.Computation | .\DataVisualiser\Core\Computation\ChartComputationEngine.cs |
+| class | ChartComputationParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ChartComputationParityHarness.cs |
+| class | ChartComputationParityHarnessTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\ChartComputationParityHarnessTests.cs |
 | class | ChartComputationResult | public | DataVisualiser.Core.Computation.Results | .\DataVisualiser\Core\Computation\Results\ChartComputationResult.cs |
+| class | ChartControllerFactory | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerFactory.cs |
+| class | ChartControllerKeys | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerKeys.cs |
+| class | ChartControllerRegistry | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerRegistry.cs |
+| class | ChartControllerRegistryTests | public | DataVisualiser.Tests.Controls | .\DataVisualiser.Tests\Controls\ChartControllerRegistryTests.cs |
 | class | ChartDataContext | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartDataContext.cs |
 | class | ChartDataContextBuilder | public | DataVisualiser.Core.Orchestration.Builders | .\DataVisualiser\Core\Orchestration\Builders\ChartDataContextBuilder.cs |
 | class | ChartDataContextBuilderTests | public | DataVisualiser.Tests.Orchestration | .\DataVisualiser.Tests\Orchestration\ChartDataContextBuilderTests.cs |
+| class | ChartFacetModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartFacetModel.cs |
 | class | ChartHelper | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartHelper.cs |
+| class | ChartInteractionModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartInteractionModel.cs |
+| class | ChartLegendItemModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartLegendItemModel.cs |
+| class | ChartLegendModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartLegendModel.cs |
+| class | ChartOverlayModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartOverlayModel.cs |
+| class | ChartPanelSurface | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartPanelSurface.cs |
 | class | ChartRenderDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\ChartRenderDefaults.cs |
 | class | ChartRenderEngine | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\ChartRenderEngine.cs |
 | class | ChartRenderGate | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartRenderGate.cs |
@@ -44,14 +59,20 @@ This file is auto-generated.
 | class | ChartRenderingOrchestrator | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartRenderingOrchestrator.cs |
 | class | ChartRenderingOrchestratorTests | public | DataVisualiser.Tests.Orchestration | .\DataVisualiser.Tests\Orchestration\ChartRenderingOrchestratorTests.cs |
 | class | ChartRenderModel | public | DataVisualiser.Core.Rendering.Models | .\DataVisualiser\Core\Rendering\Models\ChartRenderModel.cs |
+| class | ChartSeriesHelper | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartSeriesHelper.cs |
+| class | ChartSeriesModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartSeriesModel.cs |
+| class | ChartStackingTooltipState | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartStackingTooltipState.cs |
 | class | ChartState | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\ChartState.cs |
 | class | ChartTooltipManager | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartTooltipManager.cs |
 | class | ChartUiDefaults | public | DataVisualiser.UI.Defaults | .\DataVisualiser\UI\Defaults\ChartUiDefaults.cs |
+| class | ChartUiHelper | public | DataVisualiser.UI.Helpers | .\DataVisualiser\UI\Helpers\ChartUiHelper.cs |
 | class | ChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration.Coordinator | .\DataVisualiser\Core\Orchestration\Coordinator\ChartUpdateCoordinator.cs |
 | class | ChartUpdateRequestedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ChartUpdateRequestedEventArgs.cs |
 | class | ChartVisibilityChangedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ChartVisibilityChangedEventArgs.cs |
 | class | ChartVisibilityController | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\ChartVisibilityController.cs |
 | class | ChartVisibilityControllerTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\ChartVisibilityControllerTests.cs |
+| class | ChartVisibilityHelper | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\ChartVisibilityHelper.cs |
+| class | ChartVisibilityHelperTests | public | DataVisualiser.Tests.Controls | .\DataVisualiser.Tests\Controls\ChartVisibilityHelperTests.cs |
 | class | CmsBucketDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\CmsBucketDistributionStrategy.cs |
 | class | CmsConfiguration | public | DataVisualiser.Core.Configuration | .\DataVisualiser\Core\Configuration\CmsConfiguration.cs |
 | class | CmsConversionHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\CmsConversionHelper.cs |
@@ -62,7 +83,7 @@ This file is auto-generated.
 | class | CmsProductionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\CmsProductionStage.cs |
 | class | CmsTypeConverter | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CmsTypeConverter.cs |
 | class | CmsWeeklyDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\CmsWeeklyDistributionStrategy.cs |
-| class | CmsWeeklyDistributionStrategyTests | public | DataVisualiser.Tests.Charts.Strategies | .\DataVisualiser.Tests\Strategies\CmsWeeklyDistributionStrategyTests.cs |
+| class | CmsWeeklyDistributionStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\CmsWeeklyDistributionStrategyTests.cs |
 | class | ColourPalette | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ColourPalette.cs |
 | class | CombinedMetricParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\CombinedMetricParityHarness.cs |
 | class | CombinedMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\CombinedMetricParityTests.cs |
@@ -80,18 +101,22 @@ This file is auto-generated.
 | class | DataLoadValidatorTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\DataLoadValidatorTests.cs |
 | class | DataNormalization | public | DataFileReader.Helper | .\DataFileReader\Helper\DataNormalization.cs |
 | class | DataPreparationService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\DataPreparationService.cs |
+| class | DataPreparationServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\DataPreparationServiceTests.cs |
 | class | DateRangeLoadedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\DateRangeLoadedEventArgs.cs |
 | class | DateRangeResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DateRangeResult.cs |
 | class | DefaultNormalizationPipeline | public | DataFileReader.Normalization | .\DataFileReader\Normalization\DefaultNormalizationPipeline.cs |
 | class | DifferenceStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\DifferenceStrategy.cs |
 | class | DifferenceStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\DifferenceStrategyFactory.cs |
 | class | DifferenceStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\DifferenceStrategyTests.cs |
+| class | DiffRatioChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\DiffRatioChartControllerAdapter.cs |
 | class | DimensionSet | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\DimensionSet.cs |
+| class | DistributionChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\DistributionChartControllerAdapter.cs |
 | class | DistributionDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\DistributionDefaults.cs |
-| class | DistributionModeCatalog | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionModeDefinition.cs |
+| class | DistributionModeCatalog | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionModeCatalog.cs |
 | class | DistributionModeDefinition | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionModeDefinition.cs |
 | class | DistributionModeSettings | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionModeSettings.cs |
 | class | DistributionPolarRenderingService | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\DistributionPolarRenderingService.cs |
+| class | DistributionPolarTooltipState | internal | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionPolarTooltipState.cs |
 | class | DistributionRangeResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DistributionRangeResult.cs |
 | class | ErrorEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ErrorEventArgs.cs |
 | class | FileHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\FileHelper.cs |
@@ -104,11 +129,14 @@ This file is auto-generated.
 | class | FrequencyShadingDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\FrequencyShadingDefaults.cs |
 | class | FrequencyShadingRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\FrequencyShadingRenderer.cs |
 | class | HealthDataApp | public | DataFileReader.App | .\DataFileReader\App\HealthDataApp.cs |
-| class | HealthMetric | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthParser.cs |
-| class | HealthMetricDataBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
+| class | HealthMetric | public | DataFileReader.Helper | .\DataFileReader\Helper\HealthMetric.cs |
+| class | HealthMetricDataBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\HealthMetricDataBuilder.cs |
+| class | HealthMetricsCountEntry | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\HealthMetricsCountEntry.cs |
 | class | HealthMetricToCmsMapper | public | DataFileReader.Canonical | .\DataFileReader\Canonical\HealthMetricToCmsMapper.cs |
-| class | HierarchyObject | public |  | .\DataFileReader\Class\HierarchyObject.cs |
+| class | HierarchyObject | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyObject.cs |
 | class | HierarchyObjectList | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyObjectList.cs |
+| class | HierarchyRefValCalculator | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyRefValCalculator.cs |
+| class | HierarchyRefValTests | public | DataFileReader.Tests | .\DataFileReader.Tests\HierarchyRefValTests.cs |
 | class | HourlyDistributionConfiguration | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\HourlyDistributionConfiguration.cs |
 | class | HourlyDistributionParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\HourlyDistributionParityHarness.cs |
 | class | HourlyDistributionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\HourlyDistributionService.cs |
@@ -118,12 +146,16 @@ This file is auto-generated.
 | class | HourlyFrequencyRenderer | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\HourlyFrequencyRenderer.cs |
 | class | HourlyIntervalRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\HourlyIntervalRenderer.cs |
 | class | IntervalShadingContext | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\IntervalShadingContext.cs |
-| class | JsonArray | public |  | .\DataFileReader\Class\JSON\JsonArray.cs |
-| class | JsonObject | public |  | .\DataFileReader\Class\JSON\JsonObject.cs |
-| class | JsonValue | public |  | .\DataFileReader\Class\JSON\JsonValue.cs |
+| class | JsonArray | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\JsonArray.cs |
+| class | JsonObject | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\JsonObject.cs |
+| class | JsonValue | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\JsonValue.cs |
 | class | JsoonHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\JsoonHelper.cs |
 | class | LegacyExecutionResult | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\LegacyExecutionResult.cs |
-| class | LegacyJsonParser | public |  | .\DataFileReader\Parsers\LegacyJsonParser.cs |
+| class | LegacyJsonParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\LegacyJsonParser.cs |
+| class | LegendItem | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\LegendToggleManager.cs |
+| class | LegendToggleManager | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\LegendToggleManager.cs |
+| class | LiveChartsChartRenderer | public | DataVisualiser.UI.Rendering.LiveCharts | .\DataVisualiser\UI\Rendering\LiveCharts\LiveChartsChartRenderer.cs |
+| class | MainChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\MainChartControllerAdapter.cs |
 | class | MainWindowViewModelBusyStateTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\MainWindowViewModelBusyStateTests.cs |
 | class | MathHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\MathHelper.cs |
 | class | MathHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\MathHelperTests.cs |
@@ -138,22 +170,28 @@ This file is auto-generated.
 | class | MetricIdentityResolutionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\MetricIdentityResolutionStage.cs |
 | class | MetricLoadCoordinator | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\MetricLoadCoordinator.cs |
 | class | MetricSelectionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\MetricSelectionService.cs |
+| class | MetricSelectionServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\MetricSelectionServiceTests.cs |
+| class | MetricSeriesSelectionCache | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\MetricSeriesSelectionCache.cs |
 | class | MetricState | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\MetricState.cs |
 | class | MetricTypeParser | public | DataFileReader.Helper | .\DataFileReader\Helper\MetricTypeParser.cs |
 | class | MetricTypesLoadedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\MetricTypesLoadedEventArgs.cs |
-| class | MockCanonicalMetricSeries | internal | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
-| class | MockCmsBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
+| class | MockCanonicalMetricSeries | internal | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\MockCanonicalMetricSeries.cs |
+| class | MockCmsBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\MockCmsBuilder.cs |
 | class | MultiMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\MultiMetricParityTests.cs |
 | class | MultiMetricStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\MultiMetricStrategy.cs |
 | class | MultiMetricStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\MultiMetricStrategyFactory.cs |
 | class | MultiMetricStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\MultiMetricStrategyTests.cs |
+| class | MultiplyConverter | public | DataVisualiser.UI.Converters | .\DataVisualiser\UI\Converters\MultiplyConverter.cs |
 | class | NormalizationBootstrap | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationBootstrap.cs |
 | class | NormalizationContext | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationContext.cs |
 | class | NormalizationDiagnostics | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationDiagnostics.cs |
 | class | NormalizationModeConverter | public | DataVisualiser.UI.Converters | .\DataVisualiser\UI\Converters\NormalizationModeConverter.cs |
+| class | NormalizedChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\NormalizedChartControllerAdapter.cs |
 | class | NormalizedStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\NormalizedStrategy.cs |
 | class | NormalizedStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\NormalizedStrategyFactory.cs |
 | class | NormalizedStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\NormalizedStrategyTests.cs |
+| class | NullStrategyReachabilityProbe | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\NullStrategyReachabilityProbe.cs |
+| class | ParityExportShapeTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\ParityExportShapeTests.cs |
 | class | ParityFailure | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityFailure.cs |
 | class | ParityPoint | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityPoint.cs |
 | class | ParityResult | public | DataVisualiser.Core.Validation | .\DataVisualiser\Core\Validation\ParityResult.cs |
@@ -162,7 +200,7 @@ This file is auto-generated.
 | class | ParitySeries | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParitySeries.cs |
 | class | ParityTolerance | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityTolerance.cs |
 | class | ParityValidationService | public | DataVisualiser.Core.Validation | .\DataVisualiser\Core\Validation\ParityValidationService.cs |
-| class | Program | internal |  | .\DataFileReader\Program.cs |
+| class | Program | internal | DataFileReader | .\DataFileReader\Program.cs |
 | class | RatioStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\RatioStrategy.cs |
 | class | RatioStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\RatioStrategyFactory.cs |
 | class | RatioStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\RatioStrategyTests.cs |
@@ -171,12 +209,14 @@ This file is auto-generated.
 | class | RelayCommand | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\RelayCommand.cs |
 | class | RenderingDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\RenderingDefaults.cs |
 | class | RowComparer | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper.cs |
-| class | SamsungCsvParser | public |  | .\DataFileReader\Parsers\SamsungCsvParser.cs |
+| class | SamsungCsvParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\SamsungCsvParser.cs |
 | class | SamsungHealthCsvParser | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthCsvParser.cs |
 | class | SamsungHealthParser | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthParser.cs |
-| class | SamsungJsonParser | public |  | .\DataFileReader\Parsers\SamsungJsonParser.cs |
+| class | SamsungJsonParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\SamsungJsonParser.cs |
+| class | SeriesAlignmentHelper | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\SeriesAlignmentHelper.cs |
 | class | SeriesResult | public | DataVisualiser.Core.Computation.Results | .\DataVisualiser\Core\Computation\Results\SeriesResult.cs |
-| class | ShadowValidate_SamsungHealthCsv | public |  | .\DataFileReader\ShadowValidate_SamsungHealthCsv.cs |
+| class | ShadowValidate_SamsungHealthCsv | public | DataFileReader | .\DataFileReader\ShadowValidate_SamsungHealthCsv.cs |
+| class | SimpleChartTooltip | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\SimpleChartTooltip.cs |
 | class | SingleMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\SingleMetricParityTests.cs |
 | class | SingleMetricStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\SingleMetricStrategy.cs |
 | class | SingleMetricStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\SingleMetricStrategyFactory.cs |
@@ -185,6 +225,7 @@ This file is auto-generated.
 | class | SmoothingService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\SmoothingService.cs |
 | class | SQLHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\SQLHelper.cs |
 | class | SqlQueryBuilder | public | DataVisualiser.Core.Data.QueryBuilders | .\DataVisualiser\Core\Data\QueryBuilders\SqlQueryBuilder.cs |
+| class | StaTestHelper | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\StaTestHelper.cs |
 | class | StrategyComputationHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\StrategyComputationHelper.cs |
 | class | StrategyComputationHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\StrategyComputationHelperTests.cs |
 | class | StrategyCreationParameters | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\StrategyCreationParameters.cs |
@@ -192,8 +233,10 @@ This file is auto-generated.
 | class | StrategyCutOverServiceTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\StrategyCutOverServiceTests.cs |
 | class | StrategyFactoryBase | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\StrategyFactoryBase.cs |
 | class | StrategyParityContext | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\StrategyParityContext.cs |
+| class | StrategyReachabilityStoreProbe | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\StrategyReachabilityStoreProbe.cs |
 | class | StrategySelectionService | public | DataVisualiser.Core.Orchestration.Selection | .\DataVisualiser\Core\Orchestration\Selection\StrategySelectionService.cs |
 | class | StrategySelectionServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\StrategySelectionServiceTests.cs |
+| class | StrategyTypeMetadata | public | DataVisualiser.Core.Strategies | .\DataVisualiser\Core\Strategies\StrategyTypeMetadata.cs |
 | class | SubtypeControlPair | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\SubtypeControlPair.cs |
 | class | SubtypeSelectorManager | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\SubtypeSelectorManager.cs |
 | class | SubtypesLoadedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\SubtypesLoadedEventArgs.cs |
@@ -207,6 +250,7 @@ This file is auto-generated.
 | class | TransformComputationService | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformComputationService.cs |
 | class | TransformComputationServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\TransformComputationServiceTests.cs |
 | class | TransformDataHelperTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformDataHelperTests.cs |
+| class | TransformDataPanelControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\TransformDataPanelControllerAdapter.cs |
 | class | TransformExpression | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformExpression.cs |
 | class | TransformExpressionBuilder | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformExpressionBuilder.cs |
 | class | TransformExpressionBuilderTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformExpressionBuilderTests.cs |
@@ -220,12 +264,15 @@ This file is auto-generated.
 | class | TransformOperationService | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformOperationService.cs |
 | class | TransformResultStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\TransformResultStrategy.cs |
 | class | TransformResultStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\TransformResultStrategyTests.cs |
-| class | Types | public |  | .\DataFileReader\Class\JSON\JsonValue.cs |
+| class | Types | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\Types.cs |
+| class | UiChartRenderModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\UiChartRenderModel.cs |
 | class | UiDefaults | public | DataVisualiser.UI.Defaults | .\DataVisualiser\UI\Defaults\UiDefaults.cs |
 | class | UiState | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\UiState.cs |
 | class | UiStateTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\UiStateTests.cs |
 | class | UnaryOperators | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\UnaryOperators.cs |
 | class | UnitResolutionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\UnitResolutionService.cs |
+| class | WeekdayTrendAverageToggleEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\WeekdayTrendAverageToggleEventArgs.cs |
+| class | WeekdayTrendChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\WeekdayTrendChartControllerAdapter.cs |
 | class | WeekdayTrendChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration.Coordinator | .\DataVisualiser\Core\Orchestration\Coordinator\WeekdayTrendChartUpdateCoordinator.cs |
 | class | WeekdayTrendComputationStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\WeekdayTrendComputationStrategy.cs |
 | class | WeekdayTrendComputationStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\WeekdayTrendComputationStrategyTests.cs |
@@ -249,52 +296,78 @@ This file is auto-generated.
 | class | WeeklyFrequencyRenderer | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\WeeklyFrequencyRenderer.cs |
 | class | WeeklyIntervalRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\WeeklyIntervalRenderer.cs |
 | enum | AggregationPeriod | public | DataFileReader.Class | .\DataFileReader\Class\AggregationPeriod.cs |
+| enum | ChartLegendPlacement | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartLegendPlacement.cs |
 | enum | ChartSeriesMode | public | DataVisualiser.Core.Rendering.Models | .\DataVisualiser\Core\Rendering\Models\ChartSeriesMode.cs |
-| enum | DataCompleteness | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| enum | ChartSeriesType | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartSeriesType.cs |
+| enum | DataCompleteness | public | DataFileReader.Canonical | .\DataFileReader\Canonical\DataCompleteness.cs |
 | enum | DistributionMode | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DistributionMode.cs |
-| enum | IdentityResolutionFailureReason | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricIdentityResolutionResult.cs |
-| enum | MetricDimension | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| enum | IdentityResolutionFailureReason | public | DataFileReader.Canonical | .\DataFileReader\Canonical\IdentityResolutionFailureReason.cs |
+| enum | MainChartDisplayMode | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\MainChartDisplayMode.cs |
+| enum | MetricDimension | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricDimension.cs |
 | enum | NormalizationMode | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\NormalizationMode.cs |
 | enum | ParityLayer | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityLayer.cs |
 | enum | ParityMode | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityMode.cs |
 | enum | RecordToDayRatio | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\RecordToDayRatio.cs |
+| enum | SamplingMode | public | DataVisualiser.Core.Data | .\DataVisualiser\Core\Data\SamplingMode.cs |
 | enum | StrategyType | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\StrategyType.cs |
 | enum | TickInterval | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\TickInterval.cs |
-| enum | TimeRepresentation | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
-| enum | ValidationStatus | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
-| interface | ICanonicalMetricSeries | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| enum | TimeRepresentation | public | DataFileReader.Canonical | .\DataFileReader\Canonical\TimeRepresentation.cs |
+| enum | ValidationStatus | public | DataFileReader.Canonical | .\DataFileReader\Canonical\ValidationStatus.cs |
+| enum | WeekdayTrendAverageWindow | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\WeekdayTrendAverageWindow.cs |
+| enum | WeekdayTrendChartMode | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\WeekdayTrendChartMode.cs |
+| interface | IBarPieChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IBarPieChartControllerExtras.cs |
+| interface | ICanonicalMetricSeries | public | DataFileReader.Canonical | .\DataFileReader\Canonical\ICanonicalMetricSeries.cs |
+| interface | ICartesianChartSurface | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ICartesianChartSurface.cs |
 | interface | IChartComputationStrategy | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IChartComputationStrategy.cs |
+| interface | IChartController | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartController.cs |
+| interface | IChartControllerFactory | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartControllerFactory.cs |
+| interface | IChartControllerRegistry | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartControllerRegistry.cs |
+| interface | IChartPanelScaffold | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartPanelScaffold.cs |
+| interface | IChartRenderer | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\IChartRenderer.cs |
 | interface | IChartRenderingContext | public | DataVisualiser.UI | .\DataVisualiser\UI\IChartRenderingContext.cs |
+| interface | IChartSurface | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\IChartSurface.cs |
 | interface | IDataPreparationService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDataPreparationService.cs |
+| interface | IDiffRatioChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IDiffRatioChartControllerExtras.cs |
+| interface | IDistributionChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IDistributionChartControllerExtras.cs |
 | interface | IDistributionConfiguration | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDistributionConfiguration.cs |
 | interface | IDistributionResultExtractor | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDistributionResultExtractor.cs |
+| interface | IDistributionService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDistributionService.cs |
 | interface | IFrequencyShadingRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\IFrequencyShadingRenderer.cs |
 | interface | IHealthFileParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\IHealthFileParser.cs |
 | interface | IIntervalRenderer | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\IIntervalRenderer.cs |
 | interface | IIntervalShadingStrategy | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\IIntervalShadingStrategy.cs |
-| interface | IJson | public |  | .\DataFileReader\Class\JSON\IJson.cs |
-| interface | IJsonComplex | public |  | .\DataFileReader\Class\JSON\IJson.cs |
-| interface | IJsonPrimitive | public |  | .\DataFileReader\Class\JSON\IJson.cs |
+| interface | IJson | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\IJson.cs |
+| interface | IJsonComplex | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\IJsonComplex.cs |
+| interface | IJsonPrimitive | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\IJsonPrimitive.cs |
+| interface | IMainChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IMainChartControllerExtras.cs |
 | interface | INormalizationPipeline | public | DataFileReader.Normalization | .\DataFileReader\Normalization\INormalizationPipeline.cs |
 | interface | INormalizationStage | public | DataFileReader.Normalization | .\DataFileReader\Normalization\INormalizationStage.cs |
+| interface | IPolarChartSurface | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IPolarChartSurface.cs |
 | interface | ISmoothingService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\ISmoothingService.cs |
 | interface | IStrategyCutOverService | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IStrategyCutOverService.cs |
 | interface | IStrategyFactory | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IStrategyFactory.cs |
 | interface | IStrategyParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\IStrategyParityHarness.cs |
+| interface | IStrategyReachabilityProbe | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\IStrategyReachabilityProbe.cs |
 | interface | ITimelineService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\ITimelineService.cs |
+| interface | ITransformPanelControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ITransformPanelControllerExtras.cs |
 | interface | IUnitResolutionService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IUnitResolutionService.cs |
+| interface | IWeekdayTrendChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IWeekdayTrendChartControllerExtras.cs |
 | interface | IWeekdayTrendResultProvider | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IWeekdayTrendResultProvider.cs |
-| record | CanonicalMetricId | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | CanonicalMetricId | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricId.cs |
 | record | CanonicalMetricSeries | internal | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
-| record | FileProcessingResult | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingService.cs |
+| record | ChartControllerFactoryContext | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerFactoryContext.cs |
+| record | ChartControllerFactoryResult | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerFactoryResult.cs |
+| record | FileProcessingResult | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingResult.cs |
 | record | FrequencyShadingData | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\FrequencyShadingData.cs |
 | record | MetricIdentityResolutionResult | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricIdentityResolutionResult.cs |
-| record | MetricProvenance | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
-| record | MetricQuality | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
-| record | MetricSample | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | MetricNameOption | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\MetricNameOption.cs |
+| record | MetricProvenance | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricProvenance.cs |
+| record | MetricQuality | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricQuality.cs |
+| record | MetricSample | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricSample.cs |
 | record | MetricSeriesSelection | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\MetricSeriesSelection.cs |
-| record | MetricUnit | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
-| record | TimeSemantics | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| record | MetricUnit | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricUnit.cs |
+| record | StrategyReachabilityRecord | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\StrategyReachabilityRecord.cs |
+| record | TimeSemantics | public | DataFileReader.Canonical | .\DataFileReader\Canonical\TimeSemantics.cs |
 
 
 ------------------------------------------------------

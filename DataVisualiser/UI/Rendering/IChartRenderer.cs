@@ -1,6 +1,9 @@
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace DataVisualiser.UI.Rendering;
 
 public interface IChartRenderer
 {
-    void Apply(IChartSurface surface, UiChartRenderModel model);
+    Task ApplyAsync(IChartSurface surface, UiChartRenderModel model, CancellationToken cancellationToken = default);
 }

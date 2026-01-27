@@ -1,4 +1,4 @@
-using System.Windows.Controls.Primitives;
+using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.UI.Helpers;
@@ -8,7 +8,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, ICartesianChartSurface
+public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
 {
     private readonly MainChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
@@ -28,11 +28,25 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
     public string Key => "Main";
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => false;
-    public ChartPanelController Panel => _controller.Panel;
-    public ButtonBase ToggleButton => _controller.ToggleButton;
+    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
 
     public void Initialize()
     {
+    }
+
+    public void SetVisible(bool isVisible)
+    {
+        _controller.Panel.IsChartVisible = isVisible;
+    }
+
+    public void SetTitle(string? title)
+    {
+        _controller.Panel.Title = title ?? string.Empty;
+    }
+
+    public void SetToggleEnabled(bool isEnabled)
+    {
+        _controller.ToggleButton.IsEnabled = isEnabled;
     }
 
     public Task RenderAsync(ChartDataContext context)

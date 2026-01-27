@@ -102,7 +102,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
             using var connection = new SqlConnection(connectionString);
             connection.Open();
             EnsureHealthMetricsCanonicalTableExists(connection);
-            SeedHealthMetricsCanonicalTableFromCounts(connection);
             SeedHealthMetricsCanonicalTableFromHealthMetrics(connection);
         }
         catch (Exception ex)
@@ -152,71 +151,6 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                 var metricType = reader["MetricType"] as string ?? string.Empty;
                 var metricSubtype = reader["MetricSubtype"] as string ?? string.Empty;
                 entries.Add((metricType, metricSubtype));
-            }
-        }
-
-        if (entries.Count > 0)
-            EnsureHealthMetricsCanonicalEntries(connection, entries);
-    }
-
-    private static void SeedHealthMetricsCanonicalTableFromCounts(SqlConnection connection)
-    {
-        var hasCountsTable = @"
-            IF OBJECT_ID(N'[dbo].[HealthMetricsCounts]', N'U') IS NULL
-                SELECT 0
-            ELSE
-                SELECT 1;";
-
-        using (var checkCommand = new SqlCommand(hasCountsTable, connection))
-        {
-            var exists = (int)(checkCommand.ExecuteScalar() ?? 0);
-            if (exists == 0)
-                return;
-        }
-
-        var hasColumnsSql = @"
-            SELECT CASE
-                WHEN COL_LENGTH('dbo.HealthMetricsCounts', 'MetricTypeName') IS NOT NULL
-                  AND COL_LENGTH('dbo.HealthMetricsCounts', 'MetricSubtypeName') IS NOT NULL
-                  AND COL_LENGTH('dbo.HealthMetricsCounts', 'Disabled') IS NOT NULL
-                THEN 1 ELSE 0 END;";
-
-        using (var columnCommand = new SqlCommand(hasColumnsSql, connection))
-        {
-            var hasColumns = (int)(columnCommand.ExecuteScalar() ?? 0);
-            if (hasColumns == 0)
-                return;
-        }
-
-        var seedSql = @"
-            SELECT DISTINCT
-                LTRIM(RTRIM(MetricType)) AS MetricType,
-                ISNULL(LTRIM(RTRIM(MetricSubtype)), '') AS MetricSubtype,
-                ISNULL(MetricTypeName, '') AS MetricTypeName,
-                ISNULL(MetricSubtypeName, '') AS MetricSubtypeName,
-                ISNULL(Disabled, 0) AS Disabled
-            FROM [dbo].[HealthMetricsCounts]
-            WHERE MetricType IS NOT NULL AND LTRIM(RTRIM(MetricType)) <> '';";
-
-        var entries = new List<(string MetricType, string MetricSubtype, string MetricTypeName, string MetricSubtypeName, bool Disabled)>();
-        using (var command = new SqlCommand(seedSql, connection))
-        using (var reader = command.ExecuteReader())
-        {
-            while (reader.Read())
-            {
-                var metricType = reader["MetricType"] as string ?? string.Empty;
-                var metricSubtype = reader["MetricSubtype"] as string ?? string.Empty;
-                var metricTypeName = reader["MetricTypeName"] as string ?? string.Empty;
-                var metricSubtypeName = reader["MetricSubtypeName"] as string ?? string.Empty;
-                var disabledValue = reader["Disabled"] is bool disabled && disabled;
-
-                if (string.IsNullOrWhiteSpace(metricType))
-                    continue;
-
-                var resolvedTypeName = string.IsNullOrWhiteSpace(metricTypeName) ? FormatMetricDisplayName(metricType) : metricTypeName;
-                var resolvedSubtypeName = string.IsNullOrWhiteSpace(metricSubtypeName) ? FormatMetricDisplayName(metricSubtype) : metricSubtypeName;
-
-                entries.Add((metricType, metricSubtype, resolvedTypeName, resolvedSubtypeName, disabledValue));
             }
         }
 

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Defaults;
+using DataVisualiser.UI.Rendering;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.Controls;
@@ -11,7 +12,7 @@ namespace DataVisualiser.UI.Controls;
 ///     Encapsulates the common structure: header with title/toggle, behavioral controls, and chart content.
 ///     Each chart panel can use this controller and provide its own rendering logic and behavioral controls.
 /// </summary>
-public partial class ChartPanelController : UserControl
+public partial class ChartPanelController : UserControl, IChartPanelHost
 {
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(ChartPanelController), new PropertyMetadata(UiDefaults.ChartTitleDefault, OnTitleChanged));
 
@@ -75,6 +76,16 @@ public partial class ChartPanelController : UserControl
 
     public event EventHandler? ToggleRequested;
 
+    public void SetTitle(string? title)
+    {
+        Title = title ?? string.Empty;
+    }
+
+    public void SetIsVisible(bool isVisible)
+    {
+        IsChartVisible = isVisible;
+    }
+
     /// <summary>
     ///     Sets the header controls (e.g., operation toggle button for DiffRatio chart).
     /// </summary>
@@ -83,6 +94,11 @@ public partial class ChartPanelController : UserControl
         HeaderControlsPresenter.Content = controls;
         var hasHeaderControls = controls != null;
         HeaderControlsPresenter.Visibility = IsChartVisible && hasHeaderControls ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public void SetHeader(UIElement? controls)
+    {
+        SetHeaderControls(controls);
     }
 
     /// <summary>

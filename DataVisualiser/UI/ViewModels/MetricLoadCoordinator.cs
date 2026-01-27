@@ -175,11 +175,12 @@ public sealed class MetricLoadCoordinator
                 return;
             }
 
-            var primarySelection = _metricState.SelectedSeries.FirstOrDefault();
-            if (primarySelection == null)
+            var metricType = _metricState.SelectedMetricType;
+            if (string.IsNullOrWhiteSpace(metricType))
                 return;
 
-            var dateRange = await _metricService.LoadDateRangeAsync(primarySelection.MetricType, primarySelection.QuerySubtype, tableName);
+            var selections = _metricState.SelectedSeries;
+            var dateRange = await _metricService.LoadDateRangeForSelectionsAsync(metricType, selections, tableName);
 
             if (!dateRange.HasValue)
             {

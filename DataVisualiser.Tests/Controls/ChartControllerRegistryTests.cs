@@ -1,4 +1,3 @@
-using System.Windows.Controls.Primitives;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Controls;
 using DataVisualiser.UI.State;
@@ -98,8 +97,6 @@ public sealed class ChartControllerRegistryTests
         public string Key { get; }
         public bool RequiresPrimaryData => false;
         public bool RequiresSecondaryData => false;
-        public ChartPanelController Panel => null!;
-        public ButtonBase ToggleButton => null!;
 
         public void Initialize()
         {
@@ -128,6 +125,18 @@ public sealed class ChartControllerRegistryTests
         }
 
         public void ClearCache()
+        {
+        }
+
+        public void SetVisible(bool isVisible)
+        {
+        }
+
+        public void SetTitle(string? title)
+        {
+        }
+
+        public void SetToggleEnabled(bool isEnabled)
         {
         }
     }

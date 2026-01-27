@@ -723,6 +723,101 @@ public class DataFetcher
     }
 
     /// <summary>
+    ///     Gets date range for a base metric type and optional subtype union from HealthMetricsCounts.
+    ///     This avoids expensive scans over large metric tables when only min/max are needed.
+    /// </summary>
+    public async Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeFromCounts(string baseType, IReadOnlyCollection<string>? subtypes = null)
+    {
+        if (string.IsNullOrWhiteSpace(baseType))
+            throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
+
+        var subtypeList = subtypes?
+                .Where(subtype => !string.IsNullOrWhiteSpace(subtype) && !string.Equals(subtype, "(All)", StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+                         ?? new List<string>();
+
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        var sql = new StringBuilder($@"
+                -- DataFetcher.GetBaseTypeDateRangeFromCounts
+                SELECT 
+                    MIN(c.EarliestDateTime) AS MinDate,
+                    MAX(c.MostRecentDateTime) AS MaxDate
+                FROM {DataAccessDefaults.HealthMetricsCountsTable} c
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
+                       ON m.MetricType = c.MetricType
+                      AND m.MetricSubtype = c.MetricSubtype
+                WHERE c.MetricType = @MetricType
+                  AND (m.Disabled IS NULL OR m.Disabled = 0)
+                  AND c.RecordCount > 0
+                  AND c.EarliestDateTime IS NOT NULL
+                  AND c.MostRecentDateTime IS NOT NULL");
+
+        var parameters = new DynamicParameters();
+        parameters.Add("MetricType", baseType);
+
+        if (subtypeList.Count > 0)
+        {
+            sql.Append(" AND c.MetricSubtype IN @Subtypes");
+            parameters.Add("Subtypes", subtypeList);
+        }
+
+        var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql.ToString(), parameters);
+
+        if (result != null && result.MinDate.HasValue && result.MaxDate.HasValue)
+            return (result.MinDate.Value, result.MaxDate.Value);
+
+        return null;
+    }
+
+    /// <summary>
+    ///     Gets date range for a base metric type using the union of optional subtypes in the raw table.
+    ///     This is a fallback when counts data is unavailable.
+    /// </summary>
+    public async Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeForSubtypes(string baseType, IReadOnlyCollection<string>? subtypes, string tableName = DataAccessDefaults.DefaultTableName)
+    {
+        if (string.IsNullOrWhiteSpace(baseType))
+            throw new ArgumentException("Base metric type cannot be null or empty.", nameof(baseType));
+
+        tableName = SqlQueryBuilder.NormalizeTableName(tableName);
+
+        var subtypeList = subtypes?
+                .Where(subtype => !string.IsNullOrWhiteSpace(subtype) && !string.Equals(subtype, "(All)", StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList()
+                         ?? new List<string>();
+
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        var sql = new StringBuilder($@"
+                -- DataFetcher.GetBaseTypeDateRangeForSubtypes
+                SELECT 
+                    MIN(NormalizedTimestamp) AS MinDate,
+                    MAX(NormalizedTimestamp) AS MaxDate
+                FROM [dbo].[{tableName}]
+                WHERE NormalizedTimestamp IS NOT NULL");
+
+        var parameters = new DynamicParameters();
+        SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
+
+        if (subtypeList.Count > 0)
+        {
+            sql.Append(" AND MetricSubtype IN @Subtypes");
+            parameters.Add("Subtypes", subtypeList);
+        }
+
+        var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql.ToString(), parameters);
+
+        if (result != null && result.MinDate.HasValue && result.MaxDate.HasValue)
+            return (result.MinDate.Value, result.MaxDate.Value);
+
+        return null;
+    }
+
+    /// <summary>
     ///     Gets the record count for a specific MetricType and optional MetricSubtype.
     ///     Returns 0 if the combination doesn't exist.
     /// </summary>

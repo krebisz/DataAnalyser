@@ -86,7 +86,7 @@ public static class ChartUiDefaults
     public static readonly Thickness TransformPanelRightMargin = new(0, 0, 20, 0);
     public static readonly Thickness TransformPanelRightMarginSmall = new(0, 0, 10, 0);
     public static readonly Thickness TransformComputeButtonMargin = new(10, 20, 0, 0);
-    public static readonly Thickness TransformComputeButtonPadding = new(15, 5, 15, 5);
+    public static readonly Thickness TransformComputeButtonPadding = new(12, 2, 12, 2);
     public static readonly Thickness TransformChartContainerMargin = new(10, 0, 0, 0);
 
     public static readonly LegendLocation DefaultLegendLocation = LegendLocation.Right;

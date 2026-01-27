@@ -1,4 +1,3 @@
-using System.Windows.Controls.Primitives;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.State;
 
@@ -9,8 +8,6 @@ public interface IChartController
     string Key { get; }
     bool RequiresPrimaryData { get; }
     bool RequiresSecondaryData { get; }
-    ChartPanelController Panel { get; }
-    ButtonBase ToggleButton { get; }
 
     void Initialize();
     Task RenderAsync(ChartDataContext context);
@@ -19,4 +16,7 @@ public interface IChartController
     bool HasSeries(ChartState state);
     void UpdateSubtypeOptions();
     void ClearCache();
+    void SetVisible(bool isVisible);
+    void SetTitle(string? title);
+    void SetToggleEnabled(bool isEnabled);
 }

@@ -54,6 +54,7 @@
                         Content="="
                         FontSize="{x:Static ui:ChartUiDefaults.TransformComputeButtonFontSize}"
                         FontWeight="Bold"
+                        VerticalContentAlignment="Center"
                         Padding="{x:Static ui:ChartUiDefaults.TransformComputeButtonPadding}"
                         Margin="{x:Static ui:ChartUiDefaults.TransformComputeButtonMargin}"
                         IsEnabled="False" />

@@ -12,7 +12,7 @@ Running list of ideas
 - <!-- Pie Chart(s) per resolution (A Pie Chart per year or month to show compositional changes, side by side) : DONE -->
 - <!-- Introducing metric:submetric selection present for some charts, to all charts : DONE -->
 - <!-- Moving original main tab (window) contents into separate control : DONE -->
-- Decouple main charts controller, and all suboordinate charts, flows and controls
+- <!-- Decouple main charts controller, and all suboordinate charts, flows and controls : DONE -->
 - <!-- Adding "average" scoring to simple range rendering of distribution graph : DONE -->
 - Expanding transform graph to ternary operations, with more than two submetrics
 - Allowing for more than one graph to be created/generated within transform graph by dynamically adding more custom transforms (new control)
@@ -27,3 +27,11 @@ Running list of ideas
 - Expand distribution chart to use custom modulo bucket intervals
 - Rules based engine governing list of options available to each chart based on current selections made
 - Statistical determination of inaccurate data points, their clear indication on the UI, and what to do with them (ignore or mark graphically, or reduce impact on trend assessments)
+
+
+GRAPH TYPES
+-Treemap (Like windir for file sizes on system)
+-Venn Diagram
+Senke/Alluvial Maps
+-Chard Diagram
+-Sunburst Chart

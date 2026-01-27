@@ -1,30 +1,29 @@
 using System.Windows;
-using DataVisualiser.UI.Controls;
 
 namespace DataVisualiser.UI.Rendering;
 
 public sealed class ChartPanelSurface : IChartSurface
 {
-    private readonly ChartPanelController _panel;
+    private readonly IChartPanelHost _panel;
 
-    public ChartPanelSurface(ChartPanelController panel)
+    public ChartPanelSurface(IChartPanelHost panel)
     {
         _panel = panel ?? throw new ArgumentNullException(nameof(panel));
     }
 
     public void SetTitle(string? title)
     {
-        _panel.Title = title ?? string.Empty;
+        _panel.SetTitle(title);
     }
 
     public void SetIsVisible(bool isVisible)
     {
-        _panel.IsChartVisible = isVisible;
+        _panel.SetIsVisible(isVisible);
     }
 
     public void SetHeader(UIElement? header)
     {
-        _panel.SetHeaderControls(header);
+        _panel.SetHeader(header);
     }
 
     public void SetBehavioralControls(UIElement? controls)

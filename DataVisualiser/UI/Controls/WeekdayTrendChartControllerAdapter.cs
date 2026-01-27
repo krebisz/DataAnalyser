@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
@@ -16,7 +15,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeekdayTrendChartControllerExtras, ICartesianChartSurface
+public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeekdayTrendChartControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly WeekdayTrendChartController _controller;
@@ -50,11 +49,25 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
     public string Key => "WeeklyTrend";
     public bool RequiresPrimaryData => true;
     public bool RequiresSecondaryData => false;
-    public ChartPanelController Panel => _controller.Panel;
-    public ButtonBase ToggleButton => _controller.ToggleButton;
+    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
 
     public void Initialize()
     {
+    }
+
+    public void SetVisible(bool isVisible)
+    {
+        _controller.Panel.IsChartVisible = isVisible;
+    }
+
+    public void SetTitle(string? title)
+    {
+        _controller.Panel.Title = title ?? string.Empty;
+    }
+
+    public void SetToggleEnabled(bool isEnabled)
+    {
+        _controller.ToggleButton.IsEnabled = isEnabled;
     }
 
     public Task RenderAsync(ChartDataContext context)
