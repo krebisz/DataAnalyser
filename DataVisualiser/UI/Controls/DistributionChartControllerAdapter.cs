@@ -22,7 +22,7 @@ namespace DataVisualiser.UI.Controls;
 public sealed class DistributionChartControllerAdapter : IChartController, IDistributionChartControllerExtras, ICartesianChartSurface, IPolarChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly DistributionChartController _controller;
+    private readonly IDistributionChartController _controller;
     private readonly DistributionPolarRenderingService _distributionPolarRenderingService;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly Func<ToolTip?> _getPolarTooltip;
@@ -34,7 +34,7 @@ public sealed class DistributionChartControllerAdapter : IChartController, IDist
     private readonly IDistributionService _weeklyDistributionService;
     private bool _isUpdatingSubtypeCombo;
 
-    public DistributionChartControllerAdapter(DistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, DistributionPolarRenderingService distributionPolarRenderingService, Func<ToolTip?> getPolarTooltip)
+    public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, DistributionPolarRenderingService distributionPolarRenderingService, Func<ToolTip?> getPolarTooltip)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));

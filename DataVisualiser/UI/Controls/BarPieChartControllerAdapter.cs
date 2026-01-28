@@ -17,7 +17,7 @@ namespace DataVisualiser.UI.Controls;
 
 public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChartControllerExtras, IWpfChartPanelHost
 {
-    private readonly BarPieChartController _controller;
+    private readonly IBarPieChartController _controller;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly IChartRendererResolver _rendererResolver;
@@ -27,7 +27,7 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
     private IChartSurface? _surface;
 
     public BarPieChartControllerAdapter(
-        BarPieChartController controller,
+        IBarPieChartController controller,
         MainWindowViewModel viewModel,
         Func<bool> isInitializing,
         MetricSelectionService metricSelectionService,

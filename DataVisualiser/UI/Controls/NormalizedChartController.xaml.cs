@@ -8,7 +8,7 @@ namespace DataVisualiser.UI.Controls;
 /// <summary>
 ///     Controller for the normalized chart panel.
 /// </summary>
-public partial class NormalizedChartController : UserControl
+public partial class NormalizedChartController : UserControl, INormalizedChartController
 {
     private readonly LegendToggleManager _legendManager;
     private readonly Dictionary<string, bool> _legendVisibility = new(StringComparer.OrdinalIgnoreCase);

@@ -9,7 +9,7 @@ namespace DataVisualiser.UI.Controls;
 /// <summary>
 ///     Controller for the Difference / Ratio chart panel.
 /// </summary>
-public partial class DiffRatioChartController : UserControl
+public partial class DiffRatioChartController : UserControl, IDiffRatioChartController
 {
     private readonly CartesianChart _chart;
     private readonly LegendToggleManager _legendManager;

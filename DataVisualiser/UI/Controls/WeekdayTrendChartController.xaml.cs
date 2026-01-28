@@ -11,7 +11,7 @@ namespace DataVisualiser.UI.Controls;
 /// <summary>
 ///     Controller for the weekday trend chart panel, including day filters and chart type toggle.
 /// </summary>
-public partial class WeekdayTrendChartController : UserControl
+public partial class WeekdayTrendChartController : UserControl, IWeekdayTrendChartController
 {
     private readonly CartesianChart _cartesianChart;
     private readonly LegendToggleManager _cartesianLegendManager;

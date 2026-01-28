@@ -18,7 +18,7 @@ namespace DataVisualiser.UI.Controls;
 public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeekdayTrendChartControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly WeekdayTrendChartController _controller;
+    private readonly IWeekdayTrendChartController _controller;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
@@ -27,7 +27,7 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombo;
 
-    public WeekdayTrendChartControllerAdapter(WeekdayTrendChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<IStrategyCutOverService?> getStrategyCutOverService, WeekdayTrendChartUpdateCoordinator updateCoordinator)
+    public WeekdayTrendChartControllerAdapter(IWeekdayTrendChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<IStrategyCutOverService?> getStrategyCutOverService, WeekdayTrendChartUpdateCoordinator updateCoordinator)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));

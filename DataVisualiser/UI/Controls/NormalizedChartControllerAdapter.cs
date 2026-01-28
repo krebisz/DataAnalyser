@@ -19,7 +19,7 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
-    private readonly NormalizedChartController _controller;
+    private readonly INormalizedChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
     private readonly Func<bool> _isInitializing;
@@ -28,7 +28,7 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombos;
 
-    public NormalizedChartControllerAdapter(NormalizedChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, ChartUpdateCoordinator chartUpdateCoordinator, Func<IStrategyCutOverService?> getStrategyCutOverService)
+    public NormalizedChartControllerAdapter(INormalizedChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, ChartUpdateCoordinator chartUpdateCoordinator, Func<IStrategyCutOverService?> getStrategyCutOverService)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));

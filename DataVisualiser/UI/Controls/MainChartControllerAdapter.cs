@@ -10,12 +10,12 @@ namespace DataVisualiser.UI.Controls;
 
 public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
 {
-    private readonly MainChartController _controller;
+    private readonly IMainChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly Func<bool> _isInitializing;
     private readonly MainWindowViewModel _viewModel;
 
-    public MainChartControllerAdapter(MainChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator)
+    public MainChartControllerAdapter(IMainChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));

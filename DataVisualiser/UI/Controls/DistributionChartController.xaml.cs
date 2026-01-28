@@ -8,7 +8,7 @@ namespace DataVisualiser.UI.Controls;
 /// <summary>
 ///     Controller for the distribution chart panel.
 /// </summary>
-public partial class DistributionChartController : UserControl
+public partial class DistributionChartController : UserControl, IDistributionChartController
 {
     public DistributionChartController()
     {

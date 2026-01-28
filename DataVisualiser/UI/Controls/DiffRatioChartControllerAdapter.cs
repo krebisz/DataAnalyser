@@ -15,7 +15,7 @@ namespace DataVisualiser.UI.Controls;
 public sealed class DiffRatioChartControllerAdapter : IChartController, IDiffRatioChartControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly DiffRatioChartController _controller;
+    private readonly IDiffRatioChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly Func<ChartTooltipManager?> _getTooltipManager;
     private readonly Func<bool> _isInitializing;
@@ -24,7 +24,7 @@ public sealed class DiffRatioChartControllerAdapter : IChartController, IDiffRat
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombos;
 
-    public DiffRatioChartControllerAdapter(DiffRatioChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, Func<ChartTooltipManager?> getTooltipManager)
+    public DiffRatioChartControllerAdapter(IDiffRatioChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, Func<ChartTooltipManager?> getTooltipManager)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));

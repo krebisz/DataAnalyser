@@ -12,13 +12,13 @@ using DataVisualiser.UI.ViewModels;
 namespace DataVisualiser.UI.Controls;
 
 public sealed record ChartControllerFactoryContext(
-    MainChartController MainChartController,
-    NormalizedChartController NormalizedChartController,
-    DiffRatioChartController DiffRatioChartController,
-    DistributionChartController DistributionChartController,
-    WeekdayTrendChartController WeekdayTrendChartController,
+    IMainChartController MainChartController,
+    INormalizedChartController NormalizedChartController,
+    IDiffRatioChartController DiffRatioChartController,
+    IDistributionChartController DistributionChartController,
+    IWeekdayTrendChartController WeekdayTrendChartController,
     ITransformDataPanelController TransformDataPanelController,
-    BarPieChartController BarPieChartController,
+    IBarPieChartController BarPieChartController,
     MainWindowViewModel ViewModel,
     Func<bool> IsInitializing,
     Func<IDisposable> BeginUiBusyScope,

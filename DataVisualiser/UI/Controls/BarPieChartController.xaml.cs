@@ -7,7 +7,7 @@ namespace DataVisualiser.UI.Controls;
 /// <summary>
 ///     Controller for the Bar / Pie chart panel.
 /// </summary>
-public partial class BarPieChartController : UserControl, IChartPanelScaffold
+public partial class BarPieChartController : UserControl, IChartPanelScaffold, IBarPieChartController
 {
     public BarPieChartController()
     {

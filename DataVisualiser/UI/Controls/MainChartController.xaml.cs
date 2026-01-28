@@ -10,7 +10,7 @@ namespace DataVisualiser.UI.Controls;
 ///     Controller for the Main chart panel.
 ///     This is the simplest chart panel - just title, toggle, and chart.
 /// </summary>
-public partial class MainChartController : UserControl
+public partial class MainChartController : UserControl, IMainChartController
 {
     private readonly LegendToggleManager _legendManager;
 
