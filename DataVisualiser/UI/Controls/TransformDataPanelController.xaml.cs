@@ -9,7 +9,7 @@ namespace DataVisualiser.UI.Controls;
 /// <summary>
 ///     Controller for the data transform panel.
 /// </summary>
-public partial class TransformDataPanelController : UserControl
+public partial class TransformDataPanelController : UserControl, ITransformDataPanelController
 {
     private readonly LegendToggleManager _legendManager;
     private readonly Dictionary<string, bool> _legendVisibility = new(StringComparer.OrdinalIgnoreCase);

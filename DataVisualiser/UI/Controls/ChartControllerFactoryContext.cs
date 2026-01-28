@@ -17,7 +17,7 @@ public sealed record ChartControllerFactoryContext(
     DiffRatioChartController DiffRatioChartController,
     DistributionChartController DistributionChartController,
     WeekdayTrendChartController WeekdayTrendChartController,
-    TransformDataPanelController TransformDataPanelController,
+    ITransformDataPanelController TransformDataPanelController,
     BarPieChartController BarPieChartController,
     MainWindowViewModel ViewModel,
     Func<bool> IsInitializing,

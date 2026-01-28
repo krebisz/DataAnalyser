@@ -10,7 +10,7 @@ namespace DataVisualiser.UI.Controls;
 /// <summary>
 ///     Controller for the data transform panel (V2 layout).
 /// </summary>
-public partial class TransformDataPanelControllerV2 : UserControl
+public partial class TransformDataPanelControllerV2 : UserControl, ITransformDataPanelController
 {
     private const double CollapsedHandleWidth = 16;
     private const double DefaultExpandedRailWidth = 700;

@@ -24,7 +24,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
-    private readonly TransformDataPanelController _controller;
+    private readonly ITransformDataPanelController _controller;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
@@ -32,7 +32,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
 
-    public TransformDataPanelControllerAdapter(TransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ChartUpdateCoordinator chartUpdateCoordinator)
+    public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ChartUpdateCoordinator chartUpdateCoordinator)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
