@@ -1,6 +1,4 @@
-using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.UI.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
@@ -8,7 +6,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class MainChartControllerAdapter : IChartController, IMainChartControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
+public sealed class MainChartControllerAdapter : ChartControllerAdapterBase, IMainChartControllerExtras, ICartesianChartSurface, IWpfCartesianChartHost
 {
     private readonly IMainChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
@@ -16,6 +14,7 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
     private readonly MainWindowViewModel _viewModel;
 
     public MainChartControllerAdapter(IMainChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator)
+        : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -25,31 +24,10 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
 
     public CartesianChart Chart => _controller.Chart;
 
-    public string Key => "Main";
-    public bool RequiresPrimaryData => true;
-    public bool RequiresSecondaryData => false;
-    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
-
-    public void Initialize()
-    {
-    }
-
-    public void SetVisible(bool isVisible)
-    {
-        _controller.Panel.IsChartVisible = isVisible;
-    }
-
-    public void SetTitle(string? title)
-    {
-        _controller.Panel.Title = title ?? string.Empty;
-    }
-
-    public void SetToggleEnabled(bool isEnabled)
-    {
-        _controller.ToggleButton.IsEnabled = isEnabled;
-    }
-
-    public Task RenderAsync(ChartDataContext context)
+    public override string Key => "Main";
+    public override bool RequiresPrimaryData => true;
+    public override bool RequiresSecondaryData => false;
+    public override Task RenderAsync(ChartDataContext context)
     {
         if (!_viewModel.ChartState.IsMainVisible)
             return Task.CompletedTask;
@@ -57,26 +35,26 @@ public sealed class MainChartControllerAdapter : IChartController, IMainChartCon
         return RenderMainChartAsync(context);
     }
 
-    public void Clear(ChartState state)
+    public override void Clear(ChartState state)
     {
-        ChartHelper.ClearChart(_controller.Chart, state.ChartTimestamps);
+        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
     }
 
-    public void ResetZoom()
+    public override void ResetZoom()
     {
-        ChartUiHelper.ResetZoom(_controller.Chart);
+        ChartSurfaceHelper.ResetZoom(_controller.Chart);
     }
 
-    public bool HasSeries(ChartState state)
+    public override bool HasSeries(ChartState state)
     {
-        return ChartSeriesHelper.HasSeries(_controller.Chart.Series);
+        return ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
-    public void UpdateSubtypeOptions()
+    public override void UpdateSubtypeOptions()
     {
     }
 
-    public void ClearCache()
+    public override void ClearCache()
     {
     }
 

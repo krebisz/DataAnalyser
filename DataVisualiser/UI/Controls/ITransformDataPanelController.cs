@@ -5,10 +5,8 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public interface ITransformDataPanelController
+public interface ITransformDataPanelController : IChartPanelControllerHost
 {
-    ChartPanelController Panel { get; }
-    Button ToggleButton { get; }
     ComboBox TransformPrimarySubtypeCombo { get; }
     ComboBox TransformSecondarySubtypeCombo { get; }
     ComboBox TransformOperationCombo { get; }

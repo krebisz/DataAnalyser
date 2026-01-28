@@ -4,7 +4,6 @@ using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
-using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -15,7 +14,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class NormalizedChartControllerAdapter : IChartController, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
+public sealed class NormalizedChartControllerAdapter : ChartControllerAdapterBase, ICartesianChartSurface, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
@@ -29,6 +28,7 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
     private bool _isUpdatingSubtypeCombos;
 
     public NormalizedChartControllerAdapter(INormalizedChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, ChartUpdateCoordinator chartUpdateCoordinator, Func<IStrategyCutOverService?> getStrategyCutOverService)
+        : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -42,56 +42,35 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
 
     public CartesianChart Chart => _controller.Chart;
 
-    public void ClearCache()
+    public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public string Key => "Norm";
-    public bool RequiresPrimaryData => true;
-    public bool RequiresSecondaryData => true;
-    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
-
-    public void Initialize()
-    {
-    }
-
-    public void SetVisible(bool isVisible)
-    {
-        _controller.Panel.IsChartVisible = isVisible;
-    }
-
-    public void SetTitle(string? title)
-    {
-        _controller.Panel.Title = title ?? string.Empty;
-    }
-
-    public void SetToggleEnabled(bool isEnabled)
-    {
-        _controller.ToggleButton.IsEnabled = isEnabled;
-    }
-
-    public Task RenderAsync(ChartDataContext context)
+    public override string Key => "Norm";
+    public override bool RequiresPrimaryData => true;
+    public override bool RequiresSecondaryData => true;
+    public override Task RenderAsync(ChartDataContext context)
     {
         return RenderNormalizedAsync(context);
     }
 
-    public void Clear(ChartState state)
+    public override void Clear(ChartState state)
     {
-        ChartHelper.ClearChart(_controller.Chart, state.ChartTimestamps);
+        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
     }
 
-    public void ResetZoom()
+    public override void ResetZoom()
     {
-        ChartUiHelper.ResetZoom(_controller.Chart);
+        ChartSurfaceHelper.ResetZoom(_controller.Chart);
     }
 
-    public bool HasSeries(ChartState state)
+    public override bool HasSeries(ChartState state)
     {
-        return ChartSeriesHelper.HasSeries(_controller.Chart.Series);
+        return ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
-    public void UpdateSubtypeOptions()
+    public override void UpdateSubtypeOptions()
     {
         if (!CanUpdateNormalizedSubtypeOptions())
             return;
@@ -368,23 +347,15 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
 
     private void PopulateNormalizedSubtypeCombos(IReadOnlyList<MetricSeriesSelection> selectedSeries)
     {
-        foreach (var selection in selectedSeries)
-        {
-            _controller.NormalizedPrimarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
-            _controller.NormalizedSecondarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
-        }
-
-        _controller.NormalizedPrimarySubtypeCombo.IsEnabled = true;
+        ChartSubtypeComboHelper.PopulateCombo(_controller.NormalizedPrimarySubtypeCombo, selectedSeries);
+        ChartSubtypeComboHelper.PopulateCombo(_controller.NormalizedSecondarySubtypeCombo, selectedSeries);
     }
 
     private void UpdatePrimaryNormalizedSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
     {
         var primaryCurrent = _viewModel.ChartState.SelectedNormalizedPrimarySeries;
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
-
-        var primaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.NormalizedPrimarySubtypeCombo, primarySelection) ?? _controller.NormalizedPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-        _controller.NormalizedPrimarySubtypeCombo.SelectedItem = primaryItem;
+        var primarySelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, primaryCurrent) ?? selectedSeries[0];
+        ChartSubtypeComboHelper.SelectComboItem(_controller.NormalizedPrimarySubtypeCombo, primarySelection);
         _viewModel.ChartState.SelectedNormalizedPrimarySeries = primarySelection;
     }
 
@@ -398,9 +369,7 @@ public sealed class NormalizedChartControllerAdapter : IChartController, ICartes
             var secondaryCurrent = _viewModel.ChartState.SelectedNormalizedSecondarySeries;
             var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
 
-            var secondaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.NormalizedSecondarySubtypeCombo, secondarySelection) ?? _controller.NormalizedSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-            _controller.NormalizedSecondarySubtypeCombo.SelectedItem = secondaryItem;
+            ChartSubtypeComboHelper.SelectComboItem(_controller.NormalizedSecondarySubtypeCombo, secondarySelection);
             _viewModel.ChartState.SelectedNormalizedSecondarySeries = secondarySelection;
         }
         else

@@ -3,7 +3,6 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
-using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -15,7 +14,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeekdayTrendChartControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
+public sealed class WeekdayTrendChartControllerAdapter : ChartControllerAdapterBase, IWeekdayTrendChartControllerExtras, ICartesianChartSurface, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IWeekdayTrendChartController _controller;
@@ -28,6 +27,7 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
     private bool _isUpdatingSubtypeCombo;
 
     public WeekdayTrendChartControllerAdapter(IWeekdayTrendChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<IStrategyCutOverService?> getStrategyCutOverService, WeekdayTrendChartUpdateCoordinator updateCoordinator)
+        : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -41,58 +41,37 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
     public CartesianChart PolarChart => _controller.PolarChart;
     public CartesianChart Chart => _controller.Chart;
 
-    public void ClearCache()
+    public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public string Key => "WeeklyTrend";
-    public bool RequiresPrimaryData => true;
-    public bool RequiresSecondaryData => false;
-    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
-
-    public void Initialize()
-    {
-    }
-
-    public void SetVisible(bool isVisible)
-    {
-        _controller.Panel.IsChartVisible = isVisible;
-    }
-
-    public void SetTitle(string? title)
-    {
-        _controller.Panel.Title = title ?? string.Empty;
-    }
-
-    public void SetToggleEnabled(bool isEnabled)
-    {
-        _controller.ToggleButton.IsEnabled = isEnabled;
-    }
-
-    public Task RenderAsync(ChartDataContext context)
+    public override string Key => "WeeklyTrend";
+    public override bool RequiresPrimaryData => true;
+    public override bool RequiresSecondaryData => false;
+    public override Task RenderAsync(ChartDataContext context)
     {
         return RenderWeekdayTrendAsync(context);
     }
 
-    public void Clear(ChartState state)
+    public override void Clear(ChartState state)
     {
-        ChartHelper.ClearChart(_controller.Chart, state.ChartTimestamps);
-        ChartHelper.ClearChart(_controller.PolarChart, state.ChartTimestamps);
+        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
+        ChartSurfaceHelper.ClearCartesian(_controller.PolarChart, state);
     }
 
-    public void ResetZoom()
+    public override void ResetZoom()
     {
-        ChartUiHelper.ResetZoom(_controller.Chart);
-        ChartUiHelper.ResetZoom(_controller.PolarChart);
+        ChartSurfaceHelper.ResetZoom(_controller.Chart);
+        ChartSurfaceHelper.ResetZoom(_controller.PolarChart);
     }
 
-    public bool HasSeries(ChartState state)
+    public override bool HasSeries(ChartState state)
     {
-        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar ? ChartSeriesHelper.HasSeries(_controller.PolarChart.Series) : ChartSeriesHelper.HasSeries(_controller.Chart.Series);
+        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar ? ChartSurfaceHelper.HasSeries(_controller.PolarChart) : ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
-    public void UpdateSubtypeOptions()
+    public override void UpdateSubtypeOptions()
     {
         var combo = _controller.SubtypeCombo;
         if (combo == null)
@@ -101,26 +80,17 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
         _isUpdatingSubtypeCombo = true;
         try
         {
-            combo.Items.Clear();
-
             var selectedSeries = _viewModel.MetricState.SelectedSeries;
             if (selectedSeries.Count == 0)
             {
-                combo.IsEnabled = false;
+                ChartSubtypeComboHelper.DisableCombo(combo);
                 _viewModel.ChartState.SelectedWeekdayTrendSeries = null;
-                combo.SelectedItem = null;
                 return;
             }
 
-            foreach (var selection in selectedSeries)
-                combo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
-
-            combo.IsEnabled = true;
-
-            var current = _viewModel.ChartState.SelectedWeekdayTrendSeries;
-            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? current : selectedSeries[0];
-            var weekdayItem = MetricSeriesSelectionCache.FindSeriesComboItem(combo, seriesSelection) ?? combo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-            combo.SelectedItem = weekdayItem;
+            ChartSubtypeComboHelper.PopulateCombo(combo, selectedSeries);
+            var seriesSelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, _viewModel.ChartState.SelectedWeekdayTrendSeries) ?? selectedSeries[0];
+            ChartSubtypeComboHelper.SelectComboItem(combo, seriesSelection);
 
             if (_isInitializing())
                 _viewModel.ChartState.SelectedWeekdayTrendSeries = seriesSelection;
@@ -135,10 +105,12 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
 
     public void InitializeControls()
     {
-        _controller.AverageWindowCombo.Items.Clear();
-        AddWeekdayTrendAverageOption("Running Mean", WeekdayTrendAverageWindow.RunningMean);
-        AddWeekdayTrendAverageOption("Weekly", WeekdayTrendAverageWindow.Weekly);
-        AddWeekdayTrendAverageOption("Monthly", WeekdayTrendAverageWindow.Monthly);
+        ChartComboItemHelper.Populate(_controller.AverageWindowCombo, new[]
+        {
+                ("Running Mean", (object)WeekdayTrendAverageWindow.RunningMean),
+                ("Weekly", (object)WeekdayTrendAverageWindow.Weekly),
+                ("Monthly", (object)WeekdayTrendAverageWindow.Monthly)
+        });
 
         SelectWeekdayTrendAverageWindow(_viewModel.ChartState.WeekdayTrendAverageWindow);
     }
@@ -237,23 +209,9 @@ public sealed class WeekdayTrendChartControllerAdapter : IChartController, IWeek
         }
     }
 
-    private void AddWeekdayTrendAverageOption(string label, WeekdayTrendAverageWindow window)
-    {
-        _controller.AverageWindowCombo.Items.Add(new ComboBoxItem
-        {
-                Content = label,
-                Tag = window
-        });
-    }
-
     private void SelectWeekdayTrendAverageWindow(WeekdayTrendAverageWindow window)
     {
-        foreach (var item in _controller.AverageWindowCombo.Items.OfType<ComboBoxItem>())
-            if (item.Tag is WeekdayTrendAverageWindow option && option == window)
-            {
-                _controller.AverageWindowCombo.SelectedItem = item;
-                break;
-            }
+        _ = ChartComboItemHelper.TrySelectByTag(_controller.AverageWindowCombo, tag => tag is WeekdayTrendAverageWindow option && option == window);
     }
 
     private async Task RenderWeekdayTrendAsync(ChartDataContext ctx)

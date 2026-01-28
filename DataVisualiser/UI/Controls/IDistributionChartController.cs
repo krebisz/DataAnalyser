@@ -5,10 +5,8 @@ using WpfCartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.UI.Controls;
 
-public interface IDistributionChartController
+public interface IDistributionChartController : IChartPanelControllerHost
 {
-    ChartPanelController Panel { get; }
-    Button ToggleButton { get; }
     ComboBox ModeCombo { get; }
     ComboBox SubtypeCombo { get; }
     RadioButton FrequencyShadingRadio { get; }

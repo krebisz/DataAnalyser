@@ -15,7 +15,7 @@ using UiChartRenderModel = DataVisualiser.UI.Rendering.UiChartRenderModel;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChartControllerExtras, IWpfChartPanelHost
+public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, IBarPieChartControllerExtras
 {
     private readonly IBarPieChartController _controller;
     private readonly Func<bool> _isInitializing;
@@ -33,6 +33,7 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
         MetricSelectionService metricSelectionService,
         IChartRendererResolver rendererResolver,
         IChartSurfaceFactory surfaceFactory)
+        : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -63,55 +64,34 @@ public sealed class BarPieChartControllerAdapter : IChartController, IBarPieChar
         return RenderBarPieChartAsync();
     }
 
-    public string Key => ChartControllerKeys.BarPie;
-    public bool RequiresPrimaryData => true;
-    public bool RequiresSecondaryData => false;
-    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
-
-    public void Initialize()
-    {
-    }
-
-    public void SetVisible(bool isVisible)
-    {
-        _controller.Panel.IsChartVisible = isVisible;
-    }
-
-    public void SetTitle(string? title)
-    {
-        _controller.Panel.Title = title ?? string.Empty;
-    }
-
-    public void SetToggleEnabled(bool isEnabled)
-    {
-        _controller.ToggleButton.IsEnabled = isEnabled;
-    }
-
-    public Task RenderAsync(ChartDataContext context)
+    public override string Key => ChartControllerKeys.BarPie;
+    public override bool RequiresPrimaryData => true;
+    public override bool RequiresSecondaryData => false;
+    public override Task RenderAsync(ChartDataContext context)
     {
         return RenderBarPieChartAsync();
     }
 
-    public void Clear(ChartState state)
+    public override void Clear(ChartState state)
     {
         EnsureSurfaceAndRenderer();
         _ = _renderer!.ApplyAsync(_surface!, CreateEmptyBarPieModel());
     }
 
-    public void ResetZoom()
+    public override void ResetZoom()
     {
     }
 
-    public bool HasSeries(ChartState state)
+    public override bool HasSeries(ChartState state)
     {
         return false;
     }
 
-    public void UpdateSubtypeOptions()
+    public override void UpdateSubtypeOptions()
     {
     }
 
-    public void ClearCache()
+    public override void ClearCache()
     {
     }
 

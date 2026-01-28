@@ -4,7 +4,6 @@ using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -19,7 +18,7 @@ using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class DistributionChartControllerAdapter : IChartController, IDistributionChartControllerExtras, ICartesianChartSurface, IPolarChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
+public sealed class DistributionChartControllerAdapter : ChartControllerAdapterBase, IDistributionChartControllerExtras, ICartesianChartSurface, IPolarChartSurface, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IDistributionChartController _controller;
@@ -35,6 +34,7 @@ public sealed class DistributionChartControllerAdapter : IChartController, IDist
     private bool _isUpdatingSubtypeCombo;
 
     public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, DistributionPolarRenderingService distributionPolarRenderingService, Func<ToolTip?> getPolarTooltip)
+        : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -50,85 +50,55 @@ public sealed class DistributionChartControllerAdapter : IChartController, IDist
 
     public CartesianChart Chart => _controller.Chart;
 
-    public void ClearCache()
+    public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public string Key => "Distribution";
-    public bool RequiresPrimaryData => true;
-    public bool RequiresSecondaryData => false;
-    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
-
-    public void Initialize()
-    {
-    }
-
-    public void SetVisible(bool isVisible)
-    {
-        _controller.Panel.IsChartVisible = isVisible;
-    }
-
-    public void SetTitle(string? title)
-    {
-        _controller.Panel.Title = title ?? string.Empty;
-    }
-
-    public void SetToggleEnabled(bool isEnabled)
-    {
-        _controller.ToggleButton.IsEnabled = isEnabled;
-    }
-
-    public Task RenderAsync(ChartDataContext context)
+    public override string Key => "Distribution";
+    public override bool RequiresPrimaryData => true;
+    public override bool RequiresSecondaryData => false;
+    public override Task RenderAsync(ChartDataContext context)
     {
         return RenderDistributionChartAsync(context, _viewModel.ChartState.SelectedDistributionMode);
     }
 
-    public void Clear(ChartState state)
+    public override void Clear(ChartState state)
     {
-        ChartHelper.ClearChart(_controller.Chart, state.ChartTimestamps);
-        ClearDistributionPolarChart();
+        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
+        ChartSurfaceHelper.ClearPolar(_controller.PolarChart, _getPolarTooltip);
     }
 
-    public void ResetZoom()
+    public override void ResetZoom()
     {
-        ChartUiHelper.ResetZoom(_controller.Chart);
-        _controller.PolarChart.FitToBounds = true;
+        ChartSurfaceHelper.ResetZoom(_controller.Chart);
+        ChartSurfaceHelper.ResetPolarFit(_controller.PolarChart);
     }
 
-    public bool HasSeries(ChartState state)
+    public override bool HasSeries(ChartState state)
     {
-        return state.IsDistributionPolarMode ? ChartSeriesHelper.HasSeries(_controller.PolarChart.Series) : ChartSeriesHelper.HasSeries(_controller.Chart.Series);
+        return state.IsDistributionPolarMode ? ChartSurfaceHelper.HasSeries(_controller.PolarChart) : ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
-    public void UpdateSubtypeOptions()
+    public override void UpdateSubtypeOptions()
     {
         if (_controller.SubtypeCombo == null)
             return;
 
-        _isUpdatingSubtypeCombo = true;
-        try
-        {
-            _controller.SubtypeCombo.Items.Clear();
-
+            _isUpdatingSubtypeCombo = true;
+            try
+            {
             var selectedSeries = _viewModel.MetricState.SelectedSeries;
             if (selectedSeries.Count == 0)
             {
-                _controller.SubtypeCombo.IsEnabled = false;
+                ChartSubtypeComboHelper.DisableCombo(_controller.SubtypeCombo);
                 _viewModel.ChartState.SelectedDistributionSeries = null;
-                _controller.SubtypeCombo.SelectedItem = null;
                 return;
             }
 
-            foreach (var selection in selectedSeries)
-                _controller.SubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
-
-            _controller.SubtypeCombo.IsEnabled = true;
-
-            var current = _viewModel.ChartState.SelectedDistributionSeries;
-            var seriesSelection = current != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, current.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? current : selectedSeries[0];
-            var distributionItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.SubtypeCombo, seriesSelection) ?? _controller.SubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-            _controller.SubtypeCombo.SelectedItem = distributionItem;
+            ChartSubtypeComboHelper.PopulateCombo(_controller.SubtypeCombo, selectedSeries);
+            var seriesSelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, _viewModel.ChartState.SelectedDistributionSeries) ?? selectedSeries[0];
+            ChartSubtypeComboHelper.SelectComboItem(_controller.SubtypeCombo, seriesSelection);
 
             if (_isInitializing())
                 _viewModel.ChartState.SelectedDistributionSeries = seriesSelection;
@@ -143,21 +113,11 @@ public sealed class DistributionChartControllerAdapter : IChartController, IDist
 
     public void InitializeControls()
     {
-        _controller.ModeCombo.Items.Clear();
-        foreach (var definition in DistributionModeCatalog.All)
-            _controller.ModeCombo.Items.Add(new ComboBoxItem
-            {
-                    Content = definition.DisplayName,
-                    Tag = definition.Mode
-            });
+        ChartComboItemHelper.Populate(_controller.ModeCombo,
+                DistributionModeCatalog.All.Select(definition => (definition.DisplayName, (object)definition.Mode)));
 
-        _controller.IntervalCountCombo.Items.Clear();
-        foreach (var intervalCount in DistributionModeCatalog.IntervalCounts)
-            _controller.IntervalCountCombo.Items.Add(new ComboBoxItem
-            {
-                    Content = intervalCount.ToString(),
-                    Tag = intervalCount
-            });
+        ChartComboItemHelper.Populate(_controller.IntervalCountCombo,
+                DistributionModeCatalog.IntervalCounts.Select(intervalCount => (intervalCount.ToString(), (object)intervalCount)));
 
         var initialMode = _viewModel.ChartState.SelectedDistributionMode;
         SelectDistributionMode(initialMode);
@@ -313,22 +273,12 @@ public sealed class DistributionChartControllerAdapter : IChartController, IDist
 
     private void SelectDistributionMode(DistributionMode mode)
     {
-        foreach (var item in _controller.ModeCombo.Items.OfType<ComboBoxItem>())
-            if (item.Tag is DistributionMode taggedMode && taggedMode == mode)
-            {
-                _controller.ModeCombo.SelectedItem = item;
-                return;
-            }
+        _ = ChartComboItemHelper.TrySelectByTag(_controller.ModeCombo, tag => tag is DistributionMode taggedMode && taggedMode == mode);
     }
 
     private void SelectDistributionIntervalCount(int intervalCount)
     {
-        foreach (var item in _controller.IntervalCountCombo.Items.OfType<ComboBoxItem>())
-            if (item.Tag is int taggedInterval && taggedInterval == intervalCount)
-            {
-                _controller.IntervalCountCombo.SelectedItem = item;
-                return;
-            }
+        _ = ChartComboItemHelper.TrySelectByTag(_controller.IntervalCountCombo, tag => tag is int taggedInterval && taggedInterval == intervalCount);
     }
 
     private void ApplySettingsToUi(DistributionMode mode)
@@ -487,14 +437,4 @@ public sealed class DistributionChartControllerAdapter : IChartController, IDist
         };
     }
 
-    private void ClearDistributionPolarChart()
-    {
-        _controller.PolarChart.Series = Array.Empty<ISeries>();
-        _controller.PolarChart.AngleAxes = Array.Empty<PolarAxis>();
-        _controller.PolarChart.RadiusAxes = Array.Empty<PolarAxis>();
-        _controller.PolarChart.Tag = null;
-        var tooltip = _getPolarTooltip();
-        if (tooltip != null)
-            tooltip.IsOpen = false;
-    }
 }

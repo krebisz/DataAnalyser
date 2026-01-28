@@ -4,11 +4,9 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public interface IMainChartController
+public interface IMainChartController : IChartPanelControllerHost
 {
     CartesianChart Chart { get; }
-    ChartPanelController Panel { get; }
-    Button ToggleButton { get; }
     RadioButton DisplayRegularRadio { get; }
     RadioButton DisplaySummedRadio { get; }
     RadioButton DisplayStackedRadio { get; }

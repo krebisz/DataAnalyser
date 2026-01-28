@@ -5,12 +5,10 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public interface IWeekdayTrendChartController
+public interface IWeekdayTrendChartController : IChartPanelControllerHost
 {
     CartesianChart Chart { get; }
     CartesianChart PolarChart { get; }
-    ChartPanelController Panel { get; }
-    Button ToggleButton { get; }
     Button ChartTypeToggleButton { get; }
     ComboBox SubtypeCombo { get; }
     ComboBox AverageWindowCombo { get; }

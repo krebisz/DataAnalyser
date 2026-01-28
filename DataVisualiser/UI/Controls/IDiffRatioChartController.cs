@@ -4,11 +4,9 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public interface IDiffRatioChartController
+public interface IDiffRatioChartController : IChartPanelControllerHost
 {
     CartesianChart Chart { get; }
-    ChartPanelController Panel { get; }
-    Button ToggleButton { get; }
     Button OperationToggleButton { get; }
     ComboBox PrimarySubtypeCombo { get; }
     ComboBox SecondarySubtypeCombo { get; }

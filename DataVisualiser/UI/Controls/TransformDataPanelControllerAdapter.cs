@@ -20,7 +20,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public sealed class TransformDataPanelControllerAdapter : IChartController, ITransformPanelControllerExtras, ICartesianChartSurface, IWpfChartPanelHost, IWpfCartesianChartHost
+public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapterBase, ITransformPanelControllerExtras, ICartesianChartSurface, IWpfCartesianChartHost
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
@@ -33,6 +33,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
     private bool _isUpdatingTransformSubtypeCombos;
 
     public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ChartUpdateCoordinator chartUpdateCoordinator)
+        : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -44,36 +45,15 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 
     public CartesianChart Chart => _controller.ChartTransformResult;
 
-    public void ClearCache()
+    public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public string Key => "Transform";
-    public bool RequiresPrimaryData => true;
-    public bool RequiresSecondaryData => false;
-    public Panel ChartContentPanel => _controller.Panel.ChartContentPanel;
-
-    public void Initialize()
-    {
-    }
-
-    public void SetVisible(bool isVisible)
-    {
-        _controller.Panel.IsChartVisible = isVisible;
-    }
-
-    public void SetTitle(string? title)
-    {
-        _controller.Panel.Title = title ?? string.Empty;
-    }
-
-    public void SetToggleEnabled(bool isEnabled)
-    {
-        _controller.ToggleButton.IsEnabled = isEnabled;
-    }
-
-    public Task RenderAsync(ChartDataContext context)
+    public override string Key => "Transform";
+    public override bool RequiresPrimaryData => true;
+    public override bool RequiresSecondaryData => false;
+    public override Task RenderAsync(ChartDataContext context)
     {
         if (!_viewModel.ChartState.IsTransformPanelVisible)
             return Task.CompletedTask;
@@ -82,22 +62,22 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         return Task.CompletedTask;
     }
 
-    public void Clear(ChartState state)
+    public override void Clear(ChartState state)
     {
         ClearTransformGrids(state);
     }
 
-    public void ResetZoom()
+    public override void ResetZoom()
     {
-        ChartUiHelper.ResetZoom(_controller.ChartTransformResult);
+        ChartSurfaceHelper.ResetZoom(_controller.ChartTransformResult);
     }
 
-    public bool HasSeries(ChartState state)
+    public override bool HasSeries(ChartState state)
     {
-        return ChartSeriesHelper.HasSeries(_controller.ChartTransformResult.Series);
+        return ChartSurfaceHelper.HasSeries(_controller.ChartTransformResult);
     }
 
-    public void UpdateSubtypeOptions()
+    public override void UpdateSubtypeOptions()
     {
         UpdateTransformSubtypeOptions();
     }
@@ -349,25 +329,16 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 
     private void PopulateTransformSubtypeCombos(IReadOnlyList<MetricSeriesSelection> selectedSeries)
     {
-        foreach (var selection in selectedSeries)
-        {
-            _controller.TransformPrimarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
-
-            _controller.TransformSecondarySubtypeCombo.Items.Add(MetricSeriesSelectionCache.BuildSeriesComboItem(selection));
-        }
-
-        _controller.TransformPrimarySubtypeCombo.IsEnabled = true;
+        ChartSubtypeComboHelper.PopulateCombo(_controller.TransformPrimarySubtypeCombo, selectedSeries);
+        ChartSubtypeComboHelper.PopulateCombo(_controller.TransformSecondarySubtypeCombo, selectedSeries);
     }
 
     private void UpdatePrimaryTransformSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
     {
         var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySeries;
 
-        var primarySelection = primaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, primaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? primaryCurrent : selectedSeries[0];
-
-        var primaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.TransformPrimarySubtypeCombo, primarySelection) ?? _controller.TransformPrimarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-        _controller.TransformPrimarySubtypeCombo.SelectedItem = primaryItem;
+        var primarySelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, primaryCurrent) ?? selectedSeries[0];
+        ChartSubtypeComboHelper.SelectComboItem(_controller.TransformPrimarySubtypeCombo, primarySelection);
         _viewModel.ChartState.SelectedTransformPrimarySeries = primarySelection;
     }
 
@@ -382,9 +353,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 
             var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
 
-            var secondaryItem = MetricSeriesSelectionCache.FindSeriesComboItem(_controller.TransformSecondarySubtypeCombo, secondarySelection) ?? _controller.TransformSecondarySubtypeCombo.Items.OfType<ComboBoxItem>().FirstOrDefault();
-
-            _controller.TransformSecondarySubtypeCombo.SelectedItem = secondaryItem;
+            ChartSubtypeComboHelper.SelectComboItem(_controller.TransformSecondarySubtypeCombo, secondarySelection);
             _viewModel.ChartState.SelectedTransformSecondarySeries = secondarySelection;
         }
         else

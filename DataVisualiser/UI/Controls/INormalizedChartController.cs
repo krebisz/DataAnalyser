@@ -4,11 +4,9 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Controls;
 
-public interface INormalizedChartController
+public interface INormalizedChartController : IChartPanelControllerHost
 {
     CartesianChart Chart { get; }
-    ChartPanelController Panel { get; }
-    Button ToggleButton { get; }
     RadioButton NormZeroToOneRadio { get; }
     RadioButton NormPercentOfMaxRadio { get; }
     RadioButton NormRelativeToMaxRadio { get; }
