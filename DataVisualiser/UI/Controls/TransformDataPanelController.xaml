@@ -13,24 +13,22 @@
         <controls:ChartPanelController x:Name="PanelController" />
 
         <StackPanel x:Name="TransformContentRootPanel" Orientation="Vertical">
-            <StackPanel x:Name="TransformOperationRowPanel" Orientation="Horizontal"
-                        Margin="{x:Static ui:ChartUiDefaults.TransformOperationRowMargin}">
+            <Border BorderBrush="#FFB0B0B0"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="8"
+                    Margin="{x:Static ui:ChartUiDefaults.TransformOperationRowMargin}">
+                <StackPanel x:Name="TransformOperationRowPanel" Orientation="Horizontal">
                 <!-- Primary Subtype Selection -->
-                <StackPanel x:Name="TransformPrimarySubtypePanel" Orientation="Vertical"
-                            Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
-                            MinWidth="{x:Static ui:ChartUiDefaults.TransformPrimaryPanelMinWidth}">
+                <StackPanel x:Name="TransformPrimarySubtypePanel" Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}" MinWidth="{x:Static ui:ChartUiDefaults.TransformPrimaryPanelMinWidth}">
                     <TextBlock Text="Primary Subtype:" FontWeight="Bold" Margin="0,0,0,5" />
-                    <ComboBox x:Name="TransformPrimarySubtypeComboControl"
-                              MinWidth="{x:Static ui:ChartUiDefaults.TransformPrimaryComboMinWidth}" />
+                    <ComboBox x:Name="TransformPrimarySubtypeComboControl" MinWidth="{x:Static ui:ChartUiDefaults.TransformPrimaryComboMinWidth}" />
                 </StackPanel>
 
                 <!-- Operation Selection -->
-                <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical"
-                            Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}"
-                            MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationPanelMinWidth}">
+                <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}" MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationPanelMinWidth}">
                     <TextBlock Text="Operation:" FontWeight="Bold" Margin="0,0,0,5" />
-                    <ComboBox x:Name="TransformOperationComboControl"
-                              MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationComboMinWidth}">
+                    <ComboBox x:Name="TransformOperationComboControl" MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationComboMinWidth}">
                         <ComboBoxItem Content="Logarithm" Tag="Log" />
                         <ComboBoxItem Content="Square Root" Tag="Sqrt" />
                         <ComboBoxItem Content="Add (+)" Tag="Add" />
@@ -58,7 +56,8 @@
                         Padding="{x:Static ui:ChartUiDefaults.TransformComputeButtonPadding}"
                         Margin="{x:Static ui:ChartUiDefaults.TransformComputeButtonMargin}"
                         IsEnabled="False" />
-            </StackPanel>
+                </StackPanel>
+            </Border>
 
             <!-- Data Grids -->
             <StackPanel x:Name="TransformDataGridsPanel" Orientation="Horizontal"

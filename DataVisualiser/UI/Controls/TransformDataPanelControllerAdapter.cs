@@ -183,16 +183,16 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
             return;
         }
 
-        if (_controller.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string operationTag)
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx == null)
         {
             _controller.TransformComputeButton.IsEnabled = false;
             return;
         }
 
-        var ctx = _viewModel.ChartState.LastContext;
-        if (ctx == null)
+        if (_controller.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string operationTag)
         {
-            _controller.TransformComputeButton.IsEnabled = false;
+            _controller.TransformComputeButton.IsEnabled = ctx.Data1 != null && ctx.Data1.Any();
             return;
         }
 
@@ -245,10 +245,13 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
             return;
 
         var ctx = _viewModel.ChartState.LastContext;
-        if (!TryGetSelectedOperation(out var operationTag))
-            return;
-
         using var _ = _beginUiBusyScope();
+        if (!TryGetSelectedOperation(out var operationTag))
+        {
+            await RenderPrimarySelectionAsResult(ctx);
+            return;
+        }
+
         await ExecuteTransformOperation(ctx, operationTag);
     }
 
@@ -460,7 +463,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         await RenderTransformResults(allDataList, computedResults, operation, metricsList, transformContext);
     }
 
-    private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext)
+    private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext, string? overrideLabel = null)
     {
         var resultData = TransformExpressionEvaluator.CreateTransformResultData(dataList, results);
         PopulateTransformResultGrid(resultData);
@@ -470,7 +473,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
 
         ShowTransformResultPanels();
         await PrepareTransformChartLayout();
-        await RenderTransformChart(dataList, results, operation, metrics, transformContext);
+        await RenderTransformChart(dataList, results, operation, metrics, transformContext, overrideLabel);
         await FinalizeTransformChartRendering();
     }
 
@@ -553,7 +556,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         return usedWidth;
     }
 
-    private async Task RenderTransformChart(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext)
+    private async Task RenderTransformChart(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext, string? overrideLabel = null)
     {
         if (dataList.Count == 0 || results.Count == 0)
             return;
@@ -561,7 +564,7 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         var from = transformContext.From != default ? transformContext.From : dataList.Min(d => d.NormalizedTimestamp);
         var to = transformContext.To != default ? transformContext.To : dataList.Max(d => d.NormalizedTimestamp);
 
-        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, metrics, transformContext);
+        var label = overrideLabel ?? TransformExpressionEvaluator.GenerateTransformLabel(operation, metrics, transformContext);
 
         var strategy = new TransformResultStrategy(dataList, results, label, from, to);
 
@@ -671,6 +674,26 @@ public sealed class TransformDataPanelControllerAdapter : IChartController, ITra
         };
 
         return (primaryData, secondaryData, transformContext);
+    }
+
+    private async Task RenderPrimarySelectionAsResult(ChartDataContext ctx)
+    {
+        var (primaryData, _, transformContext) = await ResolveTransformDataAsync(ctx);
+        if (primaryData == null)
+            return;
+
+        var dataList = primaryData.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+        if (dataList.Count == 0)
+            return;
+
+        var results = dataList.Select(d => (double)d.Value!.Value).ToList();
+        var metricsList = new List<IReadOnlyList<MetricData>>
+        {
+                dataList
+        };
+
+        var label = string.IsNullOrWhiteSpace(transformContext.DisplayName1) ? "Primary Data" : transformContext.DisplayName1;
+        await RenderTransformResults(dataList, results, string.Empty, metricsList, transformContext, label);
     }
 
     private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
