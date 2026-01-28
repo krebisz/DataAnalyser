@@ -1,5 +1,6 @@
 using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Interfaces;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using DataFileReader.Canonical;
@@ -10,10 +11,12 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Defaults;
+using DataVisualiser.UI.Charts.Helpers;
 using DataVisualiser.UI.Charts.Rendering;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using UiChartRenderModel = DataVisualiser.UI.Charts.Rendering.UiChartRenderModel;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Adapters;
 
@@ -82,6 +85,9 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
     public override void ResetZoom()
     {
+        var chart = FindCartesianChart(_controller.Panel.ChartContentPanel);
+        if (chart != null)
+            ChartSurfaceHelper.ResetZoom(chart);
     }
 
     public override bool HasSeries(ChartState state)
@@ -468,4 +474,41 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
     private sealed record BarPieBucket(int Index, DateTime Start, DateTime End, string Label);
 
     private sealed record BarPieBucketPlan(DateTime From, DateTime To, double BucketTicks, IReadOnlyList<BarPieBucket> Buckets);
+
+    private static CartesianChart? FindCartesianChart(DependencyObject? root)
+    {
+        if (root == null)
+            return null;
+
+        if (root is CartesianChart chart)
+            return chart;
+
+        if (root is ContentPresenter presenter && presenter.Content is DependencyObject presented)
+        {
+            var presentedChart = FindCartesianChart(presented);
+            if (presentedChart != null)
+                return presentedChart;
+        }
+
+        var childCount = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < childCount; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            var found = FindCartesianChart(child);
+            if (found != null)
+                return found;
+        }
+
+        foreach (var child in LogicalTreeHelper.GetChildren(root))
+        {
+            if (child is not DependencyObject dependencyChild)
+                continue;
+
+            var found = FindCartesianChart(dependencyChild);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
 }

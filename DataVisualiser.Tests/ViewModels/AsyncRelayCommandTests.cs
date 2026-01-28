@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.Tests.ViewModels;
@@ -21,8 +22,22 @@ public class AsyncRelayCommandTests
         Assert.False(command.CanExecute(null));
 
         tcs.SetResult(true);
-        await Task.Delay(10);
+        await WaitUntilAsync(() => command.CanExecute(null));
+    }
 
-        Assert.True(command.CanExecute(null));
+    private static async Task WaitUntilAsync(Func<bool> condition, int timeoutMs = 1000, int pollMs = 10)
+    {
+        if (condition())
+            return;
+
+        var sw = Stopwatch.StartNew();
+        while (sw.ElapsedMilliseconds < timeoutMs)
+        {
+            await Task.Delay(pollMs);
+            if (condition())
+                return;
+        }
+
+        Assert.True(condition());
     }
 }
