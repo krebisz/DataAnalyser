@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
@@ -7,19 +8,22 @@ using LiveCharts.Wpf;
 namespace DataVisualiser.UI.Controls;
 
 /// <summary>
-///     Controller for the data transform panel.
+///     Controller for the data transform panel (V2 layout).
 /// </summary>
-public partial class TransformDataPanelController : UserControl
+public partial class TransformDataPanelControllerV2 : UserControl
 {
+    private const double CollapsedHandleWidth = 16;
+    private const double DefaultExpandedRailWidth = 700;
     private readonly LegendToggleManager _legendManager;
     private readonly Dictionary<string, bool> _legendVisibility = new(StringComparer.OrdinalIgnoreCase);
+    private bool _isLeftRailCollapsed;
 
-    public TransformDataPanelController()
+    public TransformDataPanelControllerV2()
         : this(new DefaultTransformOperationProvider())
     {
     }
 
-    public TransformDataPanelController(ITransformOperationProvider operationProvider)
+    public TransformDataPanelControllerV2(ITransformOperationProvider operationProvider)
     {
         InitializeComponent();
 
@@ -30,12 +34,16 @@ public partial class TransformDataPanelController : UserControl
         TransformPrimarySubtypeComboControl.SelectionChanged += (s, e) => PrimarySubtypeChanged?.Invoke(this, EventArgs.Empty);
         TransformSecondarySubtypeComboControl.SelectionChanged += (s, e) => SecondarySubtypeChanged?.Invoke(this, EventArgs.Empty);
         TransformComputeButtonControl.Click += (s, e) => ComputeRequested?.Invoke(this, EventArgs.Empty);
+        TransformLeftRailToggleButton.Checked += (_, _) => CollapseLeftRail();
+        TransformLeftRailToggleButton.Unchecked += (_, _) => ExpandLeftRail();
 
         _legendManager = new LegendToggleManager(ChartTransformResultControl, _legendVisibility);
         _legendManager.AttachItemsControl(TransformLegendItemsControl);
 
         RootGrid.Children.Remove(TransformContentRootPanel);
         PanelController.SetChartContent(TransformContentRootPanel);
+
+        ExpandLeftRail();
     }
 
     public ChartPanelController Panel => PanelController;
@@ -85,6 +93,33 @@ public partial class TransformDataPanelController : UserControl
     public event EventHandler? SecondarySubtypeChanged;
 
     public event EventHandler? ComputeRequested;
+
+    private void CollapseLeftRail()
+    {
+        if (_isLeftRailCollapsed)
+            return;
+
+        _isLeftRailCollapsed = true;
+        TransformLeftRailScrollViewer.Visibility = Visibility.Collapsed;
+        LeftRailColumn.Width = new GridLength(CollapsedHandleWidth);
+        TransformLeftRailToggleButton.Content = ">";
+    }
+
+    private void ExpandLeftRail()
+    {
+        if (!_isLeftRailCollapsed)
+        {
+            TransformLeftRailScrollViewer.Visibility = Visibility.Visible;
+            LeftRailColumn.Width = new GridLength(DefaultExpandedRailWidth);
+            TransformLeftRailToggleButton.Content = "<";
+            return;
+        }
+
+        _isLeftRailCollapsed = false;
+        TransformLeftRailScrollViewer.Visibility = Visibility.Visible;
+        LeftRailColumn.Width = new GridLength(DefaultExpandedRailWidth);
+        TransformLeftRailToggleButton.Content = "<";
+    }
 
     private void OnLegendItemToggle(object sender, RoutedEventArgs e)
     {

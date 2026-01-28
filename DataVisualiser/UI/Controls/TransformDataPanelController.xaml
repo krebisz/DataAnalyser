@@ -28,13 +28,7 @@
                 <!-- Operation Selection -->
                 <StackPanel x:Name="TransformOperationPanel" Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.TransformPanelRightMargin}" MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationPanelMinWidth}">
                     <TextBlock Text="Operation:" FontWeight="Bold" Margin="0,0,0,5" />
-                    <ComboBox x:Name="TransformOperationComboControl" MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationComboMinWidth}">
-                        <ComboBoxItem Content="Logarithm" Tag="Log" />
-                        <ComboBoxItem Content="Square Root" Tag="Sqrt" />
-                        <ComboBoxItem Content="Add (+)" Tag="Add" />
-                        <ComboBoxItem Content="Subtract (-)" Tag="Subtract" />
-                        <ComboBoxItem Content="Divide (/)" Tag="Divide" />
-                    </ComboBox>
+                    <ComboBox x:Name="TransformOperationComboControl" MinWidth="{x:Static ui:ChartUiDefaults.TransformOperationComboMinWidth}" />
                 </StackPanel>
 
                 <!-- Secondary Subtype Selection -->
