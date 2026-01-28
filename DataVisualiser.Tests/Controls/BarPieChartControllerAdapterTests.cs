@@ -1,8 +1,10 @@
 using System.Windows.Controls;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Controls;
-using DataVisualiser.UI.Rendering;
+using DataVisualiser.UI.Charts.Adapters;
+using DataVisualiser.UI.Charts.Controllers;
+using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Rendering;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 

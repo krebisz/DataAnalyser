@@ -1,4 +1,4 @@
-using DataVisualiser.UI.Controls;
+using DataVisualiser.UI.Charts.Infrastructure;
 
 namespace DataVisualiser.UI.State;
 

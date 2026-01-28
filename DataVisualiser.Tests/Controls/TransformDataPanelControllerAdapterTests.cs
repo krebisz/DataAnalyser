@@ -12,7 +12,8 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Controls;
+using DataVisualiser.UI.Charts.Adapters;
+using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 
@@ -59,9 +60,9 @@ public sealed class TransformDataPanelControllerAdapterTests
     }
 
     [Fact]
-    public void RenderPrimarySelection_WhenNoOperationSelected_UsesPrimarySeriesValues()
+    public async Task RenderPrimarySelection_WhenNoOperationSelected_UsesPrimarySeriesValues()
     {
-        StaTestHelper.Run(() =>
+        await StaTestHelper.RunAsync(async () =>
         {
             var adapter = CreateAdapter(out var viewModel, out var controller, out var tooltipManager, out var window);
 
@@ -110,7 +111,7 @@ public sealed class TransformDataPanelControllerAdapterTests
                     ctx
             })!;
 
-            task.GetAwaiter().GetResult();
+            await task;
 
             var items = controller.TransformGrid3.ItemsSource as IEnumerable;
             Assert.NotNull(items);

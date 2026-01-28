@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using DataVisualiser.UI.Controls;
-using DataVisualiser.UI.Rendering;
-using DataVisualiser.UI.Rendering.ECharts;
-using DataVisualiser.UI.Rendering.LiveCharts;
+using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Rendering;
+using DataVisualiser.UI.Charts.Rendering.ECharts;
+using DataVisualiser.UI.Charts.Rendering.LiveCharts;
 
 namespace DataVisualiser.Tests.UI.Rendering;
 

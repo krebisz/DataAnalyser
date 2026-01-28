@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.UI.Controls;
+using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.Tests.Controls;
