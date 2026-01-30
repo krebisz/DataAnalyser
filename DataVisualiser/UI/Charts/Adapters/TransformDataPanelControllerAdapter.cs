@@ -453,8 +453,16 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
         _controller.TransformGrid3.ItemsSource = resultData;
         if (_controller.TransformGrid3.Columns.Count >= 2)
         {
-            _controller.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            _controller.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2)
+            {
+                _controller.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells);
+                _controller.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells);
+            }
+            else
+            {
+                _controller.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+                _controller.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+            }
         }
     }
 
@@ -494,6 +502,12 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
                 {
                     if (_controller.TransformChartContainer == null)
                         return;
+
+                    if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2)
+                    {
+                        _controller.TransformChartContainer.ClearValue(FrameworkElement.WidthProperty);
+                        return;
+                    }
 
                     var parentStackPanel = _controller.TransformChartContainer.Parent as FrameworkElement;
                     if (parentStackPanel?.Parent is not FrameworkElement parentContainer)

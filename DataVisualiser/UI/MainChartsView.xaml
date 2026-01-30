@@ -161,7 +161,7 @@
                 <controls:DistributionChartController x:Name="DistributionChartController" />
 
                 <!-- ========== TRANSFORM DATA PANEL ========== -->
-                <controls:TransformDataPanelController x:Name="TransformDataPanelController" />
+                <controls:TransformDataPanelControllerV2 x:Name="TransformDataPanelController" />
 
             </StackPanel>
         </ScrollViewer>

@@ -19,6 +19,9 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
     private readonly LegendToggleManager _legendManager;
     private readonly Dictionary<string, bool> _legendVisibility = new(StringComparer.OrdinalIgnoreCase);
     private bool _isLeftRailCollapsed;
+    private double _lastKnownLeftRailContentWidth;
+    private double _lastKnownGrid1Width;
+    private double _lastKnownGrid2Width;
 
     public TransformDataPanelControllerV2()
         : this(new DefaultTransformOperationProvider())
@@ -38,6 +41,11 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
         TransformComputeButtonControl.Click += (s, e) => ComputeRequested?.Invoke(this, EventArgs.Empty);
         TransformLeftRailToggleButton.Checked += (_, _) => CollapseLeftRail();
         TransformLeftRailToggleButton.Unchecked += (_, _) => ExpandLeftRail();
+        TransformLeftRailHostPanel.SizeChanged += (_, _) => UpdateResultsGridWidth();
+        TransformGrid1Panel.SizeChanged += (_, _) => UpdateResultsGridWidth();
+        TransformGrid2PanelControl.SizeChanged += (_, _) => UpdateResultsGridWidth();
+        TransformGrid3PanelControl.IsVisibleChanged += (_, _) => UpdateResultsGridWidth();
+        TransformMainContentGrid.SizeChanged += (_, _) => UpdateChartWidth();
 
         _legendManager = new LegendToggleManager(ChartTransformResultControl, _legendVisibility);
         _legendManager.AttachItemsControl(TransformLegendItemsControl);
@@ -105,6 +113,7 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
         TransformLeftRailScrollViewer.Visibility = Visibility.Collapsed;
         LeftRailColumn.Width = new GridLength(CollapsedHandleWidth);
         TransformLeftRailToggleButton.Content = ">";
+        UpdateResultsGridWidth();
     }
 
     private void ExpandLeftRail()
@@ -114,6 +123,7 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
             TransformLeftRailScrollViewer.Visibility = Visibility.Visible;
             LeftRailColumn.Width = new GridLength(DefaultExpandedRailWidth);
             TransformLeftRailToggleButton.Content = "<";
+            UpdateResultsGridWidth();
             return;
         }
 
@@ -121,10 +131,62 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
         TransformLeftRailScrollViewer.Visibility = Visibility.Visible;
         LeftRailColumn.Width = new GridLength(DefaultExpandedRailWidth);
         TransformLeftRailToggleButton.Content = "<";
+        UpdateResultsGridWidth();
     }
 
     private void OnLegendItemToggle(object sender, RoutedEventArgs e)
     {
         LegendToggleManager.HandleToggle(sender);
+    }
+
+    private void UpdateResultsGridWidth()
+    {
+        if (TransformLeftRailScrollViewer.Visibility == Visibility.Visible)
+        {
+            var hostWidth = TransformLeftRailHostPanel.ActualWidth;
+            if (hostWidth > 0)
+            {
+                _lastKnownLeftRailContentWidth = hostWidth;
+            }
+
+            var grid1Width = TransformGrid1Panel.ActualWidth;
+            if (grid1Width > 0)
+                _lastKnownGrid1Width = grid1Width;
+
+            var grid2Width = TransformGrid2PanelControl.IsVisible ? TransformGrid2PanelControl.ActualWidth : 0;
+            if (grid2Width > 0)
+                _lastKnownGrid2Width = grid2Width;
+        }
+
+        var grid1BaseWidth = TransformGrid1Panel.MinWidth > 0 ? TransformGrid1Panel.MinWidth : _lastKnownGrid1Width;
+        var grid2BaseWidth = TransformGrid2PanelControl.IsVisible
+            ? (TransformGrid2PanelControl.MinWidth > 0 ? TransformGrid2PanelControl.MinWidth : _lastKnownGrid2Width)
+            : 0;
+        var targetLeftWidth = Math.Max(grid1BaseWidth, grid2BaseWidth);
+
+        if (targetLeftWidth <= 0)
+            return;
+
+        var minWidth = TransformGrid3PanelControl.MinWidth;
+        var targetWidth = Math.Max(targetLeftWidth, minWidth);
+        TransformGrid3PanelControl.Width = targetWidth;
+        UpdateChartWidth();
+    }
+
+    private void UpdateChartWidth()
+    {
+        if (TransformChartContainerControl == null || TransformMainContentGrid == null)
+            return;
+
+        var mainWidth = TransformMainContentGrid.ActualWidth;
+        if (mainWidth <= 0)
+            return;
+
+        var grid3Width = TransformGrid3PanelControl.IsVisible ? TransformGrid3PanelControl.ActualWidth : 0;
+        var margin = TransformChartContainerControl.Margin;
+        var availableWidth = Math.Max(0, mainWidth - grid3Width - margin.Left - margin.Right);
+        var minWidth = TransformChartContainerControl.MinWidth;
+        var chartWidth = Math.Max(minWidth, availableWidth);
+        TransformChartContainerControl.Width = chartWidth;
     }
 }

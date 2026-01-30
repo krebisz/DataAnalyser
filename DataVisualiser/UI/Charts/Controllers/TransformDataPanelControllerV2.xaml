@@ -155,14 +155,16 @@
                               VerticalAlignment="Stretch" />
 
                 <Grid x:Name="TransformMainContentGrid" Grid.Column="2">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
                     <!-- Grid 3: Result -->
                     <StackPanel x:Name="TransformGrid3PanelControl"
                                 Orientation="Vertical"
+                                Grid.Column="0"
+                                HorizontalAlignment="Left"
                                 MinWidth="{x:Static ui:ChartUiDefaults.TransformGridMinWidth}"
                                 Visibility="Collapsed">
                         <TextBlock x:Name="TransformGrid3TitleControl"
@@ -173,15 +175,17 @@
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
+                                  ColumnWidth="SizeToCells"
+                                  HorizontalAlignment="Left"
                                   MaxHeight="{x:Static ui:ChartUiDefaults.TransformGridMaxHeight}"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                                   CanUserResizeColumns="True"
                                   CanUserReorderColumns="False">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}"
-                                                    Width="Auto"
+                                                    Width="SizeToCells"
                                                     MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
-                                <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="Auto"
+                                <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="SizeToCells"
                                                     MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                             </DataGrid.Columns>
                         </DataGrid>
@@ -189,12 +193,13 @@
 
                     <!-- Chart: Transform Result -->
                     <Grid x:Name="TransformChartContainerControl"
-                          Grid.Row="1"
+                          Grid.Column="1"
                           Margin="{x:Static ui:ChartUiDefaults.TransformChartContainerMargin}"
                           HorizontalAlignment="Stretch"
                           MinWidth="{x:Static ui:ChartUiDefaults.TransformChartContainerMinWidth}">
                         <StackPanel x:Name="TransformChartContentPanelControl"
                                     Orientation="Vertical"
+                                    HorizontalAlignment="Stretch"
                                     Visibility="Collapsed">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -208,6 +213,7 @@
                                                     Zoom="{x:Static ui:ChartUiDefaults.DefaultZoom}"
                                                     Pan="{x:Static ui:ChartUiDefaults.DefaultPan}"
                                                     Hoverable="{x:Static ui:ChartUiDefaults.DefaultHoverable}"
+                                                    Width="{Binding ActualWidth, ElementName=TransformChartContainerControl}"
                                                     Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}"
                                                     MinHeight="{x:Static ui:ChartUiDefaults.ChartMinHeight}">
                                     <lvc:CartesianChart.AxisX>
