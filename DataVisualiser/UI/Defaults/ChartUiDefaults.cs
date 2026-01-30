@@ -59,6 +59,7 @@ public static class ChartUiDefaults
     public const double TransformGridValueMinWidth = 100.0;
     public const double TransformComputeButtonFontSize = 20.0;
     public const bool DefaultHoverable = true;
+    public const double MinMaxLineThickness = 1.0;
 
     public static readonly Thickness ChartContentMargin = new(20, 5, 10, 20);
     public static readonly Thickness BehavioralControlsMargin = new(40, 5, 10, 0);
@@ -88,6 +89,8 @@ public static class ChartUiDefaults
     public static readonly Thickness TransformComputeButtonMargin = new(10, 20, 0, 0);
     public static readonly Thickness TransformComputeButtonPadding = new(12, 2, 12, 2);
     public static readonly Thickness TransformChartContainerMargin = new(10, 0, 0, 0);
+    public static readonly Brush MinMaxLineStroke = Brushes.Black;
+    public static readonly DoubleCollection MinMaxLineDashArray = new() { 2, 2 };
 
     public static readonly LegendLocation DefaultLegendLocation = LegendLocation.Right;
     public static readonly ZoomingOptions DefaultZoom = ZoomingOptions.X;

@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Core.Configuration.Defaults;
+using LiveCharts.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -75,6 +77,13 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         if (data.Points == null || data.Points.Count == 0)
             return;
 
+        var chart = data.Points.FirstOrDefault()?.ChartPoint?.ChartView as CartesianChart;
+        var allowDelta = chart != null && RenderingDefaults.DeltaTooltipChartNames.Contains(chart.Name);
+
+        var minValue = double.PositiveInfinity;
+        var maxValue = double.NegativeInfinity;
+        var validCount = 0;
+
         foreach (var point in data.Points)
         {
             var seriesTitle = point?.Series?.Title;
@@ -86,6 +95,88 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
 
             var colorBrush = point?.Series?.Stroke ?? Brushes.Gray;
             _root.Children.Add(CreateLegendRow(colorBrush, $"{seriesTitle}: {formatted}"));
+
+            if (!double.IsNaN(yValue) && !double.IsInfinity(yValue))
+            {
+                validCount++;
+                if (yValue < minValue)
+                    minValue = yValue;
+                if (yValue > maxValue)
+                    maxValue = yValue;
+            }
+        }
+
+        if (!allowDelta)
+            return;
+
+        if (chart != null && string.Equals(chart.Name, RenderingDefaults.TransformChartName, StringComparison.OrdinalIgnoreCase))
+        {
+            if (TryGetGlobalMinMax(chart, out var globalMin, out var globalMax))
+            {
+                var delta = globalMax - globalMin;
+                var formattedDelta = MathHelper.FormatDisplayedValue(delta);
+                _root.Children.Add(CreateTextBlock($"Δ: {formattedDelta}", FontWeights.Normal));
+            }
+
+            return;
+        }
+
+        if (validCount >= 2 && minValue <= maxValue)
+        {
+            var delta = maxValue - minValue;
+            var formattedDelta = MathHelper.FormatDisplayedValue(delta);
+            _root.Children.Add(CreateTextBlock($"Δ: {formattedDelta}", FontWeights.Normal));
+        }
+    }
+
+    private static bool TryGetGlobalMinMax(CartesianChart chart, out double min, out double max)
+    {
+        min = double.PositiveInfinity;
+        max = double.NegativeInfinity;
+        var validCount = 0;
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            if (series.Visibility == Visibility.Collapsed || series.Values == null)
+                continue;
+
+            foreach (var value in series.Values)
+            {
+                if (!TryExtractNumeric(value, out var numeric))
+                    continue;
+                if (double.IsNaN(numeric) || double.IsInfinity(numeric))
+                    continue;
+
+                validCount++;
+                if (numeric < min)
+                    min = numeric;
+                if (numeric > max)
+                    max = numeric;
+            }
+        }
+
+        return validCount > 0 && min <= max;
+    }
+
+    private static bool TryExtractNumeric(object value, out double numeric)
+    {
+        switch (value)
+        {
+            case double d:
+                numeric = d;
+                return true;
+            case float f:
+                numeric = f;
+                return true;
+            case decimal m:
+                numeric = (double)m;
+                return true;
+            case ObservablePoint point:
+                numeric = point.Y;
+                return true;
+            default:
+                numeric = 0;
+                return false;
         }
     }
 

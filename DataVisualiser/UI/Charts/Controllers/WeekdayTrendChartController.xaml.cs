@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using DataVisualiser.UI.Defaults;
+using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.UI.Events;
 using LiveCharts;
 using LiveCharts.Wpf;
@@ -162,6 +163,7 @@ public partial class WeekdayTrendChartController : UserControl, IWeekdayTrendCha
 
         cartesianChart = new CartesianChart
         {
+                Name = RenderingDefaults.WeekdayTrendChartName,
                 LegendLocation = LegendLocation.None,
                 Zoom = ChartUiDefaults.DefaultZoom,
                 Pan = ChartUiDefaults.DefaultPan,
@@ -202,6 +204,7 @@ public partial class WeekdayTrendChartController : UserControl, IWeekdayTrendCha
 
         polarChart = new CartesianChart
         {
+                Name = RenderingDefaults.WeekdayTrendPolarChartName,
                 LegendLocation = LegendLocation.None,
                 Zoom = ChartUiDefaults.DefaultZoom,
                 Pan = ChartUiDefaults.DefaultPan,

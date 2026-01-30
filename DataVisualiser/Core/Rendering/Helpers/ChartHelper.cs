@@ -560,6 +560,27 @@ public static class ChartHelper
     }
 
     /// <summary>
+    ///     Safely gets the Y-axis from a chart, handling potential disposal issues.
+    /// </summary>
+    private static Axis? GetYAxisSafely(CartesianChart? chart)
+    {
+        if (chart == null)
+            return null;
+
+        try
+        {
+            if (chart.AxisY != null && chart.AxisY.Count > 0)
+                return chart.AxisY[0];
+        }
+        catch
+        {
+            // Axis may have been disposed
+        }
+
+        return null;
+    }
+
+    /// <summary>
     ///     Draws (or moves) a thin black vertical line by using an AxisSection with zero width.
     /// </summary>
     public static void UpdateVerticalLineForChart(ref CartesianChart chart, int index, ref AxisSection? sectionField)
@@ -582,6 +603,43 @@ public static class ChartHelper
                     Stroke = Brushes.Black,
                     StrokeThickness = 1,
                     Fill = Brushes.Transparent
+            };
+
+            axis.Sections.Add(line);
+            sectionField = line;
+        }
+        catch
+        {
+            sectionField = null;
+        }
+    }
+
+    /// <summary>
+    ///     Draws (or moves) a thin horizontal line by using an AxisSection with zero width.
+    /// </summary>
+    public static void UpdateHorizontalLineForChart(ref CartesianChart chart, double value, ref AxisSection? sectionField, Brush? stroke = null, double strokeThickness = 1, DoubleCollection? dashArray = null, string? label = null)
+    {
+        if (chart == null || double.IsNaN(value) || double.IsInfinity(value))
+            return;
+
+        var axis = GetYAxisSafely(chart);
+        if (axis == null)
+            return;
+        axis.Sections ??= new SectionsCollection();
+
+        TryRemoveAxisSection(axis, sectionField);
+
+        try
+        {
+            var line = new AxisSection
+            {
+                    Value = value,
+                    SectionWidth = 0,
+                    Stroke = stroke ?? Brushes.Black,
+                    StrokeThickness = strokeThickness,
+                    StrokeDashArray = dashArray,
+                    Fill = Brushes.Transparent,
+                    Label = label
             };
 
             axis.Sections.Add(line);
@@ -649,6 +707,28 @@ public static class ChartHelper
             return;
 
         var axis = chart != null ? GetXAxisSafely(chart) : null;
+        if (axis?.Sections == null)
+            return;
+
+        try
+        {
+            axis.Sections.Remove(axisSection);
+        }
+        catch
+        {
+            // Section or axis may have been disposed - ignore
+        }
+    }
+
+    /// <summary>
+    ///     Safely removes an axis section from the Y-axis.
+    /// </summary>
+    public static void RemoveAxisSectionFromYAxis(CartesianChart? chart, AxisSection? axisSection)
+    {
+        if (axisSection == null)
+            return;
+
+        var axis = GetYAxisSafely(chart);
         if (axis?.Sections == null)
             return;
 

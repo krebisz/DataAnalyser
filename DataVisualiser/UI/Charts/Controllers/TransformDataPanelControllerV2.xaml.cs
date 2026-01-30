@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
 using DataVisualiser.UI.Charts.Helpers;
+using LiveCharts.Defaults;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Controllers;
@@ -22,6 +23,8 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
     private double _lastKnownLeftRailContentWidth;
     private double _lastKnownGrid1Width;
     private double _lastKnownGrid2Width;
+    private AxisSection? _minLineSection;
+    private AxisSection? _maxLineSection;
 
     public TransformDataPanelControllerV2()
         : this(new DefaultTransformOperationProvider())
@@ -46,6 +49,8 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
         TransformGrid2PanelControl.SizeChanged += (_, _) => UpdateResultsGridWidth();
         TransformGrid3PanelControl.IsVisibleChanged += (_, _) => UpdateResultsGridWidth();
         TransformMainContentGrid.SizeChanged += (_, _) => UpdateChartWidth();
+        TransformMinMaxLinesCheckBox.Checked += (_, _) => UpdateMinMaxLines();
+        TransformMinMaxLinesCheckBox.Unchecked += (_, _) => ClearMinMaxLines();
 
         _legendManager = new LegendToggleManager(ChartTransformResultControl, _legendVisibility);
         _legendManager.AttachItemsControl(TransformLegendItemsControl);
@@ -137,6 +142,111 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
     private void OnLegendItemToggle(object sender, RoutedEventArgs e)
     {
         LegendToggleManager.HandleToggle(sender);
+    }
+
+    public void UpdateMinMaxLines()
+    {
+        if (TransformMinMaxLinesCheckBox.IsChecked != true)
+        {
+            ClearMinMaxLines();
+            return;
+        }
+
+        if (!TryGetSeriesMinMax(out var min, out var max))
+        {
+            ClearMinMaxLines();
+            return;
+        }
+
+        var chart = ChartTransformResultControl;
+        var minLabel = $"min {min:F4}";
+        var maxLabel = $"max {max:F4}";
+
+        DataVisualiser.Core.Rendering.Helpers.ChartHelper.UpdateHorizontalLineForChart(
+            ref chart,
+            min,
+            ref _minLineSection,
+            ChartUiDefaults.MinMaxLineStroke,
+            ChartUiDefaults.MinMaxLineThickness,
+            ChartUiDefaults.MinMaxLineDashArray,
+            minLabel);
+        DataVisualiser.Core.Rendering.Helpers.ChartHelper.UpdateHorizontalLineForChart(
+            ref chart,
+            max,
+            ref _maxLineSection,
+            ChartUiDefaults.MinMaxLineStroke,
+            ChartUiDefaults.MinMaxLineThickness,
+            ChartUiDefaults.MinMaxLineDashArray,
+            maxLabel);
+
+        ChartTransformResultControl.Update(true, true);
+        ChartTransformResultControl.InvalidateVisual();
+    }
+
+    public void ResetMinMaxLines()
+    {
+        TransformMinMaxLinesCheckBox.IsChecked = false;
+        ClearMinMaxLines();
+    }
+
+    private void ClearMinMaxLines()
+    {
+        DataVisualiser.Core.Rendering.Helpers.ChartHelper.RemoveAxisSectionFromYAxis(ChartTransformResultControl, _minLineSection);
+        DataVisualiser.Core.Rendering.Helpers.ChartHelper.RemoveAxisSectionFromYAxis(ChartTransformResultControl, _maxLineSection);
+        _minLineSection = null;
+        _maxLineSection = null;
+    }
+
+    private bool TryGetSeriesMinMax(out double min, out double max)
+    {
+        min = double.PositiveInfinity;
+        max = double.NegativeInfinity;
+
+        foreach (var series in ChartTransformResultControl.Series.OfType<Series>())
+        {
+            if (series.Visibility == Visibility.Collapsed)
+                continue;
+
+            if (series.Values == null)
+                continue;
+
+            foreach (var value in series.Values)
+            {
+                if (!TryExtractValue(value, out var numeric))
+                    continue;
+                if (double.IsNaN(numeric) || double.IsInfinity(numeric))
+                    continue;
+
+                if (numeric < min)
+                    min = numeric;
+                if (numeric > max)
+                    max = numeric;
+            }
+        }
+
+        return min <= max && !double.IsInfinity(min) && !double.IsInfinity(max);
+    }
+
+    private static bool TryExtractValue(object value, out double numeric)
+    {
+        switch (value)
+        {
+            case double d:
+                numeric = d;
+                return true;
+            case float f:
+                numeric = f;
+                return true;
+            case decimal m:
+                numeric = (double)m;
+                return true;
+            case ObservablePoint point:
+                numeric = point.Y;
+                return true;
+            default:
+                numeric = 0;
+                return false;
+        }
     }
 
     private void UpdateResultsGridWidth()

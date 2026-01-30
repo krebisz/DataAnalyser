@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace DataVisualiser.Core.Configuration.Defaults;
 
 /// <summary>
@@ -19,4 +21,17 @@ public static class RenderingDefaults
     public const double TooltipHeaderFontSize = 14.0;
     public const double TooltipSubHeaderFontSize = 12.0;
     public const double TooltipRowFontSize = 11.0;
+
+    public const string NormalizedChartName = "ChartNormControl";
+    public const string TransformChartName = "ChartTransformResultControl";
+    public const string WeekdayTrendChartName = "ChartWeekdayTrend";
+    public const string WeekdayTrendPolarChartName = "ChartWeekdayTrendPolar";
+
+    public static readonly HashSet<string> DeltaTooltipChartNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+            NormalizedChartName,
+            TransformChartName,
+            WeekdayTrendChartName,
+            WeekdayTrendPolarChartName
+    };
 }

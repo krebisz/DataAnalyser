@@ -67,6 +67,9 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
     public override void Clear(ChartState state)
     {
         ClearTransformGrids(state);
+
+        if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
+            v2.ResetMinMaxLines();
     }
 
     public override void ResetZoom()
@@ -446,6 +449,9 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
         await PrepareTransformChartLayout();
         await RenderTransformChart(dataList, results, operation, metrics, transformContext, overrideLabel);
         await FinalizeTransformChartRendering();
+
+        if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
+            v2.UpdateMinMaxLines();
     }
 
     private void PopulateTransformResultGrid(List<object> resultData)
