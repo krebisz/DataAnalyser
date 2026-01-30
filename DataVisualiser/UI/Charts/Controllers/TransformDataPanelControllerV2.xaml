@@ -247,6 +247,7 @@
                                                                   Background="Transparent"
                                                                   BorderThickness="0"
                                                                   Padding="2"
+                                                                  Margin="{Binding ItemMargin}"
                                                                   HorizontalContentAlignment="Left">
                                                         <StackPanel Orientation="Horizontal"
                                                                     HorizontalAlignment="Left">

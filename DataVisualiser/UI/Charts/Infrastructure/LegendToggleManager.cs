@@ -64,6 +64,7 @@ public sealed class LegendToggleManager
                 {
                         Mode = BindingMode.TwoWay
                 });
+        toggleFactory.SetBinding(FrameworkElement.MarginProperty, new Binding(nameof(LegendItem.ItemMargin)));
         toggleFactory.AddHandler(ButtonBase.ClickEvent, toggleHandler);
         toggleFactory.SetValue(Control.BackgroundProperty, Brushes.Transparent);
         toggleFactory.SetValue(Control.BorderThicknessProperty, new Thickness(0));
@@ -122,11 +123,36 @@ public sealed class LegendToggleManager
     {
         Items.Clear();
 
-        foreach (var series in _chart.Series.OfType<Series>())
+        var orderedSeries = _chart.Series
+            .OfType<Series>()
+            .OrderBy(series =>
+            {
+                var title = series.Title ?? string.Empty;
+                if (title.EndsWith(" (smooth)", StringComparison.OrdinalIgnoreCase))
+                    return 0;
+                if (title.EndsWith(" (raw)", StringComparison.OrdinalIgnoreCase))
+                    return 1;
+                return 2;
+            })
+            .ThenBy(series => series.Title ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+
+        var hasSmoothed = false;
+        var insertedRawSpacer = false;
+
+        foreach (var series in orderedSeries)
         {
             var stroke = series.Stroke ?? Brushes.Gray;
             var title = string.IsNullOrWhiteSpace(series.Title) ? "Series" : series.Title;
             var isVisible = series.Visibility != Visibility.Collapsed;
+
+            var itemMargin = new Thickness(0);
+            if (title.EndsWith(" (smooth)", StringComparison.OrdinalIgnoreCase))
+                hasSmoothed = true;
+            else if (!insertedRawSpacer && hasSmoothed && title.EndsWith(" (raw)", StringComparison.OrdinalIgnoreCase))
+            {
+                itemMargin = new Thickness(0, 6, 0, 0);
+                insertedRawSpacer = true;
+            }
 
             if (_visibilityStore != null && _visibilityStore.TryGetValue(title, out var storedVisible))
             {
@@ -138,7 +164,7 @@ public sealed class LegendToggleManager
             if (_visibilityStore != null)
                 storeVisibility = value => _visibilityStore[title] = value;
 
-            Items.Add(new LegendItem(_chart, series, title, stroke, isVisible, storeVisibility));
+            Items.Add(new LegendItem(_chart, series, title, stroke, isVisible, storeVisibility, itemMargin));
         }
     }
 
@@ -146,7 +172,7 @@ public sealed class LegendToggleManager
     {
         private bool _isVisible;
 
-        public LegendItem(CartesianChart chart, Series series, string title, Brush stroke, bool isVisible, Action<bool>? storeVisibility)
+        public LegendItem(CartesianChart chart, Series series, string title, Brush stroke, bool isVisible, Action<bool>? storeVisibility, Thickness itemMargin)
         {
             Chart = chart;
             Series = series;
@@ -154,6 +180,7 @@ public sealed class LegendToggleManager
             Stroke = stroke;
             _isVisible = isVisible;
             StoreVisibility = storeVisibility;
+            ItemMargin = itemMargin;
         }
 
         public CartesianChart Chart { get; }
@@ -165,6 +192,8 @@ public sealed class LegendToggleManager
         public Brush Stroke { get; }
 
         public Action<bool>? StoreVisibility { get; }
+
+        public Thickness ItemMargin { get; }
 
         public bool IsVisible
         {

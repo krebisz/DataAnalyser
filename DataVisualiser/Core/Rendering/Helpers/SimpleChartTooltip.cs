@@ -84,6 +84,10 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         var maxValue = double.NegativeInfinity;
         var validCount = 0;
 
+        var smoothedRows = new List<UIElement>();
+        var rawRows = new List<UIElement>();
+        var otherRows = new List<UIElement>();
+
         foreach (var point in data.Points)
         {
             var seriesTitle = point?.Series?.Title;
@@ -94,7 +98,19 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
             var formatted = double.IsNaN(yValue) ? "N/A" : MathHelper.FormatDisplayedValue(yValue);
 
             var colorBrush = point?.Series?.Stroke ?? Brushes.Gray;
-            _root.Children.Add(CreateLegendRow(colorBrush, $"{seriesTitle}: {formatted}"));
+            var displayTitle = seriesTitle;
+            if (seriesTitle.EndsWith(" (smooth)", StringComparison.OrdinalIgnoreCase))
+                displayTitle = seriesTitle.Substring(0, seriesTitle.Length - 9);
+            else if (seriesTitle.EndsWith(" (raw)", StringComparison.OrdinalIgnoreCase))
+                displayTitle = seriesTitle.Substring(0, seriesTitle.Length - 5);
+
+            var row = CreateLegendRow(colorBrush, $"{displayTitle}: {formatted}");
+            if (seriesTitle.EndsWith(" (smooth)", StringComparison.OrdinalIgnoreCase))
+                smoothedRows.Add(row);
+            else if (seriesTitle.EndsWith(" (raw)", StringComparison.OrdinalIgnoreCase))
+                rawRows.Add(row);
+            else
+                otherRows.Add(row);
 
             if (!double.IsNaN(yValue) && !double.IsInfinity(yValue))
             {
@@ -106,6 +122,23 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
             }
         }
 
+        if (smoothedRows.Count > 0)
+        {
+            _root.Children.Add(CreateTextBlock("Smoothed", FontWeights.Bold));
+            foreach (var row in smoothedRows)
+                _root.Children.Add(row);
+        }
+
+        if (rawRows.Count > 0)
+        {
+            _root.Children.Add(CreateTextBlock("Raw", FontWeights.Bold));
+            foreach (var row in rawRows)
+                _root.Children.Add(row);
+        }
+
+        foreach (var row in otherRows)
+            _root.Children.Add(row);
+
         if (!allowDelta)
             return;
 
@@ -115,7 +148,8 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
             {
                 var delta = globalMax - globalMin;
                 var formattedDelta = MathHelper.FormatDisplayedValue(delta);
-                _root.Children.Add(CreateTextBlock($"Δ: {formattedDelta}", FontWeights.Normal));
+                _root.Children.Add(CreateTextBlock(string.Empty, FontWeights.Normal));
+                _root.Children.Add(CreateTextBlock($"Δ: {formattedDelta}", FontWeights.Bold));
             }
 
             return;
@@ -125,7 +159,8 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         {
             var delta = maxValue - minValue;
             var formattedDelta = MathHelper.FormatDisplayedValue(delta);
-            _root.Children.Add(CreateTextBlock($"Δ: {formattedDelta}", FontWeights.Normal));
+            _root.Children.Add(CreateTextBlock(string.Empty, FontWeights.Normal));
+            _root.Children.Add(CreateTextBlock($"Δ: {formattedDelta}", FontWeights.Bold));
         }
     }
 

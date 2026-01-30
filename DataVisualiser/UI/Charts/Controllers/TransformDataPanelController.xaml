@@ -184,12 +184,13 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <ToggleButton IsChecked="{Binding IsVisible, Mode=TwoWay}"
-                                                          Click="OnLegendItemToggle"
-                                                          Background="Transparent"
-                                                          BorderThickness="0"
-                                                          Padding="2"
-                                                          HorizontalContentAlignment="Left">
+                                <ToggleButton IsChecked="{Binding IsVisible, Mode=TwoWay}"
+                                              Click="OnLegendItemToggle"
+                                              Background="Transparent"
+                                              BorderThickness="0"
+                                              Padding="2"
+                                              Margin="{Binding ItemMargin}"
+                                              HorizontalContentAlignment="Left">
                                                 <StackPanel Orientation="Horizontal"
                                                             HorizontalAlignment="Left">
                                                     <Rectangle Width="12"
