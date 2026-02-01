@@ -199,7 +199,7 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
         UpdateTransformComputeButtonState();
     }
 
-    public void OnPrimarySubtypeChanged(object? sender, EventArgs e)
+    public async void OnPrimarySubtypeChanged(object? sender, EventArgs e)
     {
         if (_isInitializing() || _isUpdatingTransformSubtypeCombos)
             return;
@@ -208,9 +208,10 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
         _viewModel.SetTransformPrimarySeries(selection);
 
         UpdateTransformComputeButtonState();
+        await RefreshTransformGridsFromSelectionAsync();
     }
 
-    public void OnSecondarySubtypeChanged(object? sender, EventArgs e)
+    public async void OnSecondarySubtypeChanged(object? sender, EventArgs e)
     {
         if (_isInitializing() || _isUpdatingTransformSubtypeCombos)
             return;
@@ -219,6 +220,7 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
         _viewModel.SetTransformSecondarySeries(selection);
 
         UpdateTransformComputeButtonState();
+        await RefreshTransformGridsFromSelectionAsync();
     }
 
     public async void OnComputeRequested(object? sender, EventArgs e)
@@ -685,6 +687,17 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
 
         var label = string.IsNullOrWhiteSpace(transformContext.DisplayName1) ? "Primary Data" : transformContext.DisplayName1;
         await RenderTransformResults(dataList, results, string.Empty, metricsList, transformContext, label);
+    }
+
+    private async Task RefreshTransformGridsFromSelectionAsync()
+    {
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx == null)
+            return;
+
+        var (_, _, transformContext) = await ResolveTransformDataAsync(ctx);
+        PopulateTransformGrids(transformContext);
+        UpdateTransformComputeButtonState();
     }
 
     private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
