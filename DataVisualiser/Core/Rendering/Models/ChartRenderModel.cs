@@ -48,4 +48,7 @@ public sealed class ChartRenderModel
 
     // NEW: Multi-series support for Main Chart (when Series is present, it takes precedence over Primary/Secondary)
     public List<SeriesResult>? Series { get; init; }
+
+    // Optional overlay series (e.g., total line on top of stacked areas)
+    public List<SeriesResult>? OverlaySeries { get; init; }
 }

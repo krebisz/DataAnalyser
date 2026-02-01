@@ -34,6 +34,9 @@ public sealed class ChartRenderEngine
         else
             RenderLegacyMode(targetChart, model, isStacked, seriesMode);
 
+        RenderOverlaySeries(targetChart, model);
+        BringOverlaySeriesToFront(targetChart, model);
+
         LogRenderEnd(targetChart);
 
         ConfigureAxes(targetChart, model);
@@ -253,6 +256,61 @@ public sealed class ChartRenderEngine
         Debug.WriteLine($"[StackedRender] chart={targetChart.Name}, series={title}, usedSmoothed={useSmoothed}, count={values.Count}, valid={stats.Valid}, NaN={stats.NaN}");
         var series = CreateAndPopulateSeries(title, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, color, values, true);
         targetChart.Series.Add(series);
+    }
+
+    private void RenderOverlaySeries(CartesianChart targetChart, ChartRenderModel model)
+    {
+        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
+            return;
+
+        var mainTimeline = GetMainTimeline(model);
+
+        foreach (var seriesResult in model.OverlaySeries)
+        {
+            var values = ResolveStackedSeriesValues(seriesResult, mainTimeline, out var usedSmoothed);
+            if (!HasAnyValidValue(values))
+                continue;
+
+            var title = $"{seriesResult.DisplayName} ({(usedSmoothed ? "smooth" : "raw")})";
+            var color = Colors.Black;
+            var pointSize = usedSmoothed ? ChartRenderDefaults.SmoothedPointSize : ChartRenderDefaults.RawPointSize;
+            var lineThickness = usedSmoothed ? ChartRenderDefaults.SmoothedLineThickness : ChartRenderDefaults.RawLineThickness;
+
+            var series = CreateAndPopulateSeries(title, pointSize, lineThickness, color, values, false);
+            targetChart.Series.Add(series);
+        }
+    }
+
+    private static void BringOverlaySeriesToFront(CartesianChart targetChart, ChartRenderModel model)
+    {
+        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
+            return;
+
+        var overlayNames = new HashSet<string>(model.OverlaySeries
+            .Select(series => ChartStackingTooltipState.NormalizeOverlayName(series.DisplayName)),
+            StringComparer.OrdinalIgnoreCase);
+
+        if (overlayNames.Count == 0)
+            return;
+
+        var overlaySeries = targetChart.Series
+            .OfType<Series>()
+            .Where(series =>
+            {
+                var title = series.Title ?? string.Empty;
+                var baseName = ChartStackingTooltipState.NormalizeOverlayName(title);
+                return overlayNames.Contains(baseName);
+            })
+            .ToList();
+
+        if (overlaySeries.Count == 0)
+            return;
+
+        foreach (var series in overlaySeries)
+        {
+            targetChart.Series.Remove(series);
+            targetChart.Series.Add(series);
+        }
     }
 
     /// <summary>

@@ -218,6 +218,7 @@ public static class ChartHelper
     {
         var parts = new List<string>();
         var totalsBySeries = new Dictionary<string, (double? Smoothed, double? Raw)>(StringComparer.OrdinalIgnoreCase);
+        var state = chart.Tag as ChartStackingTooltipState;
 
         foreach (var series in chart.Series.OfType<Series>())
         {
@@ -232,6 +233,9 @@ public static class ChartHelper
             parts.Add($"{baseName} {suffix}: {valueText}");
 
             if (!TryExtractNumericValue(series, index, out var numericValue))
+                continue;
+
+            if (IsOverlaySeries(baseName, state))
                 continue;
 
             if (!totalsBySeries.TryGetValue(baseName, out var entry))
@@ -310,11 +314,15 @@ public static class ChartHelper
     {
         var orderedNames = new List<string>();
         var valuesByName = new Dictionary<string, (double? Raw, double? Smooth)>(StringComparer.OrdinalIgnoreCase);
+        var state = chart.Tag as ChartStackingTooltipState;
 
         foreach (var series in chart.Series.OfType<Series>())
         {
             var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(series.Title ?? "Series");
             if (string.IsNullOrWhiteSpace(baseName))
+                continue;
+
+            if (IsOverlaySeries(baseName, state))
                 continue;
 
             if (!orderedNames.Contains(baseName))
@@ -369,11 +377,15 @@ public static class ChartHelper
 
         var orderedNames = new List<string>();
         var valuesByName = new Dictionary<string, (double? Raw, double? Smooth)>(StringComparer.OrdinalIgnoreCase);
+        var state = chart.Tag as ChartStackingTooltipState;
 
         foreach (var series in chart.Series.OfType<Series>())
         {
             var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(series.Title ?? "Series");
             if (string.IsNullOrWhiteSpace(baseName))
+                continue;
+
+            if (IsOverlaySeries(baseName, state))
                 continue;
 
             if (!orderedNames.Contains(baseName))
@@ -452,18 +464,30 @@ public static class ChartHelper
         return chart.Tag is ChartStackingTooltipState state && state.IsCumulative;
     }
 
+    private static bool IsOverlaySeries(string baseName, ChartStackingTooltipState? state)
+    {
+        if (state?.OverlaySeriesNames == null || string.IsNullOrWhiteSpace(baseName))
+            return false;
+
+        return state.OverlaySeriesNames.Contains(baseName, StringComparer.OrdinalIgnoreCase);
+    }
+
     private static double? GetStackedTotalAtIndex(CartesianChart chart, int index)
     {
         if (IsCumulativeStack(chart))
             return GetCumulativeTotalAtIndex(chart, index);
 
         var totalsBySeries = new Dictionary<string, (double? Smoothed, double? Raw)>(StringComparer.OrdinalIgnoreCase);
+        var state = chart.Tag as ChartStackingTooltipState;
 
         foreach (var series in chart.Series.OfType<Series>())
         {
             var title = series.Title ?? "Series";
             var (baseName, isRaw, isSmoothed) = ParseSeriesTitle(title);
             if (string.IsNullOrWhiteSpace(baseName))
+                continue;
+
+            if (IsOverlaySeries(baseName, state))
                 continue;
 
             if (!TryExtractNumericValue(series, index, out var value))
@@ -501,9 +525,14 @@ public static class ChartHelper
     private static double? GetCumulativeTotalAtIndex(CartesianChart chart, int index)
     {
         double? total = null;
+        var state = chart.Tag as ChartStackingTooltipState;
 
         foreach (var series in chart.Series.OfType<Series>())
         {
+            var (baseName, _, _) = ParseSeriesTitle(series.Title ?? "Series");
+            if (IsOverlaySeries(baseName, state))
+                continue;
+
             if (!TryExtractNumericValue(series, index, out var value))
                 continue;
 

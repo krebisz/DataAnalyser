@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -139,6 +139,13 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         foreach (var row in otherRows)
             _root.Children.Add(row);
 
+        if (chart != null && TryBuildStackedOverlayDelta(chart, data, out var stackedDeltaText))
+        {
+            _root.Children.Add(CreateTextBlock(string.Empty, FontWeights.Normal));
+            _root.Children.Add(CreateTextBlock(stackedDeltaText, FontWeights.Bold));
+            return;
+        }
+
         if (!allowDelta)
             return;
 
@@ -162,6 +169,103 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
             _root.Children.Add(CreateTextBlock(string.Empty, FontWeights.Normal));
             _root.Children.Add(CreateTextBlock($"Δ: {formattedDelta}", FontWeights.Bold));
         }
+    }
+
+    private static bool TryBuildStackedOverlayDelta(CartesianChart chart, TooltipData data, out string text)
+    {
+        text = string.Empty;
+        var state = chart.Tag as ChartStackingTooltipState;
+        if (state?.OverlaySeriesNames == null || state.OverlaySeriesNames.Count == 0)
+            return false;
+
+        var index = ResolveTooltipIndex(data);
+        if (!index.HasValue || index.Value < 0)
+            return false;
+
+        if (!TryGetStackedTotalAtIndex(chart, state, index.Value, out var stackedTotal))
+            return false;
+
+        if (!TryGetOverlayValueAtIndex(chart, state, index.Value, out var overlayValue))
+            return false;
+
+        var delta = overlayValue - stackedTotal;
+        var formatted = MathHelper.FormatDisplayedValue(delta);
+        text = $"Δ (overlay - stacked): {formatted}";
+        return true;
+    }
+
+    private static int? ResolveTooltipIndex(TooltipData data)
+    {
+        if (data.SharedValue.HasValue)
+            return (int)Math.Round(data.SharedValue.Value);
+
+        var point = data.Points?.FirstOrDefault();
+        if (point?.ChartPoint == null)
+            return null;
+
+        return (int)Math.Round(point.ChartPoint.X);
+    }
+
+    private static bool TryGetStackedTotalAtIndex(CartesianChart chart, ChartStackingTooltipState state, int index, out double total)
+    {
+        total = 0;
+        var hasValue = false;
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            if (series.Visibility == Visibility.Collapsed)
+                continue;
+
+            if (series is not StackedAreaSeries)
+                continue;
+
+            var title = series.Title ?? string.Empty;
+            var baseName = ChartStackingTooltipState.NormalizeOverlayName(title);
+            if (state.OverlaySeriesNames.Contains(baseName, StringComparer.OrdinalIgnoreCase))
+                continue;
+
+            if (!TryGetSeriesValueAtIndex(series, index, out var value))
+                continue;
+
+            total += value;
+            hasValue = true;
+        }
+
+        return hasValue;
+    }
+
+    private static bool TryGetOverlayValueAtIndex(CartesianChart chart, ChartStackingTooltipState state, int index, out double value)
+    {
+        value = double.NaN;
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            if (series.Visibility == Visibility.Collapsed)
+                continue;
+
+            var title = series.Title ?? string.Empty;
+            var baseName = ChartStackingTooltipState.NormalizeOverlayName(title);
+            if (!state.OverlaySeriesNames.Contains(baseName, StringComparer.OrdinalIgnoreCase))
+                continue;
+
+            if (!TryGetSeriesValueAtIndex(series, index, out var seriesValue))
+                continue;
+
+            value = seriesValue;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryGetSeriesValueAtIndex(Series series, int index, out double value)
+    {
+        value = double.NaN;
+
+        if (series.Values == null || index < 0 || index >= series.Values.Count)
+            return false;
+
+        return TryExtractNumeric(series.Values[index], out value) && !double.IsNaN(value) && !double.IsInfinity(value);
     }
 
     private static bool TryGetGlobalMinMax(CartesianChart chart, out double min, out double max)
@@ -260,3 +364,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
+
+
+
+

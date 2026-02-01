@@ -1,5 +1,8 @@
+using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Adapters;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -46,6 +49,7 @@ public sealed class LegendToggleManager
         item.IsVisible = toggleButton.IsChecked == true;
         item.Series.Visibility = item.IsVisible ? Visibility.Visible : Visibility.Collapsed;
         item.StoreVisibility?.Invoke(item.IsVisible);
+        RecalculateStackedAxisIfNeeded(item.Chart);
         item.Chart.Update(true, true);
     }
 
@@ -123,6 +127,8 @@ public sealed class LegendToggleManager
     {
         Items.Clear();
 
+        var stackingState = _chart.Tag as ChartStackingTooltipState;
+
         var orderedSeries = _chart.Series
             .OfType<Series>()
             .OrderBy(series =>
@@ -144,6 +150,7 @@ public sealed class LegendToggleManager
             var stroke = series.Stroke ?? Brushes.Gray;
             var title = string.IsNullOrWhiteSpace(series.Title) ? "Series" : series.Title;
             var isVisible = series.Visibility != Visibility.Collapsed;
+            var isOverlay = IsOverlaySeries(series, stackingState);
 
             var itemMargin = new Thickness(0);
             if (title.EndsWith(" (smooth)", StringComparison.OrdinalIgnoreCase))
@@ -154,18 +161,131 @@ public sealed class LegendToggleManager
                 insertedRawSpacer = true;
             }
 
-            if (_visibilityStore != null && _visibilityStore.TryGetValue(title, out var storedVisible))
+            if (_visibilityStore != null && !isOverlay && _visibilityStore.TryGetValue(title, out var storedVisible))
             {
                 isVisible = storedVisible;
                 series.Visibility = storedVisible ? Visibility.Visible : Visibility.Collapsed;
             }
 
             Action<bool>? storeVisibility = null;
-            if (_visibilityStore != null)
+            if (_visibilityStore != null && !isOverlay)
                 storeVisibility = value => _visibilityStore[title] = value;
 
             Items.Add(new LegendItem(_chart, series, title, stroke, isVisible, storeVisibility, itemMargin));
         }
+    }
+
+    private static bool IsOverlaySeries(Series series, ChartStackingTooltipState? state)
+    {
+        if (state?.OverlaySeriesNames == null)
+            return false;
+
+        var title = series.Title ?? string.Empty;
+        var baseName = TrimSeriesSuffix(title);
+        if (string.IsNullOrWhiteSpace(baseName))
+            return false;
+
+        return state.OverlaySeriesNames.Contains(ChartStackingTooltipState.NormalizeOverlayName(baseName), StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string TrimSeriesSuffix(string title)
+    {
+        return ChartStackingTooltipState.NormalizeOverlayName(title);
+    }
+
+    private static void RecalculateStackedAxisIfNeeded(CartesianChart chart)
+    {
+        if (chart.Tag is not ChartStackingTooltipState)
+            return;
+
+        if (chart.AxisY.Count == 0)
+            return;
+
+        var stackingState = chart.Tag as ChartStackingTooltipState;
+
+        var stackedSeries = chart.Series
+            .OfType<StackedAreaSeries>()
+            .Where(series => series.Visibility == Visibility.Visible)
+            .ToList();
+
+        var overlayValues = CollectOverlayValues(chart, stackingState);
+
+        var metrics = new List<MetricData>();
+
+        if (stackedSeries.Count > 0)
+        {
+            var maxCount = stackedSeries.Max(series => series.Values?.Count ?? 0);
+            if (maxCount > 0)
+            {
+                var totals = new double[maxCount];
+                foreach (var series in stackedSeries)
+                {
+                    if (series.Values == null)
+                        continue;
+
+                    var values = series.Values.Cast<double>().ToList();
+                    for (var i = 0; i < values.Count; i++)
+                    {
+                        var value = values[i];
+                        if (double.IsNaN(value) || double.IsInfinity(value))
+                            continue;
+
+                        totals[i] += value;
+                    }
+                }
+
+                for (var i = 0; i < totals.Length; i++)
+                    metrics.Add(new MetricData
+                    {
+                            NormalizedTimestamp = DateTime.UtcNow,
+                            Value = (decimal)totals[i]
+                    });
+
+                var min = totals.Where(total => !double.IsNaN(total) && !double.IsInfinity(total))
+                    .DefaultIfEmpty(double.NaN)
+                    .Min();
+
+                if (!double.IsNaN(min) && min > 0)
+                {
+                    metrics.Add(new MetricData
+                    {
+                            NormalizedTimestamp = DateTime.UtcNow,
+                            Value = 0m
+                    });
+                }
+            }
+        }
+
+        if (metrics.Count == 0 && overlayValues.Count == 0)
+            return;
+
+        var yAxis = chart.AxisY[0];
+        ChartHelper.NormalizeYAxis(yAxis, metrics, overlayValues);
+        ChartHelper.ApplyTransformChartGradient(chart, yAxis);
+    }
+
+    private static List<double> CollectOverlayValues(CartesianChart chart, ChartStackingTooltipState? state)
+    {
+        var values = new List<double>();
+        if (state?.OverlaySeriesNames == null)
+            return values;
+
+        foreach (var series in chart.Series.OfType<Series>())
+        {
+            var title = series.Title ?? string.Empty;
+            var baseName = ChartStackingTooltipState.NormalizeOverlayName(title);
+            if (!state.OverlaySeriesNames.Contains(baseName, StringComparer.OrdinalIgnoreCase))
+                continue;
+
+            if (series.Values == null)
+                continue;
+
+            foreach (var value in series.Values.Cast<double>())
+                if (!double.IsNaN(value) && !double.IsInfinity(value))
+                    values.Add(value);
+        }
+
+        return values;
     }
 
     public sealed class LegendItem : INotifyPropertyChanged

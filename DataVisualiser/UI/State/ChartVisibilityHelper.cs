@@ -14,6 +14,9 @@ public static class ChartVisibilityHelper
         if (!state.IsMainVisible)
             hidden.Add(ChartControllerKeys.Main);
 
+        if (!state.IsStackedVisible)
+            hidden.Add(ChartControllerKeys.Stacked);
+
         if (!state.IsNormalizedVisible)
             hidden.Add(ChartControllerKeys.Normalized);
 

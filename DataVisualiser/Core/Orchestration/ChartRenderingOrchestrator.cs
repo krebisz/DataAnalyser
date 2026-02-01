@@ -1,4 +1,6 @@
 using DataFileReader.Canonical;
+using System.Linq;
+using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
@@ -166,7 +168,7 @@ public sealed class ChartRenderingOrchestrator
     ///     Renders the primary (main) chart using StrategyCutOverService.
     ///     Handles single, combined, and multi-metric strategies.
     /// </summary>
-    public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain, IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null, IReadOnlyList<string>? additionalLabels = null, bool isStacked = false, bool isCumulative = false)
+    public async Task RenderPrimaryChart(ChartDataContext ctx, CartesianChart chartMain, IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null, IReadOnlyList<string>? additionalLabels = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null)
     {
         if (ctx == null || chartMain == null)
             return;
@@ -175,17 +177,45 @@ public sealed class ChartRenderingOrchestrator
 
         var strategy = CreatePrimaryStrategy(ctx, series, labels, out var secondaryLabel);
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: isStacked, isCumulative: isCumulative);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: isStacked, isCumulative: isCumulative, overlaySeries: overlaySeries);
     }
 
     /// <summary>
     ///     Renders the primary chart with support for additional subtypes.
     ///     Loads additional subtype data if more than 2 subtypes are selected.
     /// </summary>
-    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<MetricSeriesSelection>? selectedSeries = null, string? resolutionTableName = null, bool isStacked = false, bool isCumulative = false)
+    public async Task RenderPrimaryChartAsync(ChartDataContext ctx, CartesianChart chartMain, IEnumerable<MetricData> data1, IEnumerable<MetricData>? data2, string displayName1, string displayName2, DateTime from, DateTime to, string? metricType = null, IReadOnlyList<MetricSeriesSelection>? selectedSeries = null, string? resolutionTableName = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null)
     {
         if (ctx == null || chartMain == null)
             return;
+
+        if (isStacked && selectedSeries != null)
+        {
+            var stackedSelections = selectedSeries.Where(selection => selection.QuerySubtype != null).ToList();
+            var overlaySelections = selectedSeries.Where(selection => selection.QuerySubtype == null).ToList();
+
+            if (stackedSelections.Count >= 2)
+            {
+                var (stackedSeries, stackedLabels) = await BuildSeriesFromSelectionsAsync(ctx, stackedSelections, resolutionTableName);
+                if (stackedSeries.Count >= 2)
+                {
+                    var parameters = new StrategyCreationParameters
+                    {
+                            LegacySeries = stackedSeries,
+                            Labels = stackedLabels,
+                            From = ctx.From,
+                            To = ctx.To
+                    };
+
+                    var strategy = _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+                    var computedOverlaySeries = overlaySeries ?? await BuildOverlaySeriesAsync(ctx, overlaySelections, resolutionTableName);
+
+                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, stackedLabels[0], null, 400, ctx.MetricType, ctx.PrimarySubtype, null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: true, isCumulative: false, overlaySeries: computedOverlaySeries);
+
+                    return;
+                }
+            }
+        }
 
         // Build initial series list for multi-metric routing
         var (series, labels) = BuildInitialSeriesList(data1, data2, displayName1, displayName2);
@@ -204,8 +234,110 @@ public sealed class ChartRenderingOrchestrator
         }
 
         // Use existing RenderPrimaryChart method
-        await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels, isStacked, isCumulative);
+        await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels, isStacked, isCumulative, overlaySeries);
     }
+
+    private async Task<(List<IEnumerable<MetricData>> Series, List<string> Labels)> BuildSeriesFromSelectionsAsync(ChartDataContext ctx, IReadOnlyList<MetricSeriesSelection> selections, string? resolutionTableName)
+    {
+        var series = new List<IEnumerable<MetricData>>();
+        var labels = new List<string>();
+
+        if (selections.Count == 0)
+            return (series, labels);
+
+        var tableName = resolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var metricSelectionService = _metricSelectionService ?? new MetricSelectionService(_connectionString ?? string.Empty);
+
+        foreach (var selection in selections)
+        {
+            var data = ResolveContextSeries(ctx, selection);
+            if (data == null)
+            {
+                if (selection.QuerySubtype == null)
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(selection.MetricType))
+                    continue;
+
+                var loaded = await metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, ctx.From, ctx.To, tableName);
+                data = loaded.Primary.ToList();
+            }
+
+            if (data == null || !data.Any())
+                continue;
+
+            series.Add(data);
+            labels.Add(selection.DisplayName);
+        }
+
+        return (series, labels);
+    }
+
+    private async Task<IReadOnlyList<SeriesResult>?> BuildOverlaySeriesAsync(ChartDataContext ctx, IReadOnlyList<MetricSeriesSelection> selections, string? resolutionTableName)
+    {
+        if (selections == null || selections.Count == 0)
+            return null;
+
+        var (overlaySeries, overlayLabels) = await BuildSeriesFromSelectionsAsync(ctx, selections, resolutionTableName);
+        if (overlaySeries.Count == 0 || overlayLabels.Count == 0)
+            return null;
+
+        return BuildOverlaySeriesResults(overlaySeries, overlayLabels, ctx.From, ctx.To);
+    }
+
+    private static List<SeriesResult> BuildOverlaySeriesResults(IReadOnlyList<IEnumerable<MetricData>> series, IReadOnlyList<string> labels, DateTime from, DateTime to)
+    {
+        var results = new List<SeriesResult>();
+        var smoothingService = new SmoothingService();
+
+        for (var i = 0; i < Math.Min(series.Count, labels.Count); i++)
+        {
+            var orderedData = StrategyComputationHelper.FilterAndOrderByRange(series[i], from, to);
+            if (orderedData.Count == 0)
+                continue;
+
+            var rawTimestamps = orderedData.Select(d => d.NormalizedTimestamp).ToList();
+            var rawValues = orderedData.Select(d => d.Value.HasValue ? (double)d.Value.Value : double.NaN).ToList();
+            var smoothedValues = smoothingService.SmoothSeries(orderedData, rawTimestamps, from, to).ToList();
+
+            results.Add(new SeriesResult
+            {
+                    SeriesId = $"overlay_{i}",
+                    DisplayName = labels[i],
+                    Timestamps = rawTimestamps,
+                    RawValues = rawValues,
+                    Smoothed = smoothedValues
+            });
+        }
+
+        return results;
+    }
+
+    private static IEnumerable<MetricData>? ResolveContextSeries(ChartDataContext ctx, MetricSeriesSelection selection)
+    {
+        if (IsMatchingSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return ctx.Data1;
+
+        if (IsMatchingSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return ctx.Data2;
+
+        return null;
+    }
+
+    private static bool IsMatchingSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
+    {
+        if (string.IsNullOrWhiteSpace(metricType) || string.IsNullOrWhiteSpace(selection.MetricType))
+            return false;
+
+        if (!string.Equals(metricType, selection.MetricType, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var selectionSubtype = selection.Subtype ?? string.Empty;
+        var ctxSubtype = subtype ?? string.Empty;
+
+        return string.Equals(selectionSubtype, ctxSubtype, StringComparison.OrdinalIgnoreCase);
+    }
+
 
     private static(bool IsStacked, bool IsCumulative) ResolveMainChartDisplayMode(MainChartDisplayMode mode)
     {

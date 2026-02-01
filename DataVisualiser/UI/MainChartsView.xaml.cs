@@ -73,6 +73,7 @@ public partial class MainChartsView : UserControl
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private MainChartControllerAdapter _mainAdapter = null!;
+    private StackedChartControllerAdapter _stackedAdapter = null!;
 
     private MetricSelectionService _metricSelectionService = null!;
     private NormalizedChartControllerAdapter _normalizedAdapter = null!;
@@ -140,6 +141,7 @@ public partial class MainChartsView : UserControl
         UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
         UpdateSubtypeOptions(ChartControllerKeys.Distribution);
         UpdateSubtypeOptions(ChartControllerKeys.WeeklyTrend);
+        UpdateSubtypeOptions(ChartControllerKeys.Stacked);
 
         // Update button states based on selected subtype count
         UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
@@ -219,12 +221,32 @@ public partial class MainChartsView : UserControl
     {
         var hasPrimaryData = selectedSubtypeCount >= 1;
         var canToggle = hasPrimaryData && HasLoadedData();
+        var canStack = selectedSubtypeCount >= 2 && HasLoadedData();
 
         ResolveController(ChartControllerKeys.Main).SetToggleEnabled(HasLoadedData());
+        UpdateMainChartStackedAvailability(selectedSubtypeCount);
+        ResolveController(ChartControllerKeys.Stacked).SetToggleEnabled(canStack);
+        if (!canStack && _viewModel.ChartState.IsStackedVisible)
+        {
+            ClearChart(ChartControllerKeys.Stacked);
+            _viewModel.SetStackedVisible(false);
+        }
         ResolveController(ChartControllerKeys.WeeklyTrend).SetToggleEnabled(canToggle);
         ResolveController(ChartControllerKeys.Distribution).SetToggleEnabled(canToggle);
         ResolveController(ChartControllerKeys.Transform).SetToggleEnabled(canToggle);
         ResolveController(ChartControllerKeys.BarPie).SetToggleEnabled(canToggle);
+    }
+
+    private void UpdateMainChartStackedAvailability(int selectedSubtypeCount)
+    {
+        var canStack = selectedSubtypeCount >= 2;
+        MainChartController.DisplayStackedRadio.IsEnabled = canStack;
+
+        if (!canStack && MainChartController.DisplayStackedRadio.IsChecked == true)
+        {
+            MainChartController.DisplayRegularRadio.IsChecked = true;
+            _viewModel.SetMainChartDisplayMode(MainChartDisplayMode.Regular);
+        }
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -309,7 +331,6 @@ public partial class MainChartsView : UserControl
         var previousSelection = GetSelectedMetricValue(SubtypeCombo);
 
         SubtypeCombo.Items.Clear();
-        SubtypeCombo.Items.Add(new MetricNameOption("(All)", "(All)"));
 
         foreach (var st in subtypes)
             SubtypeCombo.Items.Add(st);
@@ -323,7 +344,8 @@ public partial class MainChartsView : UserControl
             return;
         }
 
-        SubtypeCombo.SelectedIndex = 0;
+        if (SubtypeCombo.Items.Count > 0)
+            SubtypeCombo.SelectedIndex = 0;
     }
 
     private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
@@ -355,6 +377,7 @@ public partial class MainChartsView : UserControl
         CompleteTransformSelectionsPendingLoad();
         UpdateSubtypeOptions(ChartControllerKeys.Normalized);
         UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
+        UpdateSubtypeOptions(ChartControllerKeys.Stacked);
         UpdateTransformSubtypeOptions();
         UpdateTransformComputeButtonState();
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
@@ -378,6 +401,9 @@ public partial class MainChartsView : UserControl
         {
             case ChartControllerKeys.Main:
                 SetChartVisibility(ChartControllerKeys.Main, e.ShowMain);
+                break;
+            case ChartControllerKeys.Stacked:
+                SetChartVisibility(ChartControllerKeys.Stacked, e.ShowStacked);
                 break;
             case ChartControllerKeys.Normalized:
                 SetChartVisibility(ChartControllerKeys.Normalized, e.ShowNormalized);
@@ -516,6 +542,7 @@ public partial class MainChartsView : UserControl
         return chartName switch
         {
                 ChartControllerKeys.Main => _viewModel.ChartState.IsMainVisible,
+                ChartControllerKeys.Stacked => _viewModel.ChartState.IsStackedVisible,
                 ChartControllerKeys.Normalized => _viewModel.ChartState.IsNormalizedVisible,
                 ChartControllerKeys.DiffRatio => _viewModel.ChartState.IsDiffRatioVisible,
                 ChartControllerKeys.Distribution => _viewModel.ChartState.IsDistributionVisible,
@@ -537,6 +564,7 @@ public partial class MainChartsView : UserControl
     private void UpdateAllChartVisibilities(ChartUpdateRequestedEventArgs e)
     {
         SetChartVisibility(ChartControllerKeys.Main, e.ShowMain);
+        SetChartVisibility(ChartControllerKeys.Stacked, e.ShowStacked);
         SetChartVisibility(ChartControllerKeys.Normalized, e.ShowNormalized);
         SetChartVisibility(ChartControllerKeys.DiffRatio, e.ShowDiffRatio);
         SetChartVisibility(ChartControllerKeys.Distribution, e.ShowDistribution);
@@ -735,6 +763,9 @@ public partial class MainChartsView : UserControl
         if (_viewModel.ChartState.IsMainVisible)
             await RenderChartAsync(ChartControllerKeys.Main, safeCtx);
 
+        if (_viewModel.ChartState.IsStackedVisible)
+            await RenderChartAsync(ChartControllerKeys.Stacked, safeCtx);
+
         // Charts that require secondary data - only render if visible AND secondary data exists
         if (hasSecondaryData)
         {
@@ -795,6 +826,10 @@ public partial class MainChartsView : UserControl
             case ChartControllerKeys.Main:
                 if (_viewModel.ChartState.IsMainVisible)
                     await RenderChartAsync(ChartControllerKeys.Main, ctx);
+                break;
+            case ChartControllerKeys.Stacked:
+                if (_viewModel.ChartState.IsStackedVisible)
+                    await RenderChartAsync(ChartControllerKeys.Stacked, ctx);
                 break;
 
             case ChartControllerKeys.Normalized:
@@ -1014,6 +1049,7 @@ public partial class MainChartsView : UserControl
         var factoryResult = _chartControllerFactory.Create(
             new ChartControllerFactoryContext(
                 MainChartController,
+                StackedChartController,
                 NormalizedChartController,
                 DiffRatioChartController,
                 DistributionChartController,
@@ -1037,6 +1073,7 @@ public partial class MainChartsView : UserControl
                 _chartSurfaceFactory));
 
         _mainAdapter = factoryResult.Main;
+        _stackedAdapter = factoryResult.Stacked;
         _normalizedAdapter = factoryResult.Normalized;
         _diffRatioAdapter = factoryResult.DiffRatio;
         _distributionAdapter = factoryResult.Distribution;
@@ -1049,6 +1086,8 @@ public partial class MainChartsView : UserControl
         // Wire up MainChartController events
         MainChartController.ToggleRequested += _mainAdapter.OnToggleRequested;
         MainChartController.DisplayModeChanged += _mainAdapter.OnDisplayModeChanged;
+        StackedChartController.ToggleRequested += _stackedAdapter.OnToggleRequested;
+        StackedChartController.OverlaySubtypeChanged += _stackedAdapter.OnOverlaySubtypeChanged;
         WeekdayTrendChartController.ToggleRequested += _weekdayTrendAdapter.OnToggleRequested;
         WeekdayTrendChartController.ChartTypeToggleRequested += _weekdayTrendAdapter.OnChartTypeToggleRequested;
         WeekdayTrendChartController.DayToggled += _weekdayTrendAdapter.OnDayToggled;
@@ -1101,6 +1140,7 @@ public partial class MainChartsView : UserControl
         return key switch
         {
                 ChartControllerKeys.Main => _mainAdapter,
+                ChartControllerKeys.Stacked => _stackedAdapter,
                 ChartControllerKeys.Normalized => _normalizedAdapter,
                 ChartControllerKeys.DiffRatio => _diffRatioAdapter,
                 ChartControllerKeys.Distribution => _distributionAdapter,
@@ -1117,6 +1157,7 @@ public partial class MainChartsView : UserControl
             return key switch
             {
                     ChartControllerKeys.Main => MainChartController.Chart,
+                    ChartControllerKeys.Stacked => StackedChartController.Chart,
                     ChartControllerKeys.Normalized => NormalizedChartController.Chart,
                     ChartControllerKeys.DiffRatio => DiffRatioChartController.Chart,
                     ChartControllerKeys.Distribution => DistributionChartController.Chart,
@@ -1339,6 +1380,7 @@ public partial class MainChartsView : UserControl
 
         // Sync main chart button text with initial state
         SetChartVisibility(ChartControllerKeys.Main, _viewModel.ChartState.IsMainVisible);
+        SetChartVisibility(ChartControllerKeys.Stacked, _viewModel.ChartState.IsStackedVisible);
         SetChartVisibility(ChartControllerKeys.BarPie, _viewModel.ChartState.IsBarPieVisible);
 
         SetChartVisibility(ChartControllerKeys.Transform, _viewModel.ChartState.IsTransformPanelVisible);
@@ -1362,6 +1404,7 @@ public partial class MainChartsView : UserControl
         var chartLabels = new Dictionary<CartesianChart, string>
         {
                 { GetWpfCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main },
+                { GetWpfCartesianChart(ChartControllerKeys.Stacked), ChartControllerKeys.Stacked },
                 { GetWpfCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized },
                 { GetWpfCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio },
                 { GetWpfCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform }
@@ -1369,6 +1412,7 @@ public partial class MainChartsView : UserControl
 
         _tooltipManager = new ChartTooltipManager(parentWindow, chartLabels);
         _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main);
+        _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Stacked), ChartControllerKeys.Stacked);
         _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized);
         _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio);
         _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform);
@@ -1390,6 +1434,7 @@ public partial class MainChartsView : UserControl
         _viewModel.SetLoadingMetricTypes(false);
         _viewModel.SetLoadingSubtypes(false);
         _viewModel.SetMainVisible(true); // Default to visible (Show on startup)
+        _viewModel.SetStackedVisible(false);
         _viewModel.SetNormalizedVisible(false);
         _viewModel.SetDiffRatioVisible(false);
         _viewModel.SetDistributionVisible(false);
@@ -1434,6 +1479,7 @@ public partial class MainChartsView : UserControl
     private void InitializeChartBehavior()
     {
         ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Main));
+        ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Stacked));
         InitializeDistributionChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Distribution));
         ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Normalized));
         ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.DiffRatio));
@@ -1494,6 +1540,7 @@ public partial class MainChartsView : UserControl
     private void DisableAxisLabelsWhenNoData()
     {
         DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Main));
+        DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Stacked));
         DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Normalized));
         DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.DiffRatio));
         DisableDistributionAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Distribution));
@@ -1529,6 +1576,7 @@ public partial class MainChartsView : UserControl
     private void SetDefaultChartTitles()
     {
         ResolveController(ChartControllerKeys.Main).SetTitle("Metrics: Total");
+        ResolveController(ChartControllerKeys.Stacked).SetTitle("Metrics: Stacked");
         ResolveController(ChartControllerKeys.Normalized).SetTitle("Metrics: Normalized");
         ResolveController(ChartControllerKeys.DiffRatio).SetTitle("Difference / Ratio");
         UpdateDiffRatioOperationButton(); // Initialize button state
@@ -1687,6 +1735,7 @@ public partial class MainChartsView : UserControl
             ClearChartCache(ChartControllerKeys.WeeklyTrend);
             ClearChartCache(ChartControllerKeys.Normalized);
             ClearChartCache(ChartControllerKeys.DiffRatio);
+            ClearChartCache(ChartControllerKeys.Stacked);
             ClearChartCache(ChartControllerKeys.Transform);
             ResetTransformSelectionsPendingLoad();
             var dataLoaded = await _viewModel.LoadMetricDataAsync();
@@ -2642,6 +2691,7 @@ public partial class MainChartsView : UserControl
         _viewModel.ChartState.RightTitle = rightName;
 
         ResolveController(ChartControllerKeys.Main).SetTitle($"{leftName} vs. {rightName}");
+        ResolveController(ChartControllerKeys.Stacked).SetTitle(string.IsNullOrWhiteSpace(leftName) ? "Metrics: Stacked" : $"{leftName} (stacked)");
         ResolveController(ChartControllerKeys.Normalized).SetTitle($"{leftName} ~ {rightName}");
         ResolveController(ChartControllerKeys.DiffRatio).SetTitle($"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}");
     }
@@ -2660,6 +2710,8 @@ public partial class MainChartsView : UserControl
 
         var chartMainLabel = !string.IsNullOrEmpty(label2) ? $"{label1} vs {label2}" : label1;
         _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.Main), chartMainLabel);
+        var chartStackedLabel = string.IsNullOrEmpty(label1) ? "Stacked" : $"{label1} (stacked)";
+        _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.Stacked), chartStackedLabel);
 
         var chartDiffRatioLabel = !string.IsNullOrEmpty(label2) ? $"{label1} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {label2}" : label1;
         _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), chartDiffRatioLabel);

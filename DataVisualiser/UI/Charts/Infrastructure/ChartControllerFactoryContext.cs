@@ -15,6 +15,7 @@ namespace DataVisualiser.UI.Charts.Infrastructure;
 
 public sealed record ChartControllerFactoryContext(
     IMainChartController MainChartController,
+    IStackedChartController StackedChartController,
     INormalizedChartController NormalizedChartController,
     IDiffRatioChartController DiffRatioChartController,
     IDistributionChartController DistributionChartController,

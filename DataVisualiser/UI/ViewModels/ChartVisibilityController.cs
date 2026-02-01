@@ -77,6 +77,7 @@ public sealed class ChartVisibilityController
         return new ChartUpdateRequestedEventArgs
         {
                 ShowMain = _chartState.IsMainVisible,
+                ShowStacked = _chartState.IsStackedVisible,
                 ShowNormalized = _chartState.IsNormalizedVisible,
                 ShowDiffRatio = _chartState.IsDiffRatioVisible,
                 ShowDistribution = _chartState.IsDistributionVisible,

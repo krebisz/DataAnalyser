@@ -10,6 +10,7 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             throw new ArgumentNullException(nameof(context));
 
         var mainAdapter = new MainChartControllerAdapter(context.MainChartController, context.ViewModel, context.IsInitializing, context.GetChartRenderingOrchestrator);
+        var stackedAdapter = new StackedChartControllerAdapter(context.StackedChartController, context.ViewModel, context.IsInitializing, context.MetricSelectionService, context.ChartUpdateCoordinator);
 
         var distributionAdapter = new DistributionChartControllerAdapter(context.DistributionChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetChartRenderingOrchestrator, context.WeeklyDistributionService, context.HourlyDistributionService, context.DistributionPolarRenderingService, context.GetPolarTooltip);
 
@@ -31,6 +32,7 @@ public sealed class ChartControllerFactory : IChartControllerFactory
 
         var registry = new ChartControllerRegistry();
         registry.Register(mainAdapter);
+        registry.Register(stackedAdapter);
         registry.Register(normalizedAdapter);
         registry.Register(diffRatioAdapter);
         registry.Register(distributionAdapter);
@@ -38,6 +40,6 @@ public sealed class ChartControllerFactory : IChartControllerFactory
         registry.Register(transformAdapter);
         registry.Register(barPieAdapter);
 
-        return new ChartControllerFactoryResult(mainAdapter, normalizedAdapter, diffRatioAdapter, distributionAdapter, weekdayTrendAdapter, transformAdapter, barPieAdapter, registry);
+        return new ChartControllerFactoryResult(mainAdapter, stackedAdapter, normalizedAdapter, diffRatioAdapter, distributionAdapter, weekdayTrendAdapter, transformAdapter, barPieAdapter, registry);
     }
 }

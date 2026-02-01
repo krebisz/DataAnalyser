@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using DataVisualiser.Core.Computation;
@@ -7,6 +8,7 @@ using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts.Wpf;
 
@@ -42,7 +44,7 @@ public class ChartUpdateCoordinator
     ///     Runs the supplied strategy, then renders the result into the target chart.
     ///     If the strategy returns null, the chart is cleared.
     /// </summary>
-    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null, bool isStacked = false, bool isCumulative = false)
+    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -66,10 +68,10 @@ public class ChartUpdateCoordinator
         var cumulativeBundle = isCumulative ? BuildCumulativeSeries(result, strategy, primaryLabel, secondaryLabel) : (RenderSeries: null, OriginalSeries: null);
         var renderSeries = cumulativeBundle.RenderSeries;
 
-        var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart, secondaryMetricType, displayPrimaryMetricType, displaySecondaryMetricType, displayPrimarySubtype, displaySecondarySubtype, isStacked, renderSeries);
+        var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart, secondaryMetricType, displayPrimaryMetricType, displaySecondaryMetricType, displayPrimarySubtype, displaySecondarySubtype, isStacked, renderSeries, overlaySeries);
 
         if (isStacked || isCumulative)
-            targetChart.Tag = new ChartStackingTooltipState(true, isCumulative, isCumulative ? cumulativeBundle.OriginalSeries : null);
+            targetChart.Tag = new ChartStackingTooltipState(true, isCumulative, isCumulative ? cumulativeBundle.OriginalSeries : null, overlaySeries?.Select(series => series.DisplayName).ToList());
         else if (targetChart.Tag is ChartStackingTooltipState)
             targetChart.Tag = null;
 
@@ -110,7 +112,7 @@ public class ChartUpdateCoordinator
     /// <summary>
     ///     Builds a ChartRenderModel from a computation result and strategy metadata.
     /// </summary>
-    private ChartRenderModel BuildChartRenderModel(IChartComputationStrategy strategy, ChartComputationResult result, CartesianChart targetChart, string primaryLabel, string? secondaryLabel, string? metricType, string? primarySubtype, string? secondarySubtype, string? operationType, bool isOperationChart, string? secondaryMetricType, string? displayPrimaryMetricType, string? displaySecondaryMetricType, string? displayPrimarySubtype, string? displaySecondarySubtype, bool isStacked, List<SeriesResult>? overrideSeries)
+    private ChartRenderModel BuildChartRenderModel(IChartComputationStrategy strategy, ChartComputationResult result, CartesianChart targetChart, string primaryLabel, string? secondaryLabel, string? metricType, string? primarySubtype, string? secondarySubtype, string? operationType, bool isOperationChart, string? secondaryMetricType, string? displayPrimaryMetricType, string? displaySecondaryMetricType, string? displayPrimarySubtype, string? displaySecondarySubtype, bool isStacked, List<SeriesResult>? overrideSeries, IReadOnlyList<SeriesResult>? overlaySeries)
     {
         return new ChartRenderModel
         {
@@ -150,7 +152,8 @@ public class ChartUpdateCoordinator
                 IsOperationChart = isOperationChart,
 
                 // NEW: Multi-series support - when Series is present, it takes precedence
-                Series = overrideSeries ?? result.Series
+                Series = overrideSeries ?? result.Series,
+                OverlaySeries = overlaySeries?.ToList()
         };
     }
 
@@ -293,10 +296,10 @@ public class ChartUpdateCoordinator
     /// </summary>
     private List<MetricData> BuildSyntheticRawData(ChartRenderModel model)
     {
-        if (ShouldUseStackedTotals(model))
-            return BuildStackedRawData(model);
+        var metrics = ShouldUseStackedTotals(model) ? BuildStackedRawData(model) : EnumerateRawPoints(model).Select(p => CreateMetric(p.Timestamp, p.Value, model.Unit)).ToList();
 
-        return EnumerateRawPoints(model).Select(p => CreateMetric(p.Timestamp, p.Value, model.Unit)).ToList();
+        AppendOverlayRawData(metrics, model);
+        return metrics;
     }
 
     private List<MetricData> BuildStackedRawData(ChartRenderModel model)
@@ -409,6 +412,29 @@ public class ChartUpdateCoordinator
         }
     }
 
+    private static void AppendOverlayRawData(List<MetricData> metrics, ChartRenderModel model)
+    {
+        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
+            return;
+
+        foreach (var point in EnumerateOverlayRawPoints(model))
+            metrics.Add(CreateMetric(point.Timestamp, point.Value, model.Unit));
+    }
+
+    private static IEnumerable<(DateTime Timestamp, double Value)> EnumerateOverlayRawPoints(ChartRenderModel model)
+    {
+        if (model.OverlaySeries == null)
+            yield break;
+
+        foreach (var series in model.OverlaySeries)
+        {
+            var count = Math.Min(series.Timestamps.Count, series.RawValues.Count);
+
+            for (var i = 0; i < count; i++)
+                yield return (series.Timestamps[i], series.RawValues[i]);
+        }
+    }
+
     /// <summary>
     ///     Collects all smoothed values from the render model for Y-axis normalization.
     ///     Handles both multi-series mode and legacy primary/secondary mode.
@@ -436,7 +462,26 @@ public class ChartUpdateCoordinator
                 smoothedList.AddRange(model.SecondarySmoothed);
         }
 
+        AppendOverlaySmoothedValues(smoothedList, model);
         return smoothedList;
+    }
+
+    private static void AppendOverlaySmoothedValues(List<double> values, ChartRenderModel model)
+    {
+        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
+            return;
+
+        foreach (var series in model.OverlaySeries)
+        {
+            if (series.Smoothed != null && series.Smoothed.Count > 0)
+            {
+                values.AddRange(series.Smoothed);
+                continue;
+            }
+
+            if (series.RawValues != null && series.RawValues.Count > 0)
+                values.AddRange(series.RawValues);
+        }
     }
 
     private List<double> BuildStackedSmoothedValues(ChartRenderModel model)
@@ -522,14 +567,163 @@ public class ChartUpdateCoordinator
         var syntheticRawData = BuildSyntheticRawData(model);
         var smoothedList = CollectSmoothedValues(model);
 
+        EnsureOverlayExtremes(syntheticRawData, model.OverlaySeries, model.Unit);
+
+        if (model.IsStacked)
+            EnsureStackedBaseline(syntheticRawData, smoothedList, model.Unit);
+
         Debug.WriteLine($"[TransformChart] NormalizeYAxisForChart: chart={targetChart.Name}, syntheticRawData={syntheticRawData.Count}, smoothedList={smoothedList.Count}");
 
         ChartHelper.NormalizeYAxis(yAxis, syntheticRawData, smoothedList);
         ChartHelper.ApplyTransformChartGradient(targetChart, yAxis);
 
+        ApplyOverlayRangeIfNeeded(yAxis, model.OverlaySeries);
+
         Debug.WriteLine($"[TransformChart] After NormalizeYAxis: chart={targetChart.Name}, YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}, ShowLabels={yAxis.ShowLabels}");
 
         ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
         ChartHelper.InitializeChartTooltip(targetChart);
+    }
+
+    private static void ApplyOverlayRangeIfNeeded(Axis yAxis, IReadOnlyList<SeriesResult>? overlaySeries)
+    {
+        if (overlaySeries == null || overlaySeries.Count == 0 || yAxis == null)
+            return;
+
+        var (min, max) = GetOverlayMinMax(overlaySeries);
+        if (!min.HasValue || !max.HasValue)
+            return;
+
+        var currentMin = yAxis.MinValue;
+        var currentMax = yAxis.MaxValue;
+
+        if (double.IsNaN(currentMin) || double.IsNaN(currentMax))
+        {
+            currentMin = min.Value;
+            currentMax = max.Value;
+        }
+
+        var updatedMin = Math.Min(currentMin, min.Value);
+        var updatedMax = Math.Max(currentMax, max.Value);
+
+        if (updatedMin.Equals(currentMin) && updatedMax.Equals(currentMax))
+            return;
+
+        var range = updatedMax - updatedMin;
+        if (range <= 0 || double.IsNaN(range) || double.IsInfinity(range))
+            range = Math.Max(Math.Abs(updatedMax) * 0.1, 1e-3);
+
+        var paddedMin = updatedMin - range * 0.05;
+        var paddedMax = updatedMax + range * 0.05;
+
+        if (updatedMin >= 0 && paddedMin < 0)
+            paddedMin = 0;
+
+        yAxis.MinValue = MathHelper.RoundToThreeSignificantDigits(paddedMin);
+        yAxis.MaxValue = MathHelper.RoundToThreeSignificantDigits(paddedMax);
+
+        var step = MathHelper.RoundToThreeSignificantDigits((yAxis.MaxValue - yAxis.MinValue) / 10.0);
+        yAxis.Separator = step > 0 ? new Separator { Step = step } : new Separator();
+        yAxis.LabelFormatter = value => MathHelper.FormatDisplayedValue(value);
+        yAxis.ShowLabels = true;
+        yAxis.Labels = null;
+    }
+
+    private static(double? Min, double? Max) GetOverlayMinMax(IReadOnlyList<SeriesResult> overlaySeries)
+    {
+        double? min = null;
+        double? max = null;
+
+        foreach (var series in overlaySeries)
+        {
+            AccumulateMinMax(series.RawValues, ref min, ref max);
+            AccumulateMinMax(series.Smoothed, ref min, ref max);
+        }
+
+        return (min, max);
+    }
+
+    private static void EnsureStackedBaseline(List<MetricData> rawData, List<double> smoothedValues, string? unit)
+    {
+        var min = GetMinimumValue(rawData, smoothedValues);
+        if (double.IsNaN(min) || min <= 0)
+            return;
+
+        var timestamp = rawData.FirstOrDefault()?.NormalizedTimestamp ?? DateTime.UtcNow;
+        rawData.Add(new MetricData
+        {
+                NormalizedTimestamp = timestamp,
+                Value = 0m,
+                Unit = unit
+        });
+    }
+
+    private static double GetMinimumValue(List<MetricData> rawData, List<double> smoothedValues)
+    {
+        double? min = null;
+
+        foreach (var point in rawData)
+            if (point.Value.HasValue)
+            {
+                var value = (double)point.Value.Value;
+                min = min.HasValue ? Math.Min(min.Value, value) : value;
+            }
+
+        foreach (var value in smoothedValues)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                continue;
+
+            min = min.HasValue ? Math.Min(min.Value, value) : value;
+        }
+
+        return min ?? double.NaN;
+    }
+
+    private static void EnsureOverlayExtremes(List<MetricData> rawData, IReadOnlyList<SeriesResult>? overlaySeries, string? unit)
+    {
+        if (overlaySeries == null || overlaySeries.Count == 0)
+            return;
+
+        double? min = null;
+        double? max = null;
+
+        foreach (var series in overlaySeries)
+        {
+            AccumulateMinMax(series.RawValues, ref min, ref max);
+            AccumulateMinMax(series.Smoothed, ref min, ref max);
+        }
+
+        if (!min.HasValue || !max.HasValue)
+            return;
+
+        var timestamp = rawData.FirstOrDefault()?.NormalizedTimestamp ?? DateTime.UtcNow;
+        rawData.Add(new MetricData
+        {
+                NormalizedTimestamp = timestamp,
+                Value = (decimal)min.Value,
+                Unit = unit
+        });
+        rawData.Add(new MetricData
+        {
+                NormalizedTimestamp = timestamp,
+                Value = (decimal)max.Value,
+                Unit = unit
+        });
+    }
+
+    private static void AccumulateMinMax(IReadOnlyList<double>? values, ref double? min, ref double? max)
+    {
+        if (values == null)
+            return;
+
+        foreach (var value in values)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                continue;
+
+            min = min.HasValue ? Math.Min(min.Value, value) : value;
+            max = max.HasValue ? Math.Max(max.Value, value) : value;
+        }
     }
 }

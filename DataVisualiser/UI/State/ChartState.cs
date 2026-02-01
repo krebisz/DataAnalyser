@@ -16,6 +16,7 @@ public class ChartState
 
     // Track which charts are visible
     public bool IsMainVisible { get; set; } = true; // Default to visible (Show on startup)
+    public bool IsStackedVisible { get; set; }
     public MainChartDisplayMode MainChartDisplayMode { get; set; } = MainChartDisplayMode.Regular;
     public bool IsNormalizedVisible { get; set; }
     public bool IsDiffRatioVisible { get; set; }                // Unified Diff/Ratio chart
@@ -47,6 +48,7 @@ public class ChartState
     public DistributionMode SelectedDistributionMode { get; set; } = DistributionMode.Weekly;
     public MetricSeriesSelection? SelectedDistributionSeries { get; set; }
     public MetricSeriesSelection? SelectedWeekdayTrendSeries { get; set; }
+    public MetricSeriesSelection? SelectedStackedOverlaySeries { get; set; }
     public MetricSeriesSelection? SelectedNormalizedPrimarySeries { get; set; }
     public MetricSeriesSelection? SelectedNormalizedSecondarySeries { get; set; }
     public MetricSeriesSelection? SelectedDiffRatioPrimarySeries { get; set; }

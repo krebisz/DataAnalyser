@@ -5,6 +5,7 @@ namespace DataVisualiser.UI.Charts.Infrastructure;
 public static class ChartControllerKeys
 {
     public const string Main = "Main";
+    public const string Stacked = "Stacked";
     public const string Normalized = "Norm";
     public const string DiffRatio = "DiffRatio";
     public const string Distribution = "Distribution";
@@ -15,6 +16,7 @@ public static class ChartControllerKeys
     public static readonly string[] All =
     {
             Main,
+            Stacked,
             Normalized,
             DiffRatio,
             Distribution,

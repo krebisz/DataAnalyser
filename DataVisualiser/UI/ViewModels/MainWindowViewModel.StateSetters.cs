@@ -15,6 +15,12 @@ public partial class MainWindowViewModel
         RequestChartUpdate(true, "Main");
     }
 
+    public void SetStackedVisible(bool value)
+    {
+        ChartState.IsStackedVisible = value;
+        RequestChartUpdate(true, "Stacked");
+    }
+
     public void SetNormalizedVisible(bool value)
     {
         ChartState.IsNormalizedVisible = value;
@@ -123,6 +129,12 @@ public partial class MainWindowViewModel
     {
         ChartState.SelectedWeekdayTrendSeries = selection;
         RequestChartUpdate(false, "WeeklyTrend");
+    }
+
+    public void SetStackedOverlaySeries(MetricSeriesSelection? selection)
+    {
+        ChartState.SelectedStackedOverlaySeries = selection;
+        RequestChartUpdate(false, "Stacked");
     }
 
     public void SetNormalizedPrimarySeries(MetricSeriesSelection? selection)

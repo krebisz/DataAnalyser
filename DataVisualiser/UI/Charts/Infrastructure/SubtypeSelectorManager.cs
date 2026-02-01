@@ -167,7 +167,11 @@ public class SubtypeSelectorManager
 
             var subtypeOption = combo.SelectedItem as MetricNameOption;
             var subtypeValue = subtypeOption?.Value ?? combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
-            selections.Add(new MetricSeriesSelection(metricType.Value, subtypeValue, metricType.Display, subtypeOption?.Display));
+            var selection = new MetricSeriesSelection(metricType.Value, subtypeValue, metricType.Display, subtypeOption?.Display);
+            if (selection.QuerySubtype == null)
+                continue;
+
+            selections.Add(selection);
         }
 
         return selections;
