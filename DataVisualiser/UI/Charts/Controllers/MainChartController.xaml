@@ -33,6 +33,17 @@
                              GroupName="MainChartDisplayModes"
                              IsEnabled="False" />
             </StackPanel>
+            <StackPanel x:Name="OverlaySubtypePanelControl"
+                        Orientation="Vertical"
+                        Margin="0,6,0,0"
+                        Visibility="Collapsed">
+                <TextBlock Text="Overlay Subtype:"
+                           FontWeight="Bold"
+                           Margin="0,0,0,5" />
+                <ComboBox x:Name="OverlaySubtypeComboControl"
+                          Width="{x:Static ui:ChartUiDefaults.SubtypeComboWidth}"
+                          IsEnabled="False" />
+            </StackPanel>
         </StackPanel>
     </Grid>
 </UserControl>

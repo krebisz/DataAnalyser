@@ -145,9 +145,6 @@
                 <!-- ========== CHART MAIN ========== -->
                 <controls:MainChartController x:Name="MainChartController" />
 
-                <!-- ========== CHART STACKED ========== -->
-                <controls:StackedChartController x:Name="StackedChartController" />
-
                 <!-- ========== CHART NORMALIZED ========== -->
                 <controls:NormalizedChartController x:Name="NormalizedChartController" />
 

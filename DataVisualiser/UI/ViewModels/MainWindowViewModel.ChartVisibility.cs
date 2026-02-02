@@ -19,11 +19,6 @@ public partial class MainWindowViewModel
         ToggleChartVisibility("Main", () => ChartState.IsMainVisible, v => ChartState.IsMainVisible = v);
     }
 
-    public void ToggleStacked()
-    {
-        ToggleChartVisibility("Stacked", () => ChartState.IsStackedVisible, v => ChartState.IsStackedVisible = v);
-    }
-
     public void ToggleNorm()
     {
         ToggleChartVisibility("Norm", () => ChartState.IsNormalizedVisible, v => ChartState.IsNormalizedVisible = v);

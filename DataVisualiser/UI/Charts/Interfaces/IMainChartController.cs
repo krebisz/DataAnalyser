@@ -10,7 +10,10 @@ public interface IMainChartController : IChartPanelControllerHost
     RadioButton DisplayRegularRadio { get; }
     RadioButton DisplaySummedRadio { get; }
     RadioButton DisplayStackedRadio { get; }
+    ComboBox OverlaySubtypeCombo { get; }
+    StackPanel OverlaySubtypePanel { get; }
 
     event EventHandler? ToggleRequested;
     event EventHandler? DisplayModeChanged;
+    event EventHandler? OverlaySubtypeChanged;
 }

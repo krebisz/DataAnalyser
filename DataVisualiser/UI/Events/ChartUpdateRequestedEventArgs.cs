@@ -3,7 +3,6 @@ namespace DataVisualiser.UI.Events;
 public class ChartUpdateRequestedEventArgs : EventArgs
 {
     public bool ShowMain { get; set; }
-    public bool ShowStacked { get; set; }
     public bool ShowNormalized { get; set; }
     public bool ShowDiffRatio { get; set; }
     public bool ShowDistribution { get; set; }

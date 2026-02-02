@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Infrastructure;
 using System.Windows;
@@ -15,6 +17,7 @@ namespace DataVisualiser.UI.Charts.Controllers;
 public partial class MainChartController : UserControl, IMainChartController
 {
     private readonly LegendToggleManager _legendManager;
+    private readonly Dictionary<string, bool> _legendVisibility = new(StringComparer.OrdinalIgnoreCase);
 
     public MainChartController()
     {
@@ -27,6 +30,7 @@ public partial class MainChartController : UserControl, IMainChartController
         DisplayRegularRadioControl.Checked += (s, e) => DisplayModeChanged?.Invoke(this, EventArgs.Empty);
         DisplaySummedRadioControl.Checked += (s, e) => DisplayModeChanged?.Invoke(this, EventArgs.Empty);
         DisplayStackedRadioControl.Checked += (s, e) => DisplayModeChanged?.Invoke(this, EventArgs.Empty);
+        OverlaySubtypeComboControl.SelectionChanged += (s, e) => OverlaySubtypeChanged?.Invoke(this, EventArgs.Empty);
 
         // Create the chart
         Chart = new CartesianChart
@@ -64,7 +68,7 @@ public partial class MainChartController : UserControl, IMainChartController
         chartGrid.Children.Add(Chart);
         chartGrid.Children.Add(legendContainer);
 
-        _legendManager = new LegendToggleManager(Chart);
+        _legendManager = new LegendToggleManager(Chart, _legendVisibility);
         _legendManager.AttachItemsControl(legendItems);
 
         // Set the chart content
@@ -89,6 +93,10 @@ public partial class MainChartController : UserControl, IMainChartController
 
     public RadioButton DisplayStackedRadio => DisplayStackedRadioControl;
 
+    public ComboBox OverlaySubtypeCombo => OverlaySubtypeComboControl;
+
+    public StackPanel OverlaySubtypePanel => OverlaySubtypePanelControl;
+
     /// <summary>
     ///     Gets the panel controller for external access.
     /// </summary>
@@ -100,6 +108,8 @@ public partial class MainChartController : UserControl, IMainChartController
     public event EventHandler? ToggleRequested;
 
     public event EventHandler? DisplayModeChanged;
+
+    public event EventHandler? OverlaySubtypeChanged;
 
     private void OnLegendItemToggle(object sender, RoutedEventArgs e)
     {
