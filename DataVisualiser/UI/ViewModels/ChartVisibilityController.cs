@@ -83,6 +83,7 @@ public sealed class ChartVisibilityController
                 ShowWeeklyTrend = _chartState.IsWeeklyTrendVisible,
                 ShowTransformPanel = _chartState.IsTransformPanelVisible,
                 ShowBarPie = _chartState.IsBarPieVisible,
+                ShowSyncfusionSunburst = _chartState.IsSyncfusionSunburstVisible,
                 ShouldRenderCharts = _chartState.LastContext != null,
                 IsVisibilityOnlyToggle = isVisibilityOnlyToggle,
                 ToggledChartName = toggledChartName

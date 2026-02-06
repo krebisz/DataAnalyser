@@ -1,0 +1,13 @@
+<Project>
+  <!-- Intentionally left minimal. (Most repo-wide configuration lives in Directory.Build.props.) -->
+
+  <Target Name="ShowEnvironment" Condition="'$(ShowEnvironment)' == 'true'">
+    <Message Importance="High" Text="TEMP=$(TEMP)" />
+    <Message Importance="High" Text="TMP=$(TMP)" />
+    <Message Importance="High" Text="UserProfile=$(UserProfile)" />
+    <Message Importance="High" Text="BaseIntermediateOutputPath=$(BaseIntermediateOutputPath)" />
+    <Message Importance="High" Text="MSBuildProjectExtensionsPath=$(MSBuildProjectExtensionsPath)" />
+    <Message Importance="High" Text="IntermediateOutputPath=$(IntermediateOutputPath)" />
+    <Message Importance="High" Text="UseWPF=$(UseWPF)" />
+  </Target>
+</Project>

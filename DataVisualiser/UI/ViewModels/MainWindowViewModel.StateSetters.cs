@@ -171,20 +171,38 @@ public partial class MainWindowViewModel
         ChartState.GetDistributionSettings(mode).IntervalCount = intervalCount;
     }
 
+    public void SetBarPieBucketCount(int bucketCount)
+    {
+        if (ChartState.BarPieBucketCount == bucketCount)
+            return;
+
+        ChartState.BarPieBucketCount = bucketCount;
+        RaiseSelectionStateChanged();
+    }
+
     public void SetSelectedMetricType(string? metric)
     {
         MetricState.SelectedMetricType = metric;
+        RaiseSelectionStateChanged();
     }
 
     public void SetSelectedSeries(IEnumerable<MetricSeriesSelection> selections)
     {
         MetricState.SetSeriesSelections(selections);
+        RaiseSelectionStateChanged();
     }
 
     public void SetDateRange(DateTime? from, DateTime? to)
     {
         MetricState.FromDate = from;
         MetricState.ToDate = to;
+        RaiseSelectionStateChanged();
+    }
+
+    public void SetResolutionTableName(string? tableName)
+    {
+        MetricState.ResolutionTableName = tableName;
+        RaiseSelectionStateChanged();
     }
 
     public void SetLoadingMetricTypes(bool isLoading)

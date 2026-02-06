@@ -8,6 +8,15 @@
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 
+	<!--
+		dotnet run fails if WPF's MarkupCompile has left behind *_wpftmp.csproj files (which can happen on this machine
+		due to intermittent "Access denied" preventing cleanup). We'll add explicit launch settings so the CLI always
+		picks this project, even when temp csproj files exist.
+	-->
+	<PropertyGroup>
+		<NoDefaultLaunchSettingsFile>false</NoDefaultLaunchSettingsFile>
+	</PropertyGroup>
+
 
 	<ItemGroup>
 		<PackageReference Include="Dapper" Version="2.1.66" />
@@ -16,7 +25,9 @@
 		<PackageReference Include="LiveChartsCore" Version="2.0.0-rc6.1" />
 		<PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-rc6.1" />
 		<PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc6.1" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+		<PackageReference Include="Syncfusion.Licensing" Version="32.1.25" />
+		<PackageReference Include="Syncfusion.SfSunburstChart.WPF" Version="32.1.25" />
 	</ItemGroup>
 
 	<ItemGroup>

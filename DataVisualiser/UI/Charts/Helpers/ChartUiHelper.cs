@@ -22,6 +22,19 @@ public static class ChartUiHelper
         };
     }
 
+    public static string GetResolutionFromTableName(string? tableName)
+    {
+        return tableName switch
+        {
+                DataAccessDefaults.HealthMetricsHourTable => "Hourly",
+                DataAccessDefaults.HealthMetricsDayTable => "Daily",
+                DataAccessDefaults.HealthMetricsWeekTable => "Weekly",
+                DataAccessDefaults.HealthMetricsMonthTable => "Monthly",
+                DataAccessDefaults.HealthMetricsYearTable => "Yearly",
+                _ => "All"
+        };
+    }
+
     public static string[] GetChartTitlesFromCombos(ComboBox tablesCombo, ComboBox subtypeCombo, ComboBox? subtypeCombo2)
     {
         var baseMetric = GetDisplayValueFromCombo(tablesCombo);

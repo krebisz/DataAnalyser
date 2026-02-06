@@ -68,8 +68,7 @@ public sealed class TransformDataPanelControllerAdapterTests
 
             viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
             {
-                    new("MetricA", "SubA", "MetricA", "SubA"),
-                    new("MetricA", "SubB", "MetricA", "SubB")
+                    new("MetricA", "SubA", "MetricA", "SubA")
             });
 
             adapter.UpdateTransformSubtypeOptions();

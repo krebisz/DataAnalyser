@@ -68,6 +68,11 @@ public partial class MainWindowViewModel
         ToggleChartVisibility("BarPie", () => ChartState.IsBarPieVisible, v => ChartState.IsBarPieVisible = v);
     }
 
+    public void ToggleSyncfusionSunburst()
+    {
+        ToggleChartVisibility("SyncfusionSunburst", () => ChartState.IsSyncfusionSunburstVisible, v => ChartState.IsSyncfusionSunburstVisible = v);
+    }
+
     public void RequestChartUpdate(bool isVisibilityOnlyToggle = false, string? toggledChartName = null)
     {
         var updateArgs = _chartVisibilityController.BuildChartUpdateRequest(isVisibilityOnlyToggle, toggledChartName);

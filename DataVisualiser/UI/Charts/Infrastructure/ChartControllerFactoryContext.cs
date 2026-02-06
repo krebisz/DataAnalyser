@@ -35,4 +35,5 @@ public sealed record ChartControllerFactoryContext(
     Func<ToolTip?> GetPolarTooltip,
     Func<ChartTooltipManager?> GetTooltipManager,
     IChartRendererResolver ChartRendererResolver,
-    IChartSurfaceFactory ChartSurfaceFactory);
+    IChartSurfaceFactory ChartSurfaceFactory,
+    ISyncfusionSunburstChartController? SyncfusionSunburstChartController = null);

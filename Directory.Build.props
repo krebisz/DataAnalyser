@@ -2,4 +2,33 @@
   <PropertyGroup>
     <NoWarn>$(NoWarn);NU1900;DV2001</NoWarn>
   </PropertyGroup>
+
+  <!--
+    This repo has experienced intermittent "Access is denied" errors while MSBuild is deleting/replacing files under
+    the repo's obj\ folders (WPF MarkupCompile caches, apphost.exe, and WPF's *_wpftmp temp projects).
+
+    Redirecting intermediate output to %TEMP% keeps the repo tree stable and avoids those failures.
+
+    NOTE: WPF's temporary *_wpftmp.csproj must share the same intermediate root as the parent project. We normalize
+    the intermediate root name by stripping the _{Random}_wpftmp suffix from MSBuildProjectName when present.
+  -->
+  <PropertyGroup Condition="'$(TEMP)' != ''">
+    <_DataAnalyserIntermediateRootProjectName>$([System.Text.RegularExpressions.Regex]::Replace('$(MSBuildProjectName)', '_[^_]+_wpftmp$', ''))</_DataAnalyserIntermediateRootProjectName>
+
+    <BaseIntermediateOutputPath>$(TEMP)\DataAnalyser\obj\$(_DataAnalyserIntermediateRootProjectName)\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+
+    <!--
+      When BaseIntermediateOutputPath is redirected outside the project folder, the SDK no longer auto-excludes the
+      in-repo obj\ folder. Explicitly exclude obj\ and bin\ under the project directory to avoid compiling stale
+      generated sources left behind by previous builds.
+    -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildProjectDirectory)\obj\**;$(MSBuildProjectDirectory)\bin\**</DefaultItemExcludes>
+    <DefaultExcludesInProjectFolder>$(DefaultExcludesInProjectFolder);obj\**;bin\**</DefaultExcludesInProjectFolder>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(UseWPF)' == 'true'">
+    <!-- Keep wpftmp debugging artifacts rather than attempting cleanup in the repo folder. -->
+    <GenerateTemporaryTargetAssemblyDebuggingInformation>true</GenerateTemporaryTargetAssemblyDebuggingInformation>
+  </PropertyGroup>
 </Project>

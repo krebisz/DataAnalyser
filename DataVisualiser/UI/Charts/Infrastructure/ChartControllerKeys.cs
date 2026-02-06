@@ -11,6 +11,7 @@ public static class ChartControllerKeys
     public const string WeeklyTrend = "WeeklyTrend";
     public const string Transform = "Transform";
     public const string BarPie = "BarPie";
+    public const string SyncfusionSunburst = "SyncfusionSunburst";
 
     public static readonly string[] All =
     {

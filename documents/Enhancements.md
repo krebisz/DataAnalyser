@@ -7,7 +7,7 @@ Running list of ideas
 - Dynamic Line Chart colouring based on vertical value (hot/cold) : PARTIALLY DONE
 - Dynamic Lines colouring based on equivalent trends at a point (increasing/decreasing)
 - Scatter chart for date vs. heart rate (exercise, etc.) clusters : PARTIALLY DONE
-- Stack chart to compare summed graphs/values to total (e.g.: muscle + fat vs. total weight value)
+- <!-- Stack chart to compare summed graphs/values to total (e.g.: muscle + fat vs. total weight value) : DONE -->
 - <!-- Legends that work as toggling radiobuttons for graph display on charts : DONE -->
 - <!-- Pie Chart(s) per resolution (A Pie Chart per year or month to show compositional changes, side by side) : DONE -->
 - <!-- Introducing metric:submetric selection present for some charts, to all charts : DONE -->
@@ -16,8 +16,8 @@ Running list of ideas
 - <!-- Adding "average" scoring to simple range rendering of distribution graph : DONE -->
 - Expanding transform graph to ternary operations, with more than two submetrics
 - Allowing for more than one graph to be created/generated within transform graph by dynamically adding more custom transforms (new control)
-- Persisting HealthMetricsCanonical table in DB across cleans
-- Moving fields: disabled; metric name; submetric name from HealthMetricsCount to HealthMetricsCanonical in DB
+- <!-- Persisting HealthMetricsCanonical table in DB across cleans : DONE -->
+- <!-- Moving fields: disabled; metric name; submetric name from HealthMetricsCount to HealthMetricsCanonical in DB : DONE -->
 - Modifying metric/submetric name default insertion into DB to undergo some formatting first
 - Rename either trends "weekly" to "daily", or "hourly" to "daily" to close the inconsistency
 - Add a daily/hourly option to weekly trend graph, with similar toggles that exist for Mon to Sun

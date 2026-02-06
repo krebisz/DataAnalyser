@@ -1,9 +1,30 @@
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.Core.Services;
 using DataVisualiser.UI.Charts.Adapters;
+using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.ViewModels;
 namespace DataVisualiser.UI.Charts.Infrastructure;
 
 public sealed class ChartControllerFactory : IChartControllerFactory
 {
+    public SyncfusionChartControllerFactoryResult CreateSyncfusion(
+        ISyncfusionSunburstChartController controller,
+        MainWindowViewModel viewModel,
+        MetricSelectionService metricSelectionService)
+    {
+        if (controller == null)
+            throw new ArgumentNullException(nameof(controller));
+        if (viewModel == null)
+            throw new ArgumentNullException(nameof(viewModel));
+        if (metricSelectionService == null)
+            throw new ArgumentNullException(nameof(metricSelectionService));
+
+        var adapter = new SyncfusionSunburstChartControllerAdapter(controller, viewModel, metricSelectionService);
+        var registry = new ChartControllerRegistry();
+        registry.Register(adapter);
+
+        return new SyncfusionChartControllerFactoryResult(adapter, registry);
+    }
+
     public ChartControllerFactoryResult Create(ChartControllerFactoryContext context)
     {
         if (context == null)
@@ -37,6 +58,15 @@ public sealed class ChartControllerFactory : IChartControllerFactory
         registry.Register(weekdayTrendAdapter);
         registry.Register(transformAdapter);
         registry.Register(barPieAdapter);
+
+        if (context.SyncfusionSunburstChartController != null)
+        {
+            var syncfusionAdapter = new SyncfusionSunburstChartControllerAdapter(
+                context.SyncfusionSunburstChartController,
+                context.ViewModel,
+                context.MetricSelectionService);
+            registry.Register(syncfusionAdapter);
+        }
 
         return new ChartControllerFactoryResult(mainAdapter, normalizedAdapter, diffRatioAdapter, distributionAdapter, weekdayTrendAdapter, transformAdapter, barPieAdapter, registry);
     }

@@ -123,7 +123,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
             return;
 
         if (_controller.BucketCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var bucketCount))
-            _viewModel.ChartState.BarPieBucketCount = bucketCount;
+            _viewModel.SetBarPieBucketCount(bucketCount);
 
         if (_viewModel.ChartState.IsBarPieVisible)
             await RenderBarPieChartAsync();

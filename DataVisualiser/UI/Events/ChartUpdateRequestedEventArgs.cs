@@ -9,6 +9,7 @@ public class ChartUpdateRequestedEventArgs : EventArgs
     public bool ShowWeeklyTrend { get; init; }
     public bool ShowTransformPanel { get; set; }
     public bool ShowBarPie { get; set; }
+    public bool ShowSyncfusionSunburst { get; set; }
 
     // NEW: whether charts should be rendered
     public bool ShouldRenderCharts { get; set; }

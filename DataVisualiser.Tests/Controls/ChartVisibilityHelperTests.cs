@@ -16,7 +16,8 @@ public sealed class ChartVisibilityHelperTests
                 IsDistributionVisible = true,
                 IsWeeklyTrendVisible = true,
                 IsTransformPanelVisible = true,
-                IsBarPieVisible = true
+                IsBarPieVisible = true,
+                IsSyncfusionSunburstVisible = true
         };
 
         var hidden = ChartVisibilityHelper.GetHiddenChartKeys(state);
@@ -35,7 +36,8 @@ public sealed class ChartVisibilityHelperTests
                 IsDistributionVisible = true,
                 IsWeeklyTrendVisible = false,
                 IsTransformPanelVisible = false,
-                IsBarPieVisible = false
+                IsBarPieVisible = false,
+                IsSyncfusionSunburstVisible = false
         };
 
         var hidden = ChartVisibilityHelper.GetHiddenChartKeys(state);
@@ -47,5 +49,6 @@ public sealed class ChartVisibilityHelperTests
         Assert.Contains(ChartControllerKeys.WeeklyTrend, hidden);
         Assert.Contains(ChartControllerKeys.Transform, hidden);
         Assert.Contains(ChartControllerKeys.BarPie, hidden);
+        Assert.Contains(ChartControllerKeys.SyncfusionSunburst, hidden);
     }
 }

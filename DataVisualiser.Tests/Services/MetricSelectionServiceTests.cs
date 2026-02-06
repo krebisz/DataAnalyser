@@ -11,10 +11,10 @@ public sealed class MetricSelectionServiceTests
     public void ResolveDataLoadStrategy_ActivatesSampling_WhenRecordCountExceedsThreshold()
     {
         // Arrange
-        ConfigurationManager.AppSettings["DataVisualiser:EnableSqlSampling"] = "true";
-        ConfigurationManager.AppSettings["DataVisualiser:SamplingThreshold"] = "1000";
-        ConfigurationManager.AppSettings["DataVisualiser:TargetSamplePoints"] = "200";
-        ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"] = "false";
+        SetAppSetting("DataVisualiser:EnableSqlSampling", "true");
+        SetAppSetting("DataVisualiser:SamplingThreshold", "1000");
+        SetAppSetting("DataVisualiser:TargetSamplePoints", "200");
+        SetAppSetting("DataVisualiser:EnableSqlResultLimiting", "false");
 
         var service = new MetricSelectionService("FakeConnectionString");
 
@@ -48,14 +48,27 @@ public sealed class MetricSelectionServiceTests
                 })!;
     }
 
+    private static void SetAppSetting(string key, string value)
+    {
+        var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+        var setting = config.AppSettings.Settings[key];
+        if (setting == null)
+            config.AppSettings.Settings.Add(key, value);
+        else
+            setting.Value = value;
+
+        config.Save(ConfigurationSaveMode.Modified);
+        ConfigurationManager.RefreshSection("appSettings");
+    }
+
     [Fact]
     public void ResolveDataLoadStrategy_DoesNotActivateSampling_WhenRecordCountIsBelowThreshold()
     {
         // Arrange
-        ConfigurationManager.AppSettings["DataVisualiser:EnableSqlSampling"] = "true";
-        ConfigurationManager.AppSettings["DataVisualiser:SamplingThreshold"] = "1000";
-        ConfigurationManager.AppSettings["DataVisualiser:TargetSamplePoints"] = "200";
-        ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"] = "false";
+        SetAppSetting("DataVisualiser:EnableSqlSampling", "true");
+        SetAppSetting("DataVisualiser:SamplingThreshold", "1000");
+        SetAppSetting("DataVisualiser:TargetSamplePoints", "200");
+        SetAppSetting("DataVisualiser:EnableSqlResultLimiting", "false");
 
         var service = new MetricSelectionService("FakeConnectionString");
 

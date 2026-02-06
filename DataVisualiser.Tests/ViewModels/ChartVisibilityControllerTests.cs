@@ -42,6 +42,7 @@ public class ChartVisibilityControllerTests
         Assert.True(updateArgs!.ShouldRenderCharts);
         Assert.True(updateArgs.IsVisibilityOnlyToggle);
         Assert.Equal("Main", updateArgs.ToggledChartName);
+        Assert.Equal(chartState.IsSyncfusionSunburstVisible, updateArgs.ShowSyncfusionSunburst);
     }
 
     [Fact]

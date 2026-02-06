@@ -83,6 +83,7 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
     public event EventHandler<ChartVisibilityChangedEventArgs>? ChartVisibilityChanged;
     public event EventHandler<ErrorEventArgs>? ErrorOccured;
     public event EventHandler<ChartUpdateRequestedEventArgs>? ChartUpdateRequested;
+    public event EventHandler? SelectionStateChanged;
 
     // Secondary string-based error channel (kept for compatibility)
     public event EventHandler<string>? ErrorOccurred;
@@ -96,5 +97,10 @@ public partial class MainWindowViewModel : INotifyPropertyChanged
     {
         if (string.IsNullOrWhiteSpace(e.PropertyName) || e.PropertyName == nameof(BusyStateTracker.IsBusy))
             OnPropertyChanged(nameof(IsBusy));
+    }
+
+    private void RaiseSelectionStateChanged()
+    {
+        SelectionStateChanged?.Invoke(this, EventArgs.Empty);
     }
 }

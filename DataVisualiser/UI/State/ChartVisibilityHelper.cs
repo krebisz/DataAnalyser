@@ -32,6 +32,9 @@ public static class ChartVisibilityHelper
         if (!state.IsBarPieVisible)
             hidden.Add(ChartControllerKeys.BarPie);
 
+        if (!state.IsSyncfusionSunburstVisible)
+            hidden.Add(ChartControllerKeys.SyncfusionSunburst);
+
         return hidden;
     }
 }
