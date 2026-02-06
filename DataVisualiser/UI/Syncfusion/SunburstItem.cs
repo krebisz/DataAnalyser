@@ -12,6 +12,4 @@ public sealed class SunburstItem
     public string Bucket { get; }
     public string Submetric { get; }
     public double Value { get; }
-    public double BucketTotal { get; set; }
-    public string PercentText { get; set; } = "Percent: n/a";
 }

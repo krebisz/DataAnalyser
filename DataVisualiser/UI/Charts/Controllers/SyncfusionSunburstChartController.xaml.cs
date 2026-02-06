@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -23,7 +22,6 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
     private IReadOnlyList<SunburstItem> _rawItems = Array.Empty<SunburstItem>();
     private readonly List<SfSunburstChart> _ringCharts = new();
     private readonly Dictionary<SfSunburstChart, (double Inner, double Outer)> _ringRanges = new();
-    private readonly Dictionary<SfSunburstChart, BucketTooltipContext> _tooltipContextByChart = new();
     private readonly Dictionary<SfSunburstChart, SunburstTooltipModel> _tooltipModelByChart = new();
     private readonly List<string> _currentBucketLabels = new();
     private int _bucketRingCount = 1;
@@ -60,12 +58,11 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         {
             UpdateRingLabels();
         };
-        SunburstHost.PreviewMouseMove += OnSunburstHostPreviewMouseMove;
-        SunburstHost.MouseMove += OnSunburstHostMouseMove;
-        SunburstHost.MouseLeave += (_, _) =>
-        {
-            HideHoverPopup();
-        };
+
+        // Syncfusion controls can mark mouse events as handled; listen to handled events too so our tooltip still works.
+        SunburstHost.AddHandler(MouseMoveEvent, new MouseEventHandler(OnSunburstHostMouseMove), true);
+        SunburstHost.AddHandler(MouseLeaveEvent, new MouseEventHandler(OnSunburstHostMouseLeave), true);
+
         RenderRingCharts(Array.Empty<SunburstItem>());
     }
 
@@ -300,7 +297,6 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             SunburstHost.Children.Clear();
             _ringCharts.Clear();
             _ringRanges.Clear();
-            _tooltipContextByChart.Clear();
             _tooltipModelByChart.Clear();
             _currentBucketLabels.Clear();
 
@@ -319,19 +315,11 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
                 var bucketLabel = i < bucketLabels.Count ? bucketLabels[i] : $"Bucket {i + 1}";
                 var ringItems = items.Where(item => string.Equals(item.Bucket, bucketLabel, StringComparison.OrdinalIgnoreCase)).ToList();
                 var bucketTotal = ringItems.Where(item => double.IsFinite(item.Value)).Sum(item => item.Value);
-                foreach (var ringItem in ringItems)
-                {
-                    ringItem.BucketTotal = bucketTotal;
-                    ringItem.PercentText = bucketTotal > 0
-                        ? string.Format(CultureInfo.InvariantCulture, "Percent: {0:P1}", ringItem.Value / bucketTotal)
-                        : "Percent: n/a";
-                }
 
                 var breakdown = BuildBucketBreakdown(ringItems, bucketTotal);
                 var tooltipContext = new BucketTooltipContext(bucketLabel, bucketTotal, breakdown);
 
                 var ringChart = CreateRingChart(ringItems, i, _bucketRingCount);
-                _tooltipContextByChart[ringChart] = tooltipContext;
                 _tooltipModelByChart[ringChart] = BuildRingTooltipModel(tooltipContext);
                 _ringCharts.Add(ringChart);
                 System.Windows.Controls.Panel.SetZIndex(ringChart, _bucketRingCount - i);
@@ -419,15 +407,6 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             breakdownLines);
     }
 
-    private void OnSunburstHostPreviewMouseMove(object? sender, MouseEventArgs e)
-    {
-        // Historically we toggled IsHitTestVisible per-ring on every MouseMove to route events to the correct ring.
-        // That is expensive and can also provoke unstable behavior inside 3rd party controls.
-        //
-        // We now determine the ring purely from mouse radius (see GetRingChartAtMouse) and avoid mutating the controls
-        // on every move.
-    }
-
     private void OnSunburstHostMouseMove(object? sender, MouseEventArgs e)
     {
         try
@@ -439,6 +418,11 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             // Never let hover/tooltip logic crash the app.
             HideHoverPopup();
         }
+    }
+
+    private void OnSunburstHostMouseLeave(object? sender, MouseEventArgs e)
+    {
+        HideHoverPopup();
     }
 
     private void UpdateHoverPopup(MouseEventArgs e)
