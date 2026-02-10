@@ -11,17 +11,31 @@ public static class StaTestHelper
         if (action == null)
             throw new ArgumentNullException(nameof(action));
 
+        // Some WPF components (XAML loading, pack URIs, etc.) assume a Dispatcher-based
+        // synchronization context. Use a minimal Dispatcher loop for synchronous tests too.
         Exception? captured = null;
         var thread = new Thread(() =>
         {
-            try
+            SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+
+            void InvokeAction()
             {
-                action();
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    captured = ex;
+                }
+                finally
+                {
+                    Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+                }
             }
-            catch (Exception ex)
-            {
-                captured = ex;
-            }
+
+            Dispatcher.CurrentDispatcher.BeginInvoke((Action)InvokeAction);
+            Dispatcher.Run();
         });
 
         thread.SetApartmentState(ApartmentState.STA);

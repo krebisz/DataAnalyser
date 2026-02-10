@@ -9,36 +9,8 @@
              mc:Ignorable="d"
              d:DesignHeight="550"
              d:DesignWidth="800">
-    <UserControl.Resources>
-        <DataTemplate x:Key="SunburstToolTipTemplate">
-            <Border Background="#CC222222" Padding="8" CornerRadius="4">
-                <StackPanel>
-                    <TextBlock Foreground="White"
-                               FontWeight="Bold"
-                               Text="{Binding PeriodText}" />
-
-                    <TextBlock Foreground="White"
-                               Text="{Binding TotalText}" />
-
-                    <ItemsControl ItemsSource="{Binding BucketBreakdown}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                    <Border Width="10"
-                                            Height="10"
-                                            Background="{Binding Brush}"
-                                            CornerRadius="2"
-                                            Margin="0,0,6,0" />
-                                    <TextBlock Foreground="White"
-                                               Text="{Binding Text}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Border>
-        </DataTemplate>
-    </UserControl.Resources>
+    <!-- Tooltip visuals are declared directly under the Popup below, because using a ContentPresenter + DataTemplate
+         inside a Popup proved brittle across environments (unexpected null DataContext). -->
     <Grid x:Name="RootGrid">
         <controls:ChartPanelController x:Name="PanelController" />
 
@@ -65,7 +37,9 @@
 
         <ContentControl x:Name="ChartPresenter" Visibility="Collapsed">
             <Grid Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}">
-                <Grid x:Name="SunburstHost" />
+                <!-- Disable WPF ToolTips at the host level. Syncfusion may use ToolTipService internally. -->
+                <Grid x:Name="SunburstHost"
+                      ToolTipService.IsEnabled="False" />
                 <Canvas x:Name="RingLabelCanvas"
                         Panel.ZIndex="10"
                         IsHitTestVisible="False" />
@@ -83,9 +57,71 @@
                AllowsTransparency="True"
                IsHitTestVisible="False"
                StaysOpen="False"
-               PopupAnimation="Fade">
-            <ContentControl x:Name="HoverPopupContent"
-                            ContentTemplate="{StaticResource SunburstToolTipTemplate}" />
+               PopupAnimation="None">
+            <Border x:Name="HoverTooltipRoot"
+                    Background="#CC222222"
+                    BorderBrush="#CC00FF00"
+                    BorderThickness="1"
+                    Padding="8"
+                    CornerRadius="4"
+                    MinWidth="220">
+                <StackPanel>
+                    <TextBlock Foreground="#FFB0B0B0"
+                               FontSize="10"
+                               FontStyle="Italic"
+                               Text="DV Tooltip (PopupRoot v1)" />
+                    <TextBlock Foreground="#FFB0B0B0"
+                               FontSize="10"
+                               Text="{Binding ElementName=HoverTooltipRoot, Path=Tag, StringFormat=Tag: {0}, TargetNullValue='Tag: (null)', FallbackValue='Tag: (binding failed)'}" />
+                    <TextBlock Foreground="White"
+                               FontWeight="Bold"
+                               Text="{Binding ElementName=HoverTooltipRoot, Path=Tag.PeriodText, FallbackValue='Period: (binding failed)', TargetNullValue='Period: (null)'}" />
+                    <TextBlock Foreground="White"
+                               Text="{Binding ElementName=HoverTooltipRoot, Path=Tag.TitleText, FallbackValue='(binding failed)', TargetNullValue='(null)'}" />
+
+                    <TextBlock Foreground="#FFB0B0B0"
+                               FontSize="10"
+                               FontStyle="Italic"
+                               Margin="0,4,0,0"
+                               Text="(No details)">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=HoverTooltipRoot, Path=Tag.HasLines}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <ItemsControl ItemsSource="{Binding ElementName=HoverTooltipRoot, Path=Tag.Lines}">
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=HoverTooltipRoot, Path=Tag.HasLines}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <Border Width="10"
+                                            Height="10"
+                                            Background="{Binding Brush}"
+                                            CornerRadius="2"
+                                            Margin="0,0,6,0" />
+                                    <TextBlock Foreground="White"
+                                               Text="{Binding Text}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
         </Popup>
     </Grid>
 </UserControl>

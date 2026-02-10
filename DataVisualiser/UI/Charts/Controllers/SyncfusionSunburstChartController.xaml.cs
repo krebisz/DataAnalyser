@@ -7,9 +7,11 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Syncfusion;
+using DataVisualiser.Shared.Helpers;
 using Syncfusion.UI.Xaml.SunburstChart;
 
 namespace DataVisualiser.UI.Charts.Controllers;
@@ -22,12 +24,14 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
     private IReadOnlyList<SunburstItem> _rawItems = Array.Empty<SunburstItem>();
     private readonly List<SfSunburstChart> _ringCharts = new();
     private readonly Dictionary<SfSunburstChart, (double Inner, double Outer)> _ringRanges = new();
-    private readonly Dictionary<SfSunburstChart, SunburstTooltipModel> _tooltipModelByChart = new();
+    private readonly Dictionary<SfSunburstChart, BucketTooltipContext> _tooltipContextByChart = new();
+    private readonly Dictionary<SfSunburstChart, SyncfusionSunburstTooltipModel> _tooltipModelByChart = new();
     private readonly List<string> _currentBucketLabels = new();
     private int _bucketRingCount = 1;
     private bool _isApplyingFilter;
     private bool _isSettingBucketCount;
     private SfSunburstChart? _lastTooltipChart;
+    private string? _lastTooltipSubmetric;
 
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource),
@@ -58,6 +62,11 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         {
             UpdateRingLabels();
         };
+
+        // Suppress any WPF ToolTipService tooltips bubbling out of the Syncfusion visuals.
+        // (We use our own Popup tooltip instead.)
+        SunburstHost.AddHandler(ToolTipService.ToolTipOpeningEvent, new ToolTipEventHandler((_, args) => args.Handled = true), true);
+        SunburstHost.AddHandler(ToolTipService.ToolTipClosingEvent, new ToolTipEventHandler((_, args) => args.Handled = true), true);
 
         // Syncfusion controls can mark mouse events as handled; listen to handled events too so our tooltip still works.
         SunburstHost.AddHandler(MouseMoveEvent, new MouseEventHandler(OnSunburstHostMouseMove), true);
@@ -156,6 +165,13 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         var segment = e.Segment;
         if (segment == null)
             return;
+
+        DisableThirdPartyTooltip(segment);
+        if (segment is DependencyObject dep)
+        {
+            ToolTipService.SetIsEnabled(dep, false);
+            ToolTipService.SetShowDuration(dep, 0);
+        }
 
         var key = segment.Category?.ToString();
         if (!string.IsNullOrWhiteSpace(key) && _submetricBrushes.TryGetValue(key, out var resolved))
@@ -297,6 +313,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             SunburstHost.Children.Clear();
             _ringCharts.Clear();
             _ringRanges.Clear();
+            _tooltipContextByChart.Clear();
             _tooltipModelByChart.Clear();
             _currentBucketLabels.Clear();
 
@@ -320,6 +337,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
                 var tooltipContext = new BucketTooltipContext(bucketLabel, bucketTotal, breakdown);
 
                 var ringChart = CreateRingChart(ringItems, i, _bucketRingCount);
+                _tooltipContextByChart[ringChart] = tooltipContext;
                 _tooltipModelByChart[ringChart] = BuildRingTooltipModel(tooltipContext);
                 _ringCharts.Add(ringChart);
                 System.Windows.Controls.Panel.SetZIndex(ringChart, _bucketRingCount - i);
@@ -341,6 +359,11 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
                 ValueMemberPath = nameof(SunburstItem.Value),
                 Background = Brushes.Transparent
         };
+
+        DisableThirdPartyTooltip(chart);
+        ToolTipService.SetIsEnabled(chart, false);
+        ToolTipService.SetShowDuration(chart, 0);
+        chart.ToolTip = null;
 
         chart.Levels.Add(new SunburstHierarchicalLevel
         {
@@ -381,30 +404,28 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             .ToList();
     }
 
-    private SunburstTooltipModel BuildRingTooltipModel(BucketTooltipContext context)
+    private SyncfusionSunburstTooltipModel BuildRingTooltipModel(BucketTooltipContext context)
     {
         var periodLabel = $"Period: {context.Label}";
         var bucketTotal = context.Total;
         var breakdown = context.Breakdown;
-        var totalText = double.IsFinite(bucketTotal)
-            ? string.Format(CultureInfo.CurrentCulture, "Total: {0:N2}", bucketTotal)
+        var titleText = double.IsFinite(bucketTotal)
+            ? $"Total: {MathHelper.FormatDisplayedValue(bucketTotal)}"
             : "Total: n/a";
 
-        var breakdownLines = breakdown.Select(item =>
+        var lines = breakdown.Select(item =>
         {
-            var text = string.Format(
-                CultureInfo.CurrentCulture,
-                "{0}: {1:P1}",
-                item.Submetric,
-                item.Percent);
+            var valueText = FormatValue(item.Value);
+            var percentText = FormatPercent(item.Percent);
+            var text = $"{item.Submetric}: {valueText} ({percentText})";
 
-            return new BucketBreakdownLine(item.Submetric, text, item.Brush);
+            return new SyncfusionSunburstTooltipLine(text, item.Brush);
         }).ToList();
 
-        return new SunburstTooltipModel(
+        return new SyncfusionSunburstTooltipModel(
             periodLabel,
-            totalText,
-            breakdownLines);
+            titleText,
+            lines);
     }
 
     private void OnSunburstHostMouseMove(object? sender, MouseEventArgs e)
@@ -442,25 +463,156 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             return;
         }
 
-        if (!_tooltipModelByChart.TryGetValue(selected, out var model))
+        if (!_tooltipContextByChart.TryGetValue(selected, out var context))
         {
             HideHoverPopup();
             return;
         }
 
+        var model = BuildHoverTooltipModel(selected, context, e);
         var position = e.GetPosition(SunburstHost);
 
-        // Avoid excessive object churn/re-template on high-frequency mouse move events.
-        // If the user is still on the same ring, only move the popup.
-        if (!ReferenceEquals(_lastTooltipChart, selected) || !HoverPopup.IsOpen)
-        {
-            HoverPopupContent.Content = model;
-            _lastTooltipChart = selected;
-        }
+        // Be explicit and always assign the model. We previously tried to be clever and only assign it when
+        // the hovered ring changed, but that can leave the popup visible with no content (causing bindings to
+        // fall back to "binding failed").
+        // Bind tooltip content via a stable ElementName=HoverTooltipRoot, Path=Tag.* binding (Popup DataContext can be fickle).
+        HoverTooltipRoot.Tag = model;
+        HoverTooltipRoot.DataContext = model;
+        _lastTooltipChart = selected;
+        _lastTooltipSubmetric = model.SubmetricKey;
 
         HoverPopup.HorizontalOffset = position.X + 16;
         HoverPopup.VerticalOffset = position.Y + 16;
         HoverPopup.IsOpen = true;
+
+        // Defensive: In some environments Popup visuals are created lazily and can miss the first DataContext assignment.
+        // Re-apply after layout has had a chance to run.
+        SunburstHost.Dispatcher.BeginInvoke(() =>
+        {
+            if (!HoverPopup.IsOpen)
+                return;
+
+            HoverTooltipRoot.Tag = model;
+            HoverTooltipRoot.DataContext = model;
+        }, DispatcherPriority.Loaded);
+    }
+
+    private SyncfusionSunburstTooltipModel BuildHoverTooltipModel(SfSunburstChart chart, BucketTooltipContext context, MouseEventArgs e)
+    {
+        // Try to resolve the hovered submetric (segment) using a lightweight WPF hit test.
+        // If we cannot resolve it, fall back to the per-bucket summary model.
+        if (!TryResolveHoveredSubmetric(chart, e, out var submetricKey))
+            return _tooltipModelByChart.TryGetValue(chart, out var fallback) ? fallback : BuildRingTooltipModel(context);
+
+        var match = context.Breakdown.FirstOrDefault(item => string.Equals(item.Submetric, submetricKey, StringComparison.OrdinalIgnoreCase));
+        if (match == null)
+            return _tooltipModelByChart.TryGetValue(chart, out var fallback) ? fallback : BuildRingTooltipModel(context);
+
+        var periodText = $"Period: {context.Label}";
+
+        var valueText = $"Value: {FormatValue(match.Value)}";
+
+        // Prefer the precomputed per-bucket percent to avoid NaN/Infinity when totals are zero or values are odd.
+        var percentText = $"Percent: {FormatPercent(match.Percent)}";
+
+        var titleText = match.Submetric;
+        var lines = new List<SyncfusionSunburstTooltipLine>
+        {
+            new(valueText, match.Brush),
+            new(percentText, match.Brush)
+        };
+
+        return new SyncfusionSunburstTooltipModel(
+            periodText,
+            titleText,
+            lines,
+            match.Submetric);
+    }
+
+    private static string FormatValue(double value)
+    {
+        if (!double.IsFinite(value))
+            return "n/a";
+
+        return MathHelper.FormatDisplayedValue(value);
+    }
+
+    private static string FormatPercent(double fraction)
+    {
+        if (!double.IsFinite(fraction) || fraction < 0)
+            return "n/a";
+
+        // Keep percent display consistent with other UI: show a formatted numeric value plus a '%' suffix.
+        // fraction is expected in 0..1 range.
+        var percent = fraction * 100.0;
+        return $"{MathHelper.FormatDisplayedValue(percent)}%";
+    }
+
+    private bool TryResolveHoveredSubmetric(SfSunburstChart chart, MouseEventArgs e, out string submetricKey)
+    {
+        submetricKey = string.Empty;
+
+        // The chart is hosted inside SunburstHost (a Grid). Use chart-relative coordinates for hit testing.
+        var position = e.GetPosition(chart);
+        var result = VisualTreeHelper.HitTest(chart, position);
+        if (result?.VisualHit is not DependencyObject hit)
+            return false;
+
+        // Walk up the visual tree looking for a DataContext (or element) that exposes a "Category" property.
+        // Syncfusion often uses internal visuals; we avoid hard dependencies and use reflection safely.
+        for (DependencyObject? current = hit; current != null; current = VisualTreeHelper.GetParent(current))
+        {
+            if (current is FrameworkElement fe)
+            {
+                if (TryExtractCategoryKey(fe.DataContext, out submetricKey))
+                    return true;
+            }
+
+            if (TryExtractCategoryKey(current, out submetricKey))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryExtractCategoryKey(object? source, out string key)
+    {
+        key = string.Empty;
+        if (source == null)
+            return false;
+
+        // Best case: the DataContext is already a string key.
+        if (source is string s && !string.IsNullOrWhiteSpace(s))
+        {
+            key = s;
+            return true;
+        }
+
+        try
+        {
+            // Syncfusion visuals often expose "Category"; our own data model uses "Submetric".
+            // Probe a small set of known property names to avoid hard type dependencies.
+            foreach (var name in new[] { "Category", "Submetric", "Group" })
+            {
+                var prop = source.GetType().GetProperty(name);
+                if (prop == null)
+                    continue;
+
+                var value = prop.GetValue(source);
+                var asText = value?.ToString();
+                if (string.IsNullOrWhiteSpace(asText))
+                    continue;
+
+                key = asText;
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private SfSunburstChart? GetRingChartAtMouse(MouseEventArgs e)
@@ -496,8 +648,165 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
     private void HideHoverPopup()
     {
         HoverPopup.IsOpen = false;
-        HoverPopupContent.Content = null;
+        // Don't clear Tag/DataContext here. When PopupAnimation was enabled, WPF could still render the closing popup
+        // for a moment and bindings would show as null. Keeping the last model avoids flicker and aids debugging.
         _lastTooltipChart = null;
+        _lastTooltipSubmetric = null;
+    }
+
+    private static void DisableThirdPartyTooltip(object target)
+    {
+        // We render our own tooltip via a WPF Popup (so it always appears above overlaid rings).
+        // Disable Syncfusion's internal tooltip if an equivalent property exists on this version.
+        // Syncfusion has used a few different property names across releases; we handle both:
+        // - exact known names, and
+        // - any writable bool containing "tooltip" in its name.
+        TrySetBoolProperty(target, "ShowToolTip", false);
+        TrySetBoolProperty(target, "ShowTooltip", false);
+        TrySetBoolProperty(target, "EnableToolTip", false);
+        TrySetBoolProperty(target, "EnableTooltip", false);
+        TrySetBoolProperty(target, "ToolTipEnabled", false);
+        TrySetBoolProperty(target, "TooltipEnabled", false);
+
+        TrySetNullProperty(target, "ToolTipTemplate");
+        TrySetNullProperty(target, "TooltipTemplate");
+        TrySetNullProperty(target, "ToolTip");
+        TrySetNullProperty(target, "Tooltip");
+
+        TryDisableAnyTooltipBooleans(target);
+        TryDisableAnyTooltipEnums(target);
+        TryDisableNestedTooltipBehaviors(target);
+    }
+
+    private static void TrySetBoolProperty(object target, string propertyName, bool value)
+    {
+        try
+        {
+            var prop = target.GetType().GetProperty(propertyName);
+            if (prop == null || prop.PropertyType != typeof(bool) || !prop.CanWrite)
+                return;
+
+            prop.SetValue(target, value);
+        }
+        catch
+        {
+            // Ignore reflection failures; tooltip behavior differs across Syncfusion versions.
+        }
+    }
+
+    private static void TrySetNullProperty(object target, string propertyName)
+    {
+        try
+        {
+            var prop = target.GetType().GetProperty(propertyName);
+            if (prop == null || !prop.CanWrite)
+                return;
+
+            if (prop.PropertyType.IsValueType)
+                return;
+
+            prop.SetValue(target, null);
+        }
+        catch
+        {
+            // Ignore reflection failures; tooltip behavior differs across Syncfusion versions.
+        }
+    }
+
+    private static void TryDisableAnyTooltipBooleans(object target)
+    {
+        try
+        {
+            var props = target.GetType().GetProperties();
+            foreach (var prop in props)
+            {
+                if (!prop.CanWrite || prop.PropertyType != typeof(bool))
+                    continue;
+
+                if (!prop.Name.Contains("tooltip", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                prop.SetValue(target, false);
+            }
+        }
+        catch
+        {
+            // Ignore reflection failures.
+        }
+    }
+
+    private static void TryDisableAnyTooltipEnums(object target)
+    {
+        try
+        {
+            var props = target.GetType().GetProperties();
+            foreach (var prop in props)
+            {
+                if (!prop.CanWrite || !prop.PropertyType.IsEnum)
+                    continue;
+
+                if (!prop.Name.Contains("tooltip", StringComparison.OrdinalIgnoreCase) &&
+                    !prop.Name.Contains("toolTip", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var enumType = prop.PropertyType;
+                var names = Enum.GetNames(enumType);
+                var disabledName =
+                    names.FirstOrDefault(n => string.Equals(n, "None", StringComparison.OrdinalIgnoreCase)) ??
+                    names.FirstOrDefault(n => n.Contains("None", StringComparison.OrdinalIgnoreCase)) ??
+                    names.FirstOrDefault(n => n.Contains("Disable", StringComparison.OrdinalIgnoreCase)) ??
+                    names.FirstOrDefault(n => n.Contains("Off", StringComparison.OrdinalIgnoreCase));
+
+                if (disabledName == null)
+                    continue;
+
+                var value = Enum.Parse(enumType, disabledName);
+                prop.SetValue(target, value);
+            }
+        }
+        catch
+        {
+            // Ignore reflection failures.
+        }
+    }
+
+    private static void TryDisableNestedTooltipBehaviors(object target)
+    {
+        try
+        {
+            var props = target.GetType().GetProperties();
+            foreach (var prop in props)
+            {
+                if (!prop.CanRead)
+                    continue;
+
+                // Behaviors are commonly exposed as properties like TooltipBehavior/ToolTipBehavior/etc.
+                if (!prop.Name.Contains("behavior", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!prop.Name.Contains("tooltip", StringComparison.OrdinalIgnoreCase) &&
+                    !prop.Name.Contains("toolTip", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var nested = prop.GetValue(target);
+                if (nested == null)
+                    continue;
+
+                // Disable whatever boolean/enum flags it might have.
+                TryDisableAnyTooltipBooleans(nested);
+                TryDisableAnyTooltipEnums(nested);
+
+                // Common template/value slots.
+                TrySetNullProperty(nested, "ToolTipTemplate");
+                TrySetNullProperty(nested, "TooltipTemplate");
+                TrySetNullProperty(nested, "ToolTip");
+                TrySetNullProperty(nested, "Tooltip");
+            }
+        }
+        catch
+        {
+            // Ignore reflection failures.
+        }
     }
 
     private void UpdateRingLabels()
@@ -540,22 +849,5 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
 
     private sealed record BucketBreakdownItem(string Submetric, double Value, double Percent, Brush Brush);
 
-    private sealed record BucketBreakdownLine(string Submetric, string Text, Brush Brush);
-
-    private sealed class SunburstTooltipModel
-    {
-        public SunburstTooltipModel(
-            string periodText,
-            string totalText,
-            IReadOnlyList<BucketBreakdownLine> bucketBreakdown)
-        {
-            PeriodText = periodText;
-            TotalText = totalText;
-            BucketBreakdown = bucketBreakdown;
-        }
-
-        public string PeriodText { get; }
-        public string TotalText { get; }
-        public IReadOnlyList<BucketBreakdownLine> BucketBreakdown { get; }
-    }
+    // Tooltip view models are defined in SyncfusionSunburstTooltipModel.cs
 }
