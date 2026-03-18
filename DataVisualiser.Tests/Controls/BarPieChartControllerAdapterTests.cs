@@ -23,7 +23,7 @@ public sealed class BarPieChartControllerAdapterTests
             };
             var metricState = new MetricState();
             var uiState = new UiState();
-            var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
+            var metricService = new MetricSelectionService("TestConnection");
             var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
             var controller = new BarPieChartController();
             var rendererResolver = new ChartRendererResolver();
@@ -48,7 +48,7 @@ public sealed class BarPieChartControllerAdapterTests
             };
             var metricState = new MetricState();
             var uiState = new UiState();
-            var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
+            var metricService = new MetricSelectionService("TestConnection");
             var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
             var controller = new BarPieChartController();
             var rendererResolver = new ChartRendererResolver();

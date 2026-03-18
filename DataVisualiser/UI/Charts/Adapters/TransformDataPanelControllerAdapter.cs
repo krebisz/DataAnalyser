@@ -759,6 +759,11 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
         if (_viewModel.ChartState.SelectedTransformSecondarySeries != null)
             return _viewModel.ChartState.SelectedTransformSecondarySeries;
 
+        // If no secondary data is loaded and no explicit secondary selection exists,
+        // treat the transform as single-input rather than fabricating a second series.
+        if (!HasSecondaryData(ctx))
+            return null;
+
         var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
         if (string.IsNullOrWhiteSpace(metricType))
             return null;

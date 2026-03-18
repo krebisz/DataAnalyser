@@ -1602,9 +1602,6 @@ public partial class MainChartsView : UserControl
                 Placement = PlacementMode.Mouse,
                 StaysOpen = true
         };
-        var polarChart = GetPolarChart(ChartControllerKeys.Distribution);
-        ToolTipService.SetToolTip(polarChart, _distributionPolarTooltip);
-        polarChart.HoveredPointsChanged += OnDistributionPolarHoveredPointsChanged;
     }
 
     /// <summary>
@@ -1666,10 +1663,6 @@ public partial class MainChartsView : UserControl
 
     private void DisableDistributionPolarAxisLabels()
     {
-        var polarChart = GetPolarChart(ChartControllerKeys.Distribution);
-        polarChart.AngleAxes = Array.Empty<PolarAxis>();
-        polarChart.RadiusAxes = Array.Empty<PolarAxis>();
-        polarChart.Tag = null;
         if (_distributionPolarTooltip != null)
             _distributionPolarTooltip.IsOpen = false;
     }
@@ -2736,65 +2729,6 @@ public partial class MainChartsView : UserControl
 
         return series.Samples.Count(s => s.Value.HasValue && s.Timestamp.LocalDateTime >= fromStartOfDay && s.Timestamp.LocalDateTime <= toEndOfDay);
     }
-
-    /// <summary>
-    ///     Handles hover updates for the distribution polar tooltip.
-    /// </summary>
-    private void OnDistributionPolarHoveredPointsChanged(IChartView chart, IEnumerable<ChartPoint>? newPoints, IEnumerable<ChartPoint>? oldPoints)
-    {
-        if (_distributionPolarTooltip == null)
-            return;
-
-        var state = GetPolarChart(ChartControllerKeys.Distribution).Tag as DistributionPolarTooltipState;
-        if (state == null || newPoints == null)
-        {
-            _distributionPolarTooltip.IsOpen = false;
-            return;
-        }
-
-        var point = newPoints.FirstOrDefault();
-        if (point == null)
-        {
-            _distributionPolarTooltip.IsOpen = false;
-            return;
-        }
-
-        var bucketCount = state.Definition.XAxisLabels.Count;
-        if (bucketCount <= 0)
-        {
-            _distributionPolarTooltip.IsOpen = false;
-            return;
-        }
-
-        var rawIndex = (int)Math.Round(point.Coordinate.SecondaryValue);
-        var index = rawIndex % bucketCount;
-        if (index < 0)
-            index += bucketCount;
-
-        var label = state.Definition.XAxisLabels[index];
-        var minRaw = state.RangeResult.Mins[index];
-        var maxRaw = state.RangeResult.Maxs[index];
-        var minValue = FormatDistributionValue(minRaw, state.RangeResult.Unit);
-        var maxValue = FormatDistributionValue(maxRaw, state.RangeResult.Unit);
-        var avgValue = FormatDistributionValue(state.RangeResult.Averages[index], state.RangeResult.Unit);
-        var diffValue = FormatDistributionValue(maxRaw - minRaw, state.RangeResult.Unit);
-
-        _distributionPolarTooltip.Content = $"{label}\nMin: {minValue}\nMax: {maxValue}\nAvg: {avgValue}\nΔ: {diffValue}";
-        _distributionPolarTooltip.IsOpen = true;
-    }
-
-    private static string FormatDistributionValue(double value, string? unit)
-    {
-        if (double.IsNaN(value))
-            return "n/a";
-
-        var formatted = MathHelper.FormatDisplayedValue(value);
-        if (!string.IsNullOrWhiteSpace(unit))
-            formatted = $"{formatted} {unit}";
-
-        return formatted;
-    }
-
     private void SetChartTitles(string leftName, string rightName)
     {
         leftName ??= string.Empty;
@@ -2845,3 +2779,4 @@ public partial class MainChartsView : UserControl
 
     #endregion
 }
+

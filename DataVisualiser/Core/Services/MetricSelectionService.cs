@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Data;
+using DataVisualiser.Core.Data.Abstractions;
 using DataVisualiser.Core.Data.Repositories;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -10,13 +11,25 @@ namespace DataVisualiser.Core.Services;
 
 public class MetricSelectionService
 {
-    private readonly CmsDataService _cms; // <-- add
-    private readonly string _connectionString;
+    private readonly CmsDataService _cms;
+    private readonly IMetricSelectionDataQueries _dataQueries;
 
     public MetricSelectionService(string connectionString)
     {
-        _connectionString = connectionString;
-        _cms = new CmsDataService(connectionString); // <-- add
+        _dataQueries = new DataFetcher(connectionString);
+        _cms = new CmsDataService(connectionString);
+    }
+
+    public MetricSelectionService(IMetricSelectionDataQueries dataQueries, string connectionString)
+    {
+        _dataQueries = dataQueries ?? throw new ArgumentNullException(nameof(dataQueries));
+        _cms = new CmsDataService(connectionString);
+    }
+
+    internal MetricSelectionService(IMetricSelectionDataQueries dataQueries, CmsDataService cmsDataService)
+    {
+        _dataQueries = dataQueries ?? throw new ArgumentNullException(nameof(dataQueries));
+        _cms = cmsDataService ?? throw new ArgumentNullException(nameof(cmsDataService));
     }
 
 
@@ -64,31 +77,28 @@ public class MetricSelectionService
     //}
     public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName)
     {
-        var dataFetcher = new DataFetcher(_connectionString);
-        var cmsService = new CmsDataService(_connectionString);
-
-        var primaryCountTask = dataFetcher.GetRecordCount(primarySelection.MetricType, primarySelection.QuerySubtype);
-        var secondaryCountTask = secondarySelection != null ? dataFetcher.GetRecordCount(secondarySelection.MetricType, secondarySelection.QuerySubtype) : Task.FromResult(0L);
+        var primaryCountTask = _dataQueries.GetRecordCount(primarySelection.MetricType, primarySelection.QuerySubtype);
+        var secondaryCountTask = secondarySelection != null ? _dataQueries.GetRecordCount(secondarySelection.MetricType, secondarySelection.QuerySubtype) : Task.FromResult(0L);
 
         await Task.WhenAll(primaryCountTask, secondaryCountTask);
 
         var primaryStrategy = ResolveDataLoadStrategy(from, to, primaryCountTask.Result);
         var secondaryStrategy = secondarySelection != null ? ResolveDataLoadStrategy(from, to, secondaryCountTask.Result) : (Mode: SamplingMode.None, TargetSamples: null, MaxRecords: null);
 
-        var legacyTasks = StartLegacyLoadTasks(dataFetcher, primarySelection, secondarySelection, from, to, tableName, primaryStrategy, secondaryStrategy);
+        var legacyTasks = StartLegacyLoadTasks(_dataQueries, primarySelection, secondarySelection, from, to, tableName, primaryStrategy, secondaryStrategy);
 
-        var cmsTasks = await StartCmsLoadTasksAsync(cmsService, primarySelection, secondarySelection, from, to, tableName, primaryStrategy, secondaryStrategy);
+        var cmsTasks = await StartCmsLoadTasksAsync(_cms, primarySelection, secondarySelection, from, to, tableName, primaryStrategy, secondaryStrategy);
 
         await Task.WhenAll(legacyTasks.Primary, legacyTasks.Secondary, cmsTasks.Primary ?? Task.CompletedTask, cmsTasks.Secondary ?? Task.CompletedTask);
 
         return (PrimaryCms: cmsTasks.Primary?.Result.FirstOrDefault(), SecondaryCms: cmsTasks.Secondary?.Result.FirstOrDefault(), PrimaryLegacy: legacyTasks.Primary.Result, SecondaryLegacy: legacyTasks.Secondary.Result);
     }
 
-    private static(Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(DataFetcher dataFetcher, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
+    private static(Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(IMetricSelectionDataQueries dataQueries, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
     {
-        var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
+        var primaryTask = dataQueries.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
 
-        var secondaryTask = secondarySelection != null ? dataFetcher.GetHealthMetricsDataByBaseType(secondarySelection.MetricType, secondarySelection.QuerySubtype, from, to, tableName, secondaryStrategy.MaxRecords, secondaryStrategy.Mode, secondaryStrategy.TargetSamples) : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+        var secondaryTask = secondarySelection != null ? dataQueries.GetHealthMetricsDataByBaseType(secondarySelection.MetricType, secondarySelection.QuerySubtype, from, to, tableName, secondaryStrategy.MaxRecords, secondaryStrategy.Mode, secondaryStrategy.TargetSamples) : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
 
         return (primaryTask, secondaryTask);
     }
@@ -144,19 +154,17 @@ public class MetricSelectionService
     // ------------------------------------------------------------
     public async Task<(IEnumerable<MetricData> Primary, IEnumerable<MetricData> Secondary)> LoadMetricDataAsync(string baseType, string? primarySubtype, string? secondarySubtype, DateTime from, DateTime to, string tableName)
     {
-        var dataFetcher = new DataFetcher(_connectionString);
-
         // PRIMARY
-        var primaryCount = await dataFetcher.GetRecordCount(baseType, primarySubtype);
+        var primaryCount = await _dataQueries.GetRecordCount(baseType, primarySubtype);
         var primaryStrategy = ResolveDataLoadStrategy(from, to, primaryCount);
 
         // SECONDARY
-        var secondaryStrategy = secondarySubtype != null ? ResolveDataLoadStrategy(from, to, await dataFetcher.GetRecordCount(baseType, secondarySubtype)) : (SamplingMode.None, null, null);
+        var secondaryStrategy = secondarySubtype != null ? ResolveDataLoadStrategy(from, to, await _dataQueries.GetRecordCount(baseType, secondarySubtype)) : (SamplingMode.None, null, null);
 
         // LOAD
-        var primaryTask = dataFetcher.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
+        var primaryTask = _dataQueries.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
 
-        var secondaryTask = secondarySubtype != null ? dataFetcher.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName, secondaryStrategy.MaxRecords, secondaryStrategy.Mode, secondaryStrategy.TargetSamples) : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+        var secondaryTask = secondarySubtype != null ? _dataQueries.GetHealthMetricsDataByBaseType(baseType, secondarySubtype, from, to, tableName, secondaryStrategy.MaxRecords, secondaryStrategy.Mode, secondaryStrategy.TargetSamples) : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
 
         await Task.WhenAll(primaryTask, secondaryTask);
 
@@ -168,8 +176,7 @@ public class MetricSelectionService
     // ------------------------------------------------------------
     public async Task<List<MetricNameOption>> LoadMetricTypesAsync(string tableName)
     {
-        var dataFetcher = new DataFetcher(_connectionString);
-        var baseMetricTypes = await dataFetcher.GetBaseMetricTypeOptions(tableName);
+        var baseMetricTypes = await _dataQueries.GetBaseMetricTypeOptions(tableName);
 
         return baseMetricTypes.ToList();
     }
@@ -179,8 +186,7 @@ public class MetricSelectionService
     // ------------------------------------------------------------
     public async Task<List<MetricNameOption>> LoadSubtypesAsync(string metricType, string tableName)
     {
-        var dataFetcher = new DataFetcher(_connectionString);
-        var subtypes = await dataFetcher.GetSubtypeOptionsForBaseType(metricType, tableName);
+        var subtypes = await _dataQueries.GetSubtypeOptionsForBaseType(metricType, tableName);
 
         return subtypes.ToList();
     }
@@ -190,8 +196,7 @@ public class MetricSelectionService
     // ------------------------------------------------------------
     public async Task<(DateTime MinDate, DateTime MaxDate)?> LoadDateRangeAsync(string metricType, string? subtype, string tableName)
     {
-        var dataFetcher = new DataFetcher(_connectionString);
-        var dateRange = await dataFetcher.GetBaseTypeDateRange(metricType, subtype, tableName);
+        var dateRange = await _dataQueries.GetBaseTypeDateRange(metricType, subtype, tableName);
 
         return dateRange;
     }
@@ -214,14 +219,12 @@ public class MetricSelectionService
                 .ToList()
                       ?? new List<string>();
 
-        var dataFetcher = new DataFetcher(_connectionString);
-
         // Fast path: aggregated counts table.
-        var countsRange = await dataFetcher.GetBaseTypeDateRangeFromCounts(metricType, subtypes);
+        var countsRange = await _dataQueries.GetBaseTypeDateRangeFromCounts(metricType, subtypes);
         if (countsRange.HasValue)
             return countsRange;
 
         // Fallback: raw table scan using subtype union.
-        return await dataFetcher.GetBaseTypeDateRangeForSubtypes(metricType, subtypes, tableName);
+        return await _dataQueries.GetBaseTypeDateRangeForSubtypes(metricType, subtypes, tableName);
     }
 }

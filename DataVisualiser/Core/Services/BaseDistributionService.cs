@@ -25,6 +25,7 @@ public abstract class BaseDistributionService : IDistributionService
 {
     protected readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
     protected readonly IFrequencyShadingRenderer _frequencyRenderer;
+    protected readonly IUserNotificationService _notificationService;
     protected readonly ChartRenderGate _renderGate = new();
     protected readonly IStrategyCutOverService _strategyCutOverService;
 
@@ -32,11 +33,12 @@ public abstract class BaseDistributionService : IDistributionService
     protected FrequencyShadingCalculator _frequencyShadingCalculator;
     protected IIntervalShadingStrategy _shadingStrategy;
 
-    protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null)
+    protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null, IUserNotificationService? notificationService = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
+        _notificationService = notificationService ?? MessageBoxUserNotificationService.Instance;
         _shadingStrategy = shadingStrategy ?? new FrequencyBasedShadingStrategy(Configuration.BucketCount);
         _frequencyRenderer = new FrequencyShadingRenderer(RenderingDefaults.MaxColumnWidth, Configuration.BucketCount);
         _frequencyShadingCalculator = new FrequencyShadingCalculator(_shadingStrategy, Configuration.BucketCount);
@@ -98,8 +100,7 @@ public abstract class BaseDistributionService : IDistributionService
                     {
                         Debug.WriteLine($"{Configuration.LogPrefix}: Chart error: {ex.Message}\n{ex.StackTrace}");
 
-                        MessageBox.Show($"Error updating chart: {ex.Message}\n\nSee debug output for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
+                        _notificationService.ShowError("Error", $"Error updating chart: {ex.Message}\n\nSee debug output for details.");
                         ChartHelper.ClearChart(targetChart, _chartTimestamps);
                     }
                 });

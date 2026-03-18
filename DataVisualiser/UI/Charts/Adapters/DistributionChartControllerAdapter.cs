@@ -6,6 +6,7 @@ using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -67,6 +68,7 @@ public sealed class DistributionChartControllerAdapter : ChartControllerAdapterB
 
     public override void Clear(ChartState state)
     {
+        DisposeDistributionChartInteractions();
         ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
         ChartSurfaceHelper.ClearPolar(_controller.PolarChart, _getPolarTooltip);
     }
@@ -74,12 +76,11 @@ public sealed class DistributionChartControllerAdapter : ChartControllerAdapterB
     public override void ResetZoom()
     {
         ChartSurfaceHelper.ResetZoom(_controller.Chart);
-        ChartSurfaceHelper.ResetPolarFit(_controller.PolarChart);
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return state.IsDistributionPolarMode ? ChartSurfaceHelper.HasSeries(_controller.PolarChart) : ChartSurfaceHelper.HasSeries(_controller.Chart);
+        return ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
     public override void UpdateSubtypeOptions()
@@ -141,8 +142,8 @@ public sealed class DistributionChartControllerAdapter : ChartControllerAdapterB
 
         if (_viewModel.ChartState.IsDistributionPolarMode)
         {
-            _controller.Chart.Visibility = Visibility.Collapsed;
-            _controller.PolarChart.Visibility = Visibility.Visible;
+            _controller.Chart.Visibility = Visibility.Visible;
+            _controller.PolarChart.Visibility = Visibility.Collapsed;
             _controller.ChartTypeToggleButton.Content = "Cartesian";
         }
         else
@@ -318,6 +319,8 @@ public sealed class DistributionChartControllerAdapter : ChartControllerAdapterB
         if (!_viewModel.ChartState.IsDistributionVisible)
             return;
 
+        DisposeDistributionChartInteractions();
+
         var selectedSeries = ResolveSelectedDistributionSeries(ctx);
         var (data, cmsSeries) = await ResolveDistributionDataAsync(ctx, selectedSeries);
         if (data == null || (data.Count == 0 && cmsSeries == null))
@@ -366,10 +369,22 @@ public sealed class DistributionChartControllerAdapter : ChartControllerAdapterB
             return;
 
         var definition = DistributionModeCatalog.Get(mode);
-        _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, _controller.PolarChart);
-        _controller.PolarChart.Tag = new DistributionPolarTooltipState(definition, rangeResult);
-        _controller.PolarChart.UpdateLayout();
-        _controller.PolarChart.InvalidateVisual();
+        _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, _controller.Chart);
+        _controller.Chart.Tag = new DistributionPolarProjectionTooltip(_controller.Chart, definition, rangeResult);
+        _controller.PolarChart.Tag = null;
+    }
+
+    private void DisposeDistributionChartInteractions()
+    {
+        if (_controller.Chart.Tag is IDisposable disposable)
+            disposable.Dispose();
+
+        _controller.Chart.Tag = null;
+        _controller.Chart.DataTooltip = null;
+
+        var tooltip = _getPolarTooltip();
+        if (tooltip != null)
+            tooltip.IsOpen = false;
     }
 
     private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)

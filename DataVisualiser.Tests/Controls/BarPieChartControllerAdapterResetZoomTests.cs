@@ -61,7 +61,7 @@ public sealed class BarPieChartControllerAdapterResetZoomTests
         };
         var metricState = new MetricState();
         var uiState = new UiState();
-        var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
+        var metricService = new MetricSelectionService("TestConnection");
         var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
         controller = new BarPieChartController();
         var rendererResolver = new ChartRendererResolver();

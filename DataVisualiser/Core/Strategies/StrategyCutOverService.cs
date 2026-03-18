@@ -17,13 +17,15 @@ namespace DataVisualiser.Core.Strategies;
 /// </summary>
 public sealed class StrategyCutOverService : IStrategyCutOverService
 {
+    private readonly ICmsRuntimeConfiguration _cmsRuntimeConfiguration;
     private readonly Dictionary<StrategyType, IStrategyFactory> _factories;
 
     private readonly IStrategyReachabilityProbe _reachabilityProbe;
 
-    public StrategyCutOverService(IDataPreparationService dataPreparation, IStrategyReachabilityProbe? reachabilityProbe = null)
+    public StrategyCutOverService(IDataPreparationService dataPreparation, IStrategyReachabilityProbe? reachabilityProbe = null, ICmsRuntimeConfiguration? cmsRuntimeConfiguration = null)
     {
         _ = dataPreparation ?? throw new ArgumentNullException(nameof(dataPreparation));
+        _cmsRuntimeConfiguration = cmsRuntimeConfiguration ?? StaticCmsRuntimeConfiguration.Instance;
         _reachabilityProbe = reachabilityProbe ?? NullStrategyReachabilityProbe.Instance;
 
         // Initialize factories
@@ -44,18 +46,18 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
     public bool ShouldUseCms(StrategyType strategyType, ChartDataContext ctx)
     {
         // Check global configuration
-        if (!CmsConfiguration.UseCmsData)
+        if (!_cmsRuntimeConfiguration.UseCmsData)
         {
-            Debug.WriteLine($"[ShouldUseCms] Global CMS disabled: UseCmsData={CmsConfiguration.UseCmsData}");
+            Debug.WriteLine($"[ShouldUseCms] Global CMS disabled: UseCmsData={_cmsRuntimeConfiguration.UseCmsData}");
             return false;
         }
 
         // Check strategy-specific configuration
         var strategyName = StrategyTypeMetadata.GetConfigName(strategyType);
 
-        if (strategyName != null && !CmsConfiguration.ShouldUseCms(strategyName))
+        if (strategyName != null && !_cmsRuntimeConfiguration.ShouldUseCms(strategyName))
         {
-            Debug.WriteLine($"[ShouldUseCms] Strategy-specific CMS disabled: {strategyName}={CmsConfiguration.ShouldUseCms(strategyName)}");
+            Debug.WriteLine($"[ShouldUseCms] Strategy-specific CMS disabled: {strategyName}={_cmsRuntimeConfiguration.ShouldUseCms(strategyName)}");
             return false;
         }
 

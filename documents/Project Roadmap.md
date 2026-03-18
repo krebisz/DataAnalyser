@@ -1,262 +1,432 @@
 # PROJECT ROADMAP
-**Status:** Sequencing & Execution Authority  
-**Scope:** Phase ordering, execution dependencies, and closure criteria  
-**Authority:** Subordinate to Project Bible.md and SYSTEM_MAP.md  
-**Last Updated:** 2026-01-21  
-**Change Note:** Phase 6 decomposed into explicit exploratory & confidence sub-phases
+**Status:** Sequencing and Execution Authority  
+**Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
+**Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
+**Operational Execution Source:** `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` for active architecture rehaul work  
+**Last Updated:** 2026-03-18  
+**Change Note:** Roadmap revitalized to reconcile foundational intent, stale closure claims, architecture rehaul, and multi-backend rendering qualification
 
 ---
 
 ## 1. Purpose
 
-This roadmap defines **how the project advances safely over time**.
+This roadmap defines how the project advances safely over time.
 
 It answers:
 
-- what is complete
-- what is in progress
+- what is truly closed
+- what is implemented but not yet safely closed
+- what is open now
 - what is blocked
-- what may proceed
+- what may proceed next
 - what must not proceed yet
 
-It does **not** define architecture or semantics.  
-It defines **order, discipline, and exit conditions**.
+It does not define semantic law.  
+It defines order, discipline, gating, and closure.
+
+If a conflict exists:
+1. `Project Bible.md` wins on architectural law.
+2. `SYSTEM_MAP.md` wins on structural direction.
+3. This roadmap wins on sequencing and closure discipline.
+4. `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` operationalizes the active rehaul work permitted by this roadmap.
 
 ---
 
-## 2. Roadmap Philosophy (Binding for This Document)
+## 2. Binding Roadmap Doctrine
 
-- Phases exist to **protect correctness**, not to accelerate delivery
-- A phase is not complete until its **closure conditions are provably met**
-- Unreachable code is treated as **non-existent**
-- Exploratory capability must be **explicitly staged**, not silently accumulated
-- The roadmap is **evolutionary**, but never vague
+This roadmap is governed by the following rules:
+
+1. Truth comes before insight.
+2. Phases exist to protect trust and correctness, not to accelerate delivery.
+3. A closure claim without current executable evidence is not closure.
+4. Unreachable or unobservable execution is treated as non-existent.
+5. Exploratory power must be explicitly staged above canonical truth, never folded into it.
+6. Architecture work is phase work when it is required to preserve truth, reversibility, and safe future extension.
+7. Capability preservation is the default: refactor may not silently remove current abilities.
+8. Tactical stabilization is permitted, but stabilization is not the same as architectural closure.
+9. Multiple chart backends may coexist intentionally, but only to strengthen modular rendering boundaries.
+10. No backend is treated as production-safe for a capability family until it has passed explicit qualification for that capability family.
+11. Future enhancement ideas are welcome, but they do not enter active work unless intentionally assigned to a phase and layer.
 
 ---
 
-## 3. Phase Overview (Authoritative)
+## 3. Strategic Reconciliation
+
+The foundational project intent remains unchanged:
+
+- preserve truth
+- assign meaning declaratively
+- compute deterministically
+- make interpretation explicit and reversible
+- surface uncertainty without mutating canonical reality
+- support human reasoning rather than replace it
+
+What has changed is the roadmap's understanding of what must happen before the project can safely evolve further.
+
+The architecture rehaul established that the project is not yet structurally ready for unconstrained future growth. The most important current realities are:
+
+1. The truthful canonical foundation is real and still authoritative.
+2. The system has meaningful implementation progress across migration, visualization, and interaction.
+3. Structural weaknesses now threaten safe extension if left untreated:
+   - UI composition bottlenecks
+   - Core/UI leakage
+   - rendering fragmentation without one stable capability contract
+   - stale or misaligned closure evidence
+   - mutable global runtime behavior
+   - concentrated data-access and orchestration responsibilities
+   - uneven assurance quality
+4. Multi-backend chart support is not a cosmetic preference. It is a deliberate architectural probe into whether rendering has actually been isolated from the rest of the application.
+
+Therefore, architecture rehaul is not a side quest.  
+It is now the mandatory bridge between the truthful foundation already built and the exploratory, confidence-aware, multi-backend future the project intends to support.
 
 ---
 
-### Phase 1 — Baseline Stabilization  
-**Status:** COMPLETE
+## 4. Status Model
+
+Use these status labels literally:
+
+- `CLOSED`: closure conditions are currently satisfied with present evidence
+- `IMPLEMENTED / REVALIDATION REQUIRED`: implementation progress exists, but closure evidence is stale, incomplete, or structurally misaligned
+- `OPEN / CURRENT CRITICAL PATH`: active phase that governs what may proceed next
+- `PLANNED / BLOCKED`: defined future work that must not proceed until its gates are satisfied
+- `DEFERRED`: intentionally not on the critical path
+
+---
+
+## 5. Phase Overview (Authoritative)
+
+### Phase 1 - Baseline Stabilization  
+**Status:** CLOSED
 
 **Objective**
-- Freeze and understand legacy behavior
+- Freeze and understand legacy behavior as a compatibility reference
 
 **Closure Condition**
-- Legacy behavior is stable and reproducible
+- Legacy behavior is stable and reproducible enough to serve as a bounded migration baseline
 
 ---
 
-### Phase 2 — Canonical Semantics & Normalization  
-**Status:** COMPLETE
+### Phase 2 - Canonical Semantics and Normalization  
+**Status:** CLOSED
 
 **Objective**
-- Establish a single semantic authority
+- Establish a single semantic authority and deterministic canonical foundation
 
 **Closure Condition**
-- CMS produces deterministic, independently verifiable outputs
+- Normalization and CMS production are deterministic, explainable, and authoritative
 
 ---
 
-### Phase 3 — Strategy Migration  
-**Status:** COMPLETE  
-**Blocked By:** None
+### Phase 3 - CMS Strategy Capability  
+**Status:** IMPLEMENTED / REVALIDATION REQUIRED
 
 **Objective**
-- Migrate computation strategies to CMS-based execution
+- Make CMS-based computation available across active strategy families
+
+**What is believed true**
+- CMS-capable strategies exist broadly across the system
+- Major migration work has already been implemented
+
+**Why closure is not currently accepted as final**
+- earlier closure claims relied on January 2026 reachability artifacts that must be regenerated under the current evidence rules
+- execution-path observability and path-used assertions must remain current, not historical
+
+**Historical evidence references (now treated as historical, not sufficient by themselves)**
+- `documents/reachability-20260121-160503.json`
 
 **Closure Condition**
-- All strategies are CMS-capable
-- All strategies are reachable via orchestration
-- Parity coverage exists for all strategies
-- Evidence: `documents/reachability-20260121-160503.json`
+1. All active strategies are CMS-capable.
+2. All active strategies are reachable through live orchestration.
+3. Path used is observable and test/assertion backed.
+4. Current evidence artifacts exist in the repository-visible evidence path.
 
 ---
 
-### Phase 3.5 — Orchestration Layer Assessment (CRITICAL)  
-**Status:** COMPLETE
+### Phase 3.5 - Execution Reachability and Observability  
+**Status:** IMPLEMENTED / REVALIDATION REQUIRED
 
 **Objective**
-- Ensure CMS strategies are actually executed in live pipelines
+- Prove that CMS paths are actually exercised in live pipelines and not merely implemented in isolation
+
+**Historical evidence references (now treated as historical, not sufficient by themselves)**
+- `documents/reachability-20260121-074430.json`
+- `documents/reachability-20260121-074900.json`
+- `documents/reachability-20260121-075301.json`
+- `documents/reachability-20260121-085510.json`
 
 **Closure Condition**
-- CMS execution is observable and provable for all strategies
-- Evidence: `documents/reachability-20260121-074430.json`, `documents/reachability-20260121-074900.json`, `documents/reachability-20260121-075301.json`, `documents/reachability-20260121-085510.json`
+1. CMS execution is observable for all active strategy families.
+2. Bypass paths are either eliminated or explicitly justified.
+3. Reachability evidence is current, reproducible, and generated through the approved evidence path.
 
 ---
 
-### Phase 4 — Parity Validation (CRITICAL)  
-**Status:** COMPLETE  
-**Blocked By:** None
+### Phase 4 - Consumer Adoption and Parity Closure  
+**Status:** IMPLEMENTED / REVALIDATION REQUIRED
 
 **Objective**
-- Prove CMS behavior is numerically, structurally, and semantically identical to legacy behavior
+- Prove that CMS behavior is preserved through consumer-facing pipelines and parity obligations remain satisfied
 
-**Evidence**
+**Historical evidence references (now treated as historical, not sufficient by themselves)**
 - `documents/reachability-20260121-151124.json`
+- `documents/reachability-20260121-114215.json`
 
----
-
-#### Phase 4A — Core Strategy Parity  
-**Status:** COMPLETE
-
-**Closure Condition**
-- All parity tests pass deterministically
-- Difference/Ratio parity is N/A (strategies deprecated)
-
----
-
-#### Phase 4B — Transform Pipeline Parity  
-**Status:** COMPLETE
+#### Phase 4A - Core Strategy Parity  
+**Status:** IMPLEMENTED / REVALIDATION REQUIRED
 
 **Closure Condition**
-- Transform results match legacy output for all supported expressions
+- Parity tests pass deterministically for active strategy families with current evidence and current test lanes
 
----
-
-#### Phase 4C — Weekly / Temporal Strategy Migration  
-**Status:** COMPLETE
+#### Phase 4B - Transform Pipeline Parity  
+**Status:** IMPLEMENTED / REVALIDATION REQUIRED
 
 **Closure Condition**
-- CMS strategies reachable via services
-- Parity verified in pipeline context
-- Legacy path preserved behind explicit flag
-- Evidence: `documents/reachability-20260121-114215.json`
+- Transform outputs match required reference behavior across supported expressions with current evidence
 
----
+#### Phase 4C - Temporal and Distribution Consumer Adoption  
+**Status:** IMPLEMENTED / REVALIDATION REQUIRED
 
-### Phase 5 — Optional End-to-End Parity  
-**Status:** OPTIONAL / DEFERRED
+**Closure Condition**
+- Temporal and distribution strategies remain reachable, parity-backed, and consumer-safe in live pipeline context
+
+#### Phase 4D - Optional End-to-End Regression Protection  
+**Status:** DEFERRED
 
 **Objective**
-- Regression protection against orchestration regressions
+- Add broader regression protection against orchestration and integration regressions
+
+**Note**
+- This idea remains valid, but its practical assurance role is now absorbed into the broader Phase 5 assurance and guardrail work
+
+**Global Closure Condition for Phase 4**
+1. Consumer-facing CMS paths are current, reachable, and parity-validated.
+2. Historical closure claims have been refreshed with present evidence.
+3. No active parity claim depends on missing or stale artifacts.
 
 ---
 
-## 4. Phase 6 — Exploratory & Confidence Capability Expansion (INTENTIONAL)
+### Phase 5 - Architecture Rehaul and Backend Qualification  
+**Status:** OPEN / CURRENT CRITICAL PATH
 
-**Status:** PLANNED / UNOPENED  
-**Entry Gate:** Phases 3, 3.5, and 4 fully closed
+**Entry Context**
+- The project has enough truthful and functional implementation progress to expose its next bottlenecks clearly.
+- The next risk is no longer "can the system compute?" but "can it evolve safely without contaminating truth, orchestration, or rendering boundaries?"
 
 **Purpose**
-Phase 6 introduces **explicit, non-authoritative exploratory capabilities** and **confidence-aware interpretation**, without violating Canonical Law.
+Phase 5 exists to make the system structurally safe for its intended future:
 
-This phase is intentionally decomposed to prevent semantic leakage and uncontrolled scope growth.
+- exploratory and confidence-aware capability expansion
+- continued CMS-first evolution
+- safe UI growth
+- support for multiple chart vendors and future rendering tools without semantic contamination
 
----
+**Execution Source**
+- `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` is the operational execution source for this phase
 
-### Phase 6.1 — Interpretive Visual Overlays (Render-Only)
-
-**Scope**
-- Dynamic line colouring (hot/cold, increasing/decreasing)
-- Through-lines (median, average, reference markers)
-- Enhanced hover and tooltip signalling
-- Legend-driven visibility toggles
-
-**Constraints**
-- Render-only
-- No impact on computation
-- No influence on derived values
-
-**Closure Condition**
-- Overlays are visually correct, reversible, and provenance-neutral
-
----
-
-### Phase 6.2 — Confidence Annotation (Non-Destructive)
+#### Phase 5.1 - Closure Repair and Evidence Recovery
 
 **Scope**
-- Statistical identification of atypical data points
-- Confidence markers on charts and data views
-- Declaration of statistical model and parameters
-
-**Constraints**
-- Canonical values remain unchanged
-- Confidence is annotation only
-- Language avoids claims of correctness or error
+- repair evidence export path
+- regenerate required reachability and parity artifacts
+- eliminate stale closure claims
+- synchronize roadmap, overview, and actual evidence reality
 
 **Closure Condition**
-- Confidence annotations are visible, explainable, and reversible
+- roadmap and overview claims are backed by present, reproducible evidence artifacts
 
----
-
-### Phase 6.3 — Confidence-Aware Interpretation
+#### Phase 5.2 - Composition and Boundary Reduction
 
 **Scope**
-- Optional exclusion of low-confidence points from overlays
-- Optional attenuation / weighting in trend or smoothing views
-- Explicit user control over confidence handling
-
-**Constraints**
-- Applies only to interpretive overlays
-- Never affects CMS or normalization
-- Must expose provenance
+- reduce `MainChartsView` as an orchestration bottleneck
+- remove Core/UI and WPF leakage from higher layers
+- split mixed helpers and misplaced rendering concerns
 
 **Closure Condition**
-- Confidence-aware views are opt-in and fully transparent
+- Core and orchestration semantics no longer depend on UI/view-level authority or vendor control knowledge
 
----
-
-### Phase 6.4 — Structural & Relational Exploration
+#### Phase 5.3 - Rendering Capability Contracts and Backend Qualification
 
 **Scope**
-- Scatter plots and clustering views
-- Compositional (stacked) analysis
-- Pivot-based inspection (event-relative views)
-- Multi-resolution comparative views
+- define rendering contracts by capability family rather than by vendor
+- isolate vendor lifecycle, hover, animation, disposal, and visibility quirks behind backend adapters
+- intentionally qualify current and future chart vendors against explicit capability slices
+- treat multi-backend coexistence as qualification work, not architectural failure
 
-**Constraints**
-- Non-authoritative
-- No inferred identity or meaning
-- No automatic promotion of structure to semantics
+**Required outputs**
+- rendering capability contracts
+- backend qualification matrix
+- backend qualification probes / harnesses
+- bounded classification of any tactical fallback still in use
 
 **Closure Condition**
-- Structural views are clearly interpretive and bounded
+1. At least one end-to-end chart family renders through a backend-agnostic capability contract.
+2. Supported backends are qualified per capability slice rather than assumed globally safe.
+3. A new backend can be introduced for an existing chart family without changing semantic or orchestration logic.
+4. Tactical backend fallbacks are either retired or explicitly bounded as temporary.
 
----
-
-### Phase 6.5 — Rules-Based Option Gating
+#### Phase 5.4 - Configuration, Data Access, and Orchestration Hardening
 
 **Scope**
-- Declarative rules controlling UI option availability
-- Prevention of invalid or misleading combinations
-- Context-aware UI constraints
-
-**Constraints**
-- Rules are constraints, not recommendations
-- Rules must be explainable
-- Rules must not encode semantic truth
+- remove mutable global runtime toggles from production flow
+- put concrete data-fetch behavior behind narrow contracts
+- separate context building, data retrieval, and render invocation
+- move side effects such as notifications behind explicit seams
 
 **Closure Condition**
-- Rule effects are transparent and reversible
+- runtime behavior is scoped, testable, contract-driven, and no longer dependent on ad-hoc repository construction or global mutable state
+
+#### Phase 5.5 - Assurance and Architectural Guardrails
+
+**Scope**
+- strengthen default test lanes
+- add architecture-conformance checks
+- separate unit and integration concerns properly
+- enforce current-date evidence discipline
+- prevent future vendor leakage above rendering adapters
+
+**Closure Condition**
+- the system can no longer silently drift back into the same structural failures without tests or guardrails catching it
+
+**Global Closure Condition for Phase 5**
+1. Capability preservation baseline is satisfied.
+2. Evidence and documentation are synchronized.
+3. Rendering capability contracts and backend qualification matrix exist.
+4. Core/UI and orchestration/rendering boundaries are materially improved and test-enforced.
+5. Current shipped capabilities are preserved or replaced with validated equivalents.
+6. Residual tactical debt is explicit rather than accidental.
 
 ---
 
-### Phase 6 Completion Criteria (Global)
+### Phase 6 - Exploratory and Confidence Capability Expansion (Intentional)  
+**Status:** PLANNED / BLOCKED  
+**Entry Gate:** Phases 3, 3.5, 4, and 5 must be genuinely closed under current evidence rules
 
-Phase 6 is considered complete when:
+**Purpose**
+Phase 6 increases interpretive power without eroding canonical truth.
 
-- All exploratory features are explicitly layered
-- Canonical truth remains untouched
-- Confidence handling is visible and non-destructive
-- Interpretive power increases without semantic erosion
+This phase remains the sanctioned home for exploratory capability, confidence-aware interpretation, and richer analytical views.
+It exists to make the system a stronger instrument for human reasoning without turning it into an authority.
+
+#### Phase 6.1 - Interpretive Visual Overlays (Render-Only)
+
+**Scope**
+- dynamic line colouring
+- through-lines such as average, median, or reference markers
+- enhanced hover and tooltip signalling
+- legend-driven visibility toggles
+
+**Constraints**
+- render-only
+- no effect on computation or CMS
+- backend used for these overlays must already be qualified for the relevant chart capability slice
+
+**Closure Condition**
+- overlays are visually correct, reversible, provenance-neutral, and backend-safe for the capability slice in which they are used
+
+#### Phase 6.2 - Confidence Annotation (Non-Destructive)
+
+**Scope**
+- statistical identification of atypical points
+- confidence markers on charts and data views
+- declared model and parameter visibility
+
+**Constraints**
+- annotation only
+- canonical values unchanged
+- confidence does not become semantics
+
+**Closure Condition**
+- confidence annotations are visible, explainable, reversible, and do not mutate truth layers
+
+#### Phase 6.3 - Confidence-Aware Interpretation
+
+**Scope**
+- optional exclusion of low-confidence points from interpretive overlays
+- optional attenuation or weighting in non-authoritative trend views
+- explicit user control over confidence handling
+
+**Constraints**
+- applies only to interpretive layers
+- never affects normalization, identity, or CMS construction
+- provenance must remain visible
+
+**Closure Condition**
+- confidence-aware views are opt-in, transparent, reversible, and semantically non-invasive
+
+#### Phase 6.4 - Structural and Relational Exploration
+
+**Scope**
+- scatter plots and clustering views
+- compositional and hierarchical views
+- pivot-relative inspection
+- multi-resolution comparative views
+
+**Constraints**
+- non-authoritative
+- no implicit promotion of structure into meaning
+- rendering backend choice must remain behind qualified capability contracts
+
+**Closure Condition**
+- structural views are powerful, bounded, explicitly interpretive, and semantically non-promotable by default
+
+#### Phase 6.5 - Rules-Based Option Gating
+
+**Scope**
+- declarative rules controlling UI option availability
+- prevention of invalid or misleading combinations
+- context-aware UI constraints
+
+**Constraints**
+- rules are constraints, not recommendations
+- rules must be explainable
+- rules must not encode semantic truth
+
+**Closure Condition**
+- rule effects are transparent, reversible, and clearly separate from semantics
+
+**Global Closure Condition for Phase 6**
+1. All exploratory features are explicitly layered above truth.
+2. Confidence handling is visible and non-destructive.
+3. Interpretive power increases without semantic erosion.
+4. New exploratory features do not breach rendering-boundary or backend qualification rules.
 
 ---
 
-### Phase 7 — UI / State / Integration  
-**Status:** IMPLEMENTATION COMPLETE, VALIDATION PENDING
+### Phase 7 - UI, State, and Integration Consolidation  
+**Status:** PLANNED / BLOCKED
 
 **Objective**
-- Ensure UI accurately reflects computation, interpretation, and uncertainty
+- ensure the UI accurately reflects truth, interpretation, uncertainty, and qualified rendering behavior without compensating for architectural weakness
 
 **Closure Condition**
-- UI reflects truth and uncertainty without compensation or distortion
+1. UI state reflects truth and uncertainty without distortion.
+2. Integration behavior is predictable across supported chart families and qualified backends.
+3. The UI no longer acts as a repair layer for missing architectural boundaries.
 
 ---
 
-## 5. Handling Evolving Requirements (Explicit Policy)
+## 6. Rendering Backend Introduction Policy (Explicit)
+
+Any new chart vendor or rendering tool must enter the project through Phase 5.3 discipline.
+
+Required declaration before adoption:
+1. capability family targeted
+2. render and interaction requirements
+3. lifecycle risks being qualified
+4. probe or harness used to validate the backend
+5. rollback path if the backend fails qualification
+
+Prohibited:
+1. introducing vendor-specific types into orchestration or semantic layers
+2. assuming one successful chart proves backend-wide safety
+3. treating a tactical workaround as backend qualification
+
+This policy exists because backend plurality is a deliberate architectural learning tool in this project.
+
+---
+
+## 7. Handling Evolving Requirements (Explicit Policy)
 
 Enhancement ideas are:
 
@@ -264,31 +434,42 @@ Enhancement ideas are:
 - expected
 - non-exhaustive
 
-However:
+However, they do not auto-enter active work.
 
-- They do not auto-enter active phases
-- They must be assigned intentionally to a Phase 6 sub-phase (or later)
-- They must declare scope, layer, and reversibility
+Every new idea must declare:
+1. intended phase
+2. intended layer (`truth`, `derived`, `interpretive`, `UI`, `rendering infrastructure`, or `governance/evidence`)
+3. reversibility expectation
+4. whether a rendering backend qualification step is required
 
-This policy protects both delivery discipline and long-term trust.
-
----
-
-## 6. Current Critical Path (Authoritative)
-
-1. Open Phase 6 deliberately
+This policy protects both long-term trust and long-term extensibility.
 
 ---
 
-## 7. Summary
+## 8. Current Critical Path (Authoritative)
 
-- Early phases protect truth
-- Mid phases protect correctness
-- Phase 6 protects interpretation
-- Evolution is deliberate, not accidental
-- Closure means closure
+1. Repair evidence export path and regenerate current closure artifacts.
+2. Fix the immediate tactical distribution-polar tooltip defect.
+3. Continue Phase 5 architecture rehaul work through the approved execution plan.
+4. Define rendering capability contracts and backend qualification matrix.
+5. Qualify `LiveChartsCore` and other relevant backends by capability slice rather than assumption.
+6. Close Phase 5 before opening Phase 6.
 
-This roadmap defines **how the project grows without lying to itself**.
+Phase 6 must not be treated as open merely because ideas are ready.  
+It opens only when the system is structurally able to absorb them safely.
+
+---
+
+## 9. Summary
+
+- Early phases built truthful foundations.
+- Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
+- Phase 5 is the current bridge between what the system already does and what it is intended to become.
+- Phase 6 remains the sanctioned home of exploration, confidence, and richer interpretive power.
+- Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.
+- Closure means present truth, present evidence, and present structural safety.
+
+This roadmap defines how the project grows without lying to itself, and without losing the flexibility it is explicitly trying to earn.
 
 ---
 

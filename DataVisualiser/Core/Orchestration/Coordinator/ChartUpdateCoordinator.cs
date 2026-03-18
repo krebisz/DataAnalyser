@@ -7,6 +7,8 @@ using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
+using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -24,14 +26,16 @@ public class ChartUpdateCoordinator
 
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
     private readonly ChartRenderGate _renderGate = new();
+    private readonly IUserNotificationService _notificationService;
     private readonly ChartTooltipManager _tooltipManager;
 
-    public ChartUpdateCoordinator(ChartComputationEngine computationEngine, ChartRenderEngine renderEngine, ChartTooltipManager tooltipManager, Dictionary<CartesianChart, List<DateTime>> chartTimestamps)
+    public ChartUpdateCoordinator(ChartComputationEngine computationEngine, ChartRenderEngine renderEngine, ChartTooltipManager tooltipManager, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService? notificationService = null)
     {
         _chartComputationEngine = computationEngine ?? throw new ArgumentNullException(nameof(computationEngine));
         _chartRenderEngine = renderEngine ?? throw new ArgumentNullException(nameof(renderEngine));
         _tooltipManager = tooltipManager ?? throw new ArgumentNullException(nameof(tooltipManager));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
+        _notificationService = notificationService ?? MessageBoxUserNotificationService.Instance;
     }
 
     /// <summary>
@@ -101,8 +105,7 @@ public class ChartUpdateCoordinator
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Error rendering chart: {ex.Message}", "Chart Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
+                        _notificationService.ShowError("Chart Error", $"Error rendering chart: {ex.Message}");
                         ChartHelper.ClearChart(targetChart, _chartTimestamps);
                     }
                 });

@@ -56,7 +56,7 @@ public sealed class SyncfusionSunburstChartControllerAdapterTests
         var chartState = new ChartState();
         var metricState = new MetricState();
         var uiState = new UiState();
-        var metricService = new Core.Services.MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
+        var metricService = new Core.Services.MetricSelectionService("TestConnection");
         var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
         return (viewModel, metricService);
     }

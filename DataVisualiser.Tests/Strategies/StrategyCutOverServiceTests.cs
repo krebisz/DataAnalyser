@@ -19,8 +19,7 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void ShouldUseCms_ShouldReturnFalse_WhenGlobalDisabled()
     {
-        using var _ = new CmsConfigurationScope(false, true);
-        var service = CreateService();
+        var service = CreateService(useCmsData: false, useCmsForSingleMetric: true);
         var ctx = new ChartDataContext
         {
                 PrimaryCms = TestDataBuilders.CanonicalMetricSeries().Build()
@@ -34,8 +33,7 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void ShouldUseCms_ShouldReturnTrue_WhenEnabledAndCmsPresent()
     {
-        using var _ = new CmsConfigurationScope(true, true);
-        var service = CreateService();
+        var service = CreateService(useCmsData: true, useCmsForSingleMetric: true);
         var from = new DateTime(2024, 01, 01);
         var to = from.AddDays(1);
         var ctx = new ChartDataContext
@@ -53,8 +51,7 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void CreateStrategy_ShouldPreferCms_WhenEnabled()
     {
-        using var _ = new CmsConfigurationScope(true, true);
-        var service = CreateService();
+        var service = CreateService(useCmsData: true, useCmsForSingleMetric: true);
         var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build();
 
         var ctx = new ChartDataContext
@@ -83,8 +80,7 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void CreateStrategy_ShouldPreferLegacy_WhenGlobalDisabled()
     {
-        using var _ = new CmsConfigurationScope(false, true);
-        var service = CreateService();
+        var service = CreateService(useCmsData: false, useCmsForSingleMetric: true);
         var cms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build();
 
         var legacy = TestDataBuilders.HealthMetricData().WithTimestamp(From).BuildSeries(2, TimeSpan.FromDays(1));
@@ -115,8 +111,7 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void ShouldUseCms_ShouldReturnFalse_WhenCombinedMetricFlagDisabled()
     {
-        using var _ = new CmsConfigurationScope(true, true, false);
-        var service = CreateService();
+        var service = CreateService(useCmsData: true, useCmsForSingleMetric: true, useCmsForCombinedMetric: false);
 
         var ctx = new ChartDataContext
         {
@@ -157,34 +152,50 @@ public sealed class StrategyCutOverServiceTests
         }
     }
 
-    private static StrategyCutOverService CreateService()
+    private static StrategyCutOverService CreateService(bool useCmsData = true, bool useCmsForSingleMetric = true, bool useCmsForCombinedMetric = true)
     {
         var dataPreparation = new Mock<IDataPreparationService>();
-        return new StrategyCutOverService(dataPreparation.Object);
+        return new StrategyCutOverService(dataPreparation.Object, cmsRuntimeConfiguration: new TestCmsRuntimeConfiguration
+        {
+            UseCmsData = useCmsData,
+            UseCmsForSingleMetric = useCmsForSingleMetric,
+            UseCmsForCombinedMetric = useCmsForCombinedMetric
+        });
     }
 
-    private sealed class CmsConfigurationScope : IDisposable
+    private sealed class TestCmsRuntimeConfiguration : ICmsRuntimeConfiguration
     {
-        private readonly bool _useCmsData;
-        private readonly bool _useCmsForCombinedMetric;
-        private readonly bool _useCmsForSingleMetric;
+        public bool UseCmsData { get; set; } = true;
+        public bool UseCmsForSingleMetric { get; set; } = true;
+        public bool UseCmsForMultiMetric { get; set; } = true;
+        public bool UseCmsForCombinedMetric { get; set; } = true;
+        public bool UseCmsForDifference { get; set; } = true;
+        public bool UseCmsForRatio { get; set; } = true;
+        public bool UseCmsForNormalized { get; set; } = true;
+        public bool UseCmsForWeeklyDistribution { get; set; } = true;
+        public bool UseCmsForWeekdayTrend { get; set; } = true;
+        public bool UseCmsForHourlyDistribution { get; set; } = true;
+        public bool UseCmsForBarPie { get; set; } = true;
 
-        public CmsConfigurationScope(bool useCmsData, bool useCmsForSingleMetric, bool useCmsForCombinedMetric = true)
+        public bool ShouldUseCms(string strategyType)
         {
-            _useCmsData = CmsConfiguration.UseCmsData;
-            _useCmsForSingleMetric = CmsConfiguration.UseCmsForSingleMetric;
-            _useCmsForCombinedMetric = CmsConfiguration.UseCmsForCombinedMetric;
+            if (!UseCmsData)
+                return false;
 
-            CmsConfiguration.UseCmsData = useCmsData;
-            CmsConfiguration.UseCmsForSingleMetric = useCmsForSingleMetric;
-            CmsConfiguration.UseCmsForCombinedMetric = useCmsForCombinedMetric;
-        }
-
-        public void Dispose()
-        {
-            CmsConfiguration.UseCmsData = _useCmsData;
-            CmsConfiguration.UseCmsForSingleMetric = _useCmsForSingleMetric;
-            CmsConfiguration.UseCmsForCombinedMetric = _useCmsForCombinedMetric;
+            return strategyType switch
+            {
+                    "SingleMetricStrategy" => UseCmsForSingleMetric,
+                    "MultiMetricStrategy" => UseCmsForMultiMetric,
+                    "CombinedMetricStrategy" => UseCmsForCombinedMetric,
+                    "DifferenceStrategy" => UseCmsForDifference,
+                    "RatioStrategy" => UseCmsForRatio,
+                    "NormalizedStrategy" => UseCmsForNormalized,
+                    "WeeklyDistributionStrategy" => UseCmsForWeeklyDistribution,
+                    "WeekdayTrendStrategy" => UseCmsForWeekdayTrend,
+                    "HourlyDistributionStrategy" => UseCmsForHourlyDistribution,
+                    "BarPieStrategy" => UseCmsForBarPie,
+                    _ => false
+            };
         }
     }
 }

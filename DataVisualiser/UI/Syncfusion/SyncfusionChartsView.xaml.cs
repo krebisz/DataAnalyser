@@ -643,6 +643,7 @@ public partial class SyncfusionChartsView : UserControl
         return string.Equals(key, ChartControllerKeys.SyncfusionSunburst, StringComparison.OrdinalIgnoreCase);
     }
 
+
     private void ApplySelectionStateToUi()
     {
         if (_isApplyingSelectionSync)

@@ -1,13 +1,14 @@
 using System.Text;
 using Dapper;
 using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Core.Data.Abstractions;
 using DataVisualiser.Core.Data.QueryBuilders;
 using DataVisualiser.Shared.Models;
 using Microsoft.Data.SqlClient;
 
 namespace DataVisualiser.Core.Data.Repositories;
 
-public class DataFetcher
+public class DataFetcher : IMetricSelectionDataQueries
 {
     private readonly string _connectionString;
 

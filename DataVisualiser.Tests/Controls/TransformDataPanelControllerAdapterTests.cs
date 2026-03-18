@@ -5,6 +5,8 @@ using System.Windows;
 using System.Linq;
 using System.Threading.Tasks;
 using DataVisualiser.Core.Computation;
+using DataVisualiser.Core.Data;
+using DataVisualiser.Core.Data.Abstractions;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
@@ -135,7 +137,7 @@ public sealed class TransformDataPanelControllerAdapterTests
         };
         var metricState = new MetricState();
         var uiState = new UiState();
-        var metricService = new MetricSelectionService("Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True");
+        var metricService = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
         viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
         controller = new TransformDataPanelController();
 
@@ -152,6 +154,44 @@ public sealed class TransformDataPanelControllerAdapterTests
     {
         public void Dispose()
         {
+        }
+    }
+
+    private sealed class StubMetricSelectionDataQueries : IMetricSelectionDataQueries
+    {
+        public Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
+        {
+            return Task.FromResult(0L);
+        }
+
+        public Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype, DateTime? from, DateTime? to, string tableName, int? maxRecords = null, SamplingMode samplingMode = SamplingMode.None, int? targetSamples = null)
+        {
+            return Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+        }
+
+        public Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName)
+        {
+            return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
+        }
+
+        public Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName)
+        {
+            return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeFromCounts(string baseType, IReadOnlyCollection<string>? subtypes = null)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeForSubtypes(string baseType, IReadOnlyCollection<string>? subtypes, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
         }
     }
 }
