@@ -16,7 +16,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Adapters;
 
-public sealed class NormalizedChartControllerAdapter : ChartControllerAdapterBase, ICartesianChartSurface, IWpfCartesianChartHost
+public sealed class NormalizedChartControllerAdapter : CartesianChartControllerAdapterBase<INormalizedChartController>
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
@@ -42,34 +42,17 @@ public sealed class NormalizedChartControllerAdapter : ChartControllerAdapterBas
         _getStrategyCutOverService = getStrategyCutOverService ?? throw new ArgumentNullException(nameof(getStrategyCutOverService));
     }
 
-    public CartesianChart Chart => _controller.Chart;
-
     public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public override string Key => "Norm";
+    public override string Key => ChartControllerKeys.Normalized;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => true;
     public override Task RenderAsync(ChartDataContext context)
     {
         return RenderNormalizedAsync(context);
-    }
-
-    public override void Clear(ChartState state)
-    {
-        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
-    }
-
-    public override void ResetZoom()
-    {
-        ChartSurfaceHelper.ResetZoom(_controller.Chart);
-    }
-
-    public override bool HasSeries(ChartState state)
-    {
-        return ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
     public override void UpdateSubtypeOptions()

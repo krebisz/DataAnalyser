@@ -22,7 +22,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Adapters;
 
-public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapterBase, ITransformPanelControllerExtras, ICartesianChartSurface, IWpfCartesianChartHost
+public sealed class TransformDataPanelControllerAdapter : CartesianChartControllerAdapterBase<ITransformDataPanelController>, ITransformPanelControllerExtras
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
@@ -45,14 +45,12 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
     }
 
-    public CartesianChart Chart => _controller.ChartTransformResult;
-
     public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public override string Key => "Transform";
+    public override string Key => ChartControllerKeys.Transform;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => false;
     public override Task RenderAsync(ChartDataContext context)
@@ -70,16 +68,6 @@ public sealed class TransformDataPanelControllerAdapter : ChartControllerAdapter
 
         if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
             v2.ResetMinMaxLines();
-    }
-
-    public override void ResetZoom()
-    {
-        ChartSurfaceHelper.ResetZoom(_controller.ChartTransformResult);
-    }
-
-    public override bool HasSeries(ChartState state)
-    {
-        return ChartSurfaceHelper.HasSeries(_controller.ChartTransformResult);
     }
 
     public override void UpdateSubtypeOptions()

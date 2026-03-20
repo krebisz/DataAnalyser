@@ -21,7 +21,7 @@ using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.UI.Charts.Adapters;
 
-public sealed class DistributionChartControllerAdapter : ChartControllerAdapterBase, IDistributionChartControllerExtras, ICartesianChartSurface, IPolarChartSurface, IWpfCartesianChartHost
+public sealed class DistributionChartControllerAdapter : CartesianChartControllerAdapterBase<IDistributionChartController>, IDistributionChartControllerExtras, IPolarChartSurface
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IDistributionChartController _controller;
@@ -51,14 +51,12 @@ public sealed class DistributionChartControllerAdapter : ChartControllerAdapterB
         _getPolarTooltip = getPolarTooltip ?? throw new ArgumentNullException(nameof(getPolarTooltip));
     }
 
-    public CartesianChart Chart => _controller.Chart;
-
     public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public override string Key => "Distribution";
+    public override string Key => ChartControllerKeys.Distribution;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => false;
     public override Task RenderAsync(ChartDataContext context)
@@ -71,16 +69,6 @@ public sealed class DistributionChartControllerAdapter : ChartControllerAdapterB
         DisposeDistributionChartInteractions();
         ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
         ChartSurfaceHelper.ClearPolar(_controller.PolarChart, _getPolarTooltip);
-    }
-
-    public override void ResetZoom()
-    {
-        ChartSurfaceHelper.ResetZoom(_controller.Chart);
-    }
-
-    public override bool HasSeries(ChartState state)
-    {
-        return ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
     public override void UpdateSubtypeOptions()

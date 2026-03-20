@@ -16,7 +16,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Adapters;
 
-public sealed class WeekdayTrendChartControllerAdapter : ChartControllerAdapterBase, IWeekdayTrendChartControllerExtras, ICartesianChartSurface, IWpfCartesianChartHost
+public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControllerAdapterBase<IWeekdayTrendChartController>, IWeekdayTrendChartControllerExtras
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IWeekdayTrendChartController _controller;
@@ -41,14 +41,13 @@ public sealed class WeekdayTrendChartControllerAdapter : ChartControllerAdapterB
     }
 
     public CartesianChart PolarChart => _controller.PolarChart;
-    public CartesianChart Chart => _controller.Chart;
 
     public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public override string Key => "WeeklyTrend";
+    public override string Key => ChartControllerKeys.WeeklyTrend;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => false;
     public override Task RenderAsync(ChartDataContext context)

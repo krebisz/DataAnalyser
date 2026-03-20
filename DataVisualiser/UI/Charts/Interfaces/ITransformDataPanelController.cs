@@ -5,7 +5,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Interfaces;
 
-public interface ITransformDataPanelController : IChartPanelControllerHost
+public interface ITransformDataPanelController : ICartesianChartControllerHost
 {
     ComboBox TransformPrimarySubtypeCombo { get; }
     ComboBox TransformSecondarySubtypeCombo { get; }
@@ -23,7 +23,6 @@ public interface ITransformDataPanelController : IChartPanelControllerHost
     TextBlock TransformGrid2Title { get; }
     TextBlock TransformGrid3Title { get; }
     CartesianChart ChartTransformResult { get; }
-    CartesianChart Chart { get; }
     Dispatcher Dispatcher { get; }
 
     event EventHandler? ToggleRequested;

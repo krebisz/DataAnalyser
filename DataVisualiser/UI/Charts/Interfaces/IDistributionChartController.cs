@@ -5,7 +5,7 @@ using WpfCartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.UI.Charts.Interfaces;
 
-public interface IDistributionChartController : IChartPanelControllerHost
+public interface IDistributionChartController : ICartesianChartControllerHost
 {
     ComboBox ModeCombo { get; }
     ComboBox SubtypeCombo { get; }
@@ -13,7 +13,6 @@ public interface IDistributionChartController : IChartPanelControllerHost
     RadioButton SimpleRangeRadio { get; }
     ComboBox IntervalCountCombo { get; }
     Button ChartTypeToggleButton { get; }
-    WpfCartesianChart Chart { get; }
     PolarChart PolarChart { get; }
 
     event EventHandler? ToggleRequested;

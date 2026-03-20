@@ -15,7 +15,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Adapters;
 
-public sealed class MainChartControllerAdapter : ChartControllerAdapterBase, IMainChartControllerExtras, ICartesianChartSurface, IWpfCartesianChartHost
+public sealed class MainChartControllerAdapter : CartesianChartControllerAdapterBase<IMainChartController>, IMainChartControllerExtras
 {
     private readonly IMainChartController _controller;
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
@@ -34,9 +34,7 @@ public sealed class MainChartControllerAdapter : ChartControllerAdapterBase, IMa
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
     }
 
-    public CartesianChart Chart => _controller.Chart;
-
-    public override string Key => "Main";
+    public override string Key => ChartControllerKeys.Main;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => false;
     public override Task RenderAsync(ChartDataContext context)
@@ -45,21 +43,6 @@ public sealed class MainChartControllerAdapter : ChartControllerAdapterBase, IMa
             return Task.CompletedTask;
 
         return RenderMainChartAsync(context);
-    }
-
-    public override void Clear(ChartState state)
-    {
-        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
-    }
-
-    public override void ResetZoom()
-    {
-        ChartSurfaceHelper.ResetZoom(_controller.Chart);
-    }
-
-    public override bool HasSeries(ChartState state)
-    {
-        return ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
     public override void UpdateSubtypeOptions()

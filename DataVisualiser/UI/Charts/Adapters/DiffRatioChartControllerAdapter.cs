@@ -14,7 +14,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Adapters;
 
-public sealed class DiffRatioChartControllerAdapter : ChartControllerAdapterBase, IDiffRatioChartControllerExtras, ICartesianChartSurface, IWpfCartesianChartHost
+public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAdapterBase<IDiffRatioChartController>, IDiffRatioChartControllerExtras
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IDiffRatioChartController _controller;
@@ -38,34 +38,17 @@ public sealed class DiffRatioChartControllerAdapter : ChartControllerAdapterBase
         _getTooltipManager = getTooltipManager ?? throw new ArgumentNullException(nameof(getTooltipManager));
     }
 
-    public CartesianChart Chart => _controller.Chart;
-
     public override void ClearCache()
     {
         _selectionCache.Clear();
     }
 
-    public override string Key => "DiffRatio";
+    public override string Key => ChartControllerKeys.DiffRatio;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => true;
     public override Task RenderAsync(ChartDataContext context)
     {
         return RenderDiffRatioAsync(context);
-    }
-
-    public override void Clear(ChartState state)
-    {
-        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
-    }
-
-    public override void ResetZoom()
-    {
-        ChartSurfaceHelper.ResetZoom(_controller.Chart);
-    }
-
-    public override bool HasSeries(ChartState state)
-    {
-        return ChartSurfaceHelper.HasSeries(_controller.Chart);
     }
 
     public override void UpdateSubtypeOptions()

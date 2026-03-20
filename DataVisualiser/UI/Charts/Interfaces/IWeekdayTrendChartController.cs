@@ -5,9 +5,8 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Interfaces;
 
-public interface IWeekdayTrendChartController : IChartPanelControllerHost
+public interface IWeekdayTrendChartController : ICartesianChartControllerHost
 {
-    CartesianChart Chart { get; }
     CartesianChart PolarChart { get; }
     Button ChartTypeToggleButton { get; }
     ComboBox SubtypeCombo { get; }
