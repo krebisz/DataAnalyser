@@ -33,7 +33,7 @@ public sealed class DistributionPolarRenderingService
         chart.AxisY.Clear();
         chart.DataTooltip = null;
 
-        ConfigureAxes(chart, axisModel);
+        ApplyProjectionBounds(chart, axisModel);
         AddGrid(chart, definition, radiusModel);
         AddPerimeterLabels(chart, definition);
         AddRingLabels(chart, rangeResult, radiusModel);
@@ -43,29 +43,42 @@ public sealed class DistributionPolarRenderingService
         chart.Update(true, true);
     }
 
-    private static void ConfigureAxes(CartesianChart chart, AxisModel axisModel)
+    public void RefitPolarProjection(CartesianChart chart)
     {
-        chart.AxisX.Add(new Axis
-        {
-                MinValue = axisModel.XMin,
-                MaxValue = axisModel.XMax,
-                ShowLabels = false,
-                Separator = new Separator
-                {
-                        IsEnabled = false
-                }
-        });
+        if (chart == null)
+            throw new ArgumentNullException(nameof(chart));
 
-        chart.AxisY.Add(new Axis
-        {
-                MinValue = axisModel.YMin,
-                MaxValue = axisModel.YMax,
-                ShowLabels = false,
-                Separator = new Separator
-                {
-                        IsEnabled = false
-                }
-        });
+        var axisModel = AxisModel.Create(chart, LabelRadius);
+        ApplyProjectionBounds(chart, axisModel);
+        chart.Update(true, true);
+    }
+
+    private static void ApplyProjectionBounds(CartesianChart chart, AxisModel axisModel)
+    {
+        var xAxis = EnsureAxis(chart.AxisX);
+        var yAxis = EnsureAxis(chart.AxisY);
+
+        ConfigureAxis(xAxis, axisModel.XMin, axisModel.XMax);
+        ConfigureAxis(yAxis, axisModel.YMin, axisModel.YMax);
+    }
+
+    private static Axis EnsureAxis(AxesCollection axes)
+    {
+        if (axes.Count > 0)
+            return axes[0];
+
+        var axis = new Axis();
+        axes.Add(axis);
+        return axis;
+    }
+
+    private static void ConfigureAxis(Axis axis, double minValue, double maxValue)
+    {
+        axis.MinValue = minValue;
+        axis.MaxValue = maxValue;
+        axis.ShowLabels = false;
+        axis.Separator ??= new Separator();
+        axis.Separator.IsEnabled = false;
     }
 
     private static void AddGrid(CartesianChart chart, DistributionModeDefinition definition, RadiusModel radiusModel)

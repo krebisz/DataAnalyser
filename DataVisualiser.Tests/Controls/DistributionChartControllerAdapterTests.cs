@@ -81,6 +81,83 @@ public sealed class DistributionChartControllerAdapterTests
         });
     }
 
+    [Fact]
+    public async Task ResetZoom_InPolarMode_ReappliesPolarProjectionBounds()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartState = new ChartState
+            {
+                    IsDistributionVisible = true,
+                    IsDistributionPolarMode = true,
+                    SelectedDistributionMode = DistributionMode.Weekly
+            };
+
+            var metricState = new MetricState();
+            var uiState = new UiState();
+            var metricService = new MetricSelectionService("TestConnection");
+            var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
+            var controller = new DistributionChartController
+            {
+                    Width = 800,
+                    Height = 400
+            };
+            controller.Chart.Width = 800;
+            controller.Chart.Height = 400;
+            controller.Chart.Measure(new Size(800, 400));
+            controller.Chart.Arrange(new Rect(0, 0, 800, 400));
+            controller.Chart.UpdateLayout();
+
+            var distributionService = new StubDistributionService(CreateRangeResult());
+            var adapter = new DistributionChartControllerAdapter(
+                    controller,
+                    viewModel,
+                    () => false,
+                    () => NoOpScope.Instance,
+                    metricService,
+                    () => null,
+                    distributionService,
+                    distributionService,
+                    new DistributionPolarRenderingService(),
+                    () => null);
+
+            adapter.InitializeControls();
+            adapter.UpdateChartTypeVisibility();
+
+            var context = new ChartDataContext
+            {
+                    Data1 =
+                    [
+                            new MetricData
+                            {
+                                    NormalizedTimestamp = new DateTime(2026, 1, 1),
+                                    Value = 1m,
+                                    Unit = "kg"
+                            }
+                    ],
+                    DisplayName1 = "Weight",
+                    MetricType = "weight",
+                    PrimaryMetricType = "weight",
+                    From = new DateTime(2026, 1, 1),
+                    To = new DateTime(2026, 1, 7)
+            };
+
+            await adapter.RenderAsync(context);
+
+            controller.Chart.AxisX[0].MinValue = double.NaN;
+            controller.Chart.AxisX[0].MaxValue = double.NaN;
+            controller.Chart.AxisY[0].MinValue = double.NaN;
+            controller.Chart.AxisY[0].MaxValue = double.NaN;
+
+            adapter.ResetZoom();
+
+            Assert.False(double.IsNaN(controller.Chart.AxisX[0].MinValue));
+            Assert.False(double.IsNaN(controller.Chart.AxisX[0].MaxValue));
+            Assert.False(double.IsNaN(controller.Chart.AxisY[0].MinValue));
+            Assert.False(double.IsNaN(controller.Chart.AxisY[0].MaxValue));
+        });
+    }
+
     private static DistributionRangeResult CreateRangeResult()
     {
         return new DistributionRangeResult(

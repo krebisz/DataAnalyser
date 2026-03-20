@@ -71,6 +71,17 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         ChartSurfaceHelper.ClearPolar(_controller.PolarChart, _getPolarTooltip);
     }
 
+    public override void ResetZoom()
+    {
+        if (_viewModel.ChartState.IsDistributionPolarMode && _controller.Chart.Tag is DistributionPolarProjectionTooltip)
+        {
+            _distributionPolarRenderingService.RefitPolarProjection(_controller.Chart);
+            return;
+        }
+
+        base.ResetZoom();
+    }
+
     public override void UpdateSubtypeOptions()
     {
         if (_controller.SubtypeCombo == null)
