@@ -523,6 +523,8 @@ Execution rules:
 8. Code deletion is permitted only after the replacement path has passed the step's validation gate.
 9. Before each step, declare the intended layer classification for the work.
 10. If a step is only tactical stabilization, record that explicitly and do not count it as architectural closure for the affected workstream.
+11. Prefer contraction, simplification, and generalization of existing behavior-preserving structure before introducing new architectural surfaces when that reduces qualification risk.
+12. Keep each step reversible as a single bounded change set wherever practical so rollback and fault isolation remain straightforward.
 
 ### Step 1. Stabilize the default test lane
 
@@ -597,7 +599,34 @@ Validation gate:
 Done when:
 1. the extracted core-safe helper logic is usable without WPF or chart-control references
 
-### Step 5. Establish rendering capability contracts and backend qualification on a narrow vertical slice
+### Step 5. Sanitize chart/controller structure before new rendering abstractions
+
+Agent work:
+1. Inventory existing chart families, controllers, adapters, helpers, and host patterns to identify repeated responsibilities and accidental divergence.
+2. Standardize chart host and surface access patterns for the current chart families where capability semantics already align.
+3. Remove ad-hoc control discovery and visual-tree traversal where explicit ownership or host access can replace it safely.
+4. Collapse duplicated adapter/controller plumbing into shared helpers or base patterns where doing so preserves behavior and reduces architectural noise.
+5. Normalize naming and placement of chart-layer types so controller, adapter, host, rendering, and helper responsibilities are structurally obvious.
+6. Isolate vendor-specific behavior more clearly so shared chart code stops carrying backend-specific quirks unnecessarily.
+7. Delete superseded compatibility code only after the replacement path has passed validation.
+
+Primary code focus:
+1. chart controllers/adapters/hosts
+2. shared chart helpers and chart-surface access patterns
+3. backend-specific code currently leaking into shared chart paths
+
+Validation gate:
+1. build
+2. targeted adapter/controller tests for the touched chart families
+3. manual smoke for load/render, toggle visibility, reset zoom, clear, and transform compute on touched flows
+
+Done when:
+1. current chart families use more consistent host/access patterns where appropriate
+2. duplicated plumbing is reduced without introducing new user-facing behavior
+3. vendor-specific quirks are more isolated from shared chart structure
+4. the codebase is materially cleaner to receive rendering capability contracts
+
+### Step 6. Establish rendering capability contracts and backend qualification on a narrow vertical slice
 
 Agent work:
 1. Introduce rendering contracts by capability for one chart family, including render, reset, visibility, and interaction lifecycle.
@@ -632,7 +661,7 @@ Done when:
 3. any tactical fallback still in place is explicitly classified as temporary and bounded
 4. the first rendering contract does not accidentally foreclose future chart-program/result-set composition above the rendering boundary
 
-### Step 6. Refactor orchestration to explicit handoff boundaries
+### Step 7. Refactor orchestration to explicit handoff boundaries
 
 Agent work:
 1. Separate context building, strategy selection, chart-program/result composition, data retrieval, and render invocation into explicit handoff stages.
@@ -652,7 +681,7 @@ Validation gate:
 Done when:
 1. the migrated orchestration path does not directly require WPF controls, `MessageBox`, or concrete repository construction
 
-### Step 7. Reduce `MainChartsView` to a composition host, pass 1
+### Step 8. Reduce `MainChartsView` to a composition host, pass 1
 
 Agent work:
 1. Extract startup/bootstrap responsibilities from `MainChartsView`.
@@ -671,7 +700,7 @@ Validation gate:
 Done when:
 1. `MainChartsView` primarily wires composition and bindings rather than owning workflow logic
 
-### Step 8. Reduce `MainChartsView` to a composition host, pass 2
+### Step 9. Reduce `MainChartsView` to a composition host, pass 2
 
 Agent work:
 1. Remove remaining direct controller access and fallback control lookups.
@@ -691,7 +720,7 @@ Validation gate:
 Done when:
 1. `MainChartsView` has no remaining chart-specific fallback control knowledge outside composition seams
 
-### Step 9. Isolate Syncfusion-specific fragility
+### Step 10. Isolate Syncfusion-specific fragility
 
 Agent work:
 1. Move reflection-heavy tooltip/hit-testing workarounds behind a dedicated Syncfusion-specific behavior/service layer.
@@ -710,7 +739,7 @@ Validation gate:
 Done when:
 1. Syncfusion version/workaround logic is isolated from shared chart orchestration logic
 
-### Step 10. Start `DataFileReader` modernization with the safest infrastructure slice
+### Step 11. Start `DataFileReader` modernization with the safest infrastructure slice
 
 Agent work:
 1. Introduce injected options/connection-string access instead of ad-hoc configuration reads in the first migrated slice.
@@ -728,7 +757,7 @@ Validation gate:
 Done when:
 1. the first `DataFileReader` slice is no longer using obsolete SQL client APIs or implicit config access
 
-### Step 11. Split `SQLHelper` by capability without changing callers all at once
+### Step 12. Split `SQLHelper` by capability without changing callers all at once
 
 Agent work:
 1. Extract separate services/modules for schema maintenance, metric reads, persistence, and count/canonical operations.
@@ -747,7 +776,7 @@ Validation gate:
 Done when:
 1. `SQLHelper` is no longer the dominant multi-concern entry point for ingestion/persistence/database maintenance
 
-### Step 12. Add hard architectural guardrails
+### Step 13. Add hard architectural guardrails
 
 Agent work:
 1. Add dependency-direction tests for Core->UI and orchestration->chart-library leakage.
@@ -767,7 +796,7 @@ Done when:
 1. the next refactor step cannot silently reintroduce the same boundary violations
 2. new vendor adoption cannot bypass the rendering-boundary and qualification rules accidentally
 
-### Step 13. Rebuild evidence/export flow after the code seams are in place
+### Step 14. Rebuild evidence/export flow after the code seams are in place
 
 Agent work:
 1. Move reachability/parity/evidence export behind a scriptable headless path.
@@ -787,7 +816,7 @@ Validation gate:
 Done when:
 1. closure evidence can be regenerated consistently without manual UI interaction
 
-### Step 14. Run a final convergence pass before declaring architectural closure
+### Step 15. Run a final convergence pass before declaring architectural closure
 
 Agent work:
 1. remove compatibility shims that were only meant to support intermediate migration
