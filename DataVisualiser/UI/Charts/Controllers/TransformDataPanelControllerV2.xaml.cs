@@ -162,7 +162,7 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
         var minLabel = $"min {min:F4}";
         var maxLabel = $"max {max:F4}";
 
-        DataVisualiser.Core.Rendering.Helpers.ChartHelper.UpdateHorizontalLineForChart(
+        DataVisualiser.Core.Rendering.Helpers.ChartInteractionVisualHelper.UpdateHorizontalLineForChart(
             ref chart,
             min,
             ref _minLineSection,
@@ -170,7 +170,7 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
             ChartUiDefaults.MinMaxLineThickness,
             ChartUiDefaults.MinMaxLineDashArray,
             minLabel);
-        DataVisualiser.Core.Rendering.Helpers.ChartHelper.UpdateHorizontalLineForChart(
+        DataVisualiser.Core.Rendering.Helpers.ChartInteractionVisualHelper.UpdateHorizontalLineForChart(
             ref chart,
             max,
             ref _maxLineSection,
@@ -191,8 +191,8 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
 
     private void ClearMinMaxLines()
     {
-        DataVisualiser.Core.Rendering.Helpers.ChartHelper.RemoveAxisSectionFromYAxis(ChartTransformResultControl, _minLineSection);
-        DataVisualiser.Core.Rendering.Helpers.ChartHelper.RemoveAxisSectionFromYAxis(ChartTransformResultControl, _maxLineSection);
+        DataVisualiser.Core.Rendering.Helpers.ChartInteractionVisualHelper.RemoveAxisSectionFromYAxis(ChartTransformResultControl, _minLineSection);
+        DataVisualiser.Core.Rendering.Helpers.ChartInteractionVisualHelper.RemoveAxisSectionFromYAxis(ChartTransformResultControl, _maxLineSection);
         _minLineSection = null;
         _maxLineSection = null;
     }

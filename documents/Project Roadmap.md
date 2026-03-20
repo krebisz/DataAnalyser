@@ -76,6 +76,7 @@ The architecture rehaul established that the project is not yet structurally rea
    - concentrated data-access and orchestration responsibilities
    - uneven assurance quality
 4. Multi-backend chart support is not a cosmetic preference. It is a deliberate architectural probe into whether rendering has actually been isolated from the rest of the application.
+5. Standardized programmable chart hosts are intended future product behavior, but that future is unsafe unless controller convergence, rendering contracts, and orchestration seams are made explicit first.
 
 Therefore, architecture rehaul is not a side quest.  
 It is now the mandatory bridge between the truthful foundation already built and the exploratory, confidence-aware, multi-backend future the project intends to support.
@@ -220,6 +221,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 - continued CMS-first evolution
 - safe UI growth
 - support for multiple chart vendors and future rendering tools without semantic contamination
+- eventual standardized programmable chart hosts and multi-result derived chart composition
 
 **Execution Source**
 - `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` is the operational execution source for this phase
@@ -241,6 +243,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 - reduce `MainChartsView` as an orchestration bottleneck
 - remove Core/UI and WPF leakage from higher layers
 - split mixed helpers and misplaced rendering concerns
+- avoid cementing prototype-era parent-controller divergence that later standardized chart hosts must undo
 
 **Closure Condition**
 - Core and orchestration semantics no longer depend on UI/view-level authority or vendor control knowledge
@@ -252,6 +255,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 - isolate vendor lifecycle, hover, animation, disposal, and visibility quirks behind backend adapters
 - intentionally qualify current and future chart vendors against explicit capability slices
 - treat multi-backend coexistence as qualification work, not architectural failure
+- ensure the rendering boundary does not hard-code single-result assumptions that would block future programmable chart composition
 
 **Required outputs**
 - rendering capability contracts
@@ -272,6 +276,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 - put concrete data-fetch behavior behind narrow contracts
 - separate context building, data retrieval, and render invocation
 - move side effects such as notifications behind explicit seams
+- separate chart-program/result composition from render execution so programmable charting can evolve without controller-specific orchestration
 
 **Closure Condition**
 - runtime behavior is scoped, testable, contract-driven, and no longer dependent on ad-hoc repository construction or global mutable state
@@ -307,6 +312,7 @@ Phase 6 increases interpretive power without eroding canonical truth.
 
 This phase remains the sanctioned home for exploratory capability, confidence-aware interpretation, and richer analytical views.
 It exists to make the system a stronger instrument for human reasoning without turning it into an authority.
+It is also the sanctioned home for standardized programmable chart composition once Phase 5 has earned the structural right to support it safely.
 
 #### Phase 6.1 - Interpretive Visual Overlays (Render-Only)
 
@@ -354,7 +360,25 @@ It exists to make the system a stronger instrument for human reasoning without t
 **Closure Condition**
 - confidence-aware views are opt-in, transparent, reversible, and semantically non-invasive
 
-#### Phase 6.4 - Structural and Relational Exploration
+#### Phase 6.4 - Programmable Chart Composition and Multi-Result Derived Views
+
+**Scope**
+- standardize graph parent controllers and shared option/toggle surfaces where capability semantics align
+- allow transform-style programming across qualified chart families, including selected submetrics and unary, binary, ternary, or higher-order derived operations
+- support rendering more than one derived result set on the same qualified chart surface where the chart family supports it
+- preserve provenance and explicit derived identity for each result set
+
+**Constraints**
+- programmable chart composition is downstream of CMS and does not redefine semantics
+- result sets remain derived or interpretive unless explicitly promoted by a separate declarative mechanism
+- backend qualification must already cover the interactions and rendering behavior used by the programmable chart surface
+
+**Closure Condition**
+- standardized programmable chart hosts can express the current chart examples they are intended to subsume without semantic erosion
+- multi-result derived rendering works on qualified chart families with visible provenance
+- transform-style programmability is no longer isolated to a single special-case controller
+
+#### Phase 6.5 - Structural and Relational Exploration
 
 **Scope**
 - scatter plots and clustering views
@@ -370,7 +394,7 @@ It exists to make the system a stronger instrument for human reasoning without t
 **Closure Condition**
 - structural views are powerful, bounded, explicitly interpretive, and semantically non-promotable by default
 
-#### Phase 6.5 - Rules-Based Option Gating
+#### Phase 6.6 - Rules-Based Option Gating
 
 **Scope**
 - declarative rules controlling UI option availability
@@ -389,7 +413,8 @@ It exists to make the system a stronger instrument for human reasoning without t
 1. All exploratory features are explicitly layered above truth.
 2. Confidence handling is visible and non-destructive.
 3. Interpretive power increases without semantic erosion.
-4. New exploratory features do not breach rendering-boundary or backend qualification rules.
+4. Programmable chart composition remains explicit, reversible, and provenance-preserving.
+5. New exploratory features do not breach rendering-boundary or backend qualification rules.
 
 ---
 
@@ -397,12 +422,13 @@ It exists to make the system a stronger instrument for human reasoning without t
 **Status:** PLANNED / BLOCKED
 
 **Objective**
-- ensure the UI accurately reflects truth, interpretation, uncertainty, and qualified rendering behavior without compensating for architectural weakness
+- ensure the UI accurately reflects truth, interpretation, uncertainty, qualified rendering behavior, and standardized programmable chart capabilities without compensating for architectural weakness
 
 **Closure Condition**
-1. UI state reflects truth and uncertainty without distortion.
-2. Integration behavior is predictable across supported chart families and qualified backends.
-3. The UI no longer acts as a repair layer for missing architectural boundaries.
+1. Qualified chart families share standardized parent controller/host behavior wherever capability semantics genuinely align.
+2. UI state reflects truth, uncertainty, and programmable chart composition without distortion.
+3. Integration behavior is predictable across supported chart families and qualified backends.
+4. The UI no longer acts as a repair layer for missing architectural boundaries.
 
 ---
 

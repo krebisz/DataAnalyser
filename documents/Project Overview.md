@@ -1,20 +1,20 @@
 # PROJECT OVERVIEW
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
-**Authority:** Subordinate to Project Bible.md and SYSTEM_MAP.md
+**Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`
 
 ---
 
 ## 1. Purpose
 
-This document provides a **descriptive overview** of the project:
+This document provides a descriptive overview of the project:
 
 - what the system currently does
 - how it is structured conceptually
 - what direction it is evolving toward
 - what constraints govern that evolution
 
-It does **not** define architectural law or sequencing authority.
+It does not define architectural law or sequencing authority.
 
 If a conflict exists, higher-authority documents prevail.
 
@@ -22,7 +22,7 @@ If a conflict exists, higher-authority documents prevail.
 
 ## 2. Project Intent (High-Level)
 
-The project exists to provide a **trustworthy analytical environment** for exploring time-indexed metrics, with an explicit emphasis on:
+The project exists to provide a trustworthy analytical environment for exploring time-indexed metrics, with an explicit emphasis on:
 
 - canonical truth
 - deterministic computation
@@ -30,7 +30,7 @@ The project exists to provide a **trustworthy analytical environment** for explo
 - reversible interpretation
 - visible uncertainty
 
-The system favors **clarity and auditability** over automation or convenience.
+The system favors clarity and auditability over automation or convenience.
 
 ---
 
@@ -69,7 +69,7 @@ The system supports multiple computation strategies, including:
 - combined metrics
 - multi-metric comparisons
 - temporal distributions
-- transformations (unary and binary)
+- transformations, currently including unary and binary flows with broader programmable composition intended
 
 Strategies may exist in both legacy and CMS forms during migration, with parity validation enforcing correctness.
 
@@ -84,30 +84,33 @@ The UI layer provides:
 - transform previews
 - compositional and comparative charts
 - dynamic chart visibility and state management
+- backend-qualified multi-vendor rendering experiments in support of rendering-boundary isolation
 
-UI components are controller-based and standardized to support extension.
+UI components are controller-based, but full standardization is still an active architectural direction rather than finished reality.
+The intended direction is convergence toward standardized graph hosts with shared option/toggle affordances and programmable derived-result composition on qualified chart surfaces.
 
 ---
 
 ## 5. Interpretive & Exploratory Capabilities (Evolving)
 
-Beyond raw computation, the system increasingly supports **interpretive exploration**, including:
+Beyond raw computation, the system increasingly supports interpretive exploration, including:
 
 - trend identification and comparison
 - compositional analysis (part vs whole)
 - transform-based derived views
+- future programmable chart composition over selected metric and submetric inputs
 - pivot-oriented inspection (event-relative views)
 - dynamic visual cues (colouring, emphasis)
 
-These capabilities are **non-authoritative overlays** applied on top of canonical truth.
+These capabilities are non-authoritative overlays applied on top of canonical truth.
 
 They exist to aid understanding, not to redefine meaning.
 
 ---
 
-## 6. Confidence & Reliability (Newly Explicit)
+## 6. Confidence & Reliability (Explicit Direction)
 
-The system supports (or will support) explicit representation of **data confidence and reliability**, including:
+The system supports, or is explicitly staged to support, representation of data confidence and reliability, including:
 
 - statistical identification of atypical readings
 - visual marking of low-confidence points
@@ -135,6 +138,7 @@ Characteristics:
 - provenance is always preserved
 - derived metrics are non-canonical by default
 - promotion to canonical truth is explicit and declarative
+- future chart programs may compose and render more than one derived result set at a time on qualified chart families
 
 Derived results may be ephemeral (session-scoped) or persisted, depending on intent.
 
@@ -142,9 +146,10 @@ Derived results may be ephemeral (session-scoped) or persisted, depending on int
 
 ## 8. Current Phase Status (Descriptive)
 
-This section reflects **observed implementation state**, not aspiration.
+This section reflects observed implementation state, not aspiration.
+Sequencing authority remains the roadmap; where older descriptive claims drifted, the roadmap wins.
 
-### Phase 1 — Ingestion & Persistence  
+### Phase 1 - Ingestion & Persistence  
 **Complete**
 
 - Lossless ingestion
@@ -153,7 +158,7 @@ This section reflects **observed implementation state**, not aspiration.
 
 ---
 
-### Phase 2 — Canonical Semantics & Normalization  
+### Phase 2 - Canonical Semantics & Normalization  
 **Complete**
 
 - Canonical Metric Series established
@@ -162,63 +167,85 @@ This section reflects **observed implementation state**, not aspiration.
 
 ---
 
-### Phase 3 — Strategy Migration  
-**Complete**
+### Phase 3 - Strategy Migration  
+**Implemented / Revalidation Required**
 
-- CMS strategies implemented for all strategies
-- Parallel legacy execution maintained
-- Factory consolidation completed
-- Orchestration migration complete
-- Parity coverage evidence: `documents/reachability-20260121-160503.json`
+- CMS strategies are broadly implemented
+- Parallel legacy execution remains as migration compatibility
+- Historical evidence exists, but closure requires current-date revalidation under the roadmap evidence rules
 
 ---
 
-### Phase 3.5 — Orchestration Layer Assessment  
-**Complete**
+### Phase 3.5 - Orchestration Layer Assessment  
+**Implemented / Revalidation Required**
 
-- Unified cut-over mechanism implemented
-- CMS preserved through orchestration
-- Execution reachability verification complete (see `documents/reachability-20260121-074430.json`, `documents/reachability-20260121-074900.json`, `documents/reachability-20260121-075301.json`, `documents/reachability-20260121-085510.json`)
+- Unified cut-over behavior exists
+- CMS is preserved through orchestration
+- Reachability evidence must be regenerated through the approved evidence path before closure is treated as current
 
 ---
 
-### Phase 4 — Consumer Adoption & Visualization Integration  
-**Complete**
+### Phase 4 - Consumer Adoption & Visualization Integration  
+**Implemented / Revalidation Required**
 
-- CMS consumed explicitly by visualization pipeline
-- UI migration largely complete
-- Parity treated as a phase obligation
-- Phase 4 parity evidence: `documents/reachability-20260121-151124.json`
-- Difference/Ratio parity marked N/A (strategies deprecated)
+- CMS is materially adopted by consumer-facing visualization paths
+- UI migration is advanced but not accepted as finally closed without present evidence
+- Parity remains a phase obligation rather than a historical claim
+
+---
+
+### Phase 5 - Architecture Rehaul & Backend Qualification  
+**Open / Current Critical Path**
+
+- Structural repair, boundary reduction, and backend qualification are the active focus
+- Current work is intended to preserve the path toward standardized programmable chart hosts
+- Rendering contracts, orchestration seams, and evidence discipline must close before exploratory expansion opens
+
+---
+
+### Phase 6 - Exploratory & Confidence Capability Expansion  
+**Planned / Blocked**
+
+- Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result chart composition are intentionally staged here
+- This phase remains blocked until earlier phases are genuinely closed with current evidence
+
+---
+
+### Phase 7 - UI, State, & Integration Consolidation  
+**Planned / Blocked**
+
+- Standardized graph hosts, shared option/toggle surfaces, and predictable integration behavior are intended here
+- This phase exists to consolidate the UI after the architecture is strong enough to support that convergence safely
 
 ---
 
 ## 9. Evolutionary Direction (Non-Exhaustive)
 
-The project is intentionally **open-ended**.
+The project is intentionally open-ended.
 
-Future directions may include (non-exhaustive):
+Future directions may include:
 
 - richer interpretive overlays
 - expanded transform capabilities
+- standardized programmable chart hosts across the current chart families
+- multi-result derived chart composition on qualified rendering surfaces
 - compositional and relational analysis
 - confidence-aware visualizations
 - rules-based option gating
 - advanced exploratory views
 
-These directions represent **intent**, not commitment.
+These directions represent intent, not immediate commitment.
 
 All future work must respect canonical boundaries and phase discipline.
 
-> **Note on Planning Discipline**  
-> Exploratory and confidence-related capabilities are no longer treated as informal future ideas.  
-> They are explicitly staged and gated under **Phase 6** of the Project Roadmap, with declared scope, constraints, and closure conditions to prevent semantic erosion while supporting intentional exploration.
+Exploratory and confidence-related capabilities are no longer treated as informal future ideas.
+They are explicitly staged and gated under Phase 6 of the roadmap, with declared scope, constraints, and closure conditions to prevent semantic erosion while supporting intentional exploration.
 
 ---
 
 ## 10. What This Project Is Not
 
-To avoid ambiguity, the system is **not**:
+To avoid ambiguity, the system is not:
 
 - an automated decision engine
 - a semantic inference system
@@ -228,7 +255,7 @@ To avoid ambiguity, the system is **not**:
 
 Human judgement remains central.
 
-The system exists to **support reasoning**, not replace it.
+The system exists to support reasoning, not replace it.
 
 ---
 
@@ -238,7 +265,8 @@ The system exists to **support reasoning**, not replace it.
 - Interpretation is powerful but bounded
 - Confidence is explicit, not implicit
 - Exploration is supported without semantic erosion
-- Evolution is intentional and phase-gated
+- Standardized programmable charting is intended, but still phase-gated
+- Evolution is intentional and evidence-bound
 
 This overview describes the system as it exists today and the direction it is deliberately moving toward.
 

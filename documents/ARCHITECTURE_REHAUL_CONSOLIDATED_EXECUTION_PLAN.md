@@ -68,6 +68,9 @@ All actions in this plan must preserve:
 15. The system remains an instrument for human reasoning, not an authority; architectural changes must not quietly convert interpretive behavior into semantic or operational truth.
 16. Interpretation, confidence, and exploratory structure remain explicit overlay layers; the rehaul must preserve their reversibility, provenance, and non-authoritative status.
 17. UI, state, and integration layers may reflect uncertainty and backend qualification state, but must never compensate for missing semantic, orchestration, or rendering boundaries.
+18. Eventual convergence toward standardized graph parent controllers and shared chart-host affordances is intentional; Phase 5 work must not harden bespoke controller divergence as steady-state architecture.
+19. Transform-like chart programmability is a downstream derived/interpretive capability, not a semantic authority; selectable submetrics, operations, and result composition must remain explicit, auditable, and reversible.
+20. Support for rendering more than one derived result set on a qualified chart surface is future-facing architectural intent and must not be blocked by single-result assumptions in current seams, contracts, or host models.
 
 ---
 
@@ -95,6 +98,20 @@ After reconciliation with `Project Bible.md`, `Project Overview.md`, `Project Ph
 5. Tactical stabilization is acceptable when necessary to preserve current capability, but tactical stabilization must be explicitly bounded and must not be mistaken for architectural closure.
 6. Stale closure claims are now treated as structural debt. This plan must therefore prioritize evidence recovery and revalidation, not just new code movement.
 7. Future exploratory work is blocked not because the ideas are weak, but because the architecture must first earn the right to extend safely.
+
+---
+
+## 3C. Programmable Chart Platform Direction
+
+This rehaul must preserve the path toward a standardized programmable chart platform.
+
+Desired architectural properties:
+1. Graph parent controllers converge toward a shared host model wherever capability semantics actually align, rather than remaining permanently fragmented by prototype history.
+2. Chart capability families can be driven by explicit chart programs that describe selected submetrics, declared operations, and render intent without embedding semantic decisions in controllers.
+3. A chart program may yield one or more derived result sets, each with visible provenance, without requiring per-chart-family controller redesign.
+4. Transform-style programmability is not confined to a single transform panel long-term; it is an eventual cross-chart capability layered above canonical truth and qualified rendering surfaces.
+5. Result-set composition remains derived/interpretive by default unless a higher-authority declarative promotion path is introduced explicitly.
+6. Backend qualification remains orthogonal: programmable composition may use only backend/capability slices that have already been qualified for the interactions they need.
 
 ---
 
@@ -143,6 +160,8 @@ Capability families that must not be lost accidentally:
 8. Future-extension readiness for declared interpretive overlays, confidence annotation, confidence-aware views, and structural/relational exploration.
 9. Rendering-backend extensibility across current and future chart families without reworking semantic/application logic.
 10. Visible, non-destructive uncertainty and interpretive-overlay support without canonical erosion.
+11. Eventual standardized chart-host/controller convergence across the graph families already present in the prototype.
+12. Eventual transform-style programmability and multi-result-set rendering on qualified chart surfaces with preserved provenance.
 
 Capability retirement rule:
 1. A capability may be removed only if one of the following is true:
@@ -178,6 +197,7 @@ Current working lessons from the ongoing prototype evolution:
 `MainChartsView` is a thin host/composition boundary only.  
 Chart-specific behavior lives in adapters/controllers/services and is swappable through registry/factory contracts.  
 View composition does not double as chart workflow ownership.
+Graph parent-controller divergence is reduced in a way that preserves later convergence toward standardized chart hosts and shared option/toggle affordances.
 
 ### Ordered Actions
 1. Complete decoupling plan "next steps":
@@ -193,7 +213,7 @@ View composition does not double as chart workflow ownership.
    - pipeline bootstrap
    - ui binding bootstrap
    - export/evidence command handlers
-5. Ensure chart feature composition hangs off stable chart-host abstractions rather than ad-hoc view-owned control knowledge.
+5. Ensure chart feature composition hangs off stable chart-host abstractions rather than ad-hoc view-owned control knowledge, and do not hard-code the assumption that each chart family needs a permanently unique parent controller shell.
 6. Add controller swap integration tests (registry-level, not view-internal reflection paths).
 
 ### Closure Criteria
@@ -201,6 +221,7 @@ View composition does not double as chart workflow ownership.
 2. Transform layout shell and transform compute/render logic are separated.
 3. Registry/factory is the only chart controller access path.
 4. View-level composition is not responsible for chart-specific workflow logic.
+5. Remaining controller divergence is capability-driven or qualification-driven, not prototype-history drift.
 
 ---
 
@@ -226,6 +247,7 @@ Chart-library choice and backend lifecycle behavior are implementation details b
    - compositional/hierarchical
    - transform/result
    - hover/selection/legend/visibility/reset interactions
+   - chart-program/result-set composition handoff sufficient to avoid locking future programmable chart hosts into single-result assumptions
 5. Converge chart backend usage behind those capability contracts so `LiveCharts`, `LiveChartsCore`, Syncfusion, and future vendors remain replaceable adapters rather than architectural peers.
 6. Add backend qualification harnesses for each backend/capability slice:
    - load
@@ -246,6 +268,7 @@ Chart-library choice and backend lifecycle behavior are implementation details b
 4. A backend qualification matrix exists for supported chart capability families.
 5. A new backend can be introduced for an existing chart family by implementing the rendering contract without changing semantic/orchestration flow.
 6. Boundary tests exist and run in CI/test workflow.
+7. Rendering contracts do not assume a single derived result set where future qualified chart families are intended to support multiple concurrent result sets.
 
 ---
 
@@ -481,6 +504,7 @@ Retired as superfluous after absorption:
 7. Close CMS factory TODOs and update strategy contracts for CMS-first flow.
 8. Replace mutable static CMS toggles with scoped runtime configuration service.
 9. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
+10. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
 
 ---
 
@@ -578,8 +602,9 @@ Done when:
 Agent work:
 1. Introduce rendering contracts by capability for one chart family, including render, reset, visibility, and interaction lifecycle.
 2. Apply the first slice to the distribution chart path only.
-3. Keep adapters for `LiveCharts`, `LiveChartsCore`, and Syncfusion behind that contract rather than attempting a full rendering rewrite.
-4. Build a backend qualification harness for that slice covering:
+3. Shape the first contract so it does not hard-code a permanent single-result assumption that would later block programmable multi-result chart composition.
+4. Keep adapters for `LiveCharts`, `LiveChartsCore`, and Syncfusion behind that contract rather than attempting a full rendering rewrite.
+5. Build a backend qualification harness for that slice covering:
    - initial render
    - repeated updates
    - tab switch/offscreen behavior
@@ -587,7 +612,7 @@ Agent work:
    - unload/disposal
    - application close
    - hover/tooltip behavior
-5. Record qualification outcome in a backend capability matrix instead of assuming equal support across vendors.
+6. Record qualification outcome in a backend capability matrix instead of assuming equal support across vendors.
 
 Primary code focus:
 1. distribution chart controller/adapter path
@@ -605,11 +630,12 @@ Done when:
 1. one end-to-end chart flow renders through the new contract without leaking chart-library concrete types upward
 2. backend qualification evidence exists for that chart family/capability slice
 3. any tactical fallback still in place is explicitly classified as temporary and bounded
+4. the first rendering contract does not accidentally foreclose future chart-program/result-set composition above the rendering boundary
 
 ### Step 6. Refactor orchestration to explicit handoff boundaries
 
 Agent work:
-1. Separate context building, strategy selection, data retrieval, and render invocation into explicit handoff stages.
+1. Separate context building, strategy selection, chart-program/result composition, data retrieval, and render invocation into explicit handoff stages.
 2. Remove direct UI state/control assumptions from the first orchestration slice migrated.
 3. Route failure handling through the new notification/logging seams.
 
@@ -631,7 +657,7 @@ Done when:
 Agent work:
 1. Extract startup/bootstrap responsibilities from `MainChartsView`.
 2. Move event registration and workflow setup into dedicated bootstrap/registration helpers.
-3. Keep view behavior unchanged while shrinking code-behind responsibility.
+3. Keep view behavior unchanged while shrinking code-behind responsibility, and do not re-entrench chart-family-specific parent host divergence that later standardization must undo.
 
 Primary code focus:
 1. `MainChartsView`
@@ -650,7 +676,7 @@ Done when:
 Agent work:
 1. Remove remaining direct controller access and fallback control lookups.
 2. Use registry/factory resolution as the sole controller access path.
-3. Ensure transform-panel interactions also resolve through explicit controller/adapter contracts.
+3. Ensure transform-panel interactions also resolve through explicit controller/adapter contracts rather than remaining a permanently special-case programmability island.
 
 Primary code focus:
 1. `MainChartsView`

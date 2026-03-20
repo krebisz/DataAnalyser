@@ -38,7 +38,7 @@ public class ChartTooltipManager : IDisposable
         _chartLabels = chartLabels ?? new Dictionary<CartesianChart, string>();
 
         // Create the shared hover popup UI
-        _timestampText = ChartHelper.SetHoverText(true);
+        _timestampText = ChartInteractionVisualHelper.CreateHoverText(true);
         var stack = new StackPanel
         {
                 Orientation = Orientation.Vertical,
@@ -48,7 +48,7 @@ public class ChartTooltipManager : IDisposable
                 }
         };
 
-        var border = ChartHelper.CreateBorder(stack);
+        var border = ChartInteractionVisualHelper.CreateBorder(stack);
         _hoverPopup = CreatePopup(border);
     }
 
@@ -125,7 +125,7 @@ public class ChartTooltipManager : IDisposable
 
     private TextBlock CreateAndRegisterTextBlock(CartesianChart chart)
     {
-        var textBlock = ChartHelper.SetHoverText();
+        var textBlock = ChartInteractionVisualHelper.CreateHoverText();
         _chartTextBlocks[chart] = textBlock;
         return textBlock;
     }
@@ -158,7 +158,7 @@ public class ChartTooltipManager : IDisposable
     private void RemoveVerticalLine(CartesianChart chart)
     {
         if (_chartVerticalLines.TryGetValue(chart, out var verticalLine) && verticalLine != null)
-            ChartHelper.RemoveAxisSection(chart, verticalLine);
+            ChartInteractionVisualHelper.RemoveAxisSection(chart, verticalLine);
     }
 
     private void SubscribeChartEvents(CartesianChart chart)
@@ -247,7 +247,7 @@ public class ChartTooltipManager : IDisposable
 
     private void ShowHoverPopup()
     {
-        ChartHelper.PositionHoverPopup(_hoverPopup);
+        ChartInteractionVisualHelper.PositionHoverPopup(_hoverPopup);
     }
 
     private void UpdateVerticalLines(int index)
@@ -256,7 +256,7 @@ public class ChartTooltipManager : IDisposable
             if (_chartVerticalLines.TryGetValue(chart, out var verticalLine))
             {
                 var chartRef = chart;
-                ChartHelper.UpdateVerticalLineForChart(ref chartRef, index, ref verticalLine);
+                ChartInteractionVisualHelper.UpdateVerticalLineForChart(ref chartRef, index, ref verticalLine);
 
                 _chartVerticalLines[chart] = verticalLine;
             }

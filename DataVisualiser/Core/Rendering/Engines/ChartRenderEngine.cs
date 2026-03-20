@@ -485,11 +485,11 @@ public sealed class ChartRenderEngine
 
             // Use data timestamp directly if available (this is what the values are aligned to)
             if (idx < dataTimestamps.Count)
-                return ChartHelper.FormatDateTimeLabel(dataTimestamps[idx], model.TickInterval);
+                return ChartLabelFormatter.FormatDateTimeLabel(dataTimestamps[idx], model.TickInterval);
 
             // Fallback to normalized interval if data timestamps not available
             if (idx < normalizedIntervals.Count)
-                return ChartHelper.FormatDateTimeLabel(normalizedIntervals[idx], model.TickInterval);
+                return ChartLabelFormatter.FormatDateTimeLabel(normalizedIntervals[idx], model.TickInterval);
 
             return string.Empty;
         };

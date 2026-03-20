@@ -53,6 +53,34 @@ public sealed class BarPieChartControllerAdapterResetZoomTests
         });
     }
 
+    [Fact]
+    public void ResetZoom_WhenLogicalTreeContainsNonVisualChildren_DoesNotThrow_AndStillFindsChart()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var adapter = CreateAdapter(out var controller);
+
+            var chart = new CartesianChart();
+            chart.AxisX.Add(new Axis
+            {
+                MinValue = 2,
+                MaxValue = 8
+            });
+
+            var host = new Grid();
+            host.ColumnDefinitions.Add(new ColumnDefinition());
+            host.Children.Add(chart);
+            controller.SetChartContent(host);
+            controller.IsChartVisible = true;
+
+            adapter.ResetZoom();
+
+            var axis = chart.AxisX[0];
+            Assert.True(double.IsNaN(axis.MinValue));
+            Assert.True(double.IsNaN(axis.MaxValue));
+        });
+    }
+
     private static BarPieChartControllerAdapter CreateAdapter(out BarPieChartController controller)
     {
         var chartState = new ChartState

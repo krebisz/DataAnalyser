@@ -3,6 +3,7 @@ using DataVisualiser.UI.Charts.Interfaces;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
@@ -490,13 +491,16 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
                 return presentedChart;
         }
 
-        var childCount = VisualTreeHelper.GetChildrenCount(root);
-        for (var i = 0; i < childCount; i++)
+        if (root is Visual || root is Visual3D)
         {
-            var child = VisualTreeHelper.GetChild(root, i);
-            var found = FindCartesianChart(child);
-            if (found != null)
-                return found;
+            var childCount = VisualTreeHelper.GetChildrenCount(root);
+            for (var i = 0; i < childCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                var found = FindCartesianChart(child);
+                if (found != null)
+                    return found;
+            }
         }
 
         foreach (var child in LogicalTreeHelper.GetChildren(root))
