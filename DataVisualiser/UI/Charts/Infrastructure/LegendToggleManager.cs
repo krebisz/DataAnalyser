@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Adapters;

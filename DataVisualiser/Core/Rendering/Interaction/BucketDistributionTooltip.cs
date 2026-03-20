@@ -10,7 +10,7 @@ using DataVisualiser.Shared.Helpers;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Helpers;
+namespace DataVisualiser.Core.Rendering.Interaction;
 
 public abstract class BucketDistributionTooltip : IDisposable
 {

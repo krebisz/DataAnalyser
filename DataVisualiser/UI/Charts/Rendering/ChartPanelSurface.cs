@@ -1,10 +1,12 @@
 using System.Windows;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Rendering;
 
-public sealed class ChartPanelSurface : IChartSurface
+public sealed class ChartPanelSurface : IChartSurface, ITrackedCartesianChartSurface
 {
     private readonly IChartPanelHost _panel;
+    private CartesianChart? _renderedCartesianChart;
 
     public ChartPanelSurface(IChartPanelHost panel)
     {
@@ -34,5 +36,12 @@ public sealed class ChartPanelSurface : IChartSurface
     public void SetChartContent(UIElement? content)
     {
         _panel.SetChartContent(content);
+    }
+
+    public CartesianChart? RenderedCartesianChart => _renderedCartesianChart;
+
+    public void SetRenderedCartesianChart(CartesianChart? chart)
+    {
+        _renderedCartesianChart = chart;
     }
 }

@@ -6,7 +6,7 @@ using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -76,9 +76,9 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         if (_controller.SubtypeCombo == null)
             return;
 
-            _isUpdatingSubtypeCombo = true;
-            try
-            {
+        _isUpdatingSubtypeCombo = true;
+        try
+        {
             var selectedSeries = _viewModel.MetricState.SelectedSeries;
             if (selectedSeries.Count == 0)
             {
@@ -87,14 +87,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
                 return;
             }
 
-            ChartSubtypeComboHelper.PopulateCombo(_controller.SubtypeCombo, selectedSeries);
-            var seriesSelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, _viewModel.ChartState.SelectedDistributionSeries) ?? selectedSeries[0];
-            ChartSubtypeComboHelper.SelectComboItem(_controller.SubtypeCombo, seriesSelection);
-
-            if (_isInitializing())
-                _viewModel.ChartState.SelectedDistributionSeries = seriesSelection;
-            else
-                _viewModel.SetDistributionSeries(seriesSelection);
+            ApplyDistributionSeriesSelection(selectedSeries);
         }
         finally
         {
@@ -175,15 +168,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         try
         {
             _viewModel.SetDistributionFrequencyShading(mode, useFrequencyShading);
-
-            var isVisible = _viewModel.ChartState.IsDistributionVisible;
-            if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
-            {
-                using var _ = _beginUiBusyScope();
-                var ctx = _viewModel.ChartState.LastContext;
-                if (ctx != null)
-                    await RenderDistributionChartAsync(ctx, mode);
-            }
+            await RerenderDistributionIfVisibleAsync(mode);
         }
         catch
         {
@@ -199,15 +184,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         try
         {
             _viewModel.SetDistributionIntervalCount(mode, intervalCount);
-            var isVisible = _viewModel.ChartState.IsDistributionVisible;
-
-            if (isVisible && _viewModel.ChartState.LastContext?.Data1 != null)
-            {
-                using var _ = _beginUiBusyScope();
-                var ctx = _viewModel.ChartState.LastContext;
-                if (ctx != null)
-                    await RenderDistributionChartAsync(ctx, mode);
-            }
+            await RerenderDistributionIfVisibleAsync(mode);
         }
         catch
         {
@@ -309,44 +286,85 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
         DisposeDistributionChartInteractions();
 
-        var selectedSeries = ResolveSelectedDistributionSeries(ctx);
-        var (data, cmsSeries) = await ResolveDistributionDataAsync(ctx, selectedSeries);
-        if (data == null || (data.Count == 0 && cmsSeries == null))
+        var renderInput = await BuildDistributionRenderInputAsync(ctx);
+        if (renderInput == null)
             return;
-
-        var displayName = ResolveDistributionDisplayName(ctx, selectedSeries);
 
         if (_viewModel.ChartState.IsDistributionPolarMode)
         {
-            await RenderDistributionPolarChartAsync(ctx, mode, data, displayName, cmsSeries);
+            await RenderDistributionPolarChartAsync(ctx, mode, renderInput.Data, renderInput.DisplayName, renderInput.CmsSeries);
             return;
         }
 
+        await RenderDistributionCartesianChartAsync(ctx, mode, renderInput);
+    }
+
+    private void ApplyDistributionSeriesSelection(IReadOnlyList<MetricSeriesSelection> selectedSeries)
+    {
+        ChartSubtypeComboHelper.PopulateCombo(_controller.SubtypeCombo, selectedSeries);
+        var seriesSelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, _viewModel.ChartState.SelectedDistributionSeries) ?? selectedSeries[0];
+        ChartSubtypeComboHelper.SelectComboItem(_controller.SubtypeCombo, seriesSelection);
+
+        if (_isInitializing())
+            _viewModel.ChartState.SelectedDistributionSeries = seriesSelection;
+        else
+            _viewModel.SetDistributionSeries(seriesSelection);
+    }
+
+    private async Task RerenderDistributionIfVisibleAsync(DistributionMode mode)
+    {
+        if (!_viewModel.ChartState.IsDistributionVisible || _viewModel.ChartState.LastContext?.Data1 == null)
+            return;
+
+        using var _ = _beginUiBusyScope();
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx != null)
+            await RenderDistributionChartAsync(ctx, mode);
+    }
+
+    private async Task<DistributionRenderInput?> BuildDistributionRenderInputAsync(ChartDataContext ctx)
+    {
+        var selectedSeries = ResolveSelectedDistributionSeries(ctx);
+        var (data, cmsSeries) = await ResolveDistributionDataAsync(ctx, selectedSeries);
+        if (data == null || (data.Count == 0 && cmsSeries == null))
+            return null;
+
+        var displayName = ResolveDistributionDisplayName(ctx, selectedSeries);
+        return new DistributionRenderInput(selectedSeries, data, cmsSeries, displayName);
+    }
+
+    private async Task RenderDistributionCartesianChartAsync(ChartDataContext ctx, DistributionMode mode, DistributionRenderInput renderInput)
+    {
         var settings = _viewModel.ChartState.GetDistributionSettings(mode);
         var chart = _controller.Chart;
         var orchestrator = _getChartRenderingOrchestrator();
 
         if (orchestrator != null)
         {
-            var distributionContext = new ChartDataContext
-            {
-                    PrimaryCms = cmsSeries,
-                    Data1 = data,
-                    DisplayName1 = displayName,
-                    MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-                    PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-                    PrimarySubtype = selectedSeries?.Subtype,
-                    DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                    DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                    From = ctx.From,
-                    To = ctx.To
-            };
+            var distributionContext = BuildDistributionContext(ctx, renderInput);
             await orchestrator.RenderDistributionChartAsync(distributionContext, chart, _viewModel.ChartState, mode);
             return;
         }
 
         var service = GetDistributionService(mode);
-        await service.UpdateDistributionChartAsync(chart, data, displayName, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount, cmsSeries);
+        await service.UpdateDistributionChartAsync(chart, renderInput.Data, renderInput.DisplayName, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount, renderInput.CmsSeries);
+    }
+
+    private static ChartDataContext BuildDistributionContext(ChartDataContext ctx, DistributionRenderInput renderInput)
+    {
+        return new ChartDataContext
+        {
+                PrimaryCms = renderInput.CmsSeries,
+                Data1 = renderInput.Data,
+                DisplayName1 = renderInput.DisplayName,
+                MetricType = renderInput.SelectedSeries?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = renderInput.SelectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+                PrimarySubtype = renderInput.SelectedSeries?.Subtype,
+                DisplayPrimaryMetricType = renderInput.SelectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplayPrimarySubtype = renderInput.SelectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
     }
 
     private async Task RenderDistributionPolarChartAsync(ChartDataContext ctx, DistributionMode mode, IReadOnlyList<MetricData> data, string displayName, ICanonicalMetricSeries? cmsSeries)
@@ -442,4 +460,9 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         };
     }
 
+    private sealed record DistributionRenderInput(
+        MetricSeriesSelection? SelectedSeries,
+        IReadOnlyList<MetricData> Data,
+        ICanonicalMetricSeries? CmsSeries,
+        string DisplayName);
 }

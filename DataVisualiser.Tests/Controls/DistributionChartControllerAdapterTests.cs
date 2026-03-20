@@ -1,7 +1,7 @@
 using System.Windows;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;

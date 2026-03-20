@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;

@@ -1,12 +1,11 @@
 using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Adapters;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.State;
 
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Adapters;
 
 public abstract class ChartControllerAdapterBase : IChartController, IWpfChartPanelHost
 {

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows.Media;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Shared.Helpers;

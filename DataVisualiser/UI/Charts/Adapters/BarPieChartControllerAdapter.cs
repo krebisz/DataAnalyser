@@ -1,9 +1,7 @@
 using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Interfaces;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Media3D;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
@@ -86,7 +84,8 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
     public override void ResetZoom()
     {
-        var chart = FindCartesianChart(_controller.Panel.ChartContentPanel);
+        EnsureSurfaceAndRenderer();
+        var chart = (_surface as ITrackedCartesianChartSurface)?.RenderedCartesianChart;
         if (chart != null)
             ChartSurfaceHelper.ResetZoom(chart);
     }
@@ -476,43 +475,4 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
     private sealed record BarPieBucketPlan(DateTime From, DateTime To, double BucketTicks, IReadOnlyList<BarPieBucket> Buckets);
 
-    private static CartesianChart? FindCartesianChart(DependencyObject? root)
-    {
-        if (root == null)
-            return null;
-
-        if (root is CartesianChart chart)
-            return chart;
-
-        if (root is ContentPresenter presenter && presenter.Content is DependencyObject presented)
-        {
-            var presentedChart = FindCartesianChart(presented);
-            if (presentedChart != null)
-                return presentedChart;
-        }
-
-        if (root is Visual || root is Visual3D)
-        {
-            var childCount = VisualTreeHelper.GetChildrenCount(root);
-            for (var i = 0; i < childCount; i++)
-            {
-                var child = VisualTreeHelper.GetChild(root, i);
-                var found = FindCartesianChart(child);
-                if (found != null)
-                    return found;
-            }
-        }
-
-        foreach (var child in LogicalTreeHelper.GetChildren(root))
-        {
-            if (child is not DependencyObject dependencyChild)
-                continue;
-
-            var found = FindCartesianChart(dependencyChild);
-            if (found != null)
-                return found;
-        }
-
-        return null;
-    }
 }

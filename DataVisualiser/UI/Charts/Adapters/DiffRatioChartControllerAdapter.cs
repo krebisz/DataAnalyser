@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Helpers;

@@ -3,7 +3,7 @@ using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.State;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Adapters;
 
 public abstract class CartesianChartControllerAdapterBase<TController> : ChartControllerAdapterBase, ICartesianChartSurface, IWpfCartesianChartHost
     where TController : ICartesianChartControllerHost

@@ -11,7 +11,7 @@ using DataVisualiser.UI.State;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Helpers;
+namespace DataVisualiser.Core.Rendering.Interaction;
 
 public sealed class DistributionPolarProjectionTooltip : IDisposable
 {

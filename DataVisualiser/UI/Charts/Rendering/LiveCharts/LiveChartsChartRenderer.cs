@@ -29,11 +29,13 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         if (model.Facets.Count > 0)
         {
+            SetTrackedCartesianChart(surface, null);
             surface.SetChartContent(BuildFacetPieContent(model));
             return Task.CompletedTask;
         }
 
-        surface.SetChartContent(BuildSingleChartContent(model));
+        surface.SetChartContent(BuildSingleChartContent(model, out var chart));
+        SetTrackedCartesianChart(surface, chart);
         return Task.CompletedTask;
     }
 
@@ -130,10 +132,13 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         return grid;
     }
 
-    private static UIElement BuildSingleChartContent(UiChartRenderModel model)
+    private static UIElement BuildSingleChartContent(UiChartRenderModel model, out CartesianChart? renderedChart)
     {
         if (model.Series.Count == 0)
+        {
+            renderedChart = null;
             return new Grid();
+        }
 
         var chart = new CartesianChart
         {
@@ -144,6 +149,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
                 Margin = ChartUiDefaults.ChartContentMargin,
                 MinHeight = ChartUiDefaults.ChartMinHeight
         };
+        renderedChart = chart;
 
         foreach (var series in model.Series)
         {
@@ -231,6 +237,12 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         }
 
         return chart;
+    }
+
+    private static void SetTrackedCartesianChart(IChartSurface surface, CartesianChart? chart)
+    {
+        if (surface is ITrackedCartesianChartSurface trackedSurface)
+            trackedSurface.SetRenderedCartesianChart(chart);
     }
 
     private static LegendLocation GetLegendLocation(ChartLegendModel? legend)

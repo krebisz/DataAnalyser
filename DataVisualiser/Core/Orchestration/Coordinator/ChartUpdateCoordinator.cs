@@ -5,6 +5,7 @@ using System.Windows.Media;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Core.Services;

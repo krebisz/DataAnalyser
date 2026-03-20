@@ -94,28 +94,8 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
         try
         {
-            if (_controller.NormZeroToOneRadio.IsChecked == true)
-                _viewModel.SetNormalizationMode(NormalizationMode.ZeroToOne);
-            else if (_controller.NormPercentOfMaxRadio.IsChecked == true)
-                _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
-            else if (_controller.NormRelativeToMaxRadio.IsChecked == true)
-                _viewModel.SetNormalizationMode(NormalizationMode.RelativeToMax);
-
-            if (_viewModel.ChartState.IsNormalizedVisible && _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data2 != null)
-            {
-                using var _ = _beginUiBusyScope();
-                var ctx = _viewModel.ChartState.LastContext;
-                if (ctx == null)
-                    return;
-
-                var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
-                if (primaryData == null || secondaryData == null)
-                    return;
-
-                var normalizedStrategy = CreateNormalizedStrategy(normalizedContext, primaryData, secondaryData, normalizedContext.DisplayName1, normalizedContext.DisplayName2, normalizedContext.From, normalizedContext.To, _viewModel.ChartState.SelectedNormalizationMode);
-                UpdateNormalizedPanelTitle(normalizedContext);
-                await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(_controller.Chart, normalizedStrategy, $"{normalizedContext.DisplayName1} ~ {normalizedContext.DisplayName2}", minHeight: 400, metricType: normalizedContext.PrimaryMetricType ?? normalizedContext.MetricType, primarySubtype: normalizedContext.PrimarySubtype, secondarySubtype: normalizedContext.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: normalizedContext.SecondaryMetricType, displayPrimaryMetricType: normalizedContext.DisplayPrimaryMetricType, displaySecondaryMetricType: normalizedContext.DisplaySecondaryMetricType, displayPrimarySubtype: normalizedContext.DisplayPrimarySubtype, displaySecondarySubtype: normalizedContext.DisplaySecondarySubtype);
-            }
+            ApplySelectedNormalizationMode();
+            await RerenderNormalizedIfVisibleAsync();
         }
         catch
         {
@@ -183,29 +163,7 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
             secondaryCms = resolvedSecondary.Cms;
         }
 
-        var displayName1 = ResolveNormalizedDisplayName(ctx, primarySelection);
-        var displayName2 = ResolveNormalizedDisplayName(ctx, secondarySelection);
-
-        var normalizedContext = new ChartDataContext
-        {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                PrimaryCms = primaryCms,
-                SecondaryCms = secondaryCms,
-                DisplayName1 = displayName1,
-                DisplayName2 = displayName2,
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                From = ctx.From,
-                To = ctx.To
-        };
+        var normalizedContext = BuildNormalizedContext(ctx, primarySelection, secondarySelection, primaryData, secondaryData, primaryCms, secondaryCms);
 
         return (primaryData, secondaryData, normalizedContext);
     }
@@ -277,6 +235,56 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
             return ctx.DisplayName2;
 
         return selectedSeries.DisplayName;
+    }
+
+    private void ApplySelectedNormalizationMode()
+    {
+        if (_controller.NormZeroToOneRadio.IsChecked == true)
+            _viewModel.SetNormalizationMode(NormalizationMode.ZeroToOne);
+        else if (_controller.NormPercentOfMaxRadio.IsChecked == true)
+            _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
+        else if (_controller.NormRelativeToMaxRadio.IsChecked == true)
+            _viewModel.SetNormalizationMode(NormalizationMode.RelativeToMax);
+    }
+
+    private async Task RerenderNormalizedIfVisibleAsync()
+    {
+        var ctx = _viewModel.ChartState.LastContext;
+        if (!_viewModel.ChartState.IsNormalizedVisible || ctx?.Data1 == null || ctx.Data2 == null)
+            return;
+
+        using var _ = _beginUiBusyScope();
+        var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
+        if (primaryData == null || secondaryData == null)
+            return;
+
+        var normalizedStrategy = CreateNormalizedStrategy(normalizedContext, primaryData, secondaryData, normalizedContext.DisplayName1, normalizedContext.DisplayName2, normalizedContext.From, normalizedContext.To, _viewModel.ChartState.SelectedNormalizationMode);
+        UpdateNormalizedPanelTitle(normalizedContext);
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(_controller.Chart, normalizedStrategy, $"{normalizedContext.DisplayName1} ~ {normalizedContext.DisplayName2}", minHeight: 400, metricType: normalizedContext.PrimaryMetricType ?? normalizedContext.MetricType, primarySubtype: normalizedContext.PrimarySubtype, secondarySubtype: normalizedContext.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: normalizedContext.SecondaryMetricType, displayPrimaryMetricType: normalizedContext.DisplayPrimaryMetricType, displaySecondaryMetricType: normalizedContext.DisplaySecondaryMetricType, displayPrimarySubtype: normalizedContext.DisplayPrimarySubtype, displaySecondarySubtype: normalizedContext.DisplaySecondarySubtype);
+    }
+
+    private static ChartDataContext BuildNormalizedContext(ChartDataContext ctx, MetricSeriesSelection? primarySelection, MetricSeriesSelection? secondarySelection, IReadOnlyList<MetricData>? primaryData, IReadOnlyList<MetricData>? secondaryData, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
+    {
+        return new ChartDataContext
+        {
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                PrimaryCms = primaryCms,
+                SecondaryCms = secondaryCms,
+                DisplayName1 = ResolveNormalizedDisplayName(ctx, primarySelection),
+                DisplayName2 = ResolveNormalizedDisplayName(ctx, secondarySelection),
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
     }
 
     private void UpdateNormalizedPanelTitle(ChartDataContext ctx)

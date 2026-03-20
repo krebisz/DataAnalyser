@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Rendering.ECharts;
 
@@ -9,9 +10,10 @@ namespace DataVisualiser.UI.Charts.Rendering.ECharts;
 ///     For now, it behaves like a standard chart panel surface while keeping
 ///     the surface type distinct for resolver-based routing.
 /// </summary>
-public sealed class EChartsWebViewSurface : IChartSurface
+public sealed class EChartsWebViewSurface : IChartSurface, ITrackedCartesianChartSurface
 {
     private readonly IChartPanelHost _panel;
+    private CartesianChart? _renderedCartesianChart;
 
     public EChartsWebViewSurface(IChartPanelHost panel)
     {
@@ -43,5 +45,12 @@ public sealed class EChartsWebViewSurface : IChartSurface
         // Keep content assignment centralized at the surface boundary.
         // A future WebView2 host can be mounted here.
         _panel.SetChartContent(content ?? new Grid());
+    }
+
+    public CartesianChart? RenderedCartesianChart => _renderedCartesianChart;
+
+    public void SetRenderedCartesianChart(CartesianChart? chart)
+    {
+        _renderedCartesianChart = chart;
     }
 }

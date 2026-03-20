@@ -5,7 +5,7 @@ using System.Windows.Media;
 using DataVisualiser.Core.Configuration.Defaults;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Helpers;
+namespace DataVisualiser.Core.Rendering.Interaction;
 
 public static class ChartInteractionVisualHelper
 {

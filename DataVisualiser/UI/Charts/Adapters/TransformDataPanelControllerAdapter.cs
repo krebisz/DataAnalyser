@@ -92,15 +92,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _isUpdatingTransformSubtypeCombos = true;
         try
         {
-            _controller.TransformPrimarySubtypeCombo.Items.Clear();
-            _controller.TransformSecondarySubtypeCombo.Items.Clear();
-            _controller.TransformPrimarySubtypeCombo.IsEnabled = false;
-            _controller.TransformSecondarySubtypeCombo.IsEnabled = false;
-            _controller.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            _controller.TransformPrimarySubtypeCombo.SelectedItem = null;
-            _controller.TransformSecondarySubtypeCombo.SelectedItem = null;
-            _controller.TransformOperationCombo.SelectedItem = null;
-            _controller.TransformComputeButton.IsEnabled = false;
+            ResetTransformSelectionControls();
         }
         finally
         {
@@ -150,31 +142,20 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     public void UpdateTransformComputeButtonState()
     {
-        if (_isTransformSelectionPendingLoad)
-        {
-            _controller.TransformComputeButton.IsEnabled = false;
-            return;
-        }
-
         var ctx = _viewModel.ChartState.LastContext;
-        if (ctx == null)
+        if (_isTransformSelectionPendingLoad || ctx == null)
         {
             _controller.TransformComputeButton.IsEnabled = false;
             return;
         }
 
-        if (_controller.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string operationTag)
+        if (!TryGetSelectedOperation(out var operationTag))
         {
-            _controller.TransformComputeButton.IsEnabled = ctx.Data1 != null && ctx.Data1.Any();
+            _controller.TransformComputeButton.IsEnabled = CanRenderPrimarySelection(ctx);
             return;
         }
 
-        var hasSecondary = HasSecondaryData(ctx);
-        var hasSecondSubtype = ResolveSelectedTransformSecondarySeries(ctx) != null;
-        var isUnary = operationTag == "Log" || operationTag == "Sqrt";
-        var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
-
-        _controller.TransformComputeButton.IsEnabled = (isUnary && ctx.Data1 != null) || (isBinary && hasSecondary && hasSecondSubtype);
+        _controller.TransformComputeButton.IsEnabled = CanComputeTransformOperation(ctx, operationTag);
     }
 
     public void OnToggleRequested(object? sender, EventArgs e)
@@ -372,8 +353,8 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     private async Task ExecuteTransformOperation(ChartDataContext ctx, string operationTag)
     {
-        var isUnary = operationTag == "Log" || operationTag == "Sqrt";
-        var isBinary = operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
+        var isUnary = IsUnaryTransformOperation(operationTag);
+        var isBinary = IsBinaryTransformOperation(operationTag);
         var hasSecondary = HasSecondaryData(ctx) && ResolveSelectedTransformSecondarySeries(ctx) != null;
 
         var (primaryData, secondaryData, transformContext) = await ResolveTransformDataAsync(ctx);
@@ -632,27 +613,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         if (secondarySelection != null)
             secondaryData = await ResolveTransformDataAsync(ctx, secondarySelection);
 
-        var displayName1 = ResolveTransformDisplayName(ctx, primarySelection);
-        var displayName2 = ResolveTransformDisplayName(ctx, secondarySelection);
-
-        var transformContext = new ChartDataContext
-        {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                DisplayName1 = displayName1,
-                DisplayName2 = displayName2,
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                From = ctx.From,
-                To = ctx.To
-        };
+        var transformContext = BuildTransformContext(ctx, primarySelection, secondarySelection, primaryData, secondaryData);
 
         return (primaryData, secondaryData, transformContext);
     }
@@ -686,6 +647,64 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         var (_, _, transformContext) = await ResolveTransformDataAsync(ctx);
         PopulateTransformGrids(transformContext);
         UpdateTransformComputeButtonState();
+    }
+
+    private void ResetTransformSelectionControls()
+    {
+        _controller.TransformPrimarySubtypeCombo.Items.Clear();
+        _controller.TransformSecondarySubtypeCombo.Items.Clear();
+        _controller.TransformPrimarySubtypeCombo.IsEnabled = false;
+        _controller.TransformSecondarySubtypeCombo.IsEnabled = false;
+        _controller.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
+        _controller.TransformPrimarySubtypeCombo.SelectedItem = null;
+        _controller.TransformSecondarySubtypeCombo.SelectedItem = null;
+        _controller.TransformOperationCombo.SelectedItem = null;
+        _controller.TransformComputeButton.IsEnabled = false;
+    }
+
+    private bool CanComputeTransformOperation(ChartDataContext ctx, string operationTag)
+    {
+        if (IsUnaryTransformOperation(operationTag))
+            return CanRenderPrimarySelection(ctx);
+
+        return IsBinaryTransformOperation(operationTag) && HasSecondaryData(ctx) && ResolveSelectedTransformSecondarySeries(ctx) != null;
+    }
+
+    private static bool CanRenderPrimarySelection(ChartDataContext ctx)
+    {
+        return ctx.Data1 != null && ctx.Data1.Any();
+    }
+
+    private static bool IsUnaryTransformOperation(string operationTag)
+    {
+        return operationTag == "Log" || operationTag == "Sqrt";
+    }
+
+    private static bool IsBinaryTransformOperation(string operationTag)
+    {
+        return operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
+    }
+
+    private static ChartDataContext BuildTransformContext(ChartDataContext ctx, MetricSeriesSelection? primarySelection, MetricSeriesSelection? secondarySelection, IReadOnlyList<MetricData>? primaryData, IReadOnlyList<MetricData>? secondaryData)
+    {
+        return new ChartDataContext
+        {
+                Data1 = primaryData,
+                Data2 = secondaryData,
+                DisplayName1 = ResolveTransformDisplayName(ctx, primarySelection),
+                DisplayName2 = ResolveTransformDisplayName(ctx, secondarySelection),
+                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
+                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
+                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
+                PrimarySubtype = primarySelection?.Subtype,
+                SecondarySubtype = secondarySelection?.Subtype,
+                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
     }
 
     private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)

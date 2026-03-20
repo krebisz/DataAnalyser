@@ -1,5 +1,5 @@
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;

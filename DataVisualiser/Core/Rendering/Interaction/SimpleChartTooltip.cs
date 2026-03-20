@@ -9,7 +9,7 @@ using LiveCharts.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Helpers;
+namespace DataVisualiser.Core.Rendering.Interaction;
 
 public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyPropertyChanged
 {

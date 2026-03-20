@@ -4,8 +4,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using LiveCharts;
 using LiveCharts.Wpf;
+using DataVisualiser.Core.Rendering.Helpers;
 
-namespace DataVisualiser.Core.Rendering.Helpers;
+namespace DataVisualiser.Core.Rendering.Interaction;
 
 /// <summary>
 ///     Manages tooltip display and vertical line indicators for one or more CartesianChart instances.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DataVisualiser.Core.Computation.Results;
 
-namespace DataVisualiser.Core.Rendering.Helpers;
+namespace DataVisualiser.Core.Rendering.Interaction;
 
 public sealed class ChartStackingTooltipState
 {
