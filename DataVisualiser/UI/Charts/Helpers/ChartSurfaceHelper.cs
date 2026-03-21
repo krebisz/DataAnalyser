@@ -53,14 +53,6 @@ public static class ChartSurfaceHelper
             tooltip.IsOpen = false;
     }
 
-    public static void ResetPolarFit(PolarChart chart)
-    {
-        if (chart == null)
-            throw new ArgumentNullException(nameof(chart));
-
-        chart.FitToBounds = true;
-    }
-
     public static bool HasSeries(PolarChart chart)
     {
         if (chart == null)
