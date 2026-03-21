@@ -10,10 +10,11 @@ namespace DataVisualiser.UI.Charts.Rendering.ECharts;
 ///     For now, it behaves like a standard chart panel surface while keeping
 ///     the surface type distinct for resolver-based routing.
 /// </summary>
-public sealed class EChartsWebViewSurface : IChartSurface, ITrackedCartesianChartSurface
+public sealed class EChartsWebViewSurface : IChartSurface, ITrackedCartesianChartSurface, ITrackedChartContentSurface
 {
     private readonly IChartPanelHost _panel;
     private CartesianChart? _renderedCartesianChart;
+    private bool _hasRenderedContent;
 
     public EChartsWebViewSurface(IChartPanelHost panel)
     {
@@ -52,5 +53,12 @@ public sealed class EChartsWebViewSurface : IChartSurface, ITrackedCartesianChar
     public void SetRenderedCartesianChart(CartesianChart? chart)
     {
         _renderedCartesianChart = chart;
+    }
+
+    public bool HasRenderedContent => _hasRenderedContent;
+
+    public void SetHasRenderedContent(bool hasRenderedContent)
+    {
+        _hasRenderedContent = hasRenderedContent;
     }
 }

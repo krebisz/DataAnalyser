@@ -3,10 +3,11 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Rendering;
 
-public sealed class ChartPanelSurface : IChartSurface, ITrackedCartesianChartSurface
+public sealed class ChartPanelSurface : IChartSurface, ITrackedCartesianChartSurface, ITrackedChartContentSurface
 {
     private readonly IChartPanelHost _panel;
     private CartesianChart? _renderedCartesianChart;
+    private bool _hasRenderedContent;
 
     public ChartPanelSurface(IChartPanelHost panel)
     {
@@ -43,5 +44,12 @@ public sealed class ChartPanelSurface : IChartSurface, ITrackedCartesianChartSur
     public void SetRenderedCartesianChart(CartesianChart? chart)
     {
         _renderedCartesianChart = chart;
+    }
+
+    public bool HasRenderedContent => _hasRenderedContent;
+
+    public void SetHasRenderedContent(bool hasRenderedContent)
+    {
+        _hasRenderedContent = hasRenderedContent;
     }
 }

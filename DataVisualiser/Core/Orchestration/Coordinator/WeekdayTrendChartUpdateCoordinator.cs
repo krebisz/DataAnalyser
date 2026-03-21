@@ -43,6 +43,18 @@ public sealed class WeekdayTrendChartUpdateCoordinator
         RenderWhenReady();
     }
 
+    public bool TryRefitActiveChart()
+    {
+        if (_lastResult == null || _chartState == null || _cartesianChart == null || _polarChart == null)
+            return false;
+
+        _renderingService.RenderWeekdayTrendChart(_lastResult, _chartState, _cartesianChart, _polarChart);
+
+        FinalizeChart(_cartesianChart);
+        FinalizeChart(_polarChart);
+        return true;
+    }
+
     private static void FinalizeChart(CartesianChart chart)
     {
         ChartHelper.InitializeChartTooltip(chart);

@@ -92,7 +92,13 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
     public override bool HasSeries(ChartState state)
     {
-        return false;
+        EnsureSurfaceAndRenderer();
+
+        if (_surface is ITrackedChartContentSurface trackedSurface)
+            return trackedSurface.HasRenderedContent;
+
+        var chart = (_surface as ITrackedCartesianChartSurface)?.RenderedCartesianChart;
+        return chart != null && ChartSurfaceHelper.HasSeries(chart);
     }
 
     public override void UpdateSubtypeOptions()
@@ -113,8 +119,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         if (_isInitializing())
             return;
 
-        if (_viewModel.ChartState.IsBarPieVisible)
-            await RenderBarPieChartAsync();
+        await RerenderBarPieIfVisibleAsync();
     }
 
     public async void OnBucketCountChanged(object? sender, EventArgs e)
@@ -125,8 +130,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         if (_controller.BucketCountCombo.SelectedItem is ComboBoxItem selectedItem && TryGetIntervalCount(selectedItem.Tag, out var bucketCount))
             _viewModel.SetBarPieBucketCount(bucketCount);
 
-        if (_viewModel.ChartState.IsBarPieVisible)
-            await RenderBarPieChartAsync();
+        await RerenderBarPieIfVisibleAsync();
     }
 
     private void EnsureSurfaceAndRenderer()
@@ -148,6 +152,11 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         var isPieMode = _controller.PieModeRadio.IsChecked == true;
         var model = await BuildBarPieRenderModelAsync(isPieMode);
         await _renderer!.ApplyAsync(_surface!, model);
+    }
+
+    private Task RerenderBarPieIfVisibleAsync()
+    {
+        return _viewModel.ChartState.IsBarPieVisible ? RenderBarPieChartAsync() : Task.CompletedTask;
     }
 
     private async Task<UiChartRenderModel> BuildBarPieRenderModelAsync(bool isPieMode)

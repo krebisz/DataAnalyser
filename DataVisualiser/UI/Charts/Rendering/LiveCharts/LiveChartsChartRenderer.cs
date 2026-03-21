@@ -26,6 +26,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         surface.SetTitle(model.Title);
         surface.SetIsVisible(model.IsVisible);
+        SetTrackedRenderedContent(surface, model.HasRenderableContent);
 
         if (model.Facets.Count > 0)
         {
@@ -243,6 +244,12 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
     {
         if (surface is ITrackedCartesianChartSurface trackedSurface)
             trackedSurface.SetRenderedCartesianChart(chart);
+    }
+
+    private static void SetTrackedRenderedContent(IChartSurface surface, bool hasRenderableContent)
+    {
+        if (surface is ITrackedChartContentSurface trackedSurface)
+            trackedSurface.SetHasRenderedContent(hasRenderableContent);
     }
 
     private static LegendLocation GetLegendLocation(ChartLegendModel? legend)

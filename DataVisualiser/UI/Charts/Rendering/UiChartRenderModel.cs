@@ -12,4 +12,6 @@ public sealed class UiChartRenderModel
     public ChartInteractionModel? Interactions { get; init; }
     public IReadOnlyList<ChartOverlayModel> Overlays { get; init; } = Array.Empty<ChartOverlayModel>();
     public IReadOnlyList<ChartFacetModel> Facets { get; init; } = Array.Empty<ChartFacetModel>();
+
+    public bool HasRenderableContent => Series.Count > 0 || Facets.Any(facet => facet.Series.Count > 0);
 }

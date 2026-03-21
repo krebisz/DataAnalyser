@@ -63,6 +63,9 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
     public override void ResetZoom()
     {
+        if (_updateCoordinator.TryRefitActiveChart())
+            return;
+
         ChartSurfaceHelper.ResetZoom(_controller.Chart);
         ChartSurfaceHelper.ResetZoom(_controller.PolarChart);
     }

@@ -24,6 +24,8 @@ public sealed class EChartsChartRenderer : IChartRenderer
         surface.SetIsVisible(model.IsVisible);
         if (surface is ITrackedCartesianChartSurface trackedSurface)
             trackedSurface.SetRenderedCartesianChart(null);
+        if (surface is ITrackedChartContentSurface trackedContentSurface)
+            trackedContentSurface.SetHasRenderedContent(model.HasRenderableContent);
 
         surface.SetChartContent(BuildPlaceholder(model.Title));
         return Task.CompletedTask;
