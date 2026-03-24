@@ -2,7 +2,7 @@
 Status: Consolidated execution source of truth for structural rehaul  
 Scope: Structural, philosophical, evolutionary, and intention-aligned codebase overhaul  
 Authority: Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `Project Roadmap.md`  
-Last Updated: 2026-03-18
+Last Updated: 2026-03-24
 
 ---
 
@@ -439,9 +439,9 @@ Breadth of tests is secondary to seam quality and environment independence.
 
 Execution order for minimal risk and maximum structural leverage:
 1. Evidence pipeline correction and documentation/evidence sync guardrails.
-2. Composition bottleneck reduction in `MainChartsView`.
-3. Core/UI boundary enforcement, helper splits, and rendering contract convergence.
-4. CMS migration closure for remaining strategy factories and contracts.
+2. CMS/Legacy cut-over truthfulness and missing strategy-path completion.
+3. Composition bottleneck reduction in `MainChartsView`.
+4. Core/UI boundary enforcement, helper splits, rendering contract convergence, and backend qualification.
 5. Configuration centralization (remove global mutable toggles and shared runtime state assumptions).
 6. Data access/orchestration decomposition, `DataFileReader` pipeline decomposition, and error-path hardening.
 7. Assurance expansion, architecture conformance testing, and environment-independent seam validation.
@@ -495,16 +495,15 @@ Retired as superfluous after absorption:
 
 ## 9. Immediate Next Action Set
 
-1. Fix evidence export path and regenerate referenced reachability files in project-root `documents/`.
-2. Fix the current tactical distribution-polar tooltip defect and record the fallback as stabilization work, not backend closure.
-3. Define rendering capability contracts and a backend qualification matrix for current/future chart vendors.
-4. Build the first backend qualification probe for `LiveChartsCore` to determine whether current lifecycle risk is backend-wide or control-specific.
+1. Repair CMS/Legacy cut-over truthfulness for unsupported strategy families.
+2. Implement missing real CMS paths for `MultiMetric`, `Normalized`, `Difference`, and `Ratio`.
+3. Add/expand reachability and parity coverage for the corrected paths.
+4. Resume orchestration refactor only after the cut-over truthfulness gap is closed.
 5. Remove remaining direct controller access/fallbacks from `MainChartsView`.
 6. Eliminate direct repository construction from presentation/orchestration flows that should be contract-driven.
-7. Close CMS factory TODOs and update strategy contracts for CMS-first flow.
-8. Replace mutable static CMS toggles with scoped runtime configuration service.
-9. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
-10. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
+7. Replace mutable static CMS toggles with scoped runtime configuration service.
+8. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
+9. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
 
 ---
 
@@ -527,6 +526,7 @@ Execution rules:
 12. Keep each step reversible as a single bounded change set wherever practical so rollback and fault isolation remain straightforward.
 
 ### Step 1. Stabilize the default test lane
+Status: completed
 
 Agent work:
 1. Remove accidental live-database dependency from default `DataVisualiser.Tests` execution.
@@ -544,6 +544,7 @@ Done when:
 1. The default `DataVisualiser.Tests` lane does not require live SQL Server access.
 
 ### Step 2. Introduce cross-cutting seams before deeper refactors
+Status: completed
 
 Agent work:
 1. Add an injected runtime configuration abstraction to wrap current mutable static strategy/config toggles.
@@ -562,6 +563,7 @@ Done when:
 1. newly touched orchestration/core code no longer depends directly on global static toggles or direct UI dialog calls
 
 ### Step 3. Put `DataFetcher` behind narrow query contracts
+Status: completed
 
 Agent work:
 1. Define small interfaces for counts, subtype lookup, and series retrieval.
@@ -581,6 +583,7 @@ Done when:
 1. presentation-path logic no longer constructs `DataFetcher` directly in the first migrated slice
 
 ### Step 4. Split `ChartHelper` into pure logic and UI logic
+Status: completed
 
 Agent work:
 1. Extract chart-independent formatting/math/selection logic into core-safe helpers.
@@ -600,6 +603,7 @@ Done when:
 1. the extracted core-safe helper logic is usable without WPF or chart-control references
 
 ### Step 5. Sanitize chart/controller structure before new rendering abstractions
+Status: completed
 
 Agent work:
 1. Inventory existing chart families, controllers, adapters, helpers, and host patterns to identify repeated responsibilities and accidental divergence.
@@ -627,6 +631,9 @@ Done when:
 4. the codebase is materially cleaner to receive rendering capability contracts
 
 ### Step 6. Establish rendering capability contracts and backend qualification on a narrow vertical slice
+Status: completed
+Completion note:
+1. Proven and widened beyond the first slice for `Distribution`, `Weekday Trend`, `Bar/Pie`, `Main`, `Normalized`, `Diff/Ratio`, and `Transform`.
 
 Agent work:
 1. Introduce rendering contracts by capability for one chart family, including render, reset, visibility, and interaction lifecycle.
@@ -661,7 +668,42 @@ Done when:
 3. any tactical fallback still in place is explicitly classified as temporary and bounded
 4. the first rendering contract does not accidentally foreclose future chart-program/result-set composition above the rendering boundary
 
-### Step 7. Refactor orchestration to explicit handoff boundaries
+### Step 7. Repair CMS/Legacy cut-over truthfulness and complete missing dual-path strategies
+Status: next
+
+Agent work:
+1. Make cut-over reporting truthful for strategy families that do not yet have a real CMS implementation.
+2. Remove false-positive `UseCms` outcomes or false-positive reachability claims for unsupported families until real CMS execution exists.
+3. Complete real CMS strategy paths for:
+   - `MultiMetric`
+   - `Normalized`
+   - `Difference`
+   - `Ratio`
+4. Update orchestration/context contracts so the repaired CMS paths receive first-class CMS inputs instead of relying on legacy-derived substitutes.
+5. Remove or replace chart-path short-circuits that bypass cut-over for repaired families, especially `Diff/Ratio`.
+6. Add focused reachability, no-silent-fallback, and parity coverage for each repaired family.
+7. Regenerate the CMS/Legacy capability truth table after the repaired paths are in place.
+
+Primary code focus:
+1. `StrategyCutOverService`
+2. strategy factories for `MultiMetric`, `Normalized`, `Difference`, and `Ratio`
+3. `ChartDataContextBuilder`
+4. `ChartRenderingOrchestrator`
+5. tests covering reachability and parity for the repaired families
+
+Validation gate:
+1. full solution build
+2. focused strategy cut-over tests
+3. focused parity tests for repaired families
+4. manual smoke for `Main`, `Normalized`, and `Diff/Ratio`
+
+Done when:
+1. no strategy family reports CMS execution without a real CMS computation path
+2. `MultiMetric`, `Normalized`, `Difference`, and `Ratio` each have a real CMS path or are explicitly reported as legacy-only
+3. `Diff/Ratio` no longer bypasses the cut-over truth model in live chart flow
+4. reachability/parity evidence for the repaired families is executable and current
+
+### Step 8. Refactor orchestration to explicit handoff boundaries
 
 Agent work:
 1. Separate context building, strategy selection, chart-program/result composition, data retrieval, and render invocation into explicit handoff stages.
@@ -681,7 +723,7 @@ Validation gate:
 Done when:
 1. the migrated orchestration path does not directly require WPF controls, `MessageBox`, or concrete repository construction
 
-### Step 8. Reduce `MainChartsView` to a composition host, pass 1
+### Step 9. Reduce `MainChartsView` to a composition host, pass 1
 
 Agent work:
 1. Extract startup/bootstrap responsibilities from `MainChartsView`.
@@ -700,7 +742,7 @@ Validation gate:
 Done when:
 1. `MainChartsView` primarily wires composition and bindings rather than owning workflow logic
 
-### Step 9. Reduce `MainChartsView` to a composition host, pass 2
+### Step 10. Reduce `MainChartsView` to a composition host, pass 2
 
 Agent work:
 1. Remove remaining direct controller access and fallback control lookups.
@@ -720,7 +762,7 @@ Validation gate:
 Done when:
 1. `MainChartsView` has no remaining chart-specific fallback control knowledge outside composition seams
 
-### Step 10. Isolate Syncfusion-specific fragility
+### Step 11. Isolate Syncfusion-specific fragility
 
 Agent work:
 1. Move reflection-heavy tooltip/hit-testing workarounds behind a dedicated Syncfusion-specific behavior/service layer.
@@ -739,7 +781,7 @@ Validation gate:
 Done when:
 1. Syncfusion version/workaround logic is isolated from shared chart orchestration logic
 
-### Step 11. Start `DataFileReader` modernization with the safest infrastructure slice
+### Step 12. Start `DataFileReader` modernization with the safest infrastructure slice
 
 Agent work:
 1. Introduce injected options/connection-string access instead of ad-hoc configuration reads in the first migrated slice.
@@ -757,7 +799,7 @@ Validation gate:
 Done when:
 1. the first `DataFileReader` slice is no longer using obsolete SQL client APIs or implicit config access
 
-### Step 12. Split `SQLHelper` by capability without changing callers all at once
+### Step 13. Split `SQLHelper` by capability without changing callers all at once
 
 Agent work:
 1. Extract separate services/modules for schema maintenance, metric reads, persistence, and count/canonical operations.
@@ -776,7 +818,7 @@ Validation gate:
 Done when:
 1. `SQLHelper` is no longer the dominant multi-concern entry point for ingestion/persistence/database maintenance
 
-### Step 13. Add hard architectural guardrails
+### Step 14. Add hard architectural guardrails
 
 Agent work:
 1. Add dependency-direction tests for Core->UI and orchestration->chart-library leakage.
@@ -796,7 +838,7 @@ Done when:
 1. the next refactor step cannot silently reintroduce the same boundary violations
 2. new vendor adoption cannot bypass the rendering-boundary and qualification rules accidentally
 
-### Step 14. Rebuild evidence/export flow after the code seams are in place
+### Step 15. Rebuild evidence/export flow after the code seams are in place
 
 Agent work:
 1. Move reachability/parity/evidence export behind a scriptable headless path.
@@ -816,7 +858,7 @@ Validation gate:
 Done when:
 1. closure evidence can be regenerated consistently without manual UI interaction
 
-### Step 15. Run a final convergence pass before declaring architectural closure
+### Step 16. Run a final convergence pass before declaring architectural closure
 
 Agent work:
 1. remove compatibility shims that were only meant to support intermediate migration

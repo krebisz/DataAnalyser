@@ -127,6 +127,28 @@ public sealed class StrategyCutOverServiceTests
     }
 
     [Theory]
+    [InlineData(StrategyType.CombinedMetric)]
+    [InlineData(StrategyType.Normalized)]
+    [InlineData(StrategyType.Difference)]
+    [InlineData(StrategyType.Ratio)]
+    public void ShouldUseCms_ShouldReturnFalse_ForBinaryStrategies_WhenSecondaryCmsMissing(StrategyType strategyType)
+    {
+        var service = CreateService(useCmsData: true, useCmsForCombinedMetric: true, useCmsForNormalized: true, useCmsForDifference: true, useCmsForRatio: true);
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(2).Build(),
+            SecondaryCms = null,
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(strategyType, ctx);
+
+        Assert.False(result);
+    }
+
+    [Theory]
     [InlineData(StrategyType.Normalized)]
     [InlineData(StrategyType.Difference)]
     [InlineData(StrategyType.Ratio)]
@@ -166,7 +188,7 @@ public sealed class StrategyCutOverServiceTests
     }
 
     [Fact]
-    public void CreateStrategy_ShouldPreferCms_ForNormalized_WhenEnabled()
+    public void CreateStrategy_ShouldContinueUsingLegacyImplementation_ForNormalized_WhenCmsIsEligible()
     {
         var service = CreateService(useCmsData: true, useCmsForNormalized: true);
         var primaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build();
@@ -196,7 +218,151 @@ public sealed class StrategyCutOverServiceTests
 
         Assert.IsType<NormalizedStrategy>(strategy);
         Assert.NotNull(result);
+        Assert.Equal(2, result!.PrimaryRawValues.Count);
+    }
+
+    [Fact]
+    public void ShouldUseCms_ShouldReturnFalse_WhenCmsSamplesFallOutsideRequestedRange()
+    {
+        var service = CreateService(useCmsData: true, useCmsForSingleMetric: true);
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries()
+                .WithStartTime(new DateTimeOffset(From.AddDays(-20), TimeSpan.Zero))
+                .WithInterval(TimeSpan.FromDays(1))
+                .WithSampleCount(3)
+                .Build(),
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(StrategyType.SingleMetric, ctx);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForCombinedMetric_WhenEnabled()
+    {
+        var service = CreateService(useCmsData: true, useCmsForCombinedMetric: true);
+        var primaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build();
+        var secondaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build();
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            LegacyData2 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).BuildSeries(2, TimeSpan.FromDays(1)),
+            Label1 = "Left",
+            Label2 = "Right",
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.IsType<CombinedMetricStrategy>(strategy);
+        Assert.NotNull(result);
         Assert.Equal(5, result!.PrimaryRawValues.Count);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForWeeklyDistribution_WhenEnabled()
+    {
+        var service = CreateService(useCmsData: true, useCmsForWeeklyDistribution: true);
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries()
+                .WithMetricId("metric.weekly")
+                .WithStartTime(new DateTimeOffset(From, TimeSpan.Zero))
+                .WithInterval(TimeSpan.FromDays(1))
+                .WithValue(10m)
+                .WithSampleCount(5)
+                .Build(),
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            Label1 = "Weekly",
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.WeeklyDistribution, ctx, parameters);
+
+        Assert.IsType<CmsWeeklyDistributionStrategy>(strategy);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForHourlyDistribution_WhenEnabled()
+    {
+        var service = CreateService(useCmsData: true, useCmsForHourlyDistribution: true);
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries()
+                .WithMetricId("metric.hourly")
+                .WithStartTime(new DateTimeOffset(From, TimeSpan.Zero))
+                .WithInterval(TimeSpan.FromHours(1))
+                .WithValue(10m)
+                .WithSampleCount(24)
+                .Build(),
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromHours(1)),
+            Label1 = "Hourly",
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.HourlyDistribution, ctx, parameters);
+
+        Assert.IsType<CmsHourlyDistributionStrategy>(strategy);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForWeekdayTrend_WhenEnabled()
+    {
+        var service = CreateService(useCmsData: true, useCmsForWeekdayTrend: true);
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries()
+                .WithMetricId("metric.weekday")
+                .WithStartTime(new DateTimeOffset(From, TimeSpan.Zero))
+                .WithInterval(TimeSpan.FromDays(1))
+                .WithValue(10m)
+                .WithSampleCount(5)
+                .Build(),
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            Label1 = "Weekday",
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
+        strategy.Compute();
+
+        Assert.Equal(5, CountWeekdayTrendPoints(strategy));
     }
 
     [Fact]
@@ -231,7 +397,10 @@ public sealed class StrategyCutOverServiceTests
         bool useCmsForCombinedMetric = true,
         bool useCmsForDifference = true,
         bool useCmsForRatio = true,
-        bool useCmsForNormalized = true)
+        bool useCmsForNormalized = true,
+        bool useCmsForWeeklyDistribution = true,
+        bool useCmsForWeekdayTrend = true,
+        bool useCmsForHourlyDistribution = true)
     {
         var dataPreparation = new Mock<IDataPreparationService>();
         return new StrategyCutOverService(dataPreparation.Object, cmsRuntimeConfiguration: new TestCmsRuntimeConfiguration
@@ -241,8 +410,18 @@ public sealed class StrategyCutOverServiceTests
             UseCmsForCombinedMetric = useCmsForCombinedMetric,
             UseCmsForDifference = useCmsForDifference,
             UseCmsForRatio = useCmsForRatio,
-            UseCmsForNormalized = useCmsForNormalized
+            UseCmsForNormalized = useCmsForNormalized,
+            UseCmsForWeeklyDistribution = useCmsForWeeklyDistribution,
+            UseCmsForWeekdayTrend = useCmsForWeekdayTrend,
+            UseCmsForHourlyDistribution = useCmsForHourlyDistribution
         });
+    }
+
+    private static int CountWeekdayTrendPoints(IChartComputationStrategy strategy)
+    {
+        var provider = Assert.IsAssignableFrom<IWeekdayTrendResultProvider>(strategy);
+        Assert.NotNull(provider.ExtendedResult);
+        return provider.ExtendedResult!.SeriesByDay.Values.Sum(series => series.Points.Count);
     }
 
     private sealed class TestCmsRuntimeConfiguration : ICmsRuntimeConfiguration
