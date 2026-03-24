@@ -2,6 +2,7 @@ namespace DataVisualiser.UI.Charts.Rendering;
 
 public sealed class UiChartRenderModel
 {
+    public string? ChartName { get; init; }
     public string? Title { get; init; }
     public bool IsVisible { get; init; }
 

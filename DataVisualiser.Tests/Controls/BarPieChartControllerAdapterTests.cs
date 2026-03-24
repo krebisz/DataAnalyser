@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.Charts.Adapters;
@@ -28,7 +29,7 @@ public sealed class BarPieChartControllerAdapterTests
             var controller = new BarPieChartController();
             var rendererResolver = new ChartRendererResolver();
             var surfaceFactory = new ChartSurfaceFactory(rendererResolver);
-            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, rendererResolver, surfaceFactory);
+            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, new BarPieRenderingContract(), rendererResolver, surfaceFactory);
 
             adapter.InitializeControls();
 
@@ -53,7 +54,7 @@ public sealed class BarPieChartControllerAdapterTests
             var controller = new BarPieChartController();
             var rendererResolver = new ChartRendererResolver();
             var surfaceFactory = new ChartSurfaceFactory(rendererResolver);
-            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, rendererResolver, surfaceFactory);
+            var adapter = new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, new BarPieRenderingContract(), rendererResolver, surfaceFactory);
 
             bool? showBarPie = null;
             viewModel.ChartUpdateRequested += (_, args) =>
@@ -100,7 +101,7 @@ public sealed class BarPieChartControllerAdapterTests
         var controller = new BarPieChartController();
         var rendererResolver = new StubChartRendererResolver();
         var surfaceFactory = new StubChartSurfaceFactory(surface);
-        return new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, rendererResolver, surfaceFactory);
+        return new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, new BarPieRenderingContract(), rendererResolver, surfaceFactory);
     }
 
     private sealed class StubTrackedChartSurface : IChartSurface, ITrackedChartContentSurface

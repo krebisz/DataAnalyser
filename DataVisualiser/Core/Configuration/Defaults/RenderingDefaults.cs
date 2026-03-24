@@ -26,6 +26,7 @@ public static class RenderingDefaults
     public const string TransformChartName = "ChartTransformResultControl";
     public const string WeekdayTrendChartName = "ChartWeekdayTrend";
     public const string WeekdayTrendPolarChartName = "ChartWeekdayTrendPolar";
+    public const string BarPieChartName = "ChartBarPie";
 
     public static readonly HashSet<string> DeltaTooltipChartNames = new(StringComparer.OrdinalIgnoreCase)
     {

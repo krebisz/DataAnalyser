@@ -6,6 +6,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Rendering;
@@ -44,6 +46,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
     {
         var columnCount = Math.Min(5, Math.Max(1, model.Facets.Count));
         var pieSize = GetFacetPieSize(columnCount);
+        var renderedPieCharts = new List<PieChart>();
 
         var grid = new Grid
         {
@@ -90,6 +93,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
                     Width = pieSize,
                     Height = pieSize
             };
+            renderedPieCharts.Add(pieChart);
 
             foreach (var series in facet.Series)
             {
@@ -121,7 +125,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         if (model.Legend?.IsVisible == true)
         {
-            var legendItems = BuildFacetLegendItems(model);
+            var legendItems = BuildFacetLegendItems(renderedPieCharts);
             if (legendItems != null)
             {
                 var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
@@ -143,13 +147,19 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         var chart = new CartesianChart
         {
-                LegendLocation = GetLegendLocation(model.Legend),
+                LegendLocation = model.Legend?.IsVisible == true ? LegendLocation.None : GetLegendLocation(model.Legend),
                 Zoom = GetZoomOptions(model.Interactions),
                 Pan = GetPanOptions(model.Interactions),
                 Hoverable = model.Interactions?.Hoverable ?? ChartUiDefaults.DefaultHoverable,
                 Margin = ChartUiDefaults.ChartContentMargin,
                 MinHeight = ChartUiDefaults.ChartMinHeight
         };
+        if (!string.IsNullOrWhiteSpace(model.ChartName))
+            chart.Name = model.ChartName;
+
+        if (string.Equals(model.ChartName, RenderingDefaults.BarPieChartName, StringComparison.OrdinalIgnoreCase))
+            ChartHelper.InitializeChartTooltip(chart);
+
         renderedChart = chart;
 
         foreach (var series in model.Series)
@@ -218,7 +228,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         if (model.Legend?.IsVisible == true)
         {
-            var legendItems = BuildSeriesLegendItemsControl(chart.Series);
+            var legendItems = BuildSeriesLegendItemsControl(chart);
             var legendContainer = LegendToggleManager.CreateLegendContainer(legendItems);
 
             var grid = new Grid();
@@ -307,87 +317,22 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         };
     }
 
-    private static ItemsControl? BuildFacetLegendItems(UiChartRenderModel model)
+    private static ItemsControl? BuildFacetLegendItems(IReadOnlyList<PieChart> charts)
     {
-        var firstFacet = model.Facets.FirstOrDefault();
-        if (firstFacet == null || firstFacet.Series.Count == 0)
+        if (charts.Count == 0)
             return null;
 
-        var entries = firstFacet.Series.Select(series => new LegendEntry(series.Name ?? "Series", CreateBrush(series.Color) ?? Brushes.Gray)).ToList();
-
-        var itemsControl = new ItemsControl
-        {
-                HorizontalAlignment = HorizontalAlignment.Left,
-                ItemsSource = entries
-        };
-
-        itemsControl.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(StackPanel)));
-
-        var stackFactory = new FrameworkElementFactory(typeof(StackPanel));
-        stackFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-        stackFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Left);
-
-        var rectFactory = new FrameworkElementFactory(typeof(Rectangle));
-        rectFactory.SetValue(FrameworkElement.WidthProperty, 12.0);
-        rectFactory.SetValue(FrameworkElement.HeightProperty, 12.0);
-        rectFactory.SetBinding(Shape.FillProperty, new Binding(nameof(LegendEntry.Stroke)));
-        rectFactory.SetValue(Shape.StrokeProperty, Brushes.White);
-        rectFactory.SetValue(Shape.StrokeThicknessProperty, 0.5);
-        rectFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 6, 0));
-
-        var textFactory = new FrameworkElementFactory(typeof(TextBlock));
-        textFactory.SetBinding(TextBlock.TextProperty, new Binding(nameof(LegendEntry.Title)));
-        textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.White);
-        textFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Left);
-
-        stackFactory.AppendChild(rectFactory);
-        stackFactory.AppendChild(textFactory);
-
-        itemsControl.ItemTemplate = new DataTemplate
-        {
-                VisualTree = stackFactory
-        };
-
+        var manager = new PieFacetLegendToggleManager(charts);
+        var itemsControl = LegendToggleManager.CreateLegendItemsControl((sender, _) => PieFacetLegendToggleManager.HandleToggle(sender));
+        manager.AttachItemsControl(itemsControl);
         return itemsControl;
     }
 
-    private static ItemsControl BuildSeriesLegendItemsControl(SeriesCollection seriesCollection)
+    private static ItemsControl BuildSeriesLegendItemsControl(CartesianChart chart)
     {
-        var entries = seriesCollection.OfType<Series>().Select(series => new LegendEntry(string.IsNullOrWhiteSpace(series.Title) ? "Series" : series.Title, series.Stroke ?? Brushes.Gray)).ToList();
-
-        var itemsControl = new ItemsControl
-        {
-                HorizontalAlignment = HorizontalAlignment.Left,
-                ItemsSource = entries
-        };
-
-        itemsControl.ItemsPanel = new ItemsPanelTemplate(new FrameworkElementFactory(typeof(StackPanel)));
-
-        var stackFactory = new FrameworkElementFactory(typeof(StackPanel));
-        stackFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-        stackFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Left);
-
-        var rectFactory = new FrameworkElementFactory(typeof(Rectangle));
-        rectFactory.SetValue(FrameworkElement.WidthProperty, 12.0);
-        rectFactory.SetValue(FrameworkElement.HeightProperty, 12.0);
-        rectFactory.SetBinding(Shape.FillProperty, new Binding(nameof(LegendEntry.Stroke)));
-        rectFactory.SetValue(Shape.StrokeProperty, Brushes.White);
-        rectFactory.SetValue(Shape.StrokeThicknessProperty, 0.5);
-        rectFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 6, 0));
-
-        var textFactory = new FrameworkElementFactory(typeof(TextBlock));
-        textFactory.SetBinding(TextBlock.TextProperty, new Binding(nameof(LegendEntry.Title)));
-        textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.White);
-        textFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Left);
-
-        stackFactory.AppendChild(rectFactory);
-        stackFactory.AppendChild(textFactory);
-
-        itemsControl.ItemTemplate = new DataTemplate
-        {
-                VisualTree = stackFactory
-        };
-
+        var manager = new LegendToggleManager(chart);
+        var itemsControl = LegendToggleManager.CreateLegendItemsControl((sender, _) => LegendToggleManager.HandleToggle(sender));
+        manager.AttachItemsControl(itemsControl);
         return itemsControl;
     }
 
@@ -400,6 +345,4 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
         brush.Freeze();
         return brush;
     }
-
-    private sealed record LegendEntry(string Title, Brush Stroke);
 }

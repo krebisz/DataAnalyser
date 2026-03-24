@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.Charts.Adapters;
@@ -84,7 +85,7 @@ public sealed class BarPieChartControllerAdapterResetZoomTests
         var rendererResolver = new StubChartRendererResolver(renderer);
         var surfaceFactory = new StubChartSurfaceFactory(surface);
 
-        return new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, rendererResolver, surfaceFactory);
+        return new BarPieChartControllerAdapter(controller, viewModel, () => false, metricService, new BarPieRenderingContract(), rendererResolver, surfaceFactory);
     }
 
     private sealed class StubTrackedCartesianChartSurface : IChartSurface, ITrackedCartesianChartSurface

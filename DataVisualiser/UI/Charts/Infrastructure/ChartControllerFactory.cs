@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
+using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.UI.Charts.Adapters;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.ViewModels;
@@ -59,11 +60,13 @@ public sealed class ChartControllerFactory : IChartControllerFactory
 
         var transformAdapter = new TransformDataPanelControllerAdapter(context.TransformDataPanelController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.ChartUpdateCoordinator);
 
+        var barPieRenderingContract = new BarPieRenderingContract();
         var barPieAdapter = new BarPieChartControllerAdapter(
             context.BarPieChartController,
             context.ViewModel,
             context.IsInitializing,
             context.MetricSelectionService,
+            barPieRenderingContract,
             context.ChartRendererResolver,
             context.ChartSurfaceFactory);
 

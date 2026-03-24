@@ -87,6 +87,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         var smoothedRows = new List<UIElement>();
         var rawRows = new List<UIElement>();
         var otherRows = new List<UIElement>();
+        var barPieParticipationLookup = TryBuildBarPieParticipationLookup(chart, data);
 
         foreach (var point in data.Points)
         {
@@ -104,7 +105,10 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
             else if (seriesTitle.EndsWith(" (raw)", StringComparison.OrdinalIgnoreCase))
                 displayTitle = seriesTitle.Substring(0, seriesTitle.Length - 5);
 
-            var row = CreateLegendRow(colorBrush, $"{displayTitle}: {formatted}");
+            var participationText = barPieParticipationLookup.TryGetValue(seriesTitle, out var participation)
+                ? $" ({participation:P0})"
+                : string.Empty;
+            var row = CreateLegendRow(colorBrush, $"{displayTitle}: {formatted}{participationText}");
             if (seriesTitle.EndsWith(" (smooth)", StringComparison.OrdinalIgnoreCase))
                 smoothedRows.Add(row);
             else if (seriesTitle.EndsWith(" (raw)", StringComparison.OrdinalIgnoreCase))
@@ -297,7 +301,19 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         return validCount > 0 && min <= max;
     }
 
-    private static bool TryExtractNumeric(object value, out double numeric)
+    private static IReadOnlyDictionary<string, double> TryBuildBarPieParticipationLookup(CartesianChart? chart, TooltipData data)
+    {
+        if (chart == null || !string.Equals(chart.Name, RenderingDefaults.BarPieChartName, StringComparison.OrdinalIgnoreCase))
+            return EmptyParticipationLookup;
+
+        var index = ResolveTooltipIndex(data);
+        if (!index.HasValue)
+            return EmptyParticipationLookup;
+
+        return ChartTooltipParticipationCalculator.BuildColumnSeriesParticipationLookup(chart, index.Value);
+    }
+
+    internal static bool TryExtractNumeric(object value, out double numeric)
     {
         switch (value)
         {
@@ -363,6 +379,9 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    private static readonly IReadOnlyDictionary<string, double> EmptyParticipationLookup =
+        new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 }
 
 

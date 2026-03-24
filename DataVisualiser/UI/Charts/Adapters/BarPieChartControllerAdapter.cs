@@ -6,6 +6,7 @@ using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
@@ -23,6 +24,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 {
     private readonly IBarPieChartController _controller;
     private readonly Func<bool> _isInitializing;
+    private readonly IBarPieRenderingContract _barPieRenderingContract;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly IChartRendererResolver _rendererResolver;
     private readonly IChartSurfaceFactory _surfaceFactory;
@@ -35,6 +37,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         MainWindowViewModel viewModel,
         Func<bool> isInitializing,
         MetricSelectionService metricSelectionService,
+        IBarPieRenderingContract barPieRenderingContract,
         IChartRendererResolver rendererResolver,
         IChartSurfaceFactory surfaceFactory)
         : base(controller)
@@ -43,6 +46,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
+        _barPieRenderingContract = barPieRenderingContract ?? throw new ArgumentNullException(nameof(barPieRenderingContract));
         _rendererResolver = rendererResolver ?? throw new ArgumentNullException(nameof(rendererResolver));
         _surfaceFactory = surfaceFactory ?? throw new ArgumentNullException(nameof(surfaceFactory));
     }
@@ -78,27 +82,17 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
     public override void Clear(ChartState state)
     {
-        EnsureSurfaceAndRenderer();
-        _ = _renderer!.ApplyAsync(_surface!, CreateEmptyBarPieModel());
+        _ = _barPieRenderingContract.ClearAsync(CreateRenderHost());
     }
 
     public override void ResetZoom()
     {
-        EnsureSurfaceAndRenderer();
-        var chart = (_surface as ITrackedCartesianChartSurface)?.RenderedCartesianChart;
-        if (chart != null)
-            ChartSurfaceHelper.ResetZoom(chart);
+        _barPieRenderingContract.ResetView(ResolveRenderingRoute(), CreateRenderHost());
     }
 
     public override bool HasSeries(ChartState state)
     {
-        EnsureSurfaceAndRenderer();
-
-        if (_surface is ITrackedChartContentSurface trackedSurface)
-            return trackedSurface.HasRenderedContent;
-
-        var chart = (_surface as ITrackedCartesianChartSurface)?.RenderedCartesianChart;
-        return chart != null && ChartSurfaceHelper.HasSeries(chart);
+        return _barPieRenderingContract.HasRenderableContent(ResolveRenderingRoute(), CreateRenderHost());
     }
 
     public override void UpdateSubtypeOptions()
@@ -141,17 +135,17 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
     private async Task RenderBarPieChartAsync()
     {
-        EnsureSurfaceAndRenderer();
-
         if (!_viewModel.ChartState.IsBarPieVisible)
         {
-            await _renderer!.ApplyAsync(_surface!, CreateEmptyBarPieModel());
+            await _barPieRenderingContract.ClearAsync(CreateRenderHost());
             return;
         }
 
         var isPieMode = _controller.PieModeRadio.IsChecked == true;
         var model = await BuildBarPieRenderModelAsync(isPieMode);
-        await _renderer!.ApplyAsync(_surface!, model);
+        await _barPieRenderingContract.RenderAsync(
+            new BarPieChartRenderRequest(ResolveRenderingRoute(), model),
+            CreateRenderHost());
     }
 
     private Task RerenderBarPieIfVisibleAsync()
@@ -206,6 +200,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
             return new UiChartRenderModel
             {
+                    ChartName = RenderingDefaults.BarPieChartName,
                     Title = ChartUiDefaults.BarPieChartTitle,
                     IsVisible = _viewModel.ChartState.IsBarPieVisible,
                     Facets = facets,
@@ -232,6 +227,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
         return new UiChartRenderModel
         {
+                ChartName = RenderingDefaults.BarPieChartName,
                 Title = ChartUiDefaults.BarPieChartTitle,
                 IsVisible = _viewModel.ChartState.IsBarPieVisible,
                 Series = barSeries,
@@ -268,11 +264,23 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
     {
         return new UiChartRenderModel
         {
+                ChartName = RenderingDefaults.BarPieChartName,
                 Title = ChartUiDefaults.BarPieChartTitle,
                 IsVisible = _viewModel.ChartState.IsBarPieVisible,
                 Series = Array.Empty<ChartSeriesModel>(),
                 Facets = Array.Empty<ChartFacetModel>()
         };
+    }
+
+    private BarPieRenderingRoute ResolveRenderingRoute()
+    {
+        return BarPieRenderingRouteResolver.Resolve(_controller.PieModeRadio.IsChecked == true);
+    }
+
+    private BarPieChartRenderHost CreateRenderHost()
+    {
+        EnsureSurfaceAndRenderer();
+        return new BarPieChartRenderHost(_surface!, _renderer!, _rendererResolver.ResolveKind(Key), _viewModel.ChartState.IsBarPieVisible);
     }
 
     private List<MetricSeriesSelection> GetDistinctSelectedSeries()
