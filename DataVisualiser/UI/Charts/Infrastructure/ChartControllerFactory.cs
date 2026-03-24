@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Rendering.CartesianMetrics;
+using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.UI.Charts.Adapters;
@@ -62,7 +63,9 @@ public sealed class ChartControllerFactory : IChartControllerFactory
 
         var diffRatioAdapter = new DiffRatioChartControllerAdapter(context.DiffRatioChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetTooltipManager, cartesianMetricRenderingContract);
 
-        var transformAdapter = new TransformDataPanelControllerAdapter(context.TransformDataPanelController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.ChartUpdateCoordinator);
+        var transformRenderingContract = new TransformRenderingContract(new TransformChartRenderInvoker(context.ChartUpdateCoordinator));
+
+        var transformAdapter = new TransformDataPanelControllerAdapter(context.TransformDataPanelController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, transformRenderingContract);
 
         var barPieRenderingContract = new BarPieRenderingContract();
         var barPieAdapter = new BarPieChartControllerAdapter(

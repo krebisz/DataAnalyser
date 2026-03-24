@@ -6,8 +6,8 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Core.Transforms.Evaluators;
@@ -25,16 +25,16 @@ namespace DataVisualiser.UI.Charts.Adapters;
 public sealed class TransformDataPanelControllerAdapter : CartesianChartControllerAdapterBase<ITransformDataPanelController>, ITransformPanelControllerExtras
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
     private readonly ITransformDataPanelController _controller;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
+    private readonly ITransformRenderingContract _transformRenderingContract;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
 
-    public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ChartUpdateCoordinator chartUpdateCoordinator)
+    public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ITransformRenderingContract transformRenderingContract)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -42,7 +42,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
-        _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
+        _transformRenderingContract = transformRenderingContract ?? throw new ArgumentNullException(nameof(transformRenderingContract));
     }
 
     public override void ClearCache()
@@ -65,9 +65,17 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     public override void Clear(ChartState state)
     {
         ClearTransformGrids(state);
+        _transformRenderingContract.Clear(TransformRenderingRoute.ResultCartesian, CreateRenderHost());
+    }
 
-        if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
-            v2.ResetMinMaxLines();
+    public override void ResetZoom()
+    {
+        _transformRenderingContract.ResetView(TransformRenderingRoute.ResultCartesian, CreateRenderHost());
+    }
+
+    public override bool HasSeries(ChartState state)
+    {
+        return _transformRenderingContract.HasRenderableContent(TransformRenderingRoute.ResultCartesian, CreateRenderHost());
     }
 
     public override void UpdateSubtypeOptions()
@@ -534,7 +542,15 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
         var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
 
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(_controller.ChartTransformResult, strategy, label, null, 400, transformContext.PrimaryMetricType ?? transformContext.MetricType, transformContext.PrimarySubtype, transformContext.SecondarySubtype, operationType, isOperationChart, transformContext.SecondaryMetricType, transformContext.DisplayPrimaryMetricType, transformContext.DisplaySecondaryMetricType, transformContext.DisplayPrimarySubtype, transformContext.DisplaySecondarySubtype);
+        await _transformRenderingContract.RenderAsync(
+            new TransformChartRenderRequest(
+                TransformRenderingRoute.ResultCartesian,
+                transformContext,
+                strategy,
+                label,
+                operationType,
+                isOperationChart),
+            CreateRenderHost());
     }
 
     private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation, ChartDataContext transformContext)
@@ -802,7 +818,6 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _controller.TransformGrid3Panel.Visibility = Visibility.Collapsed;
         _controller.TransformChartContentPanel.Visibility = Visibility.Collapsed;
         _controller.TransformComputeButton.IsEnabled = false;
-        ChartHelper.ClearChart(_controller.ChartTransformResult, state.ChartTimestamps);
     }
 
     private static bool ShouldRenderCharts(ChartDataContext? ctx)
@@ -813,6 +828,20 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private static bool HasSecondaryData(ChartDataContext ctx)
     {
         return ctx.Data2 != null && ctx.Data2.Any();
+    }
+
+    private TransformChartRenderHost CreateRenderHost()
+    {
+        return new TransformChartRenderHost(
+            _controller.ChartTransformResult,
+            _viewModel.ChartState,
+            ResetTransformAuxiliaryVisuals);
+    }
+
+    private void ResetTransformAuxiliaryVisuals()
+    {
+        if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
+            v2.ResetMinMaxLines();
     }
 
 }

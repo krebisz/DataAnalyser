@@ -11,6 +11,7 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
@@ -146,8 +147,9 @@ public sealed class TransformDataPanelControllerAdapterTests
         window = new Window();
         tooltipManager = new ChartTooltipManager(window);
         var coordinator = new ChartUpdateCoordinator(computationEngine, renderEngine, tooltipManager, chartState.ChartTimestamps);
+        var renderingContract = new TransformRenderingContract(new TransformChartRenderInvoker(coordinator));
 
-        return new TransformDataPanelControllerAdapter(controller, viewModel, () => false, () => new DummyDisposable(), metricService, coordinator);
+        return new TransformDataPanelControllerAdapter(controller, viewModel, () => false, () => new DummyDisposable(), metricService, renderingContract);
     }
 
     private sealed class DummyDisposable : IDisposable
