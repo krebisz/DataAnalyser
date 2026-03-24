@@ -1,5 +1,6 @@
 using System.Windows;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Shading;
@@ -35,16 +36,18 @@ public sealed class DistributionChartControllerAdapterTests
             var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
             var controller = new DistributionChartController();
             var distributionService = new StubDistributionService(CreateRangeResult());
+            var renderingContract = new DistributionRenderingContract(
+                    () => null,
+                    distributionService,
+                    distributionService,
+                    new DistributionPolarRenderingService());
             var adapter = new DistributionChartControllerAdapter(
                     controller,
                     viewModel,
                     () => false,
                     () => NoOpScope.Instance,
                     metricService,
-                    () => null,
-                    distributionService,
-                    distributionService,
-                    new DistributionPolarRenderingService(),
+                    renderingContract,
                     () => null);
 
             adapter.InitializeControls();
@@ -109,16 +112,18 @@ public sealed class DistributionChartControllerAdapterTests
             controller.Chart.UpdateLayout();
 
             var distributionService = new StubDistributionService(CreateRangeResult());
+            var renderingContract = new DistributionRenderingContract(
+                    () => null,
+                    distributionService,
+                    distributionService,
+                    new DistributionPolarRenderingService());
             var adapter = new DistributionChartControllerAdapter(
                     controller,
                     viewModel,
                     () => false,
                     () => NoOpScope.Instance,
                     metricService,
-                    () => null,
-                    distributionService,
-                    distributionService,
-                    new DistributionPolarRenderingService(),
+                    renderingContract,
                     () => null);
 
             adapter.InitializeControls();

@@ -405,6 +405,8 @@ public abstract class BaseDistributionService : IDistributionService
             chart.AxisX.Add(new Axis());
 
         var axis = chart.AxisX[0];
+        axis.MinValue = double.NaN;
+        axis.MaxValue = double.NaN;
         axis.Labels = Configuration.BucketLabels;
         axis.Title = Configuration.XAxisTitle;
         axis.ShowLabels = true;

@@ -5,6 +5,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.Tests.Helpers;
 using LiveCharts.Wpf;
 using Moq;
 
@@ -150,6 +151,30 @@ public sealed class BaseDistributionServiceTests
             Assert.Empty(tooltip[i]);
     }
 
+    [Fact]
+    public async Task ConfigureXAxis_ShouldClearStaleViewportBounds()
+    {
+        await StaTestHelper.RunAsync(() =>
+        {
+            var service = CreateService();
+            var chart = new CartesianChart();
+            chart.AxisX.Add(new Axis
+            {
+                    MinValue = 2,
+                    MaxValue = 5
+            });
+
+            service.PublicConfigureXAxis(chart);
+
+            Assert.True(double.IsNaN(chart.AxisX[0].MinValue));
+            Assert.True(double.IsNaN(chart.AxisX[0].MaxValue));
+            Assert.Equal("Bucket", chart.AxisX[0].Title);
+            Assert.Equal(7, chart.AxisX[0].Labels.Count());
+
+            return Task.CompletedTask;
+        });
+    }
+
     private static TestDistributionService CreateService()
     {
         var config = new TestDistributionConfiguration();
@@ -177,6 +202,11 @@ public sealed class BaseDistributionServiceTests
         public Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> PublicCalculateSimpleRangeTooltipData(ChartComputationResult result, BucketDistributionResult extendedResult)
         {
             return CalculateSimpleRangeTooltipData(result, extendedResult);
+        }
+
+        public void PublicConfigureXAxis(CartesianChart chart)
+        {
+            ConfigureXAxis(chart);
         }
 
         protected override BucketDistributionResult? ExtractExtendedResult(object strategy)

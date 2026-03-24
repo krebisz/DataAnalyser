@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
@@ -25,18 +26,15 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IDistributionChartController _controller;
-    private readonly DistributionPolarRenderingService _distributionPolarRenderingService;
-    private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
+    private readonly IDistributionRenderingContract _distributionRenderingContract;
     private readonly Func<ToolTip?> _getPolarTooltip;
-    private readonly IDistributionService _hourlyDistributionService;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
-    private readonly IDistributionService _weeklyDistributionService;
     private bool _isUpdatingSubtypeCombo;
 
-    public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, DistributionPolarRenderingService distributionPolarRenderingService, Func<ToolTip?> getPolarTooltip)
+    public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, IDistributionRenderingContract distributionRenderingContract, Func<ToolTip?> getPolarTooltip)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -44,10 +42,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
-        _getChartRenderingOrchestrator = getChartRenderingOrchestrator ?? throw new ArgumentNullException(nameof(getChartRenderingOrchestrator));
-        _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));
-        _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));
-        _distributionPolarRenderingService = distributionPolarRenderingService ?? throw new ArgumentNullException(nameof(distributionPolarRenderingService));
+        _distributionRenderingContract = distributionRenderingContract ?? throw new ArgumentNullException(nameof(distributionRenderingContract));
         _getPolarTooltip = getPolarTooltip ?? throw new ArgumentNullException(nameof(getPolarTooltip));
     }
 
@@ -66,20 +61,17 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
     public override void Clear(ChartState state)
     {
-        DisposeDistributionChartInteractions();
-        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
-        ChartSurfaceHelper.ClearPolar(_controller.PolarChart, _getPolarTooltip);
+        _distributionRenderingContract.Clear(CreateRenderHost());
     }
 
     public override void ResetZoom()
     {
-        if (_viewModel.ChartState.IsDistributionPolarMode && _controller.Chart.Tag is DistributionPolarProjectionTooltip)
-        {
-            _distributionPolarRenderingService.RefitPolarProjection(_controller.Chart);
-            return;
-        }
+        _distributionRenderingContract.ResetView(ResolveRenderingRoute(), CreateRenderHost());
+    }
 
-        base.ResetZoom();
+    public override bool HasSeries(ChartState state)
+    {
+        return _distributionRenderingContract.HasRenderableContent(ResolveRenderingRoute(), CreateRenderHost());
     }
 
     public override void UpdateSubtypeOptions()
@@ -295,19 +287,23 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         if (!_viewModel.ChartState.IsDistributionVisible)
             return;
 
-        DisposeDistributionChartInteractions();
-
         var renderInput = await BuildDistributionRenderInputAsync(ctx);
         if (renderInput == null)
             return;
 
-        if (_viewModel.ChartState.IsDistributionPolarMode)
-        {
-            await RenderDistributionPolarChartAsync(ctx, mode, renderInput.Data, renderInput.DisplayName, renderInput.CmsSeries);
-            return;
-        }
+        var request = new DistributionChartRenderRequest(
+            ResolveRenderingRoute(),
+            mode,
+            _viewModel.ChartState.GetDistributionSettings(mode),
+            renderInput.Data,
+            renderInput.DisplayName,
+            ctx.From,
+            ctx.To,
+            renderInput.CmsSeries,
+            BuildDistributionContext(ctx, renderInput),
+            _viewModel.ChartState);
 
-        await RenderDistributionCartesianChartAsync(ctx, mode, renderInput);
+        await _distributionRenderingContract.RenderAsync(request, CreateRenderHost());
     }
 
     private void ApplyDistributionSeriesSelection(IReadOnlyList<MetricSeriesSelection> selectedSeries)
@@ -342,66 +338,6 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
         var displayName = ResolveDistributionDisplayName(ctx, selectedSeries);
         return new DistributionRenderInput(selectedSeries, data, cmsSeries, displayName);
-    }
-
-    private async Task RenderDistributionCartesianChartAsync(ChartDataContext ctx, DistributionMode mode, DistributionRenderInput renderInput)
-    {
-        var settings = _viewModel.ChartState.GetDistributionSettings(mode);
-        var chart = _controller.Chart;
-        var orchestrator = _getChartRenderingOrchestrator();
-
-        if (orchestrator != null)
-        {
-            var distributionContext = BuildDistributionContext(ctx, renderInput);
-            await orchestrator.RenderDistributionChartAsync(distributionContext, chart, _viewModel.ChartState, mode);
-            return;
-        }
-
-        var service = GetDistributionService(mode);
-        await service.UpdateDistributionChartAsync(chart, renderInput.Data, renderInput.DisplayName, ctx.From, ctx.To, 400, settings.UseFrequencyShading, settings.IntervalCount, renderInput.CmsSeries);
-    }
-
-    private static ChartDataContext BuildDistributionContext(ChartDataContext ctx, DistributionRenderInput renderInput)
-    {
-        return new ChartDataContext
-        {
-                PrimaryCms = renderInput.CmsSeries,
-                Data1 = renderInput.Data,
-                DisplayName1 = renderInput.DisplayName,
-                MetricType = renderInput.SelectedSeries?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = renderInput.SelectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-                PrimarySubtype = renderInput.SelectedSeries?.Subtype,
-                DisplayPrimaryMetricType = renderInput.SelectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplayPrimarySubtype = renderInput.SelectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                From = ctx.From,
-                To = ctx.To
-        };
-    }
-
-    private async Task RenderDistributionPolarChartAsync(ChartDataContext ctx, DistributionMode mode, IReadOnlyList<MetricData> data, string displayName, ICanonicalMetricSeries? cmsSeries)
-    {
-        var service = GetDistributionService(mode);
-        var rangeResult = await service.ComputeSimpleRangeAsync(data, displayName, ctx.From, ctx.To, cmsSeries);
-        if (rangeResult == null)
-            return;
-
-        var definition = DistributionModeCatalog.Get(mode);
-        _distributionPolarRenderingService.RenderPolarChart(rangeResult, definition, _controller.Chart);
-        _controller.Chart.Tag = new DistributionPolarProjectionTooltip(_controller.Chart, definition, rangeResult);
-        _controller.PolarChart.Tag = null;
-    }
-
-    private void DisposeDistributionChartInteractions()
-    {
-        if (_controller.Chart.Tag is IDisposable disposable)
-            disposable.Dispose();
-
-        _controller.Chart.Tag = null;
-        _controller.Chart.DataTooltip = null;
-
-        var tooltip = _getPolarTooltip();
-        if (tooltip != null)
-            tooltip.IsOpen = false;
     }
 
     private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
@@ -461,14 +397,33 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         return selectedSeries.DisplayName;
     }
 
-    private IDistributionService GetDistributionService(DistributionMode mode)
+    private DistributionRenderingRoute ResolveRenderingRoute()
     {
-        return mode switch
+        return _viewModel.ChartState.IsDistributionPolarMode
+            ? DistributionRenderingRoute.PolarFallback
+            : DistributionRenderingRoute.Cartesian;
+    }
+
+    private static ChartDataContext BuildDistributionContext(ChartDataContext ctx, DistributionRenderInput renderInput)
+    {
+        return new ChartDataContext
         {
-                DistributionMode.Weekly => _weeklyDistributionService,
-                DistributionMode.Hourly => _hourlyDistributionService,
-                _ => _weeklyDistributionService
+            PrimaryCms = renderInput.CmsSeries,
+            Data1 = renderInput.Data,
+            DisplayName1 = renderInput.DisplayName,
+            MetricType = renderInput.SelectedSeries?.MetricType ?? ctx.MetricType,
+            PrimaryMetricType = renderInput.SelectedSeries?.MetricType ?? ctx.PrimaryMetricType,
+            PrimarySubtype = renderInput.SelectedSeries?.Subtype,
+            DisplayPrimaryMetricType = renderInput.SelectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
+            DisplayPrimarySubtype = renderInput.SelectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
+            From = ctx.From,
+            To = ctx.To
         };
+    }
+
+    private DistributionChartRenderHost CreateRenderHost()
+    {
+        return new DistributionChartRenderHost(_controller.Chart, _controller.PolarChart, _viewModel.ChartState, _getPolarTooltip);
     }
 
     private sealed record DistributionRenderInput(

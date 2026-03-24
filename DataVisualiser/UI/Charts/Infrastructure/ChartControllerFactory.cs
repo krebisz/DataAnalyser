@@ -2,6 +2,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.UI.Charts.Adapters;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.Core.Rendering.Distribution;
 namespace DataVisualiser.UI.Charts.Infrastructure;
 
 public sealed class ChartControllerFactory : IChartControllerFactory
@@ -32,7 +33,20 @@ public sealed class ChartControllerFactory : IChartControllerFactory
 
         var mainAdapter = new MainChartControllerAdapter(context.MainChartController, context.ViewModel, context.IsInitializing, context.GetChartRenderingOrchestrator, context.MetricSelectionService);
 
-        var distributionAdapter = new DistributionChartControllerAdapter(context.DistributionChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetChartRenderingOrchestrator, context.WeeklyDistributionService, context.HourlyDistributionService, context.DistributionPolarRenderingService, context.GetPolarTooltip);
+        var distributionRenderingContract = new DistributionRenderingContract(
+            context.GetChartRenderingOrchestrator,
+            context.WeeklyDistributionService,
+            context.HourlyDistributionService,
+            context.DistributionPolarRenderingService);
+
+        var distributionAdapter = new DistributionChartControllerAdapter(
+            context.DistributionChartController,
+            context.ViewModel,
+            context.IsInitializing,
+            context.BeginUiBusyScope,
+            context.MetricSelectionService,
+            distributionRenderingContract,
+            context.GetPolarTooltip);
 
         var weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(context.WeekdayTrendChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetStrategyCutOverService, context.WeekdayTrendChartUpdateCoordinator);
 
