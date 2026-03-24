@@ -126,6 +126,79 @@ public sealed class StrategyCutOverServiceTests
         Assert.False(result);
     }
 
+    [Theory]
+    [InlineData(StrategyType.Normalized)]
+    [InlineData(StrategyType.Difference)]
+    [InlineData(StrategyType.Ratio)]
+    public void ShouldUseCms_ShouldReturnTrue_ForBinaryStrategies_WhenEnabledAndCmsPresent(StrategyType strategyType)
+    {
+        var service = CreateService(useCmsData: true, useCmsForNormalized: true, useCmsForDifference: true, useCmsForRatio: true);
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(2).Build(),
+            SecondaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(2).Build(),
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(strategyType, ctx);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldUseCms_ShouldReturnFalse_ForNormalized_WhenFlagDisabled()
+    {
+        var service = CreateService(useCmsData: true, useCmsForNormalized: false);
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(2).Build(),
+            SecondaryCms = TestDataBuilders.CanonicalMetricSeries().WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(2).Build(),
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(StrategyType.Normalized, ctx);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForNormalized_WhenEnabled()
+    {
+        var service = CreateService(useCmsData: true, useCmsForNormalized: true);
+        var primaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build();
+        var secondaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build();
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            LegacyData2 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).BuildSeries(2, TimeSpan.FromDays(1)),
+            Label1 = "Left",
+            Label2 = "Right",
+            From = From,
+            To = To,
+            NormalizationMode = Shared.Models.NormalizationMode.ZeroToOne
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.Normalized, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.IsType<NormalizedStrategy>(strategy);
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.PrimaryRawValues.Count);
+    }
+
     [Fact]
     public void GetParityHarness_ShouldReturnChartComputationHarness_ForCoreStrategies()
     {
@@ -152,14 +225,23 @@ public sealed class StrategyCutOverServiceTests
         }
     }
 
-    private static StrategyCutOverService CreateService(bool useCmsData = true, bool useCmsForSingleMetric = true, bool useCmsForCombinedMetric = true)
+    private static StrategyCutOverService CreateService(
+        bool useCmsData = true,
+        bool useCmsForSingleMetric = true,
+        bool useCmsForCombinedMetric = true,
+        bool useCmsForDifference = true,
+        bool useCmsForRatio = true,
+        bool useCmsForNormalized = true)
     {
         var dataPreparation = new Mock<IDataPreparationService>();
         return new StrategyCutOverService(dataPreparation.Object, cmsRuntimeConfiguration: new TestCmsRuntimeConfiguration
         {
             UseCmsData = useCmsData,
             UseCmsForSingleMetric = useCmsForSingleMetric,
-            UseCmsForCombinedMetric = useCmsForCombinedMetric
+            UseCmsForCombinedMetric = useCmsForCombinedMetric,
+            UseCmsForDifference = useCmsForDifference,
+            UseCmsForRatio = useCmsForRatio,
+            UseCmsForNormalized = useCmsForNormalized
         });
     }
 

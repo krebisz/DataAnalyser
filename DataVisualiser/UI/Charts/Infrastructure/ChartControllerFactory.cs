@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.UI.Charts.Adapters;
@@ -33,7 +34,10 @@ public sealed class ChartControllerFactory : IChartControllerFactory
         if (context == null)
             throw new ArgumentNullException(nameof(context));
 
-        var mainAdapter = new MainChartControllerAdapter(context.MainChartController, context.ViewModel, context.IsInitializing, context.GetChartRenderingOrchestrator, context.MetricSelectionService);
+        var cartesianMetricRenderingContract = new CartesianMetricChartRenderingContract(
+            new CartesianMetricChartRenderInvoker(context.GetChartRenderingOrchestrator));
+
+        var mainAdapter = new MainChartControllerAdapter(context.MainChartController, context.ViewModel, context.IsInitializing, context.MetricSelectionService, cartesianMetricRenderingContract);
 
         var distributionRenderingContract = new DistributionRenderingContract(
             context.GetChartRenderingOrchestrator,
@@ -54,9 +58,9 @@ public sealed class ChartControllerFactory : IChartControllerFactory
 
         var weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(context.WeekdayTrendChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetStrategyCutOverService, weekdayTrendRenderingContract);
 
-        var normalizedAdapter = new NormalizedChartControllerAdapter(context.NormalizedChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetChartRenderingOrchestrator, context.ChartUpdateCoordinator, context.GetStrategyCutOverService);
+        var normalizedAdapter = new NormalizedChartControllerAdapter(context.NormalizedChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, cartesianMetricRenderingContract);
 
-        var diffRatioAdapter = new DiffRatioChartControllerAdapter(context.DiffRatioChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetChartRenderingOrchestrator, context.GetTooltipManager);
+        var diffRatioAdapter = new DiffRatioChartControllerAdapter(context.DiffRatioChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetTooltipManager, cartesianMetricRenderingContract);
 
         var transformAdapter = new TransformDataPanelControllerAdapter(context.TransformDataPanelController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.ChartUpdateCoordinator);
 

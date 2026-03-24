@@ -3,6 +3,7 @@ using System.Windows;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -18,20 +19,20 @@ namespace DataVisualiser.UI.Charts.Adapters;
 public sealed class MainChartControllerAdapter : CartesianChartControllerAdapterBase<IMainChartController>, IMainChartControllerExtras
 {
     private readonly IMainChartController _controller;
-    private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
+    private readonly ICartesianMetricChartRenderingContract _renderingContract;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombo;
 
-    public MainChartControllerAdapter(IMainChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, MetricSelectionService metricSelectionService)
+    public MainChartControllerAdapter(IMainChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, MetricSelectionService metricSelectionService, ICartesianMetricChartRenderingContract renderingContract)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
-        _getChartRenderingOrchestrator = getChartRenderingOrchestrator ?? throw new ArgumentNullException(nameof(getChartRenderingOrchestrator));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
+        _renderingContract = renderingContract ?? throw new ArgumentNullException(nameof(renderingContract));
     }
 
     public override string Key => ChartControllerKeys.Main;
@@ -83,6 +84,21 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
     {
     }
 
+    public override void Clear(ChartState state)
+    {
+        _renderingContract.Clear(CartesianMetricChartRoute.Main, CreateRenderHost());
+    }
+
+    public override void ResetZoom()
+    {
+        _renderingContract.ResetView(CartesianMetricChartRoute.Main, CreateRenderHost());
+    }
+
+    public override bool HasSeries(ChartState state)
+    {
+        return _renderingContract.HasRenderableContent(CartesianMetricChartRoute.Main, CreateRenderHost());
+    }
+
     public void SyncDisplayModeSelection()
     {
         var mode = _viewModel.ChartState.MainChartDisplayMode;
@@ -123,17 +139,22 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
         if (ctx.Data1 == null)
             return;
 
-        var orchestrator = _getChartRenderingOrchestrator();
-        if (orchestrator == null)
-            return;
-
         var mode = _viewModel.ChartState.MainChartDisplayMode;
         var selections = GetStackedSelections();
         var canStack = mode == MainChartDisplayMode.Stacked && selections.Count >= 2;
         var isCumulative = mode == MainChartDisplayMode.Summed;
         var overlaySeries = canStack ? await BuildOverlaySeriesAsync(ctx, selections) : null;
 
-        await orchestrator.RenderPrimaryChartAsync(ctx, _controller.Chart, ctx.Data1, ctx.Data2, ctx.DisplayName1 ?? string.Empty, ctx.DisplayName2 ?? string.Empty, ctx.From, ctx.To, ctx.MetricType, _viewModel.MetricState.SelectedSeries, _viewModel.MetricState.ResolutionTableName, canStack, isCumulative, overlaySeries);
+        await _renderingContract.RenderAsync(
+            new CartesianMetricChartRenderRequest(
+                CartesianMetricChartRoute.Main,
+                ctx,
+                _viewModel.MetricState.SelectedSeries,
+                _viewModel.MetricState.ResolutionTableName,
+                canStack,
+                isCumulative,
+                overlaySeries),
+            CreateRenderHost());
     }
 
     private List<MetricSeriesSelection> GetStackedSelections()
@@ -229,5 +250,10 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
         var ctxSubtype = subtype ?? string.Empty;
 
         return string.Equals(selectionSubtype, ctxSubtype, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private CartesianMetricChartRenderHost CreateRenderHost()
+    {
+        return new CartesianMetricChartRenderHost(_controller.Chart, _viewModel.ChartState);
     }
 }

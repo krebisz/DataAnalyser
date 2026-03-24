@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
@@ -18,7 +19,7 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IDiffRatioChartController _controller;
-    private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
+    private readonly ICartesianMetricChartRenderingContract _renderingContract;
     private readonly Func<ChartTooltipManager?> _getTooltipManager;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
@@ -26,7 +27,7 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombos;
 
-    public DiffRatioChartControllerAdapter(IDiffRatioChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, Func<ChartTooltipManager?> getTooltipManager)
+    public DiffRatioChartControllerAdapter(IDiffRatioChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartTooltipManager?> getTooltipManager, ICartesianMetricChartRenderingContract renderingContract)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -34,8 +35,8 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
-        _getChartRenderingOrchestrator = getChartRenderingOrchestrator ?? throw new ArgumentNullException(nameof(getChartRenderingOrchestrator));
         _getTooltipManager = getTooltipManager ?? throw new ArgumentNullException(nameof(getTooltipManager));
+        _renderingContract = renderingContract ?? throw new ArgumentNullException(nameof(renderingContract));
     }
 
     public override void ClearCache()
@@ -90,6 +91,21 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
             _controller.Chart.AxisY[0].Title = isDifference ? "Difference" : "Ratio";
     }
 
+    public override void Clear(ChartState state)
+    {
+        _renderingContract.Clear(CartesianMetricChartRoute.DiffRatio, CreateRenderHost());
+    }
+
+    public override void ResetZoom()
+    {
+        _renderingContract.ResetView(CartesianMetricChartRoute.DiffRatio, CreateRenderHost());
+    }
+
+    public override bool HasSeries(ChartState state)
+    {
+        return _renderingContract.HasRenderableContent(CartesianMetricChartRoute.DiffRatio, CreateRenderHost());
+    }
+
     public void OnToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleDiffRatio();
@@ -137,16 +153,14 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 
     private async Task RenderDiffRatioAsync(ChartDataContext ctx)
     {
-        var orchestrator = _getChartRenderingOrchestrator();
-        if (orchestrator == null)
-            return;
-
         var (primaryData, secondaryData, diffRatioContext) = await ResolveDiffRatioDataAsync(ctx);
         if (primaryData == null || secondaryData == null)
             return;
 
         UpdateDiffRatioPanelTitle(diffRatioContext);
-        await orchestrator.RenderDiffRatioChartAsync(diffRatioContext, _controller.Chart, _viewModel.ChartState);
+        await _renderingContract.RenderAsync(
+            new CartesianMetricChartRenderRequest(CartesianMetricChartRoute.DiffRatio, diffRatioContext),
+            CreateRenderHost());
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveDiffRatioDataAsync(ChartDataContext ctx)
@@ -329,5 +343,10 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
             _controller.SecondarySubtypeCombo.SelectedItem = null;
             _viewModel.ChartState.SelectedDiffRatioSecondarySeries = null;
         }
+    }
+
+    private CartesianMetricChartRenderHost CreateRenderHost()
+    {
+        return new CartesianMetricChartRenderHost(_controller.Chart, _viewModel.ChartState);
     }
 }

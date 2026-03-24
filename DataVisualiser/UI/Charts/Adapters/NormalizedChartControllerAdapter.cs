@@ -5,9 +5,8 @@ using System.Windows.Controls;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Services;
-using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Helpers;
 using DataVisualiser.UI.State;
@@ -19,17 +18,15 @@ namespace DataVisualiser.UI.Charts.Adapters;
 public sealed class NormalizedChartControllerAdapter : CartesianChartControllerAdapterBase<INormalizedChartController>
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
-    private readonly ChartUpdateCoordinator _chartUpdateCoordinator;
     private readonly INormalizedChartController _controller;
-    private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
-    private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
+    private readonly ICartesianMetricChartRenderingContract _renderingContract;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombos;
 
-    public NormalizedChartControllerAdapter(INormalizedChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator, ChartUpdateCoordinator chartUpdateCoordinator, Func<IStrategyCutOverService?> getStrategyCutOverService)
+    public NormalizedChartControllerAdapter(INormalizedChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ICartesianMetricChartRenderingContract renderingContract)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -37,9 +34,7 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
-        _getChartRenderingOrchestrator = getChartRenderingOrchestrator ?? throw new ArgumentNullException(nameof(getChartRenderingOrchestrator));
-        _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
-        _getStrategyCutOverService = getStrategyCutOverService ?? throw new ArgumentNullException(nameof(getStrategyCutOverService));
+        _renderingContract = renderingContract ?? throw new ArgumentNullException(nameof(renderingContract));
     }
 
     public override void ClearCache()
@@ -85,6 +80,21 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
     public void OnToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleNorm();
+    }
+
+    public override void Clear(ChartState state)
+    {
+        _renderingContract.Clear(CartesianMetricChartRoute.Normalized, CreateRenderHost());
+    }
+
+    public override void ResetZoom()
+    {
+        _renderingContract.ResetView(CartesianMetricChartRoute.Normalized, CreateRenderHost());
+    }
+
+    public override bool HasSeries(ChartState state)
+    {
+        return _renderingContract.HasRenderableContent(CartesianMetricChartRoute.Normalized, CreateRenderHost());
     }
 
     public async void OnNormalizationModeChanged(object? sender, EventArgs e)
@@ -136,16 +146,14 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     private async Task RenderNormalizedAsync(ChartDataContext ctx)
     {
-        var orchestrator = _getChartRenderingOrchestrator();
-        if (orchestrator == null)
-            return;
-
         var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
         if (primaryData == null || secondaryData == null)
             return;
 
         UpdateNormalizedPanelTitle(normalizedContext);
-        await orchestrator.RenderNormalizedChartAsync(normalizedContext, _controller.Chart, _viewModel.ChartState);
+        await _renderingContract.RenderAsync(
+            new CartesianMetricChartRenderRequest(CartesianMetricChartRoute.Normalized, normalizedContext),
+            CreateRenderHost());
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveNormalizedDataAsync(ChartDataContext ctx)
@@ -254,13 +262,7 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
             return;
 
         using var _ = _beginUiBusyScope();
-        var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
-        if (primaryData == null || secondaryData == null)
-            return;
-
-        var normalizedStrategy = CreateNormalizedStrategy(normalizedContext, primaryData, secondaryData, normalizedContext.DisplayName1, normalizedContext.DisplayName2, normalizedContext.From, normalizedContext.To, _viewModel.ChartState.SelectedNormalizationMode);
-        UpdateNormalizedPanelTitle(normalizedContext);
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(_controller.Chart, normalizedStrategy, $"{normalizedContext.DisplayName1} ~ {normalizedContext.DisplayName2}", minHeight: 400, metricType: normalizedContext.PrimaryMetricType ?? normalizedContext.MetricType, primarySubtype: normalizedContext.PrimarySubtype, secondarySubtype: normalizedContext.SecondarySubtype, operationType: "~", isOperationChart: true, secondaryMetricType: normalizedContext.SecondaryMetricType, displayPrimaryMetricType: normalizedContext.DisplayPrimaryMetricType, displaySecondaryMetricType: normalizedContext.DisplaySecondaryMetricType, displayPrimarySubtype: normalizedContext.DisplayPrimarySubtype, displaySecondarySubtype: normalizedContext.DisplaySecondarySubtype);
+        await RenderNormalizedAsync(ctx);
     }
 
     private static ChartDataContext BuildNormalizedContext(ChartDataContext ctx, MetricSeriesSelection? primarySelection, MetricSeriesSelection? secondarySelection, IReadOnlyList<MetricData>? primaryData, IReadOnlyList<MetricData>? secondaryData, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
@@ -292,26 +294,6 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
         var leftName = ctx.DisplayName1 ?? string.Empty;
         var rightName = ctx.DisplayName2 ?? string.Empty;
         _controller.Panel.Title = $"{leftName} ~ {rightName}";
-    }
-
-    private IChartComputationStrategy CreateNormalizedStrategy(ChartDataContext ctx, IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string label1, string label2, DateTime from, DateTime to, NormalizationMode normalizationMode)
-    {
-        var strategyCutOverService = _getStrategyCutOverService();
-        if (strategyCutOverService == null)
-            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
-
-        var parameters = new StrategyCreationParameters
-        {
-                LegacyData1 = data1,
-                LegacyData2 = data2,
-                Label1 = label1,
-                Label2 = label2,
-                From = from,
-                To = to,
-                NormalizationMode = normalizationMode
-        };
-
-        return strategyCutOverService.CreateStrategy(StrategyType.Normalized, ctx, parameters);
     }
 
     private bool CanUpdateNormalizedSubtypeOptions()
@@ -372,5 +354,10 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
             _controller.NormalizedSecondarySubtypeCombo.SelectedItem = null;
             _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
         }
+    }
+
+    private CartesianMetricChartRenderHost CreateRenderHost()
+    {
+        return new CartesianMetricChartRenderHost(_controller.Chart, _viewModel.ChartState);
     }
 }
