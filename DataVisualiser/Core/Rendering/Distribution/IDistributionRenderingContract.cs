@@ -2,6 +2,8 @@ namespace DataVisualiser.Core.Rendering.Distribution;
 
 public interface IDistributionRenderingContract
 {
+    IReadOnlyList<DistributionBackendQualification> GetBackendQualificationMatrix();
+
     DistributionRenderingCapabilities GetCapabilities(DistributionRenderingRoute route);
 
     Task RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host);

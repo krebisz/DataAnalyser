@@ -11,6 +11,43 @@ namespace DataVisualiser.Core.Rendering.Distribution;
 
 public sealed class DistributionRenderingContract : IDistributionRenderingContract
 {
+    private static readonly IReadOnlyList<DistributionBackendQualification> QualificationMatrix =
+    [
+        new DistributionBackendQualification(
+            DistributionBackendKey.LiveChartsWpfCartesian,
+            "Distribution.Cartesian.LiveChartsWpf",
+            DistributionRenderingQualification.Qualified,
+            DistributionRenderingRoute.Cartesian,
+            SupportsRender: true,
+            SupportsUpdate: true,
+            SupportsHoverTooltip: true,
+            SupportsResetView: true,
+            SupportsClear: true,
+            SupportsLifecycleSafety: true),
+        new DistributionBackendQualification(
+            DistributionBackendKey.LiveChartsWpfPolarFallbackProjection,
+            "Distribution.PolarFallback.LiveChartsWpfProjection",
+            DistributionRenderingQualification.TacticalFallback,
+            DistributionRenderingRoute.PolarFallback,
+            SupportsRender: true,
+            SupportsUpdate: true,
+            SupportsHoverTooltip: true,
+            SupportsResetView: true,
+            SupportsClear: true,
+            SupportsLifecycleSafety: true),
+        new DistributionBackendQualification(
+            DistributionBackendKey.LiveChartsCorePolar,
+            "Distribution.Polar.LiveChartsCore",
+            DistributionRenderingQualification.UnqualifiedDebt,
+            ActiveRoute: null,
+            SupportsRender: false,
+            SupportsUpdate: false,
+            SupportsHoverTooltip: false,
+            SupportsResetView: false,
+            SupportsClear: false,
+            SupportsLifecycleSafety: false)
+    ];
+
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly IDistributionService _hourlyDistributionService;
     private readonly DistributionPolarRenderingService _polarRenderingService;
@@ -28,29 +65,26 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
         _polarRenderingService = polarRenderingService ?? throw new ArgumentNullException(nameof(polarRenderingService));
     }
 
+    public IReadOnlyList<DistributionBackendQualification> GetBackendQualificationMatrix()
+    {
+        return QualificationMatrix;
+    }
+
     public DistributionRenderingCapabilities GetCapabilities(DistributionRenderingRoute route)
     {
-        return route switch
-        {
-            DistributionRenderingRoute.PolarFallback => new DistributionRenderingCapabilities(
-                "Distribution.PolarFallback.LiveChartsWpfProjection",
-                DistributionRenderingQualification.TacticalFallback,
-                SupportsRender: true,
-                SupportsUpdate: true,
-                SupportsHoverTooltip: true,
-                SupportsResetView: true,
-                SupportsClear: true,
-                SupportsLifecycleSafety: true),
-            _ => new DistributionRenderingCapabilities(
-                "Distribution.Cartesian.LiveChartsWpf",
-                DistributionRenderingQualification.Qualified,
-                SupportsRender: true,
-                SupportsUpdate: true,
-                SupportsHoverTooltip: true,
-                SupportsResetView: true,
-                SupportsClear: true,
-                SupportsLifecycleSafety: true)
-        };
+        var qualification = QualificationMatrix.FirstOrDefault(entry => entry.ActiveRoute == route);
+        if (qualification == null)
+            throw new ArgumentOutOfRangeException(nameof(route), route, "Unknown distribution rendering route.");
+
+        return new DistributionRenderingCapabilities(
+            qualification.PathKey,
+            qualification.Qualification,
+            qualification.SupportsRender,
+            qualification.SupportsUpdate,
+            qualification.SupportsHoverTooltip,
+            qualification.SupportsResetView,
+            qualification.SupportsClear,
+            qualification.SupportsLifecycleSafety);
     }
 
     public async Task RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
@@ -68,9 +102,10 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
                 await RenderPolarFallbackAsync(request, host);
                 break;
             case DistributionRenderingRoute.Cartesian:
-            default:
                 await RenderCartesianAsync(request, host);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(request.Route), request.Route, "Unknown distribution rendering route.");
         }
     }
 
@@ -95,7 +130,13 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
             return;
         }
 
-        ChartSurfaceHelper.ResetZoom(host.CartesianChart);
+        if (route == DistributionRenderingRoute.Cartesian)
+        {
+            ChartSurfaceHelper.ResetZoom(host.CartesianChart);
+            return;
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(route), route, "Unknown distribution rendering route.");
     }
 
     public bool HasRenderableContent(DistributionRenderingRoute route, DistributionChartRenderHost host)
@@ -106,7 +147,8 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
         return route switch
         {
             DistributionRenderingRoute.PolarFallback => ChartSurfaceHelper.HasSeries(host.CartesianChart) || ChartSurfaceHelper.HasSeries(host.PolarChart),
-            _ => ChartSurfaceHelper.HasSeries(host.CartesianChart)
+            DistributionRenderingRoute.Cartesian => ChartSurfaceHelper.HasSeries(host.CartesianChart),
+            _ => throw new ArgumentOutOfRangeException(nameof(route), route, "Unknown distribution rendering route.")
         };
     }
 

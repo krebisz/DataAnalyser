@@ -10,6 +10,25 @@ namespace DataVisualiser.Tests.UI.Rendering;
 public sealed class DistributionRenderingContractTests
 {
     [Fact]
+    public void GetBackendQualificationMatrix_IncludesQualifiedFallbackAndDormantDebtEntries()
+    {
+        var contract = CreateContract();
+
+        var entries = contract.GetBackendQualificationMatrix();
+
+        Assert.Contains(entries, entry => entry.BackendKey == DistributionBackendKey.LiveChartsWpfCartesian
+            && entry.ActiveRoute == DistributionRenderingRoute.Cartesian
+            && entry.Qualification == DistributionRenderingQualification.Qualified);
+        Assert.Contains(entries, entry => entry.BackendKey == DistributionBackendKey.LiveChartsWpfPolarFallbackProjection
+            && entry.ActiveRoute == DistributionRenderingRoute.PolarFallback
+            && entry.Qualification == DistributionRenderingQualification.TacticalFallback);
+        Assert.Contains(entries, entry => entry.BackendKey == DistributionBackendKey.LiveChartsCorePolar
+            && entry.ActiveRoute == null
+            && entry.Qualification == DistributionRenderingQualification.UnqualifiedDebt
+            && !entry.SupportsLifecycleSafety);
+    }
+
+    [Fact]
     public void GetCapabilities_ForCartesianRoute_ReportsQualifiedPath()
     {
         var contract = CreateContract();
@@ -35,6 +54,24 @@ public sealed class DistributionRenderingContractTests
         Assert.True(capabilities.SupportsRender);
         Assert.True(capabilities.SupportsResetView);
         Assert.True(capabilities.SupportsHoverTooltip);
+    }
+
+    [Fact]
+    public void GetCapabilities_ForUnknownRoute_Throws()
+    {
+        var contract = CreateContract();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => contract.GetCapabilities((DistributionRenderingRoute)999));
+    }
+
+    [Theory]
+    [InlineData(false, DistributionRenderingRoute.Cartesian)]
+    [InlineData(true, DistributionRenderingRoute.PolarFallback)]
+    public void ResolveRoute_ReturnsExpectedActiveRoute(bool isPolarMode, DistributionRenderingRoute expectedRoute)
+    {
+        var route = DistributionRenderingRouteResolver.Resolve(isPolarMode);
+
+        Assert.Equal(expectedRoute, route);
     }
 
     [Fact]

@@ -399,9 +399,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
     private DistributionRenderingRoute ResolveRenderingRoute()
     {
-        return _viewModel.ChartState.IsDistributionPolarMode
-            ? DistributionRenderingRoute.PolarFallback
-            : DistributionRenderingRoute.Cartesian;
+        return DistributionRenderingRouteResolver.Resolve(_viewModel.ChartState.IsDistributionPolarMode);
     }
 
     private static ChartDataContext BuildDistributionContext(ChartDataContext ctx, DistributionRenderInput renderInput)
