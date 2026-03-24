@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.UI.Charts.Adapters;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.ViewModels;
@@ -48,7 +49,9 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             distributionRenderingContract,
             context.GetPolarTooltip);
 
-        var weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(context.WeekdayTrendChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetStrategyCutOverService, context.WeekdayTrendChartUpdateCoordinator);
+        var weekdayTrendRenderingContract = new WeekdayTrendRenderingContract(context.WeekdayTrendChartUpdateCoordinator);
+
+        var weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(context.WeekdayTrendChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetStrategyCutOverService, weekdayTrendRenderingContract);
 
         var normalizedAdapter = new NormalizedChartControllerAdapter(context.NormalizedChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetChartRenderingOrchestrator, context.ChartUpdateCoordinator, context.GetStrategyCutOverService);
 

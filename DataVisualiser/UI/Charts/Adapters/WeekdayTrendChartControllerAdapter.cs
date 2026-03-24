@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
@@ -24,11 +25,11 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
-    private readonly WeekdayTrendChartUpdateCoordinator _updateCoordinator;
+    private readonly IWeekdayTrendRenderingContract _weekdayTrendRenderingContract;
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombo;
 
-    public WeekdayTrendChartControllerAdapter(IWeekdayTrendChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<IStrategyCutOverService?> getStrategyCutOverService, WeekdayTrendChartUpdateCoordinator updateCoordinator)
+    public WeekdayTrendChartControllerAdapter(IWeekdayTrendChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, Func<IStrategyCutOverService?> getStrategyCutOverService, IWeekdayTrendRenderingContract weekdayTrendRenderingContract)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -37,7 +38,7 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _getStrategyCutOverService = getStrategyCutOverService ?? throw new ArgumentNullException(nameof(getStrategyCutOverService));
-        _updateCoordinator = updateCoordinator ?? throw new ArgumentNullException(nameof(updateCoordinator));
+        _weekdayTrendRenderingContract = weekdayTrendRenderingContract ?? throw new ArgumentNullException(nameof(weekdayTrendRenderingContract));
     }
 
     public CartesianChart PolarChart => _controller.PolarChart;
@@ -57,22 +58,17 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
     public override void Clear(ChartState state)
     {
-        ChartSurfaceHelper.ClearCartesian(_controller.Chart, state);
-        ChartSurfaceHelper.ClearCartesian(_controller.PolarChart, state);
+        _weekdayTrendRenderingContract.Clear(CreateRenderHost());
     }
 
     public override void ResetZoom()
     {
-        if (_updateCoordinator.TryRefitActiveChart())
-            return;
-
-        ChartSurfaceHelper.ResetZoom(_controller.Chart);
-        ChartSurfaceHelper.ResetZoom(_controller.PolarChart);
+        _weekdayTrendRenderingContract.ResetView(ResolveRenderingRoute(), CreateRenderHost());
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return state.WeekdayTrendChartMode == WeekdayTrendChartMode.Polar ? ChartSurfaceHelper.HasSeries(_controller.PolarChart) : ChartSurfaceHelper.HasSeries(_controller.Chart);
+        return _weekdayTrendRenderingContract.HasRenderableContent(ResolveRenderingRoute(), CreateRenderHost());
     }
 
     public override void UpdateSubtypeOptions()
@@ -326,6 +322,18 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
     private void RenderWeekdayTrendChart(WeekdayTrendResult result)
     {
-        _updateCoordinator.UpdateChart(result, _viewModel.ChartState, _controller.Chart, _controller.PolarChart);
+        _weekdayTrendRenderingContract.Render(
+            new WeekdayTrendChartRenderRequest(ResolveRenderingRoute(), result, _viewModel.ChartState),
+            CreateRenderHost());
+    }
+
+    private WeekdayTrendRenderingRoute ResolveRenderingRoute()
+    {
+        return WeekdayTrendRenderingRouteResolver.Resolve(_viewModel.ChartState.WeekdayTrendChartMode);
+    }
+
+    private WeekdayTrendChartRenderHost CreateRenderHost()
+    {
+        return new WeekdayTrendChartRenderHost(_controller.Chart, _controller.PolarChart, _viewModel.ChartState);
     }
 }
