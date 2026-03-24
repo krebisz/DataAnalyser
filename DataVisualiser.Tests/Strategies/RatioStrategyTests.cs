@@ -176,4 +176,18 @@ public sealed class RatioStrategyTests
         Assert.NotNull(result);
         Assert.Null(result!.Unit);
     }
+
+    [Fact]
+    public void Compute_ShouldSupportCmsInputs()
+    {
+        var left = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithUnit("kg").WithSampleCount(5).Build();
+        var right = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(2m).WithUnit("kg").WithSampleCount(5).Build();
+
+        var strategy = new RatioStrategy(left, right, "L", "R", From, To);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.PrimaryRawValues.Count);
+    }
 }

@@ -149,14 +149,10 @@ public sealed class StrategyCutOverServiceTests
         Assert.False(result);
     }
 
-    [Theory]
-    [InlineData(StrategyType.MultiMetric)]
-    [InlineData(StrategyType.Normalized)]
-    [InlineData(StrategyType.Difference)]
-    [InlineData(StrategyType.Ratio)]
-    public void ShouldUseCms_ShouldReturnFalse_ForUnsupportedOrIncompleteStrategies_WhenCmsPresenceIsInsufficient(StrategyType strategyType)
+    [Fact]
+    public void ShouldUseCms_ShouldReturnFalse_ForMultiMetric_WhenCmsSeriesCollectionIsMissing()
     {
-        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true, useCmsForNormalized: true, useCmsForDifference: true, useCmsForRatio: true);
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true);
 
         var ctx = new ChartDataContext
         {
@@ -166,9 +162,30 @@ public sealed class StrategyCutOverServiceTests
             To = To
         };
 
-        var result = service.ShouldUseCms(strategyType, ctx);
+        var result = service.ShouldUseCms(StrategyType.MultiMetric, ctx);
 
         Assert.False(result);
+    }
+
+    [Theory]
+    [InlineData(StrategyType.Normalized)]
+    [InlineData(StrategyType.Difference)]
+    [InlineData(StrategyType.Ratio)]
+    public void ShouldUseCms_ShouldReturnTrue_ForBinaryStrategies_WhenPrimaryAndSecondaryCmsArePresent(StrategyType strategyType)
+    {
+        var service = CreateService(useCmsData: true, useCmsForNormalized: true, useCmsForDifference: true, useCmsForRatio: true);
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build(),
+            SecondaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithSampleCount(5).Build(),
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(strategyType, ctx);
+
+        Assert.True(result);
     }
 
     [Fact]
@@ -253,7 +270,7 @@ public sealed class StrategyCutOverServiceTests
     }
 
     [Fact]
-    public void CreateStrategy_ShouldContinueUsingLegacyImplementation_ForNormalized_WhenCmsIsEligible()
+    public void CreateStrategy_ShouldPreferCms_ForNormalized_WhenCmsIsEligible()
     {
         var service = CreateService(useCmsData: true, useCmsForNormalized: true);
         var primaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build();
@@ -283,7 +300,73 @@ public sealed class StrategyCutOverServiceTests
 
         Assert.IsType<NormalizedStrategy>(strategy);
         Assert.NotNull(result);
-        Assert.Equal(2, result!.PrimaryRawValues.Count);
+        Assert.Equal(5, result!.PrimaryRawValues.Count);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForDifference_WhenCmsIsEligible()
+    {
+        var service = CreateService(useCmsData: true, useCmsForDifference: true);
+        var primaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build();
+        var secondaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(4m).WithSampleCount(5).Build();
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            LegacyData2 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(4m).BuildSeries(2, TimeSpan.FromDays(1)),
+            Label1 = "Left",
+            Label2 = "Right",
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.Difference, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.IsType<DifferenceStrategy>(strategy);
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.PrimaryRawValues.Count);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForRatio_WhenCmsIsEligible()
+    {
+        var service = CreateService(useCmsData: true, useCmsForRatio: true);
+        var primaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build();
+        var secondaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(2m).WithSampleCount(5).Build();
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            LegacyData2 = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(2m).BuildSeries(2, TimeSpan.FromDays(1)),
+            Label1 = "Left",
+            Label2 = "Right",
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.Ratio, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.IsType<RatioStrategy>(strategy);
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.PrimaryRawValues.Count);
     }
 
     [Fact]

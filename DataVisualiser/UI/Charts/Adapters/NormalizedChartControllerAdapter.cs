@@ -284,6 +284,7 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
                 DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
                 DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
                 DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                ActualSeriesCount = secondaryData == null ? 1 : 2,
                 From = ctx.From,
                 To = ctx.To
         };

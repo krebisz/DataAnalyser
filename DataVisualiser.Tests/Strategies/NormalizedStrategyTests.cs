@@ -1,5 +1,6 @@
-﻿using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.Tests.Helpers;
 
 namespace DataVisualiser.Tests.Strategies;
 
@@ -26,22 +27,22 @@ public sealed class NormalizedStrategyTests
     {
         var left = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 10m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 10m,
+                Unit = "kg"
+            }
         };
 
         var right = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = To.AddDays(5),
-                        Value = 20m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = To.AddDays(5),
+                Value = 20m,
+                Unit = "kg"
+            }
         };
 
         var strategy = new NormalizedStrategy(left, right, "L", "R", From, To);
@@ -58,46 +59,46 @@ public sealed class NormalizedStrategyTests
     {
         var left = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 10m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(1),
-                        Value = 20m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(2),
-                        Value = 30m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(3),
-                        Value = 40m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(4),
-                        Value = 50m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 10m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(1),
+                Value = 20m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(2),
+                Value = 30m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(3),
+                Value = 40m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(4),
+                Value = 50m,
+                Unit = "kg"
+            }
         };
 
         var right = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 5m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 5m,
+                Unit = "kg"
+            }
         };
 
         var strategy = new NormalizedStrategy(left, right, "L", "R", From, To);
@@ -111,40 +112,39 @@ public sealed class NormalizedStrategyTests
         Assert.DoesNotContain(result.PrimaryRawValues, double.IsNaN);
     }
 
-
     [Fact]
     public void Compute_ShouldReturnTwoSeries_ForRelativeToMax()
     {
         var left = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 10m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(1),
-                        Value = 20m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 10m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(1),
+                Value = 20m,
+                Unit = "kg"
+            }
         };
 
         var right = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 5m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(1),
-                        Value = 10m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 5m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(1),
+                Value = 10m,
+                Unit = "kg"
+            }
         };
 
         var strategy = new NormalizedStrategy(left, right, "L", "R", From, To, NormalizationMode.RelativeToMax);
@@ -154,8 +154,6 @@ public sealed class NormalizedStrategyTests
         Assert.NotNull(result);
         Assert.NotNull(result!.SecondaryRawValues);
         Assert.NotNull(result.SecondarySmoothed);
-
-        // Baseline series is a straight 100% line (per MathHelper.RelativeToMax overload)
         Assert.All(result.SecondaryRawValues!, v => Assert.Equal(100.0, v));
         Assert.All(result.SecondarySmoothed!, v => Assert.Equal(100.0, v));
     }
@@ -165,58 +163,58 @@ public sealed class NormalizedStrategyTests
     {
         var left = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 10m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(1),
-                        Value = 20m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(2),
-                        Value = 30m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(3),
-                        Value = 40m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 10m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(1),
+                Value = 20m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(2),
+                Value = 30m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(3),
+                Value = 40m,
+                Unit = "kg"
+            }
         };
 
         var right = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 5m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(1),
-                        Value = 10m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(2),
-                        Value = 15m,
-                        Unit = "kg"
-                },
-                new()
-                {
-                        NormalizedTimestamp = From.AddDays(3),
-                        Value = 20m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 5m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(1),
+                Value = 10m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(2),
+                Value = 15m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(3),
+                Value = 20m,
+                Unit = "kg"
+            }
         };
 
         var strategy = new NormalizedStrategy(left, right, "L", "R", From, To);
@@ -232,22 +230,22 @@ public sealed class NormalizedStrategyTests
     {
         var left = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 10m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 10m,
+                Unit = "kg"
+            }
         };
 
         var right = new List<MetricData>
         {
-                new()
-                {
-                        NormalizedTimestamp = From,
-                        Value = 5m,
-                        Unit = "kg"
-                }
+            new()
+            {
+                NormalizedTimestamp = From,
+                Value = 5m,
+                Unit = "kg"
+            }
         };
 
         var strategy = new NormalizedStrategy(left, right, "L", "R", From, To);
@@ -264,5 +262,19 @@ public sealed class NormalizedStrategyTests
         var strategy = new NormalizedStrategy(Enumerable.Empty<MetricData>(), Enumerable.Empty<MetricData>(), "L", "R", From, To, NormalizationMode.RelativeToMax);
 
         Assert.Equal("R (baseline)", strategy.SecondaryLabel);
+    }
+
+    [Fact]
+    public void Compute_ShouldSupportCmsInputs()
+    {
+        var left = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithUnit("kg").WithSampleCount(5).Build();
+        var right = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithUnit("kg").WithSampleCount(5).Build();
+
+        var strategy = new NormalizedStrategy(left, right, "L", "R", From, To, NormalizationMode.PercentageOfMax);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal(5, result!.PrimaryRawValues.Count);
     }
 }

@@ -5,6 +5,7 @@ using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using UnitResolutionService = DataVisualiser.Core.Services.UnitResolutionService;
+using DataFileReader.Canonical;
 
 namespace DataVisualiser.Core.Strategies.Implementations;
 
@@ -34,6 +35,19 @@ public sealed class RatioStrategy : IChartComputationStrategy
         _timelineService = timelineService ?? new TimelineService();
         _smoothingService = smoothingService ?? new SmoothingService();
         _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
+    }
+
+    public RatioStrategy(ICanonicalMetricSeries left, ICanonicalMetricSeries right, string labelLeft, string labelRight, DateTime from, DateTime to, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+        : this(CmsConversionHelper.ConvertSamplesToHealthMetricData(left, from, to).ToList(),
+            CmsConversionHelper.ConvertSamplesToHealthMetricData(right, from, to).ToList(),
+            labelLeft,
+            labelRight,
+            from,
+            to,
+            timelineService,
+            smoothingService,
+            unitResolutionService)
+    {
     }
 
     public string PrimaryLabel => $"{_labelLeft} / {_labelRight}";

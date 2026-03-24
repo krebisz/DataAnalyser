@@ -2597,6 +2597,7 @@ public partial class MainChartsView : UserControl
         {
                 "Add" => BinaryOperators.Sum,
                 "Subtract" => BinaryOperators.Difference,
+                "Divide" => BinaryOperators.Ratio,
                 _ => (a, b) => a
         };
 

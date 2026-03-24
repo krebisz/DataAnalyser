@@ -2,6 +2,7 @@ using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Interfaces;
 using System.Windows;
 using System.Windows.Controls;
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.CartesianMetrics;
@@ -168,10 +169,15 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
         var primarySelection = ResolveSelectedDiffRatioPrimarySeries(ctx);
         var secondarySelection = ResolveSelectedDiffRatioSecondarySeries(ctx);
 
-        var primaryData = await ResolveDiffRatioDataAsync(ctx, primarySelection);
+        var (primaryData, primaryCms) = await ResolveDiffRatioSeriesAsync(ctx, primarySelection);
         IReadOnlyList<MetricData>? secondaryData = null;
+        ICanonicalMetricSeries? secondaryCms = null;
         if (secondarySelection != null)
-            secondaryData = await ResolveDiffRatioDataAsync(ctx, secondarySelection);
+        {
+            var resolvedSecondary = await ResolveDiffRatioSeriesAsync(ctx, secondarySelection);
+            secondaryData = resolvedSecondary.Data;
+            secondaryCms = resolvedSecondary.Cms;
+        }
 
         var displayName1 = ResolveDiffRatioDisplayName(ctx, primarySelection);
         var displayName2 = ResolveDiffRatioDisplayName(ctx, secondarySelection);
@@ -180,6 +186,8 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
         {
                 Data1 = primaryData,
                 Data2 = secondaryData,
+                PrimaryCms = primaryCms,
+                SecondaryCms = secondaryCms,
                 DisplayName1 = displayName1,
                 DisplayName2 = displayName2,
                 MetricType = primarySelection?.MetricType ?? ctx.MetricType,
@@ -191,6 +199,7 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
                 DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
                 DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
                 DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
+                ActualSeriesCount = secondaryData == null ? 1 : 2,
                 From = ctx.From,
                 To = ctx.To
         };
@@ -198,32 +207,32 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
         return (primaryData, secondaryData, diffRatioContext);
     }
 
-    private async Task<IReadOnlyList<MetricData>?> ResolveDiffRatioDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveDiffRatioSeriesAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         if (ctx.Data1 == null)
-            return null;
+            return (null, null);
 
         if (selectedSeries == null)
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
+            return (ctx.Data2 ?? ctx.Data1, ctx.SecondaryCms as ICanonicalMetricSeries ?? ctx.PrimaryCms as ICanonicalMetricSeries);
 
         if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
         var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_selectionCache.TryGetData(cacheKey, out var cached))
-            return cached;
+        if (_selectionCache.TryGetDataWithCms(cacheKey, out var cached, out var cachedCms))
+            return (cached, cachedCms);
 
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
+        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, ctx.From, ctx.To, tableName);
         var data = primaryData.ToList();
-        _selectionCache.SetData(cacheKey, data);
-        return data;
+        _selectionCache.SetDataWithCms(cacheKey, data, primaryCms);
+        return (data, primaryCms);
     }
 
     private MetricSeriesSelection? ResolveSelectedDiffRatioPrimarySeries(ChartDataContext ctx)

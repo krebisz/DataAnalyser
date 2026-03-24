@@ -221,12 +221,12 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
             StrategyType.SingleMetric => true,
             StrategyType.CombinedMetric => true,
             StrategyType.MultiMetric => true,
+            StrategyType.Difference => true,
+            StrategyType.Ratio => true,
+            StrategyType.Normalized => true,
             StrategyType.WeeklyDistribution => true,
             StrategyType.HourlyDistribution => true,
             StrategyType.WeekdayTrend => true,
-            StrategyType.Difference => false,
-            StrategyType.Ratio => false,
-            StrategyType.Normalized => false,
             _ => false
         };
     }

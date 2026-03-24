@@ -1,3 +1,4 @@
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
@@ -23,6 +24,20 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
     private readonly IUnitResolutionService _unitResolutionService;
 
     public NormalizedStrategy(IEnumerable<MetricData> left, IEnumerable<MetricData> right, string labelLeft, string labelRight, DateTime from, DateTime to) : this(left, right, labelLeft, labelRight, from, to, NormalizationMode.PercentageOfMax)
+    {
+    }
+
+    public NormalizedStrategy(ICanonicalMetricSeries left, ICanonicalMetricSeries right, string labelLeft, string labelRight, DateTime from, DateTime to, NormalizationMode mode, ITimelineService? timelineService = null, ISmoothingService? smoothingService = null, IUnitResolutionService? unitResolutionService = null)
+        : this(CmsConversionHelper.ConvertSamplesToHealthMetricData(left, from, to).ToList(),
+            CmsConversionHelper.ConvertSamplesToHealthMetricData(right, from, to).ToList(),
+            labelLeft,
+            labelRight,
+            from,
+            to,
+            mode,
+            timelineService,
+            smoothingService,
+            unitResolutionService)
     {
     }
 

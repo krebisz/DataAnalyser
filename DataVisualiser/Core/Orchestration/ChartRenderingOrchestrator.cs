@@ -6,11 +6,9 @@ using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
+using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
-using DataVisualiser.Core.Transforms.Evaluators;
-using DataVisualiser.Core.Transforms.Expressions;
-using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
@@ -513,127 +511,22 @@ public sealed class ChartRenderingOrchestrator
             return;
 
         var isDifferenceMode = chartState?.IsDiffRatioDifferenceMode ?? true;
-        var operation = isDifferenceMode ? "Subtract" : "Divide";
         var operationSymbol = isDifferenceMode ? "-" : "/";
-
-        if (TryBuildDiffRatioSeries(ctx, isDifferenceMode, out var derivedData, out var derivedValues))
-        {
-            var derivedLabel = TransformExpressionEvaluator.GenerateTransformLabel(operation,
-                    new List<IReadOnlyList<MetricData>>
-                    {
-                            ctx.Data1,
-                            ctx.Data2
-                    },
-                    ctx);
-            var derivedStrategy = new TransformResultStrategy(derivedData, derivedValues, derivedLabel, ctx.From, ctx.To);
-
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, derivedStrategy, derivedLabel, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, ctx.DisplayPrimaryMetricType, ctx.DisplaySecondaryMetricType, ctx.DisplayPrimarySubtype, ctx.DisplaySecondarySubtype);
-            return;
-        }
-
-        var preparedData = PrepareAndAlignBinaryData(ctx.Data1, ctx.Data2);
-        if (preparedData == null)
-            return;
-
-        var alignedData = preparedData.Value;
-
-        var computation = ComputeBinaryResults(alignedData, operation);
-
-        var label = TransformExpressionEvaluator.GenerateTransformLabel(operation, computation.MetricsList, ctx);
-
-        var strategy = new TransformResultStrategy(alignedData.Item1, computation.Results, label, ctx.From, ctx.To);
+        var strategyType = isDifferenceMode ? StrategyType.Difference : StrategyType.Ratio;
+        var label = $"{ctx.DisplayName1} {operationSymbol} {ctx.DisplayName2}";
+        var strategy = _strategyCutOverService.CreateStrategy(strategyType,
+            ctx,
+            new StrategyCreationParameters
+            {
+                LegacyData1 = ctx.Data1,
+                LegacyData2 = ctx.Data2,
+                Label1 = ctx.DisplayName1,
+                Label2 = ctx.DisplayName2,
+                From = ctx.From,
+                To = ctx.To
+            });
 
         await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartDiffRatio, strategy, label, null, 400, metricType, primarySubtype, secondarySubtype, operationSymbol, true, ctx.SecondaryMetricType, ctx.DisplayPrimaryMetricType, ctx.DisplaySecondaryMetricType, ctx.DisplayPrimarySubtype, ctx.DisplaySecondarySubtype);
-    }
-
-    private static bool TryBuildDiffRatioSeries(ChartDataContext ctx, bool isDifferenceMode, out List<MetricData> data, out List<double> values)
-    {
-        data = new List<MetricData>();
-        values = new List<double>();
-
-        var timeline = ctx.Timestamps;
-        var derivedValues = isDifferenceMode ? ctx.DifferenceValues : ctx.RatioValues;
-        if (timeline == null || derivedValues == null || timeline.Count == 0 || derivedValues.Count == 0)
-            return false;
-
-        var count = Math.Min(timeline.Count, derivedValues.Count);
-        if (count == 0)
-            return false;
-
-        var sample = ctx.Data1.FirstOrDefault(d => d.Value.HasValue) ?? ctx.Data2.FirstOrDefault(d => d.Value.HasValue) ?? ctx.Data1.FirstOrDefault() ?? ctx.Data2.FirstOrDefault();
-
-        data = new List<MetricData>(count);
-        values = new List<double>(count);
-
-        for (var i = 0; i < count; i++)
-        {
-            var value = derivedValues[i];
-            values.Add(value);
-
-            decimal? decimalValue = null;
-            if (!double.IsNaN(value) && !double.IsInfinity(value))
-                decimalValue = (decimal)value;
-
-            data.Add(new MetricData
-            {
-                    NormalizedTimestamp = timeline[i],
-                    Value = decimalValue,
-                    Unit = sample?.Unit,
-                    Provider = sample?.Provider
-            });
-        }
-
-        return data.Count > 0 && values.Count > 0;
-    }
-
-    private static(List<MetricData> Item1, List<MetricData> Item2)? PrepareAndAlignBinaryData(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2)
-    {
-        var allData1List = data1.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-
-        var allData2List = data2.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-
-        if (allData1List.Count == 0 || allData2List.Count == 0)
-            return null;
-
-        var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
-
-        if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
-            return null;
-
-        return alignedData;
-    }
-
-    private static(List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
-    {
-        var metricsList = new List<IReadOnlyList<MetricData>>
-        {
-                alignedData.Item1,
-                alignedData.Item2
-        };
-
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
-
-        if (expression == null)
-        {
-            var op = operation switch
-            {
-                    "Subtract" => BinaryOperators.Difference,
-                    "Divide" => BinaryOperators.Ratio,
-                    _ => (a, b) => a
-            };
-
-            var values1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
-
-            var values2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
-
-            var results = MathHelper.ApplyBinaryOperation(values1, values2, op);
-
-            return (results, metricsList);
-        }
-
-        var computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-
-        return (computedResults, metricsList);
     }
 
 
