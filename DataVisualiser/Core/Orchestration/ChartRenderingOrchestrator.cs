@@ -175,7 +175,7 @@ public sealed class ChartRenderingOrchestrator
 
         var (series, labels) = BuildSeriesAndLabels(ctx, additionalSeries, additionalLabels);
 
-        var strategy = CreatePrimaryStrategy(ctx, series, labels, out var secondaryLabel);
+        var strategy = CreatePrimaryStrategy(ctx, series, labels, ctx.CmsSeries, out var secondaryLabel);
 
         await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: isStacked, isCumulative: isCumulative, overlaySeries: overlaySeries);
     }
@@ -196,18 +196,20 @@ public sealed class ChartRenderingOrchestrator
 
             if (stackedSelections.Count >= 2)
             {
-                var (stackedSeries, stackedLabels) = await BuildSeriesFromSelectionsAsync(ctx, stackedSelections, resolutionTableName);
+                var (stackedSeries, stackedLabels, stackedCmsSeries) = await BuildSeriesFromSelectionsAsync(ctx, stackedSelections, resolutionTableName);
                 if (stackedSeries.Count >= 2)
                 {
+                    var stackedContext = BuildMultiMetricContext(ctx, stackedCmsSeries, stackedSeries.Count);
                     var parameters = new StrategyCreationParameters
                     {
                             LegacySeries = stackedSeries,
+                            CmsSeries = stackedContext.CmsSeries,
                             Labels = stackedLabels,
                             From = ctx.From,
                             To = ctx.To
                     };
 
-                    var strategy = _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+                    var strategy = _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, stackedContext, parameters);
                     var computedOverlaySeries = overlaySeries ?? await BuildOverlaySeriesAsync(ctx, overlaySelections, resolutionTableName);
 
                     await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, stackedLabels[0], null, 400, ctx.MetricType, ctx.PrimarySubtype, null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: true, isCumulative: false, overlaySeries: computedOverlaySeries);
@@ -219,31 +221,32 @@ public sealed class ChartRenderingOrchestrator
 
         // Build initial series list for multi-metric routing
         var (series, labels) = BuildInitialSeriesList(data1, data2, displayName1, displayName2);
+        var cmsSeries = BuildInitialCmsSeries(ctx);
 
         // Load additional subtypes if more than 2 are selected
-        await LoadAdditionalSubtypesAsync(series, labels, metricType, from, to, selectedSeries, resolutionTableName);
-
-        // Extract additional series (beyond the first 2 from context)
-        IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null;
-        IReadOnlyList<string>? additionalLabels = null;
+        await LoadAdditionalSubtypesAsync(series, labels, cmsSeries, metricType, from, to, selectedSeries, resolutionTableName);
 
         if (series.Count > 2)
         {
-            additionalSeries = series.Skip(2).ToList();
-            additionalLabels = labels.Skip(2).ToList();
+            var multiMetricContext = BuildMultiMetricContext(ctx, cmsSeries, series.Count);
+            var strategy = CreatePrimaryStrategy(multiMetricContext, series, labels, multiMetricContext.CmsSeries, out _);
+
+            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], null, 400, ctx.MetricType, ctx.PrimarySubtype, null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: isStacked, isCumulative: isCumulative, overlaySeries: overlaySeries);
+            return;
         }
 
         // Use existing RenderPrimaryChart method
-        await RenderPrimaryChart(ctx, chartMain, additionalSeries, additionalLabels, isStacked, isCumulative, overlaySeries);
+        await RenderPrimaryChart(ctx, chartMain, null, null, isStacked, isCumulative, overlaySeries);
     }
 
-    private async Task<(List<IEnumerable<MetricData>> Series, List<string> Labels)> BuildSeriesFromSelectionsAsync(ChartDataContext ctx, IReadOnlyList<MetricSeriesSelection> selections, string? resolutionTableName)
+    private async Task<(List<IEnumerable<MetricData>> Series, List<string> Labels, List<ICanonicalMetricSeries> CmsSeries)> BuildSeriesFromSelectionsAsync(ChartDataContext ctx, IReadOnlyList<MetricSeriesSelection> selections, string? resolutionTableName)
     {
         var series = new List<IEnumerable<MetricData>>();
         var labels = new List<string>();
+        var cmsSeries = new List<ICanonicalMetricSeries>();
 
         if (selections.Count == 0)
-            return (series, labels);
+            return (series, labels, cmsSeries);
 
         var tableName = resolutionTableName ?? DataAccessDefaults.DefaultTableName;
         var metricSelectionService = _metricSelectionService ?? new MetricSelectionService(_connectionString ?? string.Empty);
@@ -251,6 +254,7 @@ public sealed class ChartRenderingOrchestrator
         foreach (var selection in selections)
         {
             var data = ResolveContextSeries(ctx, selection);
+            var cms = ResolveContextCmsSeries(ctx, selection);
             if (data == null)
             {
                 if (selection.QuerySubtype == null)
@@ -259,8 +263,9 @@ public sealed class ChartRenderingOrchestrator
                 if (string.IsNullOrWhiteSpace(selection.MetricType))
                     continue;
 
-                var loaded = await metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, ctx.From, ctx.To, tableName);
-                data = loaded.Primary.ToList();
+                var loaded = await metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, ctx.From, ctx.To, tableName);
+                data = loaded.PrimaryLegacy.ToList();
+                cms = loaded.PrimaryCms;
             }
 
             if (data == null || !data.Any())
@@ -268,9 +273,11 @@ public sealed class ChartRenderingOrchestrator
 
             series.Add(data);
             labels.Add(selection.DisplayName);
+            if (cms != null)
+                cmsSeries.Add(cms);
         }
 
-        return (series, labels);
+        return (series, labels, cmsSeries);
     }
 
     private async Task<IReadOnlyList<SeriesResult>?> BuildOverlaySeriesAsync(ChartDataContext ctx, IReadOnlyList<MetricSeriesSelection> selections, string? resolutionTableName)
@@ -278,7 +285,7 @@ public sealed class ChartRenderingOrchestrator
         if (selections == null || selections.Count == 0)
             return null;
 
-        var (overlaySeries, overlayLabels) = await BuildSeriesFromSelectionsAsync(ctx, selections, resolutionTableName);
+        var (overlaySeries, overlayLabels, _) = await BuildSeriesFromSelectionsAsync(ctx, selections, resolutionTableName);
         if (overlaySeries.Count == 0 || overlayLabels.Count == 0)
             return null;
 
@@ -320,6 +327,17 @@ public sealed class ChartRenderingOrchestrator
 
         if (IsMatchingSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2;
+
+        return null;
+    }
+
+    private static ICanonicalMetricSeries? ResolveContextCmsSeries(ChartDataContext ctx, MetricSeriesSelection selection)
+    {
+        if (IsMatchingSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return ctx.PrimaryCms as ICanonicalMetricSeries;
+
+        if (IsMatchingSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return ctx.SecondaryCms as ICanonicalMetricSeries;
 
         return null;
     }
@@ -378,7 +396,7 @@ public sealed class ChartRenderingOrchestrator
         return (series, labels);
     }
 
-    private IChartComputationStrategy CreatePrimaryStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, out string? secondaryLabel)
+    private IChartComputationStrategy CreatePrimaryStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, IReadOnlyList<ICanonicalMetricSeries>? cmsSeries, out string? secondaryLabel)
     {
         secondaryLabel = null;
 
@@ -388,6 +406,7 @@ public sealed class ChartRenderingOrchestrator
                     new StrategyCreationParameters
                     {
                             LegacySeries = series,
+                            CmsSeries = cmsSeries,
                             Labels = labels,
                             From = ctx.From,
                             To = ctx.To
@@ -419,6 +438,54 @@ public sealed class ChartRenderingOrchestrator
                         From = ctx.From,
                         To = ctx.To
                 });
+    }
+
+    private static List<ICanonicalMetricSeries> BuildInitialCmsSeries(ChartDataContext ctx)
+    {
+        var cmsSeries = new List<ICanonicalMetricSeries>(2);
+
+        if (ctx.PrimaryCms is ICanonicalMetricSeries primaryCms)
+            cmsSeries.Add(primaryCms);
+
+        if (ctx.SecondaryCms is ICanonicalMetricSeries secondaryCms)
+            cmsSeries.Add(secondaryCms);
+
+        return cmsSeries;
+    }
+
+    private static ChartDataContext BuildMultiMetricContext(ChartDataContext ctx, IReadOnlyList<ICanonicalMetricSeries>? cmsSeries, int seriesCount)
+    {
+        return new ChartDataContext
+        {
+                PrimaryCms = ctx.PrimaryCms,
+                SecondaryCms = ctx.SecondaryCms,
+                CmsSeries = cmsSeries != null && cmsSeries.Count == seriesCount ? cmsSeries.ToList() : null,
+                Data1 = ctx.Data1,
+                Data2 = ctx.Data2,
+                Timestamps = ctx.Timestamps,
+                RawValues1 = ctx.RawValues1,
+                RawValues2 = ctx.RawValues2,
+                SmoothedValues1 = ctx.SmoothedValues1,
+                SmoothedValues2 = ctx.SmoothedValues2,
+                DifferenceValues = ctx.DifferenceValues,
+                RatioValues = ctx.RatioValues,
+                NormalizedValues1 = ctx.NormalizedValues1,
+                NormalizedValues2 = ctx.NormalizedValues2,
+                DisplayName1 = ctx.DisplayName1,
+                DisplayName2 = ctx.DisplayName2,
+                ActualSeriesCount = seriesCount,
+                MetricType = ctx.MetricType,
+                PrimaryMetricType = ctx.PrimaryMetricType,
+                SecondaryMetricType = ctx.SecondaryMetricType,
+                PrimarySubtype = ctx.PrimarySubtype,
+                SecondarySubtype = ctx.SecondarySubtype,
+                DisplayPrimaryMetricType = ctx.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = ctx.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = ctx.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = ctx.DisplaySecondarySubtype,
+                From = ctx.From,
+                To = ctx.To
+        };
     }
 
 
@@ -630,7 +697,7 @@ public sealed class ChartRenderingOrchestrator
     /// <summary>
     ///     Loads additional subtype data (subtypes 3, 4, etc.) and adds them to the series and labels lists.
     /// </summary>
-    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, string? metricType, DateTime from, DateTime to, IReadOnlyList<MetricSeriesSelection>? selectedSeries, string? resolutionTableName)
+    private async Task LoadAdditionalSubtypesAsync(List<IEnumerable<MetricData>> series, List<string> labels, List<ICanonicalMetricSeries> cmsSeries, string? metricType, DateTime from, DateTime to, IReadOnlyList<MetricSeriesSelection>? selectedSeries, string? resolutionTableName)
     {
         if (selectedSeries == null || selectedSeries.Count <= 2 || string.IsNullOrEmpty(_connectionString))
             return;
@@ -656,12 +723,14 @@ public sealed class ChartRenderingOrchestrator
 
             try
             {
-                var (primary, _) = await metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
+                var (primaryCms, _, primary, _) = await metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, from, to, tableName);
 
                 if (primary.Any())
                 {
                     series.Add(primary);
                     labels.Add(selection.DisplayName);
+                    if (primaryCms != null)
+                        cmsSeries.Add(primaryCms);
                 }
             }
             catch

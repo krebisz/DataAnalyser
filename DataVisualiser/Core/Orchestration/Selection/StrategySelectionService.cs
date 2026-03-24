@@ -32,7 +32,7 @@ public sealed class StrategySelectionService
 
         var actualSeriesCount = series.Count;
 
-        Debug.WriteLine($"[STRATEGY] ActualSeriesCount={actualSeriesCount}, SemanticMetricCount={ctx.SemanticMetricCount}, " + $"PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, " + $"SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}");
+        Debug.WriteLine($"[STRATEGY] ActualSeriesCount={actualSeriesCount}, ContextActualSeriesCount={ctx.ActualSeriesCount}, " + $"PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, " + $"SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}");
 
         // Multi-metric strategy (3+ series)
         if (actualSeriesCount > 2)

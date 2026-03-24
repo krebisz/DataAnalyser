@@ -10,6 +10,7 @@ public class MockCmsBuilder
     private DateTimeOffset _startTime = DateTimeOffset.UtcNow;
     private string _unitSymbol = "kg";
     private decimal? _value = 100m;
+    private MetricDimension _dimension = MetricDimension.Unknown;
 
     public MockCmsBuilder WithMetricId(string metricId)
     {
@@ -47,6 +48,12 @@ public class MockCmsBuilder
         return this;
     }
 
+    public MockCmsBuilder WithDimension(MetricDimension dimension)
+    {
+        _dimension = dimension;
+        return this;
+    }
+
     public ICanonicalMetricSeries Build()
     {
         var samples = new List<MetricSample>();
@@ -62,7 +69,8 @@ public class MockCmsBuilder
                 MetricId = new CanonicalMetricId(_metricId),
                 Samples = samples,
                 Unit = new MetricUnit(_unitSymbol, true),
-                Time = new TimeSemantics(TimeRepresentation.Point, _startTime, samples.Count > 0 ? samples[^1].Timestamp : null)
+                Time = new TimeSemantics(TimeRepresentation.Point, _startTime, samples.Count > 0 ? samples[^1].Timestamp : null),
+                Dimension = _dimension
         };
     }
 }

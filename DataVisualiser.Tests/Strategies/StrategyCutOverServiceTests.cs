@@ -5,6 +5,7 @@ using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Core.Strategies.Reachability;
 using DataVisualiser.Core.Validation.Parity;
 using DataVisualiser.Tests.Helpers;
 using Moq;
@@ -149,12 +150,13 @@ public sealed class StrategyCutOverServiceTests
     }
 
     [Theory]
+    [InlineData(StrategyType.MultiMetric)]
     [InlineData(StrategyType.Normalized)]
     [InlineData(StrategyType.Difference)]
     [InlineData(StrategyType.Ratio)]
-    public void ShouldUseCms_ShouldReturnTrue_ForBinaryStrategies_WhenEnabledAndCmsPresent(StrategyType strategyType)
+    public void ShouldUseCms_ShouldReturnFalse_ForUnsupportedOrIncompleteStrategies_WhenCmsPresenceIsInsufficient(StrategyType strategyType)
     {
-        var service = CreateService(useCmsData: true, useCmsForNormalized: true, useCmsForDifference: true, useCmsForRatio: true);
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true, useCmsForNormalized: true, useCmsForDifference: true, useCmsForRatio: true);
 
         var ctx = new ChartDataContext
         {
@@ -166,7 +168,70 @@ public sealed class StrategyCutOverServiceTests
 
         var result = service.ShouldUseCms(strategyType, ctx);
 
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ShouldUseCms_ShouldReturnTrue_ForMultiMetric_WhenRealCmsSeriesArePresent()
+    {
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true);
+        var ctx = new ChartDataContext
+        {
+            CmsSeries =
+            [
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build()
+            ],
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(StrategyType.MultiMetric, ctx);
+
         Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldUseCms_ShouldReturnTrue_ForMultiMetric_WhenCmsSeriesShareADimension()
+    {
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true);
+        var ctx = new ChartDataContext
+        {
+            CmsSeries =
+            [
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_fat_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.total_body_water").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.skeletal_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build()
+            ],
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(StrategyType.MultiMetric, ctx);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ShouldUseCms_ShouldReturnFalse_ForMultiMetric_WhenCmsSeriesHaveDifferentDimensions()
+    {
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true);
+        var ctx = new ChartDataContext
+        {
+            CmsSeries =
+            [
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_weight").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("sleep.duration").WithUnit("hours").WithDimension(DataFileReader.Canonical.MetricDimension.Duration).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.total_body_water").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build()
+            ],
+            From = From,
+            To = To
+        };
+
+        var result = service.ShouldUseCms(StrategyType.MultiMetric, ctx);
+
+        Assert.False(result);
     }
 
     [Fact]
@@ -219,6 +284,48 @@ public sealed class StrategyCutOverServiceTests
         Assert.IsType<NormalizedStrategy>(strategy);
         Assert.NotNull(result);
         Assert.Equal(2, result!.PrimaryRawValues.Count);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForMultiMetric_WhenCompleteCmsSeriesAreProvided()
+    {
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true);
+        var cmsSeries = new[]
+        {
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.test.multi").WithUnit("kg").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(30m).WithSampleCount(5).Build()
+        };
+
+        var ctx = new ChartDataContext
+        {
+            CmsSeries = cmsSeries,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries =
+            [
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).BuildSeries(2, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(30m).BuildSeries(2, TimeSpan.FromDays(1))
+            ],
+            CmsSeries = cmsSeries,
+            Labels = ["A", "B", "C"],
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.IsType<MultiMetricStrategy>(strategy);
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Series);
+        Assert.Equal(3, result.Series!.Count);
+        Assert.Equal(5, result.Series[0].RawValues.Count);
     }
 
     [Fact]
@@ -275,6 +382,40 @@ public sealed class StrategyCutOverServiceTests
     }
 
     [Fact]
+    public void CreateStrategy_ShouldPreferLegacy_ForCombinedMetric_WhenCmsDisabled()
+    {
+        var service = CreateService(useCmsData: false, useCmsForCombinedMetric: true);
+        var primaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.left").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build();
+        var secondaryCms = TestDataBuilders.CanonicalMetricSeries().WithMetricId("metric.right").WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build();
+        var legacyLeft = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1));
+        var legacyRight = TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).BuildSeries(2, TimeSpan.FromDays(1));
+
+        var ctx = new ChartDataContext
+        {
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacyData1 = legacyLeft,
+            LegacyData2 = legacyRight,
+            Label1 = "Left",
+            Label2 = "Right",
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal(legacyLeft.Count, result!.PrimaryRawValues.Count);
+    }
+
+    [Fact]
     public void CreateStrategy_ShouldPreferCms_ForWeeklyDistribution_WhenEnabled()
     {
         var service = CreateService(useCmsData: true, useCmsForWeeklyDistribution: true);
@@ -302,6 +443,137 @@ public sealed class StrategyCutOverServiceTests
         var strategy = service.CreateStrategy(StrategyType.WeeklyDistribution, ctx, parameters);
 
         Assert.IsType<CmsWeeklyDistributionStrategy>(strategy);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferCms_ForMultiMetric_WhenFourCompatibleMassSeriesAreProvided()
+    {
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true);
+        var cmsSeries = new[]
+        {
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_fat_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.total_body_water").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.skeletal_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(30m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.muscle_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(40m).WithSampleCount(5).Build()
+        };
+
+        var legacySeries = new[]
+        {
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(30m).BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(40m).BuildSeries(2, TimeSpan.FromDays(1))
+        };
+
+        var ctx = new ChartDataContext
+        {
+            CmsSeries = cmsSeries,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries = legacySeries,
+            CmsSeries = cmsSeries,
+            Labels = ["Fat", "Water", "Skeletal", "Muscle"],
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Series);
+        Assert.Equal(4, result.Series!.Count);
+        Assert.Equal(5, result.Series[0].RawValues.Count);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferLegacy_ForMultiMetric_WhenCmsIsDisabled()
+    {
+        var service = CreateService(useCmsData: false, useCmsForMultiMetric: true);
+        var cmsSeries = new[]
+        {
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_fat_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.total_body_water").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.skeletal_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(30m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.muscle_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(40m).WithSampleCount(5).Build()
+        };
+        var legacySeries = new[]
+        {
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(30m).BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(40m).BuildSeries(2, TimeSpan.FromDays(1))
+        };
+
+        var ctx = new ChartDataContext
+        {
+            CmsSeries = cmsSeries,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries = legacySeries,
+            CmsSeries = cmsSeries,
+            Labels = ["Fat", "Water", "Skeletal", "Muscle"],
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Series);
+        Assert.Equal(4, result.Series!.Count);
+        Assert.Equal(2, result.Series[0].RawValues.Count);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldPreferLegacy_ForMultiMetric_WhenCmsSeriesHaveDifferentDimensions()
+    {
+        var service = CreateService(useCmsData: true, useCmsForMultiMetric: true);
+        var cmsSeries = new[]
+        {
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_weight").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("sleep.duration").WithUnit("hours").WithDimension(DataFileReader.Canonical.MetricDimension.Duration).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("body.fat_percentage").WithUnit("%").WithDimension(DataFileReader.Canonical.MetricDimension.Percentage).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(30m).WithSampleCount(5).Build()
+        };
+        var legacySeries = new[]
+        {
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).WithUnit("kg").BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).WithUnit("hours").BuildSeries(2, TimeSpan.FromDays(1)),
+            TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(30m).WithUnit("%").BuildSeries(2, TimeSpan.FromDays(1))
+        };
+
+        var ctx = new ChartDataContext
+        {
+            CmsSeries = cmsSeries,
+            From = From,
+            To = To
+        };
+
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries = legacySeries,
+            CmsSeries = cmsSeries,
+            Labels = ["Weight", "Sleep", "Fat %"],
+            From = From,
+            To = To
+        };
+
+        var strategy = service.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Series);
+        Assert.Equal(3, result.Series!.Count);
+        Assert.Equal(2, result.Series[0].RawValues.Count);
     }
 
     [Fact]
@@ -391,9 +663,84 @@ public sealed class StrategyCutOverServiceTests
         }
     }
 
+    [Fact]
+    public void CreateStrategy_ShouldRecordReachabilityReason_WhenMultiMetricUsesCms()
+    {
+        var probe = new CapturingReachabilityProbe();
+        var service = CreateService(reachabilityProbe: probe, useCmsData: true, useCmsForMultiMetric: true);
+        var cmsSeries = new[]
+        {
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_fat_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.total_body_water").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.skeletal_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(30m).WithSampleCount(5).Build()
+        };
+
+        var ctx = new ChartDataContext { CmsSeries = cmsSeries, ActualSeriesCount = 3, From = From, To = To };
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries =
+            [
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).BuildSeries(2, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).BuildSeries(2, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(30m).BuildSeries(2, TimeSpan.FromDays(1))
+            ],
+            CmsSeries = cmsSeries,
+            Labels = ["Fat", "Water", "Skeletal"],
+            From = From,
+            To = To
+        };
+
+        service.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+
+        var record = Assert.Single(probe.Records);
+        Assert.True(record.UsedCms);
+        Assert.True(record.CmsRequested);
+        Assert.True(record.RealCmsSupported);
+        Assert.Equal(3, record.CmsSeriesCount);
+        Assert.Equal(3, record.ActualSeriesCount);
+        Assert.Equal("Compatible CMS multi-series data available", record.DecisionReason);
+    }
+
+    [Fact]
+    public void CreateStrategy_ShouldRecordReachabilityReason_WhenMultiMetricFallsBackToLegacy()
+    {
+        var probe = new CapturingReachabilityProbe();
+        var service = CreateService(reachabilityProbe: probe, useCmsData: true, useCmsForMultiMetric: true);
+        var cmsSeries = new[]
+        {
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_weight").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(10m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("sleep.duration").WithUnit("hours").WithDimension(DataFileReader.Canonical.MetricDimension.Duration).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(20m).WithSampleCount(5).Build(),
+            TestDataBuilders.CanonicalMetricSeries().WithMetricId("body.fat_percentage").WithUnit("%").WithDimension(DataFileReader.Canonical.MetricDimension.Percentage).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithInterval(TimeSpan.FromDays(1)).WithValue(30m).WithSampleCount(5).Build()
+        };
+
+        var ctx = new ChartDataContext { CmsSeries = cmsSeries, ActualSeriesCount = 3, From = From, To = To };
+        var parameters = new StrategyCreationParameters
+        {
+            LegacySeries =
+            [
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(10m).WithUnit("kg").BuildSeries(2, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(20m).WithUnit("hours").BuildSeries(2, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithValue(30m).WithUnit("%").BuildSeries(2, TimeSpan.FromDays(1))
+            ],
+            CmsSeries = cmsSeries,
+            Labels = ["Weight", "Sleep", "Fat %"],
+            From = From,
+            To = To
+        };
+
+        service.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
+
+        var record = Assert.Single(probe.Records);
+        Assert.False(record.UsedCms);
+        Assert.True(record.CmsRequested);
+        Assert.Contains("incompatible dimensions", record.DecisionReason, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static StrategyCutOverService CreateService(
+        IStrategyReachabilityProbe? reachabilityProbe = null,
         bool useCmsData = true,
         bool useCmsForSingleMetric = true,
+        bool useCmsForMultiMetric = true,
         bool useCmsForCombinedMetric = true,
         bool useCmsForDifference = true,
         bool useCmsForRatio = true,
@@ -403,10 +750,11 @@ public sealed class StrategyCutOverServiceTests
         bool useCmsForHourlyDistribution = true)
     {
         var dataPreparation = new Mock<IDataPreparationService>();
-        return new StrategyCutOverService(dataPreparation.Object, cmsRuntimeConfiguration: new TestCmsRuntimeConfiguration
+        return new StrategyCutOverService(dataPreparation.Object, reachabilityProbe, new TestCmsRuntimeConfiguration
         {
             UseCmsData = useCmsData,
             UseCmsForSingleMetric = useCmsForSingleMetric,
+            UseCmsForMultiMetric = useCmsForMultiMetric,
             UseCmsForCombinedMetric = useCmsForCombinedMetric,
             UseCmsForDifference = useCmsForDifference,
             UseCmsForRatio = useCmsForRatio,
@@ -457,6 +805,16 @@ public sealed class StrategyCutOverServiceTests
                     "BarPieStrategy" => UseCmsForBarPie,
                     _ => false
             };
+        }
+    }
+
+    private sealed class CapturingReachabilityProbe : IStrategyReachabilityProbe
+    {
+        public List<StrategyReachabilityRecord> Records { get; } = new();
+
+        public void Record(StrategyReachabilityRecord record)
+        {
+            Records.Add(record);
         }
     }
 }

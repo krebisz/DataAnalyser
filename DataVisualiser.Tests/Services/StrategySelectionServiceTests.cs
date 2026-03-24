@@ -37,7 +37,7 @@ public sealed class StrategySelectionServiceTests
         };
         var ctx = new ChartDataContext
         {
-                SemanticMetricCount = 1
+                ActualSeriesCount = 1
         };
         var from = DateTime.UtcNow.AddDays(-10);
         var to = DateTime.UtcNow;
@@ -70,7 +70,7 @@ public sealed class StrategySelectionServiceTests
         };
         var ctx = new ChartDataContext
         {
-                SemanticMetricCount = 2
+                ActualSeriesCount = 2
         };
         var from = DateTime.UtcNow.AddDays(-10);
         var to = DateTime.UtcNow;
@@ -106,7 +106,7 @@ public sealed class StrategySelectionServiceTests
         };
         var ctx = new ChartDataContext
         {
-                SemanticMetricCount = 3
+                ActualSeriesCount = 3
         };
         var from = DateTime.UtcNow.AddDays(-10);
         var to = DateTime.UtcNow;
@@ -118,6 +118,40 @@ public sealed class StrategySelectionServiceTests
         var (strategy, secondaryLabel) = _service.SelectComputationStrategy(series, labels, ctx, from, to);
 
         // Assert
+        Assert.NotNull(strategy);
+        Assert.Null(secondaryLabel);
+        _mockCutOverService.Verify(s => s.CreateStrategy(StrategyType.MultiMetric, ctx, It.Is<StrategyCreationParameters>(p => p.LegacySeries == series && p.Labels == labels && p.From == from && p.To == to)), Times.Once);
+    }
+
+    [Fact]
+    public void SelectComputationStrategy_ShouldReturnMultiMetricStrategy_WhenFourSeries()
+    {
+        var series = new List<IEnumerable<MetricData>>
+        {
+                TestDataBuilders.HealthMetricData().BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithValue(50m).BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithValue(75m).BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithValue(90m).BuildSeries(5, TimeSpan.FromDays(1))
+        };
+        var labels = new List<string>
+        {
+                "Series1",
+                "Series2",
+                "Series3",
+                "Series4"
+        };
+        var ctx = new ChartDataContext
+        {
+                ActualSeriesCount = 4
+        };
+        var from = DateTime.UtcNow.AddDays(-10);
+        var to = DateTime.UtcNow;
+
+        var mockStrategy = new Mock<IChartComputationStrategy>();
+        _mockCutOverService.Setup(s => s.CreateStrategy(StrategyType.MultiMetric, It.IsAny<ChartDataContext>(), It.IsAny<StrategyCreationParameters>())).Returns(mockStrategy.Object);
+
+        var (strategy, secondaryLabel) = _service.SelectComputationStrategy(series, labels, ctx, from, to);
+
         Assert.NotNull(strategy);
         Assert.Null(secondaryLabel);
         _mockCutOverService.Verify(s => s.CreateStrategy(StrategyType.MultiMetric, ctx, It.Is<StrategyCreationParameters>(p => p.LegacySeries == series && p.Labels == labels && p.From == from && p.To == to)), Times.Once);

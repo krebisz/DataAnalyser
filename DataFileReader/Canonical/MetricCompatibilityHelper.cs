@@ -11,6 +11,45 @@ namespace DataFileReader.Canonical;
 /// </summary>
 public static class MetricCompatibilityHelper
 {
+    private static readonly HashSet<string> DurationUnits = new(StringComparer.OrdinalIgnoreCase)
+    {
+            "h",
+            "hr",
+            "hrs",
+            "hour",
+            "hours",
+            "m",
+            "min",
+            "mins",
+            "minute",
+            "minutes",
+            "s",
+            "sec",
+            "secs",
+            "second",
+            "seconds"
+    };
+
+    private static readonly HashSet<string> MassUnits = new(StringComparer.OrdinalIgnoreCase)
+    {
+            "kg",
+            "kgs",
+            "kilogram",
+            "kilograms",
+            "g",
+            "gram",
+            "grams",
+            "lb",
+            "lbs",
+            "pound",
+            "pounds",
+            "oz",
+            "ounce",
+            "ounces",
+            "st",
+            "stone"
+    };
+
     /// <summary>
     ///     Checks if two canonical metric IDs have compatible dimensions for computation.
     ///     Current rule: Only metrics with identical dimensions are compatible.
@@ -103,6 +142,27 @@ public static class MetricCompatibilityHelper
     }
 
     /// <summary>
+    ///     Validates compatibility for consumer-facing CMS series.
+    ///     Uses explicit series dimensions when available, then unit-based inference,
+    ///     and finally canonical ID lookup as a last fallback.
+    /// </summary>
+    public static bool ValidateCompatibility(IEnumerable<ICanonicalMetricSeries> series)
+    {
+        if (series == null)
+            return false;
+
+        var items = series.Where(s => s != null).ToList();
+        if (items.Count < 2)
+            return true;
+
+        var firstDimension = ResolveDimension(items[0]);
+        if (firstDimension == MetricDimension.Unknown)
+            return false;
+
+        return items.Skip(1).All(item => ResolveDimension(item) == firstDimension);
+    }
+
+    /// <summary>
     ///     Gets a human-readable explanation of why metrics are incompatible.
     ///     Useful for error messages and UI feedback.
     /// </summary>
@@ -135,5 +195,57 @@ public static class MetricCompatibilityHelper
         }
 
         return null; // Compatible
+    }
+
+    /// <summary>
+    ///     Gets a human-readable explanation of why CMS series are incompatible.
+    /// </summary>
+    public static string? GetIncompatibilityReason(IEnumerable<ICanonicalMetricSeries> series)
+    {
+        if (series == null)
+            return "No metrics provided";
+
+        var items = series.Where(s => s != null).ToList();
+        if (items.Count < 2)
+            return null;
+
+        var dimensions = items.Select(ResolveDimension).Distinct().ToList();
+        if (dimensions.Contains(MetricDimension.Unknown))
+            return "One or more metrics has unknown dimension";
+
+        if (dimensions.Count > 1)
+            return $"Metrics have incompatible dimensions: {string.Join(", ", dimensions)}";
+
+        return null;
+    }
+
+    private static MetricDimension ResolveDimension(ICanonicalMetricSeries series)
+    {
+        if (series.Dimension != MetricDimension.Unknown)
+            return series.Dimension;
+
+        var unitDimension = GetDimensionFromUnit(series.Unit.Symbol);
+        if (unitDimension != MetricDimension.Unknown)
+            return unitDimension;
+
+        return GetDimension(series.MetricId.Value);
+    }
+
+    private static MetricDimension GetDimensionFromUnit(string? unitSymbol)
+    {
+        if (string.IsNullOrWhiteSpace(unitSymbol))
+            return MetricDimension.Unknown;
+
+        var normalized = unitSymbol.Trim();
+        if (MassUnits.Contains(normalized))
+            return MetricDimension.Mass;
+
+        if (DurationUnits.Contains(normalized))
+            return MetricDimension.Duration;
+
+        if (normalized is "%" or "percent" or "percentage")
+            return MetricDimension.Percentage;
+
+        return MetricDimension.Unknown;
     }
 }

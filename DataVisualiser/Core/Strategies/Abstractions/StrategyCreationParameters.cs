@@ -1,3 +1,4 @@
+using DataFileReader.Canonical;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Strategies.Abstractions;
@@ -10,6 +11,7 @@ public class StrategyCreationParameters
     public IEnumerable<MetricData>? LegacyData1 { get; init; }
     public IEnumerable<MetricData>? LegacyData2 { get; init; }
     public IReadOnlyList<IEnumerable<MetricData>>? LegacySeries { get; init; }
+    public IReadOnlyList<ICanonicalMetricSeries>? CmsSeries { get; init; }
     public string Label1 { get; init; } = string.Empty;
     public string Label2 { get; init; } = string.Empty;
     public IReadOnlyList<string>? Labels { get; init; }

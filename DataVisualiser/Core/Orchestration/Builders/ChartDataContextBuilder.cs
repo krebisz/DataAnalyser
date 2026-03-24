@@ -86,7 +86,7 @@ public sealed class ChartDataContextBuilder
                 From = from,
                 To = to,
 
-                SemanticMetricCount = secondarySelection == null ? 1 : 2
+                ActualSeriesCount = secondarySelection == null ? 1 : 2
         };
     }
 
@@ -103,8 +103,22 @@ public sealed class ChartDataContextBuilder
         // Store CMS in context for strategies to use directly
         ctx.PrimaryCms = primaryCms;
         ctx.SecondaryCms = secondaryCms;
+        ctx.CmsSeries = BuildCmsSeries(primaryCms, secondaryCms);
 
         return ctx;
+    }
+
+    private static IReadOnlyList<ICanonicalMetricSeries>? BuildCmsSeries(ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
+    {
+        var series = new List<ICanonicalMetricSeries>(2);
+
+        if (primaryCms != null)
+            series.Add(primaryCms);
+
+        if (secondaryCms != null)
+            series.Add(secondaryCms);
+
+        return series.Count > 0 ? series : null;
     }
 
 

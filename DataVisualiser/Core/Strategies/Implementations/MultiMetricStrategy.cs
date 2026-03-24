@@ -56,14 +56,12 @@ public sealed class MultiMetricStrategy : IChartComputationStrategy
             throw new ArgumentException("Labels count must match series count.", nameof(labels));
 
         // Validate compatibility before processing
-        var canonicalIds = cmsSeries.Where(cms => cms != null && cms.MetricId != null).Select(cms => cms.MetricId.Value).ToList();
-
-        if (canonicalIds.Count != cmsSeries.Count)
+        if (cmsSeries.Any(cms => cms == null || cms.MetricId == null))
             throw new ArgumentException("All CMS series must have valid metric identities.", nameof(cmsSeries));
 
-        if (!MetricCompatibilityHelper.ValidateCompatibility(canonicalIds))
+        if (!MetricCompatibilityHelper.ValidateCompatibility(cmsSeries))
         {
-            var reason = MetricCompatibilityHelper.GetIncompatibilityReason(canonicalIds);
+            var reason = MetricCompatibilityHelper.GetIncompatibilityReason(cmsSeries);
             throw new ArgumentException($"Cannot combine incompatible metrics: {reason}", nameof(cmsSeries));
         }
 

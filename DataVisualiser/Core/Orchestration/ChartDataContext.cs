@@ -1,3 +1,4 @@
+using DataFileReader.Canonical;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Orchestration;
@@ -6,6 +7,7 @@ public class ChartDataContext
 {
     public object? PrimaryCms { get; set; }
     public object? SecondaryCms { get; set; }
+    public IReadOnlyList<ICanonicalMetricSeries>? CmsSeries { get; set; }
 
     // Raw input from DB
     public IReadOnlyList<MetricData>? Data1 { get; init; }
@@ -31,7 +33,7 @@ public class ChartDataContext
     // Metadata
     public string DisplayName1 { get; init; } = string.Empty;
     public string DisplayName2 { get; init; } = string.Empty;
-    public int SemanticMetricCount { get; init; }
+    public int ActualSeriesCount { get; init; }
 
     // Raw metric information for label formatting
     public string? MetricType { get; init; }

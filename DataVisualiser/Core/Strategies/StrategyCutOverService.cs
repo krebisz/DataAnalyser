@@ -45,49 +45,73 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
 
     public bool ShouldUseCms(StrategyType strategyType, ChartDataContext ctx)
     {
-        // Check global configuration
-        if (!_cmsRuntimeConfiguration.UseCmsData)
-        {
-            Debug.WriteLine($"[ShouldUseCms] Global CMS disabled: UseCmsData={_cmsRuntimeConfiguration.UseCmsData}");
-            return false;
-        }
-
-        // Check strategy-specific configuration
-        var strategyName = StrategyTypeMetadata.GetConfigName(strategyType);
-
-        if (strategyName != null && !_cmsRuntimeConfiguration.ShouldUseCms(strategyName))
-        {
-            Debug.WriteLine($"[ShouldUseCms] Strategy-specific CMS disabled: {strategyName}={_cmsRuntimeConfiguration.ShouldUseCms(strategyName)}");
-            return false;
-        }
-
-        // Check if CMS data is available (filtered by date range)
-        return strategyType switch
-        {
-                StrategyType.SingleMetric => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-                StrategyType.CombinedMetric => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-                StrategyType.MultiMetric => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To), // At least primary
-                StrategyType.Difference => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-                StrategyType.Ratio => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-                StrategyType.Normalized => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To),
-                StrategyType.WeeklyDistribution => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-                StrategyType.HourlyDistribution => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-                StrategyType.WeekdayTrend => HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To),
-                _ => false
-        };
+        return EvaluateCmsDecision(strategyType, ctx).UseCms;
     }
 
     public IChartComputationStrategy CreateStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
     {
-        var useCms = ShouldUseCms(strategyType, ctx);
-        Debug.WriteLine($"[CMS] {strategyType}: PrimarySamples={GetSampleCount(ctx.PrimaryCms, ctx.From, ctx.To)} (filtered), TotalPrimarySamples={GetSampleCount(ctx.PrimaryCms)}, SecondarySamples={GetSampleCount(ctx.SecondaryCms, ctx.From, ctx.To)} (filtered), TotalSecondarySamples={GetSampleCount(ctx.SecondaryCms)}");
-        Debug.WriteLine($"[CutOver] Strategy={strategyType}, UseCms={useCms}, PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}, DateRange=[{ctx.From:yyyy-MM-dd} to {ctx.To:yyyy-MM-dd}]");
-        _reachabilityProbe.Record(StrategyReachabilityRecord.Create(strategyType, useCms, ctx, GetSampleCount(ctx.PrimaryCms, ctx.From, ctx.To), GetSampleCount(ctx.SecondaryCms, ctx.From, ctx.To)));
+        var decision = EvaluateCmsDecision(strategyType, ctx);
+        Debug.WriteLine($"[CMS] {strategyType}: PrimarySamples={decision.PrimarySamples} (filtered), TotalPrimarySamples={GetSampleCount(ctx.PrimaryCms)}, SecondarySamples={decision.SecondarySamples} (filtered), TotalSecondarySamples={GetSampleCount(ctx.SecondaryCms)}");
+        Debug.WriteLine($"[CutOver] Strategy={strategyType}, UseCms={decision.UseCms}, CmsRequested={decision.CmsRequested}, Reason={decision.Reason}, PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}, DateRange=[{ctx.From:yyyy-MM-dd} to {ctx.To:yyyy-MM-dd}]");
+        _reachabilityProbe.Record(StrategyReachabilityRecord.Create(strategyType, ctx, decision));
 
-        if (useCms)
+        if (decision.UseCms)
             return CreateCmsStrategy(strategyType, ctx, parameters);
 
         return CreateLegacyStrategy(strategyType, parameters);
+    }
+
+    private StrategyCmsDecision EvaluateCmsDecision(StrategyType strategyType, ChartDataContext ctx)
+    {
+        var primarySamples = GetSampleCount(ctx.PrimaryCms, ctx.From, ctx.To);
+        var secondarySamples = GetSampleCount(ctx.SecondaryCms, ctx.From, ctx.To);
+        var realCmsSupported = SupportsRealCmsStrategy(strategyType);
+        if (!realCmsSupported)
+            return new StrategyCmsDecision(false, false, _cmsRuntimeConfiguration.UseCmsData, false, false, primarySamples, secondarySamples, "No real CMS implementation exists");
+
+        if (!_cmsRuntimeConfiguration.UseCmsData)
+            return new StrategyCmsDecision(false, false, false, false, true, primarySamples, secondarySamples, "Global CMS disabled");
+
+        var strategyName = StrategyTypeMetadata.GetConfigName(strategyType);
+        var strategyCmsEnabled = strategyName == null || _cmsRuntimeConfiguration.ShouldUseCms(strategyName);
+        if (!strategyCmsEnabled)
+            return new StrategyCmsDecision(false, false, true, false, true, primarySamples, secondarySamples, "Strategy-specific CMS disabled");
+
+        return strategyType switch
+        {
+                StrategyType.SingleMetric => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary CMS data available", "Primary CMS data unavailable in selected range"),
+                StrategyType.CombinedMetric => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary and secondary CMS data available", "Primary or secondary CMS data unavailable in selected range"),
+                StrategyType.MultiMetric => CreateMultiMetricDecision(ctx, primarySamples, secondarySamples),
+                StrategyType.Difference => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary and secondary CMS data available", "Primary or secondary CMS data unavailable in selected range"),
+                StrategyType.Ratio => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary and secondary CMS data available", "Primary or secondary CMS data unavailable in selected range"),
+                StrategyType.Normalized => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To) && HasSufficientCmsSamples(ctx.SecondaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary and secondary CMS data available", "Primary or secondary CMS data unavailable in selected range"),
+                StrategyType.WeeklyDistribution => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary CMS data available", "Primary CMS data unavailable in selected range"),
+                StrategyType.HourlyDistribution => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary CMS data available", "Primary CMS data unavailable in selected range"),
+                StrategyType.WeekdayTrend => CreateAvailabilityDecision(HasSufficientCmsSamples(ctx.PrimaryCms, ctx.From, ctx.To), primarySamples, secondarySamples, "Primary CMS data available", "Primary CMS data unavailable in selected range"),
+                _ => new StrategyCmsDecision(false, true, true, true, true, primarySamples, secondarySamples, "Unsupported strategy type")
+        };
+    }
+
+    private static StrategyCmsDecision CreateAvailabilityDecision(bool available, int primarySamples, int secondarySamples, string successReason, string failureReason)
+    {
+        return new StrategyCmsDecision(available, true, true, true, true, primarySamples, secondarySamples, available ? successReason : failureReason);
+    }
+
+    private static StrategyCmsDecision CreateMultiMetricDecision(ChartDataContext ctx, int primarySamples, int secondarySamples)
+    {
+        if (ctx.CmsSeries == null || ctx.CmsSeries.Count == 0)
+            return new StrategyCmsDecision(false, true, true, true, true, primarySamples, secondarySamples, "CMS multi-series data unavailable");
+
+        if (ctx.CmsSeries.Any(item => item == null || item.MetricId == null))
+            return new StrategyCmsDecision(false, true, true, true, true, primarySamples, secondarySamples, "CMS multi-series identities are incomplete");
+
+        if (!MetricCompatibilityHelper.ValidateCompatibility(ctx.CmsSeries))
+            return new StrategyCmsDecision(false, true, true, true, true, primarySamples, secondarySamples, MetricCompatibilityHelper.GetIncompatibilityReason(ctx.CmsSeries) ?? "CMS multi-series metrics are incompatible");
+
+        if (!ctx.CmsSeries.All(item => HasSufficientCmsSamples(item, ctx.From, ctx.To)))
+            return new StrategyCmsDecision(false, true, true, true, true, primarySamples, secondarySamples, "One or more CMS series lacks samples in the selected range");
+
+        return new StrategyCmsDecision(true, true, true, true, true, primarySamples, secondarySamples, "Compatible CMS multi-series data available");
     }
 
     public ParityResult ValidateParity(IChartComputationStrategy legacyStrategy, IChartComputationStrategy cmsStrategy)
@@ -174,6 +198,37 @@ public sealed class StrategyCutOverService : IStrategyCutOverService
         }
 
         return filteredCount >= minSamples;
+    }
+
+    private static bool HasSufficientCmsSeries(IReadOnlyList<ICanonicalMetricSeries>? series, DateTime from, DateTime to)
+    {
+        if (series == null || series.Count == 0)
+            return false;
+
+        if (series.Any(item => item == null || item.MetricId == null))
+            return false;
+
+        if (!MetricCompatibilityHelper.ValidateCompatibility(series))
+            return false;
+
+        return series.All(item => HasSufficientCmsSamples(item, from, to));
+    }
+
+    private static bool SupportsRealCmsStrategy(StrategyType strategyType)
+    {
+        return strategyType switch
+        {
+            StrategyType.SingleMetric => true,
+            StrategyType.CombinedMetric => true,
+            StrategyType.MultiMetric => true,
+            StrategyType.WeeklyDistribution => true,
+            StrategyType.HourlyDistribution => true,
+            StrategyType.WeekdayTrend => true,
+            StrategyType.Difference => false,
+            StrategyType.Ratio => false,
+            StrategyType.Normalized => false,
+            _ => false
+        };
     }
 
     private static int GetSampleCount(object? series, DateTime? from = null, DateTime? to = null)

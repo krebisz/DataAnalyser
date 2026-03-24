@@ -814,7 +814,7 @@ public partial class MainChartsView : UserControl
             strategy = CreateMultiMetricStrategy(ctx!, selectedMetricSeries.ToList(), selectedMetricLabels.ToList(), from, to, unit);
         else if (selectedMetricSeries.Count == 2)
             strategy = CreateCombinedMetricStrategy(ctx!, selectedMetricSeries[0], selectedMetricSeries[1], selectedMetricLabels[0], selectedMetricLabels[1], from, to);
-        else if (ctx?.SemanticMetricCount == 1)
+        else if (ctx?.ActualSeriesCount == 1)
             strategy = CreateSingleMetricStrategy(ctx, selectedMetricSeries[0], selectedMetricLabels[0], from, to);
         else
             return null;
@@ -833,10 +833,9 @@ public partial class MainChartsView : UserControl
         IChartComputationStrategy strategy;
 
         var ctx = _viewModel.ChartState.LastContext!;
-        // Use actual series count instead of SemanticMetricCount which is hardcoded to max 2
         var actualSeriesCount = series.Count;
 
-        Debug.WriteLine($"[STRATEGY] ActualSeriesCount={actualSeriesCount}, SemanticMetricCount={ctx.SemanticMetricCount}, " + $"PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, " + $"SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}");
+        Debug.WriteLine($"[STRATEGY] ActualSeriesCount={actualSeriesCount}, ContextActualSeriesCount={ctx.ActualSeriesCount}, " + $"PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, " + $"SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}");
 
         // ---------- MULTI METRIC ----------
         if (actualSeriesCount > 2)
@@ -1909,7 +1908,6 @@ public partial class MainChartsView : UserControl
     {
         var records = StrategyReachabilityStoreProbe.Default.Snapshot();
         var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
-        var distinctSeries = GetDistinctSelectedSeries();
         var paritySnapshot = await BuildDistributionParitySnapshotAsync(_viewModel.ChartState.LastContext);
         var combinedParitySnapshot = BuildCombinedMetricParitySnapshot(_viewModel.ChartState.LastContext);
         var singleParitySnapshot = BuildSingleMetricParitySnapshot(_viewModel.ChartState.LastContext);
@@ -1933,8 +1931,6 @@ public partial class MainChartsView : UserControl
                         _viewModel.MetricState.FromDate,
                         _viewModel.MetricState.ToDate,
                         _viewModel.MetricState.ResolutionTableName,
-                        SelectedSeriesCount = selectedSeries.Count,
-                        DistinctSelectedSeriesCount = distinctSeries.Count,
                         SelectedSeries = selectedSeries.Select(series => new
                         {
                                 series.MetricType,

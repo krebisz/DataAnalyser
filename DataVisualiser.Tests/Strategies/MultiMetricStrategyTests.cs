@@ -196,4 +196,75 @@ public sealed class MultiMetricStrategyTests
         Assert.Equal(2, result!.Series!.Count);
         Assert.Equal("kg", result.Unit);
     }
+
+    [Fact]
+    public void Compute_ShouldHandleCanonicalMetricSeries_WithDifferentIdsWhenDimensionsMatch()
+    {
+        var cmsSeries = new[]
+        {
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_fat_mass").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.total_body_water").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build()
+        };
+
+        var strategy = new MultiMetricStrategy(cmsSeries,
+                new[]
+                {
+                        "Fat Mass",
+                        "Water Mass"
+                },
+                From,
+                To);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Series!.Count);
+    }
+
+    [Fact]
+    public void Constructor_ShouldRejectCanonicalMetricSeries_WithDifferentDimensions()
+    {
+        var cmsSeries = new[]
+        {
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("weight.body_weight").WithUnit("kg").WithDimension(DataFileReader.Canonical.MetricDimension.Mass).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build(),
+                TestDataBuilders.CanonicalMetricSeries().WithMetricId("sleep.duration").WithUnit("hours").WithDimension(DataFileReader.Canonical.MetricDimension.Duration).WithStartTime(new DateTimeOffset(From, TimeSpan.Zero)).WithSampleCount(5).Build()
+        };
+
+        var ex = Assert.Throws<ArgumentException>(() => new MultiMetricStrategy(cmsSeries,
+                new[]
+                {
+                        "Weight",
+                        "Sleep"
+                },
+                From,
+                To));
+
+        Assert.Contains("incompatible", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Compute_ShouldAllowLegacySeries_WithMixedDimensions()
+    {
+        var series = new List<IEnumerable<MetricData>>
+        {
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("kg").BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("hours").BuildSeries(5, TimeSpan.FromDays(1)),
+                TestDataBuilders.HealthMetricData().WithTimestamp(From).WithUnit("%").BuildSeries(5, TimeSpan.FromDays(1))
+        };
+
+        var strategy = new MultiMetricStrategy(series,
+                new[]
+                {
+                        "Mass",
+                        "Duration",
+                        "Percentage"
+                },
+                From,
+                To);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Equal(3, result!.Series!.Count);
+    }
 }

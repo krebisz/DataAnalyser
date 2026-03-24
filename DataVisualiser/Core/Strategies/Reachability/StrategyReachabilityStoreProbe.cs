@@ -16,7 +16,7 @@ public sealed class StrategyReachabilityStoreProbe : IStrategyReachabilityProbe
     public void Record(StrategyReachabilityRecord record)
     {
         _records.Enqueue(record);
-        Debug.WriteLine($"[Reachability] Strategy={record.StrategyType}, UsedCms={record.UsedCms}, PrimaryCms={record.PrimaryCmsAvailable}, SecondaryCms={record.SecondaryCmsAvailable}, PrimarySamples={record.PrimarySamples}, SecondarySamples={record.SecondarySamples}, Range=[{record.From:yyyy-MM-dd} to {record.To:yyyy-MM-dd}]");
+        Debug.WriteLine($"[Reachability] Strategy={record.StrategyType}, UsedCms={record.UsedCms}, CmsRequested={record.CmsRequested}, GlobalCmsEnabled={record.GlobalCmsEnabled}, StrategyCmsEnabled={record.StrategyCmsEnabled}, RealCmsSupported={record.RealCmsSupported}, Reason={record.DecisionReason}, PrimaryCms={record.PrimaryCmsAvailable}, SecondaryCms={record.SecondaryCmsAvailable}, PrimarySamples={record.PrimarySamples}, SecondarySamples={record.SecondarySamples}, CmsSeriesCount={record.CmsSeriesCount}, ActualSeriesCount={record.ActualSeriesCount}, Range=[{record.From:yyyy-MM-dd} to {record.To:yyyy-MM-dd}]");
     }
 
     public IReadOnlyList<StrategyReachabilityRecord> Snapshot()

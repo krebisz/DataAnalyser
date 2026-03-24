@@ -289,7 +289,7 @@ public sealed class MetricLoadCoordinator
 
         _chartState.LastContext = ctxBuilder.Build(primarySelection, secondarySelection, data1, data2, _metricState.FromDate.Value, _metricState.ToDate.Value, primaryCms, secondaryCms);
 
-        Debug.WriteLine($"[CTX] SemanticMetricCount={_chartState.LastContext.SemanticMetricCount}, " + $"PrimaryCms={(_chartState.LastContext.PrimaryCms == null ? "NULL" : "SET")}");
+        Debug.WriteLine($"[CTX] ActualSeriesCount={_chartState.LastContext.ActualSeriesCount}, " + $"PrimaryCms={(_chartState.LastContext.PrimaryCms == null ? "NULL" : "SET")}");
 
         return true;
     }

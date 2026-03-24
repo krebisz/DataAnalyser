@@ -97,7 +97,7 @@ public sealed class ChartDataContextBuilderTests
     }
 
     [Fact]
-    public void Build_ShouldSetDisplayNamesAndSemanticCount()
+    public void Build_ShouldSetDisplayNamesAndActualSeriesCount()
     {
         var data = TestDataBuilders.HealthMetricData().WithTimestamp(From).BuildSeries(1, TimeSpan.FromDays(1));
 
@@ -108,7 +108,7 @@ public sealed class ChartDataContextBuilderTests
 
         Assert.Equal("Weight", ctx.DisplayName1);
         Assert.Equal("Weight", ctx.DisplayName2);
-        Assert.Equal(1, ctx.SemanticMetricCount);
+        Assert.Equal(1, ctx.ActualSeriesCount);
     }
 
     [Fact]
@@ -128,6 +128,10 @@ public sealed class ChartDataContextBuilderTests
 
         Assert.Same(cms1, ctx.PrimaryCms);
         Assert.Same(cms2, ctx.SecondaryCms);
+        Assert.NotNull(ctx.CmsSeries);
+        Assert.Equal(2, ctx.CmsSeries!.Count);
+        Assert.Same(cms1, ctx.CmsSeries[0]);
+        Assert.Same(cms2, ctx.CmsSeries[1]);
     }
 
     private static void AssertInRange(double value, double minInclusive, double maxInclusive)
