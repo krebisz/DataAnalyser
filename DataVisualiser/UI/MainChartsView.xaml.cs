@@ -8,7 +8,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Computation;
-using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
@@ -52,6 +51,7 @@ public partial class MainChartsView : UserControl
     private readonly IChartControllerFactory _chartControllerFactory = new ChartControllerFactory();
     private readonly MainChartsViewChartPipelineFactory _chartPipelineFactory = new();
     private readonly MainChartsViewChartPresentationCoordinator _chartPresentationCoordinator = new();
+    private readonly MainChartsViewChartUpdateCoordinator _chartUpdateCoordinatorHost = new();
     private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
     private readonly ReachabilityExportWriter _reachabilityExportWriter = new();
     private readonly MainChartsViewStartupCoordinator _startupCoordinator = new();
@@ -542,197 +542,31 @@ public partial class MainChartsView : UserControl
         await RenderChartsFromLastContext();
     }
 
-    private void UpdateChartVisibility(Panel panel, ButtonBase toggleButton, bool isVisible)
-    {
-        panel.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
-        toggleButton.Content = isVisible ? "Hide" : "Show";
-    }
-
-    private void UpdateChartVisibilityForToggle(ChartUpdateRequestedEventArgs e)
-    {
-        switch (e.ToggledChartName)
-        {
-            case ChartControllerKeys.Main:
-                SetChartVisibility(ChartControllerKeys.Main, e.ShowMain);
-                break;
-            case ChartControllerKeys.Normalized:
-                SetChartVisibility(ChartControllerKeys.Normalized, e.ShowNormalized);
-                break;
-            case ChartControllerKeys.DiffRatio:
-                SetChartVisibility(ChartControllerKeys.DiffRatio, e.ShowDiffRatio);
-                break;
-            case ChartControllerKeys.Distribution:
-                SetChartVisibility(ChartControllerKeys.Distribution, e.ShowDistribution);
-                UpdateDistributionChartTypeVisibility();
-                break;
-            case ChartControllerKeys.WeeklyTrend:
-                SetChartVisibility(ChartControllerKeys.WeeklyTrend, e.ShowWeeklyTrend);
-                UpdateWeekdayTrendChartTypeVisibility();
-                break;
-            case ChartControllerKeys.Transform:
-                SetChartVisibility(ChartControllerKeys.Transform, e.ShowTransformPanel);
-                break;
-            case ChartControllerKeys.BarPie:
-                SetChartVisibility(ChartControllerKeys.BarPie, e.ShowBarPie);
-                break;
-        }
-    }
-
-    //private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
-    //{
-    //    if (e.IsVisibilityOnlyToggle && !string.IsNullOrEmpty(e.ToggledChartName))
-    //    {
-    //        UpdateChartVisibilityForToggle(e);
-
-    //        // Transform panel visibility toggle - just update visibility, don't reload charts
-    //        if (e.ToggledChartName == "Transform")
-    //        {
-    //            // Only populate grids if panel is being shown and we have data
-    //            if (_viewModel.ChartState.IsTransformPanelVisible)
-    //            {
-    //                var transformCtx = _viewModel.ChartState.LastContext;
-    //                if (transformCtx != null && ShouldRenderCharts(transformCtx))
-    //                    PopulateTransformGrids(transformCtx);
-    //                UpdateTransformSubtypeOptions();
-    //            }
-
-    //            return; // Don't reload other charts
-    //        }
-
-    //        var ctx = _viewModel.ChartState.LastContext;
-    //        if (ctx != null && ShouldRenderCharts(ctx))
-    //            await RenderSingleChart(e.ToggledChartName, ctx);
-
-    //        return;
-    //    }
-
-    //    // Update visibility for all charts (just UI state, doesn't clear data)
-    //    MainChartController.Panel.IsChartVisible = e.ShowMain;
-    //    NormalizedChartController.Panel.IsChartVisible = e.ShowNormalized;
-    //    DiffRatioChartController.Panel.IsChartVisible = e.ShowDiffRatio;
-    //    DistributionChartController.Panel.IsChartVisible = e.ShowDistribution;
-    //    UpdateDistributionChartTypeVisibility();
-    //    WeekdayTrendChartController.Panel.IsChartVisible = e.ShowWeeklyTrend;
-    //    UpdateWeekdayTrendChartTypeVisibility();
-    //    TransformDataPanelController.Panel.IsChartVisible = _viewModel.ChartState.IsTransformPanelVisible;
-
-    //    // If a specific chart was identified (visibility toggle or chart-specific config change), only render that chart
-    //    if (!string.IsNullOrEmpty(e.ToggledChartName))
-    //    {
-    //        // Transform panel visibility toggle - just update visibility, don't reload charts
-    //        if (e.ToggledChartName == "Transform" && e.IsVisibilityOnlyToggle)
-    //        {
-    //            // Only populate grids if panel is being shown and we have data
-    //            if (_viewModel.ChartState.IsTransformPanelVisible)
-    //            {
-    //                var transformCtx = _viewModel.ChartState.LastContext;
-    //                if (transformCtx != null && ShouldRenderCharts(transformCtx))
-    //                    PopulateTransformGrids(transformCtx);
-    //                UpdateTransformSubtypeOptions();
-    //            }
-
-    //            return; // Don't reload other charts
-    //        }
-
-    //        var ctx = _viewModel.ChartState.LastContext;
-    //        if (ctx != null && ShouldRenderCharts(ctx))
-    //            await RenderSingleChart(e.ToggledChartName, ctx);
-    //    }
-    //    // Otherwise, render all charts (data change scenario)
-    //    else if (e.ShouldRenderCharts && !e.IsVisibilityOnlyToggle)
-    //    {
-    //        await RenderChartsFromLastContext();
-    //    }
-    //}
-
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
     {
-        if (HandleVisibilityOnlyToggle(e))
+        if (await TryHandleVisibilityOnlyToggleAsync(e))
             return;
 
-        UpdateAllChartVisibilities(e);
+        _chartUpdateCoordinatorHost.ApplyAllChartVisibilities(e, _viewModel.ChartState, CreateChartUpdateActions());
 
         if (!string.IsNullOrEmpty(e.ToggledChartName))
-            await HandleSingleChartUpdate(e);
+            await HandleSingleChartUpdateAsync(e);
         else if (e.ShouldRenderCharts && !e.IsVisibilityOnlyToggle)
             await RenderChartsFromLastContext();
     }
 
-    private bool HandleVisibilityOnlyToggle(ChartUpdateRequestedEventArgs e)
+    private Task<bool> TryHandleVisibilityOnlyToggleAsync(ChartUpdateRequestedEventArgs e)
     {
-        if (!e.IsVisibilityOnlyToggle || string.IsNullOrEmpty(e.ToggledChartName))
-            return false;
-
-        if (!IsKnownChartKey(e.ToggledChartName))
-        {
-            Debug.WriteLine($"[ChartRegistry] Ignoring visibility-only toggle for unknown chart '{e.ToggledChartName}'.");
-            return true;
-        }
-
-        UpdateChartVisibilityForToggle(e);
-
-        if (e.ToggledChartName == ChartControllerKeys.Transform)
-        {
-            HandleTransformVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
-            return true; // Never reload charts
-        }
-
-        if (!IsChartVisible(e.ToggledChartName))
-            return true;
-
-        var ctx = _viewModel.ChartState.LastContext;
-        if (ctx != null && ShouldRenderCharts(ctx))
-            _ = RenderSingleChart(e.ToggledChartName, ctx);
-
-        return true;
-    }
-
-    private bool IsChartVisible(string chartName)
-    {
-        return chartName switch
-        {
-                ChartControllerKeys.Main => _viewModel.ChartState.IsMainVisible,
-                ChartControllerKeys.Normalized => _viewModel.ChartState.IsNormalizedVisible,
-                ChartControllerKeys.DiffRatio => _viewModel.ChartState.IsDiffRatioVisible,
-                ChartControllerKeys.Distribution => _viewModel.ChartState.IsDistributionVisible,
-                ChartControllerKeys.WeeklyTrend => _viewModel.ChartState.IsWeeklyTrendVisible,
-                ChartControllerKeys.Transform => _viewModel.ChartState.IsTransformPanelVisible,
-                ChartControllerKeys.BarPie => _viewModel.ChartState.IsBarPieVisible,
-                _ => false
-        };
-    }
-
-    private bool HasChartData(string chartName)
-    {
-        if (!IsKnownChartKey(chartName))
-            return false;
-
-        return ResolveController(chartName).HasSeries(_viewModel.ChartState);
-    }
-
-    private void UpdateAllChartVisibilities(ChartUpdateRequestedEventArgs e)
-    {
-        SetChartVisibility(ChartControllerKeys.Main, e.ShowMain);
-        SetChartVisibility(ChartControllerKeys.Normalized, e.ShowNormalized);
-        SetChartVisibility(ChartControllerKeys.DiffRatio, e.ShowDiffRatio);
-        SetChartVisibility(ChartControllerKeys.Distribution, e.ShowDistribution);
-        UpdateDistributionChartTypeVisibility();
-
-        SetChartVisibility(ChartControllerKeys.WeeklyTrend, e.ShowWeeklyTrend);
-        UpdateWeekdayTrendChartTypeVisibility();
-
-        SetChartVisibility(ChartControllerKeys.Transform, _viewModel.ChartState.IsTransformPanelVisible);
-        SetChartVisibility(ChartControllerKeys.BarPie, e.ShowBarPie);
+        return _chartUpdateCoordinatorHost.TryHandleVisibilityOnlyToggleAsync(
+            e,
+            _viewModel.ChartState,
+            _viewModel.ChartState.LastContext,
+            CreateChartUpdateActions());
     }
 
     private void SetChartVisibility(string key, bool isVisible)
     {
         ResolveController(key).SetVisible(isVisible);
-    }
-
-    private static bool IsKnownChartKey(string key)
-    {
-        return ChartControllerKeys.All.Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
     }
 
     private void UpdateSubtypeOptions(string key)
@@ -811,214 +645,35 @@ public partial class MainChartsView : UserControl
             controller.SyncDisplayModeSelection();
     }
 
-    private async Task HandleSingleChartUpdate(ChartUpdateRequestedEventArgs e)
+    private Task HandleSingleChartUpdateAsync(ChartUpdateRequestedEventArgs e)
     {
-        // Transform panel visibility toggle - just update visibility, don't reload charts
-        if (e.ToggledChartName == "Transform" && e.IsVisibilityOnlyToggle)
-        {
-            HandleTransformVisibilityOnlyToggle(_viewModel.ChartState.LastContext);
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(e.ToggledChartName))
-            return;
+            return Task.CompletedTask;
 
         var ctx = _viewModel.ChartState.LastContext;
+        if (!MainChartsViewChartUpdateCoordinator.ShouldRenderCharts(ctx))
+            return Task.CompletedTask;
 
-        if (ctx != null && ShouldRenderCharts(ctx))
-            await RenderSingleChart(e.ToggledChartName, ctx);
-    }
-
-
-    private ChartComputationResult? ComputeMainChart(IReadOnlyList<IEnumerable<MetricData>> selectedMetricSeries, IReadOnlyList<string> selectedMetricLabels, string? unit, DateTime from, DateTime to)
-    {
-        IChartComputationStrategy strategy;
-        var ctx = _viewModel.ChartState.LastContext;
-
-        if (selectedMetricSeries.Count > 2)
-            strategy = CreateMultiMetricStrategy(ctx!, selectedMetricSeries.ToList(), selectedMetricLabels.ToList(), from, to, unit);
-        else if (selectedMetricSeries.Count == 2)
-            strategy = CreateCombinedMetricStrategy(ctx!, selectedMetricSeries[0], selectedMetricSeries[1], selectedMetricLabels[0], selectedMetricLabels[1], from, to);
-        else if (ctx?.ActualSeriesCount == 1)
-            strategy = CreateSingleMetricStrategy(ctx, selectedMetricSeries[0], selectedMetricLabels[0], from, to);
-        else
-            return null;
-
-        return strategy.Compute();
-    }
-
-
-    /// <summary>
-    ///     Selects the appropriate computation strategy based on the number of series.
-    ///     Returns the strategy and secondary label (if applicable).
-    /// </summary>
-    private(IChartComputationStrategy strategy, string? secondaryLabel) SelectComputationStrategy(List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to)
-    {
-        string? secondaryLabel = null;
-        IChartComputationStrategy strategy;
-
-        var ctx = _viewModel.ChartState.LastContext!;
-        var actualSeriesCount = series.Count;
-
-        Debug.WriteLine($"[STRATEGY] ActualSeriesCount={actualSeriesCount}, ContextActualSeriesCount={ctx.ActualSeriesCount}, " + $"PrimaryCms={(ctx.PrimaryCms == null ? "NULL" : "SET")}, " + $"SecondaryCms={(ctx.SecondaryCms == null ? "NULL" : "SET")}");
-
-        // ---------- MULTI METRIC ----------
-        if (actualSeriesCount > 2)
-        {
-            strategy = CreateMultiMetricStrategy(ctx, series, labels, from, to);
-        }
-        // ---------- COMBINED METRIC ----------
-        else if (actualSeriesCount == 2)
-        {
-            secondaryLabel = labels[1];
-            strategy = CreateCombinedMetricStrategy(ctx, series[0], series[1], labels[0], labels[1], from, to);
-        }
-        // ---------- SINGLE METRIC ----------
-        else
-        {
-            strategy = CreateSingleMetricStrategy(ctx, series[0], labels[0], from, to);
-        }
-
-        Debug.WriteLine($"[StrategySelection] actualSeriesCount={actualSeriesCount}, " + $"series.Count={series.Count}, " + $"strategy={strategy.GetType().Name}");
-
-        return (strategy, secondaryLabel);
-    }
-
-
-    private async Task RenderOrClearChart(CartesianChart chart, bool isVisible, IChartComputationStrategy? strategy, string title, double minHeight = 400, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false)
-    {
-        if (isVisible && strategy != null)
-        {
-            var ctx = _viewModel.ChartState.LastContext;
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chart, strategy, title, minHeight: minHeight, metricType: metricType, primarySubtype: primarySubtype, secondarySubtype: secondarySubtype, operationType: operationType, isOperationChart: isOperationChart, displayPrimaryMetricType: ctx?.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx?.DisplaySecondaryMetricType, displayPrimarySubtype: ctx?.DisplayPrimarySubtype, displaySecondarySubtype: ctx?.DisplaySecondarySubtype);
-        }
-        // Note: We don't clear the chart when hiding - just hide the panel to preserve data
-        // Charts are only cleared when data changes (e.g., new selection, resolution change, etc.)
+        return RenderSingleChartAsync(e.ToggledChartName, ctx!);
     }
 
     private async Task RenderChartsFromLastContext()
     {
         using var busyScope = BeginUiBusyScope();
-        var ctx = _viewModel.ChartState.LastContext;
-        if (!ShouldRenderCharts(ctx))
-            return;
-
-        var safeCtx = ctx!;
-        var hasSecondaryData = HasSecondaryData(safeCtx);
-
-        // Only render charts that are visible - skip computation entirely for hidden charts
-        if (_viewModel.ChartState.IsMainVisible)
-            await RenderChartAsync(ChartControllerKeys.Main, safeCtx);
-
-        // Charts that require secondary data - only render if visible AND secondary data exists
-        if (hasSecondaryData)
-        {
-            if (_viewModel.ChartState.IsNormalizedVisible)
-                await RenderChartAsync(ChartControllerKeys.Normalized, safeCtx);
-
-            if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
-                await RenderChartAsync(ChartControllerKeys.DiffRatio, safeCtx);
-        }
-        else
-        {
-            // Clear charts that require secondary data when no secondary data exists
-            ClearChart(ChartControllerKeys.Normalized);
-            ClearChart(ChartControllerKeys.DiffRatio);
-        }
-
-        // Charts that don't require secondary data - only render if visible
-        if (_viewModel.ChartState.IsDistributionVisible)
-            await RenderChartAsync(ChartControllerKeys.Distribution, safeCtx);
-
-        if (_viewModel.ChartState.IsWeeklyTrendVisible)
-            await RenderChartAsync(ChartControllerKeys.WeeklyTrend, safeCtx);
-
-        // Populate transform panel grids if visible
-        if (_viewModel.ChartState.IsTransformPanelVisible)
-            await RenderChartAsync(ChartControllerKeys.Transform, safeCtx);
-
-        if (_viewModel.ChartState.IsBarPieVisible)
-            await RenderChartAsync(ChartControllerKeys.BarPie, safeCtx);
+        await _chartUpdateCoordinatorHost.RenderVisibleChartsAsync(
+            _viewModel.ChartState,
+            _viewModel.ChartState.LastContext,
+            CreateChartUpdateActions());
     }
 
-    /// <summary>
-    ///     Validates that the chart context is valid and has data to render.
-    /// </summary>
-    private static bool ShouldRenderCharts(ChartDataContext? ctx)
-    {
-        return ctx != null && ctx.Data1 != null && ctx.Data1.Any();
-    }
-
-    /// <summary>
-    ///     Determines if secondary data is available for rendering secondary charts.
-    /// </summary>
-    private static bool HasSecondaryData(ChartDataContext ctx)
-    {
-        return ctx.Data2 != null && ctx.Data2.Any();
-    }
-
-    /// <summary>
-    ///     Renders only a specific chart (used for visibility-only toggles to avoid re-rendering all charts).
-    /// </summary>
-    private async Task RenderSingleChart(string chartName, ChartDataContext ctx)
+    private async Task RenderSingleChartAsync(string chartName, ChartDataContext ctx)
     {
         using var busyScope = BeginUiBusyScope();
-        var hasSecondaryData = HasSecondaryData(ctx);
-
-        switch (chartName)
-        {
-            case ChartControllerKeys.Main:
-                if (_viewModel.ChartState.IsMainVisible)
-                    await RenderChartAsync(ChartControllerKeys.Main, ctx);
-                break;
-
-            case ChartControllerKeys.Normalized:
-                if (_viewModel.ChartState.IsNormalizedVisible && hasSecondaryData)
-                    await RenderChartAsync(ChartControllerKeys.Normalized, ctx);
-                break;
-
-            case ChartControllerKeys.DiffRatio:
-                if (_viewModel.ChartState.IsDiffRatioVisible && hasSecondaryData)
-                    await RenderChartAsync(ChartControllerKeys.DiffRatio, ctx);
-                break;
-
-            case ChartControllerKeys.Distribution:
-                if (_viewModel.ChartState.IsDistributionVisible)
-                    await RenderChartAsync(ChartControllerKeys.Distribution, ctx);
-                break;
-
-            case ChartControllerKeys.WeeklyTrend:
-                if (_viewModel.ChartState.IsWeeklyTrendVisible)
-                    await RenderChartAsync(ChartControllerKeys.WeeklyTrend, ctx);
-                break;
-            case ChartControllerKeys.BarPie:
-                if (_viewModel.ChartState.IsBarPieVisible)
-                    await RenderChartAsync(ChartControllerKeys.BarPie, ctx);
-                break;
-            default:
-                Debug.WriteLine($"[ChartRegistry] RenderSingleChart called with unknown key '{chartName}'.");
-                break;
-        }
-    }
-
-    /// <summary>
-    ///     Renders all secondary charts (normalized, distribution, weekday trend, difference, ratio).
-    /// </summary>
-    private async Task RenderSecondaryCharts(ChartDataContext ctx)
-    {
-        await RenderChartAsync(ChartControllerKeys.Normalized, ctx);
-        await RenderChartAsync(ChartControllerKeys.Distribution, ctx);
-        await RenderChartAsync(ChartControllerKeys.WeeklyTrend, ctx);
-        await RenderChartAsync(ChartControllerKeys.DiffRatio, ctx);
-    }
-
-    private void ClearSecondaryChartsAndReturn()
-    {
-        ClearChart(ChartControllerKeys.Normalized);
-        ClearChart(ChartControllerKeys.DiffRatio);
-        ClearChart(ChartControllerKeys.Distribution);
-        // NOTE: WeekdayTrend intentionally not cleared here to preserve current behavior (tied to secondary presence).
-        // Cartesian, Polar, and Scatter modes are handled by the adapter render check.
+        await _chartUpdateCoordinatorHost.RenderSingleChartAsync(
+            _viewModel.ChartState,
+            chartName,
+            ctx,
+            CreateChartUpdateActions());
     }
 
     private Task RenderChartAsync(string key, ChartDataContext ctx)
@@ -1031,77 +686,13 @@ public partial class MainChartsView : UserControl
         ResolveController(key).Clear(_viewModel.ChartState);
     }
 
-    private Panel? GetChartPanel(string chartName)
-    {
-        try
-        {
-            return ResolveController(chartName) is IWpfChartPanelHost host ? host.ChartContentPanel : null;
-        }
-        catch (KeyNotFoundException)
-        {
-            return null;
-        }
-    }
-
-    private IChartComputationStrategy CreateSingleMetricStrategy(ChartDataContext ctx, IEnumerable<MetricData> data, string label, DateTime from, DateTime to)
-    {
-        // Use unified cut-over service
-        if (_strategyCutOverService == null)
-            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
-
-        var parameters = new StrategyCreationParameters
-        {
-                LegacyData1 = data,
-                Label1 = label,
-                From = from,
-                To = to
-        };
-
-        return _strategyCutOverService.CreateStrategy(StrategyType.SingleMetric, ctx, parameters);
-    }
-
-    private IChartComputationStrategy CreateMultiMetricStrategy(ChartDataContext ctx, List<IEnumerable<MetricData>> series, List<string> labels, DateTime from, DateTime to, string? unit = null)
-    {
-        // Use unified cut-over service
-        if (_strategyCutOverService == null)
-            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
-
-        var parameters = new StrategyCreationParameters
-        {
-                LegacySeries = series,
-                Labels = labels,
-                From = from,
-                To = to,
-                Unit = unit
-        };
-
-        return _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, ctx, parameters);
-    }
-
-    private IChartComputationStrategy CreateCombinedMetricStrategy(ChartDataContext ctx, IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string label1, string label2, DateTime from, DateTime to)
-    {
-        // Use unified cut-over service
-        if (_strategyCutOverService == null)
-            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
-
-        var parameters = new StrategyCreationParameters
-        {
-                LegacyData1 = data1,
-                LegacyData2 = data2,
-                Label1 = label1,
-                Label2 = label2,
-                From = from,
-                To = to
-        };
-
-        return _strategyCutOverService.CreateStrategy(StrategyType.CombinedMetric, ctx, parameters);
-    }
-
     private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
     {
-        var panel = GetChartPanel(e.ChartName);
-        if (panel != null)
-            panel.Visibility = e.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+        if (_chartControllerRegistry == null)
+            return;
+
+        if (ChartControllerKeys.All.Any(key => string.Equals(key, e.ChartName, StringComparison.OrdinalIgnoreCase)))
+            SetChartVisibility(e.ChartName, e.IsVisible);
     }
 
     private void OnErrorOccured(object? sender, ErrorEventArgs e)
@@ -2768,6 +2359,17 @@ public partial class MainChartsView : UserControl
                 if (_tooltipManager != null)
                     _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), label);
             },
+            ClearChart);
+    }
+
+    private MainChartsViewChartUpdateActions CreateChartUpdateActions()
+    {
+        return new MainChartsViewChartUpdateActions(
+            SetChartVisibility,
+            UpdateDistributionChartTypeVisibility,
+            UpdateWeekdayTrendChartTypeVisibility,
+            HandleTransformVisibilityOnlyToggle,
+            RenderChartAsync,
             ClearChart);
     }
 
