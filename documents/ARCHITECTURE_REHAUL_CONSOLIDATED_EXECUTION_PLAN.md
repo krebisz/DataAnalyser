@@ -495,13 +495,19 @@ Retired as superfluous after absorption:
 
 ## 9. Immediate Next Action Set
 
-1. Close the now-completed theme step in documentation and treat future theme adjustments as opportunistic cleanup rather than an open overhaul batch.
-2. Resume orchestration refactor with a narrowed `ChartRenderingOrchestrator` / `ChartUpdateCoordinator` handoff-first slice.
-3. After that, reduce `MainChartsView` by extracting bootstrap, event registration, export command wiring, and host-only coordination into dedicated seams.
-4. Remove remaining direct controller access/fallbacks from `MainChartsView`.
-5. Eliminate direct repository construction from presentation/orchestration flows that should be contract-driven.
-6. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
-7. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
+1. Start `Step 12` and isolate remaining Syncfusion-specific behavioral/workaround fragility.
+2. Keep Syncfusion special-case behavior out of shared rendering/orchestration code.
+3. Eliminate direct repository construction from presentation/orchestration flows that should be contract-driven.
+4. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
+5. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
+
+### Remaining Step Summary
+1. `Step 12`: isolate remaining Syncfusion-specific behavioral/workaround fragility from shared code.
+2. `Step 13`: modernize the first safe `DataFileReader` infrastructure slice and remove obsolete SQL client usage there.
+3. `Step 14`: split `SQLHelper` by capability behind a temporary facade and migrate callers incrementally.
+4. `Step 15`: add hard architectural guardrails around the new rendering/orchestration/theme/export seams.
+5. `Step 16`: complete headless/scriptable evidence and export generation with root `documents/` output and resettable evidence state.
+6. `Step 17`: run the final convergence pass, promote only proven shared abstractions, remove superseded structure, and close residual technical debt.
 
 ---
 
@@ -772,6 +778,7 @@ Recommended execution batches:
    - preserve dynamic color assignment where functionally required, but improve placement opportunistically when safe
 
 ### Step 9. Refactor orchestration to explicit handoff boundaries
+Status: completed
 
 Agent work:
 1. Separate context building, strategy selection, chart-program/result composition, data retrieval, render invocation, and render-result/reporting into explicit handoff stages.
@@ -796,6 +803,7 @@ Done when:
 2. orchestration handoff stages are explicit enough that later `MainChartsView` extraction is mostly shell work rather than workflow surgery
 
 ### Step 10. Reduce `MainChartsView` to a composition host, pass 1
+Status: completed
 
 Agent work:
 1. Extract startup/bootstrap responsibilities from `MainChartsView`.
@@ -821,6 +829,7 @@ Done when:
 2. export/theme/bootstrap/event wiring is no longer concentrated in one code-behind class
 
 ### Step 11. Reduce `MainChartsView` to a composition host, pass 2
+Status: completed
 
 Agent work:
 1. Remove remaining direct controller access and fallback control lookups.
@@ -850,10 +859,14 @@ Agent work:
 2. Keep the controller focused on host responsibilities only.
 3. Do not generalize Syncfusion quirks into shared rendering abstractions.
 4. Treat theme/readability work on Syncfusion as already complete; this step is only for behavioral/workaround isolation.
+5. Reconcile Syncfusion tab/view lifecycle refresh behavior with the chart-host rules already proven in the main views without leaking those special cases into shared code.
+6. Make Syncfusion reachability/export status explicit: either add a bounded export seam or document the exclusion clearly.
 
 Primary code focus:
 1. Syncfusion sunburst controller/adapter path
 2. Syncfusion-specific tooltip and hit-testing support code
+3. Syncfusion tab/view lifecycle refresh handling
+4. any Syncfusion-only export/reachability stubs or placeholders
 
 Validation gate:
 1. build
@@ -862,6 +875,8 @@ Validation gate:
 
 Done when:
 1. Syncfusion version/workaround logic is isolated from shared chart orchestration logic
+2. Syncfusion lifecycle quirks are handled in Syncfusion-owned seams rather than in shared host code
+3. Syncfusion export/reachability status is explicit rather than placeholder-driven
 
 ### Step 13. Start `DataFileReader` modernization with the safest infrastructure slice
 
@@ -869,10 +884,12 @@ Agent work:
 1. Introduce injected options/connection-string access instead of ad-hoc configuration reads in the first migrated slice.
 2. Replace obsolete `System.Data.SqlClient` usage with `Microsoft.Data.SqlClient` in the canonical-mapping path first.
 3. Preserve behavior before attempting broader `SQLHelper` decomposition.
+4. Remove direct concrete repository/query construction from the first active presentation/orchestration slice that is already structurally ready to migrate.
 
 Primary code focus:
 1. canonical mapping store
 2. connection/config access for the first migrated database path
+3. first active `DataFetcher`/query-construction hotspots already isolated enough to migrate safely
 
 Validation gate:
 1. build
@@ -880,6 +897,7 @@ Validation gate:
 
 Done when:
 1. the first `DataFileReader` slice is no longer using obsolete SQL client APIs or implicit config access
+2. at least one active higher-layer path no longer constructs its concrete data query/repository dependency directly
 
 ### Step 14. Split `SQLHelper` by capability without changing callers all at once
 
@@ -887,10 +905,12 @@ Agent work:
 1. Extract separate services/modules for schema maintenance, metric reads, persistence, and count/canonical operations.
 2. Leave a temporary facade in place if needed to avoid a large caller migration in one pass.
 3. Migrate callers by capability slice, not by mass rename.
+4. Reconcile remaining direct `DataFetcher` or query-service creation in UI/core paths onto the new capability-based seams as they become available.
 
 Primary code focus:
 1. `SQLHelper`
 2. `DataFileReader` callers grouped by capability
+3. remaining direct `DataFetcher` construction hotspots in active application paths
 
 Validation gate:
 1. build
@@ -899,6 +919,7 @@ Validation gate:
 
 Done when:
 1. `SQLHelper` is no longer the dominant multi-concern entry point for ingestion/persistence/database maintenance
+2. the known direct-construction hotspots are either migrated or explicitly deferred with rationale
 
 ### Step 15. Add hard architectural guardrails
 
@@ -909,6 +930,7 @@ Agent work:
 4. Add guardrails preventing new chart-vendor usage above rendering adapters unless the backend/capability qualification path exists.
 5. Add guardrails for the new theme/export seams so UI resource concerns and export/reporting concerns do not drift back into Core/orchestration accidentally.
 6. Add guardrails against new direct controller lookup paths in `MainChartsView` and related host views.
+7. Add guardrails around notification usage so orchestration/services do not silently fall back to UI-owned defaults without explicit composition choice.
 7. Add guardrails for late-stage generalization:
    prove a pattern in at least `2-3` real slices before promoting it into a shared abstraction.
 8. Add guardrails requiring generalization by logical component/layer rather than by file-count reduction:
@@ -928,6 +950,7 @@ Done when:
 1. the next refactor step cannot silently reintroduce the same boundary violations
 2. new vendor adoption cannot bypass the rendering-boundary and qualification rules accidentally
 3. future generalization can happen safely without speculative framework-first abstraction
+4. notification, theme, and export seams are protected against regression-by-drift
 
 ### Step 16. Rebuild evidence/export flow after the code seams are in place
 
@@ -937,11 +960,14 @@ Agent work:
 3. Keep runtime configuration snapshots and path-used metadata attached to exported artifacts.
 4. Ensure evidence generation no longer depends on UI-only command paths.
 5. Provide a deterministic way to clear/reset the runtime evidence store between runs so exported artifacts are easier to interpret.
+6. Extract parity snapshot construction and reachability payload assembly out of `MainChartsView` into dedicated evidence services/coordinators.
+7. Reconcile any remaining chart-family-specific export gaps explicitly instead of leaving placeholder UI messages.
 
 Primary code focus:
 1. evidence export path
 2. artifact contract
 3. headless/scriptable execution path
+4. parity snapshot builders currently embedded in UI host code
 
 Validation gate:
 1. build
@@ -951,6 +977,7 @@ Validation gate:
 Done when:
 1. closure evidence can be regenerated consistently without manual UI interaction
 2. evidence artifacts land in the repository-visible location with current configuration/path-used metadata intact
+3. `MainChartsView` is no longer the primary owner of parity/evidence assembly
 
 ### Step 17. Run a final convergence pass before declaring architectural closure
 
@@ -968,12 +995,14 @@ Agent work:
 6. replace residual duplicate local implementations with shared layer-owned components only after the active slices confirm equivalent behavior.
 7. keep dynamic color assignment where functionally required, but relocate it to cleaner theme/render seams if that can now be done without expanding scope.
 8. explicitly leave any remaining non-generalized outliers documented as intentional debt rather than implicitly unfinished work.
+9. reduce or explicitly justify the remaining large concentration points that still hold mixed responsibility after Steps 12-16.
 
 Primary code focus:
 1. temporary shims/adapters
 2. final naming/placement cleanup
 3. late-stage shared abstractions by layer/component
 4. documentation and evidence links
+5. remaining oversized types that still concentrate mixed responsibility
 
 Validation gate:
 1. full solution build
@@ -984,6 +1013,7 @@ Validation gate:
 Done when:
 1. the transitional scaffolding is explicitly bounded and the remaining architecture debt is intentional rather than accidental
 2. cross-cutting generalization has happened only where the codebase has already earned it
+3. residual large concentration points have been either reduced or explicitly justified
 
 ---
 

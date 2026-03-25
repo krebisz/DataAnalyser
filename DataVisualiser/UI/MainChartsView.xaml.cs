@@ -7,7 +7,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using DataFileReader.Canonical;
-using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
@@ -60,12 +59,9 @@ public partial class MainChartsView : UserControl
     private readonly IChartRendererResolver _chartRendererResolver = new ChartRendererResolver();
     private readonly IChartSurfaceFactory _chartSurfaceFactory;
 
-    // Placeholder instance since DiffRatioChartController is commented out in XAML.
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
-    private ChartComputationEngine _chartComputationEngine = null!;
     private IChartControllerRegistry? _chartControllerRegistry;
-    private ChartRenderEngine _chartRenderEngine = null!;
     private ChartRenderingOrchestrator? _chartRenderingOrchestrator;
     private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
 
@@ -756,9 +752,6 @@ public partial class MainChartsView : UserControl
         _metricSelectionService = shared.MetricSelectionService;
         _viewModel = shared.ViewModel;
 
-        _chartComputationEngine = new ChartComputationEngine();
-        _chartRenderEngine = new ChartRenderEngine();
-
         InitializeTooltipManager();
     }
 
@@ -773,8 +766,6 @@ public partial class MainChartsView : UserControl
                 _tooltipManager,
                 _connectionString));
 
-        _chartComputationEngine = pipeline.ComputationEngine;
-        _chartRenderEngine = pipeline.RenderEngine;
         _chartUpdateCoordinator = pipeline.ChartUpdateCoordinator;
         _weeklyDistributionService = pipeline.WeeklyDistributionService;
         _hourlyDistributionService = pipeline.HourlyDistributionService;
@@ -935,60 +926,11 @@ public partial class MainChartsView : UserControl
 
     #endregion
 
-    #region Factory / Creation Methods
+    #region Infrastructure Helpers
 
     private string ResolveConnectionString()
     {
         return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
-    }
-
-    private ChartUpdateCoordinator CreateChartUpdateCoordinator()
-    {
-        if (_tooltipManager == null)
-            throw new InvalidOperationException("Tooltip manager is not initialized. Ensure InitializeInfrastructure() is called before creating the chart update coordinator.");
-
-        var coordinator = new ChartUpdateCoordinator(_chartComputationEngine, _chartRenderEngine, _tooltipManager, _chartState.ChartTimestamps);
-
-        coordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
-
-        return coordinator;
-    }
-
-    private WeekdayTrendChartUpdateCoordinator CreateWeekdayTrendChartUpdateCoordinator()
-    {
-        var renderingService = new WeekdayTrendRenderingService();
-
-        return new WeekdayTrendChartUpdateCoordinator(renderingService, _chartState.ChartTimestamps);
-    }
-
-    private DistributionPolarRenderingService CreateDistributionPolarRenderingService()
-    {
-        return new DistributionPolarRenderingService();
-    }
-
-    private IDistributionService CreateWeeklyDistributionService()
-    {
-        var dataPreparationService = new DataPreparationService();
-        var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
-
-        return new WeeklyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
-    }
-
-    private IDistributionService CreateHourlyDistributionService()
-    {
-        var dataPreparationService = new DataPreparationService();
-        var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
-
-        return new HourlyDistributionService(_chartState.ChartTimestamps, strategyCutOverService);
-    }
-
-    private ChartRenderingOrchestrator CreateChartRenderingOrchestrator()
-    {
-        var dataPreparationService = new DataPreparationService();
-        _strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
-
-        var metricSelectionService = new MetricSelectionService(_connectionString);
-        return new ChartRenderingOrchestrator(_chartUpdateCoordinator, _weeklyDistributionService, _hourlyDistributionService, _strategyCutOverService, metricSelectionService, _connectionString);
     }
 
     #endregion
