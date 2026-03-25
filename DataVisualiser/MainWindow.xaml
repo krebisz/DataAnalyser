@@ -8,7 +8,7 @@
         SizeToContent="Height"
         Width="1800"
         FontSize="10"
-        Background="#FFD4CFCF">
+        Background="{DynamicResource ThemeAppBackgroundBrush}">
 
     <Window.Style>
         <Style TargetType="Window">
@@ -38,21 +38,23 @@
 
         <Grid x:Name="BusyOverlay"
               Visibility="{Binding ElementName=MainChartsView, Path=DataContext.IsBusy, Converter={StaticResource BoolToVisibilityConverter}}"
-              Background="#66000000"
+              Background="{DynamicResource ThemeBusyOverlayBrush}"
               Cursor="Wait">
-            <Border Background="#FFE7E3E3" BorderBrush="#FF747171" BorderThickness="1" CornerRadius="6" Padding="16"
+            <Border Background="{DynamicResource ThemeBusyPanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource ThemeBusyPanelBorderBrush}"
+                    BorderThickness="1" CornerRadius="6" Padding="16"
                     HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Viewbox Width="26" Height="36" Margin="0,0,12,0">
                         <Canvas Width="26" Height="36">
-                            <Polygon Points="3,3 23,3 13,18" Fill="#FF3B3B3B" />
-                            <Polygon Points="3,33 23,33 13,18" Fill="#FF3B3B3B" />
-                            <Line X1="3" Y1="3" X2="3" Y2="33" Stroke="#FF3B3B3B" StrokeThickness="2" />
-                            <Line X1="23" Y1="3" X2="23" Y2="33" Stroke="#FF3B3B3B" StrokeThickness="2" />
+                            <Polygon Points="3,3 23,3 13,18" Fill="{DynamicResource ThemeBusyPanelAccentBrush}" />
+                            <Polygon Points="3,33 23,33 13,18" Fill="{DynamicResource ThemeBusyPanelAccentBrush}" />
+                            <Line X1="3" Y1="3" X2="3" Y2="33" Stroke="{DynamicResource ThemeBusyPanelAccentBrush}" StrokeThickness="2" />
+                            <Line X1="23" Y1="3" X2="23" Y2="33" Stroke="{DynamicResource ThemeBusyPanelAccentBrush}" StrokeThickness="2" />
                         </Canvas>
                     </Viewbox>
                     <StackPanel>
-                        <TextBlock Text="Loading..." FontWeight="SemiBold" Foreground="#FF3B3B3B" />
+                        <TextBlock Text="Loading..." FontWeight="SemiBold" Foreground="{DynamicResource ThemeBusyPanelAccentBrush}" />
                         <ProgressBar Width="140" Height="8" Margin="0,6,0,0" IsIndeterminate="True" />
                     </StackPanel>
                 </StackPanel>

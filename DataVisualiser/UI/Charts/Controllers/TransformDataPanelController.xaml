@@ -9,11 +9,15 @@
              mc:Ignorable="d"
              d:DesignHeight="550"
              d:DesignWidth="1200">
+    <UserControl.Resources>
+        <Style TargetType="DataGrid" BasedOn="{StaticResource ThemedDataGridStyle}" />
+        <Style TargetType="TextBlock" BasedOn="{StaticResource ThemedTextBlockStyle}" />
+    </UserControl.Resources>
     <Grid x:Name="RootGrid">
         <controls:ChartPanelController x:Name="PanelController" />
 
         <StackPanel x:Name="TransformContentRootPanel" Orientation="Vertical">
-            <Border BorderBrush="#FFB0B0B0"
+            <Border BorderBrush="{DynamicResource ThemeOperationPanelBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="4"
                     Padding="8"

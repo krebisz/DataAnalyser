@@ -18,15 +18,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
             <Setter Property="Background" Value="{DynamicResource ThemeSurfaceBackgroundBrush}" />
         </Style>
-        <Style TargetType="DataGrid">
-            <Setter Property="Background" Value="{DynamicResource ThemeSurfaceBackgroundBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryTextBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
-            <Setter Property="RowBackground" Value="{DynamicResource ThemeSurfaceBackgroundBrush}" />
-            <Setter Property="AlternatingRowBackground" Value="{DynamicResource ThemeAppBackgroundBrush}" />
-            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
-            <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
-        </Style>
+        <Style TargetType="DataGrid" BasedOn="{StaticResource ThemedDataGridStyle}" />
     </UserControl.Resources>
 
     <Grid x:Name="RootGrid" Margin="10,10,10,30" Background="{DynamicResource ThemeAppBackgroundBrush}">

@@ -16,6 +16,20 @@
     <SolidColorBrush x:Key="ThemeInputBorderBrush" Color="#FF8A8480" />
     <SolidColorBrush x:Key="ThemeDropdownItemHoverBrush" Color="#FFF0F4F8" />
     <SolidColorBrush x:Key="ThemeDropdownItemSelectedBrush" Color="#FFE1EBF5" />
+    <SolidColorBrush x:Key="ThemeGridHeaderBackgroundBrush" Color="#FFD9E2EC" />
+    <SolidColorBrush x:Key="ThemeGridHeaderForegroundBrush" Color="#FF1F2328" />
+    <SolidColorBrush x:Key="ThemeGridHeaderBorderBrush" Color="#FF8EA0B2" />
+    <SolidColorBrush x:Key="ThemeGridCellBackgroundBrush" Color="#FFFDFDFD" />
+    <SolidColorBrush x:Key="ThemeGridAltRowBackgroundBrush" Color="#FFF1F4F7" />
+    <SolidColorBrush x:Key="ThemeGridCellForegroundBrush" Color="#FF1F2328" />
+    <SolidColorBrush x:Key="ThemeGridCellBorderBrush" Color="#FFD0D7DE" />
+    <SolidColorBrush x:Key="ThemeGridSelectionBrush" Color="#FFD3E3F5" />
+    <SolidColorBrush x:Key="ThemeGridSelectionForegroundBrush" Color="#FF1F2328" />
+    <SolidColorBrush x:Key="ThemeBusyOverlayBrush" Color="#66000000" />
+    <SolidColorBrush x:Key="ThemeBusyPanelBackgroundBrush" Color="#FFE7E3E3" />
+    <SolidColorBrush x:Key="ThemeBusyPanelBorderBrush" Color="#FF747171" />
+    <SolidColorBrush x:Key="ThemeBusyPanelAccentBrush" Color="#FF3B3B3B" />
+    <SolidColorBrush x:Key="ThemeOperationPanelBorderBrush" Color="#FFB0B0B0" />
     <SolidColorBrush x:Key="ThemeTooltipBackgroundBrush" Color="#FFF8F8F8" />
     <SolidColorBrush x:Key="ThemeTooltipBorderBrush" Color="#FFB4B4B4" />
     <SolidColorBrush x:Key="ThemeTooltipPrimaryTextBrush" Color="#FF232323" />
