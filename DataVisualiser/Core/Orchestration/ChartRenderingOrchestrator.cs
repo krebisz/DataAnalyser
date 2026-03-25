@@ -3,6 +3,8 @@ using System.Linq;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Orchestration.MainChart;
+using DataVisualiser.Core.Orchestration.Selection;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
@@ -31,6 +33,7 @@ public sealed class ChartRenderingOrchestrator
     private readonly string? _connectionString;
     private readonly IDistributionService _hourlyDistributionService;
     private readonly MetricSelectionService? _metricSelectionService;
+    private readonly IMainChartOrchestrationPipeline _mainChartOrchestrationPipeline;
     private readonly IStrategyCutOverService _strategyCutOverService;
     private readonly IDistributionService _weeklyDistributionService;
 
@@ -41,6 +44,7 @@ public sealed class ChartRenderingOrchestrator
         _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _connectionString = connectionString;
+        _mainChartOrchestrationPipeline = CreateMainChartOrchestrationPipeline(metricSelectionService: null);
     }
 
     public ChartRenderingOrchestrator(ChartUpdateCoordinator chartUpdateCoordinator, IDistributionService weeklyDistributionService, IDistributionService hourlyDistributionService, IStrategyCutOverService strategyCutOverService, MetricSelectionService metricSelectionService, string? connectionString = null)
@@ -51,6 +55,7 @@ public sealed class ChartRenderingOrchestrator
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _connectionString = connectionString;
+        _mainChartOrchestrationPipeline = CreateMainChartOrchestrationPipeline(metricSelectionService);
     }
 
     /// <summary>
@@ -171,11 +176,15 @@ public sealed class ChartRenderingOrchestrator
         if (ctx == null || chartMain == null)
             return;
 
-        var (series, labels) = BuildSeriesAndLabels(ctx, additionalSeries, additionalLabels);
-
-        var strategy = CreatePrimaryStrategy(ctx, series, labels, ctx.CmsSeries, out var secondaryLabel);
-
-        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], secondaryLabel, 400, ctx.MetricType, ctx.PrimarySubtype, secondaryLabel != null ? ctx.SecondarySubtype : null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: isStacked, isCumulative: isCumulative, overlaySeries: overlaySeries);
+        await _mainChartOrchestrationPipeline.RenderAsync(
+            new MainChartRenderRequest(
+                ctx,
+                IsStacked: isStacked,
+                IsCumulative: isCumulative,
+                OverlaySeries: overlaySeries,
+                AdditionalSeries: additionalSeries,
+                AdditionalLabels: additionalLabels),
+            chartMain);
     }
 
     /// <summary>
@@ -187,54 +196,70 @@ public sealed class ChartRenderingOrchestrator
         if (ctx == null || chartMain == null)
             return;
 
-        if (isStacked && selectedSeries != null)
+        var requestedContext = BuildPrimaryRequestContext(ctx, data1, data2, displayName1, displayName2, from, to, metricType);
+
+        await _mainChartOrchestrationPipeline.RenderAsync(
+            new MainChartRenderRequest(
+                requestedContext,
+                selectedSeries,
+                resolutionTableName,
+                isStacked,
+                isCumulative,
+                overlaySeries),
+            chartMain);
+    }
+
+    private IMainChartOrchestrationPipeline CreateMainChartOrchestrationPipeline(MetricSelectionService? metricSelectionService)
+    {
+        var preparationStage = new MainChartPreparationStage(metricSelectionService, _connectionString);
+        var strategySelectionStage = new MainChartStrategySelectionStage(
+            new StrategySelectionService(_strategyCutOverService, _connectionString ?? string.Empty));
+        var renderInvocationStage = new MainChartRenderInvocationStage(_chartUpdateCoordinator);
+
+        return new MainChartOrchestrationPipeline(preparationStage, strategySelectionStage, renderInvocationStage);
+    }
+
+    private static ChartDataContext BuildPrimaryRequestContext(
+        ChartDataContext context,
+        IEnumerable<MetricData> data1,
+        IEnumerable<MetricData>? data2,
+        string displayName1,
+        string displayName2,
+        DateTime from,
+        DateTime to,
+        string? metricType)
+    {
+        return new ChartDataContext
         {
-            var stackedSelections = selectedSeries.Where(selection => selection.QuerySubtype != null).ToList();
-            var overlaySelections = selectedSeries.Where(selection => selection.QuerySubtype == null).ToList();
-
-            if (stackedSelections.Count >= 2)
-            {
-                var (stackedSeries, stackedLabels, stackedCmsSeries) = await BuildSeriesFromSelectionsAsync(ctx, stackedSelections, resolutionTableName);
-                if (stackedSeries.Count >= 2)
-                {
-                    var stackedContext = BuildMultiMetricContext(ctx, stackedCmsSeries, stackedSeries.Count);
-                    var parameters = new StrategyCreationParameters
-                    {
-                            LegacySeries = stackedSeries,
-                            CmsSeries = stackedContext.CmsSeries,
-                            Labels = stackedLabels,
-                            From = ctx.From,
-                            To = ctx.To
-                    };
-
-                    var strategy = _strategyCutOverService.CreateStrategy(StrategyType.MultiMetric, stackedContext, parameters);
-                    var computedOverlaySeries = overlaySeries ?? await BuildOverlaySeriesAsync(ctx, overlaySelections, resolutionTableName);
-
-                    await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, stackedLabels[0], null, 400, ctx.MetricType, ctx.PrimarySubtype, null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: true, isCumulative: false, overlaySeries: computedOverlaySeries);
-
-                    return;
-                }
-            }
-        }
-
-        // Build initial series list for multi-metric routing
-        var (series, labels) = BuildInitialSeriesList(data1, data2, displayName1, displayName2);
-        var cmsSeries = BuildInitialCmsSeries(ctx);
-
-        // Load additional subtypes if more than 2 are selected
-        await LoadAdditionalSubtypesAsync(series, labels, cmsSeries, metricType, from, to, selectedSeries, resolutionTableName);
-
-        if (series.Count > 2)
-        {
-            var multiMetricContext = BuildMultiMetricContext(ctx, cmsSeries, series.Count);
-            var strategy = CreatePrimaryStrategy(multiMetricContext, series, labels, multiMetricContext.CmsSeries, out _);
-
-            await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(chartMain, strategy, labels[0], null, 400, ctx.MetricType, ctx.PrimarySubtype, null, isOperationChart: false, secondaryMetricType: ctx.SecondaryMetricType, displayPrimaryMetricType: ctx.DisplayPrimaryMetricType, displaySecondaryMetricType: ctx.DisplaySecondaryMetricType, displayPrimarySubtype: ctx.DisplayPrimarySubtype, displaySecondarySubtype: ctx.DisplaySecondarySubtype, isStacked: isStacked, isCumulative: isCumulative, overlaySeries: overlaySeries);
-            return;
-        }
-
-        // Use existing RenderPrimaryChart method
-        await RenderPrimaryChart(ctx, chartMain, null, null, isStacked, isCumulative, overlaySeries);
+            PrimaryCms = context.PrimaryCms,
+            SecondaryCms = context.SecondaryCms,
+            CmsSeries = context.CmsSeries,
+            Data1 = data1.ToList(),
+            Data2 = data2?.ToList(),
+            Timestamps = context.Timestamps,
+            RawValues1 = context.RawValues1,
+            RawValues2 = context.RawValues2,
+            SmoothedValues1 = context.SmoothedValues1,
+            SmoothedValues2 = context.SmoothedValues2,
+            DifferenceValues = context.DifferenceValues,
+            RatioValues = context.RatioValues,
+            NormalizedValues1 = context.NormalizedValues1,
+            NormalizedValues2 = context.NormalizedValues2,
+            DisplayName1 = displayName1,
+            DisplayName2 = displayName2,
+            ActualSeriesCount = context.ActualSeriesCount,
+            MetricType = metricType ?? context.MetricType,
+            PrimaryMetricType = context.PrimaryMetricType,
+            SecondaryMetricType = context.SecondaryMetricType,
+            PrimarySubtype = context.PrimarySubtype,
+            SecondarySubtype = context.SecondarySubtype,
+            DisplayPrimaryMetricType = context.DisplayPrimaryMetricType,
+            DisplaySecondaryMetricType = context.DisplaySecondaryMetricType,
+            DisplayPrimarySubtype = context.DisplayPrimarySubtype,
+            DisplaySecondarySubtype = context.DisplaySecondarySubtype,
+            From = from,
+            To = to
+        };
     }
 
     private async Task<(List<IEnumerable<MetricData>> Series, List<string> Labels, List<ICanonicalMetricSeries> CmsSeries)> BuildSeriesFromSelectionsAsync(ChartDataContext ctx, IReadOnlyList<MetricSeriesSelection> selections, string? resolutionTableName)
