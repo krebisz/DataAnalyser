@@ -9,4 +9,5 @@ public interface ITransformPanelControllerExtras
     void HandleVisibilityOnlyToggle(ChartDataContext? context);
     void UpdateTransformSubtypeOptions();
     void UpdateTransformComputeButtonState();
+    string? GetSelectedOperationTag();
 }

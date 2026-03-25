@@ -72,6 +72,16 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         return RenderBarPieChartAsync();
     }
 
+    public void SelectBucketCount(int bucketCount)
+    {
+        SelectBarPieBucketCount(bucketCount);
+    }
+
+    public string GetDisplayMode()
+    {
+        return _controller.PieModeRadio.IsChecked == true ? "Pie" : "Bar";
+    }
+
     public override string Key => ChartControllerKeys.BarPie;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => false;

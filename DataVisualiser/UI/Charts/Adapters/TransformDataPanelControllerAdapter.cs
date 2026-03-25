@@ -166,6 +166,11 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _controller.TransformComputeButton.IsEnabled = CanComputeTransformOperation(ctx, operationTag);
     }
 
+    public string? GetSelectedOperationTag()
+    {
+        return _controller.TransformOperationCombo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() : null;
+    }
+
     public void OnToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleTransformPanel();
@@ -683,7 +688,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         if (IsUnaryTransformOperation(operationTag))
             return CanRenderPrimarySelection(ctx);
 
-        return IsBinaryTransformOperation(operationTag) && HasSecondaryData(ctx) && ResolveSelectedTransformSecondarySeries(ctx) != null;
+        return IsBinaryTransformOperation(operationTag) && ResolveSelectedTransformSecondarySeries(ctx) != null;
     }
 
     private static bool CanRenderPrimarySelection(ChartDataContext ctx)

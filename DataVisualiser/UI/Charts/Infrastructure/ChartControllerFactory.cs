@@ -95,6 +95,65 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             registry.Register(syncfusionAdapter);
         }
 
+        BindControllerEvents(
+            context,
+            mainAdapter,
+            normalizedAdapter,
+            diffRatioAdapter,
+            distributionAdapter,
+            weekdayTrendAdapter,
+            transformAdapter,
+            barPieAdapter);
+
         return new ChartControllerFactoryResult(mainAdapter, normalizedAdapter, diffRatioAdapter, distributionAdapter, weekdayTrendAdapter, transformAdapter, barPieAdapter, registry);
+    }
+
+    private static void BindControllerEvents(
+        ChartControllerFactoryContext context,
+        MainChartControllerAdapter mainAdapter,
+        NormalizedChartControllerAdapter normalizedAdapter,
+        DiffRatioChartControllerAdapter diffRatioAdapter,
+        DistributionChartControllerAdapter distributionAdapter,
+        WeekdayTrendChartControllerAdapter weekdayTrendAdapter,
+        TransformDataPanelControllerAdapter transformAdapter,
+        BarPieChartControllerAdapter barPieAdapter)
+    {
+        context.MainChartController.ToggleRequested += mainAdapter.OnToggleRequested;
+        context.MainChartController.DisplayModeChanged += mainAdapter.OnDisplayModeChanged;
+        context.MainChartController.OverlaySubtypeChanged += mainAdapter.OnOverlaySubtypeChanged;
+
+        context.WeekdayTrendChartController.ToggleRequested += weekdayTrendAdapter.OnToggleRequested;
+        context.WeekdayTrendChartController.ChartTypeToggleRequested += weekdayTrendAdapter.OnChartTypeToggleRequested;
+        context.WeekdayTrendChartController.DayToggled += weekdayTrendAdapter.OnDayToggled;
+        context.WeekdayTrendChartController.AverageToggled += weekdayTrendAdapter.OnAverageToggled;
+        context.WeekdayTrendChartController.AverageWindowChanged += weekdayTrendAdapter.OnAverageWindowChanged;
+        context.WeekdayTrendChartController.SubtypeChanged += weekdayTrendAdapter.OnSubtypeChanged;
+
+        context.DiffRatioChartController.ToggleRequested += diffRatioAdapter.OnToggleRequested;
+        context.DiffRatioChartController.OperationToggleRequested += diffRatioAdapter.OnOperationToggleRequested;
+        context.DiffRatioChartController.PrimarySubtypeChanged += diffRatioAdapter.OnPrimarySubtypeChanged;
+        context.DiffRatioChartController.SecondarySubtypeChanged += diffRatioAdapter.OnSecondarySubtypeChanged;
+
+        context.BarPieChartController.ToggleRequested += barPieAdapter.OnToggleRequested;
+        context.BarPieChartController.DisplayModeChanged += barPieAdapter.OnDisplayModeChanged;
+        context.BarPieChartController.BucketCountChanged += barPieAdapter.OnBucketCountChanged;
+
+        context.NormalizedChartController.ToggleRequested += normalizedAdapter.OnToggleRequested;
+        context.NormalizedChartController.NormalizationModeChanged += normalizedAdapter.OnNormalizationModeChanged;
+        context.NormalizedChartController.PrimarySubtypeChanged += normalizedAdapter.OnPrimarySubtypeChanged;
+        context.NormalizedChartController.SecondarySubtypeChanged += normalizedAdapter.OnSecondarySubtypeChanged;
+
+        context.DistributionChartController.ToggleRequested += distributionAdapter.OnToggleRequested;
+        context.DistributionChartController.ChartTypeToggleRequested += distributionAdapter.OnChartTypeToggleRequested;
+        context.DistributionChartController.ModeChanged += distributionAdapter.OnModeChanged;
+        context.DistributionChartController.SubtypeChanged += distributionAdapter.OnSubtypeChanged;
+        context.DistributionChartController.DisplayModeChanged += distributionAdapter.OnDisplayModeChanged;
+        context.DistributionChartController.IntervalCountChanged += distributionAdapter.OnIntervalCountChanged;
+
+        context.TransformDataPanelController.ToggleRequested += transformAdapter.OnToggleRequested;
+        context.TransformDataPanelController.OperationChanged += transformAdapter.OnOperationChanged;
+        context.TransformDataPanelController.PrimarySubtypeChanged += transformAdapter.OnPrimarySubtypeChanged;
+        context.TransformDataPanelController.SecondarySubtypeChanged += transformAdapter.OnSecondarySubtypeChanged;
+        context.TransformDataPanelController.ComputeRequested += transformAdapter.OnComputeRequested;
     }
 }

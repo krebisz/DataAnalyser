@@ -182,7 +182,69 @@ public sealed class TransformDataPanelControllerAdapterTests
         });
     }
 
-    private static TransformDataPanelControllerAdapter CreateAdapter(out MainWindowViewModel viewModel, out ITransformDataPanelController controller, out ChartTooltipManager tooltipManager, out Window window)
+    [Fact]
+    public async Task RefreshTransformGridsFromSelectionAsync_EnablesBinaryCompute_WhenSecondarySelectionExistsOutsideLastContext()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var adapter = CreateAdapter(
+                out var viewModel,
+                out var controller,
+                out var tooltipManager,
+                out var window,
+                new ReturningMetricSelectionDataQueries());
+
+            viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
+            {
+                new("MetricA", "SubA", "MetricA", "SubA"),
+                new("MetricB", "SubB", "MetricB", "SubB")
+            });
+
+            var data = new List<MetricData>
+            {
+                new()
+                {
+                    NormalizedTimestamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Value = 1m
+                }
+            };
+
+            viewModel.ChartState.LastContext = new ChartDataContext
+            {
+                Data1 = data,
+                MetricType = "MetricA",
+                PrimaryMetricType = "MetricA",
+                PrimarySubtype = "SubA",
+                DisplayPrimaryMetricType = "MetricA",
+                DisplayPrimarySubtype = "SubA",
+                DisplayName1 = "MetricA:SubA",
+                From = data[0].NormalizedTimestamp,
+                To = data[0].NormalizedTimestamp
+            };
+
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Add",
+                Content = "Add"
+            });
+
+            adapter.UpdateTransformSubtypeOptions();
+            controller.TransformOperationCombo.SelectedIndex = 0;
+
+            var method = typeof(TransformDataPanelControllerAdapter).GetMethod("RefreshTransformGridsFromSelectionAsync", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(method);
+
+            var task = (Task)method!.Invoke(adapter, Array.Empty<object>())!;
+            await task;
+
+            Assert.True(controller.TransformComputeButton.IsEnabled);
+
+            tooltipManager.Dispose();
+            window.Close();
+        });
+    }
+
+    private static TransformDataPanelControllerAdapter CreateAdapter(out MainWindowViewModel viewModel, out ITransformDataPanelController controller, out ChartTooltipManager tooltipManager, out Window window, IMetricSelectionDataQueries? queries = null)
     {
         var chartState = new ChartState
         {
@@ -190,7 +252,7 @@ public sealed class TransformDataPanelControllerAdapterTests
         };
         var metricState = new MetricState();
         var uiState = new UiState();
-        var metricService = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
+        var metricService = new MetricSelectionService(queries ?? new StubMetricSelectionDataQueries(), "TestConnection");
         viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
         controller = new FakeTransformDataPanelController();
 
@@ -251,6 +313,53 @@ public sealed class TransformDataPanelControllerAdapterTests
         public Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype, DateTime? from, DateTime? to, string tableName, int? maxRecords = null, SamplingMode samplingMode = SamplingMode.None, int? targetSamples = null)
         {
             return Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+        }
+
+        public Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName)
+        {
+            return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
+        }
+
+        public Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName)
+        {
+            return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeFromCounts(string baseType, IReadOnlyCollection<string>? subtypes = null)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeForSubtypes(string baseType, IReadOnlyCollection<string>? subtypes, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+    }
+
+    private sealed class ReturningMetricSelectionDataQueries : IMetricSelectionDataQueries
+    {
+        public Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
+        {
+            return Task.FromResult(1L);
+        }
+
+        public Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype, DateTime? from, DateTime? to, string tableName, int? maxRecords = null, SamplingMode samplingMode = SamplingMode.None, int? targetSamples = null)
+        {
+            IEnumerable<MetricData> data =
+            [
+                new MetricData
+                {
+                    NormalizedTimestamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Value = 2m
+                }
+            ];
+
+            return Task.FromResult(data);
         }
 
         public Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName)

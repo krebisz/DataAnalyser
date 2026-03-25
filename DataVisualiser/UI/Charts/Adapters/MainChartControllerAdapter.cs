@@ -108,6 +108,17 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
         UpdateOverlayControlsVisibility(GetStackedSelections());
     }
 
+    public void SetStackedAvailability(bool canStack)
+    {
+        _controller.DisplayStackedRadio.IsEnabled = canStack;
+
+        if (!canStack && _controller.DisplayStackedRadio.IsChecked == true)
+        {
+            _controller.DisplayRegularRadio.IsChecked = true;
+            _viewModel.SetMainChartDisplayMode(MainChartDisplayMode.Regular);
+        }
+    }
+
 
     public void OnToggleRequested(object? sender, EventArgs e)
     {

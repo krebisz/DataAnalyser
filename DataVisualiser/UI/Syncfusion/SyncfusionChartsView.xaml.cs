@@ -43,6 +43,8 @@ public partial class SyncfusionChartsView : UserControl
         InitializeViewModel();
         InitializeUiBindings();
         ExecuteStartupSequence();
+
+        IsVisibleChanged += OnViewVisibilityChanged;
     }
 
     private IDisposable BeginUiBusyScope()
@@ -346,7 +348,12 @@ public partial class SyncfusionChartsView : UserControl
         UpdateSelectedSubtypesInViewModel();
 
         if (HasLoadedData())
+        {
+            var ctx = _viewModel.ChartState.LastContext;
+            if (ctx != null)
+                await RenderChartAsync(ChartControllerKeys.SyncfusionSunburst, ctx);
             return;
+        }
 
         if (ShouldRefreshDateRangeForCurrentSelection())
             await LoadDateRangeForSelectedMetrics();
@@ -631,6 +638,19 @@ public partial class SyncfusionChartsView : UserControl
             return;
 
         if (!e.ShowSyncfusionSunburst)
+            return;
+
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx != null)
+            await RenderChartAsync(ChartControllerKeys.SyncfusionSunburst, ctx);
+    }
+
+    private async void OnViewVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (_isInitializing || e.NewValue is not bool isVisible || !isVisible)
+            return;
+
+        if (!_viewModel.ChartState.IsSyncfusionSunburstVisible)
             return;
 
         var ctx = _viewModel.ChartState.LastContext;

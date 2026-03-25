@@ -7,6 +7,7 @@ public sealed class MainChartsViewThemeCoordinator
     private readonly Action<Action>? _invokeOnUiThread;
     private readonly Action<string> _setToggleContent;
     private readonly AppThemeService _themeService;
+    private bool _isAttached;
 
     public MainChartsViewThemeCoordinator(
         AppThemeService themeService,
@@ -20,13 +21,21 @@ public sealed class MainChartsViewThemeCoordinator
 
     public void Attach()
     {
+        if (_isAttached)
+            return;
+
         _themeService.ThemeChanged += OnThemeChanged;
+        _isAttached = true;
         UpdateToggleContent();
     }
 
     public void Detach()
     {
+        if (!_isAttached)
+            return;
+
         _themeService.ThemeChanged -= OnThemeChanged;
+        _isAttached = false;
     }
 
     public void ToggleTheme()

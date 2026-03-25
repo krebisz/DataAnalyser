@@ -63,7 +63,6 @@ public partial class MainChartsView : UserControl
     // Placeholder instance since DiffRatioChartController is commented out in XAML.
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
-    private BarPieChartControllerAdapter _barPieAdapter = null!;
     private ChartComputationEngine _chartComputationEngine = null!;
     private IChartControllerRegistry? _chartControllerRegistry;
     private ChartRenderEngine _chartRenderEngine = null!;
@@ -71,8 +70,6 @@ public partial class MainChartsView : UserControl
     private ChartUpdateCoordinator _chartUpdateCoordinator = null!;
 
     private string _connectionString = null!;
-    private DiffRatioChartControllerAdapter _diffRatioAdapter = null!;
-    private DistributionChartControllerAdapter _distributionAdapter = null!;
     private DistributionPolarRenderingService _distributionPolarRenderingService = null!;
     private ToolTip _distributionPolarTooltip = null!;
     private IDistributionService _hourlyDistributionService = null!;
@@ -81,20 +78,16 @@ public partial class MainChartsView : UserControl
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isApplyingSelectionSync;
-    private MainChartControllerAdapter _mainAdapter = null!;
     private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private MainChartsViewEventBinder? _viewModelEventBinder;
 
     private MetricSelectionService _metricSelectionService = null!;
-    private NormalizedChartControllerAdapter _normalizedAdapter = null!;
     private SubtypeSelectorManager _selectorManager = null!;
     private IStrategyCutOverService? _strategyCutOverService;
     private List<MetricNameOption>? _subtypeList;
     private ChartTooltipManager? _tooltipManager;
-    private TransformDataPanelControllerAdapter _transformAdapter = null!;
     private int _uiBusyDepth;
     private MainWindowViewModel _viewModel = null!;
-    private WeekdayTrendChartControllerAdapter _weekdayTrendAdapter = null!;
     private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
     private IDistributionService _weeklyDistributionService = null!;
 
@@ -121,14 +114,28 @@ public partial class MainChartsView : UserControl
         InitializeChartPipeline();
         InitializeViewModel();
         InitializeUiBindings();
+        InitializeTooltips();
         _themeCoordinator.Attach();
 
         ExecuteStartupSequence();
 
+        Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
 
     private DiffRatioChartController DiffRatioChartController { get; } = new();
+
+    private void OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        _viewModelEventBinder?.Bind();
+        _themeCoordinator.Attach();
+
+        if (_tooltipManager == null && _chartControllerRegistry != null)
+        {
+            InitializeTooltipManager();
+            InitializeTooltips();
+        }
+    }
 
     private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
@@ -265,13 +272,8 @@ public partial class MainChartsView : UserControl
     private void UpdateMainChartStackedAvailability(int selectedSubtypeCount)
     {
         var canStack = selectedSubtypeCount >= 2;
-        MainChartController.DisplayStackedRadio.IsEnabled = canStack;
-
-        if (!canStack && MainChartController.DisplayStackedRadio.IsChecked == true)
-        {
-            MainChartController.DisplayRegularRadio.IsChecked = true;
-            _viewModel.SetMainChartDisplayMode(MainChartDisplayMode.Regular);
-        }
+        if (ResolveController(ChartControllerKeys.Main) is IMainChartControllerExtras controller)
+            controller.SetStackedAvailability(canStack);
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -444,16 +446,8 @@ public partial class MainChartsView : UserControl
     private void ApplyBucketCountFromState()
     {
         var target = _viewModel.ChartState.BarPieBucketCount;
-        var combo = BarPieChartController.BucketCountCombo;
-
-        if (combo.SelectedItem is ComboBoxItem selectedItem && selectedItem.Tag is int current && current == target)
-            return;
-
-        var match = combo.Items.OfType<ComboBoxItem>()
-            .FirstOrDefault(item => item.Tag is int tag && tag == target);
-
-        if (match != null)
-            combo.SelectedItem = match;
+        if (ResolveController(ChartControllerKeys.BarPie) is IBarPieChartControllerExtras controller)
+            controller.SelectBucketCount(target);
     }
 
     private static void SetComboSelectionByValue(ComboBox combo, string? value)
@@ -687,7 +681,7 @@ public partial class MainChartsView : UserControl
             return true;
 
         var ctx = _viewModel.ChartState.LastContext;
-        if (ctx != null && ShouldRenderCharts(ctx) && !HasChartData(e.ToggledChartName))
+        if (ctx != null && ShouldRenderCharts(ctx))
             _ = RenderSingleChart(e.ToggledChartName, ctx);
 
         return true;
@@ -1174,7 +1168,7 @@ public partial class MainChartsView : UserControl
         _chartComputationEngine = new ChartComputationEngine();
         _chartRenderEngine = new ChartRenderEngine();
 
-        InitializeTooltips();
+        InitializeTooltipManager();
     }
 
     private void InitializeChartPipeline()
@@ -1235,48 +1229,8 @@ public partial class MainChartsView : UserControl
                 _chartRendererResolver,
                 _chartSurfaceFactory));
 
-        _mainAdapter = factoryResult.Main;
-        _normalizedAdapter = factoryResult.Normalized;
-        _diffRatioAdapter = factoryResult.DiffRatio;
-        _distributionAdapter = factoryResult.Distribution;
-        _weekdayTrendAdapter = factoryResult.WeekdayTrend;
-        _transformAdapter = factoryResult.Transform;
-        _barPieAdapter = factoryResult.BarPie;
         _chartControllerRegistry = factoryResult.Registry;
         ValidateChartControllerRegistry(_chartControllerRegistry);
-
-        // Wire up MainChartController events
-        MainChartController.ToggleRequested += _mainAdapter.OnToggleRequested;
-        MainChartController.DisplayModeChanged += _mainAdapter.OnDisplayModeChanged;
-        MainChartController.OverlaySubtypeChanged += _mainAdapter.OnOverlaySubtypeChanged;
-        WeekdayTrendChartController.ToggleRequested += _weekdayTrendAdapter.OnToggleRequested;
-        WeekdayTrendChartController.ChartTypeToggleRequested += _weekdayTrendAdapter.OnChartTypeToggleRequested;
-        WeekdayTrendChartController.DayToggled += _weekdayTrendAdapter.OnDayToggled;
-        WeekdayTrendChartController.AverageToggled += _weekdayTrendAdapter.OnAverageToggled;
-        WeekdayTrendChartController.AverageWindowChanged += _weekdayTrendAdapter.OnAverageWindowChanged;
-        WeekdayTrendChartController.SubtypeChanged += _weekdayTrendAdapter.OnSubtypeChanged;
-        DiffRatioChartController.ToggleRequested += _diffRatioAdapter.OnToggleRequested;
-        DiffRatioChartController.OperationToggleRequested += _diffRatioAdapter.OnOperationToggleRequested;
-        DiffRatioChartController.PrimarySubtypeChanged += _diffRatioAdapter.OnPrimarySubtypeChanged;
-        DiffRatioChartController.SecondarySubtypeChanged += _diffRatioAdapter.OnSecondarySubtypeChanged;
-        BarPieChartController.ToggleRequested += _barPieAdapter.OnToggleRequested;
-        BarPieChartController.DisplayModeChanged += _barPieAdapter.OnDisplayModeChanged;
-        BarPieChartController.BucketCountChanged += _barPieAdapter.OnBucketCountChanged;
-        NormalizedChartController.ToggleRequested += _normalizedAdapter.OnToggleRequested;
-        NormalizedChartController.NormalizationModeChanged += _normalizedAdapter.OnNormalizationModeChanged;
-        NormalizedChartController.PrimarySubtypeChanged += _normalizedAdapter.OnPrimarySubtypeChanged;
-        NormalizedChartController.SecondarySubtypeChanged += _normalizedAdapter.OnSecondarySubtypeChanged;
-        DistributionChartController.ToggleRequested += _distributionAdapter.OnToggleRequested;
-        DistributionChartController.ChartTypeToggleRequested += _distributionAdapter.OnChartTypeToggleRequested;
-        DistributionChartController.ModeChanged += _distributionAdapter.OnModeChanged;
-        DistributionChartController.SubtypeChanged += _distributionAdapter.OnSubtypeChanged;
-        DistributionChartController.DisplayModeChanged += _distributionAdapter.OnDisplayModeChanged;
-        DistributionChartController.IntervalCountChanged += _distributionAdapter.OnIntervalCountChanged;
-        TransformDataPanelController.ToggleRequested += _transformAdapter.OnToggleRequested;
-        TransformDataPanelController.OperationChanged += _transformAdapter.OnOperationChanged;
-        TransformDataPanelController.PrimarySubtypeChanged += _transformAdapter.OnPrimarySubtypeChanged;
-        TransformDataPanelController.SecondarySubtypeChanged += _transformAdapter.OnSecondarySubtypeChanged;
-        TransformDataPanelController.ComputeRequested += _transformAdapter.OnComputeRequested;
     }
 
     private static void ValidateChartControllerRegistry(IChartControllerRegistry registry)
@@ -1294,55 +1248,18 @@ public partial class MainChartsView : UserControl
 
     private IChartController ResolveController(string key)
     {
-        if (_chartControllerRegistry != null)
-            return _chartControllerRegistry.Get(key);
+        if (_chartControllerRegistry == null)
+            throw new InvalidOperationException($"Chart controller registry is not initialized for key '{key}'.");
 
-        Debug.WriteLine($"[ChartRegistry] Fallback resolve for '{key}' (registry not available).");
-        return key switch
-        {
-                ChartControllerKeys.Main => _mainAdapter,
-                ChartControllerKeys.Normalized => _normalizedAdapter,
-                ChartControllerKeys.DiffRatio => _diffRatioAdapter,
-                ChartControllerKeys.Distribution => _distributionAdapter,
-                ChartControllerKeys.WeeklyTrend => _weekdayTrendAdapter,
-                ChartControllerKeys.Transform => _transformAdapter,
-                ChartControllerKeys.BarPie => _barPieAdapter,
-                _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
-        };
+        return _chartControllerRegistry.Get(key);
     }
 
     private CartesianChart GetWpfCartesianChart(string key)
     {
-        if (_chartControllerRegistry == null && _mainAdapter == null)
-            return key switch
-            {
-                    ChartControllerKeys.Main => MainChartController.Chart,
-                    ChartControllerKeys.Normalized => NormalizedChartController.Chart,
-                    ChartControllerKeys.DiffRatio => DiffRatioChartController.Chart,
-                    ChartControllerKeys.Distribution => DistributionChartController.Chart,
-                    ChartControllerKeys.Transform => TransformDataPanelController.Chart,
-                    _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
-            };
-
         if (ResolveController(key) is IWpfCartesianChartHost host)
             return host.Chart;
 
         throw new InvalidOperationException($"Chart controller '{key}' does not expose a Cartesian chart.");
-    }
-
-    private PolarChart GetPolarChart(string key)
-    {
-        if (_chartControllerRegistry == null && _distributionAdapter == null)
-            return key switch
-            {
-                    ChartControllerKeys.Distribution => DistributionChartController.PolarChart,
-                    _ => throw new KeyNotFoundException($"Chart controller not found for key '{key}'.")
-            };
-
-        if (ResolveController(key) is IPolarChartSurface polar)
-            return polar.PolarChart;
-
-        throw new InvalidOperationException($"Chart controller '{key}' does not expose a polar chart.");
     }
 
     private void ExecuteStartupSequence()
@@ -1546,7 +1463,7 @@ public partial class MainChartsView : UserControl
 
     #region Initialization
 
-    private void InitializeTooltips()
+    private void InitializeTooltipManager()
     {
         var parentWindow = Application.Current?.MainWindow ?? Window.GetWindow(this);
         if (parentWindow == null)
@@ -1557,15 +1474,14 @@ public partial class MainChartsView : UserControl
             throw new InvalidOperationException("Unable to resolve a parent window for tooltips.");
         }
 
-        var chartLabels = new Dictionary<CartesianChart, string>
-        {
-                { GetWpfCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main },
-                { GetWpfCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized },
-                { GetWpfCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio },
-                { GetWpfCartesianChart(ChartControllerKeys.Transform), ChartControllerKeys.Transform }
-        };
+        _tooltipManager = new ChartTooltipManager(parentWindow);
+    }
 
-        _tooltipManager = new ChartTooltipManager(parentWindow, chartLabels);
+    private void InitializeTooltips()
+    {
+        if (_tooltipManager == null)
+            throw new InvalidOperationException("Tooltip manager is not initialized.");
+
         _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Main), ChartControllerKeys.Main);
         _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.Normalized), ChartControllerKeys.Normalized);
         _tooltipManager.AttachChart(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), ChartControllerKeys.DiffRatio);
@@ -1803,7 +1719,11 @@ public partial class MainChartsView : UserControl
         UpdateSelectedSubtypesInViewModel();
 
         if (HasLoadedData())
+        {
+            UpdateChartTitlesFromSelections();
+            await RenderChartsFromLastContext();
             return;
+        }
 
         if (ShouldRefreshDateRangeForCurrentSelection())
             await LoadDateRangeForSelectedMetrics();
@@ -1943,7 +1863,7 @@ public partial class MainChartsView : UserControl
         var paritySnapshot = await BuildDistributionParitySnapshotAsync(_viewModel.ChartState.LastContext);
         var combinedParitySnapshot = BuildCombinedMetricParitySnapshot(_viewModel.ChartState.LastContext);
         var singleParitySnapshot = BuildSingleMetricParitySnapshot(_viewModel.ChartState.LastContext);
-        var multiParitySnapshot = BuildMultiMetricParitySnapshot(_viewModel.ChartState.LastContext);
+        var multiParitySnapshot = await BuildMultiMetricParitySnapshotAsync(_viewModel.ChartState.LastContext);
         var normalizedParitySnapshot = BuildNormalizedParitySnapshot(_viewModel.ChartState.LastContext);
         var weekdayTrendParitySnapshot = BuildWeekdayTrendParitySnapshot(_viewModel.ChartState.LastContext);
         var transformParitySnapshot = await BuildTransformParitySnapshotAsync(_viewModel.ChartState.LastContext);
@@ -2002,7 +1922,7 @@ public partial class MainChartsView : UserControl
                         _viewModel.ChartState.ShowSunday,
                         _viewModel.ChartState.ShowAverage,
                         _viewModel.ChartState.BarPieBucketCount,
-                        BarPieMode = BarPieChartController.PieModeRadio.IsChecked == true ? "Pie" : "Bar"
+                        BarPieMode = ResolveController(ChartControllerKeys.BarPie) is IBarPieChartControllerExtras barPieController ? barPieController.GetDisplayMode() : "Bar"
                 },
                 CmsConfiguration = new
                 {
@@ -2336,7 +2256,7 @@ public partial class MainChartsView : UserControl
         };
     }
 
-    private SimpleParitySnapshot BuildMultiMetricParitySnapshot(ChartDataContext? ctx)
+    private async Task<SimpleParitySnapshot> BuildMultiMetricParitySnapshotAsync(ChartDataContext? ctx)
     {
         if (ctx == null || ctx.Data1 == null)
             return new SimpleParitySnapshot
@@ -2345,37 +2265,110 @@ public partial class MainChartsView : UserControl
                     Reason = "Primary series required"
             };
 
-        if (ctx.PrimaryCms is not ICanonicalMetricSeries)
+        var selectedSeries = _viewModel.MetricState.SelectedSeries
+            .GroupBy(series => series.DisplayKey, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToList();
+
+        if (selectedSeries.Count < 3)
+            return new SimpleParitySnapshot
+            {
+                    Status = "Unavailable",
+                    Reason = "At least three series required"
+            };
+
+        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
+        var resolved = await ResolveMultiMetricParityInputsAsync(ctx, selectedSeries, tableName);
+        if (resolved.LegacySeries.Count < 3)
+            return new SimpleParitySnapshot
+            {
+                    Status = "Unavailable",
+                    Reason = "Insufficient multi-series legacy data available"
+            };
+
+        if (resolved.CmsSeries.Count != resolved.LegacySeries.Count)
             return new SimpleParitySnapshot
             {
                     Status = "CmsUnavailable",
-                    Reason = "Primary CMS series missing"
+                    Reason = "CMS multi-series data missing"
             };
 
         var strategyCutOverService = _strategyCutOverService ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
+        var parityContext = new ChartDataContext
+        {
+                PrimaryCms = resolved.CmsSeries.FirstOrDefault(),
+                SecondaryCms = resolved.CmsSeries.Count > 1 ? resolved.CmsSeries[1] : null,
+                CmsSeries = resolved.CmsSeries,
+                Data1 = resolved.LegacySeries[0].ToList(),
+                Data2 = resolved.LegacySeries.Count > 1 ? resolved.LegacySeries[1].ToList() : Array.Empty<MetricData>(),
+                DisplayName1 = resolved.Labels[0],
+                DisplayName2 = resolved.Labels.Count > 1 ? resolved.Labels[1] : string.Empty,
+                ActualSeriesCount = resolved.LegacySeries.Count,
+                From = ctx.From,
+                To = ctx.To
+        };
         var parameters = new StrategyCreationParameters
         {
-                LegacySeries = new List<IEnumerable<MetricData>>
-                {
-                        ctx.Data1,
-                        ctx.Data2 ?? Array.Empty<MetricData>()
-                },
-                Labels = new List<string>
-                {
-                        ctx.DisplayName1,
-                        ctx.DisplayName2
-                },
+                LegacySeries = resolved.LegacySeries,
+                CmsSeries = resolved.CmsSeries,
+                Labels = resolved.Labels,
                 From = ctx.From,
                 To = ctx.To
         };
 
-        var result = ExecuteParitySafe(strategyCutOverService, StrategyType.MultiMetric, ctx, parameters);
+        var result = ExecuteParitySafe(strategyCutOverService, StrategyType.MultiMetric, parityContext, parameters);
 
         return new SimpleParitySnapshot
         {
                 Status = "Completed",
                 Result = result
         };
+    }
+
+    private async Task<(List<IEnumerable<MetricData>> LegacySeries, List<ICanonicalMetricSeries> CmsSeries, List<string> Labels)> ResolveMultiMetricParityInputsAsync(ChartDataContext ctx, IReadOnlyList<MetricSeriesSelection> selectedSeries, string tableName)
+    {
+        var legacySeries = new List<IEnumerable<MetricData>>();
+        var cmsSeries = new List<ICanonicalMetricSeries>();
+        var labels = new List<string>();
+
+        foreach (var selection in selectedSeries)
+        {
+            var label = string.IsNullOrWhiteSpace(selection.DisplayName) ? selection.DisplayKey : selection.DisplayName;
+            var (legacyData, cmsData) = await ResolveMultiMetricParitySeriesAsync(ctx, selection, tableName);
+            if (legacyData == null || legacyData.Count == 0)
+                continue;
+
+            legacySeries.Add(legacyData);
+            labels.Add(label);
+
+            if (cmsData != null)
+                cmsSeries.Add(cmsData);
+        }
+
+        return (legacySeries, cmsSeries, labels);
+    }
+
+    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveMultiMetricParitySeriesAsync(ChartDataContext ctx, MetricSeriesSelection selection, string tableName)
+    {
+        if (ctx.Data1 != null && IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
+
+        if (ctx.Data2 != null && IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+            return (ctx.Data2, ctx.SecondaryCms as ICanonicalMetricSeries);
+
+        if (ctx.CmsSeries != null)
+        {
+            var targetMetricId = CanonicalMetricMapping.FromLegacyFields(selection.MetricType, selection.QuerySubtype);
+            var matchingCms = ctx.CmsSeries.FirstOrDefault(series => string.Equals(series.MetricId?.Value, targetMetricId, StringComparison.OrdinalIgnoreCase));
+            if (matchingCms != null)
+            {
+                var legacyData = await ResolveTransformParityDataAsync(ctx, selection);
+                return (legacyData, matchingCms);
+            }
+        }
+
+        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, ctx.From, ctx.To, tableName);
+        return (primaryData.ToList(), primaryCms);
     }
 
     private SimpleParitySnapshot BuildNormalizedParitySnapshot(ChartDataContext? ctx)
@@ -2516,10 +2509,7 @@ public partial class MainChartsView : UserControl
 
     private string? GetSelectedTransformOperation()
     {
-        if (TransformDataPanelController.TransformOperationCombo.SelectedItem is ComboBoxItem item)
-            return item.Tag?.ToString();
-
-        return null;
+        return ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller ? controller.GetSelectedOperationTag() : null;
     }
 
     private static bool IsUnaryTransform(string operation)
