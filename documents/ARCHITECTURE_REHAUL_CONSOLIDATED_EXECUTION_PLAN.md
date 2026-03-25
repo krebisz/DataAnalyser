@@ -2,7 +2,7 @@
 Status: Consolidated execution source of truth for structural rehaul  
 Scope: Structural, philosophical, evolutionary, and intention-aligned codebase overhaul  
 Authority: Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `Project Roadmap.md`  
-Last Updated: 2026-03-24
+Last Updated: 2026-03-25
 
 ---
 
@@ -495,12 +495,13 @@ Retired as superfluous after absorption:
 
 ## 9. Immediate Next Action Set
 
-1. Implement the new bounded theme step before further `MainChartsView` reduction work.
-2. Resume orchestration refactor only after the theme seams are in place and the app remains visually stable in both themes.
-3. Remove remaining direct controller access/fallbacks from `MainChartsView`.
-4. Eliminate direct repository construction from presentation/orchestration flows that should be contract-driven.
-5. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
-6. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
+1. Close the now-completed theme step in documentation and treat future theme adjustments as opportunistic cleanup rather than an open overhaul batch.
+2. Resume orchestration refactor with a narrowed `ChartRenderingOrchestrator` / `ChartUpdateCoordinator` handoff-first slice.
+3. After that, reduce `MainChartsView` by extracting bootstrap, event registration, export command wiring, and host-only coordination into dedicated seams.
+4. Remove remaining direct controller access/fallbacks from `MainChartsView`.
+5. Eliminate direct repository construction from presentation/orchestration flows that should be contract-driven.
+6. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
+7. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
 
 ---
 
@@ -701,13 +702,15 @@ Done when:
 4. reachability/parity evidence for the repaired families is executable and current
 
 ### Step 8. Introduce reversible light/dark theme support through explicit UI/theme seams
-Status: in progress
+Status: completed
 
 Completion note:
 1. Theme state/service, top-level toggle, and shared light/dark resource dictionaries are implemented.
 2. Shared shell/control theming is implemented across `Main`, `Syncfusion`, and `Admin`.
 3. Shared legend, combo-box, tooltip/popup, and major chart-host theming is implemented.
-4. Several chart-local label/text seams have already been normalized, including polar label treatment.
+4. Chart-local label/text seams that blocked readability have been normalized, including weekday/distribution polar labels, transform grids, and Syncfusion sunburst labels/tooltips.
+5. Shared grid header/body theming is implemented with distinct readable header/body treatment.
+6. Runtime theme switching works through live resource references on the touched interactive/chart-local surfaces.
 
 Agent work:
 1. Add a small application theme state and a top-level theme toggle in the existing header/options area.
@@ -761,26 +764,21 @@ Recommended execution batches:
    - `Main`, `Syncfusion`, and `Admin` top-level surfaces themed
    - validation: build + light/dark UI shell smoke
 3. Batch 3: completed
-   - shared legends, combo boxes, common tooltips/popups, and chart-host surfaces themed
+   - shared legends, combo boxes, common tooltips/popups, chart-host surfaces, and grid theming
    - live theme switching fixed for those shared interactive surfaces
-   - validation: build + tooltip/legend/dropdown smoke in both themes
-4. Batch 4: remaining cleanup batch
-   - sweep residual hard-coded local colors
-   - normalize remaining chart-local label/text surfaces
-   - finish special-case surfaces that do not yet theme cleanly in both themes
-   - validation: build + targeted light/dark smoke on touched surfaces
-5. Batch 5: remaining convergence batch
-   - remove superseded literals/resources/usings
-   - add/update focused theme regression tests where practical
-   - run broad two-theme regression smoke across all tabs and major chart families
-   - validation: build + broad light/dark regression smoke
+   - validation: build + tooltip/legend/dropdown/grid smoke in both themes
+4. Residual theme work:
+   - future visual tweaks stay local and must not reopen a broad theme refactor batch
+   - preserve dynamic color assignment where functionally required, but improve placement opportunistically when safe
 
 ### Step 9. Refactor orchestration to explicit handoff boundaries
 
 Agent work:
-1. Separate context building, strategy selection, chart-program/result composition, data retrieval, and render invocation into explicit handoff stages.
-2. Remove direct UI state/control assumptions from the first orchestration slice migrated.
-3. Route failure handling through the new notification/logging seams.
+1. Separate context building, strategy selection, chart-program/result composition, data retrieval, render invocation, and render-result/reporting into explicit handoff stages.
+2. Keep this step focused on orchestration flow only; do not mix in general `MainChartsView` code-behind extraction here.
+3. Remove direct UI state/control assumptions from the first orchestration slice migrated.
+4. Route failure handling through the new notification/logging seams.
+5. Make runtime path-used reporting and render-result metadata attach at orchestration boundaries rather than ad-hoc view code paths.
 
 Primary code focus:
 1. `ChartRenderingOrchestrator`
@@ -790,29 +788,37 @@ Primary code focus:
 Validation gate:
 1. build
 2. orchestration tests
-3. manual chart update smoke test on the migrated slice
+3. focused reachability/parity/export tests for the migrated slice where those seams move
+4. manual chart update smoke test on the migrated slice
 
 Done when:
 1. the migrated orchestration path does not directly require WPF controls, `MessageBox`, or concrete repository construction
+2. orchestration handoff stages are explicit enough that later `MainChartsView` extraction is mostly shell work rather than workflow surgery
 
 ### Step 10. Reduce `MainChartsView` to a composition host, pass 1
 
 Agent work:
 1. Extract startup/bootstrap responsibilities from `MainChartsView`.
-2. Move event registration and workflow setup into dedicated bootstrap/registration helpers.
-3. Keep view behavior unchanged while shrinking code-behind responsibility, and do not re-entrench chart-family-specific parent host divergence that later standardization must undo.
+2. Extract event registration and workflow setup into dedicated bootstrap/registration helpers.
+3. Extract reachability/parity/export command wiring out of `MainChartsView` and leave the view owning only command triggering/binding.
+4. Extract theme-toggle handling out of `MainChartsView` if it still owns non-trivial theme coordination logic.
+5. Extract view-only coordination seams such as chart-title updates, clear-hidden-chart coordination, and other host responsibilities that do not belong in deeper orchestration.
+6. Keep view behavior unchanged while shrinking code-behind responsibility, and do not re-entrench chart-family-specific parent host divergence that later standardization must undo.
 
 Primary code focus:
 1. `MainChartsView`
 2. controller registration/bootstrap code
+3. export/theme/bootstrap helper seams
 
 Validation gate:
 1. build
 2. controller registry tests
-3. manual application startup and chart-load smoke test
+3. targeted tests for extracted bootstrap/export helpers where practical
+4. manual application startup and chart-load smoke test
 
 Done when:
 1. `MainChartsView` primarily wires composition and bindings rather than owning workflow logic
+2. export/theme/bootstrap/event wiring is no longer concentrated in one code-behind class
 
 ### Step 11. Reduce `MainChartsView` to a composition host, pass 2
 
@@ -820,6 +826,7 @@ Agent work:
 1. Remove remaining direct controller access and fallback control lookups.
 2. Use registry/factory resolution as the sole controller access path.
 3. Ensure transform-panel interactions also resolve through explicit controller/adapter contracts rather than remaining a permanently special-case programmability island.
+4. Remove any remaining ad-hoc view-owned controller branching that survived pass 1.
 
 Primary code focus:
 1. `MainChartsView`
@@ -829,10 +836,12 @@ Primary code focus:
 Validation gate:
 1. build
 2. controller swap/registry tests
-3. manual chart toggle/load/transform smoke test
+3. targeted integration tests for extracted host/coordinator seams where practical
+4. manual chart toggle/load/transform smoke test
 
 Done when:
 1. `MainChartsView` has no remaining chart-specific fallback control knowledge outside composition seams
+2. transform interactions no longer depend on direct special-case control retrieval from the view shell
 
 ### Step 12. Isolate Syncfusion-specific fragility
 
@@ -840,6 +849,7 @@ Agent work:
 1. Move reflection-heavy tooltip/hit-testing workarounds behind a dedicated Syncfusion-specific behavior/service layer.
 2. Keep the controller focused on host responsibilities only.
 3. Do not generalize Syncfusion quirks into shared rendering abstractions.
+4. Treat theme/readability work on Syncfusion as already complete; this step is only for behavioral/workaround isolation.
 
 Primary code focus:
 1. Syncfusion sunburst controller/adapter path
@@ -897,6 +907,8 @@ Agent work:
 2. Add unit-vs-integration lane separation rules for tests.
 3. Add a small architecture scan that fails fast on prohibited reference patterns.
 4. Add guardrails preventing new chart-vendor usage above rendering adapters unless the backend/capability qualification path exists.
+5. Add guardrails for the new theme/export seams so UI resource concerns and export/reporting concerns do not drift back into Core/orchestration accidentally.
+6. Add guardrails against new direct controller lookup paths in `MainChartsView` and related host views.
 
 Primary code focus:
 1. test projects
@@ -913,9 +925,11 @@ Done when:
 ### Step 16. Rebuild evidence/export flow after the code seams are in place
 
 Agent work:
-1. Move reachability/parity/evidence export behind a scriptable headless path.
-2. Attach runtime configuration snapshots and path-used metadata to exported artifacts.
-3. Ensure evidence generation no longer depends on UI-only command paths.
+1. Preserve the export metadata already added, but move evidence generation behind a scriptable headless path.
+2. Move artifact destination to project-root `documents/`.
+3. Keep runtime configuration snapshots and path-used metadata attached to exported artifacts.
+4. Ensure evidence generation no longer depends on UI-only command paths.
+5. Provide a deterministic way to clear/reset the runtime evidence store between runs so exported artifacts are easier to interpret.
 
 Primary code focus:
 1. evidence export path
@@ -929,6 +943,7 @@ Validation gate:
 
 Done when:
 1. closure evidence can be regenerated consistently without manual UI interaction
+2. evidence artifacts land in the repository-visible location with current configuration/path-used metadata intact
 
 ### Step 17. Run a final convergence pass before declaring architectural closure
 
