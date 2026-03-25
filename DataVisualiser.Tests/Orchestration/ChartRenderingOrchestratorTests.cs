@@ -13,6 +13,7 @@ using DataVisualiser.Core.Strategies.Abstractions;
 using Moq;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.UI.State;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.Orchestration;
@@ -53,70 +54,6 @@ public sealed class ChartRenderingOrchestratorTests
                 })!;
 
         Assert.True(result);
-    }
-
-    [Fact]
-    public void BuildInitialSeriesList_ShouldIncludeSecondaryWhenPresent()
-    {
-        var method = GetPrivateStaticMethod("BuildInitialSeriesList");
-
-        var data1 = TestDataBuilders.HealthMetricData().BuildSeries(1, TimeSpan.FromDays(1));
-        var data2 = TestDataBuilders.HealthMetricData().BuildSeries(1, TimeSpan.FromDays(1));
-
-        var result = method.Invoke(null,
-                new object?[]
-                {
-                        data1,
-                        data2,
-                        "A",
-                        "B"
-                })!;
-        var typed = ((List<IEnumerable<MetricData>> series, List<string> labels))result;
-
-        Assert.Equal(2, typed.series.Count);
-        Assert.Equal(new[]
-                {
-                        "A",
-                        "B"
-                },
-                typed.labels);
-    }
-
-    [Fact]
-    public void BuildSeriesAndLabels_ShouldSkipEmptyAdditionalSeries()
-    {
-        var method = GetPrivateStaticMethod("BuildSeriesAndLabels");
-
-        var ctx = new ChartDataContext
-        {
-                Data1 = TestDataBuilders.HealthMetricData().BuildSeries(1, TimeSpan.FromDays(1)),
-                DisplayName1 = "A"
-        };
-
-        var additionalSeries = new List<IEnumerable<MetricData>>
-        {
-                new List<MetricData>()
-        };
-        var additionalLabels = new List<string>
-        {
-                "C"
-        };
-
-        var result = method.Invoke(null,
-                new object?[]
-                {
-                        ctx,
-                        additionalSeries,
-                        additionalLabels
-                })!;
-        var typed = ((List<IEnumerable<MetricData>> series, List<string> labels))result;
-
-        Assert.Single(typed.series);
-        Assert.Equal(new[]
-                {
-                        "A"
-                },
-                typed.labels);
     }
 
     [Fact]
@@ -196,7 +133,12 @@ public sealed class ChartRenderingOrchestratorTests
 
                 cutOverService.Verify(service => service.CreateStrategy(
                         StrategyType.MultiMetric,
-                        It.Is<ChartDataContext>(ctx => ctx == context),
+                        It.Is<ChartDataContext>(ctx =>
+                            ctx.ActualSeriesCount == 3 &&
+                            ctx.From == context.From &&
+                            ctx.To == context.To &&
+                            ctx.CmsSeries != null &&
+                            ctx.CmsSeries.Count == 3),
                         It.Is<StrategyCreationParameters>(parameters =>
                             parameters.LegacySeries != null &&
                             parameters.LegacySeries.Count == 3 &&
@@ -220,11 +162,235 @@ public sealed class ChartRenderingOrchestratorTests
         });
     }
 
+    [Fact]
+    public async Task RenderNormalizedChartAsync_ShouldUseNormalizedCutOver_AndRenderTrackedSeries()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var cutOverService = new Mock<IStrategyCutOverService>(MockBehavior.Strict);
+                cutOverService
+                    .Setup(service => service.CreateStrategy(
+                        StrategyType.Normalized,
+                        It.IsAny<ChartDataContext>(),
+                        It.IsAny<StrategyCreationParameters>()))
+                    .Returns(new StubStrategy(CreateSingleSeriesResult()));
+
+                var orchestrator = CreateOrchestrator(chartTimestamps, tooltipManager, cutOverService, out _);
+                var chartState = new ChartState
+                {
+                    SelectedNormalizationMode = NormalizationMode.PercentageOfMax
+                };
+                var context = CreateSecondaryContext();
+
+                await orchestrator.RenderNormalizedChartAsync(context, chart, chartState);
+
+                cutOverService.Verify(service => service.CreateStrategy(
+                        StrategyType.Normalized,
+                        context,
+                        It.Is<StrategyCreationParameters>(parameters =>
+                            parameters.LegacyData1 == context.Data1 &&
+                            parameters.LegacyData2 == context.Data2 &&
+                            parameters.NormalizationMode == NormalizationMode.PercentageOfMax)),
+                    Times.Once);
+                Assert.NotEmpty(chart.Series);
+                Assert.True(chartTimestamps.ContainsKey(chart));
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public async Task RenderDiffRatioChartAsync_ShouldUseRatioCutOver_WhenRatioModeSelected()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var cutOverService = new Mock<IStrategyCutOverService>(MockBehavior.Strict);
+                cutOverService
+                    .Setup(service => service.CreateStrategy(
+                        StrategyType.Ratio,
+                        It.IsAny<ChartDataContext>(),
+                        It.IsAny<StrategyCreationParameters>()))
+                    .Returns(new StubStrategy(CreateSingleSeriesResult()));
+
+                var orchestrator = CreateOrchestrator(chartTimestamps, tooltipManager, cutOverService, out _);
+                var chartState = new ChartState
+                {
+                    IsDiffRatioVisible = true,
+                    IsDiffRatioDifferenceMode = false
+                };
+                var context = CreateSecondaryContext();
+
+                await orchestrator.RenderDiffRatioChartAsync(context, chart, chartState);
+
+                cutOverService.Verify(service => service.CreateStrategy(
+                        StrategyType.Ratio,
+                        context,
+                        It.Is<StrategyCreationParameters>(parameters =>
+                            parameters.LegacyData1 == context.Data1 &&
+                            parameters.LegacyData2 == context.Data2)),
+                    Times.Once);
+                Assert.NotEmpty(chart.Series);
+                Assert.True(chartTimestamps.ContainsKey(chart));
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public async Task RenderDistributionChartAsync_ShouldUseHourlyDistributionService_ForHourlyMode()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var weeklyService = new Mock<IDistributionService>(MockBehavior.Strict);
+                var hourlyService = new Mock<IDistributionService>(MockBehavior.Strict);
+                var cutOverService = new Mock<IStrategyCutOverService>(MockBehavior.Loose);
+                hourlyService
+                    .Setup(service => service.UpdateDistributionChartAsync(
+                        It.IsAny<CartesianChart>(),
+                        It.IsAny<IEnumerable<MetricData>>(),
+                        It.IsAny<string>(),
+                        It.IsAny<DateTime>(),
+                        It.IsAny<DateTime>(),
+                        It.IsAny<double>(),
+                        It.IsAny<bool>(),
+                        It.IsAny<int>(),
+                        It.IsAny<ICanonicalMetricSeries>(),
+                        It.IsAny<bool>()))
+                    .Returns(Task.CompletedTask);
+
+                var orchestrator = CreateOrchestrator(chartTimestamps, tooltipManager, cutOverService, out _, weeklyService.Object, hourlyService.Object);
+                var chartState = new ChartState();
+                var context = new ChartDataContext
+                {
+                    Data1 = TestDataBuilders.HealthMetricData().BuildSeries(2, TimeSpan.FromDays(1)),
+                    DisplayName1 = "Primary",
+                    From = new DateTime(2024, 1, 1),
+                    To = new DateTime(2024, 1, 2)
+                };
+
+                await orchestrator.RenderDistributionChartAsync(context, chart, chartState, DistributionMode.Hourly);
+
+                hourlyService.Verify(service => service.UpdateDistributionChartAsync(
+                    chart,
+                    context.Data1,
+                    context.DisplayName1,
+                    context.From,
+                    context.To,
+                    400,
+                    true,
+                    chartState.GetDistributionSettings(DistributionMode.Hourly).IntervalCount,
+                    null,
+                    false), Times.Once);
+                weeklyService.VerifyNoOtherCalls();
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
     private static MethodInfo GetPrivateStaticMethod(string name)
     {
         var method = typeof(ChartRenderingOrchestrator).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(method);
         return method!;
+    }
+
+    private static async Task<(Window Window, CartesianChart Chart)> CreateHostedChartAsync()
+    {
+        var chart = new CartesianChart
+        {
+            Width = 800,
+            Height = 400,
+            Visibility = Visibility.Visible
+        };
+        var window = new Window
+        {
+            Width = 900,
+            Height = 600,
+            Content = chart
+        };
+
+        window.Show();
+        window.UpdateLayout();
+        chart.Measure(new Size(800, 400));
+        chart.Arrange(new Rect(0, 0, 800, 400));
+        chart.UpdateLayout();
+        await chart.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
+
+        return (window, chart);
+    }
+
+    private static ChartDataContext CreateSecondaryContext()
+    {
+        return new ChartDataContext
+        {
+            Data1 = TestDataBuilders.HealthMetricData().WithValue(10m).WithTimestamp(new DateTime(2024, 1, 1)).BuildSeries(2, TimeSpan.FromDays(1)),
+            Data2 = TestDataBuilders.HealthMetricData().WithValue(5m).WithTimestamp(new DateTime(2024, 1, 1)).BuildSeries(2, TimeSpan.FromDays(1)),
+            DisplayName1 = "MetricA:A",
+            DisplayName2 = "MetricA:B",
+            MetricType = "MetricA",
+            SecondaryMetricType = "MetricA",
+            PrimarySubtype = "A",
+            SecondarySubtype = "B",
+            DisplayPrimaryMetricType = "MetricA",
+            DisplaySecondaryMetricType = "MetricA",
+            DisplayPrimarySubtype = "A",
+            DisplaySecondarySubtype = "B",
+            From = new DateTime(2024, 1, 1),
+            To = new DateTime(2024, 1, 2)
+        };
+    }
+
+    private static ChartRenderingOrchestrator CreateOrchestrator(
+        Dictionary<CartesianChart, List<DateTime>> chartTimestamps,
+        ChartTooltipManager tooltipManager,
+        Mock<IStrategyCutOverService> cutOverService,
+        out CapturingNotificationService notifications,
+        IDistributionService? weeklyDistributionService = null,
+        IDistributionService? hourlyDistributionService = null)
+    {
+        notifications = new CapturingNotificationService();
+        var coordinator = new ChartUpdateCoordinator(
+            new ChartComputationEngine(),
+            new ChartRenderEngine(),
+            tooltipManager,
+            chartTimestamps,
+            notifications);
+
+        return new ChartRenderingOrchestrator(
+            coordinator,
+            weeklyDistributionService ?? Mock.Of<IDistributionService>(),
+            hourlyDistributionService ?? Mock.Of<IDistributionService>(),
+            cutOverService.Object);
     }
 
     private static ChartComputationResult CreateMultiSeriesResult()
@@ -267,6 +433,16 @@ public sealed class ChartRenderingOrchestratorTests
                     Smoothed = [15d, 18d]
                 }
             ]
+        };
+    }
+
+    private static ChartComputationResult CreateSingleSeriesResult()
+    {
+        return new ChartComputationResult
+        {
+            Timestamps = [new DateTime(2024, 1, 1), new DateTime(2024, 1, 2)],
+            PrimaryRawValues = [10d, 12d],
+            PrimarySmoothed = [10d, 12d]
         };
     }
 

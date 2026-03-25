@@ -208,6 +208,9 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
 
     private static List<ICanonicalMetricSeries> BuildInitialCmsSeries(ChartDataContext context)
     {
+        if (context.CmsSeries != null && context.CmsSeries.Count > 0)
+            return context.CmsSeries.ToList();
+
         var cmsSeries = new List<ICanonicalMetricSeries>(2);
 
         if (context.PrimaryCms is ICanonicalMetricSeries primaryCms)

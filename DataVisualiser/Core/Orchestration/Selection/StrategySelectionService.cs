@@ -109,6 +109,7 @@ public sealed class StrategySelectionService
         var parameters = new StrategyCreationParameters
         {
                 LegacySeries = series,
+                CmsSeries = ctx.CmsSeries,
                 Labels = labels,
                 From = from,
                 To = to
