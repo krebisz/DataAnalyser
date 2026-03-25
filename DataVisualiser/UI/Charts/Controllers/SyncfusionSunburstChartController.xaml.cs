@@ -831,10 +831,10 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             var text = new TextBlock
             {
                     Text = label,
-                    Foreground = Brushes.Black,
                     FontSize = 11,
                     FontWeight = FontWeights.SemiBold
             };
+            text.SetResourceReference(TextBlock.ForegroundProperty, "ThemePolarChartLabelBrush");
 
             text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             var size = text.DesiredSize;

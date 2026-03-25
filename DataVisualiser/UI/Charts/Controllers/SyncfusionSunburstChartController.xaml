@@ -59,27 +59,27 @@
                StaysOpen="False"
                PopupAnimation="None">
             <Border x:Name="HoverTooltipRoot"
-                    Background="#CC222222"
-                    BorderBrush="#CC00FF00"
+                    Background="{DynamicResource ThemeTooltipBackgroundBrush}"
+                    BorderBrush="{DynamicResource ThemeTooltipBorderBrush}"
                     BorderThickness="1"
                     Padding="8"
                     CornerRadius="4"
                     MinWidth="220">
                 <StackPanel>
-                    <TextBlock Foreground="#FFB0B0B0"
+                    <TextBlock Foreground="{DynamicResource ThemeTooltipSecondaryTextBrush}"
                                FontSize="10"
                                FontStyle="Italic"
                                Text="DV Tooltip (PopupRoot v1)" />
-                    <TextBlock Foreground="#FFB0B0B0"
+                    <TextBlock Foreground="{DynamicResource ThemeTooltipSecondaryTextBrush}"
                                FontSize="10"
                                Text="{Binding ElementName=HoverTooltipRoot, Path=Tag, StringFormat=Tag: {0}, TargetNullValue='Tag: (null)', FallbackValue='Tag: (binding failed)'}" />
-                    <TextBlock Foreground="White"
+                    <TextBlock Foreground="{DynamicResource ThemeTooltipPrimaryTextBrush}"
                                FontWeight="Bold"
                                Text="{Binding ElementName=HoverTooltipRoot, Path=Tag.PeriodText, FallbackValue='Period: (binding failed)', TargetNullValue='Period: (null)'}" />
-                    <TextBlock Foreground="White"
+                    <TextBlock Foreground="{DynamicResource ThemeTooltipPrimaryTextBrush}"
                                Text="{Binding ElementName=HoverTooltipRoot, Path=Tag.TitleText, FallbackValue='(binding failed)', TargetNullValue='(null)'}" />
 
-                    <TextBlock Foreground="#FFB0B0B0"
+                    <TextBlock Foreground="{DynamicResource ThemeTooltipSecondaryTextBrush}"
                                FontSize="10"
                                FontStyle="Italic"
                                Margin="0,4,0,0"
@@ -114,7 +114,7 @@
                                             Background="{Binding Brush}"
                                             CornerRadius="2"
                                             Margin="0,0,6,0" />
-                                    <TextBlock Foreground="White"
+                                    <TextBlock Foreground="{DynamicResource ThemeTooltipPrimaryTextBrush}"
                                                Text="{Binding Text}" />
                                 </StackPanel>
                             </DataTemplate>

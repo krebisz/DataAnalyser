@@ -701,7 +701,13 @@ Done when:
 4. reachability/parity evidence for the repaired families is executable and current
 
 ### Step 8. Introduce reversible light/dark theme support through explicit UI/theme seams
-Status: next
+Status: in progress
+
+Completion note:
+1. Theme state/service, top-level toggle, and shared light/dark resource dictionaries are implemented.
+2. Shared shell/control theming is implemented across `Main`, `Syncfusion`, and `Admin`.
+3. Shared legend, combo-box, tooltip/popup, and major chart-host theming is implemented.
+4. Several chart-local label/text seams have already been normalized, including polar label treatment.
 
 Agent work:
 1. Add a small application theme state and a top-level theme toggle in the existing header/options area.
@@ -724,8 +730,15 @@ Validation gate:
 2. targeted tests for any new theme coordinator/resource selection logic
 3. manual smoke in both `Light` and `Dark`:
    - application startup
-   - main/normalized/distribution/transform visibility
-   - tooltip visibility
+   - `Main`
+   - `Normalized`
+   - `Distribution` cartesian and polar
+   - `Weekday Trend` cartesian and polar
+   - `Transform`
+   - `Syncfusion`
+   - `Admin`
+   - dropdown open and closed states
+   - tooltip readability
    - legend visibility/toggle where applicable
    - reset zoom
    - theme toggle back and forth without restart
@@ -735,27 +748,31 @@ Done when:
 2. shared UI colors are no longer primarily embedded in individual controls/code-behind
 3. chart-adjacent UI visuals use explicit theme-aware resources/providers rather than scattered literal brush values
 4. theme switching does not require behavior changes or restart
+5. runtime theme switching is driven by live resource references rather than one-time brush snapshots on interactive/chart-local surfaces
 
 Recommended execution batches:
-1. Batch 1:
-   - add theme state
-   - add top-level toggle
-   - introduce empty/shared theme resource dictionaries
+1. Batch 1: completed
+   - theme state/service
+   - top-level toggle
+   - shared theme dictionaries
    - validation: build + startup/toggle smoke
-2. Batch 2:
-   - move shared window/header/panel/control colors into theme resources
-   - remove the first wave of duplicated literal brushes
+2. Batch 2: completed
+   - shared shell/header/panel/control colors moved into theme resources
+   - `Main`, `Syncfusion`, and `Admin` top-level surfaces themed
    - validation: build + light/dark UI shell smoke
-3. Batch 3:
-   - move tooltip/popup/legend/chart-host colors behind theme-aware providers/resources
-   - keep chart behavior unchanged
-   - validation: build + tooltip/legend smoke in both themes
-4. Batch 4:
-   - normalize remaining control-local color definitions and remove superseded resources/usings
-   - validation: build + chart visibility/reset smoke in both themes
-5. Batch 5:
-   - convergence cleanup
-   - add/update focused tests for theme selection/resource resolution where practical
+3. Batch 3: completed
+   - shared legends, combo boxes, common tooltips/popups, and chart-host surfaces themed
+   - live theme switching fixed for those shared interactive surfaces
+   - validation: build + tooltip/legend/dropdown smoke in both themes
+4. Batch 4: remaining cleanup batch
+   - sweep residual hard-coded local colors
+   - normalize remaining chart-local label/text surfaces
+   - finish special-case surfaces that do not yet theme cleanly in both themes
+   - validation: build + targeted light/dark smoke on touched surfaces
+5. Batch 5: remaining convergence batch
+   - remove superseded literals/resources/usings
+   - add/update focused theme regression tests where practical
+   - run broad two-theme regression smoke across all tabs and major chart families
    - validation: build + broad light/dark regression smoke
 
 ### Step 9. Refactor orchestration to explicit handoff boundaries
