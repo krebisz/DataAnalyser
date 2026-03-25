@@ -117,7 +117,7 @@ public sealed class LegendToggleManager
                 Child = itemsControl
         };
 
-        if (Application.Current.TryFindResource("ThemedLegendContainerStyle") is Style style)
+        if (Application.Current?.TryFindResource("ThemedLegendContainerStyle") is Style style)
             border.Style = style;
         else
             border.Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x11, 0x11, 0x11));

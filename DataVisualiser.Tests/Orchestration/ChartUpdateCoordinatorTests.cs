@@ -37,6 +37,7 @@ public sealed class ChartUpdateCoordinatorTests
                     chart,
                     new StubStrategy(CreateSingleSeriesResult()),
                     "Primary");
+                await FlushChartAsync(chart);
 
                 Assert.NotEmpty(chart.Series);
                 Assert.True(chartTimestamps.TryGetValue(chart, out var timestamps));
@@ -82,6 +83,7 @@ public sealed class ChartUpdateCoordinatorTests
                     chart,
                     new StubStrategy(null),
                     "Primary");
+                await FlushChartAsync(chart);
 
                 Assert.Empty(chart.Series);
                 Assert.False(chartTimestamps.ContainsKey(chart));
@@ -117,6 +119,12 @@ public sealed class ChartUpdateCoordinatorTests
         await chart.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
 
         return (window, chart);
+    }
+
+    private static async Task FlushChartAsync(CartesianChart chart)
+    {
+        chart.UpdateLayout();
+        await chart.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
     }
 
     private static ChartComputationResult CreateSingleSeriesResult()

@@ -3,6 +3,7 @@ using LiveCharts;
 using LiveCharts.Wpf;
 using DataVisualiser.Tests.Helpers;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace DataVisualiser.Tests.Helpers;
 
@@ -13,6 +14,12 @@ public sealed class ChartTooltipParticipationCalculatorTests
     {
         StaTestHelper.Run(() =>
         {
+            var hiddenSeries = new ColumnSeries
+            {
+                Title = "Series Hidden",
+                Values = new ChartValues<double> { 100d }
+            };
+
             var chart = new CartesianChart
             {
                 Series = new SeriesCollection
@@ -27,14 +34,26 @@ public sealed class ChartTooltipParticipationCalculatorTests
                         Title = "Series B",
                         Values = new ChartValues<double> { 30d }
                     },
-                    new ColumnSeries
-                    {
-                        Title = "Series Hidden",
-                        Values = new ChartValues<double> { 100d },
-                        Visibility = Visibility.Collapsed
-                    }
+                    hiddenSeries
                 }
             };
+
+            var window = new Window
+            {
+                Width = 800,
+                Height = 400,
+                Content = chart
+            };
+
+            window.Show();
+            window.UpdateLayout();
+            chart.Measure(new Size(800, 400));
+            chart.Arrange(new Rect(0, 0, 800, 400));
+            chart.UpdateLayout();
+            chart.Dispatcher.Invoke(() => { }, DispatcherPriority.Background);
+
+            hiddenSeries.Visibility = Visibility.Collapsed;
+            chart.Dispatcher.Invoke(() => { }, DispatcherPriority.Background);
 
             var lookup = ChartTooltipParticipationCalculator.BuildColumnSeriesParticipationLookup(chart, 0);
 
@@ -42,6 +61,8 @@ public sealed class ChartTooltipParticipationCalculatorTests
             Assert.Equal(0.25d, lookup["Series A"], 3);
             Assert.Equal(0.75d, lookup["Series B"], 3);
             Assert.DoesNotContain("Series Hidden", lookup.Keys);
+
+            window.Close();
         });
     }
 }

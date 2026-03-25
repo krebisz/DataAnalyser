@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
 using System.Linq;
 using System.Threading.Tasks;
 using DataVisualiser.Core.Computation;
@@ -17,8 +18,10 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.Charts.Adapters;
 using DataVisualiser.UI.Charts.Controllers;
+using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.Controls;
 
@@ -130,7 +133,56 @@ public sealed class TransformDataPanelControllerAdapterTests
         });
     }
 
-    private static TransformDataPanelControllerAdapter CreateAdapter(out MainWindowViewModel viewModel, out TransformDataPanelController controller, out ChartTooltipManager tooltipManager, out Window window)
+    [Fact]
+    public void HandleVisibilityOnlyToggle_WhenVisible_PopulatesGridAndSubtypeOptions()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var adapter = CreateAdapter(out var viewModel, out var controller, out var tooltipManager, out var window);
+
+            viewModel.ChartState.IsTransformPanelVisible = true;
+            viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
+            {
+                new("MetricA", "SubA", "MetricA", "SubA"),
+                new("MetricB", "SubB", "MetricB", "SubB")
+            });
+
+            var data = new List<MetricData>
+            {
+                new()
+                {
+                    NormalizedTimestamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Value = 1m
+                }
+            };
+
+            var ctx = new ChartDataContext
+            {
+                Data1 = data,
+                MetricType = "MetricA",
+                PrimaryMetricType = "MetricA",
+                PrimarySubtype = "SubA",
+                DisplayPrimaryMetricType = "MetricA",
+                DisplayPrimarySubtype = "SubA",
+                DisplayName1 = "MetricA:SubA",
+                From = data[0].NormalizedTimestamp,
+                To = data[0].NormalizedTimestamp
+            };
+
+            viewModel.ChartState.LastContext = ctx;
+
+            adapter.HandleVisibilityOnlyToggle(ctx);
+
+            Assert.NotNull(controller.TransformGrid1.ItemsSource);
+            Assert.True(controller.TransformPrimarySubtypeCombo.Items.Count > 0);
+            Assert.True(controller.TransformComputeButton.IsEnabled);
+
+            tooltipManager.Dispose();
+            window.Close();
+        });
+    }
+
+    private static TransformDataPanelControllerAdapter CreateAdapter(out MainWindowViewModel viewModel, out ITransformDataPanelController controller, out ChartTooltipManager tooltipManager, out Window window)
     {
         var chartState = new ChartState
         {
@@ -140,7 +192,7 @@ public sealed class TransformDataPanelControllerAdapterTests
         var uiState = new UiState();
         var metricService = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
         viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
-        controller = new TransformDataPanelController();
+        controller = new FakeTransformDataPanelController();
 
         var computationEngine = new ChartComputationEngine();
         var renderEngine = new ChartRenderEngine();
@@ -157,6 +209,36 @@ public sealed class TransformDataPanelControllerAdapterTests
         public void Dispose()
         {
         }
+    }
+
+    private sealed class FakeTransformDataPanelController : ITransformDataPanelController
+    {
+        public ChartPanelController Panel { get; } = new();
+        public Button ToggleButton => Panel.ToggleButtonControl;
+        public CartesianChart Chart { get; } = new();
+        public ComboBox TransformPrimarySubtypeCombo { get; } = new();
+        public ComboBox TransformSecondarySubtypeCombo { get; } = new();
+        public ComboBox TransformOperationCombo { get; } = new();
+        public Button TransformComputeButton { get; } = new();
+        public StackPanel TransformSecondarySubtypePanel { get; } = new();
+        public StackPanel TransformGrid2Panel { get; } = new();
+        public StackPanel TransformGrid3Panel { get; } = new();
+        public StackPanel TransformChartContentPanel { get; } = new();
+        public Grid TransformChartContainer { get; } = new();
+        public DataGrid TransformGrid1 { get; } = new();
+        public DataGrid TransformGrid2 { get; } = new();
+        public DataGrid TransformGrid3 { get; } = new();
+        public TextBlock TransformGrid1Title { get; } = new();
+        public TextBlock TransformGrid2Title { get; } = new();
+        public TextBlock TransformGrid3Title { get; } = new();
+        public CartesianChart ChartTransformResult => Chart;
+        public System.Windows.Threading.Dispatcher Dispatcher => System.Windows.Threading.Dispatcher.CurrentDispatcher;
+
+        public event EventHandler? ToggleRequested;
+        public event EventHandler? OperationChanged;
+        public event EventHandler? PrimarySubtypeChanged;
+        public event EventHandler? SecondarySubtypeChanged;
+        public event EventHandler? ComputeRequested;
     }
 
     private sealed class StubMetricSelectionDataQueries : IMetricSelectionDataQueries

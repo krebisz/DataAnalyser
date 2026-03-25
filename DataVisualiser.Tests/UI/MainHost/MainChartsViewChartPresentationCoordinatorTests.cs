@@ -32,8 +32,8 @@ public sealed class MainChartsViewChartPresentationCoordinatorTests
         var coordinator = new MainChartsViewChartPresentationCoordinator();
         var selections = new[]
         {
-            new MetricSeriesSelection("Weight", "fat", "Weight: Fat Mass", "Weight|fat"),
-            new MetricSeriesSelection("Weight", "water", "Weight: Total Body Water", "Weight|water")
+            new MetricSeriesSelection("Weight", "fat", "Weight", "Fat Mass"),
+            new MetricSeriesSelection("Weight", "water", "Weight", "Total Body Water")
         };
 
         coordinator.UpdateTitlesFromSelections(
@@ -47,12 +47,12 @@ public sealed class MainChartsViewChartPresentationCoordinatorTests
                 updateMainChartLabel: label => labels["main"] = label,
                 updateDiffRatioChartLabel: label => labels["diff"] = label));
 
-        Assert.Equal(("Weight: Fat Mass", "Weight: Total Body Water"), stateTitles);
-        Assert.Equal("Weight: Fat Mass vs. Weight: Total Body Water", titles["main"]);
-        Assert.Equal("Weight: Fat Mass ~ Weight: Total Body Water", titles["normalized"]);
-        Assert.Equal("Weight: Fat Mass / Weight: Total Body Water", titles["diff"]);
-        Assert.Equal("Weight: Fat Mass vs Weight: Total Body Water", labels["main"]);
-        Assert.Equal("Weight: Fat Mass / Weight: Total Body Water", labels["diff"]);
+        Assert.Equal(("Weight - Fat Mass", "Weight - Total Body Water"), stateTitles);
+        Assert.Equal("Weight - Fat Mass vs. Weight - Total Body Water", titles["main"]);
+        Assert.Equal("Weight - Fat Mass ~ Weight - Total Body Water", titles["normalized"]);
+        Assert.Equal("Weight - Fat Mass / Weight - Total Body Water", titles["diff"]);
+        Assert.Equal("Weight - Fat Mass vs Weight - Total Body Water", labels["main"]);
+        Assert.Equal("Weight - Fat Mass / Weight - Total Body Water", labels["diff"]);
     }
 
     [Fact]

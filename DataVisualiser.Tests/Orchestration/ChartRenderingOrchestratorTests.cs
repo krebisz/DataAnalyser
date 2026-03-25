@@ -130,6 +130,7 @@ public sealed class ChartRenderingOrchestratorTests
                 };
 
                 await orchestrator.RenderPrimaryChart(context, chart, additionalSeries, additionalLabels);
+                await FlushChartAsync(chart);
 
                 cutOverService.Verify(service => service.CreateStrategy(
                         StrategyType.MultiMetric,
@@ -189,6 +190,7 @@ public sealed class ChartRenderingOrchestratorTests
                 var context = CreateSecondaryContext();
 
                 await orchestrator.RenderNormalizedChartAsync(context, chart, chartState);
+                await FlushChartAsync(chart);
 
                 cutOverService.Verify(service => service.CreateStrategy(
                         StrategyType.Normalized,
@@ -237,6 +239,7 @@ public sealed class ChartRenderingOrchestratorTests
                 var context = CreateSecondaryContext();
 
                 await orchestrator.RenderDiffRatioChartAsync(context, chart, chartState);
+                await FlushChartAsync(chart);
 
                 cutOverService.Verify(service => service.CreateStrategy(
                         StrategyType.Ratio,
@@ -347,6 +350,12 @@ public sealed class ChartRenderingOrchestratorTests
         await chart.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
 
         return (window, chart);
+    }
+
+    private static async Task FlushChartAsync(CartesianChart chart)
+    {
+        chart.UpdateLayout();
+        await chart.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
     }
 
     private static ChartDataContext CreateSecondaryContext()
