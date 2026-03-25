@@ -8,7 +8,7 @@ using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.ViewModels;
 
-public partial class MainWindowViewModel : INotifyPropertyChanged
+public partial class MainWindowViewModel : INotifyPropertyChanged, IMainChartsViewEventSource
 {
     private readonly BusyStateTracker _busyStateTracker;
     private readonly ChartVisibilityController _chartVisibilityController;

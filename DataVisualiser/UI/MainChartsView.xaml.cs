@@ -34,6 +34,7 @@ using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Rendering;
 using DataVisualiser.UI.Events;
+using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.Theming;
 using DataVisualiser.UI.ViewModels;
@@ -49,6 +50,10 @@ namespace DataVisualiser.UI;
 public partial class MainChartsView : UserControl
 {
     private readonly IChartControllerFactory _chartControllerFactory = new ChartControllerFactory();
+    private readonly MainChartsViewChartPipelineFactory _chartPipelineFactory = new();
+    private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
+    private readonly ReachabilityExportWriter _reachabilityExportWriter = new();
+    private readonly MainChartsViewStartupCoordinator _startupCoordinator = new();
 
     private ChartState _chartState = null!;
     private readonly IChartRendererResolver _chartRendererResolver = new ChartRendererResolver();
@@ -76,6 +81,8 @@ public partial class MainChartsView : UserControl
     private bool _isMetricTypeChangePending;
     private bool _isApplyingSelectionSync;
     private MainChartControllerAdapter _mainAdapter = null!;
+    private MainChartsViewThemeCoordinator _themeCoordinator = null!;
+    private MainChartsViewEventBinder? _viewModelEventBinder;
 
     private MetricSelectionService _metricSelectionService = null!;
     private NormalizedChartControllerAdapter _normalizedAdapter = null!;
@@ -94,13 +101,26 @@ public partial class MainChartsView : UserControl
     {
         _chartSurfaceFactory = new ChartSurfaceFactory(_chartRendererResolver);
         InitializeComponent();
+        _themeCoordinator = new MainChartsViewThemeCoordinator(
+            AppThemeService.Default,
+            content =>
+            {
+                if (ThemeToggleButton != null)
+                    ThemeToggleButton.Content = content;
+            },
+            action =>
+            {
+                if (Dispatcher.CheckAccess())
+                    action();
+                else
+                    Dispatcher.Invoke(action);
+            });
 
         InitializeInfrastructure();
         InitializeChartPipeline();
         InitializeViewModel();
         InitializeUiBindings();
-        AppThemeService.Default.ThemeChanged += OnThemeChanged;
-        UpdateThemeToggleButtonContent();
+        _themeCoordinator.Attach();
 
         ExecuteStartupSequence();
 
@@ -111,7 +131,8 @@ public partial class MainChartsView : UserControl
 
     private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
-        AppThemeService.Default.ThemeChanged -= OnThemeChanged;
+        _viewModelEventBinder?.Unbind();
+        _themeCoordinator.Detach();
         // Dispose tooltip manager to prevent memory leaks
         _tooltipManager?.Dispose();
         _tooltipManager = null;
@@ -119,26 +140,7 @@ public partial class MainChartsView : UserControl
 
     private void OnToggleTheme(object sender, RoutedEventArgs e)
     {
-        AppThemeService.Default.ToggleTheme();
-    }
-
-    private void OnThemeChanged(object? sender, AppThemeChangedEventArgs e)
-    {
-        if (!Dispatcher.CheckAccess())
-        {
-            Dispatcher.Invoke(UpdateThemeToggleButtonContent);
-            return;
-        }
-
-        UpdateThemeToggleButtonContent();
-    }
-
-    private void UpdateThemeToggleButtonContent()
-    {
-        if (ThemeToggleButton == null)
-            return;
-
-        ThemeToggleButton.Content = AppThemeService.Default.CurrentTheme == AppTheme.Light ? "Dark Theme" : "Light Theme";
+        _themeCoordinator.ToggleTheme();
     }
 
     private IDisposable BeginUiBusyScope()
@@ -1111,7 +1113,9 @@ public partial class MainChartsView : UserControl
     {
         if (_isChangingResolution)
         {
-            ClearAllCharts();
+            _resolutionResetCoordinator.HandleSuppressedError(
+                () => _isChangingResolution = false,
+                ClearAllCharts);
             return;
         }
 
@@ -1174,12 +1178,24 @@ public partial class MainChartsView : UserControl
 
     private void InitializeChartPipeline()
     {
-        _chartUpdateCoordinator = CreateChartUpdateCoordinator();
-        _weeklyDistributionService = CreateWeeklyDistributionService();
-        _hourlyDistributionService = CreateHourlyDistributionService();
-        _distributionPolarRenderingService = CreateDistributionPolarRenderingService();
-        _chartRenderingOrchestrator = CreateChartRenderingOrchestrator();
-        _weekdayTrendChartUpdateCoordinator = CreateWeekdayTrendChartUpdateCoordinator();
+        if (_tooltipManager == null)
+            throw new InvalidOperationException("Tooltip manager is not initialized.");
+
+        var pipeline = _chartPipelineFactory.Create(
+            new MainChartsViewChartPipelineFactoryContext(
+                _chartState.ChartTimestamps,
+                _tooltipManager,
+                _connectionString));
+
+        _chartComputationEngine = pipeline.ComputationEngine;
+        _chartRenderEngine = pipeline.RenderEngine;
+        _chartUpdateCoordinator = pipeline.ChartUpdateCoordinator;
+        _weeklyDistributionService = pipeline.WeeklyDistributionService;
+        _hourlyDistributionService = pipeline.HourlyDistributionService;
+        _distributionPolarRenderingService = pipeline.DistributionPolarRenderingService;
+        _strategyCutOverService = pipeline.StrategyCutOverService;
+        _chartRenderingOrchestrator = pipeline.ChartRenderingOrchestrator;
+        _weekdayTrendChartUpdateCoordinator = pipeline.WeekdayTrendChartUpdateCoordinator;
     }
 
     private void InitializeViewModel()
@@ -1330,19 +1346,17 @@ public partial class MainChartsView : UserControl
 
     private void ExecuteStartupSequence()
     {
-        InitializeDateRange();
-        InitializeDefaultUiState();
-        InitializeSubtypeSelector();
-        InitializeResolution();
-        InitializeCharts();
-
-        _viewModel.RequestChartUpdate();
-
-        // Mark initialization as complete
-        SyncCmsToggleStates();
-        _isInitializing = false;
-
-        SyncInitialButtonStates();
+        _startupCoordinator.Execute(
+            new MainChartsViewStartupActions(
+                InitializeDateRange,
+                InitializeDefaultUiState,
+                InitializeSubtypeSelector,
+                InitializeResolution,
+                InitializeCharts,
+                () => _viewModel.RequestChartUpdate(),
+                SyncCmsToggleStates,
+                () => _isInitializing = false,
+                SyncInitialButtonStates));
     }
 
     #endregion
@@ -1559,14 +1573,18 @@ public partial class MainChartsView : UserControl
 
     private void WireViewModelEvents()
     {
-        _viewModel.ChartVisibilityChanged += OnChartVisibilityChanged;
-        _viewModel.ErrorOccured += OnErrorOccured;
-        _viewModel.MetricTypesLoaded += OnMetricTypesLoaded;
-        _viewModel.SubtypesLoaded += OnSubtypesLoaded;
-        _viewModel.DateRangeLoaded += OnDateRangeLoaded;
-        _viewModel.DataLoaded += OnDataLoaded;
-        _viewModel.ChartUpdateRequested += OnChartUpdateRequested;
-        _viewModel.SelectionStateChanged += OnSelectionStateChanged;
+        _viewModelEventBinder = new MainChartsViewEventBinder(
+            _viewModel,
+            new MainChartsViewEventHandlers(
+                OnChartVisibilityChanged,
+                OnErrorOccured,
+                OnMetricTypesLoaded,
+                OnSubtypesLoaded,
+                OnDateRangeLoaded,
+                OnDataLoaded,
+                OnChartUpdateRequested,
+                OnSelectionStateChanged));
+        _viewModelEventBinder.Bind();
     }
 
     private void InitializeDefaultUiState()
@@ -1740,29 +1758,21 @@ public partial class MainChartsView : UserControl
 
     private void ResetForResolutionChange(string selectedResolution)
     {
-        if (string.IsNullOrWhiteSpace(selectedResolution))
-            return;
-
-        // Set flag to suppress validation errors while resolution is being refreshed
-        _isChangingResolution = true;
-
-        ClearAllCharts();
-
-        _viewModel.MetricState.SelectedMetricType = null;
-        _viewModel.ChartState.LastContext = new ChartDataContext();
-
-        TablesCombo.Items.Clear();
-
-        _selectorManager.ClearDynamic();
-        SubtypeCombo.Items.Clear();
-        SubtypeCombo.IsEnabled = false;
-
-        _viewModel.SetResolutionTableName(ChartUiHelper.GetTableNameFromResolution(ResolutionCombo));
-        _viewModel.LoadMetricsCommand.Execute(null);
-
-        // Ensure chart buttons reflect the absence of subtypes
-        UpdatePrimaryDataRequiredButtonStates(0);
-        UpdateSecondaryDataRequiredButtonStates(0);
+        _resolutionResetCoordinator.ExecuteReset(
+            selectedResolution,
+            new MainChartsViewResolutionResetActions(
+                () => _isChangingResolution = true,
+                ClearAllCharts,
+                () => _viewModel.MetricState.SelectedMetricType = null,
+                () => _viewModel.ChartState.LastContext = new ChartDataContext(),
+                () => TablesCombo.Items.Clear(),
+                () => _selectorManager.ClearDynamic(),
+                () => SubtypeCombo.Items.Clear(),
+                () => SubtypeCombo.IsEnabled = false,
+                tableName => _viewModel.SetResolutionTableName(tableName),
+                () => _viewModel.LoadMetricsCommand.Execute(null),
+                UpdatePrimaryDataRequiredButtonStates,
+                UpdateSecondaryDataRequiredButtonStates));
     }
 
     /// <summary>
@@ -2029,23 +2039,13 @@ public partial class MainChartsView : UserControl
         if (parityWarnings.Count > 0)
             MessageBox.Show($"Export will include parity warnings:\n- {string.Join("\n- ", parityWarnings)}", "Parity Warnings", MessageBoxButton.OK, MessageBoxImage.Warning);
 
-        var targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "documents");
-        Directory.CreateDirectory(targetDir);
-        var fileName = $"reachability-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json";
-        var filePath = Path.Combine(targetDir, fileName);
-
-        var options = new JsonSerializerOptions
-        {
-                WriteIndented = true
-        };
-
         try
         {
-            File.WriteAllText(filePath, JsonSerializer.Serialize(exportPayload, options));
-            if (!File.Exists(filePath))
-                throw new IOException("Export completed without creating the output file.");
-
-            MessageBox.Show($"Reachability snapshot exported to:\n{filePath}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+            var result = _reachabilityExportWriter.Write(
+                exportPayload,
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "documents"),
+                DateTime.UtcNow);
+            MessageBox.Show($"Reachability snapshot exported to:\n{result.FilePath}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {

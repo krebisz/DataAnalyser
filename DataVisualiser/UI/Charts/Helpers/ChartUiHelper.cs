@@ -11,6 +11,12 @@ public static class ChartUiHelper
     public static string GetTableNameFromResolution(ComboBox resolutionCombo)
     {
         var selectedResolution = resolutionCombo.SelectedItem?.ToString() ?? "All";
+        return GetTableNameFromResolution(selectedResolution);
+    }
+
+    public static string GetTableNameFromResolution(string? selectedResolution)
+    {
+        selectedResolution ??= "All";
         return selectedResolution switch
         {
                 "Hourly" => DataAccessDefaults.HealthMetricsHourTable,

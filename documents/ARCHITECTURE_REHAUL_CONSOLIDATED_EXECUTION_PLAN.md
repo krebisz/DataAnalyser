@@ -909,6 +909,12 @@ Agent work:
 4. Add guardrails preventing new chart-vendor usage above rendering adapters unless the backend/capability qualification path exists.
 5. Add guardrails for the new theme/export seams so UI resource concerns and export/reporting concerns do not drift back into Core/orchestration accidentally.
 6. Add guardrails against new direct controller lookup paths in `MainChartsView` and related host views.
+7. Add guardrails for late-stage generalization:
+   prove a pattern in at least `2-3` real slices before promoting it into a shared abstraction.
+8. Add guardrails requiring generalization by logical component/layer rather than by file-count reduction:
+   orchestration stages, host coordination, rendering contracts, theme resources, and export/evidence seams.
+9. Add guardrails against forced sameness:
+   thin adapters, pure renderers, and simple state holders must not be wrapped in orchestration abstractions unless they actually own multi-stage workflow logic.
 
 Primary code focus:
 1. test projects
@@ -921,6 +927,7 @@ Validation gate:
 Done when:
 1. the next refactor step cannot silently reintroduce the same boundary violations
 2. new vendor adoption cannot bypass the rendering-boundary and qualification rules accidentally
+3. future generalization can happen safely without speculative framework-first abstraction
 
 ### Step 16. Rebuild evidence/export flow after the code seams are in place
 
@@ -951,19 +958,32 @@ Agent work:
 1. remove compatibility shims that were only meant to support intermediate migration
 2. tighten naming and folder placement after the new seams settle
 3. update this document with completed steps, qualified backend/capability support, residual risks, and remaining intentional technical debt
+4. promote only the now-proven repeated patterns into shared abstractions:
+   orchestration stage seams
+   host/composition coordination seams
+   rendering-contract support seams
+   theme/resource seams
+   evidence/export seams
+5. standardize graph parent-controller and host patterns where the behavior has already converged, without erasing justified chart-specific differences.
+6. replace residual duplicate local implementations with shared layer-owned components only after the active slices confirm equivalent behavior.
+7. keep dynamic color assignment where functionally required, but relocate it to cleaner theme/render seams if that can now be done without expanding scope.
+8. explicitly leave any remaining non-generalized outliers documented as intentional debt rather than implicitly unfinished work.
 
 Primary code focus:
 1. temporary shims/adapters
 2. final naming/placement cleanup
-3. documentation and evidence links
+3. late-stage shared abstractions by layer/component
+4. documentation and evidence links
 
 Validation gate:
 1. full solution build
 2. default test lanes
 3. manual smoke pass across main chart, transform, and Syncfusion flows
+4. confirm newly shared abstractions are exercised by more than one real consumer path
 
 Done when:
 1. the transitional scaffolding is explicitly bounded and the remaining architecture debt is intentional rather than accidental
+2. cross-cutting generalization has happened only where the codebase has already earned it
 
 ---
 
