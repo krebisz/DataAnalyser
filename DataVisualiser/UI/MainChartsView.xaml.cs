@@ -51,6 +51,7 @@ public partial class MainChartsView : UserControl
 {
     private readonly IChartControllerFactory _chartControllerFactory = new ChartControllerFactory();
     private readonly MainChartsViewChartPipelineFactory _chartPipelineFactory = new();
+    private readonly MainChartsViewChartPresentationCoordinator _chartPresentationCoordinator = new();
     private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
     private readonly ReachabilityExportWriter _reachabilityExportWriter = new();
     private readonly MainChartsViewStartupCoordinator _startupCoordinator = new();
@@ -1613,7 +1614,7 @@ public partial class MainChartsView : UserControl
 
         _selectorManager.SubtypeSelectionChanged += (s, e) =>
         {
-            UpdateChartTitlesFromCombos();
+            UpdateChartTitlesFromSelections();
             OnAnySubtypeSelectionChanged(s ?? this, null);
         };
     }
@@ -1723,9 +1724,7 @@ public partial class MainChartsView : UserControl
 
     private void SetDefaultChartTitles()
     {
-        ResolveController(ChartControllerKeys.Main).SetTitle("Metrics: Total");
-        ResolveController(ChartControllerKeys.Normalized).SetTitle("Metrics: Normalized");
-        ResolveController(ChartControllerKeys.DiffRatio).SetTitle("Difference / Ratio");
+        _chartPresentationCoordinator.ApplyDefaultTitles(CreateChartPresentationActions());
         UpdateDiffRatioOperationButton(); // Initialize button state
     }
 
@@ -1824,7 +1823,7 @@ public partial class MainChartsView : UserControl
         using var busyScope = BeginUiBusyScope();
         await _viewModel.RefreshDateRangeForCurrentSelectionAsync();
 
-        UpdateChartTitlesFromCombos();
+        UpdateChartTitlesFromSelections();
     }
 
     private async void OnLoadData(object sender, RoutedEventArgs e)
@@ -1851,12 +1850,7 @@ public partial class MainChartsView : UserControl
         _viewModel.SetSelectedMetricType(selectedMetricType);
         UpdateSelectedSubtypesInViewModel();
 
-        var selections = GetDistinctSelectedSeries();
-        var display1 = selections.Count > 0 ? selections[0].DisplayName : string.Empty;
-        var display2 = selections.Count > 1 ? selections[1].DisplayName : string.Empty;
-
-        SetChartTitles(display1, display2);
-        UpdateChartLabels();
+        UpdateChartTitlesFromSelections();
 
         var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
         var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
@@ -1889,7 +1883,7 @@ public partial class MainChartsView : UserControl
                 return;
             }
 
-            ClearHiddenChartsAfterLoad();
+            _chartPresentationCoordinator.ClearHiddenCharts(_viewModel.ChartState, CreateChartPresentationActions());
             _viewModel.LoadDataCommand.Execute(null);
         }
         catch (Exception ex)
@@ -1909,7 +1903,7 @@ public partial class MainChartsView : UserControl
         newCombo.SelectedIndex = 0;
         newCombo.IsEnabled = true;
 
-        UpdateChartTitlesFromCombos();
+        UpdateChartTitlesFromSelections();
         UpdateSelectedSubtypesInViewModel();
     }
 
@@ -2755,52 +2749,36 @@ public partial class MainChartsView : UserControl
 
         return series.Samples.Count(s => s.Value.HasValue && s.Timestamp.LocalDateTime >= fromStartOfDay && s.Timestamp.LocalDateTime <= toEndOfDay);
     }
-    private void SetChartTitles(string leftName, string rightName)
+    private void UpdateChartTitlesFromSelections()
     {
-        leftName ??= string.Empty;
-        rightName ??= string.Empty;
-
-        _viewModel.ChartState.LeftTitle = leftName;
-        _viewModel.ChartState.RightTitle = rightName;
-
-        ResolveController(ChartControllerKeys.Main).SetTitle($"{leftName} vs. {rightName}");
-        ResolveController(ChartControllerKeys.Normalized).SetTitle($"{leftName} ~ {rightName}");
-        ResolveController(ChartControllerKeys.DiffRatio).SetTitle($"{leftName} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {rightName}");
+        _chartPresentationCoordinator.UpdateTitlesFromSelections(
+            GetDistinctSelectedSeries(),
+            _viewModel.ChartState.IsDiffRatioDifferenceMode,
+            CreateChartPresentationActions());
     }
 
-    private void UpdateChartLabels()
+    private MainChartsViewChartPresentationActions CreateChartPresentationActions()
     {
-        if (_tooltipManager == null)
-            return;
-
-        var selections = GetDistinctSelectedSeries();
-        var primary = selections.Count > 0 ? selections[0] : null;
-        var secondary = selections.Count > 1 ? selections[1] : null;
-
-        var label1 = primary?.DisplayName ?? string.Empty;
-        var label2 = secondary?.DisplayName ?? string.Empty;
-
-        var chartMainLabel = !string.IsNullOrEmpty(label2) ? $"{label1} vs {label2}" : label1;
-        _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.Main), chartMainLabel);
-
-        var chartDiffRatioLabel = !string.IsNullOrEmpty(label2) ? $"{label1} {(_viewModel.ChartState.IsDiffRatioDifferenceMode ? "-" : "/")} {label2}" : label1;
-        _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), chartDiffRatioLabel);
-    }
-
-    private void UpdateChartTitlesFromCombos()
-    {
-        var selections = GetDistinctSelectedSeries();
-        var display1 = selections.Count > 0 ? selections[0].DisplayName : string.Empty;
-        var display2 = selections.Count > 1 ? selections[1].DisplayName : string.Empty;
-
-        SetChartTitles(display1, display2);
-        UpdateChartLabels();
-    }
-
-    private void ClearHiddenChartsAfterLoad()
-    {
-        foreach (var key in ChartVisibilityHelper.GetHiddenChartKeys(_viewModel.ChartState))
-            ClearChart(key);
+        return new MainChartsViewChartPresentationActions(
+            (leftName, rightName) =>
+            {
+                _viewModel.ChartState.LeftTitle = leftName ?? string.Empty;
+                _viewModel.ChartState.RightTitle = rightName ?? string.Empty;
+            },
+            title => ResolveController(ChartControllerKeys.Main).SetTitle(title),
+            title => ResolveController(ChartControllerKeys.Normalized).SetTitle(title),
+            title => ResolveController(ChartControllerKeys.DiffRatio).SetTitle(title),
+            label =>
+            {
+                if (_tooltipManager != null)
+                    _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.Main), label);
+            },
+            label =>
+            {
+                if (_tooltipManager != null)
+                    _tooltipManager.UpdateChartLabel(GetWpfCartesianChart(ChartControllerKeys.DiffRatio), label);
+            },
+            ClearChart);
     }
 
     #endregion
