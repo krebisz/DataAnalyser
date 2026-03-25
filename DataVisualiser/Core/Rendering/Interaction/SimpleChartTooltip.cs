@@ -23,11 +23,10 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         _root = new StackPanel
         {
                 Orientation = Orientation.Vertical,
-                Margin = new Thickness(6),
-                Background = new SolidColorBrush(Color.FromRgb(230, 230, 230))
+                Margin = new Thickness(6)
         };
 
-        Content = _root;
+        Content = ChartInteractionVisualHelper.CreateBorder(_root);
     }
 
     public TooltipData? Data
@@ -337,12 +336,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
 
     private static TextBlock CreateTextBlock(string text, FontWeight weight)
     {
-        return new TextBlock
-        {
-                Text = text,
-                FontWeight = weight,
-                Margin = new Thickness(0, 2, 0, 0)
-        };
+        return ChartInteractionVisualHelper.CreateTooltipText(text, weight);
     }
 
     private static UIElement CreateLegendRow(Brush color, string text)
@@ -358,16 +352,12 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
                 Width = 10,
                 Height = 10,
                 Fill = color,
-                Stroke = Brushes.Black,
                 StrokeThickness = 0.5,
                 Margin = new Thickness(0, 2, 6, 0)
         };
+        key.SetResourceReference(Shape.StrokeProperty, "ThemeTooltipSwatchBorderBrush");
 
-        var textBlock = new TextBlock
-        {
-                Text = text,
-                FontWeight = FontWeights.Normal
-        };
+        var textBlock = ChartInteractionVisualHelper.CreateTooltipText(text, FontWeights.Normal, secondary: true, margin: new Thickness(0));
 
         row.Children.Add(key);
         row.Children.Add(textBlock);

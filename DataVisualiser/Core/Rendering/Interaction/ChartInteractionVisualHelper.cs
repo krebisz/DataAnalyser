@@ -9,28 +9,54 @@ namespace DataVisualiser.Core.Rendering.Interaction;
 
 public static class ChartInteractionVisualHelper
 {
+    public static Brush GetThemeBrush(string resourceKey, Brush fallback)
+    {
+        if (Application.Current?.TryFindResource(resourceKey) is Brush brush)
+            return brush;
+
+        return fallback;
+    }
+
     public static Border CreateBorder(StackPanel stack)
     {
-        return new Border
+        var border = new Border
         {
-                Background = new SolidColorBrush(Color.FromArgb(220, 30, 30, 30)),
                 CornerRadius = new CornerRadius(4),
                 BorderThickness = new Thickness(1),
-                BorderBrush = Brushes.Black,
                 Padding = new Thickness(4),
                 Child = stack,
                 MaxWidth = 600
         };
+
+        border.SetResourceReference(Border.BackgroundProperty, "ThemeTooltipBackgroundBrush");
+        border.SetResourceReference(Border.BorderBrushProperty, "ThemeTooltipBorderBrush");
+        return border;
     }
 
     public static TextBlock CreateHoverText(bool isBold = false)
     {
-        return new TextBlock
+        var textBlock = new TextBlock
         {
-                Foreground = Brushes.White,
                 FontWeight = isBold ? FontWeights.Bold : FontWeights.Normal,
                 Margin = new Thickness(6, 2, 6, 4)
         };
+
+        textBlock.SetResourceReference(TextBlock.ForegroundProperty, "ThemeTooltipPrimaryTextBrush");
+        return textBlock;
+    }
+
+    public static TextBlock CreateTooltipText(string text, FontWeight fontWeight, bool secondary = false, Thickness? margin = null, double? fontSize = null)
+    {
+        var textBlock = new TextBlock
+        {
+                Text = text,
+                FontWeight = fontWeight,
+                Margin = margin ?? new Thickness(0, 2, 0, 0),
+                FontSize = fontSize ?? 12
+        };
+
+        textBlock.SetResourceReference(TextBlock.ForegroundProperty, secondary ? "ThemeTooltipSecondaryTextBrush" : "ThemeTooltipPrimaryTextBrush");
+        return textBlock;
     }
 
     public static void PositionHoverPopup(Popup popup, double horizontalOffset = RenderingDefaults.HoverPopupOffsetPx, double verticalOffset = RenderingDefaults.HoverPopupOffsetPx)

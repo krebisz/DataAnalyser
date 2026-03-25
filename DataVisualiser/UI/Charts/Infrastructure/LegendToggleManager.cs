@@ -71,10 +71,10 @@ public sealed class LegendToggleManager
                 });
         toggleFactory.SetBinding(FrameworkElement.MarginProperty, new Binding(nameof(LegendItem.ItemMargin)));
         toggleFactory.AddHandler(ButtonBase.ClickEvent, toggleHandler);
-        toggleFactory.SetValue(Control.BackgroundProperty, Brushes.Transparent);
-        toggleFactory.SetValue(Control.BorderThicknessProperty, new Thickness(0));
+        toggleFactory.SetResourceReference(FrameworkElement.StyleProperty, "ThemedLegendToggleButtonStyle");
         toggleFactory.SetValue(Control.PaddingProperty, new Thickness(2));
         toggleFactory.SetValue(Control.HorizontalContentAlignmentProperty, HorizontalAlignment.Left);
+        toggleFactory.SetValue(Control.VerticalContentAlignmentProperty, VerticalAlignment.Center);
 
         var stackFactory = new FrameworkElementFactory(typeof(StackPanel));
         stackFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
@@ -84,13 +84,13 @@ public sealed class LegendToggleManager
         rectFactory.SetValue(FrameworkElement.WidthProperty, 12.0);
         rectFactory.SetValue(FrameworkElement.HeightProperty, 12.0);
         rectFactory.SetBinding(Shape.FillProperty, new Binding(nameof(LegendItem.Stroke)));
-        rectFactory.SetValue(Shape.StrokeProperty, Brushes.White);
+        rectFactory.SetResourceReference(Shape.StrokeProperty, "ThemeLegendSwatchBorderBrush");
         rectFactory.SetValue(Shape.StrokeThicknessProperty, 0.5);
         rectFactory.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 0, 6, 0));
 
         var textFactory = new FrameworkElementFactory(typeof(TextBlock));
         textFactory.SetBinding(TextBlock.TextProperty, new Binding(nameof(LegendItem.Title)));
-        textFactory.SetValue(TextBlock.ForegroundProperty, Brushes.White);
+        textFactory.SetResourceReference(FrameworkElement.StyleProperty, "ThemedLegendTextBlockStyle");
         textFactory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Left);
 
         stackFactory.AppendChild(rectFactory);
@@ -107,9 +107,8 @@ public sealed class LegendToggleManager
 
     public static Border CreateLegendContainer(ItemsControl itemsControl)
     {
-        return new Border
+        var border = new Border
         {
-                Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x11, 0x11, 0x11)),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(6),
                 Margin = new Thickness(0, 10, 10, 0),
@@ -117,6 +116,13 @@ public sealed class LegendToggleManager
                 VerticalAlignment = VerticalAlignment.Top,
                 Child = itemsControl
         };
+
+        if (Application.Current.TryFindResource("ThemedLegendContainerStyle") is Style style)
+            border.Style = style;
+        else
+            border.Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x11, 0x11, 0x11));
+
+        return border;
     }
 
     private void OnSeriesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

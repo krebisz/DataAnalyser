@@ -8,9 +8,20 @@
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="1000">
-    <DockPanel>
+    <UserControl.Resources>
+        <Style TargetType="Label" BasedOn="{StaticResource ThemedLabelStyle}" />
+        <Style TargetType="Button" BasedOn="{StaticResource ThemedButtonStyle}" />
+        <Style TargetType="ComboBox" BasedOn="{StaticResource ThemedComboBoxStyle}" />
+        <Style TargetType="DatePicker" BasedOn="{StaticResource ThemedDatePickerStyle}" />
+        <Style TargetType="CheckBox" BasedOn="{StaticResource ThemedCheckBoxStyle}" />
+        <Style TargetType="TextBlock" BasedOn="{StaticResource ThemedTextBlockStyle}" />
+        <Style TargetType="Expander" BasedOn="{StaticResource ThemedExpanderStyle}" />
+    </UserControl.Resources>
+    <DockPanel Background="{DynamicResource ThemeAppBackgroundBrush}">
         <!-- ====== TOP CONTROL AREA (Two Rows) ====== -->
-        <Border DockPanel.Dock="Top" Background="#FF747171" Padding="{StaticResource TopControlBorderPadding}">
+        <Border DockPanel.Dock="Top"
+                Style="{StaticResource ThemedTopBarBorderStyle}"
+                Padding="{StaticResource TopControlBorderPadding}">
             <StackPanel x:Name="TopControlAreaPanel" Orientation="Vertical">
                 <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
                 <StackPanel x:Name="TopControlBarPanel" Orientation="Horizontal"
@@ -140,6 +151,7 @@
         </Border>
 
         <ScrollViewer Margin="5"
+                      Background="{DynamicResource ThemeAppBackgroundBrush}"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel x:Name="SyncfusionMainPanel" Orientation="Vertical">

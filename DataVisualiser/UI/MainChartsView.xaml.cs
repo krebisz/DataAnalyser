@@ -35,6 +35,7 @@ using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Rendering;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
+using DataVisualiser.UI.Theming;
 using DataVisualiser.UI.ViewModels;
 using LiveChartsCore.Kernel;
 using LiveChartsCore.Kernel.Sketches;
@@ -98,6 +99,8 @@ public partial class MainChartsView : UserControl
         InitializeChartPipeline();
         InitializeViewModel();
         InitializeUiBindings();
+        AppThemeService.Default.ThemeChanged += OnThemeChanged;
+        UpdateThemeToggleButtonContent();
 
         ExecuteStartupSequence();
 
@@ -108,9 +111,34 @@ public partial class MainChartsView : UserControl
 
     private void OnUnloaded(object? sender, RoutedEventArgs e)
     {
+        AppThemeService.Default.ThemeChanged -= OnThemeChanged;
         // Dispose tooltip manager to prevent memory leaks
         _tooltipManager?.Dispose();
         _tooltipManager = null;
+    }
+
+    private void OnToggleTheme(object sender, RoutedEventArgs e)
+    {
+        AppThemeService.Default.ToggleTheme();
+    }
+
+    private void OnThemeChanged(object? sender, AppThemeChangedEventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(UpdateThemeToggleButtonContent);
+            return;
+        }
+
+        UpdateThemeToggleButtonContent();
+    }
+
+    private void UpdateThemeToggleButtonContent()
+    {
+        if (ThemeToggleButton == null)
+            return;
+
+        ThemeToggleButton.Content = AppThemeService.Default.CurrentTheme == AppTheme.Light ? "Dark Theme" : "Light Theme";
     }
 
     private IDisposable BeginUiBusyScope()

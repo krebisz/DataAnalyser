@@ -9,16 +9,38 @@
 
     <UserControl.Resources>
         <converters:MultiplyConverter x:Key="MultiplyConverter" />
+        <Style TargetType="Button" BasedOn="{StaticResource ThemedButtonStyle}" />
+        <Style TargetType="ComboBox" BasedOn="{StaticResource ThemedComboBoxStyle}" />
+        <Style TargetType="CheckBox" BasedOn="{StaticResource ThemedCheckBoxStyle}" />
+        <Style TargetType="TextBlock" BasedOn="{StaticResource ThemedTextBlockStyle}" />
+        <Style TargetType="GroupBox">
+            <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeSurfaceBackgroundBrush}" />
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource ThemeSurfaceBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
+            <Setter Property="RowBackground" Value="{DynamicResource ThemeSurfaceBackgroundBrush}" />
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource ThemeAppBackgroundBrush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
+            <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource ThemePanelBorderBrush}" />
+        </Style>
     </UserControl.Resources>
 
-    <Grid x:Name="RootGrid" Margin="10,10,10,30">
+    <Grid x:Name="RootGrid" Margin="10,10,10,30" Background="{DynamicResource ThemeAppBackgroundBrush}">
         <StackPanel x:Name="MetricsAndSubmetricsPanel" Orientation="Vertical">
             <GroupBox Header="Metrics &amp; SubMetrics" Margin="0,0,0,10">
                 <StackPanel Margin="10">
-                    <Border Background="#FF747171" Padding="8" CornerRadius="4">
+                    <Border Background="{DynamicResource ThemeTopBarBackgroundBrush}"
+                            BorderBrush="{DynamicResource ThemePanelBorderBrush}"
+                            BorderThickness="1"
+                            Padding="8"
+                            CornerRadius="4">
                         <DockPanel LastChildFill="False">
                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                <TextBlock Text="Metric Type:" Foreground="White" VerticalAlignment="Center"
+                                <TextBlock Text="Metric Type:" VerticalAlignment="Center"
                                            Margin="0,0,6,0" />
                                 <ComboBox x:Name="MetricTypeCombo"
                                           Width="320"
@@ -29,14 +51,12 @@
                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                 <CheckBox x:Name="HideDisabledCheckBox"
                                           Content="Hide disabled"
-                                          Foreground="White"
                                           VerticalAlignment="Center"
                                           Margin="0,0,10,0"
                                           Checked="OnHideDisabledToggled"
                                           Unchecked="OnHideDisabledToggled" />
                                 <TextBlock x:Name="FilterStatusText"
                                            Text="Updating list..."
-                                           Foreground="White"
                                            VerticalAlignment="Center"
                                            Margin="0,0,10,0"
                                            Visibility="Collapsed" />
@@ -70,7 +90,7 @@
                               SelectionUnit="FullRow"
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal"
-                              AlternatingRowBackground="#FFEDEDED">
+                              AlternatingRowBackground="{DynamicResource ThemeAppBackgroundBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="MetricType" Binding="{Binding MetricType}" IsReadOnly="True"
                                                 Width="200" />
@@ -94,7 +114,7 @@
 
                     <TextBlock x:Name="StatusText"
                                Margin="2,8,2,0"
-                               Foreground="#FF3B3B3B" />
+                               Foreground="{DynamicResource ThemeSecondaryTextBrush}" />
                 </StackPanel>
             </GroupBox>
         </StackPanel>

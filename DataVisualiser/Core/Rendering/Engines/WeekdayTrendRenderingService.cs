@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Media;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Rendering.Helpers;
@@ -114,6 +115,7 @@ public sealed class WeekdayTrendRenderingService
                 Title = ChartRenderDefaults.AxisTitleDayOfWeek,
                 MinValue = ChartRenderDefaults.PolarAxisMinValue,
                 MaxValue = ChartRenderDefaults.PolarAxisMaxValue,
+                Foreground = ResolveThemeBrush("ThemePrimaryTextBrush", Brushes.WhiteSmoke),
                 LabelFormatter = v =>
                 {
                     // Convert angle (0-360) to day name
@@ -137,6 +139,7 @@ public sealed class WeekdayTrendRenderingService
                 Title = result.Unit ?? ChartRenderDefaults.AxisTitleValue,
                 MinValue = result.GlobalMin,
                 MaxValue = result.GlobalMax,
+                Foreground = ResolveThemeBrush("ThemePrimaryTextBrush", Brushes.WhiteSmoke),
                 LabelFormatter = value => MathHelper.FormatDisplayedValue(value)
         });
 
@@ -362,5 +365,13 @@ public sealed class WeekdayTrendRenderingService
                 6 => chartState.ShowSunday,
                 _ => false
         };
+    }
+
+    private static Brush ResolveThemeBrush(string resourceKey, Brush fallback)
+    {
+        if (Application.Current?.TryFindResource(resourceKey) is Brush brush)
+            return brush;
+
+        return fallback;
     }
 }

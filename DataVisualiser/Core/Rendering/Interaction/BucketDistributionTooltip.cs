@@ -258,7 +258,6 @@ public abstract class BucketDistributionTooltip : IDisposable
         return new StackPanel
         {
                 Orientation = Orientation.Vertical,
-                Background = new SolidColorBrush(Color.FromRgb(245, 245, 245)),
                 Margin = new Thickness(8)
         };
     }
@@ -271,7 +270,7 @@ public abstract class BucketDistributionTooltip : IDisposable
                 FontWeight = FontWeights.Bold,
                 FontSize = RenderingDefaults.TooltipHeaderFontSize,
                 Margin = new Thickness(0, 0, 0, 8),
-                Foreground = new SolidColorBrush(Color.FromRgb(50, 50, 50))
+                Foreground = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipPrimaryTextBrush", new SolidColorBrush(Color.FromRgb(50, 50, 50)))
         };
     }
 
@@ -284,7 +283,7 @@ public abstract class BucketDistributionTooltip : IDisposable
                 FontSize = RenderingDefaults.TooltipSubHeaderFontSize,
                 FontWeight = FontWeights.SemiBold,
                 Margin = new Thickness(0, 0, 0, 6),
-                Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
+                Foreground = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipSecondaryTextBrush", new SolidColorBrush(Color.FromRgb(70, 70, 70)))
         };
     }
 
@@ -298,7 +297,7 @@ public abstract class BucketDistributionTooltip : IDisposable
                 Text = $"Average: {FormatTooltipValue(average)}",
                 FontSize = RenderingDefaults.TooltipSubHeaderFontSize,
                 Margin = new Thickness(0, 0, 0, 6),
-                Foreground = new SolidColorBrush(Color.FromRgb(70, 70, 70))
+                Foreground = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipSecondaryTextBrush", new SolidColorBrush(Color.FromRgb(70, 70, 70)))
         };
     }
 
@@ -307,7 +306,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         return new Border
         {
                 Height = 1,
-                Background = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                Background = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipSeparatorBrush", new SolidColorBrush(Color.FromRgb(200, 200, 200))),
                 Margin = new Thickness(0, 0, 0, 6)
         };
     }
@@ -347,7 +346,7 @@ public abstract class BucketDistributionTooltip : IDisposable
                 FontSize = RenderingDefaults.TooltipRowFontSize,
                 FontFamily = new FontFamily("Consolas"),
                 Width = 120,
-                Foreground = new SolidColorBrush(Color.FromRgb(60, 60, 60))
+                Foreground = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipPrimaryTextBrush", new SolidColorBrush(Color.FromRgb(60, 60, 60)))
         });
 
         if (showPercentages)
@@ -358,7 +357,7 @@ public abstract class BucketDistributionTooltip : IDisposable
                     Width = 60,
                     TextAlignment = TextAlignment.Right,
                     Margin = new Thickness(8, 0, 0, 0),
-                    Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
+                    Foreground = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipSecondaryTextBrush", new SolidColorBrush(Color.FromRgb(80, 80, 80)))
             });
 
         panel.Children.Add(new TextBlock
@@ -366,7 +365,7 @@ public abstract class BucketDistributionTooltip : IDisposable
                 Text = $"Count: {interval.Count}",
                 FontSize = RenderingDefaults.TooltipRowFontSize,
                 Margin = new Thickness(8, 0, 0, 0),
-                Foreground = new SolidColorBrush(Color.FromRgb(80, 80, 80))
+                Foreground = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipSecondaryTextBrush", new SolidColorBrush(Color.FromRgb(80, 80, 80)))
         });
 
         return panel;
@@ -394,8 +393,8 @@ public abstract class BucketDistributionTooltip : IDisposable
         return new Border
         {
                 Child = content,
-                Background = Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
+                Background = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipBackgroundBrush", Brushes.White),
+                BorderBrush = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipBorderBrush", new SolidColorBrush(Color.FromRgb(180, 180, 180))),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(4),
                 Effect = new DropShadowEffect

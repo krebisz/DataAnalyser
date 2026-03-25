@@ -495,15 +495,12 @@ Retired as superfluous after absorption:
 
 ## 9. Immediate Next Action Set
 
-1. Repair CMS/Legacy cut-over truthfulness for unsupported strategy families.
-2. Implement missing real CMS paths for `MultiMetric`, `Normalized`, `Difference`, and `Ratio`.
-3. Add/expand reachability and parity coverage for the corrected paths.
-4. Resume orchestration refactor only after the cut-over truthfulness gap is closed.
-5. Remove remaining direct controller access/fallbacks from `MainChartsView`.
-6. Eliminate direct repository construction from presentation/orchestration flows that should be contract-driven.
-7. Replace mutable static CMS toggles with scoped runtime configuration service.
-8. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
-9. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
+1. Implement the new bounded theme step before further `MainChartsView` reduction work.
+2. Resume orchestration refactor only after the theme seams are in place and the app remains visually stable in both themes.
+3. Remove remaining direct controller access/fallbacks from `MainChartsView`.
+4. Eliminate direct repository construction from presentation/orchestration flows that should be contract-driven.
+5. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
+6. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
 
 ---
 
@@ -669,7 +666,7 @@ Done when:
 4. the first rendering contract does not accidentally foreclose future chart-program/result-set composition above the rendering boundary
 
 ### Step 7. Repair CMS/Legacy cut-over truthfulness and complete missing dual-path strategies
-Status: next
+Status: completed
 
 Agent work:
 1. Make cut-over reporting truthful for strategy families that do not yet have a real CMS implementation.
@@ -703,7 +700,65 @@ Done when:
 3. `Diff/Ratio` no longer bypasses the cut-over truth model in live chart flow
 4. reachability/parity evidence for the repaired families is executable and current
 
-### Step 8. Refactor orchestration to explicit handoff boundaries
+### Step 8. Introduce reversible light/dark theme support through explicit UI/theme seams
+Status: next
+
+Agent work:
+1. Add a small application theme state and a top-level theme toggle in the existing header/options area.
+2. Move currently hard-coded shared UI colors out of controls/code-behind and into explicit theme resources.
+3. Introduce a theme service or equivalent coordinator so theme changes are applied centrally rather than through scattered ad-hoc brush mutation.
+4. Separate generic application chrome colors from chart-specific palette/tooltip/legend colors so later chart theming remains controllable without disturbing semantic/rendering seams.
+5. Move chart tooltip, popup, legend, axis, and host-surface colors behind theme-aware brush providers where those values are still hard-coded in code paths.
+6. Preserve current light-theme behavior as the default baseline while adding dark mode as an alternate qualified UI state.
+7. Keep the change behavior-preserving outside appearance; do not mix theme work with unrelated chart/controller logic changes.
+8. Remove superseded color definitions only after the new shared theme resources are live and validated.
+
+Primary code focus:
+1. top-level selection/header UI and theme toggle placement
+2. shared resource dictionaries / theme resource organization
+3. chart tooltip/legend/popup/host color providers
+4. any controls still owning hard-coded color values
+
+Validation gate:
+1. full solution build
+2. targeted tests for any new theme coordinator/resource selection logic
+3. manual smoke in both `Light` and `Dark`:
+   - application startup
+   - main/normalized/distribution/transform visibility
+   - tooltip visibility
+   - legend visibility/toggle where applicable
+   - reset zoom
+   - theme toggle back and forth without restart
+
+Done when:
+1. the app can switch between `Light` and `Dark` from the top-level UI
+2. shared UI colors are no longer primarily embedded in individual controls/code-behind
+3. chart-adjacent UI visuals use explicit theme-aware resources/providers rather than scattered literal brush values
+4. theme switching does not require behavior changes or restart
+
+Recommended execution batches:
+1. Batch 1:
+   - add theme state
+   - add top-level toggle
+   - introduce empty/shared theme resource dictionaries
+   - validation: build + startup/toggle smoke
+2. Batch 2:
+   - move shared window/header/panel/control colors into theme resources
+   - remove the first wave of duplicated literal brushes
+   - validation: build + light/dark UI shell smoke
+3. Batch 3:
+   - move tooltip/popup/legend/chart-host colors behind theme-aware providers/resources
+   - keep chart behavior unchanged
+   - validation: build + tooltip/legend smoke in both themes
+4. Batch 4:
+   - normalize remaining control-local color definitions and remove superseded resources/usings
+   - validation: build + chart visibility/reset smoke in both themes
+5. Batch 5:
+   - convergence cleanup
+   - add/update focused tests for theme selection/resource resolution where practical
+   - validation: build + broad light/dark regression smoke
+
+### Step 9. Refactor orchestration to explicit handoff boundaries
 
 Agent work:
 1. Separate context building, strategy selection, chart-program/result composition, data retrieval, and render invocation into explicit handoff stages.
@@ -723,7 +778,7 @@ Validation gate:
 Done when:
 1. the migrated orchestration path does not directly require WPF controls, `MessageBox`, or concrete repository construction
 
-### Step 9. Reduce `MainChartsView` to a composition host, pass 1
+### Step 10. Reduce `MainChartsView` to a composition host, pass 1
 
 Agent work:
 1. Extract startup/bootstrap responsibilities from `MainChartsView`.
@@ -742,7 +797,7 @@ Validation gate:
 Done when:
 1. `MainChartsView` primarily wires composition and bindings rather than owning workflow logic
 
-### Step 10. Reduce `MainChartsView` to a composition host, pass 2
+### Step 11. Reduce `MainChartsView` to a composition host, pass 2
 
 Agent work:
 1. Remove remaining direct controller access and fallback control lookups.
@@ -762,7 +817,7 @@ Validation gate:
 Done when:
 1. `MainChartsView` has no remaining chart-specific fallback control knowledge outside composition seams
 
-### Step 11. Isolate Syncfusion-specific fragility
+### Step 12. Isolate Syncfusion-specific fragility
 
 Agent work:
 1. Move reflection-heavy tooltip/hit-testing workarounds behind a dedicated Syncfusion-specific behavior/service layer.
@@ -781,7 +836,7 @@ Validation gate:
 Done when:
 1. Syncfusion version/workaround logic is isolated from shared chart orchestration logic
 
-### Step 12. Start `DataFileReader` modernization with the safest infrastructure slice
+### Step 13. Start `DataFileReader` modernization with the safest infrastructure slice
 
 Agent work:
 1. Introduce injected options/connection-string access instead of ad-hoc configuration reads in the first migrated slice.
@@ -799,7 +854,7 @@ Validation gate:
 Done when:
 1. the first `DataFileReader` slice is no longer using obsolete SQL client APIs or implicit config access
 
-### Step 13. Split `SQLHelper` by capability without changing callers all at once
+### Step 14. Split `SQLHelper` by capability without changing callers all at once
 
 Agent work:
 1. Extract separate services/modules for schema maintenance, metric reads, persistence, and count/canonical operations.
@@ -818,7 +873,7 @@ Validation gate:
 Done when:
 1. `SQLHelper` is no longer the dominant multi-concern entry point for ingestion/persistence/database maintenance
 
-### Step 14. Add hard architectural guardrails
+### Step 15. Add hard architectural guardrails
 
 Agent work:
 1. Add dependency-direction tests for Core->UI and orchestration->chart-library leakage.
@@ -838,7 +893,7 @@ Done when:
 1. the next refactor step cannot silently reintroduce the same boundary violations
 2. new vendor adoption cannot bypass the rendering-boundary and qualification rules accidentally
 
-### Step 15. Rebuild evidence/export flow after the code seams are in place
+### Step 16. Rebuild evidence/export flow after the code seams are in place
 
 Agent work:
 1. Move reachability/parity/evidence export behind a scriptable headless path.
@@ -858,7 +913,7 @@ Validation gate:
 Done when:
 1. closure evidence can be regenerated consistently without manual UI interaction
 
-### Step 16. Run a final convergence pass before declaring architectural closure
+### Step 17. Run a final convergence pass before declaring architectural closure
 
 Agent work:
 1. remove compatibility shims that were only meant to support intermediate migration

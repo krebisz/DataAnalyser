@@ -1,4 +1,5 @@
 using System.Windows.Media;
+using System.Windows;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
@@ -110,7 +111,7 @@ public sealed class DistributionPolarRenderingService
             var angle = ResolveAngleRadians(bucketIndex, definition.XAxisLabels.Count);
             var point = ProjectPoint(angle, LabelRadius);
 
-            chart.Series.Add(new LineSeries
+            var series = new LineSeries
             {
                     Title = null,
                     Values = new ChartValues<ObservablePoint>
@@ -124,7 +125,9 @@ public sealed class DistributionPolarRenderingService
                     PointGeometry = null,
                     PointGeometrySize = 0,
                     StrokeThickness = 0
-            });
+            };
+            series.SetResourceReference(LiveCharts.Wpf.Series.ForegroundProperty, "ThemePolarChartLabelBrush");
+            chart.Series.Add(series);
         }
     }
 
@@ -136,7 +139,7 @@ public sealed class DistributionPolarRenderingService
             var point = ProjectPoint(0, OuterRadius * ringIndex / GridRingCount);
             var label = FormatValue(actualValue, rangeResult.Unit);
 
-            chart.Series.Add(new LineSeries
+            var series = new LineSeries
             {
                     Title = null,
                     Values = new ChartValues<ObservablePoint>
@@ -150,7 +153,9 @@ public sealed class DistributionPolarRenderingService
                     PointGeometry = null,
                     PointGeometrySize = 0,
                     StrokeThickness = 0
-            });
+            };
+            series.SetResourceReference(LiveCharts.Wpf.Series.ForegroundProperty, "ThemePolarChartLabelBrush");
+            chart.Series.Add(series);
         }
     }
 

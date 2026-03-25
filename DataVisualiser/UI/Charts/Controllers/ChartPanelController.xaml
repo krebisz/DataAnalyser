@@ -6,13 +6,13 @@
              xmlns:ui="clr-namespace:DataVisualiser.UI.Defaults"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Border BorderBrush="{x:Static ui:ChartUiDefaults.ChartPanelBorderBrush}"
+    <Border BorderBrush="{DynamicResource ThemePanelBorderBrush}"
             BorderThickness="1"
             Margin="{x:Static ui:ChartUiDefaults.ChartPanelBorderMargin}">
         <StackPanel Orientation="Vertical" Margin="{x:Static ui:ChartUiDefaults.ChartPanelStackMargin}">
             <!-- Header Section -->
-            <Border Background="{x:Static ui:ChartUiDefaults.ChartHeaderBackground}"
-                    BorderBrush="{x:Static ui:ChartUiDefaults.ChartHeaderBorderBrush}"
+            <Border Background="{DynamicResource ThemePanelHeaderBackgroundBrush}"
+                    BorderBrush="{DynamicResource ThemePanelHeaderBorderBrush}"
                     BorderThickness="1"
                     Padding="{x:Static ui:ChartUiDefaults.ChartHeaderPadding}">
                 <StackPanel Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.ChartHeaderMargin}">

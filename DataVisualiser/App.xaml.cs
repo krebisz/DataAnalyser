@@ -3,6 +3,7 @@ using System.Configuration;
 using System.IO;
 using System.Text;
 using System.Windows;
+using DataVisualiser.UI.Theming;
 using Syncfusion.Licensing;
 
 namespace DataVisualiser;
@@ -19,6 +20,8 @@ public partial class App : Application
         var licenseKey = ConfigurationManager.AppSettings["Syncfusion:LicenseKey"];
         if (!string.IsNullOrWhiteSpace(licenseKey) && !string.Equals(licenseKey, "PUT_YOUR_SYNCFUSION_LICENSE_KEY_HERE", StringComparison.OrdinalIgnoreCase))
             SyncfusionLicenseProvider.RegisterLicense(licenseKey);
+
+        AppThemeService.Default.ApplyTheme(AppTheme.Light, Resources);
 
         base.OnStartup(e);
     }

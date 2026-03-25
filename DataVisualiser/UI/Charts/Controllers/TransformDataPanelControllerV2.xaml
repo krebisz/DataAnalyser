@@ -226,7 +226,7 @@
                                 </lvc:CartesianChart>
 
                                 <Border Grid.Column="1"
-                                        Background="#CC111111"
+                                        Style="{DynamicResource ThemedLegendContainerStyle}"
                                         CornerRadius="4"
                                         Padding="6"
                                         Margin="0,10,10,0"
@@ -244,8 +244,7 @@
                                                 <DataTemplate>
                                                     <ToggleButton IsChecked="{Binding IsVisible, Mode=TwoWay}"
                                                                   Click="OnLegendItemToggle"
-                                                                  Background="Transparent"
-                                                                  BorderThickness="0"
+                                                                  Style="{DynamicResource ThemedLegendToggleButtonStyle}"
                                                                   Padding="2"
                                                                   Margin="{Binding ItemMargin}"
                                                                   HorizontalContentAlignment="Left">
@@ -254,11 +253,11 @@
                                                             <Rectangle Width="12"
                                                                        Height="12"
                                                                        Fill="{Binding Stroke}"
-                                                                       Stroke="White"
+                                                                       Stroke="{DynamicResource ThemeLegendSwatchBorderBrush}"
                                                                        StrokeThickness="0.5"
                                                                        Margin="0,0,6,0" />
                                                             <TextBlock Text="{Binding Title}"
-                                                                       Foreground="White"
+                                                                       Style="{DynamicResource ThemedLegendTextBlockStyle}"
                                                                        TextAlignment="Left" />
                                                         </StackPanel>
                                                     </ToggleButton>
@@ -267,7 +266,7 @@
                                         </ItemsControl>
                                         <CheckBox x:Name="TransformMinMaxLinesCheckBox"
                                                   Margin="2,6,2,0"
-                                                  Foreground="White"
+                                                  Foreground="{DynamicResource ThemeLegendItemForegroundBrush}"
                                                   Content="Show Min/Max Lines" />
                                     </StackPanel>
                                 </Border>

@@ -33,7 +33,7 @@ public sealed class DistributionPolarProjectionTooltip : IDisposable
 
         _text = new TextBlock
         {
-                Foreground = Brushes.White,
+                Foreground = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipPrimaryTextBrush", Brushes.White),
                 Margin = new Thickness(6, 4, 6, 4)
         };
 
@@ -45,10 +45,10 @@ public sealed class DistributionPolarProjectionTooltip : IDisposable
                 AllowsTransparency = true,
                 Child = new Border
                 {
-                        Background = new SolidColorBrush(Color.FromArgb(220, 30, 30, 30)),
+                        Background = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipBackgroundBrush", new SolidColorBrush(Color.FromArgb(220, 30, 30, 30))),
                         CornerRadius = new CornerRadius(4),
                         BorderThickness = new Thickness(1),
-                        BorderBrush = Brushes.Black,
+                        BorderBrush = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipBorderBrush", Brushes.Black),
                         Child = _text
                 }
         };
