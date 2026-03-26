@@ -31,50 +31,6 @@ public class MetricSelectionService
         _dataQueries = dataQueries ?? throw new ArgumentNullException(nameof(dataQueries));
         _cms = cmsDataService ?? throw new ArgumentNullException(nameof(cmsDataService));
     }
-
-
-    //public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName)
-    //{
-    //    var dataFetcher = new DataFetcher(_connectionString);
-    //    var cmsService = new CmsDataService(_connectionString);
-
-    //    // Calculate optimal max records for performance optimization (if enabled via config)
-    //    int? maxRecords = null;
-    //    var enableLimiting = ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"];
-    //    if (bool.TryParse(enableLimiting, out var isEnabled) && isEnabled)
-    //        maxRecords = MathHelper.CalculateOptimalMaxRecords(from, to);
-
-    //    // -----------------------
-    //    // Legacy loads with result limiting
-    //    // -----------------------
-    //    var primaryLegacyTask = dataFetcher.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, maxRecords);
-    //    var secondaryLegacyTask = secondarySelection != null ? dataFetcher.GetHealthMetricsDataByBaseType(secondarySelection.MetricType, secondarySelection.QuerySubtype, from, to, tableName, maxRecords) : Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
-
-    //    // ---------------------------------
-    //    // Canonical ID resolution (explicit)
-    //    // ---------------------------------
-    //    var primaryCanonicalId = !string.Equals(primarySelection.MetricType, "(All)", StringComparison.OrdinalIgnoreCase) ? CanonicalMetricMapping.FromLegacyFields(primarySelection.MetricType, primarySelection.QuerySubtype) : null;
-    //    var secondaryCanonicalId = secondarySelection != null && !string.Equals(secondarySelection.MetricType, "(All)", StringComparison.OrdinalIgnoreCase) ? CanonicalMetricMapping.FromLegacyFields(secondarySelection.MetricType, secondarySelection.QuerySubtype) : null;
-
-    //    // ------------------------
-    //    // CMS availability checks
-    //    // ------------------------
-    //    Task<IReadOnlyList<ICanonicalMetricSeries>>? primaryCmsTask = null;
-    //    Task<IReadOnlyList<ICanonicalMetricSeries>>? secondaryCmsTask = null;
-
-    //    if (primaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(primaryCanonicalId))
-    //        primaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(primaryCanonicalId, from, to);
-
-    //    if (secondaryCanonicalId != null && await cmsService.IsCmsAvailableAsync(secondaryCanonicalId))
-    //        secondaryCmsTask = cmsService.GetCmsByCanonicalIdAsync(secondaryCanonicalId, from, to);
-
-    //    // -------------------------
-    //    // Await everything together
-    //    // -------------------------
-    //    await Task.WhenAll(primaryLegacyTask, secondaryLegacyTask, primaryCmsTask ?? Task.CompletedTask, secondaryCmsTask ?? Task.CompletedTask);
-
-    //    return (PrimaryCms: primaryCmsTask?.Result.FirstOrDefault(), SecondaryCms: secondaryCmsTask?.Result.FirstOrDefault(), PrimaryLegacy: primaryLegacyTask.Result, SecondaryLegacy: secondaryLegacyTask.Result);
-    //}
     public async Task<(ICanonicalMetricSeries? PrimaryCms, ICanonicalMetricSeries? SecondaryCms, IEnumerable<MetricData> PrimaryLegacy, IEnumerable<MetricData> SecondaryLegacy)> LoadMetricDataWithCmsAsync(MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName)
     {
         var primaryCountTask = _dataQueries.GetRecordCount(primarySelection.MetricType, primarySelection.QuerySubtype);

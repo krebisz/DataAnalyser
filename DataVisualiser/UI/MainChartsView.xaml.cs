@@ -1,12 +1,9 @@
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
-using System.IO;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;

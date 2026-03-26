@@ -18,6 +18,32 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void MainChartsView_ShouldNotReacquireParityAssemblyOrTransformParityHelpers()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.DoesNotContain("BuildParitySummary(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildTransformParitySnapshotAsync(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformExpressionBuilder", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformExpressionEvaluator", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("UnaryOperators", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("BinaryOperators", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("JsonSerializer", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldRemainComposedThroughKnownHostSeams()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewThemeCoordinator", source);
+        Assert.Contains("MainChartsEvidenceExportService", source);
+        Assert.Contains("MainChartsViewChartUpdateCoordinator", source);
+        Assert.Contains("MainChartsViewChartPresentationCoordinator", source);
+        Assert.Contains("MainChartsViewChartPipelineFactory", source);
+    }
+
+    [Fact]
     public void MainChartsView_ShouldKeepThemeOnDedicatedCoordinatorSeam()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");

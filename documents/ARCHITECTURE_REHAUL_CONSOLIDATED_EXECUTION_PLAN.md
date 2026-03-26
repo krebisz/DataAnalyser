@@ -495,15 +495,14 @@ Retired as superfluous after absorption:
 
 ## 9. Immediate Next Action Set
 
-1. Start `Step 16` and split `SQLHelper` by capability behind temporary facades.
-2. Keep `Step 16` as the last substantial `DataFileReader` body of work before final convergence so ingestion smoke cost is incurred once.
-3. After that, proceed to `Step 17` and run the final convergence pass.
+1. Continue `Step 17` and finish the final convergence pass.
+2. Keep the remaining work behavior-preserving: remove superseded intermediate glue first, then only promote abstractions already proven in multiple real slices.
+3. Close the rehaul only after the final build, default test lanes, and broad manual smoke pass are clean.
 4. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
 5. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
 
 ### Remaining Step Summary
-1. `Step 16`: split `SQLHelper` by capability behind a temporary facade and migrate callers incrementally.
-2. `Step 17`: run the final convergence pass, promote only proven shared abstractions, remove superseded structure, and close residual technical debt.
+1. `Step 17`: run the final convergence pass, promote only proven shared abstractions, remove superseded structure, and close residual technical debt.
 
 ---
 
@@ -960,6 +959,8 @@ Done when:
 
 ### Step 16. Split `SQLHelper` by capability without changing callers all at once
 
+Status: completed
+
 Agent work:
 1. Extract separate services/modules for schema maintenance, metric reads, persistence, and count/canonical operations.
 2. Leave a temporary facade in place if needed to avoid a large caller migration in one pass.
@@ -981,6 +982,8 @@ Done when:
 2. the known direct-construction hotspots are either migrated or explicitly deferred with rationale
 
 ### Step 17. Run a final convergence pass before declaring architectural closure
+
+Status: in progress
 
 Agent work:
 1. remove compatibility shims that were only meant to support intermediate migration
@@ -1004,6 +1007,11 @@ Primary code focus:
 3. late-stage shared abstractions by layer/component
 4. documentation and evidence links
 5. remaining oversized types that still concentrate mixed responsibility
+   Current explicitly tracked residual concentrations:
+   `MainChartsView.xaml.cs`
+   `ChartHelper.cs`
+   `ChartRenderEngine.cs`
+   `TransformDataPanelControllerAdapter.cs`
 
 Validation gate:
 1. full solution build

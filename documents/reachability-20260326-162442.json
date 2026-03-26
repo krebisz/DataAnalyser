@@ -1,0 +1,57 @@
+{
+  "ExportedAtUtc": "2026-03-26T16:24:42.1885084Z",
+  "ExportScope": "Syncfusion",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2023-11-17T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "body_fat_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat (mass)",
+        "DisplayName": "Weight - Fat (mass)",
+        "DisplayKey": "Weight:body_fat_mass"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "skeletal_muscle_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Skeletal Muscle (mass)",
+        "DisplayName": "Weight - Skeletal Muscle (mass)",
+        "DisplayKey": "Weight:skeletal_muscle_mass"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "total_body_water",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Water",
+        "DisplayName": "Weight - Water",
+        "DisplayKey": "Weight:total_body_water"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsSyncfusionSunburstVisible": true,
+    "BarPieBucketCount": 3
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [],
+  "SharedSessionReachabilityRecordsOmitted": 0,
+  "ReachabilityStatus": "NotApplicable",
+  "Notes": [
+    "Reachability export is not wired for the Syncfusion tab yet."
+  ]
+}
