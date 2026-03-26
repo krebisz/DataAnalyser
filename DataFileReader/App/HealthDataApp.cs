@@ -9,11 +9,13 @@ public sealed class HealthDataApp
 {
     private readonly MetricAggregator _aggregator;
     private readonly FileProcessingService _fileProcessor;
+    private readonly IMetricCatalogRepository _metricCatalogRepository;
 
-    public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor)
+    public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor, IMetricCatalogRepository metricCatalogRepository)
     {
         _aggregator = aggregator ?? throw new ArgumentNullException(nameof(aggregator));
         _fileProcessor = fileProcessor ?? throw new ArgumentNullException(nameof(fileProcessor));
+        _metricCatalogRepository = metricCatalogRepository ?? throw new ArgumentNullException(nameof(metricCatalogRepository));
     }
 
     public void Run()
@@ -111,7 +113,7 @@ public sealed class HealthDataApp
 
     private void AggregateData()
     {
-        var metricTypes = SQLHelper.GetAllMetricTypes();
+        var metricTypes = _metricCatalogRepository.GetAllMetricTypes();
 
         if (metricTypes.Count == 0)
         {

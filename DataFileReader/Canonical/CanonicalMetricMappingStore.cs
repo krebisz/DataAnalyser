@@ -1,13 +1,12 @@
 using System.Configuration;
-using System.Data.SqlClient;
 using System.Diagnostics;
 
 namespace DataFileReader.Canonical;
 
 internal static class CanonicalMetricMappingStore
 {
-    private const string MappingTableName = "CanonicalMetricMappings";
-    private const string AllSubtypeToken = "(all)";
+    internal const string MappingTableName = "CanonicalMetricMappings";
+    internal const string AllSubtypeToken = "(all)";
 
     private static readonly object InitLock = new();
     private static bool _initialized;
@@ -28,7 +27,7 @@ internal static class CanonicalMetricMappingStore
         return _byLegacyKey.TryGetValue(key, out var canonicalId) ? canonicalId : null;
     }
 
-    public static(string? MetricType, string? Subtype) ToLegacyFields(string canonicalMetricId)
+    public static (string? MetricType, string? Subtype) ToLegacyFields(string canonicalMetricId)
     {
         EnsureInitialized();
 
@@ -39,6 +38,27 @@ internal static class CanonicalMetricMappingStore
             return (legacy.MetricType, legacy.MetricSubtype == AllSubtypeToken ? null : legacy.MetricSubtype);
 
         return (null, null);
+    }
+
+    internal static void InitializeForTesting(IEnumerable<CanonicalMetricMappingRecord> mappings)
+    {
+        ArgumentNullException.ThrowIfNull(mappings);
+
+        lock (InitLock)
+        {
+            ApplyMappings(mappings);
+            _initialized = true;
+        }
+    }
+
+    internal static void ResetForTesting()
+    {
+        lock (InitLock)
+        {
+            _initialized = false;
+            _byCanonicalId = new Dictionary<string, (string MetricType, string MetricSubtype)>(StringComparer.OrdinalIgnoreCase);
+            _byLegacyKey = new Dictionary<(string MetricType, string MetricSubtype), string>();
+        }
     }
 
     private static void EnsureInitialized()
@@ -67,13 +87,8 @@ internal static class CanonicalMetricMappingStore
 
         try
         {
-            using var connection = new SqlConnection(connectionString);
-            connection.Open();
-
-            EnsureMappingTableExists(connection);
-            SeedMappingsIfMissing(connection);
-
-            LoadMappings(connection);
+            var mappings = CanonicalMetricMappingSqlDataSource.LoadOrInitializeMappings(connectionString);
+            ApplyMappings(mappings);
         }
         catch (Exception ex)
         {
@@ -81,116 +96,21 @@ internal static class CanonicalMetricMappingStore
         }
     }
 
-    private static void EnsureMappingTableExists(SqlConnection connection)
+    private static void ApplyMappings(IEnumerable<CanonicalMetricMappingRecord> mappings)
     {
-        var sql = $@"
-IF OBJECT_ID(N'dbo.{MappingTableName}', N'U') IS NULL
-BEGIN
-    CREATE TABLE dbo.{MappingTableName}
-    (
-        MetricType NVARCHAR(200) NOT NULL,
-        MetricSubtype NVARCHAR(200) NOT NULL,
-        CanonicalMetricId NVARCHAR(400) NOT NULL,
-        IsEnabled BIT NOT NULL CONSTRAINT DF_{MappingTableName}_IsEnabled DEFAULT(1),
-        CreatedUtc DATETIME2 NOT NULL CONSTRAINT DF_{MappingTableName}_CreatedUtc DEFAULT (SYSUTCDATETIME()),
-        CONSTRAINT PK_{MappingTableName} PRIMARY KEY (MetricType, MetricSubtype)
-    );
-END";
-        using var cmd = new SqlCommand(sql, connection);
-        cmd.ExecuteNonQuery();
-    }
-
-    private static void SeedMappingsIfMissing(SqlConnection connection)
-    {
-        var seedSource = "SELECT DISTINCT MetricType, MetricSubtype FROM dbo.HealthMetrics";
-        using var seedCmd = new SqlCommand(seedSource, connection);
-
-        using var reader = seedCmd.ExecuteReader();
-        var pairs = new List<(string MetricType, string? MetricSubtype)>();
-        var metricTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        while (reader.Read())
-        {
-            var metricType = reader["MetricType"] as string;
-            var metricSubtype = reader["MetricSubtype"] as string;
-
-            if (string.IsNullOrWhiteSpace(metricType))
-                continue;
-
-            pairs.Add((metricType, metricSubtype));
-            metricTypes.Add(metricType);
-        }
-
-        reader.Close();
-
-        foreach (var pair in pairs)
-        {
-            var normalizedType = NormalizeSegment(pair.MetricType);
-            var normalizedSubtype = NormalizeSubtype(pair.MetricSubtype);
-            var canonicalId = $"{normalizedType}.{normalizedSubtype}";
-
-            var insertSql = $@"
-IF NOT EXISTS (
-    SELECT 1 FROM dbo.{MappingTableName}
-    WHERE MetricType = @MetricType AND MetricSubtype = @MetricSubtype
-)
-BEGIN
-    INSERT INTO dbo.{MappingTableName} (MetricType, MetricSubtype, CanonicalMetricId)
-    VALUES (@MetricType, @MetricSubtype, @CanonicalMetricId);
-END";
-
-            using var insertCmd = new SqlCommand(insertSql, connection);
-            insertCmd.Parameters.AddWithValue("@MetricType", normalizedType);
-            insertCmd.Parameters.AddWithValue("@MetricSubtype", normalizedSubtype);
-            insertCmd.Parameters.AddWithValue("@CanonicalMetricId", canonicalId);
-            insertCmd.ExecuteNonQuery();
-        }
-
-        foreach (var metricType in metricTypes)
-        {
-            var normalizedType = NormalizeSegment(metricType);
-            var normalizedSubtype = AllSubtypeToken;
-            var canonicalId = $"{normalizedType}.{normalizedSubtype}";
-
-            var insertSql = $@"
-IF NOT EXISTS (
-    SELECT 1 FROM dbo.{MappingTableName}
-    WHERE MetricType = @MetricType AND MetricSubtype = @MetricSubtype
-)
-BEGIN
-    INSERT INTO dbo.{MappingTableName} (MetricType, MetricSubtype, CanonicalMetricId)
-    VALUES (@MetricType, @MetricSubtype, @CanonicalMetricId);
-END";
-
-            using var insertCmd = new SqlCommand(insertSql, connection);
-            insertCmd.Parameters.AddWithValue("@MetricType", normalizedType);
-            insertCmd.Parameters.AddWithValue("@MetricSubtype", normalizedSubtype);
-            insertCmd.Parameters.AddWithValue("@CanonicalMetricId", canonicalId);
-            insertCmd.ExecuteNonQuery();
-        }
-    }
-
-    private static void LoadMappings(SqlConnection connection)
-    {
-        var sql = $"SELECT MetricType, MetricSubtype, CanonicalMetricId FROM dbo.{MappingTableName} WHERE IsEnabled = 1";
-        using var cmd = new SqlCommand(sql, connection);
-        using var reader = cmd.ExecuteReader();
-
         var byCanonicalId = new Dictionary<string, (string MetricType, string MetricSubtype)>(StringComparer.OrdinalIgnoreCase);
         var byLegacyKey = new Dictionary<(string MetricType, string MetricSubtype), string>();
 
-        while (reader.Read())
+        foreach (var mapping in mappings)
         {
-            var metricType = reader["MetricType"] as string;
-            var metricSubtype = reader["MetricSubtype"] as string;
-            var canonicalId = reader["CanonicalMetricId"] as string;
-
-            if (string.IsNullOrWhiteSpace(metricType) || string.IsNullOrWhiteSpace(metricSubtype) || string.IsNullOrWhiteSpace(canonicalId))
+            if (string.IsNullOrWhiteSpace(mapping.MetricType) ||
+                string.IsNullOrWhiteSpace(mapping.MetricSubtype) ||
+                string.IsNullOrWhiteSpace(mapping.CanonicalMetricId))
                 continue;
 
-            var normalizedType = NormalizeSegment(metricType);
-            var normalizedSubtype = NormalizeSubtype(metricSubtype);
-            var normalizedCanonicalId = canonicalId.Trim().ToLowerInvariant();
+            var normalizedType = NormalizeSegment(mapping.MetricType);
+            var normalizedSubtype = NormalizeSubtype(mapping.MetricSubtype);
+            var normalizedCanonicalId = mapping.CanonicalMetricId.Trim().ToLowerInvariant();
 
             byLegacyKey[(normalizedType, normalizedSubtype)] = normalizedCanonicalId;
             byCanonicalId[normalizedCanonicalId] = (normalizedType, normalizedSubtype);
@@ -200,7 +120,7 @@ END";
         _byCanonicalId = byCanonicalId;
     }
 
-    private static string NormalizeSubtype(string? subtype)
+    internal static string NormalizeSubtype(string? subtype)
     {
         if (string.IsNullOrWhiteSpace(subtype))
             return AllSubtypeToken;
@@ -212,7 +132,7 @@ END";
         return NormalizeSegment(trimmed);
     }
 
-    private static string NormalizeSegment(string value)
+    internal static string NormalizeSegment(string value)
     {
         var trimmed = value.Trim();
         if (trimmed.Length == 0)
@@ -230,13 +150,7 @@ END";
                 continue;
             }
 
-            if (char.IsWhiteSpace(c) || c == '.')
-            {
-                chars[i] = '_';
-                continue;
-            }
-
-            chars[i] = '_';
+            chars[i] = char.IsWhiteSpace(c) || c == '.' ? '_' : '_';
         }
 
         return new string(chars);

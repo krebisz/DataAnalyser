@@ -15,10 +15,12 @@ internal class Program
                 new LegacyJsonParser()
         };
 
-        var aggregator = new MetricAggregator();
+        var metricCatalogRepository = new SqlMetricCatalogRepository();
+        var aggregationWriter = new SqlMetricAggregationWriter();
+        var aggregator = new MetricAggregator(metricCatalogRepository, aggregationWriter);
         var fileProcessor = new FileProcessingService(parsers);
 
-        var app = new HealthDataApp(aggregator, fileProcessor);
+        var app = new HealthDataApp(aggregator, fileProcessor, metricCatalogRepository);
 
         app.Run();
 

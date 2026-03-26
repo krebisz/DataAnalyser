@@ -325,6 +325,7 @@ public static class SamsungHealthCsvParser
                     {
                             ["Provider"] = metric.Provider,
                             ["MetricType"] = metric.MetricType,
+                            ["MetricSubtype"] = metric.MetricSubtype,
                             ["SourceFile"] = metric.SourceFile,
                             ["RawTimestamp"] = metric.RawTimestamp,
                             ["NormalizedTimestamp"] = metric.NormalizedTimestamp

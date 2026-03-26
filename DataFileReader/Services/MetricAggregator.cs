@@ -1,14 +1,27 @@
 using DataFileReader.Class;
-using DataFileReader.Helper;
 
 namespace DataFileReader.Services;
 
 public class MetricAggregator
 {
+    private readonly IMetricCatalogRepository _metricCatalogRepository;
+    private readonly IMetricAggregationWriter _metricAggregationWriter;
+
+    public MetricAggregator(IMetricCatalogRepository metricCatalogRepository, IMetricAggregationWriter metricAggregationWriter)
+    {
+        _metricCatalogRepository = metricCatalogRepository ?? throw new ArgumentNullException(nameof(metricCatalogRepository));
+        _metricAggregationWriter = metricAggregationWriter ?? throw new ArgumentNullException(nameof(metricAggregationWriter));
+    }
+
+    public MetricAggregator()
+        : this(new SqlMetricCatalogRepository(), new SqlMetricAggregationWriter())
+    {
+    }
+
     public void Aggregate(string metricType, AggregationPeriod period)
     {
         // Dynamically get all subtypes for this metric type from the database
-        var metricSubtypes = SQLHelper.GetSubtypesForMetricType(metricType);
+        var metricSubtypes = _metricCatalogRepository.GetSubtypesForMetricType(metricType);
 
         if (metricSubtypes.Count == 0)
         {
@@ -25,7 +38,7 @@ public class MetricAggregator
 
             try
             {
-                var dateRange = SQLHelper.GetDateRangeForMetric(metricType, normalized);
+                var dateRange = _metricCatalogRepository.GetDateRangeForMetric(metricType, normalized);
 
                 if (!dateRange.HasValue)
                 {
@@ -53,11 +66,11 @@ public class MetricAggregator
     {
         return period switch
         {
-                AggregationPeriod.Day => (t, s, f, e) => SQLHelper.InsertHealthMetricsDay(t, s, f, e),
+                AggregationPeriod.Day => (t, s, f, e) => _metricAggregationWriter.InsertDay(t, s, f, e),
 
-                AggregationPeriod.Week => (t, s, f, e) => SQLHelper.InsertHealthMetricsWeek(t, s, f, e),
+                AggregationPeriod.Week => (t, s, f, e) => _metricAggregationWriter.InsertWeek(t, s, f, e),
 
-                AggregationPeriod.Month => (t, s, f, e) => SQLHelper.InsertHealthMetricsMonth(t, s, f, e),
+                AggregationPeriod.Month => (t, s, f, e) => _metricAggregationWriter.InsertMonth(t, s, f, e),
 
                 _ => throw new NotSupportedException($"{period} not supported.")
         };

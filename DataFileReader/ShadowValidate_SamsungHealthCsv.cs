@@ -48,8 +48,21 @@ public static class ShadowValidate_SamsungHealthCsv
 
     private static void AssertEq(string expected, RawRecord record, string key)
     {
-        var actual = record.Fields.TryGetValue(key, out var v) ? v?.ToString() ?? "" : "<missing>";
+        var actual = GetComparableActualValue(record, key);
         if (!string.Equals(expected ?? "", actual, StringComparison.Ordinal))
             throw new InvalidOperationException($"{key} mismatch: expected='{expected}', actual='{actual}'");
+    }
+
+    internal static string GetComparableActualValue(RawRecord record, string key)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+
+        if (record.Fields.TryGetValue(key, out var value))
+            return value?.ToString() ?? string.Empty;
+
+        if (string.Equals(key, "MetricSubtype", StringComparison.Ordinal))
+            return string.Empty;
+
+        return "<missing>";
     }
 }
