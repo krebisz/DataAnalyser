@@ -5,11 +5,20 @@ namespace DataFileReader.Services;
 
 public class FileProcessingService
 {
+    private readonly IHealthMetricWriter _healthMetricWriter;
     private readonly IEnumerable<IHealthFileParser> _parsers;
+    private readonly IProcessedFileRegistry _processedFileRegistry;
 
     public FileProcessingService(IEnumerable<IHealthFileParser> parsers)
+        : this(parsers, new SqlHealthMetricWriter(), new SqlProcessedFileRegistry())
     {
-        _parsers = parsers;
+    }
+
+    public FileProcessingService(IEnumerable<IHealthFileParser> parsers, IHealthMetricWriter healthMetricWriter, IProcessedFileRegistry processedFileRegistry)
+    {
+        _parsers = parsers ?? throw new ArgumentNullException(nameof(parsers));
+        _healthMetricWriter = healthMetricWriter ?? throw new ArgumentNullException(nameof(healthMetricWriter));
+        _processedFileRegistry = processedFileRegistry ?? throw new ArgumentNullException(nameof(processedFileRegistry));
     }
 
     public FileProcessingResult ProcessFiles(IEnumerable<string> fileList)
@@ -38,14 +47,14 @@ public class FileProcessingService
 
                 if (metrics.Count > 0)
                 {
-                    SQLHelper.InsertHealthMetrics(metrics);
+                    _healthMetricWriter.InsertHealthMetrics(metrics);
                     metricsInserted += metrics.Count;
                     Console.WriteLine($"Inserted {metrics.Count} metrics from {FileHelper.GetFileName(file)}");
                 }
                 else
                 {
                     // Mark empty files as processed to avoid reprocessing them
-                    SQLHelper.MarkFileAsProcessed(file);
+                    _processedFileRegistry.MarkFileAsProcessed(file);
                     Console.WriteLine($"No metrics found in {FileHelper.GetFileName(file)} - marked as processed");
                 }
 

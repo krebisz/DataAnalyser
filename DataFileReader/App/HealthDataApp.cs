@@ -9,13 +9,22 @@ public sealed class HealthDataApp
 {
     private readonly MetricAggregator _aggregator;
     private readonly FileProcessingService _fileProcessor;
+    private readonly IHealthMetricsMaintenanceService _healthMetricsMaintenanceService;
     private readonly IMetricCatalogRepository _metricCatalogRepository;
+    private readonly IProcessedFileRegistry _processedFileRegistry;
 
     public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor, IMetricCatalogRepository metricCatalogRepository)
+        : this(aggregator, fileProcessor, metricCatalogRepository, new SqlHealthMetricsMaintenanceService(), new SqlProcessedFileRegistry())
+    {
+    }
+
+    public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor, IMetricCatalogRepository metricCatalogRepository, IHealthMetricsMaintenanceService healthMetricsMaintenanceService, IProcessedFileRegistry processedFileRegistry)
     {
         _aggregator = aggregator ?? throw new ArgumentNullException(nameof(aggregator));
         _fileProcessor = fileProcessor ?? throw new ArgumentNullException(nameof(fileProcessor));
         _metricCatalogRepository = metricCatalogRepository ?? throw new ArgumentNullException(nameof(metricCatalogRepository));
+        _healthMetricsMaintenanceService = healthMetricsMaintenanceService ?? throw new ArgumentNullException(nameof(healthMetricsMaintenanceService));
+        _processedFileRegistry = processedFileRegistry ?? throw new ArgumentNullException(nameof(processedFileRegistry));
     }
 
     public void Run()
@@ -101,7 +110,7 @@ public sealed class HealthDataApp
     {
         try
         {
-            SQLHelper.EnsureHealthMetricsTableExists();
+            _healthMetricsMaintenanceService.EnsureHealthMetricsTableExists();
             Console.WriteLine("✓ HealthMetrics table verified/created");
         }
         catch (Exception ex)
@@ -145,7 +154,7 @@ public sealed class HealthDataApp
             return;
 
         var allFiles = FileHelper.GetFileList(rootDirectory);
-        var processedFiles = SQLHelper.GetProcessedFiles();
+        var processedFiles = _processedFileRegistry.GetProcessedFiles();
 
         var newFiles = allFiles.Where(f => !processedFiles.Contains(f)).ToList();
 
@@ -190,7 +199,7 @@ public sealed class HealthDataApp
 
         try
         {
-            SQLHelper.CleanDatabase();
+            _healthMetricsMaintenanceService.CleanDatabase();
             Console.WriteLine("Database cleaned.");
 
             // Recreate tables so the app can continue running without restart.
