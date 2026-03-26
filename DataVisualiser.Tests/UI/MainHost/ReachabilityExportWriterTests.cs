@@ -26,4 +26,15 @@ public sealed class ReachabilityExportWriterTests
                 Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void Write_ShouldThrow_WhenTargetDirectoryIsBlank()
+    {
+        var writer = new ReachabilityExportWriter();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            writer.Write(new { Name = "Test" }, "   ", new DateTime(2026, 3, 25, 12, 0, 0, DateTimeKind.Utc)));
+
+        Assert.Equal("targetDirectory", ex.ParamName);
+    }
 }
