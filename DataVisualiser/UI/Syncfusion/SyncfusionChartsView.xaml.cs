@@ -20,6 +20,7 @@ namespace DataVisualiser.UI.SyncfusionViews;
 
 public partial class SyncfusionChartsView : UserControl
 {
+    private readonly SyncfusionChartsViewCoordinator _coordinator = new();
     private ChartState _chartState = null!;
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
@@ -347,11 +348,9 @@ public partial class SyncfusionChartsView : UserControl
 
         UpdateSelectedSubtypesInViewModel();
 
-        if (HasLoadedData())
+        if (_coordinator.ShouldRenderAfterSubtypeSelectionChange(_isApplyingSelectionSync, HasLoadedData(), _viewModel.ChartState.LastContext))
         {
-            var ctx = _viewModel.ChartState.LastContext;
-            if (ctx != null)
-                await RenderChartAsync(ChartControllerKeys.SyncfusionSunburst, ctx);
+            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext!);
             return;
         }
 
@@ -462,7 +461,7 @@ public partial class SyncfusionChartsView : UserControl
         if (ctx == null)
             return;
 
-        await RenderChartAsync(ChartControllerKeys.SyncfusionSunburst, ctx);
+        await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx);
         UpdateSyncfusionToggleEnabled();
     }
 
@@ -504,7 +503,7 @@ public partial class SyncfusionChartsView : UserControl
             _viewModel.RequestChartUpdate(false, ChartControllerKeys.BarPie);
 
         if (HasLoadedData())
-            _ = RenderChartAsync(ChartControllerKeys.SyncfusionSunburst, _viewModel.ChartState.LastContext ?? new ChartDataContext());
+            _ = RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext ?? new ChartDataContext());
     }
 
     private void OnResetZoom(object sender, RoutedEventArgs e)
@@ -518,7 +517,7 @@ public partial class SyncfusionChartsView : UserControl
 
         _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
         _viewModel.ChartState.LastContext = new ChartDataContext();
-        ClearChart(ChartControllerKeys.SyncfusionSunburst);
+        ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
         UpdateSyncfusionToggleEnabled();
 
         if (ResolutionCombo.SelectedItem?.ToString() == defaultResolution)
@@ -532,7 +531,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnExportReachability(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show("Reachability export is not wired for the Syncfusion tab yet.", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(_coordinator.GetReachabilityExportMessage(), "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void OnSunburstToggleRequested(object? sender, EventArgs e)
@@ -600,13 +599,13 @@ public partial class SyncfusionChartsView : UserControl
     private void SyncInitialChartState()
     {
         _viewModel.ChartState.IsSyncfusionSunburstVisible = true;
-        ResolveController(ChartControllerKeys.SyncfusionSunburst).SetVisible(_viewModel.ChartState.IsSyncfusionSunburstVisible);
+        ResolveController(SyncfusionChartsViewCoordinator.ManagedChartKey).SetVisible(_viewModel.ChartState.IsSyncfusionSunburstVisible);
         UpdateSyncfusionToggleEnabled();
     }
 
     private void UpdateSyncfusionToggleEnabled()
     {
-        ResolveController(ChartControllerKeys.SyncfusionSunburst).SetToggleEnabled(HasLoadedData());
+        ResolveController(SyncfusionChartsViewCoordinator.ManagedChartKey).SetToggleEnabled(HasLoadedData());
     }
 
     private IChartController ResolveController(string key)
@@ -626,7 +625,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
     {
-        if (!IsRegisteredKey(e.ChartName))
+        if (!SyncfusionChartsViewCoordinator.IsRegisteredKey(e.ChartName))
             return;
 
         ResolveController(e.ChartName).SetVisible(e.IsVisible);
@@ -634,33 +633,20 @@ public partial class SyncfusionChartsView : UserControl
 
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
     {
-        if (!e.IsVisibilityOnlyToggle || !string.Equals(e.ToggledChartName, ChartControllerKeys.SyncfusionSunburst, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        if (!e.ShowSyncfusionSunburst)
-            return;
-
         var ctx = _viewModel.ChartState.LastContext;
-        if (ctx != null)
-            await RenderChartAsync(ChartControllerKeys.SyncfusionSunburst, ctx);
+        if (_coordinator.ShouldRenderAfterVisibilityOnlyToggle(e, ctx))
+            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx!);
     }
 
     private async void OnViewVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (_isInitializing || e.NewValue is not bool isVisible || !isVisible)
-            return;
-
-        if (!_viewModel.ChartState.IsSyncfusionSunburstVisible)
-            return;
-
         var ctx = _viewModel.ChartState.LastContext;
-        if (ctx != null)
-            await RenderChartAsync(ChartControllerKeys.SyncfusionSunburst, ctx);
-    }
-
-    private static bool IsRegisteredKey(string key)
-    {
-        return string.Equals(key, ChartControllerKeys.SyncfusionSunburst, StringComparison.OrdinalIgnoreCase);
+        if (_coordinator.ShouldRenderWhenViewBecomesVisible(
+                _isInitializing,
+                e.NewValue is bool isVisible && isVisible,
+                _viewModel.ChartState.IsSyncfusionSunburstVisible,
+                ctx))
+            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx!);
     }
 
 

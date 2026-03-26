@@ -166,7 +166,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         if (segment == null)
             return;
 
-        DisableThirdPartyTooltip(segment);
+        SyncfusionTooltipReflectionHelper.DisableThirdPartyTooltip(segment);
         if (segment is DependencyObject dep)
         {
             ToolTipService.SetIsEnabled(dep, false);
@@ -360,7 +360,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
                 Background = Brushes.Transparent
         };
 
-        DisableThirdPartyTooltip(chart);
+        SyncfusionTooltipReflectionHelper.DisableThirdPartyTooltip(chart);
         ToolTipService.SetIsEnabled(chart, false);
         ToolTipService.SetShowDuration(chart, 0);
         chart.ToolTip = null;
@@ -564,55 +564,15 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         {
             if (current is FrameworkElement fe)
             {
-                if (TryExtractCategoryKey(fe.DataContext, out submetricKey))
+                if (SyncfusionTooltipReflectionHelper.TryExtractCategoryKey(fe.DataContext, out submetricKey))
                     return true;
             }
 
-            if (TryExtractCategoryKey(current, out submetricKey))
+            if (SyncfusionTooltipReflectionHelper.TryExtractCategoryKey(current, out submetricKey))
                 return true;
         }
 
         return false;
-    }
-
-    private static bool TryExtractCategoryKey(object? source, out string key)
-    {
-        key = string.Empty;
-        if (source == null)
-            return false;
-
-        // Best case: the DataContext is already a string key.
-        if (source is string s && !string.IsNullOrWhiteSpace(s))
-        {
-            key = s;
-            return true;
-        }
-
-        try
-        {
-            // Syncfusion visuals often expose "Category"; our own data model uses "Submetric".
-            // Probe a small set of known property names to avoid hard type dependencies.
-            foreach (var name in new[] { "Category", "Submetric", "Group" })
-            {
-                var prop = source.GetType().GetProperty(name);
-                if (prop == null)
-                    continue;
-
-                var value = prop.GetValue(source);
-                var asText = value?.ToString();
-                if (string.IsNullOrWhiteSpace(asText))
-                    continue;
-
-                key = asText;
-                return true;
-            }
-
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private SfSunburstChart? GetRingChartAtMouse(MouseEventArgs e)
@@ -654,160 +614,6 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         _lastTooltipSubmetric = null;
     }
 
-    private static void DisableThirdPartyTooltip(object target)
-    {
-        // We render our own tooltip via a WPF Popup (so it always appears above overlaid rings).
-        // Disable Syncfusion's internal tooltip if an equivalent property exists on this version.
-        // Syncfusion has used a few different property names across releases; we handle both:
-        // - exact known names, and
-        // - any writable bool containing "tooltip" in its name.
-        TrySetBoolProperty(target, "ShowToolTip", false);
-        TrySetBoolProperty(target, "ShowTooltip", false);
-        TrySetBoolProperty(target, "EnableToolTip", false);
-        TrySetBoolProperty(target, "EnableTooltip", false);
-        TrySetBoolProperty(target, "ToolTipEnabled", false);
-        TrySetBoolProperty(target, "TooltipEnabled", false);
-
-        TrySetNullProperty(target, "ToolTipTemplate");
-        TrySetNullProperty(target, "TooltipTemplate");
-        TrySetNullProperty(target, "ToolTip");
-        TrySetNullProperty(target, "Tooltip");
-
-        TryDisableAnyTooltipBooleans(target);
-        TryDisableAnyTooltipEnums(target);
-        TryDisableNestedTooltipBehaviors(target);
-    }
-
-    private static void TrySetBoolProperty(object target, string propertyName, bool value)
-    {
-        try
-        {
-            var prop = target.GetType().GetProperty(propertyName);
-            if (prop == null || prop.PropertyType != typeof(bool) || !prop.CanWrite)
-                return;
-
-            prop.SetValue(target, value);
-        }
-        catch
-        {
-            // Ignore reflection failures; tooltip behavior differs across Syncfusion versions.
-        }
-    }
-
-    private static void TrySetNullProperty(object target, string propertyName)
-    {
-        try
-        {
-            var prop = target.GetType().GetProperty(propertyName);
-            if (prop == null || !prop.CanWrite)
-                return;
-
-            if (prop.PropertyType.IsValueType)
-                return;
-
-            prop.SetValue(target, null);
-        }
-        catch
-        {
-            // Ignore reflection failures; tooltip behavior differs across Syncfusion versions.
-        }
-    }
-
-    private static void TryDisableAnyTooltipBooleans(object target)
-    {
-        try
-        {
-            var props = target.GetType().GetProperties();
-            foreach (var prop in props)
-            {
-                if (!prop.CanWrite || prop.PropertyType != typeof(bool))
-                    continue;
-
-                if (!prop.Name.Contains("tooltip", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                prop.SetValue(target, false);
-            }
-        }
-        catch
-        {
-            // Ignore reflection failures.
-        }
-    }
-
-    private static void TryDisableAnyTooltipEnums(object target)
-    {
-        try
-        {
-            var props = target.GetType().GetProperties();
-            foreach (var prop in props)
-            {
-                if (!prop.CanWrite || !prop.PropertyType.IsEnum)
-                    continue;
-
-                if (!prop.Name.Contains("tooltip", StringComparison.OrdinalIgnoreCase) &&
-                    !prop.Name.Contains("toolTip", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var enumType = prop.PropertyType;
-                var names = Enum.GetNames(enumType);
-                var disabledName =
-                    names.FirstOrDefault(n => string.Equals(n, "None", StringComparison.OrdinalIgnoreCase)) ??
-                    names.FirstOrDefault(n => n.Contains("None", StringComparison.OrdinalIgnoreCase)) ??
-                    names.FirstOrDefault(n => n.Contains("Disable", StringComparison.OrdinalIgnoreCase)) ??
-                    names.FirstOrDefault(n => n.Contains("Off", StringComparison.OrdinalIgnoreCase));
-
-                if (disabledName == null)
-                    continue;
-
-                var value = Enum.Parse(enumType, disabledName);
-                prop.SetValue(target, value);
-            }
-        }
-        catch
-        {
-            // Ignore reflection failures.
-        }
-    }
-
-    private static void TryDisableNestedTooltipBehaviors(object target)
-    {
-        try
-        {
-            var props = target.GetType().GetProperties();
-            foreach (var prop in props)
-            {
-                if (!prop.CanRead)
-                    continue;
-
-                // Behaviors are commonly exposed as properties like TooltipBehavior/ToolTipBehavior/etc.
-                if (!prop.Name.Contains("behavior", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                if (!prop.Name.Contains("tooltip", StringComparison.OrdinalIgnoreCase) &&
-                    !prop.Name.Contains("toolTip", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var nested = prop.GetValue(target);
-                if (nested == null)
-                    continue;
-
-                // Disable whatever boolean/enum flags it might have.
-                TryDisableAnyTooltipBooleans(nested);
-                TryDisableAnyTooltipEnums(nested);
-
-                // Common template/value slots.
-                TrySetNullProperty(nested, "ToolTipTemplate");
-                TrySetNullProperty(nested, "TooltipTemplate");
-                TrySetNullProperty(nested, "ToolTip");
-                TrySetNullProperty(nested, "Tooltip");
-            }
-        }
-        catch
-        {
-            // Ignore reflection failures.
-        }
-    }
 
     private void UpdateRingLabels()
     {
