@@ -15,11 +15,11 @@ public sealed class DistributionChartOrchestrationPipeline : IDistributionChartO
     public DistributionChartOrchestrationPipeline(
         IDistributionChartPreparationStage preparationStage,
         IDistributionChartRenderInvocationStage renderInvocationStage,
-        IUserNotificationService? notificationService = null)
+        IUserNotificationService notificationService)
     {
         _preparationStage = preparationStage ?? throw new ArgumentNullException(nameof(preparationStage));
         _renderInvocationStage = renderInvocationStage ?? throw new ArgumentNullException(nameof(renderInvocationStage));
-        _notificationService = notificationService ?? MessageBoxUserNotificationService.Instance;
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     }
 
     public async Task RenderAsync(DistributionChartOrchestrationRequest request, CartesianChart chart)

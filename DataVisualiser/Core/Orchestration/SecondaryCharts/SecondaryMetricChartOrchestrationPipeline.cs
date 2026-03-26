@@ -15,11 +15,11 @@ public sealed class SecondaryMetricChartOrchestrationPipeline : ISecondaryMetric
     public SecondaryMetricChartOrchestrationPipeline(
         ISecondaryMetricChartStrategySelectionStage strategySelectionStage,
         ISecondaryMetricChartRenderInvocationStage renderInvocationStage,
-        IUserNotificationService? notificationService = null)
+        IUserNotificationService notificationService)
     {
         _strategySelectionStage = strategySelectionStage ?? throw new ArgumentNullException(nameof(strategySelectionStage));
         _renderInvocationStage = renderInvocationStage ?? throw new ArgumentNullException(nameof(renderInvocationStage));
-        _notificationService = notificationService ?? MessageBoxUserNotificationService.Instance;
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     }
 
     public async Task RenderAsync(SecondaryMetricChartRenderRequest request, CartesianChart chart)

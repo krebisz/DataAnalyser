@@ -25,6 +25,7 @@ public sealed class ChartRenderingOrchestrator
     private readonly IDistributionService _hourlyDistributionService;
     private readonly MetricSelectionService? _metricSelectionService;
     private readonly IMainChartOrchestrationPipeline _mainChartOrchestrationPipeline;
+    private readonly IUserNotificationService _notificationService;
     private readonly ISecondaryMetricChartOrchestrationPipeline _secondaryMetricChartOrchestrationPipeline;
     private readonly IStrategyCutOverService _strategyCutOverService;
     private readonly IDistributionService _weeklyDistributionService;
@@ -35,12 +36,14 @@ public sealed class ChartRenderingOrchestrator
         IDistributionService weeklyDistributionService,
         IDistributionService hourlyDistributionService,
         IStrategyCutOverService strategyCutOverService,
+        IUserNotificationService notificationService,
         string? connectionString = null)
     {
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
         _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));
         _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         _connectionString = connectionString;
         _mainChartOrchestrationPipeline = CreateMainChartOrchestrationPipeline(metricSelectionService: null);
         _secondaryMetricChartOrchestrationPipeline = CreateSecondaryMetricChartOrchestrationPipeline();
@@ -53,6 +56,7 @@ public sealed class ChartRenderingOrchestrator
         IDistributionService hourlyDistributionService,
         IStrategyCutOverService strategyCutOverService,
         MetricSelectionService metricSelectionService,
+        IUserNotificationService notificationService,
         string? connectionString = null)
     {
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
@@ -60,6 +64,7 @@ public sealed class ChartRenderingOrchestrator
         _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         _connectionString = connectionString;
         _mainChartOrchestrationPipeline = CreateMainChartOrchestrationPipeline(metricSelectionService);
         _secondaryMetricChartOrchestrationPipeline = CreateSecondaryMetricChartOrchestrationPipeline();
@@ -260,14 +265,14 @@ public sealed class ChartRenderingOrchestrator
     {
         var strategySelectionStage = new SecondaryMetricChartStrategySelectionStage(_strategyCutOverService);
         var renderInvocationStage = new SecondaryMetricChartRenderInvocationStage(_chartUpdateCoordinator);
-        return new SecondaryMetricChartOrchestrationPipeline(strategySelectionStage, renderInvocationStage);
+        return new SecondaryMetricChartOrchestrationPipeline(strategySelectionStage, renderInvocationStage, _notificationService);
     }
 
     private IDistributionChartOrchestrationPipeline CreateDistributionChartOrchestrationPipeline()
     {
         var preparationStage = new DistributionChartPreparationStage(_weeklyDistributionService, _hourlyDistributionService);
         var renderInvocationStage = new DistributionChartRenderInvocationStage();
-        return new DistributionChartOrchestrationPipeline(preparationStage, renderInvocationStage);
+        return new DistributionChartOrchestrationPipeline(preparationStage, renderInvocationStage, _notificationService);
     }
 
     private static ChartDataContext BuildPrimaryRequestContext(

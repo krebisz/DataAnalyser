@@ -30,13 +30,13 @@ public class ChartUpdateCoordinator
     private readonly IUserNotificationService _notificationService;
     private readonly ChartTooltipManager _tooltipManager;
 
-    public ChartUpdateCoordinator(ChartComputationEngine computationEngine, ChartRenderEngine renderEngine, ChartTooltipManager tooltipManager, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService? notificationService = null)
+    public ChartUpdateCoordinator(ChartComputationEngine computationEngine, ChartRenderEngine renderEngine, ChartTooltipManager tooltipManager, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
     {
         _chartComputationEngine = computationEngine ?? throw new ArgumentNullException(nameof(computationEngine));
         _chartRenderEngine = renderEngine ?? throw new ArgumentNullException(nameof(renderEngine));
         _tooltipManager = tooltipManager ?? throw new ArgumentNullException(nameof(tooltipManager));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
-        _notificationService = notificationService ?? MessageBoxUserNotificationService.Instance;
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     }
 
     /// <summary>

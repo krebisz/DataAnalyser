@@ -18,13 +18,15 @@ public sealed class MainChartsViewChartPipelineFactory
         if (context == null)
             throw new ArgumentNullException(nameof(context));
 
+        IUserNotificationService notificationService = MessageBoxUserNotificationService.Instance;
         var computationEngine = new ChartComputationEngine();
         var renderEngine = new ChartRenderEngine();
         var chartUpdateCoordinator = new ChartUpdateCoordinator(
             computationEngine,
             renderEngine,
             context.TooltipManager,
-            context.ChartTimestamps);
+            context.ChartTimestamps,
+            notificationService);
         chartUpdateCoordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
 
         var distributionPolarRenderingService = new DistributionPolarRenderingService();
@@ -32,8 +34,8 @@ public sealed class MainChartsViewChartPipelineFactory
             new WeekdayTrendRenderingService(),
             context.ChartTimestamps);
 
-        var weeklyDistributionService = CreateWeeklyDistributionService(context.ChartTimestamps);
-        var hourlyDistributionService = CreateHourlyDistributionService(context.ChartTimestamps);
+        var weeklyDistributionService = CreateWeeklyDistributionService(context.ChartTimestamps, notificationService);
+        var hourlyDistributionService = CreateHourlyDistributionService(context.ChartTimestamps, notificationService);
         var strategyCutOverService = new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
         var chartRenderingOrchestrator = new ChartRenderingOrchestrator(
             chartUpdateCoordinator,
@@ -41,6 +43,7 @@ public sealed class MainChartsViewChartPipelineFactory
             hourlyDistributionService,
             strategyCutOverService,
             new MetricSelectionService(context.ConnectionString),
+            notificationService,
             context.ConnectionString);
 
         return new MainChartsViewChartPipelineFactoryResult(
@@ -55,17 +58,17 @@ public sealed class MainChartsViewChartPipelineFactory
             weekdayTrendChartUpdateCoordinator);
     }
 
-    private static IDistributionService CreateWeeklyDistributionService(Dictionary<LiveCharts.Wpf.CartesianChart, List<DateTime>> chartTimestamps)
+    private static IDistributionService CreateWeeklyDistributionService(Dictionary<LiveCharts.Wpf.CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
-        return new WeeklyDistributionService(chartTimestamps, strategyCutOverService);
+        return new WeeklyDistributionService(chartTimestamps, strategyCutOverService, notificationService);
     }
 
-    private static IDistributionService CreateHourlyDistributionService(Dictionary<LiveCharts.Wpf.CartesianChart, List<DateTime>> chartTimestamps)
+    private static IDistributionService CreateHourlyDistributionService(Dictionary<LiveCharts.Wpf.CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
-        return new HourlyDistributionService(chartTimestamps, strategyCutOverService);
+        return new HourlyDistributionService(chartTimestamps, strategyCutOverService, notificationService);
     }
 }

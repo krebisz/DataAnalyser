@@ -15,7 +15,7 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public class WeeklyDistributionService : BaseDistributionService
 {
-    public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null) : base(new WeeklyDistributionConfiguration(), chartTimestamps, strategyCutOverService, shadingStrategy)
+    public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IUserNotificationService notificationService, IIntervalShadingStrategy? shadingStrategy = null) : base(new WeeklyDistributionConfiguration(), chartTimestamps, strategyCutOverService, notificationService, shadingStrategy)
     {
     }
 

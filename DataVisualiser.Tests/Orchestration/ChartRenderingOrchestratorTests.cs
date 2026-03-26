@@ -104,7 +104,8 @@ public sealed class ChartRenderingOrchestratorTests
                     coordinator,
                     Mock.Of<IDistributionService>(),
                     Mock.Of<IDistributionService>(),
-                    cutOverService.Object);
+                    cutOverService.Object,
+                    new CapturingNotificationService());
 
                 var additionalSeries = new List<IEnumerable<MetricData>>
                 {
@@ -399,7 +400,8 @@ public sealed class ChartRenderingOrchestratorTests
             coordinator,
             weeklyDistributionService ?? Mock.Of<IDistributionService>(),
             hourlyDistributionService ?? Mock.Of<IDistributionService>(),
-            cutOverService.Object);
+            cutOverService.Object,
+            notifications);
     }
 
     private static ChartComputationResult CreateMultiSeriesResult()

@@ -63,6 +63,7 @@ public sealed class ChartControllerFactoryTests
     {
         private readonly Window _window;
         private readonly ChartTooltipManager _tooltipManager;
+        private readonly CapturingNotificationService _notifications = new();
 
         public FactoryHarness()
         {
@@ -81,7 +82,8 @@ public sealed class ChartControllerFactoryTests
                 new ChartComputationEngine(),
                 new ChartRenderEngine(),
                 _tooltipManager,
-                chartState.ChartTimestamps);
+                chartState.ChartTimestamps,
+                _notifications);
             WeekdayTrendChartUpdateCoordinator = new WeekdayTrendChartUpdateCoordinator(new WeekdayTrendRenderingService(), chartState.ChartTimestamps);
             ChartRendererResolver = new ChartRendererResolver();
             ChartSurfaceFactory = new ChartSurfaceFactory(ChartRendererResolver);
@@ -126,6 +128,13 @@ public sealed class ChartControllerFactoryTests
         {
             _tooltipManager.Dispose();
             _window.Close();
+        }
+    }
+
+    private sealed class CapturingNotificationService : IUserNotificationService
+    {
+        public void ShowError(string title, string message)
+        {
         }
     }
 

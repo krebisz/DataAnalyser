@@ -15,7 +15,7 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public class HourlyDistributionService : BaseDistributionService
 {
-    public HourlyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null) : base(new HourlyDistributionConfiguration(), chartTimestamps, strategyCutOverService, shadingStrategy)
+    public HourlyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IUserNotificationService notificationService, IIntervalShadingStrategy? shadingStrategy = null) : base(new HourlyDistributionConfiguration(), chartTimestamps, strategyCutOverService, notificationService, shadingStrategy)
     {
     }
 

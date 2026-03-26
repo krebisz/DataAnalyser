@@ -185,7 +185,7 @@ public sealed class BaseDistributionServiceTests
 
     private sealed class TestDistributionService : BaseDistributionService
     {
-        public TestDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService) : base(configuration, chartTimestamps, strategyCutOverService, new FrequencyBasedShadingStrategy(configuration.BucketCount))
+        public TestDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService) : base(configuration, chartTimestamps, strategyCutOverService, new NoOpNotificationService(), new FrequencyBasedShadingStrategy(configuration.BucketCount))
         {
         }
 
@@ -229,6 +229,13 @@ public sealed class BaseDistributionServiceTests
         public int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)
         {
             return 0;
+        }
+    }
+
+    private sealed class NoOpNotificationService : IUserNotificationService
+    {
+        public void ShowError(string title, string message)
+        {
         }
     }
 

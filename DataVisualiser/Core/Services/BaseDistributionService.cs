@@ -33,12 +33,12 @@ public abstract class BaseDistributionService : IDistributionService
     protected FrequencyShadingCalculator _frequencyShadingCalculator;
     protected IIntervalShadingStrategy _shadingStrategy;
 
-    protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IIntervalShadingStrategy? shadingStrategy = null, IUserNotificationService? notificationService = null)
+    protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IUserNotificationService notificationService, IIntervalShadingStrategy? shadingStrategy = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
-        _notificationService = notificationService ?? MessageBoxUserNotificationService.Instance;
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         _shadingStrategy = shadingStrategy ?? new FrequencyBasedShadingStrategy(Configuration.BucketCount);
         _frequencyRenderer = new FrequencyShadingRenderer(RenderingDefaults.MaxColumnWidth, Configuration.BucketCount);
         _frequencyShadingCalculator = new FrequencyShadingCalculator(_shadingStrategy, Configuration.BucketCount);
