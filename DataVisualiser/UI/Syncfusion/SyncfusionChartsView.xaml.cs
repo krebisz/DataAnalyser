@@ -13,6 +13,7 @@ using DataVisualiser.UI.Charts.Helpers;
 using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Events;
+using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 
@@ -21,6 +22,7 @@ namespace DataVisualiser.UI.SyncfusionViews;
 public partial class SyncfusionChartsView : UserControl
 {
     private readonly SyncfusionChartsViewCoordinator _coordinator = new();
+    private SyncfusionEvidenceExportService _evidenceExportService = null!;
     private ChartState _chartState = null!;
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
@@ -76,6 +78,10 @@ public partial class SyncfusionChartsView : UserControl
         _uiState = shared.UiState;
         _metricSelectionService = shared.MetricSelectionService;
         _viewModel = shared.ViewModel;
+        _evidenceExportService = new SyncfusionEvidenceExportService(
+            new ReachabilityExportWriter(),
+            new ReachabilityExportPathResolver(),
+            new StrategyReachabilityEvidenceStore());
     }
 
     private void InitializeViewModel()
@@ -515,6 +521,7 @@ public partial class SyncfusionChartsView : UserControl
     {
         const string defaultResolution = "All";
 
+        _evidenceExportService.ClearEvidence();
         _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
         _viewModel.ChartState.LastContext = new ChartDataContext();
         ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
@@ -531,7 +538,15 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnExportReachability(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show(_coordinator.GetReachabilityExportMessage(), "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+        try
+        {
+            var result = _evidenceExportService.Export(_viewModel.ChartState, _viewModel.MetricState, DateTime.UtcNow);
+            MessageBox.Show($"Syncfusion evidence snapshot exported to:\n{result.FilePath}\n\nNotes:\n- {string.Join("\n- ", result.Notes)}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to export Syncfusion evidence snapshot:\n{ex.Message}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void OnSunburstToggleRequested(object? sender, EventArgs e)

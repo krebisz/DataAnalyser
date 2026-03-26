@@ -1,5 +1,5 @@
 using System.Reflection;
-using DataVisualiser.UI;
+using DataVisualiser.UI.MainHost;
 
 namespace DataVisualiser.Tests.Parity;
 
@@ -33,7 +33,7 @@ public sealed class ParityExportShapeTests
     [Fact]
     public void BuildParityWarnings_ShouldWarn_WhenUnavailable()
     {
-        var mainType = typeof(MainChartsView);
+        var mainType = typeof(MainChartsEvidenceExportService);
         var buildWarnings = mainType.GetMethod("BuildParityWarnings", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(buildWarnings);
 
@@ -61,7 +61,7 @@ public sealed class ParityExportShapeTests
 
     private static Type GetNestedType(string name)
     {
-        var type = typeof(MainChartsView).GetNestedType(name, BindingFlags.NonPublic);
+        var type = typeof(MainChartsEvidenceExportService).GetNestedType(name, BindingFlags.Public);
         Assert.NotNull(type);
         return type!;
     }

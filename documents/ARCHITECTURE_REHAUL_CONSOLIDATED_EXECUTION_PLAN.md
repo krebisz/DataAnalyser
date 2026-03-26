@@ -495,16 +495,15 @@ Retired as superfluous after absorption:
 
 ## 9. Immediate Next Action Set
 
-1. Start `Step 15` and complete headless/scriptable evidence and export generation.
-2. After that, proceed to `Step 16` and split `SQLHelper` by capability behind temporary facades.
-3. Defer `Step 16` until just before final convergence so remaining `DataFileReader` smoke cost is incurred once.
+1. Start `Step 16` and split `SQLHelper` by capability behind temporary facades.
+2. Keep `Step 16` as the last substantial `DataFileReader` body of work before final convergence so ingestion smoke cost is incurred once.
+3. After that, proceed to `Step 17` and run the final convergence pass.
 4. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
 5. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
 
 ### Remaining Step Summary
-1. `Step 15`: complete headless/scriptable evidence and export generation with root `documents/` output and resettable evidence state.
-2. `Step 16`: split `SQLHelper` by capability behind a temporary facade and migrate callers incrementally.
-3. `Step 17`: run the final convergence pass, promote only proven shared abstractions, remove superseded structure, and close residual technical debt.
+1. `Step 16`: split `SQLHelper` by capability behind a temporary facade and migrate callers incrementally.
+2. `Step 17`: run the final convergence pass, promote only proven shared abstractions, remove superseded structure, and close residual technical debt.
 
 ---
 
@@ -931,6 +930,8 @@ Done when:
 4. notification, theme, and export seams are protected against regression-by-drift
 
 ### Step 15. Rebuild evidence/export flow after the code seams are in place
+
+Status: completed
 
 Agent work:
 1. Preserve the export metadata already added, but move evidence generation behind a scriptable headless path.

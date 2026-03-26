@@ -11,7 +11,7 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
 
-        Assert.Contains("ReachabilityExportWriter", source);
+        Assert.Contains("MainChartsEvidenceExportService", source);
         Assert.DoesNotContain("File.WriteAllText(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Directory.CreateDirectory(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("JsonSerializer.Serialize(", source, StringComparison.Ordinal);
