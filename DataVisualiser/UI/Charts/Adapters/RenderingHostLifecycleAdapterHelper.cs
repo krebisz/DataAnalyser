@@ -1,4 +1,4 @@
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Adapters;
 
 internal static class RenderingHostLifecycleAdapterHelper
 {
@@ -45,3 +45,5 @@ internal static class RenderingHostLifecycleAdapterHelper
         return HasRenderableContent(resolveRoute(), createHost, hasRenderableContent);
     }
 }
+
+internal readonly record struct RenderingHostTarget<TRoute, THost>(TRoute Route, THost Host);

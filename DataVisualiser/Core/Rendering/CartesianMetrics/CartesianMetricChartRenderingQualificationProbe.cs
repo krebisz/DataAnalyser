@@ -190,3 +190,22 @@ public sealed class CartesianMetricChartRenderingQualificationProbe
         return host.Chart.AxisX.Count > 0 && host.Chart.AxisY.Count > 0;
     }
 }
+
+public sealed record CartesianMetricChartRenderingQualificationProbeResult(
+    CartesianMetricChartRoute Route,
+    bool InitialRenderPassed,
+    bool RepeatedUpdatePassed,
+    bool VisibilityTransitionPassed,
+    bool OffscreenTransitionPassed,
+    bool ResetViewPassed,
+    bool ClearPassed,
+    IReadOnlyList<string> Failures)
+{
+    public bool Passed => InitialRenderPassed
+                          && RepeatedUpdatePassed
+                          && VisibilityTransitionPassed
+                          && OffscreenTransitionPassed
+                          && ResetViewPassed
+                          && ClearPassed
+                          && Failures.Count == 0;
+}

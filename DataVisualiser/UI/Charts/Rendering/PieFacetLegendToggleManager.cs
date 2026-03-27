@@ -5,7 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Rendering;
 
 public sealed class PieFacetLegendToggleManager
 {

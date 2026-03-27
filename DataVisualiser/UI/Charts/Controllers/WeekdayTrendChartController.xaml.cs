@@ -1,5 +1,6 @@
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Rendering;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;

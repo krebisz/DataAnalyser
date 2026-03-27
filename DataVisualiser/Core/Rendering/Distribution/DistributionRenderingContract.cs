@@ -1,3 +1,5 @@
+using System.Windows.Controls;
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
@@ -6,6 +8,8 @@ using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Helpers;
 using DataVisualiser.UI.State;
+using LiveChartsCore.SkiaSharpView.WPF;
+using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.Core.Rendering.Distribution;
 
@@ -210,3 +214,73 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
         };
     }
 }
+
+public static class DistributionBackendKey
+{
+    public const string LiveChartsWpfCartesian = "LiveChartsWpf.Cartesian";
+    public const string LiveChartsWpfPolarFallbackProjection = "LiveChartsWpf.PolarFallbackProjection";
+    public const string LiveChartsCorePolar = "LiveChartsCore.Polar";
+}
+
+public sealed record DistributionBackendQualification(
+    string BackendKey,
+    string PathKey,
+    DistributionRenderingQualification Qualification,
+    DistributionRenderingRoute? ActiveRoute,
+    bool SupportsRender,
+    bool SupportsUpdate,
+    bool SupportsHoverTooltip,
+    bool SupportsResetView,
+    bool SupportsClear,
+    bool SupportsLifecycleSafety);
+
+public sealed record DistributionRenderingCapabilities(
+    string PathKey,
+    DistributionRenderingQualification Qualification,
+    bool SupportsRender,
+    bool SupportsUpdate,
+    bool SupportsHoverTooltip,
+    bool SupportsResetView,
+    bool SupportsClear,
+    bool SupportsLifecycleSafety);
+
+public enum DistributionRenderingQualification
+{
+    Qualified = 0,
+    TacticalFallback = 1,
+    UnqualifiedDebt = 2
+}
+
+public enum DistributionRenderingRoute
+{
+    Cartesian = 0,
+    PolarFallback = 1
+}
+
+public static class DistributionRenderingRouteResolver
+{
+    public static DistributionRenderingRoute Resolve(bool isPolarMode)
+    {
+        return isPolarMode
+            ? DistributionRenderingRoute.PolarFallback
+            : DistributionRenderingRoute.Cartesian;
+    }
+}
+
+public sealed record DistributionChartRenderRequest(
+    DistributionRenderingRoute Route,
+    DistributionMode Mode,
+    DistributionModeSettings Settings,
+    IReadOnlyList<MetricData> Data,
+    string DisplayName,
+    DateTime From,
+    DateTime To,
+    ICanonicalMetricSeries? CmsSeries,
+    ChartDataContext RenderingContext,
+    ChartState ChartState);
+
+public sealed record DistributionChartRenderHost(
+    CartesianChart CartesianChart,
+    PolarChart PolarChart,
+    ChartState ChartState,
+    Func<ToolTip?> GetPolarTooltip);

@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Rendering;
 
 public sealed class LegendToggleManager
 {

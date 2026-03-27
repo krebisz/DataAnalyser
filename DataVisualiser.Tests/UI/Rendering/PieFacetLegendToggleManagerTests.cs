@@ -1,5 +1,5 @@
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 using System.Windows.Controls.Primitives;

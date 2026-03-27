@@ -7,7 +7,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Helpers;
 
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Adapters;
 
 internal static class MetricSeriesSelectionAdapterHelper
 {

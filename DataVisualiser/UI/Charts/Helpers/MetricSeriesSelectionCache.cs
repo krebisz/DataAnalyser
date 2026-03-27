@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using DataFileReader.Canonical;
 using DataVisualiser.Shared.Models;
 
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Helpers;
 
 public sealed class MetricSeriesSelectionCache
 {

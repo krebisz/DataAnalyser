@@ -389,6 +389,21 @@ Tracked steps:
 4. apply standardized renames
 5. remove dead code and compatibility residue
 
+Recommended execution shape:
+
+- do not perform Phase E as one broad mass-churn pass unless new evidence shows the physical structure is already unusually stable
+- prefer `2-3` bounded iterations:
+  - first bounded cleanup pass:
+    - remove obvious superseded files, classes, and passive glue
+    - merge trivial micro-types that no longer earn a standalone file
+    - keep namespace churn minimal
+  - second bounded cleanup pass:
+    - perform the main folder and namespace realignment around the now-stable ownership model
+    - apply standardized renames where the destination structure is clear
+  - optional third bounded cleanup pass:
+    - remove residual compatibility residue, dead code, and naming leftovers exposed by the first two passes
+- the default recommendation is `2` iterations when the cleanup proves orderly, and `3` iterations when residual rename fallout or compatibility residue remains
+
 ### 7.6 Phase F - Final Simplification and Metrics Pass
 
 Goal:
@@ -1047,6 +1062,310 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - the next likely bounded step before Phase E is any remaining cartesian-metric controller glue that still meaningfully duplicates orchestration without changing semantics
 - if no further safe, high-value controller seam remains after smoke, the next move should be reassessment for Phase E readiness rather than forcing one more abstraction
 - no physical folder/file reduction has been attempted yet; this remains deferred to bounded debt-retirement work once the remaining controller seams are considered stable
+
+#### Iteration 9 - Phase E - Debt Retirement and Folder Realignment
+
+**Date:** `2026-03-27`  
+**Primary objective:** begin the first bounded physical cleanup pass by removing trivial standalone infrastructure files that no longer earn their own file boundary after the controller/host seams stabilized
+
+**Bounded slice executed**
+
+- `UI/Charts/Infrastructure/ChartControllerFactory.cs`
+- `UI/Charts/Infrastructure/RenderingHostLifecycleAdapterHelper.cs`
+- `UI/Charts/Infrastructure/SubtypeSelectorManager.cs`
+- retired standalone files:
+  - `UI/Charts/Infrastructure/ChartControllerFactoryContext.cs`
+  - `UI/Charts/Infrastructure/ChartControllerFactoryResult.cs`
+  - `UI/Charts/Infrastructure/SyncfusionChartControllerFactoryResult.cs`
+  - `UI/Charts/Infrastructure/RenderingHostTarget.cs`
+  - `UI/Charts/Infrastructure/SubtypeControlPair.cs`
+
+**Inventory outcome for the chosen slice**
+
+- the retired types were all tiny, tightly coupled support shapes with no independent behavioral responsibility:
+  - controller-factory context/result records existed only to support `ChartControllerFactory`
+  - `RenderingHostTarget` existed only to support `RenderingHostLifecycleAdapterHelper`
+  - `SubtypeControlPair` existed only to support `SubtypeSelectorManager`
+- keeping those as separate files was increasing physical sprawl without clarifying subsystem ownership
+
+**What was simplified**
+
+- the controller-factory support cluster is now physically co-located in one file
+- the render-host lifecycle helper now owns its tiny support value shape directly
+- the subtype-selector manager now owns its tiny label/combo pair type directly
+
+**What was consolidated**
+
+- five low-value standalone support files were merged back into their owning infrastructure files
+- no public type names or namespaces changed; this was a physical-structure cleanup rather than a behavioral refactor
+
+**What was removed / retired**
+
+- standalone factory context/result wrapper files
+- standalone render-host target wrapper file
+- standalone subtype-control pair wrapper file
+
+**Validation / smoke result**
+
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `400` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change stayed internal to physical file consolidation and did not intentionally change live behavior
+
+**Remaining intentional debt after Iteration 9**
+
+- larger Phase E work remains: broader folder/namespace realignment and additional micro-type merging where the owning boundaries are now stable
+- the current `DataVisualiser` C# file count is `425`; this pass reduced that count by `5` files from the pre-iteration state
+- the next Phase E pass should target the next bounded cluster of low-value file fragmentation rather than broad mass-churn
+
+#### Iteration 10 - Phase E - Debt Retirement and Folder Realignment
+
+**Date:** `2026-03-27`  
+**Primary objective:** continue the bounded physical cleanup pass by collapsing the tiny cartesian-metric metadata/request/host cluster into its owning rendering files
+
+**Bounded slice executed**
+
+- `Core/Rendering/CartesianMetrics/CartesianMetricChartRenderingContract.cs`
+- `Core/Rendering/CartesianMetrics/CartesianMetricChartRenderingQualificationProbe.cs`
+- retired standalone files:
+  - `Core/Rendering/CartesianMetrics/CartesianMetricBackendKey.cs`
+  - `Core/Rendering/CartesianMetrics/CartesianMetricBackendQualification.cs`
+  - `Core/Rendering/CartesianMetrics/CartesianMetricRenderingCapabilities.cs`
+  - `Core/Rendering/CartesianMetrics/CartesianMetricRenderingQualification.cs`
+  - `Core/Rendering/CartesianMetrics/CartesianMetricChartRoute.cs`
+  - `Core/Rendering/CartesianMetrics/CartesianMetricChartRenderHost.cs`
+  - `Core/Rendering/CartesianMetrics/CartesianMetricChartRenderRequest.cs`
+  - `Core/Rendering/CartesianMetrics/CartesianMetricChartRenderingQualificationProbeResult.cs`
+
+**Inventory outcome for the chosen slice**
+
+- the retired types were all tiny, tightly coupled support shapes with no independent behavior outside the cartesian-metric rendering contract/probe seam
+- keeping each of those shapes in its own file was inflating physical sprawl without improving ownership clarity, because they already moved in lockstep with the two owning files
+
+**What was simplified**
+
+- the cartesian-metric rendering contract now physically owns its supporting route, request, qualification, backend, capability, and host types
+- the cartesian-metric qualification probe now physically owns its result shape
+
+**What was consolidated**
+
+- eight low-value standalone support files were merged into the two rendering files that actually own the seam
+- public type names and namespaces stayed unchanged; this was physical pruning only
+
+**What was removed / retired**
+
+- standalone cartesian-metric backend-key, backend-qualification, capability, and rendering-qualification files
+- standalone cartesian-metric route, render-host, and render-request files
+- standalone cartesian-metric qualification-probe result file
+
+**Validation / smoke result**
+
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `400` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change stayed internal to physical file consolidation and did not intentionally change live behavior
+
+**Remaining intentional debt after Iteration 10**
+
+- the larger Phase E realignment pass still remains: bounded folder/namespace cleanup and broader deletion of superseded glue where ownership is already stable
+- the current `DataVisualiser` C# file count is `417`; this pass reduced that count by `8` files from the pre-iteration state
+- the next Phase E pass should shift from pure micro-type pruning toward bounded folder/namespace cleanup in the now-stabilized chart/rendering areas
+
+#### Iteration 11 - Phase E - Debt Retirement and Folder Realignment
+
+**Date:** `2026-03-27`  
+**Primary objective:** execute the main bounded chart-side ownership realignment pass by shrinking `UI/Charts/Infrastructure` to true composition concerns only
+
+**Bounded slice executed**
+
+- `UI/Charts/Infrastructure`
+- `UI/Charts/Adapters`
+- `UI/Charts/Helpers`
+- `UI/Charts/Rendering`
+- retired standalone file:
+  - `UI/Charts/Infrastructure/ChartSeriesHelper.cs`
+
+**Inventory outcome for the chosen slice**
+
+- `UI/Charts/Infrastructure` had become a catch-all for unrelated responsibilities:
+  - controller factory / registry / keys
+  - adapter-only lifecycle helpers
+  - metric-series selection helpers and caches
+  - subtype-selection UI management
+  - legend/rendering support
+- those seams were already behaviorally stable from earlier iterations, so the remaining debt was mainly physical ownership drift rather than unresolved abstraction work
+
+**What was simplified**
+
+- adapter-only support now lives with adapters:
+  - `MetricSeriesSelectionAdapterHelper`
+  - `RenderingHostLifecycleAdapterHelper`
+- chart selection support now lives with chart helpers:
+  - `MetricSeriesSelectionCache`
+  - `SubtypeSelectorManager`
+- legend/rendering support now lives with chart rendering:
+  - `LegendToggleManager`
+  - `PieFacetLegendToggleManager`
+- `ChartSeriesHelper` was folded into `ChartSurfaceHelper` because it no longer earned a standalone file
+
+**What was consolidated**
+
+- the `Infrastructure` folder is now reduced to its actual composition role:
+  - `ChartControllerFactory`
+  - `ChartControllerKeys`
+  - `ChartControllerRegistry`
+- chart-side support types now align physically and by namespace with the owners that use them most directly
+
+**What was removed / retired**
+
+- standalone `ChartSeriesHelper.cs`
+
+**Validation / smoke result**
+
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and existing warnings only
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `400` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change stayed internal to file/folder/namespace ownership and did not intentionally change live behavior
+
+**Remaining intentional debt after Iteration 11**
+
+- one final bounded Phase E residue pass may still be worthwhile to remove or merge any remaining low-value glue exposed by the new ownership layout
+- the current `DataVisualiser` C# file count is `416`; this pass reduced that count by `1` file from the pre-iteration state
+- the main structural payoff of Phase E has now been achieved: future cleanup should be judged against whether it materially improves the layout beyond this new baseline rather than continuing churn by principle
+
+#### Iteration 12 - Phase E - Debt Retirement and Folder Realignment
+
+**Date:** `2026-03-27`  
+**Primary objective:** finish the final bounded Phase E residue pass by collapsing the remaining low-value micro-type clusters in the converged `Distribution` and `WeekdayTrend` rendering families
+
+**Bounded slice executed**
+
+- `Core/Rendering/Distribution/DistributionRenderingContract.cs`
+- `Core/Rendering/Distribution/DistributionRenderingQualificationProbe.cs`
+- `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingContract.cs`
+- `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingQualificationProbe.cs`
+- retained interfaces:
+  - `Core/Rendering/Distribution/IDistributionRenderingContract.cs`
+  - `Core/Rendering/WeekdayTrend/IWeekdayTrendRenderingContract.cs`
+- retired standalone files:
+  - `Core/Rendering/Distribution/DistributionBackendKey.cs`
+  - `Core/Rendering/Distribution/DistributionBackendQualification.cs`
+  - `Core/Rendering/Distribution/DistributionChartRenderHost.cs`
+  - `Core/Rendering/Distribution/DistributionChartRenderRequest.cs`
+  - `Core/Rendering/Distribution/DistributionRenderingCapabilities.cs`
+  - `Core/Rendering/Distribution/DistributionRenderingQualification.cs`
+  - `Core/Rendering/Distribution/DistributionRenderingQualificationProbeResult.cs`
+  - `Core/Rendering/Distribution/DistributionRenderingRoute.cs`
+  - `Core/Rendering/Distribution/DistributionRenderingRouteResolver.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendBackendKey.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendBackendQualification.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendChartRenderHost.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendChartRenderRequest.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingCapabilities.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingQualification.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingQualificationProbeResult.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingRoute.cs`
+  - `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingRouteResolver.cs`
+
+**Inventory outcome for the chosen slice**
+
+- both rendering families still carried many tiny family-local files for route, qualification, capability, request, host, backend-key, backend-qualification, and probe-result types
+- those types had no independent behavioral responsibility outside the contract/probe seams that owned them, so they were still inflating file sprawl after the earlier controller/host convergence work had stabilized
+
+**What was simplified**
+
+- each family is now reduced to the files that matter structurally:
+  - interface
+  - rendering contract
+  - qualification probe
+- the contract files now physically own their route/request/host/qualification/capability/backend support shapes
+- the qualification probe files now physically own their result types
+
+**What was consolidated**
+
+- `Distribution` and `WeekdayTrend` now follow the same compact physical pattern already established in `CartesianMetrics`
+- public type names and namespaces remained unchanged; this was physical consolidation only
+
+**What was removed / retired**
+
+- eighteen standalone rendering-family support files across `Distribution` and `WeekdayTrend`
+
+**Validation / smoke result**
+
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and existing warnings only
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `400` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change stayed internal to physical file consolidation and did not intentionally change live behavior
+
+**Remaining intentional debt after Iteration 12**
+
+- the bounded Phase E pruning and realignment work is complete enough to move to evaluation rather than force another cleanup pass by habit
+- the current `DataVisualiser` C# file count is `398`; this pass reduced that count by `18` files from the pre-iteration state
+- the next major step in the plan is `Phase F - Final Simplification and Metrics Pass`
+
+#### Iteration 13 - Phase F - Final Simplification and Metrics Pass
+
+**Date:** `2026-03-27`  
+**Primary objective:** close the cycle with an auditable post-refactor baseline rather than more structural churn
+
+**Measured outcome**
+
+- overall `DataVisualiser` C# file count:
+  - pre-Phase E baseline: `430`
+  - current baseline: `398`
+  - net reduction across the cleanup cycle: `32` files
+- repeated scaffolding / physical sprawl reduction in the most targeted areas:
+  - `UI/Charts/Infrastructure`: `10` files -> `3`
+  - `Core/Rendering/CartesianMetrics`: `13` files -> `5`
+  - `Core/Rendering/Distribution`: `12` files -> `3`
+  - `Core/Rendering/WeekdayTrend`: `12` files -> `3`
+
+**Success-criteria checkpoint**
+
+- fewer large mixed-responsibility files:
+  - achieved in the targeted chart/rendering seams through helper consolidation, controller seam harvesting, and Phase E physical pruning
+- fewer repeated scaffolding types across chart families:
+  - achieved across `CartesianMetrics`, `Distribution`, `WeekdayTrend`, and chart-side infrastructure
+- clearer subsystem ownership boundaries:
+  - achieved by shrinking `Infrastructure` to true composition concerns and aligning selection, lifecycle, and legend support with their owners
+- lower cognitive load in `Core/Rendering`, `UI/Charts`, and helper-heavy areas:
+  - materially improved in the targeted seams, though not eliminated across the whole project
+- no regression in rendering, parity, export, theme, orchestration, or flexibility behavior:
+  - supported by green build/tests and targeted smoke gates where live controller flow was touched earlier in the cycle
+- intentional outliers remain explicit rather than accidental:
+  - achieved; remaining large files are now identifiable as honest next-cycle targets rather than unexamined spillover
+
+**Remaining intentional outliers for the next major cycle**
+
+- `UI/MainChartsView.xaml.cs` (`1207` lines):
+  - main host composition, selection workflow, event wiring, and orchestration still coexist in one file
+- `UI/Charts/Adapters/TransformDataPanelControllerAdapter.cs` (`688` lines):
+  - transform workflow, compute gating, pending-load handling, and chart update behavior remain intentionally coupled
+- `UI/MainHost/MainChartsEvidenceExportService.cs` (`661` lines):
+  - evidence export / parity snapshot composition is large but outside the core rendering-seam consolidation focus
+- `Core/Data/Repositories/DataFetcher.cs` (`768` lines):
+  - broad data-access responsibilities remain outside this chart-structure cycle
+- `Core/Services/BaseDistributionService.cs` (`490` lines):
+  - shared distribution computation and rendering-prep logic remains large but was not the main structural risk after the rendering seams stabilized
+- `UI/Charts/Adapters/BarPieChartControllerAdapter.cs` (`423` lines):
+  - async renderer/surface/facet orchestration remains an honest outlier that was not safe to flatten during this cycle
+
+**Validation / smoke result**
+
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and existing warnings only
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `400` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this closeout iteration because it recorded metrics / completion state and did not intentionally change live behavior
+
+**Cycle closeout position**
+
+- the current cycle is complete enough to hand to external review without needing another cleanup pass by default
+- the next major cycle should start from the named intentional outliers above rather than reopening the now-stabilized chart/rendering seams
 
 ---
 

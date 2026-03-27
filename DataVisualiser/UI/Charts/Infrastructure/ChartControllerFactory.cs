@@ -3,10 +3,18 @@ using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Core.Rendering.BarPie;
+using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.UI.Charts.Adapters;
 using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Rendering;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.Core.Rendering.Distribution;
+using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Services.Abstractions;
+using DataVisualiser.Core.Strategies.Abstractions;
+using System.Windows.Controls;
 namespace DataVisualiser.UI.Charts.Infrastructure;
 
 public sealed class ChartControllerFactory : IChartControllerFactory
@@ -157,3 +165,42 @@ public sealed class ChartControllerFactory : IChartControllerFactory
         context.TransformDataPanelController.ComputeRequested += transformAdapter.OnComputeRequested;
     }
 }
+
+public sealed record ChartControllerFactoryContext(
+    IMainChartController MainChartController,
+    INormalizedChartController NormalizedChartController,
+    IDiffRatioChartController DiffRatioChartController,
+    IDistributionChartController DistributionChartController,
+    IWeekdayTrendChartController WeekdayTrendChartController,
+    ITransformDataPanelController TransformDataPanelController,
+    IBarPieChartController BarPieChartController,
+    MainWindowViewModel ViewModel,
+    Func<bool> IsInitializing,
+    Func<IDisposable> BeginUiBusyScope,
+    MetricSelectionService MetricSelectionService,
+    Func<ChartRenderingOrchestrator?> GetChartRenderingOrchestrator,
+    ChartUpdateCoordinator ChartUpdateCoordinator,
+    Func<IStrategyCutOverService?> GetStrategyCutOverService,
+    WeekdayTrendChartUpdateCoordinator WeekdayTrendChartUpdateCoordinator,
+    IDistributionService WeeklyDistributionService,
+    IDistributionService HourlyDistributionService,
+    DistributionPolarRenderingService DistributionPolarRenderingService,
+    Func<ToolTip?> GetPolarTooltip,
+    Func<ChartTooltipManager?> GetTooltipManager,
+    IChartRendererResolver ChartRendererResolver,
+    IChartSurfaceFactory ChartSurfaceFactory,
+    ISyncfusionSunburstChartController? SyncfusionSunburstChartController = null);
+
+public sealed record ChartControllerFactoryResult(
+    MainChartControllerAdapter Main,
+    NormalizedChartControllerAdapter Normalized,
+    DiffRatioChartControllerAdapter DiffRatio,
+    DistributionChartControllerAdapter Distribution,
+    WeekdayTrendChartControllerAdapter WeekdayTrend,
+    TransformDataPanelControllerAdapter Transform,
+    BarPieChartControllerAdapter BarPie,
+    IChartControllerRegistry Registry);
+
+public sealed record SyncfusionChartControllerFactoryResult(
+    SyncfusionSunburstChartControllerAdapter Sunburst,
+    IChartControllerRegistry Registry);

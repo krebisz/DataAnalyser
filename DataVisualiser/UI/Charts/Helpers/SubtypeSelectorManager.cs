@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Shared.Models;
 
-namespace DataVisualiser.UI.Charts.Infrastructure;
+namespace DataVisualiser.UI.Charts.Helpers;
 
 public class SubtypeSelectorManager
 {
@@ -242,5 +242,17 @@ public class SubtypeSelectorManager
 
         foreach (var combo in _dynamicCombos)
             yield return (combo.SelectedItem as MetricNameOption)?.Value ?? combo.SelectedValue?.ToString() ?? string.Empty;
+    }
+
+    private sealed class SubtypeControlPair
+    {
+        public SubtypeControlPair(Label label, ComboBox combo)
+        {
+            Label = label;
+            Combo = combo;
+        }
+
+        public Label Label { get; }
+        public ComboBox Combo { get; }
     }
 }

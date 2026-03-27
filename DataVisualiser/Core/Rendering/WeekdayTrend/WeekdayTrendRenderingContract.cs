@@ -1,5 +1,8 @@
 using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Helpers;
+using DataVisualiser.UI.State;
+using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.Core.Rendering.WeekdayTrend;
 
@@ -122,3 +125,65 @@ public sealed class WeekdayTrendRenderingContract : IWeekdayTrendRenderingContra
         };
     }
 }
+
+public static class WeekdayTrendBackendKey
+{
+    public const string LiveChartsWpfCartesian = "LiveChartsWpf.Cartesian";
+    public const string LiveChartsWpfPolar = "LiveChartsWpf.PolarProjection";
+    public const string LiveChartsWpfScatter = "LiveChartsWpf.Scatter";
+}
+
+public sealed record WeekdayTrendBackendQualification(
+    string BackendKey,
+    string PathKey,
+    WeekdayTrendRenderingQualification Qualification,
+    WeekdayTrendRenderingRoute ActiveRoute,
+    bool SupportsRender,
+    bool SupportsUpdate,
+    bool SupportsResetView,
+    bool SupportsClear,
+    bool SupportsLifecycleSafety);
+
+public sealed record WeekdayTrendRenderingCapabilities(
+    string PathKey,
+    WeekdayTrendRenderingQualification Qualification,
+    bool SupportsRender,
+    bool SupportsUpdate,
+    bool SupportsResetView,
+    bool SupportsClear,
+    bool SupportsLifecycleSafety);
+
+public enum WeekdayTrendRenderingQualification
+{
+    Qualified = 0
+}
+
+public enum WeekdayTrendRenderingRoute
+{
+    Cartesian = 0,
+    Polar = 1,
+    Scatter = 2
+}
+
+public static class WeekdayTrendRenderingRouteResolver
+{
+    public static WeekdayTrendRenderingRoute Resolve(WeekdayTrendChartMode mode)
+    {
+        return mode switch
+        {
+            WeekdayTrendChartMode.Polar => WeekdayTrendRenderingRoute.Polar,
+            WeekdayTrendChartMode.Scatter => WeekdayTrendRenderingRoute.Scatter,
+            _ => WeekdayTrendRenderingRoute.Cartesian
+        };
+    }
+}
+
+public sealed record WeekdayTrendChartRenderRequest(
+    WeekdayTrendRenderingRoute Route,
+    WeekdayTrendResult Result,
+    ChartState ChartState);
+
+public sealed record WeekdayTrendChartRenderHost(
+    CartesianChart CartesianChart,
+    CartesianChart PolarChart,
+    ChartState ChartState);

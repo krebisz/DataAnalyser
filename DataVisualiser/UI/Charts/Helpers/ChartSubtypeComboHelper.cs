@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
-using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.UI.Charts.Helpers;

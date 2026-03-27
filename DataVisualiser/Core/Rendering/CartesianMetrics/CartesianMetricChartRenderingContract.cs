@@ -1,4 +1,9 @@
+using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Charts.Helpers;
+using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.State;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.CartesianMetrics;
 
@@ -104,3 +109,59 @@ public sealed class CartesianMetricChartRenderingContract : ICartesianMetricChar
         return ChartSurfaceHelper.HasSeries(host.Chart);
     }
 }
+
+public enum CartesianMetricBackendKey
+{
+    LiveChartsWpfMain = 0,
+    LiveChartsWpfNormalized = 1,
+    LiveChartsWpfDiffRatio = 2
+}
+
+public sealed record CartesianMetricBackendQualification(
+    CartesianMetricBackendKey BackendKey,
+    string PathKey,
+    CartesianMetricRenderingQualification Qualification,
+    CartesianMetricChartRoute Route,
+    bool SupportsRender,
+    bool SupportsUpdate,
+    bool SupportsHoverTooltip,
+    bool SupportsResetView,
+    bool SupportsClear,
+    bool SupportsLifecycleSafety);
+
+public sealed record CartesianMetricRenderingCapabilities(
+    string PathKey,
+    CartesianMetricRenderingQualification Qualification,
+    bool SupportsRender,
+    bool SupportsUpdate,
+    bool SupportsHoverTooltip,
+    bool SupportsResetView,
+    bool SupportsClear,
+    bool SupportsLifecycleSafety);
+
+public enum CartesianMetricRenderingQualification
+{
+    Qualified = 0,
+    TacticalFallback = 1,
+    UnqualifiedDebt = 2
+}
+
+public enum CartesianMetricChartRoute
+{
+    Main = 0,
+    Normalized = 1,
+    DiffRatio = 2
+}
+
+public sealed record CartesianMetricChartRenderHost(
+    CartesianChart Chart,
+    ChartState ChartState);
+
+public sealed record CartesianMetricChartRenderRequest(
+    CartesianMetricChartRoute Route,
+    ChartDataContext Context,
+    IReadOnlyList<MetricSeriesSelection>? SelectedSeries = null,
+    string? ResolutionTableName = null,
+    bool IsStacked = false,
+    bool IsCumulative = false,
+    IReadOnlyList<SeriesResult>? OverlaySeries = null);

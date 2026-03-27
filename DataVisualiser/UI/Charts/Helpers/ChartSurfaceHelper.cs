@@ -1,7 +1,8 @@
 using System;
+using System.Collections;
+using System.Linq;
 using System.Windows.Controls;
 using DataVisualiser.Core.Rendering.Helpers;
-using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.State;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -35,7 +36,7 @@ public static class ChartSurfaceHelper
         if (chart == null)
             throw new ArgumentNullException(nameof(chart));
 
-        return ChartSeriesHelper.HasSeries(chart.Series);
+        return HasAnySeries(chart.Series);
     }
 
     public static void ClearPolar(PolarChart chart, Func<ToolTip?>? getTooltip)
@@ -58,6 +59,11 @@ public static class ChartSurfaceHelper
         if (chart == null)
             throw new ArgumentNullException(nameof(chart));
 
-        return ChartSeriesHelper.HasSeries(chart.Series);
+        return HasAnySeries(chart.Series);
+    }
+
+    private static bool HasAnySeries(IEnumerable? series)
+    {
+        return series != null && series.Cast<object>().Any();
     }
 }

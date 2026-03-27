@@ -129,3 +129,24 @@ public sealed class DistributionRenderingQualificationProbe
             throw new InvalidOperationException($"{stage}: post-clear verification failed");
     }
 }
+
+public sealed record DistributionRenderingQualificationProbeResult(
+    DistributionRenderingRoute Route,
+    bool InitialRenderPassed,
+    bool RepeatedUpdatePassed,
+    bool VisibilityTransitionPassed,
+    bool OffscreenTransitionPassed,
+    bool ResetViewPassed,
+    bool ClearPassed,
+    bool DisposalPassed,
+    IReadOnlyList<string> Failures)
+{
+    public bool Passed =>
+        InitialRenderPassed &&
+        RepeatedUpdatePassed &&
+        VisibilityTransitionPassed &&
+        OffscreenTransitionPassed &&
+        ResetViewPassed &&
+        ClearPassed &&
+        DisposalPassed;
+}
