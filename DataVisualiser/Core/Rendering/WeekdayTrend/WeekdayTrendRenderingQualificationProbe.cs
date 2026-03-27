@@ -1,4 +1,5 @@
 using System.Windows;
+using DataVisualiser.Core.Rendering;
 
 namespace DataVisualiser.Core.Rendering.WeekdayTrend;
 
@@ -47,25 +48,16 @@ public sealed class WeekdayTrendRenderingQualificationProbe
         ICollection<string> failures,
         string stage)
     {
-        try
-        {
-            contract.Render(request, host);
-            if (!contract.HasRenderableContent(route, host))
-                contract.ResetView(route, host);
-
-            if (!HasRenderedState(contract, route, host))
+        return RenderingQualificationProbeSupport.TryRender(
+            () => contract.Render(request, host),
+            () => HasRenderedState(contract, route, host),
+            failures,
+            stage,
+            () =>
             {
-                failures.Add($"{stage}: route rendered without content");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"{stage}: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+                if (!contract.HasRenderableContent(route, host))
+                    contract.ResetView(route, host);
+            });
     }
 
     private static bool TryVisibilityTransition(
@@ -74,29 +66,10 @@ public sealed class WeekdayTrendRenderingQualificationProbe
         WeekdayTrendRenderingRoute route,
         ICollection<string> failures)
     {
-        var cartesianVisibility = host.CartesianChart.Visibility;
-        var polarVisibility = host.PolarChart.Visibility;
-
-        try
-        {
-            host.CartesianChart.Visibility = Visibility.Collapsed;
-            host.PolarChart.Visibility = Visibility.Collapsed;
-            host.CartesianChart.Visibility = cartesianVisibility;
-            host.PolarChart.Visibility = polarVisibility;
-
-            if (!HasRenderedState(contract, route, host))
-            {
-                failures.Add("visibility transition: content did not survive hide/show");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"visibility transition: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryVisibilityTransition(
+            [host.CartesianChart, host.PolarChart],
+            () => HasRenderedState(contract, route, host),
+            failures);
     }
 
     private static bool TryOffscreenTransition(
@@ -105,42 +78,10 @@ public sealed class WeekdayTrendRenderingQualificationProbe
         WeekdayTrendRenderingRoute route,
         ICollection<string> failures)
     {
-        var targetChart = ResolveTargetChart(route, host);
-        var width = targetChart.Width;
-        var height = targetChart.Height;
-        var actualWidth = targetChart.ActualWidth;
-        var actualHeight = targetChart.ActualHeight;
-
-        try
-        {
-            targetChart.Width = 0;
-            targetChart.Height = 0;
-            targetChart.Measure(new Size(0, 0));
-            targetChart.Arrange(new Rect(0, 0, 0, 0));
-            targetChart.UpdateLayout();
-
-            targetChart.Width = width;
-            targetChart.Height = height;
-
-            var restoreWidth = width > 0 ? width : Math.Max(actualWidth, 1);
-            var restoreHeight = height > 0 ? height : Math.Max(actualHeight, 1);
-            targetChart.Measure(new Size(restoreWidth, restoreHeight));
-            targetChart.Arrange(new Rect(0, 0, restoreWidth, restoreHeight));
-            targetChart.UpdateLayout();
-
-            if (!HasRenderedState(contract, route, host))
-            {
-                failures.Add("offscreen transition: content did not survive host collapse/restore");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"offscreen transition: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryOffscreenTransition(
+            ResolveTargetChart(route, host),
+            () => HasRenderedState(contract, route, host),
+            failures);
     }
 
     private static bool TryResetView(
@@ -149,16 +90,7 @@ public sealed class WeekdayTrendRenderingQualificationProbe
         WeekdayTrendRenderingRoute route,
         ICollection<string> failures)
     {
-        try
-        {
-            contract.ResetView(route, host);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"reset view: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryResetView(() => contract.ResetView(route, host), failures);
     }
 
     private static bool TryClear(
@@ -167,23 +99,11 @@ public sealed class WeekdayTrendRenderingQualificationProbe
         WeekdayTrendRenderingRoute route,
         ICollection<string> failures)
     {
-        try
-        {
-            contract.Clear(host);
-
-            if (contract.HasRenderableContent(route, host))
-            {
-                failures.Add("clear: content remained after clear");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"clear: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryClear(
+            () => contract.Clear(host),
+            () => contract.HasRenderableContent(route, host),
+            failures,
+            "clear");
     }
 
     private static LiveCharts.Wpf.CartesianChart ResolveTargetChart(WeekdayTrendRenderingRoute route, WeekdayTrendChartRenderHost host)

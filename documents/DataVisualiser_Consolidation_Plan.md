@@ -590,6 +590,71 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - no folder or namespace realignment was performed yet
 - rendering-specific analytical cleanup remains deferred to later bounded slices once helper ownership stabilizes
 
+#### Iteration 3 - Phase C - Chart Capability Unification
+
+**Date:** `2026-03-27`  
+**Primary objective:** consolidate the repeated qualification-probe lifecycle scaffold shared by the `Distribution` and `WeekdayTrend` rendering families without changing family-specific contracts, routes, or live rendering behavior
+
+**Bounded slice executed**
+
+- `Core/Rendering/Distribution/DistributionRenderingQualificationProbe.cs`
+- `Core/Rendering/WeekdayTrend/WeekdayTrendRenderingQualificationProbe.cs`
+- new shared internal support:
+  - `Core/Rendering/RenderingQualificationProbeSupport.cs`
+
+**Inventory outcome for the chosen slice**
+
+- both families already had explicit family-specific contracts, routes, route resolvers, qualification records, and probe result types
+- the strongest repeated shape was not the route map itself, but the lifecycle probe scaffold:
+  - render
+  - visibility transition
+  - offscreen transition
+  - reset view
+  - clear
+  - failure collection / stage reporting
+- the family-specific parts remained real and worth keeping explicit:
+  - `Distribution` keeps async rendering, disposal validation, tooltip/tag cleanup checks, and polar fallback behavior
+  - `WeekdayTrend` keeps route-specific active-chart resolution and reset-assisted render-state recovery
+
+**What was simplified**
+
+- lifecycle probe stages no longer re-implement the same try/catch and stage-failure scaffolding in both families
+- visibility, offscreen, reset, clear, and render-stage orchestration now share one internal support path
+
+**What was consolidated**
+
+- common qualification-probe lifecycle mechanics moved into `RenderingQualificationProbeSupport`
+- `Distribution` and `WeekdayTrend` probes now delegate shared stage mechanics while preserving their own route/content semantics
+
+**What was generalized**
+
+- a shared probe support abstraction was promoted because there are now at least two real rendering-family consumers with the same lifecycle qualification pattern
+- the abstraction stays below the family contract layer and does not force false uniformity into route selection or backend capability models
+
+**What remained explicit intentionally**
+
+- `DistributionRenderingContract` and `WeekdayTrendRenderingContract`
+- family-specific route enums and route resolvers
+- family-specific qualification records and probe result types
+- `Distribution` disposal/tooltip/tag cleanup verification
+- `WeekdayTrend` active-chart resolution and reset-assisted content recovery
+
+**Validation / smoke result**
+
+- focused subsystem lane:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~DistributionRenderingQualificationProbeTests|FullyQualifiedName~WeekdayTrendRenderingQualificationProbeTests"` passed on `2026-03-27` with `5` tests passed, `0` failed, `0` skipped
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `380` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change stayed structural inside rendering-family qualification scaffolding and did not intentionally change live UI/render behavior
+
+**Remaining intentional debt after Iteration 3**
+
+- `Distribution` and `WeekdayTrend` contracts still have different capability matrices and host semantics, which should remain explicit unless a later slice proves deeper shared structure
+- the next likely Phase C candidate is contract/qualification metadata shape, not live rendering execution
+- broader rendering-family unification beyond `Distribution` and `WeekdayTrend` remains deferred until this smaller shared-support seam proves stable
+
 ---
 
 ## 8. Validation and Smoke-Test Discipline
