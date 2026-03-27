@@ -18,6 +18,7 @@ namespace DataVisualiser.UI.Charts.Adapters;
 
 public sealed class MainChartControllerAdapter : CartesianChartControllerAdapterBase<IMainChartController>, IMainChartControllerExtras
 {
+    private const CartesianMetricChartRoute RenderingRoute = CartesianMetricChartRoute.Main;
     private readonly IMainChartController _controller;
     private readonly ICartesianMetricChartRenderingContract _renderingContract;
     private readonly Func<bool> _isInitializing;
@@ -86,17 +87,17 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
 
     public override void Clear(ChartState state)
     {
-        _renderingContract.Clear(CartesianMetricChartRoute.Main, CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.Clear(RenderingRoute, CreateRenderHost, _renderingContract.Clear);
     }
 
     public override void ResetZoom()
     {
-        _renderingContract.ResetView(CartesianMetricChartRoute.Main, CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.ResetView(RenderingRoute, CreateRenderHost, _renderingContract.ResetView);
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return _renderingContract.HasRenderableContent(CartesianMetricChartRoute.Main, CreateRenderHost());
+        return RenderingHostLifecycleAdapterHelper.HasRenderableContent(RenderingRoute, CreateRenderHost, _renderingContract.HasRenderableContent);
     }
 
     public void SyncDisplayModeSelection()
@@ -158,7 +159,7 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
 
         await _renderingContract.RenderAsync(
             new CartesianMetricChartRenderRequest(
-                CartesianMetricChartRoute.Main,
+                RenderingRoute,
                 ctx,
                 _viewModel.MetricState.SelectedSeries,
                 _viewModel.MetricState.ResolutionTableName,

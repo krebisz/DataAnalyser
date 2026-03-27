@@ -18,6 +18,7 @@ namespace DataVisualiser.UI.Charts.Adapters;
 
 public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAdapterBase<IDiffRatioChartController>, IDiffRatioChartControllerExtras
 {
+    private const CartesianMetricChartRoute RenderingRoute = CartesianMetricChartRoute.DiffRatio;
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IDiffRatioChartController _controller;
     private readonly ICartesianMetricChartRenderingContract _renderingContract;
@@ -94,17 +95,17 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 
     public override void Clear(ChartState state)
     {
-        _renderingContract.Clear(CartesianMetricChartRoute.DiffRatio, CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.Clear(RenderingRoute, CreateRenderHost, _renderingContract.Clear);
     }
 
     public override void ResetZoom()
     {
-        _renderingContract.ResetView(CartesianMetricChartRoute.DiffRatio, CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.ResetView(RenderingRoute, CreateRenderHost, _renderingContract.ResetView);
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return _renderingContract.HasRenderableContent(CartesianMetricChartRoute.DiffRatio, CreateRenderHost());
+        return RenderingHostLifecycleAdapterHelper.HasRenderableContent(RenderingRoute, CreateRenderHost, _renderingContract.HasRenderableContent);
     }
 
     public void OnToggleRequested(object? sender, EventArgs e)
@@ -160,7 +161,7 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 
         UpdateDiffRatioPanelTitle(diffRatioContext);
         await _renderingContract.RenderAsync(
-            new CartesianMetricChartRenderRequest(CartesianMetricChartRoute.DiffRatio, diffRatioContext),
+            new CartesianMetricChartRenderRequest(RenderingRoute, diffRatioContext),
             CreateRenderHost());
     }
 

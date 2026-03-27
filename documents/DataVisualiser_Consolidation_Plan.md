@@ -31,6 +31,7 @@ Current defaults:
 - scope is `DataVisualiser` only
 - posture is `Moderate`
 - one iteration must have one primary objective
+- safely coupled slices are allowed when they already share one contract/host/route pattern and batching them reduces duplicated churn
 - validation must happen on every significant refactor
 - if live behavior changes, halt after automated validation and request targeted manual smoke before continuing
 
@@ -47,6 +48,7 @@ Default execution starting point:
 1. start at `Phase A - Subsystem Inventory and Target Module Map`
 2. once Phase A produces a stable slice map, begin with the first `Analytical Kernel Consolidation` slice
 3. do not begin with broad folder churn or mass renames
+4. once a proving pair establishes a shared seam, broaden subsequent iterations to the next safe converged cluster instead of repeating one-family-at-a-time by default
 
 Default validation commands:
 
@@ -242,6 +244,7 @@ Use it for each actual consolidation pass.
      - evidence/diagnostics
      - vendor-specific adapters
    - Do not mix unrelated slices unless coupling forces it.
+   - Do couple adjacent families or controllers when they already share a real contract/host/route shape and one bounded iteration can simplify that whole converged cluster safely.
 
 3. `Inventory the current shape`
    - Record hotspot files.
@@ -367,9 +370,10 @@ Tracked steps:
 
 1. inventory controller/adapter/host shapes now in use
 2. identify which ones are already behaviorally converged
-3. standardize ownership and responsibilities for converged shapes
-4. keep `Syncfusion` and other justified outliers explicit
-5. remove passive host/controller glue exposed by the new shape
+3. batch the next safe converged cluster when multiple controllers already share the same contract/host/route seam
+4. standardize ownership and responsibilities for converged shapes
+5. keep `Syncfusion` and other justified outliers explicit
+6. remove passive host/controller glue exposed by the new shape
 
 ### 7.5 Phase E - Debt Retirement and Folder Realignment
 
@@ -426,7 +430,17 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
    - standardize one already-converged controller/adapter/host shape
    - do not start with `Syncfusion`
 
-5. defer aggressive folder/namespace realignment until the earlier iterations produce a stable ownership model
+5. `Next broadened Phase D cluster after the proving pair`
+   - after a shared seam is proven on `Distribution` / `WeekdayTrend`, broaden the next controller/host pass to the cartesian-metric controller family where the contract and host shape already converge
+   - preferred next cluster:
+     - `Main`
+     - `DiffRatio`
+     - `Normalized`
+   - preferred first coupled seams in that cluster:
+     - constant-route render-host lifecycle delegation
+     - subtype-selection and selected-series resolution where `DiffRatio` and `Normalized` are materially aligned
+
+6. defer aggressive folder/namespace realignment until the earlier iterations produce a stable ownership model
 
 ### 7.8 Iteration Baseline Log
 
@@ -805,6 +819,78 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - broader controller/host convergence still exists outside this lifecycle seam, especially full render orchestration and chart-panel event wiring
 - no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once controller/host ownership stabilizes further
 - `Syncfusion` remains explicitly out of scope for the early controller/host standardization program
+
+#### Iteration 6 - Phase D - Controller and Host Standardization
+
+**Date:** `2026-03-27`  
+**Primary objective:** broaden the controller/host standardization pass from the proving pair to the safe cartesian-metric controller cluster by standardizing the fixed-route render-host lifecycle delegation shared by `Main`, `DiffRatio`, and `Normalized`
+
+**Regression protection established before mutation**
+
+- added direct adapter coverage for the fixed-route lifecycle seam across `Main`, `DiffRatio`, and `Normalized`
+- pre-mutation focused regression gate:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~CartesianMetricControllerAdapterLifecycleTests"` passed on `2026-03-27` with `3` tests passed, `0` failed, `0` skipped
+
+**Bounded slice executed**
+
+- `UI/Charts/Adapters/MainChartControllerAdapter.cs`
+- `UI/Charts/Adapters/DiffRatioChartControllerAdapter.cs`
+- `UI/Charts/Adapters/NormalizedChartControllerAdapter.cs`
+- shared lifecycle support refinement:
+  - `UI/Charts/Infrastructure/RenderingHostLifecycleAdapterHelper.cs`
+- focused direct test addition:
+  - `DataVisualiser.Tests/Controls/CartesianMetricControllerAdapterLifecycleTests.cs`
+
+**Inventory outcome for the chosen slice**
+
+- all three adapters already converged on the same controller-side lifecycle shape:
+  - one fixed cartesian-metric route per adapter
+  - one cartesian render host type per adapter
+  - direct delegation of `Clear`
+  - direct delegation of `ResetZoom`
+  - direct delegation of `HasSeries`
+- the family-specific parts remained distinct and intentionally explicit:
+  - `Main` keeps stacked/overlay display-mode behavior and overlay series construction
+  - `DiffRatio` keeps operation-toggle behavior, tooltip label updates, and primary/secondary comparison context rebuilding
+  - `Normalized` keeps normalization-mode behavior and primary/secondary normalization context rebuilding
+
+**What was simplified**
+
+- repeated fixed-route lifecycle delegation no longer lives separately in the three cartesian-metric adapters
+- the route constant used by each adapter is now defined once and reused across the lifecycle seam and render-request construction
+
+**What was consolidated**
+
+- `RenderingHostLifecycleAdapterHelper` now supports fixed-route target creation, clear, reset, and has-content delegation
+- `MainChartControllerAdapter`, `DiffRatioChartControllerAdapter`, and `NormalizedChartControllerAdapter` now share one constant-route lifecycle delegation pattern
+
+**What was generalized**
+
+- the lifecycle helper was broadened because there are now multiple controller families using both dynamic-route and fixed-route render-host delegation shapes
+- the generalization stays below family-specific chart behavior and above host creation so the cartesian-metric cluster can share one structural path without flattening its distinct behaviors
+
+**What remained explicit intentionally**
+
+- family-specific render-host creation details
+- `Main` overlay selection and stacked rendering behavior
+- `DiffRatio` comparison-operation behavior and tooltip integration
+- `Normalized` normalization-mode selection and context shaping
+
+**Validation / smoke result**
+
+- focused subsystem lane after the refactor:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~CartesianMetricControllerAdapterLifecycleTests"` passed on `2026-03-27` with `3` tests passed, `0` failed, `0` skipped
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `392` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change remained behavior-preserving controller/host standardization backed by direct adapter tests rather than an intentional live UI behavior change
+
+**Remaining intentional debt after Iteration 6**
+
+- the next safe coupled seam inside the cartesian-metric cluster is subtype-selection and selected-series resolution, especially the tighter `DiffRatio` / `Normalized` pairing
+- broader chart-panel event wiring and render orchestration still remain outside this bounded slice
+- no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once more controller/host seams are stabilized
 
 ---
 

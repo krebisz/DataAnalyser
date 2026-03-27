@@ -17,6 +17,7 @@ namespace DataVisualiser.UI.Charts.Adapters;
 
 public sealed class NormalizedChartControllerAdapter : CartesianChartControllerAdapterBase<INormalizedChartController>
 {
+    private const CartesianMetricChartRoute RenderingRoute = CartesianMetricChartRoute.Normalized;
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly INormalizedChartController _controller;
     private readonly ICartesianMetricChartRenderingContract _renderingContract;
@@ -84,17 +85,17 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     public override void Clear(ChartState state)
     {
-        _renderingContract.Clear(CartesianMetricChartRoute.Normalized, CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.Clear(RenderingRoute, CreateRenderHost, _renderingContract.Clear);
     }
 
     public override void ResetZoom()
     {
-        _renderingContract.ResetView(CartesianMetricChartRoute.Normalized, CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.ResetView(RenderingRoute, CreateRenderHost, _renderingContract.ResetView);
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return _renderingContract.HasRenderableContent(CartesianMetricChartRoute.Normalized, CreateRenderHost());
+        return RenderingHostLifecycleAdapterHelper.HasRenderableContent(RenderingRoute, CreateRenderHost, _renderingContract.HasRenderableContent);
     }
 
     public async void OnNormalizationModeChanged(object? sender, EventArgs e)
@@ -152,7 +153,7 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
         UpdateNormalizedPanelTitle(normalizedContext);
         await _renderingContract.RenderAsync(
-            new CartesianMetricChartRenderRequest(CartesianMetricChartRoute.Normalized, normalizedContext),
+            new CartesianMetricChartRenderRequest(RenderingRoute, normalizedContext),
             CreateRenderHost());
     }
 
