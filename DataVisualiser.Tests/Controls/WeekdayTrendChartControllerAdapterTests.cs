@@ -60,6 +60,21 @@ public sealed class WeekdayTrendChartControllerAdapterTests
     }
 
     [Fact]
+    public void Clear_ShouldDelegateToRenderingContract_WithCurrentHost()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var setup = CreateAdapter(WeekdayTrendChartMode.Cartesian, isVisible: true);
+
+            setup.Adapter.Clear(setup.ChartState);
+
+            Assert.Same(setup.Controller.Chart, setup.RenderingContract.LastClearHost!.CartesianChart);
+            Assert.Same(setup.Controller.PolarChart, setup.RenderingContract.LastClearHost.PolarChart);
+            Assert.Same(setup.ChartState, setup.RenderingContract.LastClearHost.ChartState);
+        });
+    }
+
+    [Fact]
     public void OnChartTypeToggleRequested_ShouldToggleMode_AndRenderLastContext()
     {
         StaTestHelper.Run(() =>
@@ -185,6 +200,7 @@ public sealed class WeekdayTrendChartControllerAdapterTests
 
     private sealed class FakeWeekdayTrendRenderingContract : IWeekdayTrendRenderingContract
     {
+        public WeekdayTrendChartRenderHost? LastClearHost { get; private set; }
         public WeekdayTrendRenderingRoute? LastResetRoute { get; private set; }
         public WeekdayTrendRenderingRoute? LastHasRenderableRoute { get; private set; }
         public WeekdayTrendChartRenderRequest? LastRenderRequest { get; private set; }
@@ -207,6 +223,7 @@ public sealed class WeekdayTrendChartControllerAdapterTests
 
         public void Clear(WeekdayTrendChartRenderHost host)
         {
+            LastClearHost = host;
         }
 
         public void ResetView(WeekdayTrendRenderingRoute route, WeekdayTrendChartRenderHost host)

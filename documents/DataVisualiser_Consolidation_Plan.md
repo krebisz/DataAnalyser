@@ -733,6 +733,79 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once more controller/host seams are stabilized
 - `Syncfusion` remains explicitly out of scope for the early controller/host standardization program
 
+#### Iteration 5 - Phase D - Controller and Host Standardization
+
+**Date:** `2026-03-27`  
+**Primary objective:** standardize the converged render-host lifecycle delegation shared by the `Distribution` and `WeekdayTrend` controller adapters without changing their family-specific route semantics, render-host creation, or live chart behavior
+
+**Regression protection established before mutation**
+
+- expanded direct controller-adapter coverage to lock down `Clear`, `ResetZoom`, and `HasSeries` delegation through the current render host / resolved route seam
+- pre-mutation focused regression gate:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~WeekdayTrendChartControllerAdapterTests|FullyQualifiedName~DistributionChartControllerAdapterTests"` passed on `2026-03-27` with `9` tests passed, `0` failed, `0` skipped
+
+**Bounded slice executed**
+
+- `UI/Charts/Adapters/DistributionChartControllerAdapter.cs`
+- `UI/Charts/Adapters/WeekdayTrendChartControllerAdapter.cs`
+- new shared controller-adapter support:
+  - `UI/Charts/Infrastructure/RenderingHostLifecycleAdapterHelper.cs`
+  - `UI/Charts/Infrastructure/RenderingHostTarget.cs`
+- focused direct test expansion:
+  - `DataVisualiser.Tests/Controls/DistributionChartControllerAdapterTests.cs`
+  - `DataVisualiser.Tests/Controls/WeekdayTrendChartControllerAdapterTests.cs`
+
+**Inventory outcome for the chosen slice**
+
+- both adapters already converged on the same lifecycle-delegation shape:
+  - resolve the active host
+  - resolve the route associated with that host or current chart mode
+  - delegate `Clear`
+  - delegate `ResetZoom`
+  - delegate `HasSeries`
+- the family-specific parts remained distinct and intentionally explicit:
+  - `Distribution` keeps family-specific route resolution tied to distribution mode and polar/cartesian behavior
+  - `WeekdayTrend` keeps family-specific host selection and chart-type visibility behavior
+
+**What was simplified**
+
+- repeated route/host lookup no longer lives separately inside both adapters for the lifecycle seam
+- `Clear`, `ResetZoom`, and `HasSeries` no longer re-implement nearly identical host-target delegation logic in both adapters
+
+**What was consolidated**
+
+- common render-host lifecycle delegation moved into `RenderingHostLifecycleAdapterHelper`
+- a small shared `RenderingHostTarget` value shape now carries the resolved host and route through the common lifecycle path
+- `DistributionChartControllerAdapter` and `WeekdayTrendChartControllerAdapter` now use the same lifecycle-delegation contract for this converged seam
+
+**What was generalized**
+
+- a shared controller/host support helper was promoted because there are now at least two real adapter consumers with the same route-plus-host lifecycle delegation shape
+- the generalization stays narrow and does not force uniformity into family-specific render-host creation, route resolution rules, or chart-mode policy
+
+**What remained explicit intentionally**
+
+- family-specific render-host creation
+- family-specific route resolution and chart-mode semantics
+- family-specific data-loading, strategy computation, and mode/settings behavior
+- chart-type visibility and any UI-facing toggling policy
+
+**Validation / smoke result**
+
+- focused subsystem lane after the refactor:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~WeekdayTrendChartControllerAdapterTests|FullyQualifiedName~DistributionChartControllerAdapterTests"` passed on `2026-03-27` with `9` tests passed, `0` failed, `0` skipped
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `389` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change remained behavior-preserving controller/host standardization backed by focused adapter tests rather than an intentional live UI behavior change
+
+**Remaining intentional debt after Iteration 5**
+
+- broader controller/host convergence still exists outside this lifecycle seam, especially full render orchestration and chart-panel event wiring
+- no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once controller/host ownership stabilizes further
+- `Syncfusion` remains explicitly out of scope for the early controller/host standardization program
+
 ---
 
 ## 8. Validation and Smoke-Test Discipline

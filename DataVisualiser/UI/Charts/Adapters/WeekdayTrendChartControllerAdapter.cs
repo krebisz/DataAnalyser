@@ -58,17 +58,17 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
     public override void Clear(ChartState state)
     {
-        _weekdayTrendRenderingContract.Clear(CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.Clear(CreateRenderHost, _weekdayTrendRenderingContract.Clear);
     }
 
     public override void ResetZoom()
     {
-        _weekdayTrendRenderingContract.ResetView(ResolveRenderingRoute(), CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.ResetView(ResolveRenderingRoute, CreateRenderHost, _weekdayTrendRenderingContract.ResetView);
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return _weekdayTrendRenderingContract.HasRenderableContent(ResolveRenderingRoute(), CreateRenderHost());
+        return RenderingHostLifecycleAdapterHelper.HasRenderableContent(ResolveRenderingRoute, CreateRenderHost, _weekdayTrendRenderingContract.HasRenderableContent);
     }
 
     public override void UpdateSubtypeOptions()
@@ -298,9 +298,10 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
     private void RenderWeekdayTrendChart(WeekdayTrendResult result)
     {
+        var renderTarget = RenderingHostLifecycleAdapterHelper.CreateTarget(ResolveRenderingRoute, CreateRenderHost);
         _weekdayTrendRenderingContract.Render(
-            new WeekdayTrendChartRenderRequest(ResolveRenderingRoute(), result, _viewModel.ChartState),
-            CreateRenderHost());
+            new WeekdayTrendChartRenderRequest(renderTarget.Route, result, _viewModel.ChartState),
+            renderTarget.Host);
     }
 
     private WeekdayTrendRenderingRoute ResolveRenderingRoute()

@@ -61,17 +61,17 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
     public override void Clear(ChartState state)
     {
-        _distributionRenderingContract.Clear(CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.Clear(CreateRenderHost, _distributionRenderingContract.Clear);
     }
 
     public override void ResetZoom()
     {
-        _distributionRenderingContract.ResetView(ResolveRenderingRoute(), CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.ResetView(ResolveRenderingRoute, CreateRenderHost, _distributionRenderingContract.ResetView);
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return _distributionRenderingContract.HasRenderableContent(ResolveRenderingRoute(), CreateRenderHost());
+        return RenderingHostLifecycleAdapterHelper.HasRenderableContent(ResolveRenderingRoute, CreateRenderHost, _distributionRenderingContract.HasRenderableContent);
     }
 
     public override void UpdateSubtypeOptions()
@@ -290,8 +290,9 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         if (renderInput == null)
             return;
 
+        var renderTarget = RenderingHostLifecycleAdapterHelper.CreateTarget(ResolveRenderingRoute, CreateRenderHost);
         var request = new DistributionChartRenderRequest(
-            ResolveRenderingRoute(),
+            renderTarget.Route,
             mode,
             _viewModel.ChartState.GetDistributionSettings(mode),
             renderInput.Data,
@@ -302,7 +303,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
             BuildDistributionContext(ctx, renderInput),
             _viewModel.ChartState);
 
-        await _distributionRenderingContract.RenderAsync(request, CreateRenderHost());
+        await _distributionRenderingContract.RenderAsync(request, renderTarget.Host);
     }
 
     private async Task RerenderDistributionIfVisibleAsync(DistributionMode mode)

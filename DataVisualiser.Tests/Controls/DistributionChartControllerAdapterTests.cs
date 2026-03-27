@@ -63,6 +63,48 @@ public sealed class DistributionChartControllerAdapterTests
     }
 
     [Fact]
+    public void Clear_ResetZoom_AndHasSeries_ShouldDelegateToRenderingContract_WithResolvedRoute()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var chartState = new ChartState
+            {
+                    IsDistributionVisible = true,
+                    IsDistributionPolarMode = true,
+                    SelectedDistributionMode = DistributionMode.Weekly
+            };
+
+            var metricState = new MetricState();
+            var uiState = new UiState();
+            var metricService = new MetricSelectionService("TestConnection");
+            var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
+            var controller = new DistributionChartController();
+            var renderingContract = new FakeDistributionRenderingContract
+            {
+                    HasRenderableContentResult = true
+            };
+            var adapter = new DistributionChartControllerAdapter(
+                    controller,
+                    viewModel,
+                    () => false,
+                    () => NoOpScope.Instance,
+                    metricService,
+                    renderingContract,
+                    () => null);
+
+            adapter.Clear(chartState);
+            adapter.ResetZoom();
+            var hasSeries = adapter.HasSeries(chartState);
+
+            Assert.True(hasSeries);
+            Assert.Same(controller.Chart, renderingContract.LastClearHost!.CartesianChart);
+            Assert.Same(controller.PolarChart, renderingContract.LastClearHost.PolarChart);
+            Assert.Equal(DistributionRenderingRoute.PolarFallback, renderingContract.LastResetRoute);
+            Assert.Equal(DistributionRenderingRoute.PolarFallback, renderingContract.LastHasRenderableRoute);
+        });
+    }
+
+    [Fact]
     public async Task RenderAsync_InPolarMode_RendersOnCartesianHost_AndKeepsPolarHostCollapsed()
     {
         await StaTestHelper.RunAsync(async () =>
@@ -248,6 +290,45 @@ public sealed class DistributionChartControllerAdapterTests
 
         public void Dispose()
         {
+        }
+    }
+
+    private sealed class FakeDistributionRenderingContract : IDistributionRenderingContract
+    {
+        public DistributionChartRenderHost? LastClearHost { get; private set; }
+        public DistributionRenderingRoute? LastResetRoute { get; private set; }
+        public DistributionRenderingRoute? LastHasRenderableRoute { get; private set; }
+        public bool HasRenderableContentResult { get; set; }
+
+        public IReadOnlyList<DistributionBackendQualification> GetBackendQualificationMatrix()
+        {
+            return [];
+        }
+
+        public DistributionRenderingCapabilities GetCapabilities(DistributionRenderingRoute route)
+        {
+            return new DistributionRenderingCapabilities("test", DistributionRenderingQualification.Qualified, true, true, true, true, true, true);
+        }
+
+        public Task RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
+        {
+            return Task.CompletedTask;
+        }
+
+        public void Clear(DistributionChartRenderHost host)
+        {
+            LastClearHost = host;
+        }
+
+        public void ResetView(DistributionRenderingRoute route, DistributionChartRenderHost host)
+        {
+            LastResetRoute = route;
+        }
+
+        public bool HasRenderableContent(DistributionRenderingRoute route, DistributionChartRenderHost host)
+        {
+            LastHasRenderableRoute = route;
+            return HasRenderableContentResult;
         }
     }
 }
