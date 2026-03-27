@@ -61,6 +61,50 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
     }
 
     [Fact]
+    public void DiffRatioOnPrimarySubtypeChanged_ShouldUpdateState_AndRerenderLastContext()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var primary = new MetricSeriesSelection("weight", "avg");
+            var secondary = new MetricSeriesSelection("steps", "(All)");
+            var setup = CreateDiffRatioAdapter();
+            setup.MetricState.SetSeriesSelections([primary, secondary]);
+            setup.Adapter.UpdateSubtypeOptions();
+            setup.ChartState.LastContext = CreateComparisonContext();
+            setup.Controller.PrimarySubtypeCombo.SelectedIndex = 1;
+
+            setup.Adapter.OnPrimarySubtypeChanged(null, EventArgs.Empty);
+
+            Assert.Equal(secondary, setup.ChartState.SelectedDiffRatioPrimarySeries);
+            var request = Assert.IsType<CartesianMetricChartRenderRequest>(setup.RenderingContract.LastRenderRequest);
+            Assert.Equal("Steps", request.Context.DisplayName1);
+            Assert.Equal(1, setup.RenderingContract.RenderCallCount);
+        });
+    }
+
+    [Fact]
+    public void DiffRatioOnPrimarySubtypeChanged_ShouldUpdateState_WithoutRerenderWhenHidden()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var primary = new MetricSeriesSelection("weight", "avg");
+            var secondary = new MetricSeriesSelection("steps", "(All)");
+            var setup = CreateDiffRatioAdapter();
+            setup.ChartState.IsDiffRatioVisible = false;
+            setup.MetricState.SetSeriesSelections([primary, secondary]);
+            setup.Adapter.UpdateSubtypeOptions();
+            setup.ChartState.LastContext = CreateComparisonContext();
+            setup.Controller.PrimarySubtypeCombo.SelectedIndex = 1;
+
+            setup.Adapter.OnPrimarySubtypeChanged(null, EventArgs.Empty);
+
+            Assert.Equal(secondary, setup.ChartState.SelectedDiffRatioPrimarySeries);
+            Assert.Null(setup.RenderingContract.LastRenderRequest);
+            Assert.Equal(0, setup.RenderingContract.RenderCallCount);
+        });
+    }
+
+    [Fact]
     public void NormalizedUpdateSubtypeOptions_ShouldPopulatePrimaryAndSecondaryCombos()
     {
         StaTestHelper.Run(() =>
@@ -104,6 +148,48 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
             Assert.Equal("Weight", request.Context.DisplayName2);
             Assert.Equal(secondary.MetricType, request.Context.PrimaryMetricType);
             Assert.Equal(primary.MetricType, request.Context.SecondaryMetricType);
+        });
+    }
+
+    [Fact]
+    public void NormalizedOnSecondarySubtypeChanged_ShouldUpdateState_AndRerenderLastContext()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var primary = new MetricSeriesSelection("weight", "avg");
+            var secondary = new MetricSeriesSelection("steps", "(All)");
+            var setup = CreateNormalizedAdapter();
+            setup.MetricState.SetSeriesSelections([primary, secondary]);
+            setup.Adapter.UpdateSubtypeOptions();
+            setup.ChartState.LastContext = CreateComparisonContext();
+            setup.Controller.NormalizedSecondarySubtypeCombo.SelectedIndex = 0;
+
+            setup.Adapter.OnSecondarySubtypeChanged(null, EventArgs.Empty);
+
+            Assert.Equal(primary, setup.ChartState.SelectedNormalizedSecondarySeries);
+            var request = Assert.IsType<CartesianMetricChartRenderRequest>(setup.RenderingContract.LastRenderRequest);
+            Assert.Equal("Weight", request.Context.DisplayName2);
+            Assert.Equal(1, setup.RenderingContract.RenderCallCount);
+        });
+    }
+
+    [Fact]
+    public void NormalizedOnSecondarySubtypeChanged_ShouldUpdateState_WithoutRerenderWhenNoLastContext()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var primary = new MetricSeriesSelection("weight", "avg");
+            var secondary = new MetricSeriesSelection("steps", "(All)");
+            var setup = CreateNormalizedAdapter();
+            setup.MetricState.SetSeriesSelections([primary, secondary]);
+            setup.Adapter.UpdateSubtypeOptions();
+            setup.Controller.NormalizedSecondarySubtypeCombo.SelectedIndex = 0;
+
+            setup.Adapter.OnSecondarySubtypeChanged(null, EventArgs.Empty);
+
+            Assert.Equal(primary, setup.ChartState.SelectedNormalizedSecondarySeries);
+            Assert.Null(setup.RenderingContract.LastRenderRequest);
+            Assert.Equal(0, setup.RenderingContract.RenderCallCount);
         });
     }
 
@@ -213,6 +299,7 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
     private sealed class FakeCartesianMetricRenderingContract : ICartesianMetricChartRenderingContract
     {
         public object? LastRenderRequest { get; private set; }
+        public int RenderCallCount { get; private set; }
 
         public IReadOnlyList<CartesianMetricBackendQualification> GetBackendQualificationMatrix()
         {
@@ -227,6 +314,7 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
         public Task RenderAsync(CartesianMetricChartRenderRequest request, CartesianMetricChartRenderHost host)
         {
             LastRenderRequest = request;
+            RenderCallCount++;
             return Task.CompletedTask;
         }
 

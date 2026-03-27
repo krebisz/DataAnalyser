@@ -113,24 +113,22 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 
     public async void OnPrimarySubtypeChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing() || _isUpdatingSubtypeCombos)
-            return;
-
-        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.PrimarySubtypeCombo);
-        _viewModel.SetDiffRatioPrimarySeries(selection);
-
-        await RenderDiffRatioFromSelectionAsync();
+        await MetricSeriesSelectionAdapterHelper.HandleSubtypeSelectionChangeAsync(
+            _isInitializing(),
+            _isUpdatingSubtypeCombos,
+            _controller.PrimarySubtypeCombo,
+            _viewModel.SetDiffRatioPrimarySeries,
+            RenderDiffRatioFromSelectionAsync);
     }
 
     public async void OnSecondarySubtypeChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing() || _isUpdatingSubtypeCombos)
-            return;
-
-        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.SecondarySubtypeCombo);
-        _viewModel.SetDiffRatioSecondarySeries(selection);
-
-        await RenderDiffRatioFromSelectionAsync();
+        await MetricSeriesSelectionAdapterHelper.HandleSubtypeSelectionChangeAsync(
+            _isInitializing(),
+            _isUpdatingSubtypeCombos,
+            _controller.SecondarySubtypeCombo,
+            _viewModel.SetDiffRatioSecondarySeries,
+            RenderDiffRatioFromSelectionAsync);
     }
 
     public async void OnOperationToggleRequested(object? sender, EventArgs e)
@@ -144,11 +142,10 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 
     private async Task RenderDiffRatioFromSelectionAsync()
     {
-        if (!_viewModel.ChartState.IsDiffRatioVisible || _viewModel.ChartState.LastContext == null)
-            return;
-
-        var ctx = _viewModel.ChartState.LastContext;
-        await RenderDiffRatioAsync(ctx);
+        await MetricSeriesSelectionAdapterHelper.RerenderIfVisibleAsync(
+            _viewModel.ChartState.IsDiffRatioVisible,
+            _viewModel.ChartState.LastContext,
+            RenderDiffRatioAsync);
     }
 
     private async Task RenderDiffRatioAsync(ChartDataContext ctx)

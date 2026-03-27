@@ -114,33 +114,30 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     public async void OnPrimarySubtypeChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing() || _isUpdatingSubtypeCombos)
-            return;
-
-        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.NormalizedPrimarySubtypeCombo);
-        _viewModel.SetNormalizedPrimarySeries(selection);
-
-        await RenderNormalizedFromSelectionAsync();
+        await MetricSeriesSelectionAdapterHelper.HandleSubtypeSelectionChangeAsync(
+            _isInitializing(),
+            _isUpdatingSubtypeCombos,
+            _controller.NormalizedPrimarySubtypeCombo,
+            _viewModel.SetNormalizedPrimarySeries,
+            RenderNormalizedFromSelectionAsync);
     }
 
     public async void OnSecondarySubtypeChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing() || _isUpdatingSubtypeCombos)
-            return;
-
-        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.NormalizedSecondarySubtypeCombo);
-        _viewModel.SetNormalizedSecondarySeries(selection);
-
-        await RenderNormalizedFromSelectionAsync();
+        await MetricSeriesSelectionAdapterHelper.HandleSubtypeSelectionChangeAsync(
+            _isInitializing(),
+            _isUpdatingSubtypeCombos,
+            _controller.NormalizedSecondarySubtypeCombo,
+            _viewModel.SetNormalizedSecondarySeries,
+            RenderNormalizedFromSelectionAsync);
     }
 
     private async Task RenderNormalizedFromSelectionAsync()
     {
-        if (!_viewModel.ChartState.IsNormalizedVisible || _viewModel.ChartState.LastContext == null)
-            return;
-
-        var ctx = _viewModel.ChartState.LastContext;
-        await RenderNormalizedAsync(ctx);
+        await MetricSeriesSelectionAdapterHelper.RerenderIfVisibleAsync(
+            _viewModel.ChartState.IsNormalizedVisible,
+            _viewModel.ChartState.LastContext,
+            RenderNormalizedAsync);
     }
 
     private async Task RenderNormalizedAsync(ChartDataContext ctx)
@@ -234,12 +231,12 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     private async Task RerenderNormalizedIfVisibleAsync()
     {
-        var ctx = _viewModel.ChartState.LastContext;
-        if (!_viewModel.ChartState.IsNormalizedVisible || ctx?.Data1 == null || ctx.Data2 == null)
-            return;
-
         using var _ = _beginUiBusyScope();
-        await RenderNormalizedAsync(ctx);
+        await MetricSeriesSelectionAdapterHelper.RerenderIfVisibleAsync(
+            _viewModel.ChartState.IsNormalizedVisible,
+            _viewModel.ChartState.LastContext,
+            static ctx => ctx.Data1 != null && ctx.Data2 != null,
+            RenderNormalizedAsync);
     }
 
     private static ChartDataContext BuildNormalizedContext(ChartDataContext ctx, MetricSeriesSelection? primarySelection, MetricSeriesSelection? secondarySelection, IReadOnlyList<MetricData>? primaryData, IReadOnlyList<MetricData>? secondaryData, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)

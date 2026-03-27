@@ -972,6 +972,82 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - broader render orchestration outside the cartesian-metric cluster still remains unconsolidated
 - no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once the remaining live controller seams are stabilized
 
+#### Iteration 8 - Phase D - Controller and Host Standardization
+
+**Date:** `2026-03-27`  
+**Primary objective:** standardize the subtype-change event wiring and rerender-orchestration seam shared by `DiffRatio` and `Normalized` while preserving their distinct operation and normalization behavior
+
+**Regression protection established before mutation**
+
+- expanded direct adapter coverage for subtype-change event handling and the rerender-if-visible gate in `DiffRatio` and `Normalized`
+- pre-mutation focused regression gate:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~DiffRatioNormalizedSelectionAdapterTests"` passed on `2026-03-27` with `8` tests passed, `0` failed, `0` skipped
+
+**Bounded slice executed**
+
+- `UI/Charts/Adapters/DiffRatioChartControllerAdapter.cs`
+- `UI/Charts/Adapters/NormalizedChartControllerAdapter.cs`
+- shared event/rerender support refinement:
+  - `UI/Charts/Infrastructure/MetricSeriesSelectionAdapterHelper.cs`
+- focused direct test expansion:
+  - `DataVisualiser.Tests/Controls/DiffRatioNormalizedSelectionAdapterTests.cs`
+
+**Inventory outcome for the chosen slice**
+
+- both adapters already converged on the same controller event shape around the shared selection path:
+  - ignore subtype changes during initialization
+  - ignore subtype changes while subtype combos are being repopulated
+  - read the selected series from the combo
+  - store the updated chart-state selection
+  - rerender only when the chart is visible and the last chart context is available
+- the family-specific parts remained distinct and intentionally explicit:
+  - `DiffRatio` keeps operation-toggle behavior and comparison title/tooltip semantics
+  - `Normalized` keeps normalization-mode behavior and the stricter mode-change rerender guard that requires both primary and secondary data
+
+**What was simplified**
+
+- repeated primary/secondary subtype-change event handling no longer lives separately in both adapters
+- repeated visible-and-last-context rerender gating no longer lives separately in both adapters
+
+**What was consolidated**
+
+- `MetricSeriesSelectionAdapterHelper` now owns shared subtype-change event handling and shared rerender-if-visible orchestration
+- `DiffRatioChartControllerAdapter` and `NormalizedChartControllerAdapter` now delegate the repeated event/rerender seam through one controller-support path
+
+**What was generalized**
+
+- the selection helper was broadened again because the `DiffRatio` / `Normalized` pair now proves a shared live-controller event shape in addition to the already shared selection/context shape
+- the generalization stays narrow and policy-based so mode-specific and chart-specific behavior remains explicit in each adapter
+
+**What remained explicit intentionally**
+
+- `DiffRatio` operation-toggle behavior and title/tooltip updates
+- `Normalized` normalization-mode behavior and its stricter mode-change rerender precondition
+- family-specific chart rendering semantics after the rerender gate passes
+
+**Validation / smoke result**
+
+- focused subsystem lane after the refactor:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~DiffRatioNormalizedSelectionAdapterTests"` passed on `2026-03-27` with `8` tests passed, `0` failed, `0` skipped
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `400` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - required for this iteration because the touched seam sits directly in live controller event flow and rerender behavior
+  - halt further mutation until targeted smoke completes
+  - targeted smoke scope:
+    - `Normalized`: with two selected series, change both subtype combos and verify rerender and panel-title behavior stay correct
+    - `Normalized`: with the chart hidden or without a reusable context, verify subtype changes update selection state without unstable rerender behavior
+    - `DiffRatio`: same controller-flow checks only if that chart path is reachable from the front end
+- manual smoke follow-up:
+  - `DiffRatio` smoke remains non-executable while no reachable front-end implementation uses that chart/controller path
+
+**Remaining intentional debt after Iteration 8**
+
+- the next likely bounded step before Phase E is any remaining cartesian-metric controller glue that still meaningfully duplicates orchestration without changing semantics
+- if no further safe, high-value controller seam remains after smoke, the next move should be reassessment for Phase E readiness rather than forcing one more abstraction
+- no physical folder/file reduction has been attempted yet; this remains deferred to bounded debt-retirement work once the remaining controller seams are considered stable
+
 ---
 
 ## 8. Validation and Smoke-Test Discipline

@@ -38,6 +38,21 @@ internal static class MetricSeriesSelectionAdapterHelper
             () => BuildFallbackSelection(metricType, subtype));
     }
 
+    public static async Task HandleSubtypeSelectionChangeAsync(
+        bool isInitializing,
+        bool isUpdatingSubtypeCombos,
+        ComboBox combo,
+        Action<MetricSeriesSelection?> assignSelection,
+        Func<Task> rerenderAsync)
+    {
+        if (isInitializing || isUpdatingSubtypeCombos)
+            return;
+
+        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(combo);
+        assignSelection(selection);
+        await rerenderAsync();
+    }
+
     public static void PopulatePrimarySecondarySubtypeCombos(
         ComboBox primaryCombo,
         ComboBox secondaryCombo,
@@ -116,6 +131,19 @@ internal static class MetricSeriesSelectionAdapterHelper
         var data = primaryData.ToList();
         selectionCache.SetDataWithCms(cacheKey, data, primaryCms);
         return (data, primaryCms);
+    }
+
+    public static Task RerenderIfVisibleAsync(bool isVisible, ChartDataContext? context, Func<ChartDataContext, bool> canRerender, Func<ChartDataContext, Task> rerenderAsync)
+    {
+        if (!isVisible || context == null || !canRerender(context))
+            return Task.CompletedTask;
+
+        return rerenderAsync(context);
+    }
+
+    public static Task RerenderIfVisibleAsync(bool isVisible, ChartDataContext? context, Func<ChartDataContext, Task> rerenderAsync)
+    {
+        return RerenderIfVisibleAsync(isVisible, context, static _ => true, rerenderAsync);
     }
 
     public static string ResolveDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
