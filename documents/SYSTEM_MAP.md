@@ -13,6 +13,7 @@ This document defines the structural layout of the system, including:
 - execution flow
 - semantic authority boundaries
 - rendering boundaries
+- consumer and delivery boundaries
 - permitted interactions between subsystems
 
 It answers where things live, what may talk to what, and what must never cross boundaries.
@@ -28,7 +29,7 @@ It is a map of allowed reality.
 
 Semantic and interpretive authority flows downward only:
 
-`Raw Data -> Normalization -> CMS -> Derived Computation -> Interpretive Overlays -> Presentation`
+`Raw Data -> Normalization -> Canonical Views / CMS -> Derived Computation -> Interpretive Overlays -> Presentation`
 
 Authority never flows upward.
 
@@ -38,10 +39,11 @@ Authority never flows upward.
 
 Runtime execution typically passes through these operational zones:
 
-`Presentation/UI -> Orchestration -> Computation/Overlay Selection -> Rendering Infrastructure -> Presentation/UI`
+`Consumer / UI -> Request & Presentation Planning -> Orchestration -> Derived / Interpretive Execution -> Rendering / Delivery Infrastructure -> Client Surface`
 
 This execution loop does not change authority.
-The UI may initiate execution, but it does not gain semantic authority by doing so.
+A UI may initiate execution, but it does not gain semantic authority by doing so.
+Other consumers may do the same through explicit request contracts.
 
 ---
 
@@ -94,18 +96,20 @@ This is the semantic authority layer.
 
 ---
 
-### 3.3 Canonical Metric Series (CMS) Layer
+### 3.3 Canonical Interoperability / CMS Layer
 
 **Responsibilities**
-- provide the stable, trusted analytical substrate
-- represent the authoritative time series for each metric
+- provide the default standardized substrate for comparison and interoperability
+- represent the canonical time series form for each metric
+- make cross-source and cross-context comparison explicit and repeatable
 
 **Constraints**
 - immutable once produced
-- assumed correct by all consumers
+- semantically trustworthy within declared canonical boundaries
 - never conditionally altered
+- not the only downstream-accessible view
 
-CMS is the only trusted analytical input to forward computation.
+CMS is the default substrate whenever the system claims canonical comparability.
 
 ---
 
@@ -119,7 +123,7 @@ CMS is the only trusted analytical input to forward computation.
   - compositions
   - comparative values
   - stacked values
-  - chart-program result sets
+  - chart-program or consumer-request result sets
 
 **Constraints**
 - must declare provenance
@@ -128,6 +132,10 @@ CMS is the only trusted analytical input to forward computation.
 - result identity must remain explicit when persisted or reused
 
 Derived results may be ephemeral or persistent, but never implicit.
+
+The system may expose raw, normalized, canonical, or derived views downstream for explicit inspection or comparison.
+Forward computation may operate on any explicitly declared downstream-safe view, provided that provenance, trust class, and semantic status remain visible and that non-canonical inputs are not misrepresented as canonical truth.
+Any computation that claims canonical comparability must use CMS or another explicitly declared canonical-equivalent substrate.
 
 ---
 
@@ -193,9 +201,10 @@ Rules must never be treated as recommendations or semantic truth.
 The orchestration layer coordinates execution, not meaning.
 
 **Responsibilities**
+- accept explicit downstream requests for result shaping, composition, or delivery
 - strategy selection through explicit declared mechanisms
 - execution routing
-- chart-program/result composition handoff
+- consumer-request / chart-program result composition handoff
 - migration coexistence handling
 - evidence/export initiation
 
@@ -237,6 +246,7 @@ The presentation layer renders outputs from lower layers and exposes explicit us
 - expose configuration, interpretation, and visibility choices
 - visualize provenance, uncertainty, qualification state, and result-set state
 - converge toward standardized graph hosts where capability semantics genuinely align
+- serve as one family of downstream clients rather than the architectural center of the system
 
 **Constraints**
 - must not infer semantics
@@ -245,21 +255,26 @@ The presentation layer renders outputs from lower layers and exposes explicit us
 - controller standardization must not turn the UI into a semantic authority
 
 UI is expressive, not authoritative.
+Charts are consumers, not the definition of the platform.
 
 ---
 
 ## 4. Chart Programs and Programmable Composition
 
-The system may evolve toward standardized programmable chart composition, but that capability remains structurally downstream of CMS.
+The system may evolve toward standardized programmable chart composition, but that capability remains structurally downstream of truth assignment and canonicalization.
+Chart programs should be treated as the chart-oriented specialization of a broader downstream request model, not as a special semantic layer.
 
 ### 4.1 Chart Program Definition
 
 A chart program is an explicit downstream construct that may include:
 
 - selected metrics or submetrics
+- explicit source-view selection where permitted by upstream boundaries
 - declared unary, binary, ternary, or higher-order operations
+- filters, windowing, or contextual selection instructions
 - render intent for one or more derived result sets
 - optional interpretive overlays
+- client-facing output constraints or delivery hints
 
 ### 4.2 Structural Placement
 
@@ -267,9 +282,10 @@ Chart programs sit across:
 
 - derived computation, for declared result construction
 - interpretive overlays, for non-authoritative overlay behavior
+- request and presentation planning, for output selection and result-shape intent
 - orchestration, for explicit execution handoff
-- rendering infrastructure, for backend-safe display
-- presentation, for user-facing composition and control
+- rendering or delivery infrastructure, for backend-safe display or transport
+- presentation and consumer surfaces, for user-facing composition and control
 
 ### 4.3 Binding Constraints
 
@@ -280,6 +296,7 @@ Chart programs:
 - do not promote results into canonical truth implicitly
 - must preserve provenance for each result set
 - may use only qualified rendering capability slices for the interactions they need
+- must not bypass declared authority boundaries merely because a caller requests lower-level data access
 
 Programmability is a downstream capability, not a semantic one.
 
@@ -297,15 +314,18 @@ Upward semantic influence is forbidden.
 
 ### 5.2 Allowed Consumption
 
+- explicit consumers may request raw, normalized, canonical, or derived views only through declared boundaries with visible provenance and no semantic promotion
 - orchestration may consume declared strategies, derived results, overlay intent, and rendering contracts
-- rendering infrastructure may consume derived results and overlays
+- rendering and delivery infrastructure may consume derived results and overlays
 - presentation may consume any downstream-safe outputs and state needed to display them
+- non-UI consumers may consume the same downstream-safe result contracts without becoming semantic authorities
 
 ### 5.3 Prohibited Boundary Violations
 
 Examples include:
 
 - UI selecting semantic meaning
+- caller access silently bypassing canonical boundaries
 - confidence logic modifying CMS
 - trend logic influencing normalization
 - rendering logic altering computation
@@ -326,7 +346,8 @@ During migration phases, the system may contain:
 - CMS-based execution paths
 
 **Constraints**
-- CMS is the forward path
+- canonical, provenance-visible execution is the forward path
+- CMS-capable execution remains the default interoperability path
 - legacy is compatibility-only
 - parity visibility is mandatory
 - unreachable code is treated as non-existent
@@ -404,12 +425,14 @@ Language is part of architecture.
 
 ## 9. Summary
 
-- canonical truth is immutable
+- truth layers are preserved and canonical meaning is stable
 - derivation is explicit and provenance-preserving
 - interpretation is powerful but bounded
+- downstream requests may be rich and composable without becoming semantic authorities
 - orchestration coordinates execution but does not define meaning
-- rendering infrastructure is replaceable and qualification-bound
+- rendering and delivery infrastructure are replaceable and qualification-bound
 - UI is expressive but non-authoritative
+- charts are one consumer family among several possible clients
 - programmable chart composition is allowed only as a downstream, reversible, provenance-visible capability
 
 This map defines what the system is allowed to be.

@@ -1,7 +1,8 @@
 # PROJECT OVERVIEW
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
-**Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`
+**Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `Project Roadmap.md`  
+**Active Subsystem Execution Reference:** `DataVisualiser_Consolidation_Plan.md` for the current delivery-side hierarchy reconciliation work
 
 ---
 
@@ -22,15 +23,18 @@ If a conflict exists, higher-authority documents prevail.
 
 ## 2. Project Intent (High-Level)
 
-The project exists to provide a trustworthy analytical environment for exploring time-indexed metrics, with an explicit emphasis on:
+The project exists to provide a trustworthy canonical data reasoning environment for exploring messy, real-world, time-indexed information, with an explicit emphasis on:
 
 - canonical truth
 - deterministic computation
 - explicit semantics
 - reversible interpretation
 - visible uncertainty
+- downstream flexibility in how results are selected, transformed, composed, and consumed
 
 The system favors clarity and auditability over automation or convenience.
+It should not be understood as a reporting tool that only exposes preselected outputs.
+It is intended to become a platform that can preserve data faithfully, standardize it, reason over it explicitly, and serve those results to multiple kinds of clients.
 
 ---
 
@@ -40,13 +44,16 @@ At present, the system:
 
 - ingests raw metric data losslessly
 - assigns meaning through declarative normalization
-- produces Canonical Metric Series (CMS)
+- produces Canonical Metric Series (CMS) as the default comparison and interoperability substrate
 - computes derived results deterministically
+- increasingly exposes raw, normalized, canonical, and derived views through explicit downstream boundaries
 - visualizes results through multiple chart types
 - validates behavior through parity testing
 - supports parallel legacy and CMS execution paths during migration
+- increasingly exposes downstream-safe derived and interpretive result shaping through explicit orchestration and rendering seams
 
-Canonical semantics form the foundation for all computation.
+Canonical semantics form the foundation for all trusted meaning and for all computation that claims canonical comparability.
+Charts are currently the dominant delivery surface, but they are not the intended limit of the platform.
 
 ---
 
@@ -54,10 +61,10 @@ Canonical semantics form the foundation for all computation.
 
 ### 4.1 Canonical Semantics & CMS
 
-- Canonical Metric Series (CMS) is the sole analytical truth
+- Canonical Metric Series (CMS) is the default canonical interoperability substrate
 - Metric identity is stable and explicit
 - Normalization is deterministic and staged
-- Downstream systems consume CMS without reinterpretation
+- Downstream systems may consume raw, normalized, canonical, or derived views only through explicit boundaries with visible provenance and no semantic reinterpretation
 
 ---
 
@@ -70,14 +77,15 @@ The system supports multiple computation strategies, including:
 - multi-metric comparisons
 - temporal distributions
 - transformations, currently including unary and binary flows with broader programmable composition intended
+- explicit downstream result composition over selected metrics, submetrics, and contextual slices
 
 Strategies may exist in both legacy and CMS forms during migration, with parity validation enforcing correctness.
 
 ---
 
-### 4.3 Visualization & Interaction
+### 4.3 Visualization, Delivery & Interaction
 
-The UI layer provides:
+Current delivery surfaces provide:
 
 - time-series charts
 - distribution views
@@ -85,9 +93,18 @@ The UI layer provides:
 - compositional and comparative charts
 - dynamic chart visibility and state management
 - backend-qualified multi-vendor rendering experiments in support of rendering-boundary isolation
+- exports and evidence paths that observe execution and result state
+
+The broader intended model is:
+
+- consumers express what they want to inspect or compare
+- request and presentation planning shape those needs into explicit downstream instructions
+- orchestration coordinates the declared work
+- derived and interpretive result sets are produced explicitly
+- qualified delivery clients render or transport those results in a uniform way
 
 UI components are controller-based, but full standardization is still an active architectural direction rather than finished reality.
-The intended direction is convergence toward standardized graph hosts with shared option/toggle affordances and programmable derived-result composition on qualified chart surfaces.
+The intended direction is convergence toward standardized graph hosts, shared option/toggle affordances, and programmable derived-result composition on qualified chart surfaces, without making chart controllers the semantic center of the system.
 The recent architecture rehaul established explicit orchestration, rendering, theme, and evidence seams, while leaving a small number of large concentration points as intentional debt rather than hidden unfinished migration work.
 
 ---
@@ -100,6 +117,7 @@ Beyond raw computation, the system increasingly supports interpretive exploratio
 - compositional analysis (part vs whole)
 - transform-based derived views
 - future programmable chart composition over selected metric and submetric inputs
+- contextual subset selection, filtering, and comparison over declared views
 - pivot-oriented inspection (event-relative views)
 - dynamic visual cues (colouring, emphasis)
 
@@ -129,9 +147,9 @@ This allows uncertainty to be visible without compromising trust.
 
 ---
 
-## 7. Derived & Dynamic Metrics
+## 7. Derived & Dynamic Results
 
-Derived metrics are created through explicit composition or transformation of canonical metrics.
+Derived metrics and result sets are created through explicit composition or transformation of canonical metrics or other declared downstream-safe inputs.
 
 Characteristics:
 
@@ -140,6 +158,7 @@ Characteristics:
 - derived metrics are non-canonical by default
 - promotion to canonical truth is explicit and declarative
 - future chart programs may compose and render more than one derived result set at a time on qualified chart families
+- future non-chart consumers should be able to consume those same explicit result sets through uniform downstream contracts
 
 Derived results may be ephemeral (session-scoped) or persisted, depending on intent.
 
@@ -201,23 +220,33 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Structural repair, boundary reduction, and backend qualification have been completed as an explicit rehaul phase
 - Qualified seams now exist for orchestration, rendering contracts, theme ownership, and evidence/export flow
 - A small set of residual concentration points remains explicit intentional debt rather than hidden unfinished migration work
-- Future change is expected to preserve the path toward standardized programmable chart hosts rather than reopen prototype-era boundary leakage
+- Future change is expected to preserve the path toward standardized programmable chart hosts and broader downstream consumers rather than reopen prototype-era boundary leakage
 
 ---
 
-### Phase 6 - Exploratory & Confidence Capability Expansion  
+### Phase 6 - Architectural Legibility & Concern Reconciliation  
 **Open / Next Critical Path**
 
-- Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result chart composition are intentionally staged here
-- This is now the active next phase because the prerequisite earlier phases are closed under current evidence
+- The immediate architectural need is to restore a coherent, trustworthy hierarchy before further capability expansion
+- Similar operations need one obvious home, large mixed-responsibility outliers need decomposition, and truth/derivation/delivery seams need clearer reconciliation
+- Current active execution in `DataVisualiser_Consolidation_Plan.md` exists to make the delivery side legible enough that the remaining true outliers are exposed cleanly
+- The expected cadence is: map the hierarchy, consolidate one or two irreducible operation clusters, reconcile one mixed boundary, standardize one proven delivery seam, decompose one major outlier, then audit the new baseline
 
 ---
 
-### Phase 7 - UI, State, & Integration Consolidation  
+### Phase 7 - Exploratory & Confidence Capability Expansion  
+**Planned / Blocked**
+
+- Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
+- They are now intentionally blocked on Phase 6 because exploratory power added on top of an illegible hierarchy would amplify entropy instead of improving the system
+
+---
+
+### Phase 8 - UI, State, & Integration Consolidation  
 **Planned / Blocked**
 
 - Standardized graph hosts, shared option/toggle surfaces, and predictable integration behavior are intended here
-- This phase exists to consolidate the UI after Phase 6 has advanced enough to support that convergence safely
+- This phase exists to consolidate the UI after Phase 7 has advanced enough to support that convergence safely
 
 ---
 
@@ -227,10 +256,14 @@ The project is intentionally open-ended.
 
 Future directions may include:
 
+- cleaner separation between truth, derivation, orchestration, delivery, and client concerns
+- more legible hierarchy and naming so true outliers are obvious
 - richer interpretive overlays
 - expanded transform capabilities
 - standardized programmable chart hosts across the current chart families
 - multi-result derived chart composition on qualified rendering surfaces
+- broader downstream consumer support beyond current chart clients
+- more explicit request/result composition over selected canonical and derived views
 - compositional and relational analysis
 - confidence-aware visualizations
 - rules-based option gating
@@ -241,7 +274,7 @@ These directions represent intent, not immediate commitment.
 All future work must respect canonical boundaries and phase discipline.
 
 Exploratory and confidence-related capabilities are no longer treated as informal future ideas.
-They are explicitly staged and gated under Phase 6 of the roadmap, with declared scope, constraints, and closure conditions to prevent semantic erosion while supporting intentional exploration.
+They remain explicitly staged and gated, but they now sit behind the current legibility-first reconciliation phase so that future power is added onto a coherent structure rather than a muddled one.
 
 ---
 
@@ -267,8 +300,10 @@ The system exists to support reasoning, not replace it.
 - Interpretation is powerful but bounded
 - Confidence is explicit, not implicit
 - Exploration is supported without semantic erosion
-- Standardized programmable charting is intended, but still phase-gated
-- The architecture rehaul is complete, and the remaining large concentration points are explicit maintenance concerns rather than open rehaul ambiguity
+- Standardized programmable charting is intended, but still phase-gated behind hierarchy repair
+- Charts are the current dominant client, not the final definition of the platform
+- The broader direction is a downstream reasoning system that can serve multiple qualified consumers uniformly
+- The architecture rehaul is complete, but the next critical work is architectural legibility and concern reconciliation rather than feature expansion
 - Evolution is intentional and evidence-bound
 
 This overview describes the system as it exists today and the direction it is deliberately moving toward.

@@ -29,6 +29,9 @@ Meaning is assigned declaratively, not inferred.
 ### Single Semantic Authority
 Normalization is the sole arbiter of meaning.
 
+### Explicit Provenance
+Every downstream view must preserve its semantic status, source, and transformation lineage visibly.
+
 ### Determinism
 Identical inputs produce identical outputs.
 
@@ -43,9 +46,10 @@ Metric meaning:
 
 - is defined once
 - is stable
-- is opaque to consumers
+- is exposed through declared contracts with explicit semantic status
 
 No downstream layer may reinterpret or override semantic decisions.
+Downstream layers may consume multiple declared views of the data only if provenance, trust level, and semantic status remain visible.
 
 ---
 
@@ -80,9 +84,17 @@ Each stage:
 
 CMS:
 
-- is the only trusted analytical input
-- is required for computation
-- is assumed correct by consumers
+- is the default standardized substrate for cross-source comparison and downstream interoperability
+- is required wherever computation claims canonical comparability
+- is assumed semantically trustworthy within declared canonical boundaries
+- does not prohibit explicit downstream access to raw, normalized, or derived views
+
+The system MAY expose raw, normalized, canonical, and derived views downstream provided that:
+
+- access is explicit
+- provenance and trust classification remain visible
+- non-canonical views are not silently promoted into canonical truth
+- transformation lineage remains reviewable and reversible
 
 ---
 
@@ -94,6 +106,7 @@ The system must never:
 - conflate structure with meaning
 - allow heuristic logic to alter identity
 - permit silent semantic drift
+- silently promote non-canonical or lower-trust views into canonical truth
 
 ---
 
@@ -109,9 +122,9 @@ Convenience must not override correctness.
 
 ---
 
-## 9. Structural / Manifold Analysis Constraint (Additive · Binding)
+## 9. Structural / Manifold Analysis Constraint (Additive - Binding)
 
-Additive Section — No existing sections are modified by this addition.
+Additive Section - No existing sections are modified by this addition.
 
 The system MAY introduce future analytical subsystems that:
 
@@ -136,17 +149,17 @@ No automatic or implicit back-propagation is permitted.
 
 ---
 
-## 10. Temporal Execution & Migration Law (Additive · Binding)
+## 10. Temporal Execution & Migration Law (Additive - Binding)
 
-Additive Section — Introduced to support phased migration without violating Canonical Law.
+Additive Section - Introduced to support phased migration without violating Canonical Law.
 
 ### 10.1 Temporal Coexistence
 
-The system MAY temporarily support multiple execution paths (e.g. legacy and CMS-based) **provided that**:
+The system MAY temporarily support multiple execution paths (e.g. legacy and CMS-based) provided that:
 
 - Canonical law remains authoritative
-- No semantic authority is duplicated
-- Coexistence is explicitly bounded and observable
+- no semantic authority is duplicated
+- coexistence is explicitly bounded and observable
 
 Temporal coexistence is a migration state, not a steady-state design.
 
@@ -156,8 +169,9 @@ Temporal coexistence is a migration state, not a steady-state design.
 
 During migration phases:
 
-- Legacy execution is permitted only as a compatibility reference
-- CMS execution is the sole forward path
+- legacy execution is permitted only as a compatibility reference
+- canonical, provenance-visible execution is the sole forward path
+- CMS remains the default interoperability and comparison path
 
 Legacy paths MUST NOT:
 
@@ -175,7 +189,7 @@ Parity exists to:
 
 - validate behavioral equivalence
 - expose divergence explicitly
-- protect Canonical assumptions during transition
+- protect canonical assumptions during transition
 
 Parity mechanisms MUST:
 
@@ -199,49 +213,51 @@ Migration work MUST prove execution reachability.
 
 ---
 
-## 11. Service & Rendering Layer Constraint (Additive · Binding)
+## 11. Service & Rendering Layer Constraint (Additive - Binding)
 
-Additive Section — Clarifies downstream boundaries.
+Additive Section - Clarifies downstream boundaries.
 
 Service and rendering layers:
 
-- consume results
+- consume results or explicitly declared views
 - do not define semantics
 - do not select meaning
 - do not infer correctness
 
 They MAY:
 
+- request or compose explicit raw, normalized, canonical, or derived views
 - switch between explicitly declared strategies
-- visualize Canonical outputs
+- visualize canonical outputs
 - reflect migration state
 
 They MUST NOT:
 
-- conditionally reinterpret Canonical results
+- conditionally reinterpret canonical results
+- silently promote non-canonical views into truth
 - embed semantic branching logic
 
 ---
 
-## 12. Canonical Boundary Enforcement Rule (Additive · Binding)
+## 12. Canonical Boundary Enforcement Rule (Additive - Binding)
 
-Additive Section — Prevents silent law erosion.
+Additive Section - Prevents silent law erosion.
 
 Any code that:
 
-- constructs Canonical objects
-- mutates Canonical series
-- selects Canonical strategy
+- constructs canonical objects
+- mutates canonical series
+- selects canonical strategy
 
-MUST reside within explicitly designated Canonical boundaries.
+MUST reside within explicitly designated canonical boundaries.
 
 Violation constitutes architectural breach.
 
 ---
 
-## 13. Declarative Mapping & Non-Static Semantics Rule (Additive · Binding)
+## 13. Declarative Mapping & Non-Static Semantics Rule (Additive - Binding)
 
-Additive Section — Prevents static, manual semantic bottlenecks.
+Additive Section - Prevents static, manual semantic bottlenecks.
 
 Canonical identity and semantic mappings MUST be:
 
@@ -262,9 +278,9 @@ This rule applies to all legacy-to-canonical identity bridges.
 
 ---
 
-## 14. Confidence & Reliability Law (Additive · Binding)
+## 14. Confidence & Reliability Law (Additive - Binding)
 
-Additive Section — Supports explicit treatment of data quality **without violating Canonical Law**.
+Additive Section - Supports explicit treatment of data quality without violating Canonical Law.
 
 ### 14.1 Core Rule: Confidence Is Not Semantics
 
@@ -274,7 +290,7 @@ Such assessments:
 
 - do not alter meaning
 - do not alter identity
-- do not mutate Canonical values
+- do not mutate canonical values
 - do not rewrite history
 
 Confidence is an annotation layer, not a semantic layer.
@@ -302,14 +318,14 @@ These mechanisms must be:
 
 Permitted downstream actions:
 
-- visual marking (e.g., “low confidence”)
+- visual marking (e.g., "low confidence")
 - optional exclusion from specific computations
 - optional attenuation / weighting in trend assessments
 
 Prohibited actions:
 
 - deleting raw records
-- mutating Canonical values
+- mutating canonical values
 - silently excluding points
 - promoting confidence outcomes into normalization or identity
 
@@ -330,7 +346,7 @@ Confidence mechanisms MUST NOT influence:
 - normalization rule selection
 - CMS construction
 
-Confidence operates **after** meaning assignment.
+Confidence operates after meaning assignment.
 
 ---
 
@@ -338,7 +354,7 @@ Confidence operates **after** meaning assignment.
 
 The system MUST preserve separation between:
 
-- **Truth layers**: Raw → Normalization → CMS
+- **Truth layers**: Raw -> Normalization -> CMS
 - **Derived layers**: transforms, aggregates, compositions
 - **Interpretive overlays**: trends, clusters, pivots, confidence annotations
 
@@ -355,14 +371,14 @@ Interpretive overlays are:
 User-facing language MUST NOT imply ground-truth invalidation.
 
 Avoid:
-- “invalid”
-- “wrong”
-- “incorrect data”
+- "invalid"
+- "wrong"
+- "incorrect data"
 
 Prefer:
-- “statistically atypical under selected model”
-- “low confidence”
-- “flagged for review”
+- "statistically atypical under selected model"
+- "low confidence"
+- "flagged for review"
 
 ---
 

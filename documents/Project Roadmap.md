@@ -2,9 +2,9 @@
 **Status:** Sequencing and Execution Authority  
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
-**Operational Execution Source:** `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` for active architecture rehaul work  
-**Last Updated:** 2026-03-26  
-**Change Note:** Roadmap updated to reflect completed architecture rehaul closure, explicit residual debt posture, and post-rehaul maintenance discipline
+**Operational Execution Source:** `DataVisualiser_Consolidation_Plan.md` for the active hierarchy-reconciliation work; `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` remains the historical execution source for the completed Phase 5 rehaul  
+**Last Updated:** 2026-03-27  
+**Change Note:** Roadmap updated to make architectural legibility and concern reconciliation the next critical path before renewed exploratory expansion
 
 ---
 
@@ -28,7 +28,8 @@ If a conflict exists:
 1. `Project Bible.md` wins on architectural law.
 2. `SYSTEM_MAP.md` wins on structural direction.
 3. This roadmap wins on sequencing and closure discipline.
-4. `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` operationalizes the active rehaul work permitted by this roadmap.
+4. `DataVisualiser_Consolidation_Plan.md` operationalizes the active delivery-side hierarchy reconciliation permitted by this roadmap.
+5. `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` remains the historical execution source for the completed Phase 5 rehaul.
 
 ---
 
@@ -40,8 +41,8 @@ This roadmap is governed by the following rules:
 2. Phases exist to protect trust and correctness, not to accelerate delivery.
 3. A closure claim without current executable evidence is not closure.
 4. Unreachable or unobservable execution is treated as non-existent.
-5. Exploratory power must be explicitly staged above canonical truth, never folded into it.
-6. Architecture work is phase work when it is required to preserve truth, reversibility, and safe future extension.
+5. Exploratory power and downstream flexibility must be explicitly staged above semantic authority and only after the hierarchy is legible enough to support them safely.
+6. Architecture legibility is phase work whenever hierarchy drift, responsibility sprawl, or exception-driven structure threatens safe future extension.
 7. Capability preservation is the default: refactor may not silently remove current abilities.
 8. Tactical stabilization is permitted, but stabilization is not the same as architectural closure.
 9. Multiple chart backends may coexist intentionally, but only to strengthen modular rendering boundaries.
@@ -74,12 +75,14 @@ The architecture rehaul established that the project is not yet structurally rea
    - stale or misaligned closure evidence
    - mutable global runtime behavior
    - concentrated data-access and orchestration responsibilities
+   - repeated irreducible operations spread across unrelated locations
+   - hierarchy that reflects migration history more than stable responsibility
    - uneven assurance quality
 4. Multi-backend chart support is not a cosmetic preference. It is a deliberate architectural probe into whether rendering has actually been isolated from the rest of the application.
 5. Standardized programmable chart hosts are intended future product behavior, but that future is unsafe unless controller convergence, rendering contracts, and orchestration seams are made explicit first.
 
-Therefore, architecture rehaul is not a side quest.  
-It is now the mandatory bridge between the truthful foundation already built and the exploratory, confidence-aware, multi-backend future the project intends to support.
+Therefore, architecture rehaul was not a side quest, and its successor work is not cosmetic cleanup.  
+The next bridge is hierarchy legibility: the system must become coherent enough that true outliers are obvious and future capability can land without creating new exception-driven structure.
 
 ---
 
@@ -228,7 +231,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 - eventual standardized programmable chart hosts and multi-result derived chart composition
 
 **Execution Source**
-- `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` is the operational execution source for this phase
+- `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` is the historical execution source for this completed phase
 
 #### Phase 5.1 - Closure Repair and Evidence Recovery
 
@@ -315,18 +318,134 @@ Phase 5 exists to make the system structurally safe for its intended future:
 
 ---
 
-### Phase 6 - Exploratory and Confidence Capability Expansion (Intentional)  
+### Phase 6 - Architectural Legibility and Concern Reconciliation  
 **Status:** OPEN / NEXT CRITICAL PATH  
 **Entry Gate:** Opened now that Phases 3, 3.5, 4, and 5 are closed under current evidence rules
 
 **Purpose**
-Phase 6 increases interpretive power without eroding canonical truth.
+Phase 6 restores a coherent, trustworthy hierarchy before further capability expansion.
+
+This phase exists because the current risk is no longer a missing feature.
+It is a muddled architecture in which similar operations live in too many places, local exceptions accumulate into structure, and the project stops explaining itself to its own architect.
+
+The goal is to make the system legible enough that:
+
+- similar responsibilities have one obvious home
+- truth, derivation, orchestration, delivery, and consumer boundaries are easier to inspect
+- remaining large outliers are explicit rather than hidden in background noise
+- future exploratory and programmable capability can land without multiplying exceptions
+
+**Default bounded execution shape**
+1. begin with one mapping iteration that refreshes the hierarchy around the current outliers
+2. perform one or two irreducible-operation consolidation iterations before broad UI or folder churn
+3. reconcile one mixed truth / derivation / delivery boundary
+4. standardize one real downstream delivery seam only if earlier slices prove it
+5. decompose one highest-value remaining outlier and realign the physical tree around the stabilized ownership model
+6. close the cycle with an architecture audit and a fresh outlier baseline
+
+#### Phase 6.1 - Irreducible Operation Consolidation
+
+**Scope**
+- consolidate repeated low-level operations such as interval resolution, bucketing, binning, smoothing, alignment, selection, and other algebraic or structural helpers into one obvious home per concern
+- remove parallel variations that differ only because of local history or controller-specific exception handling
+
+**Constraints**
+- no capability regression
+- no silent semantic change
+- provenance and declared semantics must remain intact
+
+**Closure Condition**
+- repeated irreducible operations no longer sprawl across unrelated layers, and any retained duplicates are explicitly justified
+
+#### Phase 6.2 - Truth / Derivation / Delivery Boundary Reconciliation
+
+**Scope**
+- clarify where raw, normalized, canonical, derived, overlay, request, and delivery concerns live
+- keep access to lower-level views explicit, provenance-visible, and non-promoted
+- remove places where consumer, controller, or rendering code smuggles semantic or transform responsibility upward
+
+**Constraints**
+- no new false hierarchy
+- no semantic policing through UI or delivery layers
+- no silent promotion of non-canonical views into canonical truth
+
+**Closure Condition**
+- the project's main bands are easier to explain, inspect, and defend in code
+
+#### Phase 6.3 - Request, Consumer, and Delivery Standardization
+
+**Scope**
+- standardize request and presentation-planning seams where real convergence exists
+- make orchestration handoff and delivery contracts more uniform
+- reduce "programming by exception" in controller and consumer flows
+
+**Constraints**
+- do not force false abstractions
+- keep consumer-specific behavior explicit where it is genuinely different
+- preserve qualified rendering and evidence boundaries
+
+**Closure Condition**
+- consumers ask for explicit result shapes through consistent seams rather than through special-case controller logic
+
+#### Phase 6.4 - Outlier Decomposition
+
+**Scope**
+- decompose large mixed-responsibility concentration points such as `MainChartsView`, `TransformDataPanelControllerAdapter`, `MainChartsEvidenceExportService`, `DataFetcher`, `BaseDistributionService`, and similar verified outliers
+- split only where the resulting ownership is clearer than the current concentration
+
+**Constraints**
+- no decomposition for its own sake
+- no churn that hides the same ambiguity behind more files
+- validation discipline must stay intact
+
+**Closure Condition**
+- the remaining large outliers are reduced materially or explicitly bounded as intentional next-cycle debt
+
+#### Phase 6.5 - Physical Hierarchy and Naming Realignment
+
+**Scope**
+- align folders, namespaces, and names with stabilized responsibility boundaries
+- remove leftover boilerplate micro-types only when ownership is already clear
+- make the tree reveal architectural intent rather than migration history
+
+**Constraints**
+- do not optimize for file count alone
+- do not rename broadly without structural payoff
+- keep current capabilities reachable and understandable
+
+**Closure Condition**
+- the physical hierarchy is materially clearer and exposes true anomalies faster
+
+#### Phase 6.6 - Architecture Audit and Baseline Refresh
+
+**Scope**
+- measure the new hierarchy
+- record remaining outliers and repeated debt patterns
+- refresh current execution maps, success criteria, and architectural evidence
+
+**Closure Condition**
+- the next cycle starts from an auditable baseline rather than from accumulated guesswork
+
+**Global Closure Condition for Phase 6**
+1. Similar responsibilities have one obvious home often enough that the hierarchy becomes trustworthy again.
+2. Repeated irreducible operations no longer sprawl silently across unrelated layers.
+3. Truth, derivation, orchestration, delivery, and consumer seams are materially clearer and easier to defend.
+4. Remaining outliers are explicit, bounded, and visible.
+5. Current capabilities are preserved or replaced with validated equivalents.
+
+---
+
+### Phase 7 - Exploratory and Confidence Capability Expansion (Intentional)  
+**Status:** PLANNED / BLOCKED  
+**Entry Gate:** Phase 6 must restore enough hierarchy legibility that new power can be added without amplifying entropy
+
+**Purpose**
+Phase 7 increases interpretive power without eroding truth or reintroducing exception-driven structure.
 
 This phase remains the sanctioned home for exploratory capability, confidence-aware interpretation, and richer analytical views.
-It exists to make the system a stronger instrument for human reasoning without turning it into an authority.
-It is also the sanctioned home for standardized programmable chart composition once Phase 5 has earned the structural right to support it safely.
+It is also the sanctioned home for standardized programmable chart composition once Phase 6 has earned the structural right to support it safely.
 
-#### Phase 6.1 - Interpretive Visual Overlays (Render-Only)
+#### Phase 7.1 - Interpretive Visual Overlays (Render-Only)
 
 **Scope**
 - dynamic line colouring
@@ -342,7 +461,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - overlays are visually correct, reversible, provenance-neutral, and backend-safe for the capability slice in which they are used
 
-#### Phase 6.2 - Confidence Annotation (Non-Destructive)
+#### Phase 7.2 - Confidence Annotation (Non-Destructive)
 
 **Scope**
 - statistical identification of atypical points
@@ -357,7 +476,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - confidence annotations are visible, explainable, reversible, and do not mutate truth layers
 
-#### Phase 6.3 - Confidence-Aware Interpretation
+#### Phase 7.3 - Confidence-Aware Interpretation
 
 **Scope**
 - optional exclusion of low-confidence points from interpretive overlays
@@ -372,7 +491,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - confidence-aware views are opt-in, transparent, reversible, and semantically non-invasive
 
-#### Phase 6.4 - Programmable Chart Composition and Multi-Result Derived Views
+#### Phase 7.4 - Programmable Chart Composition and Multi-Result Derived Views
 
 **Scope**
 - standardize graph parent controllers and shared option/toggle surfaces where capability semantics align
@@ -390,7 +509,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 - multi-result derived rendering works on qualified chart families with visible provenance
 - transform-style programmability is no longer isolated to a single special-case controller
 
-#### Phase 6.5 - Structural and Relational Exploration
+#### Phase 7.5 - Structural and Relational Exploration
 
 **Scope**
 - scatter plots and clustering views
@@ -406,7 +525,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - structural views are powerful, bounded, explicitly interpretive, and semantically non-promotable by default
 
-#### Phase 6.6 - Rules-Based Option Gating
+#### Phase 7.6 - Rules-Based Option Gating
 
 **Scope**
 - declarative rules controlling UI option availability
@@ -421,7 +540,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - rule effects are transparent, reversible, and clearly separate from semantics
 
-**Global Closure Condition for Phase 6**
+**Global Closure Condition for Phase 7**
 1. All exploratory features are explicitly layered above truth.
 2. Confidence handling is visible and non-destructive.
 3. Interpretive power increases without semantic erosion.
@@ -430,9 +549,9 @@ It is also the sanctioned home for standardized programmable chart composition o
 
 ---
 
-### Phase 7 - UI, State, and Integration Consolidation  
+### Phase 8 - UI, State, and Integration Consolidation  
 **Status:** PLANNED / BLOCKED
-**Entry Gate:** Phase 6 must advance far enough to justify broad UI/state consolidation without reopening structural uncertainty
+**Entry Gate:** Phase 7 must advance far enough to justify broad UI/state consolidation without reopening structural uncertainty
 
 **Objective**
 - ensure the UI accurately reflects truth, interpretation, uncertainty, qualified rendering behavior, and standardized programmable chart capabilities without compensating for architectural weakness
@@ -486,13 +605,14 @@ This policy protects both long-term trust and long-term extensibility.
 ## 8. Current Critical Path (Authoritative)
 
 1. Preserve the qualified seams produced by the completed Phase 5 rehaul.
-2. Begin Phase 6 deliberately through bounded exploratory and confidence-aware slices.
+2. Execute Phase 6 through bounded hierarchy-reconciliation slices that make the architecture more legible and the remaining outliers more obvious.
 3. Keep residual debt explicit and bounded rather than allowing silent structural drift.
 4. Revalidate future closure claims with present evidence and repository-visible artifacts.
-5. Introduce further generalization only when the codebase has earned it through repeated real slices.
-6. Keep future phase entry explicit rather than reopening rehaul work implicitly.
+5. Do not open exploratory expansion until the hierarchy is coherent enough to absorb it safely.
+6. Introduce further generalization only when the codebase has earned it through repeated real slices.
+7. Keep future phase entry explicit rather than reopening rehaul work implicitly.
 
-Phase 6 must not be treated as open merely because ideas are ready.  
+Phase 7 must not be treated as open merely because ideas are ready.  
 It opens only when the system is structurally able to absorb them safely.
 
 ---
@@ -500,17 +620,19 @@ It opens only when the system is structurally able to absorb them safely.
 ## 8.5 Open Phase Summary
 
 Remaining open phases:
-1. `Phase 6 - Exploratory and Confidence Capability Expansion`: `OPEN / NEXT CRITICAL PATH`
-2. `Phase 7 - UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
+1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `OPEN / NEXT CRITICAL PATH`
+2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `PLANNED / BLOCKED`
+3. `Phase 8 - UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
 
 Major next steps in sequence:
-1. `Phase 6.1` - interpretive visual overlays
-2. `Phase 6.2` - confidence annotation
-3. `Phase 6.3` - confidence-aware interpretation
-4. `Phase 6.4` - programmable chart composition and multi-result derived views
-5. `Phase 6.5` - structural and relational exploration
-6. `Phase 6.6` - rules-based option gating
-7. `Phase 7` - UI, state, and integration consolidation after Phase 6 is sufficiently advanced
+1. `Phase 6.1` - irreducible operation consolidation
+2. `Phase 6.2` - truth / derivation / delivery boundary reconciliation
+3. `Phase 6.3` - request, consumer, and delivery standardization
+4. `Phase 6.4` - outlier decomposition
+5. `Phase 6.5` - physical hierarchy and naming realignment
+6. `Phase 6.6` - architecture audit and baseline refresh
+7. `Phase 7` - exploratory and confidence capability expansion after Phase 6 is sufficiently advanced
+8. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
 
 ---
 
@@ -519,7 +641,8 @@ Major next steps in sequence:
 - Early phases built truthful foundations.
 - Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
 - Phase 5 is the completed bridge between what the system already does and what it is intended to become.
-- Phase 6 is now the active sanctioned home of exploration, confidence, and richer interpretive power.
+- Phase 6 is now the active sanctioned home of hierarchy repair, legibility, and concern reconciliation.
+- Phase 7 remains the sanctioned home of exploration, confidence, and richer interpretive power, but only after Phase 6 earns that right.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.
 - Closure means present truth, present evidence, and present structural safety.
 

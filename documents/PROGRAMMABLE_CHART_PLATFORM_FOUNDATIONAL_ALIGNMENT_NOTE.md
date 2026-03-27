@@ -1,7 +1,7 @@
 # PROGRAMMABLE CHART PLATFORM FOUNDATIONAL ALIGNMENT NOTE
 **Status:** Disposable working note  
 **Scope:** Interpreting the standardized programmable chart direction against immutable foundational documents  
-**Authority:** Non-authoritative; subordinate to `Project Bible.md`, `Project Philosphy.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`  
+**Authority:** Non-authoritative; subordinate to `Project Bible.md`, `Project Philosphy.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `DataVisualiser_Consolidation_Plan.md`  
 **Date:** 2026-03-18
 
 ---
@@ -10,7 +10,7 @@
 
 This note captures how the intended standardized programmable chart platform fits the immutable foundation documents without editing them.
 
-It exists because the direction is significant enough to deserve explicit interpretation, but does not currently require changes to `Project Bible.md` or `Project Philosphy.md`.
+It exists because the direction is significant enough to deserve explicit interpretation alongside the active hierarchy-reconciliation work.
 
 ---
 
@@ -74,13 +74,13 @@ The following questions likely deserve future design work, but are not answered 
 
 ## 6. Current Recommendation
 
-No change to `Project Bible.md` or `Project Philosphy.md` is currently required.
+The Bible and Philosophy now provide the governing language needed for this direction; this note remains a disposable interpretation aid rather than a replacement authority.
 
 The correct immediate action is to:
 
-- encode this direction explicitly in the roadmap and architecture rehaul documents
-- keep Phase 5 focused on enabling seams rather than prematurely implementing the whole programmable chart platform
-- stage the actual capability under later gated phases
+- keep this direction aligned with the roadmap and the active hierarchy-reconciliation work
+- avoid prematurely implementing the whole programmable chart platform through new exception-driven structures
+- stage the actual capability under later gated phases after legibility work has earned it
 
 ---
 
