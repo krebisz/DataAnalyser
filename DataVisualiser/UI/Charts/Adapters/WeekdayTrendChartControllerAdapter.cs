@@ -81,18 +81,13 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         try
         {
             var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
+            var seriesSelection = MetricSeriesSelectionAdapterHelper.PopulateSubtypeCombo(combo, selectedSeries, _viewModel.ChartState.SelectedWeekdayTrendSeries);
+
+            if (seriesSelection == null)
             {
-                ChartSubtypeComboHelper.DisableCombo(combo);
                 _viewModel.ChartState.SelectedWeekdayTrendSeries = null;
-                return;
             }
-
-            ChartSubtypeComboHelper.PopulateCombo(combo, selectedSeries);
-            var seriesSelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, _viewModel.ChartState.SelectedWeekdayTrendSeries) ?? selectedSeries[0];
-            ChartSubtypeComboHelper.SelectComboItem(combo, seriesSelection);
-
-            if (_isInitializing())
+            else if (_isInitializing())
                 _viewModel.ChartState.SelectedWeekdayTrendSeries = seriesSelection;
             else
                 _viewModel.SetWeekdayTrendSeries(seriesSelection);
@@ -273,31 +268,12 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
     private MetricSeriesSelection? ResolveSelectedWeekdayTrendSeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo,
-                _controller.SubtypeCombo,
-                _viewModel.ChartState.SelectedWeekdayTrendSeries,
-                () =>
-                {
-                    var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-                    if (string.IsNullOrWhiteSpace(metricType))
-                        return null;
-
-                    return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-                });
+        return MetricSeriesSelectionAdapterHelper.ResolveSelectedSeries(!_isUpdatingSubtypeCombo, _controller.SubtypeCombo, _viewModel.ChartState.SelectedWeekdayTrendSeries, ctx);
     }
 
     private static string ResolveWeekdayTrendDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
+        return MetricSeriesSelectionAdapterHelper.ResolveDisplayName(ctx, selectedSeries);
     }
 
     private WeekdayTrendResult? ComputeWeekdayTrend(ChartDataContext ctx)

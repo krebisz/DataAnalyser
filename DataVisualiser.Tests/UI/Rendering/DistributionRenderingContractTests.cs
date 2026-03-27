@@ -87,6 +87,25 @@ public sealed class DistributionRenderingContractTests
         });
     }
 
+    [Fact]
+    public void QualificationMatrix_ShouldHaveUniquePathKeys_AndResolvableActiveRoutes()
+    {
+        var contract = CreateContract();
+
+        var entries = contract.GetBackendQualificationMatrix();
+        var activeEntries = entries.Where(entry => entry.ActiveRoute != null).ToList();
+
+        Assert.Equal(entries.Count, entries.Select(entry => entry.PathKey).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(activeEntries.Count, activeEntries.Select(entry => entry.ActiveRoute).Distinct().Count());
+
+        foreach (var entry in activeEntries)
+        {
+            var capabilities = contract.GetCapabilities(entry.ActiveRoute!.Value);
+            Assert.Equal(entry.PathKey, capabilities.PathKey);
+            Assert.Equal(entry.Qualification, capabilities.Qualification);
+        }
+    }
+
     private static DistributionRenderingContract CreateContract()
     {
         var distributionService = new StubDistributionService();

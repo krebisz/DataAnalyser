@@ -83,14 +83,13 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         try
         {
             var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                ChartSubtypeComboHelper.DisableCombo(_controller.SubtypeCombo);
+            var seriesSelection = MetricSeriesSelectionAdapterHelper.PopulateSubtypeCombo(_controller.SubtypeCombo, selectedSeries, _viewModel.ChartState.SelectedDistributionSeries);
+            if (seriesSelection == null)
                 _viewModel.ChartState.SelectedDistributionSeries = null;
-                return;
-            }
-
-            ApplyDistributionSeriesSelection(selectedSeries);
+            else if (_isInitializing())
+                _viewModel.ChartState.SelectedDistributionSeries = seriesSelection;
+            else
+                _viewModel.SetDistributionSeries(seriesSelection);
         }
         finally
         {
@@ -306,18 +305,6 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         await _distributionRenderingContract.RenderAsync(request, CreateRenderHost());
     }
 
-    private void ApplyDistributionSeriesSelection(IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        ChartSubtypeComboHelper.PopulateCombo(_controller.SubtypeCombo, selectedSeries);
-        var seriesSelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, _viewModel.ChartState.SelectedDistributionSeries) ?? selectedSeries[0];
-        ChartSubtypeComboHelper.SelectComboItem(_controller.SubtypeCombo, seriesSelection);
-
-        if (_isInitializing())
-            _viewModel.ChartState.SelectedDistributionSeries = seriesSelection;
-        else
-            _viewModel.SetDistributionSeries(seriesSelection);
-    }
-
     private async Task RerenderDistributionIfVisibleAsync(DistributionMode mode)
     {
         if (!_viewModel.ChartState.IsDistributionVisible || _viewModel.ChartState.LastContext?.Data1 == null)
@@ -370,31 +357,12 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
     private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombo,
-                _controller.SubtypeCombo,
-                _viewModel.ChartState.SelectedDistributionSeries,
-                () =>
-                {
-                    var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-                    if (string.IsNullOrWhiteSpace(metricType))
-                        return null;
-
-                    return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-                });
+        return MetricSeriesSelectionAdapterHelper.ResolveSelectedSeries(!_isUpdatingSubtypeCombo, _controller.SubtypeCombo, _viewModel.ChartState.SelectedDistributionSeries, ctx);
     }
 
     private static string ResolveDistributionDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
+        return MetricSeriesSelectionAdapterHelper.ResolveDisplayName(ctx, selectedSeries);
     }
 
     private DistributionRenderingRoute ResolveRenderingRoute()

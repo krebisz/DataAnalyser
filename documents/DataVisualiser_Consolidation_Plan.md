@@ -228,7 +228,12 @@ Use it for each actual consolidation pass.
 
 ### 6.1 Per-Iteration Procedure
 
-1. `Select a bounded subsystem slice`
+1. `Establish / Refresh Regression Protection`
+   - Add or extend focused regression tests around the bounded slice before production mutation.
+   - Prefer direct seam tests for the exact consolidation target rather than broad incidental coverage.
+   - If adequate focused coverage already exists, rerun that lane first and record it as the pre-mutation regression gate.
+
+2. `Select a bounded subsystem slice`
    - Choose one primary slice per iteration.
    - Preferred slices:
      - analytical kernel
@@ -238,34 +243,34 @@ Use it for each actual consolidation pass.
      - vendor-specific adapters
    - Do not mix unrelated slices unless coupling forces it.
 
-2. `Inventory the current shape`
+3. `Inventory the current shape`
    - Record hotspot files.
    - Record repeated class/module shapes.
    - Record overlapping responsibilities.
    - Define the target ownership model before moving code.
 
-3. `Constrain / Simplify / Re-organize`
+4. `Constrain / Simplify / Re-organize`
    - Tighten boundaries first.
    - Move responsibilities toward clearer owners.
    - Standardize naming and placement only where ownership is clear.
    - Prefer structural contraction before new abstractions.
 
-4. `Consolidate / Coalesce`
+5. `Consolidate / Coalesce`
    - Merge overlapping helpers, duplicated orchestration shapes, and fragmented micro-types.
    - Reduce the number of competing implementations in the slice.
    - Centralize semantically aligned analytical logic.
 
-5. `Generalize / Abstract`
+6. `Generalize / Abstract`
    - Introduce shared abstractions only after the consolidation pass proves a repeated pattern.
    - Require at least `2-3` real consumers before promoting a shared abstraction.
    - Generalize by responsibility, not by cosmetic similarity.
 
-6. `Retire / Remove / Clean`
+7. `Retire / Remove / Clean`
    - Delete superseded files, folders, classes, and compatibility glue.
    - Apply standardized renames where the ownership model is stable.
    - Remove dead code continuously during the pass, then perform a closing cleanup sweep.
 
-7. `Validate / Re-measure`
+8. `Validate / Re-measure`
    - Run:
      - full solution build
      - `DataVisualiser.Tests`
@@ -276,7 +281,7 @@ Use it for each actual consolidation pass.
      - ownership clarity
      - remaining intentional outliers
 
-8. `Record the new baseline`
+9. `Record the new baseline`
    - Update this document after each completed iteration.
    - Record:
      - what was simplified
@@ -654,6 +659,79 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - `Distribution` and `WeekdayTrend` contracts still have different capability matrices and host semantics, which should remain explicit unless a later slice proves deeper shared structure
 - the next likely Phase C candidate is contract/qualification metadata shape, not live rendering execution
 - broader rendering-family unification beyond `Distribution` and `WeekdayTrend` remains deferred until this smaller shared-support seam proves stable
+
+#### Iteration 4 - Phase D - Controller and Host Standardization
+
+**Date:** `2026-03-27`  
+**Primary objective:** standardize the converged subtype-selection and display-name resolution behavior shared by the `Distribution` and `WeekdayTrend` controller adapters without changing their family-specific data-loading or rendering-host behavior
+
+**Regression protection established before mutation**
+
+- added direct controller-adapter coverage for `WeekdayTrendChartControllerAdapter`
+- expanded rendering contract metadata consistency tests for `Distribution` and `WeekdayTrend`
+- pre-mutation focused regression gate:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~WeekdayTrendChartControllerAdapterTests|FullyQualifiedName~DistributionRenderingContractTests|FullyQualifiedName~WeekdayTrendRenderingContractTests"` passed on `2026-03-27` with `21` tests passed, `0` failed, `0` skipped
+
+**Bounded slice executed**
+
+- `UI/Charts/Adapters/DistributionChartControllerAdapter.cs`
+- `UI/Charts/Adapters/WeekdayTrendChartControllerAdapter.cs`
+- new shared controller-adapter support:
+  - `UI/Charts/Infrastructure/MetricSeriesSelectionAdapterHelper.cs`
+- focused direct test expansion:
+  - `DataVisualiser.Tests/Controls/WeekdayTrendChartControllerAdapterTests.cs`
+  - `DataVisualiser.Tests/Controls/DistributionChartControllerAdapterTests.cs`
+  - `DataVisualiser.Tests/UI/Rendering/DistributionRenderingContractTests.cs`
+  - `DataVisualiser.Tests/UI/Rendering/WeekdayTrendRenderingContractTests.cs`
+
+**Inventory outcome for the chosen slice**
+
+- both adapters already converged on the same subtype-combo responsibilities:
+  - populate subtype combo from selected series
+  - resolve current selection against chart state
+  - derive fallback selection from the current chart context
+  - derive display name from selected primary/secondary series
+- the family-specific parts remained distinct and intentionally explicit:
+  - `Distribution` keeps CMS-aware data loading and distribution-mode settings
+  - `WeekdayTrend` keeps strategy-driven result computation and chart-mode cycling
+
+**What was simplified**
+
+- repeated subtype-combo population and default-selection logic no longer lives separately in both adapters
+- repeated selected-series resolution and display-name derivation logic no longer lives separately in both adapters
+
+**What was consolidated**
+
+- common adapter-side series-selection logic moved into `MetricSeriesSelectionAdapterHelper`
+- `DistributionChartControllerAdapter` and `WeekdayTrendChartControllerAdapter` now use the same controller-side selection contract for this converged seam
+
+**What was generalized**
+
+- a shared controller-adapter support helper was promoted because there are now at least two real host/controller consumers with the same subtype-selection and display-name resolution shape
+- the generalization stays above family-specific rendering/data-loading behavior and below the broader host/controller layer
+
+**What remained explicit intentionally**
+
+- family-specific render host creation and route resolution
+- family-specific data-loading and CMS selection logic
+- `WeekdayTrend` strategy creation and result computation
+- `Distribution` mode/settings handling and polar-mode behavior
+
+**Validation / smoke result**
+
+- focused subsystem lane after the refactor:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~WeekdayTrendChartControllerAdapterTests|FullyQualifiedName~DistributionChartControllerAdapterTests|FullyQualifiedName~DistributionRenderingContractTests|FullyQualifiedName~WeekdayTrendRenderingContractTests"` passed on `2026-03-27` with `24` tests passed, `0` failed, `0` skipped
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `387` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change remained behavior-preserving controller-adapter standardization backed by focused adapter tests rather than an intentional live UI behavior change
+
+**Remaining intentional debt after Iteration 4**
+
+- broader controller/host convergence still exists outside this slice, especially in full render orchestration and chart-panel event wiring
+- no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once more controller/host seams are stabilized
+- `Syncfusion` remains explicitly out of scope for the early controller/host standardization program
 
 ---
 

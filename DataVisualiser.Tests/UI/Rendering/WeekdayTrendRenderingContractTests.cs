@@ -103,6 +103,24 @@ public sealed class WeekdayTrendRenderingContractTests
         });
     }
 
+    [Fact]
+    public void QualificationMatrix_ShouldHaveUniquePathKeys_AndResolvableActiveRoutes()
+    {
+        var contract = CreateContract();
+
+        var entries = contract.GetBackendQualificationMatrix();
+
+        Assert.Equal(entries.Count, entries.Select(entry => entry.PathKey).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(entries.Count, entries.Select(entry => entry.ActiveRoute).Distinct().Count());
+
+        foreach (var entry in entries)
+        {
+            var capabilities = contract.GetCapabilities(entry.ActiveRoute);
+            Assert.Equal(entry.PathKey, capabilities.PathKey);
+            Assert.Equal(entry.Qualification, capabilities.Qualification);
+        }
+    }
+
     private static WeekdayTrendRenderingContract CreateContract()
     {
         return new WeekdayTrendRenderingContract(

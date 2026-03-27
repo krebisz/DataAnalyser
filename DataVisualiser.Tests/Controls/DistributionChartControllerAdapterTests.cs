@@ -19,6 +19,50 @@ namespace DataVisualiser.Tests.Controls;
 public sealed class DistributionChartControllerAdapterTests
 {
     [Fact]
+    public void UpdateSubtypeOptions_ShouldPopulateCombo_AndPersistSelectionDuringInitialization()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var chartState = new ChartState
+            {
+                    IsDistributionVisible = true,
+                    SelectedDistributionMode = DistributionMode.Weekly
+            };
+
+            var metricState = new MetricState();
+            metricState.SetSeriesSelections(
+            [
+                new MetricSeriesSelection("weight", "avg"),
+                new MetricSeriesSelection("steps", "(All)")
+            ]);
+            var uiState = new UiState();
+            var metricService = new MetricSelectionService("TestConnection");
+            var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
+            var controller = new DistributionChartController();
+            var distributionService = new StubDistributionService(CreateRangeResult());
+            var renderingContract = new DistributionRenderingContract(
+                    () => null,
+                    distributionService,
+                    distributionService,
+                    new DistributionPolarRenderingService());
+            var adapter = new DistributionChartControllerAdapter(
+                    controller,
+                    viewModel,
+                    () => true,
+                    () => NoOpScope.Instance,
+                    metricService,
+                    renderingContract,
+                    () => null);
+
+            adapter.UpdateSubtypeOptions();
+
+            Assert.Equal(2, controller.SubtypeCombo.Items.Count);
+            Assert.Equal(metricState.SelectedSeries[0], chartState.SelectedDistributionSeries);
+            Assert.True(controller.SubtypeCombo.IsEnabled);
+        });
+    }
+
+    [Fact]
     public async Task RenderAsync_InPolarMode_RendersOnCartesianHost_AndKeepsPolarHostCollapsed()
     {
         await StaTestHelper.RunAsync(async () =>
