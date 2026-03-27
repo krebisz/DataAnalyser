@@ -892,6 +892,86 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - broader chart-panel event wiring and render orchestration still remain outside this bounded slice
 - no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once more controller/host seams are stabilized
 
+#### Iteration 7 - Phase D - Controller and Host Standardization
+
+**Date:** `2026-03-27`  
+**Primary objective:** standardize the paired subtype-selection, selected-series resolution, and context-rebuild seam shared by `DiffRatio` and `Normalized` while preserving their distinct chart behavior and semantics
+
+**Regression protection established before mutation**
+
+- added direct adapter coverage for paired subtype population and context rebuilding in `DiffRatio` and `Normalized`
+- pre-mutation focused regression gate:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~DiffRatioNormalizedSelectionAdapterTests"` passed on `2026-03-27` with `4` tests passed, `0` failed, `0` skipped
+
+**Bounded slice executed**
+
+- `UI/Charts/Adapters/DiffRatioChartControllerAdapter.cs`
+- `UI/Charts/Adapters/NormalizedChartControllerAdapter.cs`
+- shared selection/context support refinement:
+  - `UI/Charts/Infrastructure/MetricSeriesSelectionAdapterHelper.cs`
+- focused direct test addition:
+  - `DataVisualiser.Tests/Controls/DiffRatioNormalizedSelectionAdapterTests.cs`
+
+**Inventory outcome for the chosen slice**
+
+- both adapters already converged on the same paired-selection shape:
+  - primary and secondary subtype combo population
+  - secondary-panel visibility and enablement rules
+  - state-backed fallback selection
+  - display-name resolution from the current chart context
+  - cache-backed single-series resolution when the current context does not already supply the selected series
+- the family-specific parts remained distinct and intentionally explicit:
+  - `DiffRatio` keeps operation-toggle semantics, comparison label generation, and permissive fallback behavior when the secondary path collapses back to the primary series
+  - `Normalized` keeps normalization-mode behavior and stricter secondary-series semantics
+
+**What was simplified**
+
+- repeated primary/secondary subtype combo coordination no longer lives separately in both adapters
+- repeated primary/secondary selection fallback logic no longer lives separately in both adapters
+- repeated display-name resolution and cache-backed selected-series resolution scaffolding no longer lives separately in both adapters
+
+**What was consolidated**
+
+- `MetricSeriesSelectionAdapterHelper` now owns paired subtype combo population, generalized selected-series fallback construction, and shared cache-backed series resolution mechanics
+- `DiffRatioChartControllerAdapter` and `NormalizedChartControllerAdapter` now delegate the shared paired-selection seam through one infrastructure path
+
+**What was generalized**
+
+- the existing selection helper was broadened because the `DiffRatio` / `Normalized` pair now proves a second real selection-management shape beyond the earlier single-selection adapter seam
+- the generalization stays at the controller-support level and uses policy delegates so the two adapters can keep their legitimate fallback differences
+
+**What remained explicit intentionally**
+
+- `DiffRatio` comparison-operation behavior and panel-title semantics
+- `Normalized` normalization-mode behavior and panel-title semantics
+- family-specific fallback rules where secondary-series behavior differs
+
+**Validation / smoke result**
+
+- focused subsystem lane after the refactor:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1 --filter "FullyQualifiedName~DiffRatioNormalizedSelectionAdapterTests"` passed on `2026-03-27` with `4` tests passed, `0` failed, `0` skipped
+- required automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and `0` warnings
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `396` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - required for this iteration because the touched seam sits in live controller flow and selected-series context rebuilding
+  - halt further mutation until targeted smoke completes
+  - targeted smoke scope:
+    - `DiffRatio`: with two selected series, switch primary and secondary subtype combos and verify chart title, rendered series pairing, and rerender behavior stay correct
+    - `Normalized`: with two selected series, switch primary and secondary subtype combos and verify chart title, rendered pairing, and rerender behavior stay correct
+    - `DiffRatio` and `Normalized`: with only one selected series, verify the secondary subtype panel collapses and the chart remains stable
+- manual smoke follow-up:
+  - `DiffRatio` smoke is not currently executable because there is no reachable front-end implementation using that controller/chart path
+  - reviewed `documents/reachability-20260327-124731.json` on `2026-03-27` as supporting evidence for the reachable chart/controller smoke surface
+  - `Normalized` smoke outcome was accepted based on the reviewed evidence and user verification that the reachable controller/chart behavior looks correct
+  - confirmed expected behavior: the `Normalized` chart intentionally does not render when only one sub metric type is selected
+
+**Remaining intentional debt after Iteration 7**
+
+- the next likely cartesian-metric controller seam is adjacent chart-panel event wiring and rerender orchestration around the now-shared selection path
+- broader render orchestration outside the cartesian-metric cluster still remains unconsolidated
+- no physical folder/file reduction has been attempted yet; this remains deferred to later bounded debt-retirement work once the remaining live controller seams are stabilized
+
 ---
 
 ## 8. Validation and Smoke-Test Discipline

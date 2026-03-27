@@ -59,18 +59,16 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
         _isUpdatingSubtypeCombos = true;
         try
         {
-            ClearNormalizedSubtypeCombos();
-
             var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                HandleNoSelectedNormalizedSeries();
-                return;
-            }
-
-            PopulateNormalizedSubtypeCombos(selectedSeries);
-            UpdatePrimaryNormalizedSubtype(selectedSeries);
-            UpdateSecondaryNormalizedSubtype(selectedSeries);
+            MetricSeriesSelectionAdapterHelper.PopulatePrimarySecondarySubtypeCombos(
+                _controller.NormalizedPrimarySubtypeCombo,
+                _controller.NormalizedSecondarySubtypeCombo,
+                _controller.NormalizedSecondarySubtypePanel,
+                selectedSeries,
+                _viewModel.ChartState.SelectedNormalizedPrimarySeries,
+                _viewModel.ChartState.SelectedNormalizedSecondarySeries,
+                selection => _viewModel.ChartState.SelectedNormalizedPrimarySeries = selection,
+                selection => _viewModel.ChartState.SelectedNormalizedSecondarySeries = selection);
         }
         finally
         {
@@ -179,71 +177,49 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveNormalizedSeriesAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (selectedSeries == null)
-            return (null, null);
+        return await MetricSeriesSelectionAdapterHelper.ResolveSeriesAsync(
+            ctx,
+            selectedSeries,
+            _selectionCache,
+            _metricSelectionService,
+            _viewModel.MetricState.ResolutionTableName,
+            static _ => (null, null),
+            static (currentContext, selection) =>
+            {
+                if (currentContext.Data1 != null && MetricSeriesSelectionCache.IsSameSelection(selection, currentContext.PrimaryMetricType ?? currentContext.MetricType, currentContext.PrimarySubtype))
+                    return (true, currentContext.Data1, currentContext.PrimaryCms as ICanonicalMetricSeries);
 
-        if (ctx.Data1 != null && MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
+                if (currentContext.Data2 != null && MetricSeriesSelectionCache.IsSameSelection(selection, currentContext.SecondaryMetricType, currentContext.SecondarySubtype))
+                    return (true, currentContext.Data2, currentContext.SecondaryCms as ICanonicalMetricSeries);
 
-        if (ctx.Data2 != null && MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return (ctx.Data2, ctx.SecondaryCms as ICanonicalMetricSeries);
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
-
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_selectionCache.TryGetDataWithCms(cacheKey, out var cached, out var cachedCms))
-            return (cached, cachedCms);
-
-        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _selectionCache.SetDataWithCms(cacheKey, data, primaryCms);
-        return (data, primaryCms);
+                return (false, null, null);
+            },
+            static currentContext => (currentContext.Data1, currentContext.PrimaryCms as ICanonicalMetricSeries));
     }
 
     private MetricSeriesSelection? ResolveSelectedNormalizedPrimarySeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos,
-                _controller.NormalizedPrimarySubtypeCombo,
-                _viewModel.ChartState.SelectedNormalizedPrimarySeries,
-                () =>
-                {
-                    var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-                    if (string.IsNullOrWhiteSpace(metricType))
-                        return null;
-
-                    return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-                });
+        return MetricSeriesSelectionAdapterHelper.ResolveSelectedSeries(
+            !_isUpdatingSubtypeCombos,
+            _controller.NormalizedPrimarySubtypeCombo,
+            _viewModel.ChartState.SelectedNormalizedPrimarySeries,
+            ctx.PrimaryMetricType ?? ctx.MetricType,
+            ctx.PrimarySubtype);
     }
 
     private MetricSeriesSelection? ResolveSelectedNormalizedSecondarySeries(ChartDataContext ctx)
     {
-        return MetricSeriesSelectionCache.ResolveSelection(!_isUpdatingSubtypeCombos,
-                _controller.NormalizedSecondarySubtypeCombo,
-                _viewModel.ChartState.SelectedNormalizedSecondarySeries,
-                () =>
-                {
-                    var metricType = ctx.SecondaryMetricType;
-                    if (string.IsNullOrWhiteSpace(metricType))
-                        return null;
-
-                    return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
-                });
+        return MetricSeriesSelectionAdapterHelper.ResolveSelectedSeries(
+            !_isUpdatingSubtypeCombos,
+            _controller.NormalizedSecondarySubtypeCombo,
+            _viewModel.ChartState.SelectedNormalizedSecondarySeries,
+            ctx.SecondaryMetricType,
+            ctx.SecondarySubtype);
     }
 
     private static string ResolveNormalizedDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
+        return MetricSeriesSelectionAdapterHelper.ResolveDisplayName(ctx, selectedSeries);
     }
 
     private void ApplySelectedNormalizationMode()
@@ -301,61 +277,6 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
     private bool CanUpdateNormalizedSubtypeOptions()
     {
         return _controller.NormalizedPrimarySubtypeCombo != null && _controller.NormalizedSecondarySubtypeCombo != null;
-    }
-
-    private void ClearNormalizedSubtypeCombos()
-    {
-        _controller.NormalizedPrimarySubtypeCombo.Items.Clear();
-        _controller.NormalizedSecondarySubtypeCombo.Items.Clear();
-    }
-
-    private void HandleNoSelectedNormalizedSeries()
-    {
-        _controller.NormalizedPrimarySubtypeCombo.IsEnabled = false;
-        _controller.NormalizedSecondarySubtypeCombo.IsEnabled = false;
-        _controller.NormalizedSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-
-        _viewModel.ChartState.SelectedNormalizedPrimarySeries = null;
-        _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
-
-        _controller.NormalizedPrimarySubtypeCombo.SelectedItem = null;
-        _controller.NormalizedSecondarySubtypeCombo.SelectedItem = null;
-    }
-
-    private void PopulateNormalizedSubtypeCombos(IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        ChartSubtypeComboHelper.PopulateCombo(_controller.NormalizedPrimarySubtypeCombo, selectedSeries);
-        ChartSubtypeComboHelper.PopulateCombo(_controller.NormalizedSecondarySubtypeCombo, selectedSeries);
-    }
-
-    private void UpdatePrimaryNormalizedSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        var primaryCurrent = _viewModel.ChartState.SelectedNormalizedPrimarySeries;
-        var primarySelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, primaryCurrent) ?? selectedSeries[0];
-        ChartSubtypeComboHelper.SelectComboItem(_controller.NormalizedPrimarySubtypeCombo, primarySelection);
-        _viewModel.ChartState.SelectedNormalizedPrimarySeries = primarySelection;
-    }
-
-    private void UpdateSecondaryNormalizedSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        if (selectedSeries.Count > 1)
-        {
-            _controller.NormalizedSecondarySubtypePanel.Visibility = Visibility.Visible;
-            _controller.NormalizedSecondarySubtypeCombo.IsEnabled = true;
-
-            var secondaryCurrent = _viewModel.ChartState.SelectedNormalizedSecondarySeries;
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
-
-            ChartSubtypeComboHelper.SelectComboItem(_controller.NormalizedSecondarySubtypeCombo, secondarySelection);
-            _viewModel.ChartState.SelectedNormalizedSecondarySeries = secondarySelection;
-        }
-        else
-        {
-            _controller.NormalizedSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            _controller.NormalizedSecondarySubtypeCombo.IsEnabled = false;
-            _controller.NormalizedSecondarySubtypeCombo.SelectedItem = null;
-            _viewModel.ChartState.SelectedNormalizedSecondarySeries = null;
-        }
     }
 
     private CartesianMetricChartRenderHost CreateRenderHost()
