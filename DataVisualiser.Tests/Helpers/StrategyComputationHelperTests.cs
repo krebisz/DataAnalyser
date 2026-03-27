@@ -1,4 +1,4 @@
-﻿using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Tests.Helpers;
@@ -160,5 +160,173 @@ public sealed class StrategyComputationHelperTests
 
         Assert.Equal(2, s1.Count);
         Assert.Equal(2, s2.Count);
+    }
+
+    [Fact]
+    public void PrepareOrderedData_ShouldFilterNullValues_AndSortAscending()
+    {
+        var source = new[]
+        {
+                new MetricData
+                {
+                        NormalizedTimestamp = From.AddDays(2),
+                        Value = 30
+                },
+                new MetricData
+                {
+                        NormalizedTimestamp = From,
+                        Value = null
+                },
+                new MetricData
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = 20
+                }
+        };
+
+        var result = StrategyComputationHelper.PrepareOrderedData(source);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(From.AddDays(1), result[0].NormalizedTimestamp);
+        Assert.Equal(From.AddDays(2), result[1].NormalizedTimestamp);
+    }
+
+    [Fact]
+    public void FilterAndOrderByRange_ShouldApplyInclusiveBounds()
+    {
+        var source = new[]
+        {
+                new MetricData
+                {
+                        NormalizedTimestamp = From.AddDays(-1),
+                        Value = 1
+                },
+                new MetricData
+                {
+                        NormalizedTimestamp = From,
+                        Value = 2
+                },
+                new MetricData
+                {
+                        NormalizedTimestamp = To,
+                        Value = 3
+                },
+                new MetricData
+                {
+                        NormalizedTimestamp = To.AddDays(1),
+                        Value = 4
+                }
+        };
+
+        var result = StrategyComputationHelper.FilterAndOrderByRange(source, From, To);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(new[] { From, To }, result.Select(item => item.NormalizedTimestamp));
+    }
+
+    [Fact]
+    public void CreateTimestampValueDictionaries_ShouldKeepFirstValue_ForDuplicateTimestamps()
+    {
+        var timestamp = From;
+        var ordered = new List<MetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = timestamp,
+                        Value = 10
+                },
+                new()
+                {
+                        NormalizedTimestamp = timestamp,
+                        Value = 20
+                }
+        };
+
+        var (dict1, dict2) = StrategyComputationHelper.CreateTimestampValueDictionaries(ordered, new List<MetricData>());
+
+        Assert.Equal(10.0, dict1[timestamp]);
+        Assert.Empty(dict2);
+    }
+
+    [Fact]
+    public void GetUnit_ShouldPreferPrimarySeries_AndFallbackToSecondary()
+    {
+        var primary = new List<MetricData>
+        {
+                new()
+                {
+                        Unit = "kg"
+                }
+        };
+        var secondary = new List<MetricData>
+        {
+                new()
+                {
+                        Unit = "lbs"
+                }
+        };
+
+        Assert.Equal("kg", StrategyComputationHelper.GetUnit(primary, secondary));
+        Assert.Equal("lbs", StrategyComputationHelper.GetUnit(new List<MetricData>(), secondary));
+    }
+
+    [Fact]
+    public void AlignByIndex_ShouldProjectMetricDataSeries()
+    {
+        var left = new List<MetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = 10
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = null
+                }
+        };
+        var right = new List<MetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = 5
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = 15
+                }
+        };
+
+        var (timestamps, primary, secondary) = StrategyComputationHelper.AlignByIndex(left, right, 2);
+
+        Assert.Equal(new[] { From, From.AddDays(1) }, timestamps);
+        Assert.Equal(10.0, primary[0]);
+        Assert.True(double.IsNaN(primary[1]));
+        Assert.Equal(15.0, secondary[1]);
+    }
+
+    [Fact]
+    public void AlignByIndex_ShouldProjectCmsSeries()
+    {
+        var left = new List<(DateTime Timestamp, decimal? ValueDecimal)>
+        {
+                (From, 10m),
+                (From.AddDays(1), null)
+        };
+        var right = new List<(DateTime Timestamp, decimal? ValueDecimal)>
+        {
+                (From, 5m),
+                (From.AddDays(1), 15m)
+        };
+
+        var (timestamps, primary, secondary) = StrategyComputationHelper.AlignByIndex(left, right, 2);
+
+        Assert.Equal(new[] { From, From.AddDays(1) }, timestamps);
+        Assert.Equal(10.0, primary[0]);
+        Assert.True(double.IsNaN(primary[1]));
+        Assert.Equal(15.0, secondary[1]);
     }
 }

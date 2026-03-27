@@ -1,4 +1,5 @@
-﻿using DataVisualiser.Shared.Helpers;
+using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Tests.Helpers;
@@ -94,14 +95,9 @@ public sealed class MathHelperTests
 
         Assert.NotNull(relative);
         Assert.NotNull(baseline);
-
-        // Baseline is always a flat 100%
         Assert.All(baseline!, v => Assert.Equal(100.0, v));
-
-        // First series has no usable range → NaN propagates
         Assert.All(relative!, v => Assert.True(double.IsNaN(v)));
     }
-
 
     [Fact]
     public void ApplyBinaryOperation_ShouldReturnNaN_WhenInvalid()
@@ -140,5 +136,113 @@ public sealed class MathHelperTests
     {
         var ratio = MathHelper.DetermineRecordToDayRatio(0.5m);
         Assert.Equal(RecordToDayRatio.Day, ratio);
+    }
+
+    [Fact]
+    public void CalculateOptimalMaxRecords_ShouldReturnNull_ForShortRanges()
+    {
+        var result = MathHelper.CalculateOptimalMaxRecords(new DateTime(2024, 01, 01), new DateTime(2024, 01, 01, 12, 0, 0));
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void CalculateOptimalMaxRecords_ShouldReturnConfiguredLimit_ForVeryLargeRanges()
+    {
+        var result = MathHelper.CalculateOptimalMaxRecords(new DateTime(2024, 01, 01), new DateTime(2026, 01, 05));
+
+        Assert.Equal(ComputationDefaults.SqlLimitingMaxRecords, result);
+    }
+
+    [Fact]
+    public void CalculateSeparatorStep_ShouldScaleToRequestedIntervalDensity()
+    {
+        var result = MathHelper.CalculateSeparatorStep(TickInterval.Day, 100, TimeSpan.FromDays(10));
+
+        Assert.Equal(10.0, result);
+    }
+
+    [Fact]
+    public void CreateSmoothedData_ShouldAggregateIntoAveragedPoint()
+    {
+        var from = new DateTime(2024, 01, 01);
+        var to = from.AddDays(2);
+        var data = new List<MetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = from,
+                        Value = 10m
+                },
+                new()
+                {
+                        NormalizedTimestamp = from.AddDays(1),
+                        Value = 20m
+                },
+                new()
+                {
+                        NormalizedTimestamp = from.AddDays(2),
+                        Value = 40m
+                }
+        };
+
+        var result = MathHelper.CreateSmoothedData(data, from, to);
+
+        var point = Assert.Single(result);
+        Assert.Equal(23.333333333333332, point.Value, 10);
+        Assert.Equal(from.AddDays(1), point.Timestamp);
+    }
+
+    [Fact]
+    public void InterpolateSmoothedData_ShouldReturnNaNSeries_WhenNoSmoothedPointsExist()
+    {
+        var timestamps = new List<DateTime>
+        {
+                new(2024, 01, 01),
+                new(2024, 01, 02)
+        };
+
+        var result = MathHelper.InterpolateSmoothedData(new List<SmoothedDataPoint>(), timestamps);
+
+        Assert.Equal(2, result.Count);
+        Assert.All(result, value => Assert.True(double.IsNaN(value)));
+    }
+
+    [Fact]
+    public void ReturnValueDifferences_ShouldSubtractPairwise()
+    {
+        var result = MathHelper.ReturnValueDifferences(new List<double>
+        {
+                10,
+                6
+        }, new List<double>
+        {
+                3,
+                2
+        });
+
+        Assert.Equal(new[]
+        {
+                7.0,
+                4.0
+        }, result);
+    }
+
+    [Fact]
+    public void ReturnValueRatios_ShouldReturnNaN_WhenDividingByZero()
+    {
+        var result = MathHelper.ReturnValueRatios(new List<double>
+        {
+                10,
+                6
+        }, new List<double>
+        {
+                2,
+                0
+        });
+
+        Assert.NotNull(result);
+        Assert.Equal(5.0, result![0]);
+        Assert.True(double.IsNaN(result[1]));
     }
 }

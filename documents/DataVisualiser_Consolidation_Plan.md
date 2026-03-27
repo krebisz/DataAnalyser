@@ -530,6 +530,66 @@ Unless new evidence materially changes the codebase shape, use this sequence fir
 - focused subsystem lane: not applicable for this iteration because the change is documentation-only
 - manual smoke requirement: not required unless later iterations change live UI, rendering, export, theme, or controller behavior
 
+#### Iteration 2 - Phase B - Analytical Kernel Consolidation
+
+**Date:** `2026-03-27`  
+**Primary objective:** constrain the first analytical helper slice by separating interval logic, smoothing logic, and valued-series preparation logic into clearer analytical owners without changing the public helper surface
+
+**Bounded slice executed**
+
+- `Shared/Helpers/MathHelper.cs`
+- `Shared/Helpers/FrequencyBinningHelper.cs`
+- `Shared/Helpers/StrategyComputationHelper.cs`
+- new internal kernel helpers added in the same subsystem:
+  - `Shared/Helpers/TemporalIntervalHelper.cs`
+  - `Shared/Helpers/TimeSeriesSmoothingHelper.cs`
+  - `Shared/Helpers/MetricDataSeriesHelper.cs`
+
+**What was simplified**
+
+- `MathHelper` no longer owns interval normalization/mapping logic and smoothing/interpolation implementation details directly
+- `StrategyComputationHelper` no longer repeats valued-series filtering/ordering and timestamp-dictionary preparation logic inline
+- `FrequencyBinningHelper` now expresses bin sizing, bin membership, and normalization steps with smaller private helpers rather than one long linear implementation
+
+**What was consolidated**
+
+- repeated valued-series filtering/order rules were consolidated into `MetricDataSeriesHelper`
+- interval selection, interval generation, and interval index mapping were consolidated into `TemporalIntervalHelper`
+- smoothing and interpolation logic were consolidated into `TimeSeriesSmoothingHelper`
+- the public analytical helper entry points were preserved as stable facades so calling code did not need to change
+
+**What was generalized**
+
+- one shared valued-series preparation path now serves `PrepareOrderedData`, `FilterAndOrderByRange`, `PrepareDataForComputation`, timestamp dictionary creation, and unit selection
+- one shared temporal interval path now serves tick-interval selection, separator-step calculation, normalized interval generation, and interval index mapping
+
+**What was removed / retired**
+
+- duplicate valued-series filtering and ordering logic previously embedded in `StrategyComputationHelper`
+- mixed interval and smoothing implementation detail previously embedded directly inside `MathHelper`
+
+**Regression protection added before refactor**
+
+- added direct tests for `FrequencyBinningHelper`
+- expanded direct tests for `MathHelper`
+- expanded direct tests for `StrategyComputationHelper`
+
+**Validation / smoke result**
+
+- pre-refactor regression gate:
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `380` tests passed, `0` failed, `0` skipped
+- post-refactor automated validation:
+  - `dotnet build DataAnalyser.sln -c Debug` passed on `2026-03-27` with `0` errors and existing warnings only
+  - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1` passed on `2026-03-27` with `380` tests passed, `0` failed, `0` skipped
+- manual smoke requirement:
+  - not required for this iteration because the change remained internal-only and behavior-preserving at the helper/kernel layer
+
+**Remaining intentional debt after Iteration 2**
+
+- `MathHelper` still contains formatting, normalization, and binary/unary numeric operations that remain broader than one pure responsibility
+- no folder or namespace realignment was performed yet
+- rendering-specific analytical cleanup remains deferred to later bounded slices once helper ownership stabilizes
+
 ---
 
 ## 8. Validation and Smoke-Test Discipline
