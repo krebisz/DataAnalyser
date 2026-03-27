@@ -495,14 +495,14 @@ Retired as superfluous after absorption:
 
 ## 9. Immediate Next Action Set
 
-1. Continue `Step 17` and finish the final convergence pass.
-2. Keep the remaining work behavior-preserving: remove superseded intermediate glue first, then only promote abstractions already proven in multiple real slices.
-3. Close the rehaul only after the final build, default test lanes, and broad manual smoke pass are clean.
-4. Revalidate roadmap-adjacent closure claims with present evidence before treating any pre-Phase-5 work as truly closed.
-5. Ensure new rendering/orchestration seams do not hard-code single-result or permanently bespoke-controller assumptions that would block the standardized programmable chart direction.
+1. Rehaul complete.
+2. Treat the residual concentration points and explicit Syncfusion export gap as intentional debt, not unfinished hidden migration work.
+3. Apply future generalization only when new repeated patterns are proven in multiple real slices.
+4. Revalidate any future closure claims with present evidence rather than relying on historical refactor intent.
+5. Preserve the current behavior-qualified seams unless a new bounded step deliberately replaces them.
 
 ### Remaining Step Summary
-1. `Step 17`: run the final convergence pass, promote only proven shared abstractions, remove superseded structure, and close residual technical debt.
+1. No remaining overhaul steps.
 
 ---
 
@@ -983,7 +983,7 @@ Done when:
 
 ### Step 17. Run a final convergence pass before declaring architectural closure
 
-Status: in progress
+Status: completed
 
 Agent work:
 1. remove compatibility shims that were only meant to support intermediate migration
@@ -1000,6 +1000,7 @@ Agent work:
 7. keep dynamic color assignment where functionally required, but relocate it to cleaner theme/render seams if that can now be done without expanding scope.
 8. explicitly leave any remaining non-generalized outliers documented as intentional debt rather than implicitly unfinished work.
 9. reduce or explicitly justify the remaining large concentration points that still hold mixed responsibility after Steps 12-16.
+10. keep `WeekdayTrend` on its explicit controller/contract path rather than forcing it back through the generic shared orchestrator entrypoints.
 
 Primary code focus:
 1. temporary shims/adapters

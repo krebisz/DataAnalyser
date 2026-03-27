@@ -246,9 +246,6 @@ public sealed class ChartRenderingOrchestrator
     {
         if (chartState.IsDistributionVisible)
             await RenderDistributionChartAsync(ctx, chartDistribution, chartState, chartState.SelectedDistributionMode);
-
-        if (chartState.IsWeeklyTrendVisible)
-            RenderWeeklyTrend(ctx);
     }
 
     private IMainChartOrchestrationPipeline CreateMainChartOrchestrationPipeline(MetricSelectionService? metricSelectionService)
@@ -316,12 +313,6 @@ public sealed class ChartRenderingOrchestrator
             From = from,
             To = to
         };
-    }
-
-    private void RenderWeeklyTrend(ChartDataContext ctx)
-    {
-        // Implementation extracted from MainWindow
-        // TODO: Implement weekly trend rendering
     }
 
     private static (bool IsStacked, bool IsCumulative) ResolveMainChartDisplayMode(MainChartDisplayMode mode)

@@ -3,8 +3,8 @@
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
 **Operational Execution Source:** `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` for active architecture rehaul work  
-**Last Updated:** 2026-03-18  
-**Change Note:** Roadmap revitalized to reconcile foundational intent, stale closure claims, architecture rehaul, and multi-backend rendering qualification
+**Last Updated:** 2026-03-26  
+**Change Note:** Roadmap updated to reflect completed architecture rehaul closure, explicit residual debt posture, and post-rehaul maintenance discipline
 
 ---
 
@@ -120,18 +120,19 @@ Use these status labels literally:
 ---
 
 ### Phase 3 - CMS Strategy Capability  
-**Status:** IMPLEMENTED / REVALIDATION REQUIRED
+**Status:** CLOSED
 
 **Objective**
 - Make CMS-based computation available across active strategy families
 
 **What is believed true**
-- CMS-capable strategies exist broadly across the system
-- Major migration work has already been implemented
+- CMS-capable strategies exist across the active strategy families
+- Major migration work has been implemented and revalidated with current March 2026 evidence
 
 **Why closure is not currently accepted as final**
-- earlier closure claims relied on January 2026 reachability artifacts that must be regenerated under the current evidence rules
-- execution-path observability and path-used assertions must remain current, not historical
+- This concern has been satisfied by current March 2026 reachability/parity exports and current green default test lanes
+- Active closure scope excludes the retired live `Difference/Ratio` chart surface
+- `Syncfusion` remains outside CMS reachability closure because its export is still explicitly `NotApplicable`
 
 **Historical evidence references (now treated as historical, not sufficient by themselves)**
 - `documents/reachability-20260121-160503.json`
@@ -141,11 +142,12 @@ Use these status labels literally:
 2. All active strategies are reachable through live orchestration.
 3. Path used is observable and test/assertion backed.
 4. Current evidence artifacts exist in the repository-visible evidence path.
+5. Closure is based on current March 2026 evidence artifacts in `documents/`, not historical January 2026 artifacts.
 
 ---
 
 ### Phase 3.5 - Execution Reachability and Observability  
-**Status:** IMPLEMENTED / REVALIDATION REQUIRED
+**Status:** CLOSED
 
 **Objective**
 - Prove that CMS paths are actually exercised in live pipelines and not merely implemented in isolation
@@ -160,11 +162,12 @@ Use these status labels literally:
 1. CMS execution is observable for all active strategy families.
 2. Bypass paths are either eliminated or explicitly justified.
 3. Reachability evidence is current, reproducible, and generated through the approved evidence path.
+4. Closure scope explicitly excludes the retired live `Difference/Ratio` chart surface and the still-unwired Syncfusion reachability export.
 
 ---
 
 ### Phase 4 - Consumer Adoption and Parity Closure  
-**Status:** IMPLEMENTED / REVALIDATION REQUIRED
+**Status:** CLOSED
 
 **Objective**
 - Prove that CMS behavior is preserved through consumer-facing pipelines and parity obligations remain satisfied
@@ -174,19 +177,19 @@ Use these status labels literally:
 - `documents/reachability-20260121-114215.json`
 
 #### Phase 4A - Core Strategy Parity  
-**Status:** IMPLEMENTED / REVALIDATION REQUIRED
+**Status:** CLOSED
 
 **Closure Condition**
 - Parity tests pass deterministically for active strategy families with current evidence and current test lanes
 
 #### Phase 4B - Transform Pipeline Parity  
-**Status:** IMPLEMENTED / REVALIDATION REQUIRED
+**Status:** CLOSED
 
 **Closure Condition**
 - Transform outputs match required reference behavior across supported expressions with current evidence
 
 #### Phase 4C - Temporal and Distribution Consumer Adoption  
-**Status:** IMPLEMENTED / REVALIDATION REQUIRED
+**Status:** CLOSED
 
 **Closure Condition**
 - Temporal and distribution strategies remain reachable, parity-backed, and consumer-safe in live pipeline context
@@ -204,11 +207,12 @@ Use these status labels literally:
 1. Consumer-facing CMS paths are current, reachable, and parity-validated.
 2. Historical closure claims have been refreshed with present evidence.
 3. No active parity claim depends on missing or stale artifacts.
+4. Closure scope excludes retired live consumer surfaces and keeps the current Syncfusion export limitation explicit rather than pretending it is parity-complete.
 
 ---
 
 ### Phase 5 - Architecture Rehaul and Backend Qualification  
-**Status:** OPEN / CURRENT CRITICAL PATH
+**Status:** CLOSED
 
 **Entry Context**
 - The project has enough truthful and functional implementation progress to expose its next bottlenecks clearly.
@@ -301,11 +305,19 @@ Phase 5 exists to make the system structurally safe for its intended future:
 5. Current shipped capabilities are preserved or replaced with validated equivalents.
 6. Residual tactical debt is explicit rather than accidental.
 
+**Post-Closure Maintenance Discipline**
+1. Preserve the qualified seams introduced by the rehaul unless a new bounded step deliberately replaces them.
+2. Treat remaining large concentration points as explicit intentional debt, not as hidden unfinished migration work.
+3. Keep the current Syncfusion export limitation honest until true Syncfusion reachability evidence is deliberately implemented.
+4. Do not generalize further just to reduce file count; only generalize patterns proven in multiple real slices.
+5. Revalidate future closure claims with present evidence rather than relying on historical refactor intent alone.
+6. Keep `DataFileReader` active callers on capability facades and do not reintroduce direct `SQLHelper` usage in those caller layers.
+
 ---
 
 ### Phase 6 - Exploratory and Confidence Capability Expansion (Intentional)  
-**Status:** PLANNED / BLOCKED  
-**Entry Gate:** Phases 3, 3.5, 4, and 5 must be genuinely closed under current evidence rules
+**Status:** OPEN / NEXT CRITICAL PATH  
+**Entry Gate:** Opened now that Phases 3, 3.5, 4, and 5 are closed under current evidence rules
 
 **Purpose**
 Phase 6 increases interpretive power without eroding canonical truth.
@@ -420,6 +432,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 
 ### Phase 7 - UI, State, and Integration Consolidation  
 **Status:** PLANNED / BLOCKED
+**Entry Gate:** Phase 6 must advance far enough to justify broad UI/state consolidation without reopening structural uncertainty
 
 **Objective**
 - ensure the UI accurately reflects truth, interpretation, uncertainty, qualified rendering behavior, and standardized programmable chart capabilities without compensating for architectural weakness
@@ -429,8 +442,6 @@ It is also the sanctioned home for standardized programmable chart composition o
 2. UI state reflects truth, uncertainty, and programmable chart composition without distortion.
 3. Integration behavior is predictable across supported chart families and qualified backends.
 4. The UI no longer acts as a repair layer for missing architectural boundaries.
-
----
 
 ## 6. Rendering Backend Introduction Policy (Explicit)
 
@@ -474,15 +485,32 @@ This policy protects both long-term trust and long-term extensibility.
 
 ## 8. Current Critical Path (Authoritative)
 
-1. Repair evidence export path and regenerate current closure artifacts.
-2. Fix the immediate tactical distribution-polar tooltip defect.
-3. Continue Phase 5 architecture rehaul work through the approved execution plan.
-4. Define rendering capability contracts and backend qualification matrix.
-5. Qualify `LiveChartsCore` and other relevant backends by capability slice rather than assumption.
-6. Close Phase 5 before opening Phase 6.
+1. Preserve the qualified seams produced by the completed Phase 5 rehaul.
+2. Begin Phase 6 deliberately through bounded exploratory and confidence-aware slices.
+3. Keep residual debt explicit and bounded rather than allowing silent structural drift.
+4. Revalidate future closure claims with present evidence and repository-visible artifacts.
+5. Introduce further generalization only when the codebase has earned it through repeated real slices.
+6. Keep future phase entry explicit rather than reopening rehaul work implicitly.
 
 Phase 6 must not be treated as open merely because ideas are ready.  
 It opens only when the system is structurally able to absorb them safely.
+
+---
+
+## 8.5 Open Phase Summary
+
+Remaining open phases:
+1. `Phase 6 - Exploratory and Confidence Capability Expansion`: `OPEN / NEXT CRITICAL PATH`
+2. `Phase 7 - UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
+
+Major next steps in sequence:
+1. `Phase 6.1` - interpretive visual overlays
+2. `Phase 6.2` - confidence annotation
+3. `Phase 6.3` - confidence-aware interpretation
+4. `Phase 6.4` - programmable chart composition and multi-result derived views
+5. `Phase 6.5` - structural and relational exploration
+6. `Phase 6.6` - rules-based option gating
+7. `Phase 7` - UI, state, and integration consolidation after Phase 6 is sufficiently advanced
 
 ---
 
@@ -490,8 +518,8 @@ It opens only when the system is structurally able to absorb them safely.
 
 - Early phases built truthful foundations.
 - Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
-- Phase 5 is the current bridge between what the system already does and what it is intended to become.
-- Phase 6 remains the sanctioned home of exploration, confidence, and richer interpretive power.
+- Phase 5 is the completed bridge between what the system already does and what it is intended to become.
+- Phase 6 is now the active sanctioned home of exploration, confidence, and richer interpretive power.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.
 - Closure means present truth, present evidence, and present structural safety.
 

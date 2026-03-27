@@ -88,6 +88,7 @@ The UI layer provides:
 
 UI components are controller-based, but full standardization is still an active architectural direction rather than finished reality.
 The intended direction is convergence toward standardized graph hosts with shared option/toggle affordances and programmable derived-result composition on qualified chart surfaces.
+The recent architecture rehaul established explicit orchestration, rendering, theme, and evidence seams, while leaving a small number of large concentration points as intentional debt rather than hidden unfinished migration work.
 
 ---
 
@@ -168,46 +169,47 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 ---
 
 ### Phase 3 - Strategy Migration  
-**Implemented / Revalidation Required**
+**Closed**
 
-- CMS strategies are broadly implemented
-- Parallel legacy execution remains as migration compatibility
-- Historical evidence exists, but closure requires current-date revalidation under the roadmap evidence rules
+- CMS strategies are implemented across the active strategy families
+- Parallel legacy execution remains as bounded compatibility rather than open migration uncertainty
+- Closure is now supported by current March 2026 reachability/parity evidence under the approved export path
 
 ---
 
 ### Phase 3.5 - Orchestration Layer Assessment  
-**Implemented / Revalidation Required**
+**Closed**
 
 - Unified cut-over behavior exists
 - CMS is preserved through orchestration
-- Reachability evidence must be regenerated through the approved evidence path before closure is treated as current
+- Reachability evidence has been regenerated through the approved evidence path for the active live surfaces
 
 ---
 
 ### Phase 4 - Consumer Adoption & Visualization Integration  
-**Implemented / Revalidation Required**
+**Closed**
 
-- CMS is materially adopted by consumer-facing visualization paths
-- UI migration is advanced but not accepted as finally closed without present evidence
-- Parity remains a phase obligation rather than a historical claim
+- CMS is materially adopted by the active consumer-facing visualization paths
+- Current March 2026 exports and green default test lanes provide the present evidence required for closure
+- Parity is now treated as a currently satisfied obligation for the active live surfaces rather than a historical claim
 
 ---
 
 ### Phase 5 - Architecture Rehaul & Backend Qualification  
-**Open / Current Critical Path**
+**Closed / Maintenance Discipline Active**
 
-- Structural repair, boundary reduction, and backend qualification are the active focus
-- Current work is intended to preserve the path toward standardized programmable chart hosts
-- Rendering contracts, orchestration seams, and evidence discipline must close before exploratory expansion opens
+- Structural repair, boundary reduction, and backend qualification have been completed as an explicit rehaul phase
+- Qualified seams now exist for orchestration, rendering contracts, theme ownership, and evidence/export flow
+- A small set of residual concentration points remains explicit intentional debt rather than hidden unfinished migration work
+- Future change is expected to preserve the path toward standardized programmable chart hosts rather than reopen prototype-era boundary leakage
 
 ---
 
 ### Phase 6 - Exploratory & Confidence Capability Expansion  
-**Planned / Blocked**
+**Open / Next Critical Path**
 
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result chart composition are intentionally staged here
-- This phase remains blocked until earlier phases are genuinely closed with current evidence
+- This is now the active next phase because the prerequisite earlier phases are closed under current evidence
 
 ---
 
@@ -215,7 +217,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 **Planned / Blocked**
 
 - Standardized graph hosts, shared option/toggle surfaces, and predictable integration behavior are intended here
-- This phase exists to consolidate the UI after the architecture is strong enough to support that convergence safely
+- This phase exists to consolidate the UI after Phase 6 has advanced enough to support that convergence safely
 
 ---
 
@@ -266,6 +268,7 @@ The system exists to support reasoning, not replace it.
 - Confidence is explicit, not implicit
 - Exploration is supported without semantic erosion
 - Standardized programmable charting is intended, but still phase-gated
+- The architecture rehaul is complete, and the remaining large concentration points are explicit maintenance concerns rather than open rehaul ambiguity
 - Evolution is intentional and evidence-bound
 
 This overview describes the system as it exists today and the direction it is deliberately moving toward.
