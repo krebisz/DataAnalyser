@@ -100,6 +100,48 @@ public static class FrequencyBinningHelper
         return normalized;
     }
 
+    /// <summary>
+    ///     Creates fixed-width intervals for the given range.
+    ///     Returns a single interval when the range or interval count is invalid.
+    /// </summary>
+    public static List<(double Min, double Max)> CreateUniformIntervals(double minValue, double maxValue, int intervalCount)
+    {
+        var intervals = new List<(double Min, double Max)>();
+
+        if (maxValue <= minValue || intervalCount <= 0)
+        {
+            intervals.Add((minValue, maxValue));
+            return intervals;
+        }
+
+        var intervalSize = (maxValue - minValue) / intervalCount;
+
+        for (var i = 0; i < intervalCount; i++)
+        {
+            var intervalMin = minValue + i * intervalSize;
+            var intervalMax = i == intervalCount - 1 ? maxValue : intervalMin + intervalSize;
+            intervals.Add((intervalMin, intervalMax));
+        }
+
+        return intervals;
+    }
+
+    /// <summary>
+    ///     Counts values per interval for each bucket and ensures every bucket has an initialized frequency map.
+    /// </summary>
+    public static Dictionary<int, Dictionary<int, int>> CountFrequenciesPerBucket(Dictionary<int, List<double>> bucketValues, List<(double Min, double Max)> intervals, int bucketCount)
+    {
+        var result = new Dictionary<int, Dictionary<int, int>>(bucketCount);
+
+        for (var bucketIndex = 0; bucketIndex < bucketCount; bucketIndex++)
+        {
+            var values = bucketValues.TryGetValue(bucketIndex, out var bucket) ? bucket : [];
+            result[bucketIndex] = BinValuesAndCountFrequencies(values, intervals);
+        }
+
+        return result;
+    }
+
     private static double ChooseNiceMultiplier(double normalized)
     {
         if (normalized <= 1.0)

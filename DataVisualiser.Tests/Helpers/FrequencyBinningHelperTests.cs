@@ -58,4 +58,43 @@ public sealed class FrequencyBinningHelperTests
         Assert.Equal(0.0, normalized[0][0]);
         Assert.Equal(0.0, normalized[0][1]);
     }
+
+    [Fact]
+    public void CreateUniformIntervals_ShouldReturnSingleInterval_WhenInputIsInvalid()
+    {
+        var intervals = FrequencyBinningHelper.CreateUniformIntervals(10.0, 5.0, 4);
+
+        Assert.Single(intervals);
+        Assert.Equal((10.0, 5.0), intervals[0]);
+    }
+
+    [Fact]
+    public void CountFrequenciesPerBucket_ShouldInitializeAllBuckets_AndKeepLastIntervalInclusive()
+    {
+        var intervals = FrequencyBinningHelper.CreateUniformIntervals(0.0, 4.0, 4);
+        var bucketValues = new Dictionary<int, List<double>>
+        {
+                [0] = new()
+                {
+                        0.2,
+                        1.2,
+                        4.0,
+                        double.NaN
+                },
+                [2] = new()
+                {
+                        2.4
+                }
+        };
+
+        var frequencies = FrequencyBinningHelper.CountFrequenciesPerBucket(bucketValues, intervals, 4);
+
+        Assert.Equal(4, frequencies.Count);
+        Assert.Equal(1, frequencies[0][0]);
+        Assert.Equal(1, frequencies[0][1]);
+        Assert.Equal(1, frequencies[0][3]);
+        Assert.All(frequencies[1].Values, count => Assert.Equal(0, count));
+        Assert.Equal(1, frequencies[2][2]);
+        Assert.All(frequencies[3].Values, count => Assert.Equal(0, count));
+    }
 }

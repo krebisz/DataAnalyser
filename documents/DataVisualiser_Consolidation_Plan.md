@@ -537,6 +537,47 @@ Tracked steps:
 
 ---
 
+## 9.7 Current Cycle Progress
+
+Current March 2026 progress for the legibility-first cycle:
+
+- `Phase A` has been refreshed
+- the current outlier map remains materially valid
+- the first bounded `Phase B` slice was selected from the high-entropy operation clusters rather than from UI churn
+
+Bounded slice selected:
+
+- distribution interval creation and per-bucket frequency counting
+- primary files:
+  - `Shared/Helpers/FrequencyBinningHelper.cs`
+  - `Core/Services/FrequencyShadingCalculator.cs`
+  - `Core/Services/BaseDistributionService.cs`
+
+Reason this slice was chosen first:
+
+- the low-level interval / bucket frequency logic was split between more than one owner
+- the duplication was pure and behavior-preserving enough to consolidate safely
+- re-homing it improves legibility without forcing a premature controller or UI pass
+
+Current banked result from this slice:
+
+- uniform interval creation and per-bucket frequency counting now have one obvious owner in `FrequencyBinningHelper`
+- `FrequencyShadingCalculator` is reduced back toward shading-data orchestration rather than low-level interval ownership
+- `BaseDistributionService` tooltip preparation now consumes the same shared low-level helper
+- focused regression protection was extended for the re-homed interval and frequency semantics
+
+Validation recorded for this pass:
+
+- focused regression lane: `12` passed, `0` failed
+- `dotnet build DataAnalyser.sln -c Debug`: passed with `0` errors, `0` warnings
+- `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1`: `392` passed, `0` failed, `0` skipped
+
+Manual smoke:
+
+- not required for this pass because the change stayed internal-only and behavior-preserving
+
+---
+
 ## 10. Current Priority Outliers
 
 These are the current named outliers most likely to matter in the next cycle:

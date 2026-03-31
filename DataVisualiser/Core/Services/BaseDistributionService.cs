@@ -502,10 +502,10 @@ public abstract class BaseDistributionService : IDistributionService
             globalMax = globalMin + 1;
 
         // Create intervals (same as in RenderOriginalMinMaxChart)
-        var intervals = _frequencyShadingCalculator.CreateUniformIntervals(globalMin, globalMax, intervalCount);
+        var intervals = FrequencyBinningHelper.CreateUniformIntervals(globalMin, globalMax, intervalCount);
 
         // Count frequencies per interval per bucket
-        var frequenciesPerBucket = _frequencyShadingCalculator.CountFrequenciesPerInterval(bucketValues, intervals);
+        var frequenciesPerBucket = FrequencyBinningHelper.CountFrequenciesPerBucket(bucketValues, intervals, Configuration.BucketCount);
 
         // Calculate percentages for each bucket
         for (var bucketIndex = 0; bucketIndex < Configuration.BucketCount; bucketIndex++)
