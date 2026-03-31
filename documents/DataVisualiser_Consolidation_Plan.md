@@ -576,6 +576,75 @@ Manual smoke:
 
 - not required for this pass because the change stayed internal-only and behavior-preserving
 
+### Phase B - Current Cycle Progress (Slice 2)
+
+The second bounded `Phase B` slice stayed in the transform-preparation / result-composition cluster.
+
+Bounded slice selected:
+
+- duplicate transform preparation and result composition services
+- primary files:
+  - `Core/Transforms/TransformComputationService.cs`
+  - `Core/Transforms/TransformOperationService.cs`
+  - `Core/Transforms/TransformComputationResult.cs`
+  - `Core/Transforms/TransformOperationResult.cs`
+
+Reason this slice was chosen next:
+
+- the transform layer still had two near-identical services preparing metric data, aligning timestamps, choosing the same expression-vs-legacy path, and shaping equivalent result payloads
+- that duplication did not express a real subsystem difference
+- retiring the duplicate owner improves legibility without forcing a UI or controller pass
+
+Current banked result from this slice:
+
+- `TransformComputationService` is the single owner for transform preparation and computation execution
+- the duplicate `TransformOperationService` and `TransformOperationResult` files were retired
+- transform preparation and result composition now have one obvious home instead of parallel service shapes
+
+Validation recorded for this pass:
+
+- focused regression lane: `11` passed, `0` failed
+- `dotnet build DataAnalyser.sln -c Debug`: passed with `0` errors, `47` existing warnings
+- `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1`: `392` passed, `0` failed, `0` skipped
+
+Manual smoke:
+
+- not required for this pass because the change stayed internal-only and behavior-preserving
+
+### Phase C - Current Cycle Progress
+
+The next bounded slice stayed structural and reconciled a mixed ownership boundary inside chart-context construction.
+
+Bounded slice selected:
+
+- chart data context assembly vs series-derivation preparation
+- primary files:
+  - `Core/Orchestration/Builders/ChartDataContextBuilder.cs`
+  - `Core/Orchestration/Builders/ChartDataSeriesPreparationHelper.cs`
+  - `Tests/Orchestration/ChartDataContextBuilderTests.cs`
+
+Reason this slice was chosen:
+
+- `ChartDataContextBuilder` was still owning both orchestration/assembly and pure timeline / alignment / smoothing / derived-series preparation
+- that mixed boundary made the builder harder to read as an orchestration component
+- the split could be made without changing the public contract or live chart behavior
+
+Current banked result from this slice:
+
+- `ChartDataContextBuilder` is reduced toward context assembly and label / CMS attachment
+- the pure timeline, alignment, smoothing, difference, ratio, and normalization preparation path now has a dedicated internal owner
+- dead CMS conversion residue was removed from the builder because it was no longer part of its responsibility
+
+Validation recorded for this pass:
+
+- focused regression lane: `4` passed, `0` failed
+- `dotnet build DataAnalyser.sln -c Debug`: passed with `0` errors, `0` warnings
+- `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1`: `393` passed, `0` failed, `0` skipped
+
+Manual smoke:
+
+- not required for this pass because the change stayed structural-only and preserved the existing chart-context contract
+
 ---
 
 ## 10. Current Priority Outliers

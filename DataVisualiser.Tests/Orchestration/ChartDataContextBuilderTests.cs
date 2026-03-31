@@ -134,6 +134,36 @@ public sealed class ChartDataContextBuilderTests
         Assert.Same(cms2, ctx.CmsSeries[1]);
     }
 
+    [Fact]
+    public void Build_ShouldPreserveNonPositiveSeries_WhenNormalizing()
+    {
+        var data1 = new List<MetricData>
+        {
+                new()
+                {
+                        NormalizedTimestamp = From,
+                        Value = -2m
+                },
+                new()
+                {
+                        NormalizedTimestamp = From.AddDays(1),
+                        Value = 0m
+                }
+        };
+
+        var builder = new ChartDataContextBuilder();
+        var primarySelection = new MetricSeriesSelection("Weight", "A");
+
+        var ctx = builder.Build(primarySelection, null, data1, null, From, To);
+
+        Assert.Equal(new[]
+                {
+                        -2.0,
+                        0.0
+                },
+                ctx.NormalizedValues1);
+    }
+
     private static void AssertInRange(double value, double minInclusive, double maxInclusive)
     {
         Assert.True(value >= minInclusive && value <= maxInclusive, $"Expected {value} to be in range [{minInclusive},{maxInclusive}].");
