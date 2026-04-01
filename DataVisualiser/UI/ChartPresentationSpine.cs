@@ -1,6 +1,6 @@
 using DataVisualiser.UI.ViewModels;
 
-namespace DataVisualiser.UI.Pipeline;
+namespace DataVisualiser.UI;
 
 /// <summary>
 ///     Thin entry points for the interactive presentation pipeline documented in

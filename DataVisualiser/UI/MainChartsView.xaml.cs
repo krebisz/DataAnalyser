@@ -30,7 +30,6 @@ using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Rendering;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
-using DataVisualiser.UI.Pipeline;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.Theming;
 using DataVisualiser.UI.ViewModels;

@@ -1,4 +1,4 @@
-using DataVisualiser.Core.Helpers.Validation;
+using DataVisualiser.Core.Validation.DataLoad;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.Tests.ViewModels;

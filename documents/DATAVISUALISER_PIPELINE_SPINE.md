@@ -27,4 +27,4 @@
 
 ## Code facade
 
-`DataVisualiser.UI.Pipeline.ChartPresentationSpine` — thin forwards to the VM for stages 2–3 so the spine has a single type to open first.
+`DataVisualiser.UI.ChartPresentationSpine` (`UI/ChartPresentationSpine.cs`) — thin forwards to the VM for stages 2–3 so the spine has a single type to open first.

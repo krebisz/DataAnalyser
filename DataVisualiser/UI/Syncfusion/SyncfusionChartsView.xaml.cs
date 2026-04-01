@@ -13,8 +13,8 @@ using DataVisualiser.UI.Charts.Helpers;
 using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Events;
+using DataVisualiser.UI;
 using DataVisualiser.UI.MainHost;
-using DataVisualiser.UI.Pipeline;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 
