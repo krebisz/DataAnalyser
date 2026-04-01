@@ -30,6 +30,7 @@ using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Rendering;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.Pipeline;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.Theming;
 using DataVisualiser.UI.ViewModels;
@@ -1334,7 +1335,7 @@ public partial class MainChartsView : UserControl
             ClearChartCache(ChartControllerKeys.DiffRatio);
             ClearChartCache(ChartControllerKeys.Transform);
             ResetTransformSelectionsPendingLoad();
-            var dataLoaded = await _viewModel.LoadMetricDataAsync();
+            var dataLoaded = await ChartPresentationSpine.LoadMetricDataIntoLastContextAsync(_viewModel);
             if (!dataLoaded)
             {
                 ClearAllCharts();
@@ -1342,7 +1343,7 @@ public partial class MainChartsView : UserControl
             }
 
             _chartPresentationCoordinator.ClearHiddenCharts(_viewModel.ChartState, CreateChartPresentationActions());
-            _viewModel.LoadDataCommand.Execute(null);
+            ChartPresentationSpine.PublishLastContextAndRequestChartUpdate(_viewModel);
         }
         catch (Exception ex)
         {

@@ -14,6 +14,7 @@ using DataVisualiser.UI.Charts.Infrastructure;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.Pipeline;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 
@@ -445,14 +446,14 @@ public partial class SyncfusionChartsView : UserControl
     {
         try
         {
-            var dataLoaded = await _viewModel.LoadMetricDataAsync();
+            var dataLoaded = await ChartPresentationSpine.LoadMetricDataIntoLastContextAsync(_viewModel);
             if (!dataLoaded)
             {
                 _viewModel.ChartState.LastContext = null;
                 return;
             }
 
-            _viewModel.LoadDataCommand.Execute(null);
+            ChartPresentationSpine.PublishLastContextAndRequestChartUpdate(_viewModel);
         }
         catch (Exception ex)
         {
