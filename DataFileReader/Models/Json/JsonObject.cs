@@ -1,8 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace DataFileReader.Class.JSON;
+namespace DataFileReader.Models.Json;
 
 public class JsonObject : IJsonComplex, IEnumerable<IJson>, IEnumerable
 {

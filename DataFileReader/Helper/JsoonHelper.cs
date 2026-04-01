@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using DataFileReader.Class;
+using System.Text.Json;
+using DataFileReader.Models;
 using Newtonsoft.Json.Linq;
 
 namespace DataFileReader.Helper;

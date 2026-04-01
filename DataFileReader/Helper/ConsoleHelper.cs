@@ -1,7 +1,7 @@
-﻿using System.Configuration;
+using System.Configuration;
 using System.Data;
 using System.Text;
-using DataFileReader.Class;
+using DataFileReader.Models;
 
 namespace DataFileReader.Helper;
 

@@ -1,7 +1,7 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
-namespace DataFileReader.Class;
+namespace DataFileReader.Models;
 
 public class HierarchyObjectList
 {

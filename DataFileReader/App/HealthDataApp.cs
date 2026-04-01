@@ -1,5 +1,5 @@
 using System.Configuration;
-using DataFileReader.Class;
+using DataFileReader.Models;
 using DataFileReader.Helper;
 using DataFileReader.Services;
 

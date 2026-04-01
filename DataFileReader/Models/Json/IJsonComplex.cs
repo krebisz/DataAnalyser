@@ -1,6 +1,6 @@
-﻿using System.Collections;
+using System.Collections;
 
-namespace DataFileReader.Class.JSON;
+namespace DataFileReader.Models.Json;
 
 public interface IJsonComplex : IJson, IEnumerable<IJson>, IEnumerable
 {

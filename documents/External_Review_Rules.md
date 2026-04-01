@@ -11,7 +11,7 @@ The reviewing agent must treat the following as the governing context:
 
 1. the current codebase state
 2. [DataVisualiser_Consolidation_Plan.md](c:\Development\POCs\DataAnalyser\documents\DataVisualiser_Consolidation_Plan.md)
-3. [log.md](c:\Development\POCs\DataAnalyser\log.md)
+3. [log.md](c:\Development\POCs\DataAnalyser\documents\log.md)
 4. the current uncommitted workspace changes, where relevant
 
 The review must be based on the code as it exists now, not on an imagined clean-room rewrite.

@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace DataFileReader.Class;
+namespace DataFileReader.Models;
 
 public static class HierarchyRefValCalculator
 {

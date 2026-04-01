@@ -1,7 +1,7 @@
-﻿using System.Data;
+using System.Data;
 using static DataFileReader.Helper.DataHelper;
 
-namespace DataFileReader.Class;
+namespace DataFileReader.Models;
 
 public class MetaDataList
 {

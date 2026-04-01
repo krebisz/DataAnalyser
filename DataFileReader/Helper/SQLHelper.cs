@@ -2,7 +2,7 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
 using System.Text;
-using DataFileReader.Class;
+using DataFileReader.Models;
 using DataFileReader.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

@@ -1,6 +1,6 @@
-﻿using System.Collections;
+using System.Collections;
 
-namespace DataFileReader.Class.JSON;
+namespace DataFileReader.Models.Json;
 
 public class JsonArray : IJsonComplex, IEnumerable<IJson>, IEnumerable
 {

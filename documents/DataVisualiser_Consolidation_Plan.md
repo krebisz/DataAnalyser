@@ -186,7 +186,7 @@ Measured gains already banked:
 - `Core/Rendering/Distribution` reduced from `12` files to `3`
 - `Core/Rendering/WeekdayTrend` reduced from `12` files to `3`
 
-Historical summary of that cycle lives in `log.md`.
+Historical summary of that cycle lives in `documents/log.md`.
 This plan no longer serves as a line-by-line execution ledger for that earlier work.
 
 ---

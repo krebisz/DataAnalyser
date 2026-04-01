@@ -1,6 +1,6 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 
-namespace DataFileReader.Class;
+namespace DataFileReader.Models;
 
 public class HierarchyObject
 {

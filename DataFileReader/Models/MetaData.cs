@@ -1,4 +1,4 @@
-﻿namespace DataFileReader.Class;
+namespace DataFileReader.Models;
 
 public class MetaData
 {

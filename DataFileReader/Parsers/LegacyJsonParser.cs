@@ -1,6 +1,6 @@
-﻿using System.Configuration;
+using System.Configuration;
 using System.Data;
-using DataFileReader.Class;
+using DataFileReader.Models;
 using DataFileReader.Helper;
 using Newtonsoft.Json.Linq;
 

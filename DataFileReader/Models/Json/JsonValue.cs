@@ -1,4 +1,4 @@
-﻿namespace DataFileReader.Class.JSON;
+namespace DataFileReader.Models.Json;
 
 public class JsonValue : IJsonPrimitive, IConvertible
 {

@@ -1,4 +1,4 @@
-using DataFileReader.Class;
+using DataFileReader.Models;
 
 namespace DataFileReader.Services;
 
