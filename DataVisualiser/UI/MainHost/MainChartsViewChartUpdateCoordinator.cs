@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 

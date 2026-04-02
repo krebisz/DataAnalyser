@@ -6,7 +6,7 @@ using DataVisualiser.Core.Validation;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Charts.Adapters;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;

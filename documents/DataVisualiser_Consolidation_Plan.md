@@ -143,13 +143,13 @@ Current major concentration points:
 - `UI/MainChartsView.xaml.cs`
 - `Core/Data/Repositories/DataFetcher.cs`
 - `UI/MainHost/MainChartsEvidenceExportService.cs`
-- `UI/Charts/Adapters/TransformDataPanelControllerAdapter.cs`
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
 - `Core/Orchestration/Coordinator/ChartUpdateCoordinator.cs`
 - `Core/Services/BaseDistributionService.cs`
 - `UI/Syncfusion/SyncfusionChartsView.xaml.cs`
 - `Core/Rendering/Engines/ChartRenderEngine.cs`
 - `Core/Rendering/Helpers/ChartHelper.cs`
-- `UI/Charts/Adapters/BarPieChartControllerAdapter.cs`
+- `UI/Charts/Presentation/BarPieChartControllerAdapter.cs`
 
 Current read:
 
@@ -654,13 +654,13 @@ These are the current named outliers most likely to matter in the next cycle:
 - `UI/MainChartsView.xaml.cs`
 - `Core/Data/Repositories/DataFetcher.cs`
 - `UI/MainHost/MainChartsEvidenceExportService.cs`
-- `UI/Charts/Adapters/TransformDataPanelControllerAdapter.cs`
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
 - `Core/Orchestration/Coordinator/ChartUpdateCoordinator.cs`
 - `Core/Services/BaseDistributionService.cs`
 - `UI/Syncfusion/SyncfusionChartsView.xaml.cs`
 - `Core/Rendering/Engines/ChartRenderEngine.cs`
 - `Core/Rendering/Helpers/ChartHelper.cs`
-- `UI/Charts/Adapters/BarPieChartControllerAdapter.cs`
+- `UI/Charts/Presentation/BarPieChartControllerAdapter.cs`
 
 These are not automatically "wrong."
 They are the places where the hierarchy most likely still needs to explain itself better.

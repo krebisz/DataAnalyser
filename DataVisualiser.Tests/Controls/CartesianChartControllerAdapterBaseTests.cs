@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Charts.Adapters;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.State;

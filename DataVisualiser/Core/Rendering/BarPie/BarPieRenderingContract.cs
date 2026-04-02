@@ -1,5 +1,5 @@
-using DataVisualiser.UI.Charts.Helpers;
-using DataVisualiser.UI.Charts.Rendering;
+using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.Defaults;
 
 namespace DataVisualiser.Core.Rendering.BarPie;

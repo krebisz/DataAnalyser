@@ -1,10 +1,10 @@
 using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Presentation;
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Defaults;
-using DataVisualiser.UI.Charts.Rendering;
+using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.Charts.Controllers;

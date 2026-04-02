@@ -1,11 +1,10 @@
 using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Presentation;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
-using DataVisualiser.UI.Charts.Helpers;
-using DataVisualiser.UI.Charts.Rendering;
+using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.Core.Rendering.Interaction;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;

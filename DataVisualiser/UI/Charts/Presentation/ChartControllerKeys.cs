@@ -1,0 +1,26 @@
+using DataVisualiser.UI.Charts.Interfaces;
+
+namespace DataVisualiser.UI.Charts.Presentation;
+
+public static class ChartControllerKeys
+{
+    public const string Main = "Main";
+    public const string Normalized = "Norm";
+    public const string DiffRatio = "DiffRatio";
+    public const string Distribution = "Distribution";
+    public const string WeeklyTrend = "WeeklyTrend";
+    public const string Transform = "Transform";
+    public const string BarPie = "BarPie";
+    public const string SyncfusionSunburst = "SyncfusionSunburst";
+
+    public static readonly string[] All =
+    {
+            Main,
+            Normalized,
+            DiffRatio,
+            Distribution,
+            WeeklyTrend,
+            Transform,
+            BarPie
+    };
+}

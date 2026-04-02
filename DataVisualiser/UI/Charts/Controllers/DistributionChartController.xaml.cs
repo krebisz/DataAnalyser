@@ -1,5 +1,5 @@
 using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Presentation;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;
 using LiveChartsCore.SkiaSharpView.WPF;

@@ -1,4 +1,4 @@
-using DataVisualiser.UI.Charts.Rendering;
+using DataVisualiser.UI.Charts.Presentation.Rendering;
 
 namespace DataVisualiser.Core.Rendering.BarPie;
 

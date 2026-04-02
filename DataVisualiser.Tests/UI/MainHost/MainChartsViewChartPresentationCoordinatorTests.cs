@@ -1,5 +1,5 @@
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 

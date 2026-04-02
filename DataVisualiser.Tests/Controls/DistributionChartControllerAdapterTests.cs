@@ -8,7 +8,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Charts.Adapters;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;

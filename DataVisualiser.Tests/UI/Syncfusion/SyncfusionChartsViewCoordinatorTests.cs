@@ -1,6 +1,6 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Infrastructure;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.SyncfusionViews;
 

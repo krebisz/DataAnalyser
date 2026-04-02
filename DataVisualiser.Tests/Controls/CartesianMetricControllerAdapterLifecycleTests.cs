@@ -3,7 +3,7 @@ using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Charts.Adapters;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;

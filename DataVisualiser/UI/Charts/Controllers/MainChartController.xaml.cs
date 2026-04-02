@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Infrastructure;
-using DataVisualiser.UI.Charts.Rendering;
+using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.UI.Charts.Presentation.Rendering;
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI.Defaults;

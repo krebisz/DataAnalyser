@@ -1,6 +1,6 @@
 using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Tests.Helpers;
-using DataVisualiser.UI.Charts.Rendering;
+using DataVisualiser.UI.Charts.Presentation.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.UI.Rendering;
