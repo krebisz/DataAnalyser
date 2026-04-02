@@ -26,7 +26,7 @@ public sealed class MainChartsViewChartPipelineFactoryTests
             try
             {
                 var factory = new MainChartsViewChartPipelineFactory();
-                var result = factory.Create(new MainChartsViewChartPipelineFactoryContext(
+                var result = factory.Create(new MainChartsViewChartPipelineFactory.Context(
                     new Dictionary<CartesianChart, List<DateTime>>(),
                     tooltipManager,
                     "Server=(local);Database=Health;Integrated Security=True;TrustServerCertificate=True"));

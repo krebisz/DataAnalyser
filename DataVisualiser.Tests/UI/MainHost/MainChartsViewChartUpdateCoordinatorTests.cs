@@ -146,7 +146,7 @@ public sealed class MainChartsViewChartUpdateCoordinatorTests
         };
     }
 
-    private static MainChartsViewChartUpdateActions CreateActions(
+    private static MainChartsViewChartUpdateCoordinator.Actions CreateActions(
         Action<string, bool>? setChartVisibility = null,
         Action? updateDistributionChartTypeVisibility = null,
         Action? updateWeekdayTrendChartTypeVisibility = null,
@@ -154,7 +154,7 @@ public sealed class MainChartsViewChartUpdateCoordinatorTests
         Func<string, ChartDataContext, Task>? renderChartAsync = null,
         Action<string>? clearChart = null)
     {
-        return new MainChartsViewChartUpdateActions(
+        return new MainChartsViewChartUpdateCoordinator.Actions(
             setChartVisibility ?? ((_, _) => { }),
             updateDistributionChartTypeVisibility ?? (() => { }),
             updateWeekdayTrendChartTypeVisibility ?? (() => { }),

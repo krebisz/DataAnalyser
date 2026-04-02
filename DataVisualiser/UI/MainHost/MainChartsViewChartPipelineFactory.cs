@@ -2,18 +2,36 @@ using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Models;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Reachability;
+using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.MainHost;
 
 public sealed class MainChartsViewChartPipelineFactory
 {
-    public MainChartsViewChartPipelineFactoryResult Create(MainChartsViewChartPipelineFactoryContext context)
+    public sealed record Context(
+        Dictionary<CartesianChart, List<DateTime>> ChartTimestamps,
+        ChartTooltipManager TooltipManager,
+        string ConnectionString);
+
+    public sealed record Result(
+        ChartComputationEngine ComputationEngine,
+        ChartRenderEngine RenderEngine,
+        ChartUpdateCoordinator ChartUpdateCoordinator,
+        IDistributionService WeeklyDistributionService,
+        IDistributionService HourlyDistributionService,
+        DistributionPolarRenderingService DistributionPolarRenderingService,
+        IStrategyCutOverService StrategyCutOverService,
+        ChartRenderingOrchestrator ChartRenderingOrchestrator,
+        WeekdayTrendChartUpdateCoordinator WeekdayTrendChartUpdateCoordinator);
+
+    public Result Create(Context context)
     {
         if (context == null)
             throw new ArgumentNullException(nameof(context));
@@ -46,7 +64,7 @@ public sealed class MainChartsViewChartPipelineFactory
             notificationService,
             context.ConnectionString);
 
-        return new MainChartsViewChartPipelineFactoryResult(
+        return new Result(
             computationEngine,
             renderEngine,
             chartUpdateCoordinator,
@@ -58,14 +76,14 @@ public sealed class MainChartsViewChartPipelineFactory
             weekdayTrendChartUpdateCoordinator);
     }
 
-    private static IDistributionService CreateWeeklyDistributionService(Dictionary<LiveCharts.Wpf.CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
+    private static IDistributionService CreateWeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
         return new WeeklyDistributionService(chartTimestamps, strategyCutOverService, notificationService);
     }
 
-    private static IDistributionService CreateHourlyDistributionService(Dictionary<LiveCharts.Wpf.CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
+    private static IDistributionService CreateHourlyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);

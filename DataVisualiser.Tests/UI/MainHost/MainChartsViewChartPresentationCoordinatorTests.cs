@@ -84,7 +84,7 @@ public sealed class MainChartsViewChartPresentationCoordinatorTests
         Assert.DoesNotContain(ChartControllerKeys.Transform, cleared);
     }
 
-    private static MainChartsViewChartPresentationActions CreateActions(
+    private static MainChartsViewChartPresentationCoordinator.Actions CreateActions(
         Action<string, string>? setChartStateTitles = null,
         Action<string>? setMainChartTitle = null,
         Action<string>? setNormalizedChartTitle = null,
@@ -93,7 +93,7 @@ public sealed class MainChartsViewChartPresentationCoordinatorTests
         Action<string>? updateDiffRatioChartLabel = null,
         Action<string>? clearChart = null)
     {
-        return new MainChartsViewChartPresentationActions(
+        return new MainChartsViewChartPresentationCoordinator.Actions(
             setChartStateTitles ?? ((_, _) => { }),
             setMainChartTitle ?? (_ => { }),
             setNormalizedChartTitle ?? (_ => { }),

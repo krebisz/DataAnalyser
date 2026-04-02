@@ -10,7 +10,7 @@ public sealed class MainChartsViewStartupCoordinatorTests
         var calls = new List<string>();
         var coordinator = new MainChartsViewStartupCoordinator();
 
-        coordinator.Execute(new MainChartsViewStartupActions(
+        coordinator.Execute(new MainChartsViewStartupCoordinator.Actions(
             () => calls.Add("date"),
             () => calls.Add("default-ui"),
             () => calls.Add("selector"),

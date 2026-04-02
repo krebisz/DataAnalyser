@@ -764,7 +764,7 @@ public partial class MainChartsView : UserControl
             throw new InvalidOperationException("Tooltip manager is not initialized.");
 
         var pipeline = _chartPipelineFactory.Create(
-            new MainChartsViewChartPipelineFactoryContext(
+            new MainChartsViewChartPipelineFactory.Context(
                 _chartState.ChartTimestamps,
                 _tooltipManager,
                 _connectionString));
@@ -850,7 +850,7 @@ public partial class MainChartsView : UserControl
     private void ExecuteStartupSequence()
     {
         _startupCoordinator.Execute(
-            new MainChartsViewStartupActions(
+            new MainChartsViewStartupCoordinator.Actions(
                 InitializeDateRange,
                 InitializeDefaultUiState,
                 InitializeSubtypeSelector,
@@ -1028,7 +1028,7 @@ public partial class MainChartsView : UserControl
     {
         _viewModelEventBinder = new MainChartsViewEventBinder(
             _viewModel,
-            new MainChartsViewEventHandlers(
+            new MainChartsViewEventBinder.Handlers(
                 OnChartVisibilityChanged,
                 OnErrorOccured,
                 OnMetricTypesLoaded,
@@ -1211,7 +1211,7 @@ public partial class MainChartsView : UserControl
     {
         _resolutionResetCoordinator.ExecuteReset(
             selectedResolution,
-            new MainChartsViewResolutionResetActions(
+            new MainChartsViewResolutionResetCoordinator.Actions(
                 () => _isChangingResolution = true,
                 ClearAllCharts,
                 () => _viewModel.MetricState.SelectedMetricType = null,
@@ -1423,9 +1423,9 @@ public partial class MainChartsView : UserControl
             CreateChartPresentationActions());
     }
 
-    private MainChartsViewChartPresentationActions CreateChartPresentationActions()
+    private MainChartsViewChartPresentationCoordinator.Actions CreateChartPresentationActions()
     {
-        return new MainChartsViewChartPresentationActions(
+        return new MainChartsViewChartPresentationCoordinator.Actions(
             (leftName, rightName) =>
             {
                 _viewModel.ChartState.LeftTitle = leftName ?? string.Empty;
@@ -1447,9 +1447,9 @@ public partial class MainChartsView : UserControl
             ClearChart);
     }
 
-    private MainChartsViewChartUpdateActions CreateChartUpdateActions()
+    private MainChartsViewChartUpdateCoordinator.Actions CreateChartUpdateActions()
     {
-        return new MainChartsViewChartUpdateActions(
+        return new MainChartsViewChartUpdateCoordinator.Actions(
             SetChartVisibility,
             UpdateDistributionChartTypeVisibility,
             UpdateWeekdayTrendChartTypeVisibility,

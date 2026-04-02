@@ -14,7 +14,7 @@ public sealed class MainChartsViewResolutionResetCoordinatorTests
 
         coordinator.ExecuteReset(
             "All",
-            new MainChartsViewResolutionResetActions(
+            new MainChartsViewResolutionResetCoordinator.Actions(
                 () => calls.Add("start"),
                 () => calls.Add("clear-charts"),
                 () => calls.Add("clear-metric"),

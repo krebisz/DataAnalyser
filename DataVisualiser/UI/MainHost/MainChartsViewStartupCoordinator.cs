@@ -2,7 +2,18 @@ namespace DataVisualiser.UI.MainHost;
 
 public sealed class MainChartsViewStartupCoordinator
 {
-    public void Execute(MainChartsViewStartupActions actions)
+    public sealed record Actions(
+        Action InitializeDateRange,
+        Action InitializeDefaultUiState,
+        Action InitializeSubtypeSelector,
+        Action InitializeResolution,
+        Action InitializeCharts,
+        Action RequestChartUpdate,
+        Action SyncCmsToggleStates,
+        Action MarkInitializationComplete,
+        Action SyncInitialButtonStates);
+
+    public void Execute(Actions actions)
     {
         if (actions == null)
             throw new ArgumentNullException(nameof(actions));

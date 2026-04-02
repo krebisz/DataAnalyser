@@ -52,6 +52,11 @@ Current defaults:
 - validation must happen on every significant refactor
 - if live behavior changes, halt after automated validation and request targeted manual smoke before continuing
 
+Supporting navigation aids:
+
+- `documents/DATAVISUALISER_PIPELINE_SPINE.md`
+- `documents/log.md`
+
 Authority order:
 
 1. `Project Bible.md`
@@ -60,37 +65,38 @@ Authority order:
 4. `Project Overview.md`
 5. this document
 
-Default execution starting point for the next cycle:
+Default execution starting point for the current landscape:
 
-1. refresh the hierarchy map around the current named outliers
-2. identify the first bounded slice where similar low-level operations still lack one obvious home
-3. begin with that slice before broad UI churn, broad folder churn, or new feature work
-4. only broaden once the first slice proves a clearer ownership model
+1. refresh the hierarchy map around the current named outliers and the documented presentation spine
+2. treat the already-banked helper / transform / chart-context slices as closed unless fresh duplication is discovered
+3. begin with the mixed boundary or large outlier that now most impedes legibility
+4. only broaden once that slice proves a clearer ownership model
 
-Default iteration spine for the next cycle:
+Optimized active iteration spine:
 
 1. `Iteration 1 / Phase A`
-   - refresh the hierarchy map around the current outliers
-   - map files into the target module buckets
-   - choose the first bounded entropy slice
-2. `Iteration 2 / Phase B`
-   - consolidate the first irreducible low-level operation cluster into one obvious home
-3. `Iteration 3 / Phase B`
-   - consolidate the next adjacent irreducible cluster if the first pass exposes a second clear owner
-4. `Iteration 4 / Phase C`
-   - reconcile one mixed boundary where data retrieval, context building, derivation, orchestration, or delivery are still blurred
-5. `Iteration 5 / Phase D`
-   - standardize one genuinely converged downstream delivery seam only where it reduces cognitive load
-6. `Iteration 6 / Phase E`
-   - decompose the highest-value remaining outlier and realign folders / namespaces around the stabilized ownership model
-7. `Iteration 7 / Phase F`
-   - audit the resulting hierarchy, measure what actually became clearer, and define the next cycle from the remaining outliers
+   - refresh the hierarchy map around the current outliers and the presentation spine
+   - confirm the current highest-leverage outlier
+   - choose the smallest slice that most improves architectural legibility
+2. `Iteration 2-3 / Phase B`
+   - decompose the host / presentation spine
+   - separate view concerns, chart-update initiation, export hooks, and pipeline composition in `MainChartsView` / `MainHost`
+3. `Iteration 4-5 / Phase C`
+   - decompose the highest-value service outliers behind that spine
+   - prioritize `DataFetcher`, `MainChartsEvidenceExportService`, or `TransformDataPanelControllerAdapter`
+4. `Iteration 6 / Phase D`
+   - simplify delivery / rendering spillover only after host and service boundaries are clearer
+   - touch `ChartUpdateCoordinator`, `ChartRenderEngine`, `ChartHelper`, or vendor seams only where the earlier passes prove a cleaner owner
+5. `Iteration 7 / Phase E`
+   - audit what became clearer
+   - record remaining honest outliers and define the next cycle from them
 
 Default first-slice preference:
 
-1. start with one of the named high-entropy operation clusters before broad UI churn
-2. prefer `bucket / interval / range`, `temporal alignment / smoothing`, or `selected-series / transform preparation` if those still lack one obvious home
-3. move to large-file decomposition only after at least one operation cluster has a clearer owner
+1. start with `MainChartsView / MainHost`
+2. move next to `DataFetcher`, `MainChartsEvidenceExportService`, or `TransformDataPanelControllerAdapter`
+3. touch delivery/rendering internals only after the host/spine and service layers are less ambiguous
+4. reopen low-level helper clusters only if current code proves fresh duplication rather than historical residue
 
 Default validation commands:
 
@@ -135,8 +141,12 @@ The hierarchy should make these distinctions obvious:
 
 Current observed shape:
 
-- `398` C# files
+- `390` C# files
 - `18` XAML files
+- `50` C# files under `UI/Charts/Presentation`
+- `35` C# files under `Core/Orchestration`
+- `14` C# files under `UI/MainHost`
+- an explicit interactive navigation aid now exists in `documents/DATAVISUALISER_PIPELINE_SPINE.md`
 
 Current major concentration points:
 
@@ -154,11 +164,12 @@ Current major concentration points:
 Current read:
 
 - the chart / rendering delivery seams are materially cleaner than before
-- the project is still architecturally noisy
-- similar low-level operations are still too dispersed
-- folder and namespace layout is improved, but still not fully explanatory
+- the `UI/Charts/Presentation` and `Core/Orchestration` areas are more semantically named and easier to navigate
+- there is now a clearer named spine from load to chart refresh, but the host/view layer still carries too much imperative gravity
+- the project is still architecturally noisy, but the remaining noise is now more concentrated in a smaller set of high-value outliers
+- low-level helper duplication is less dominant than mixed host / orchestration / evidence / data-access responsibilities
 - several large files still hide mixed responsibilities that blur the intended hierarchy
-- some exception-handling patterns are still localized rather than absorbed into stable layers
+- some exception-handling and client-specific repair patterns are still localized rather than absorbed into stable layers
 
 The central problem is now legibility:
 
@@ -177,17 +188,25 @@ Do not reopen these gains casually:
 - chart-side support seams were realigned out of an `Infrastructure` catch-all and into clearer owners
 - `UI/Charts/Infrastructure` was reduced to its real composition role
 - regression-first mutation, validation discipline, and targeted smoke-gate rules were established and exercised
+- chart-side presentation concerns were further realigned under `UI/Charts/Presentation`
+- a named presentation spine now exists through `ChartPresentationSpine`, `MainChartsViewChartPipelineFactory`, and the staged orchestration pipeline types
+- `ChartDataContextBuilder` was reduced toward context assembly and offloaded series preparation
+- duplicate transform preparation ownership was retired
+- frequency interval and per-bucket counting responsibility was consolidated into `FrequencyBinningHelper`
+- `UI/MainHost` micro-carrier wrappers were flattened back into their single owners where the standalone files no longer earned a boundary
 
 Measured gains already banked:
 
-- overall `DataVisualiser` C# file count reduced from `430` to `398`
+- overall `DataVisualiser` C# file count reduced from `430` to `390`
 - `UI/Charts/Infrastructure` reduced from `10` files to `3`
 - `Core/Rendering/CartesianMetrics` reduced from `13` files to `5`
 - `Core/Rendering/Distribution` reduced from `12` files to `3`
 - `Core/Rendering/WeekdayTrend` reduced from `12` files to `3`
+- `UI/MainHost` reduced from `22` files to `14`
 
 Historical summary of that cycle lives in `documents/log.md`.
 This plan no longer serves as a line-by-line execution ledger for that earlier work.
+Later April 2026 presentation/orchestration optimizations are also considered banked unless current code proves they should be reopened.
 
 ---
 
@@ -417,13 +436,13 @@ Execution rules:
 
 ## 9. Trackable Phase Plan
 
-These are the concrete step groups to follow and track.
+These are the concrete active step groups to follow and track.
 
-### 9.1 Phase A - Architectural Legibility Baseline and Hierarchy Map
+### 9.1 Phase A - Re-Baseline and Outcome Gate
 
 Goal:
 
-- produce a trustworthy map of where the current code does and does not align with the intended hierarchy
+- confirm the current architecture map against the latest code and choose the highest-leverage legibility slice
 
 Default iteration count:
 
@@ -432,114 +451,96 @@ Default iteration count:
 Tracked steps:
 
 1. inventory the current large outliers
-2. inventory repeated low-level operations that still lack one obvious home
-3. map current files into the target module buckets
-4. identify honest outliers versus accidental exceptions
-5. select the first bounded slice that most improves legibility
+2. inventory the now-banked seams that should not be reopened casually
+3. map the current tree against the presentation spine and target module buckets
+4. identify which single outlier most impedes comprehension of the whole system
+5. choose the smallest slice that unlocks the clearest architectural payoff
 
-### 9.2 Phase B - Irreducible Operation Consolidation
-
-Goal:
-
-- consolidate repeated low-level operations into one clear home per concern
-
-Default iteration count:
-
-- `1-2` bounded iterations, depending on whether the first pass exposes a second adjacent cluster with the same emerging owner
-
-Tracked steps:
-
-1. identify duplicated interval / bucket / range logic
-2. identify duplicated temporal alignment / smoothing / comparison logic
-3. identify duplicated transform-preparation or selected-series resolution logic
-4. move those operations into stable subsystem owners
-5. remove superseded helper residue
-
-This phase folds in the older `Analytical Kernel Consolidation` objective, but with a stricter legibility-first standard.
-
-### 9.3 Phase C - Data / Derivation / Delivery Boundary Reconciliation
+### 9.2 Phase B - Host Spine Decomposition
 
 Goal:
 
-- reconcile where data retrieval, context building, derivation, orchestration, and delivery currently blur into each other
+- make the primary interactive host path legible from view event to chart update request to pipeline composition
 
 Default iteration count:
 
-- `1` bounded iteration before broader delivery standardization
+- `1-2` bounded iterations
 
 Tracked steps:
 
-1. separate data retrieval from orchestration where currently mixed
-2. separate context building from render invocation
-3. separate transform workflow from controller-specific repair logic
-4. make result composition more explicit where chart-program-style behavior is emerging
-5. keep `DataVisualiser` downstream of semantic authority and CMS definition
+1. separate view-only behavior from chart-update initiation in `MainChartsView`
+2. separate export / diagnostics hooks from live chart-host behavior
+3. make pipeline composition and coordinator construction explicit in `MainHost`
+4. reduce imperative host gravity without changing the spine contract
+5. leave `MainChartsView` smaller and more obviously a host rather than a catch-all
 
-This phase folds in the older concerns around orchestration cleanup, evidence seams, and mixed host responsibilities.
-
-### 9.4 Phase D - Rendering and Delivery Hierarchy Standardization
+### 9.3 Phase C - Outlier Service Decomposition
 
 Goal:
 
-- standardize the downstream delivery structure where behavior has genuinely converged
+- decompose the highest-value non-host service outliers behind the presentation spine
 
 Default iteration count:
 
-- `1` bounded iteration, and only if a real repeated downstream seam has been proved by earlier slices
+- `1-2` bounded iterations
 
 Tracked steps:
 
-1. preserve and extend capability-family contracts where they truly clarify ownership
-2. standardize controller / host / request / render-family shapes only where they reduce cognitive load
+1. choose between `DataFetcher`, `MainChartsEvidenceExportService`, and `TransformDataPanelControllerAdapter` based on current leverage
+2. separate query shaping from lookup/catalog concerns if the `DataFetcher` slice is chosen
+3. separate parity snapshot building, warning aggregation, and export payload composition if the evidence slice is chosen
+4. separate selection workflow, compute orchestration, grid sync, and render invocation if the transform slice is chosen
+5. keep each chosen service closer to one dominant responsibility
+
+### 9.4 Phase D - Delivery and Rendering Spillover Simplification
+
+Goal:
+
+- clean up the remaining delivery / rendering spillover only after the host and service seams are clearer
+
+Default iteration count:
+
+- `1` bounded iteration, and only if earlier phases expose a better owner
+
+Tracked steps:
+
+1. reassess `ChartUpdateCoordinator`, `ChartRenderEngine`, `ChartHelper`, and vendor seams after Phases B-C
+2. move chart-update repair logic downward only where a clearer owner is now visible
 3. keep vendor quirks quarantined below orchestration
-4. keep controllers increasingly UI-agnostic
-5. avoid treating client-specific behavior as architectural truth
+4. avoid broad rendering churn unless the host/service work proves it necessary
 
-This phase folds in the older `Chart Capability Unification` and `Controller and Host Standardization` aims, but only where they improve the hierarchy rather than merely reduce duplication.
-
-### 9.5 Phase E - Outlier Decomposition and Physical Realignment
+### 9.5 Phase E - Architecture Audit and Next-Cycle Gate
 
 Goal:
 
-- decompose the remaining large mixed files and make the physical tree explain the architecture more honestly
+- measure whether the hierarchy now explains itself well enough to expose the next true bottlenecks
 
 Default iteration count:
 
-- `1` bounded iteration focused on the highest-value remaining outlier
+- `1` closeout iteration
 
 Tracked steps:
 
-1. split only where a file contains more than one genuine responsibility
-2. align folders and namespaces to the target module buckets
-3. merge or delete residue that no longer earns a boundary
-4. reduce historical naming drift
-5. ensure exceptions are visible rather than normalized
-
-This phase folds in the older debt-retirement and folder-alignment work, but makes hierarchy clarity the success condition.
-
-### 9.6 Phase F - Architecture Audit and Next-Cycle Gate
-
-Goal:
-
-- measure whether the hierarchy is now coherent enough to expose the next true architectural bottlenecks
-
-Default iteration count:
-
-- `1` closeout iteration to re-measure, name the remaining outliers, and define the next cycle cleanly
-
-Tracked steps:
-
-1. measure concentration reduction
-2. measure repeated low-level operation reduction
-3. list remaining large mixed-responsibility files
-4. list remaining honest outliers and why they remain
-5. define the next cycle from those outliers rather than from convenience
+1. measure concentration reduction in the dominant host / service outliers
+2. list what became more legible in the tree
+3. list what remains mixed and why
+4. name the next cycle from the remaining outliers rather than from convenience
 
 ---
 
 ## 9.7 Current Cycle Progress
 
-Current March 2026 progress for the legibility-first cycle:
+Current April 2026 re-baseline for the legibility-first cycle:
+
+- the hierarchy baseline is banked
+- the helper / kernel consolidation slices are banked
+- the initial chart-context boundary slice is banked
+- the chart presentation landscape has shifted materially through the introduction of `UI/Charts/Presentation`, `ChartPresentationSpine`, `MainChartsViewChartPipelineFactory`, and staged orchestration pipelines
+- a pre-plan `UI/MainHost` sprawl-tightening pass is banked and should not by itself be mistaken for the real host decomposition phase
+- the active plan has been re-optimized around host-spine decomposition, service-outlier decomposition, and only then delivery simplification
+- the next default entry point should now be chosen from the remaining mixed host / orchestration / evidence / data-access outliers rather than from already-harvested helper clusters
+
+Historical implementation record from the first three slices:
 
 - `Phase A` has been refreshed
 - the current outlier map remains materially valid
@@ -576,7 +577,7 @@ Manual smoke:
 
 - not required for this pass because the change stayed internal-only and behavior-preserving
 
-### Phase B - Current Cycle Progress (Slice 2)
+### Banked Phase B Work (Slice 2)
 
 The second bounded `Phase B` slice stayed in the transform-preparation / result-composition cluster.
 
@@ -611,7 +612,7 @@ Manual smoke:
 
 - not required for this pass because the change stayed internal-only and behavior-preserving
 
-### Phase C - Current Cycle Progress
+### Banked Phase C Work
 
 The next bounded slice stayed structural and reconciled a mixed ownership boundary inside chart-context construction.
 
@@ -645,6 +646,60 @@ Manual smoke:
 
 - not required for this pass because the change stayed structural-only and preserved the existing chart-context contract
 
+### Current recommended re-entry point
+
+Preferred next bounded slice:
+
+- `UI/MainChartsView.xaml.cs`
+- `UI/MainHost/MainChartsViewChartPipelineFactory.cs`
+- `UI/ChartPresentationSpine.cs`
+
+Why this is now the best next move:
+
+- the project now has a named presentation spine and clearer orchestration staging
+- `MainChartsView.xaml.cs` remains the single largest concentration point and still carries event wiring, toggle logic, export hooks, view concerns, and chart-update initiation
+- the new spine makes the remaining host/view residue easier to separate without guessing at intent
+
+Fallback next slices if host decomposition proves too broad:
+
+- `Core/Data/Repositories/DataFetcher.cs`
+- `UI/MainHost/MainChartsEvidenceExportService.cs`
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
+
+Expected smoke posture for the next implementation slice:
+
+- likely required if the `MainChartsView` / `MainHost` path is mutated, because that work touches live controller / host / chart-update behavior
+
+### Banked MainHost sprawl-tightening pre-pass
+
+Bounded slice selected:
+
+- trivial `UI/MainHost` micro-carriers that were single-use wrappers around one owner
+- primary files:
+  - `UI/MainHost/MainChartsViewStartupCoordinator.cs`
+  - `UI/MainHost/MainChartsViewResolutionResetCoordinator.cs`
+  - `UI/MainHost/MainChartsViewChartPresentationCoordinator.cs`
+  - `UI/MainHost/MainChartsViewChartUpdateCoordinator.cs`
+  - `UI/MainHost/MainChartsViewEventBinder.cs`
+  - `UI/MainHost/MainChartsViewChartPipelineFactory.cs`
+  - `UI/MainHost/ReachabilityExportWriter.cs`
+
+Current banked result from this pass:
+
+- action, handler, context, result, and tiny export carrier types were folded into their single owners
+- `UI/MainHost` file count was reduced without collapsing the meaningful coordinator / factory / export structure
+- the next real host decomposition slice is now slightly cleaner and easier to read
+
+Validation recorded for this pass:
+
+- focused regression lane: `20` passed, `0` failed
+- `dotnet build DataAnalyser.sln -c Debug`: passed with `0` errors, existing warnings only
+- `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1`: `393` passed, `0` failed, `0` skipped
+
+Manual smoke:
+
+- not required for this pass because the change stayed structural-only and behavior-preserving
+
 ---
 
 ## 10. Current Priority Outliers
@@ -671,13 +726,19 @@ They are the places where the hierarchy most likely still needs to explain itsel
 
 Use this list as the first place to look for irreducible-operation duplication:
 
+- main-host event wiring and chart-update request flow
+- presentation-spine publication and host orchestration handoff
+- evidence / parity snapshot resolution and export composition
+- data-fetch query shaping, table normalization, subtype resolution, and sampling / count retrieval
+- transform panel workflow composition across selection, compute, render, and grid sync
+- render normalization, axis shaping, tooltip range shaping, and chart helper spillover
+- client-specific repair logic that may really belong in orchestration, planning, or client adapters
+
+Already partially banked and not default reopen targets:
+
 - bucket / interval / range determination
-- temporal alignment and record-window handling
-- smoothing / interpolation / series preparation
-- subtype / selected-series resolution
 - transform preparation and result composition
-- render-request shaping and display-name resolution
-- chart-state repair logic that may really belong in orchestration, planning, or client adapters
+- chart-context series preparation
 
 The goal is not to create one giant helper.
 The goal is to ensure each concern has one obvious home.

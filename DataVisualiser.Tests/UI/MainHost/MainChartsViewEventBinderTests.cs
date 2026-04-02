@@ -13,7 +13,7 @@ public sealed class MainChartsViewEventBinderTests
         var calls = new List<string>();
         var binder = new MainChartsViewEventBinder(
             source,
-            new MainChartsViewEventHandlers(
+            new MainChartsViewEventBinder.Handlers(
                 (_, _) => calls.Add("visibility"),
                 (_, _) => calls.Add("error"),
                 (_, _) => calls.Add("metric-types"),

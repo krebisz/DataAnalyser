@@ -1,11 +1,13 @@
-using System.Text.Json;
 using System.IO;
+using System.Text.Json;
 
 namespace DataVisualiser.UI.MainHost;
 
 public sealed class ReachabilityExportWriter
 {
-    public ReachabilityExportResult Write(object payload, string targetDirectory, DateTime utcNow)
+    public sealed record Result(string FilePath);
+
+    public Result Write(object payload, string targetDirectory, DateTime utcNow)
     {
         if (payload == null)
             throw new ArgumentNullException(nameof(payload));
@@ -24,6 +26,6 @@ public sealed class ReachabilityExportWriter
         if (!File.Exists(filePath))
             throw new IOException("Export completed without creating the output file.");
 
-        return new ReachabilityExportResult(filePath);
+        return new Result(filePath);
     }
 }

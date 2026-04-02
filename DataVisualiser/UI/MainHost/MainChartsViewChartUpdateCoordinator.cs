@@ -8,11 +8,23 @@ namespace DataVisualiser.UI.MainHost;
 
 public sealed class MainChartsViewChartUpdateCoordinator
 {
-    public async Task<bool> TryHandleVisibilityOnlyToggleAsync(
-        ChartUpdateRequestedEventArgs args,
-        ChartState chartState,
-        ChartDataContext? context,
-        MainChartsViewChartUpdateActions actions)
+    public sealed class Actions(
+        Action<string, bool> setChartVisibility,
+        Action updateDistributionChartTypeVisibility,
+        Action updateWeekdayTrendChartTypeVisibility,
+        Action<ChartDataContext?> handleTransformVisibilityOnlyToggle,
+        Func<string, ChartDataContext, Task> renderChartAsync,
+        Action<string> clearChart)
+    {
+        public Action<string, bool> SetChartVisibility { get; } = setChartVisibility ?? throw new ArgumentNullException(nameof(setChartVisibility));
+        public Action UpdateDistributionChartTypeVisibility { get; } = updateDistributionChartTypeVisibility ?? throw new ArgumentNullException(nameof(updateDistributionChartTypeVisibility));
+        public Action UpdateWeekdayTrendChartTypeVisibility { get; } = updateWeekdayTrendChartTypeVisibility ?? throw new ArgumentNullException(nameof(updateWeekdayTrendChartTypeVisibility));
+        public Action<ChartDataContext?> HandleTransformVisibilityOnlyToggle { get; } = handleTransformVisibilityOnlyToggle ?? throw new ArgumentNullException(nameof(handleTransformVisibilityOnlyToggle));
+        public Func<string, ChartDataContext, Task> RenderChartAsync { get; } = renderChartAsync ?? throw new ArgumentNullException(nameof(renderChartAsync));
+        public Action<string> ClearChart { get; } = clearChart ?? throw new ArgumentNullException(nameof(clearChart));
+    }
+
+    public async Task<bool> TryHandleVisibilityOnlyToggleAsync(ChartUpdateRequestedEventArgs args, ChartState chartState, ChartDataContext? context, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(args);
         ArgumentNullException.ThrowIfNull(chartState);
@@ -42,10 +54,7 @@ public sealed class MainChartsViewChartUpdateCoordinator
         return true;
     }
 
-    public void ApplyAllChartVisibilities(
-        ChartUpdateRequestedEventArgs args,
-        ChartState chartState,
-        MainChartsViewChartUpdateActions actions)
+    public void ApplyAllChartVisibilities(ChartUpdateRequestedEventArgs args, ChartState chartState, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(args);
         ArgumentNullException.ThrowIfNull(chartState);
@@ -62,10 +71,7 @@ public sealed class MainChartsViewChartUpdateCoordinator
         actions.SetChartVisibility(ChartControllerKeys.BarPie, args.ShowBarPie);
     }
 
-    public async Task RenderVisibleChartsAsync(
-        ChartState chartState,
-        ChartDataContext? context,
-        MainChartsViewChartUpdateActions actions)
+    public async Task RenderVisibleChartsAsync(ChartState chartState, ChartDataContext? context, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(chartState);
         ArgumentNullException.ThrowIfNull(actions);
@@ -106,11 +112,7 @@ public sealed class MainChartsViewChartUpdateCoordinator
             await actions.RenderChartAsync(ChartControllerKeys.BarPie, safeContext);
     }
 
-    public async Task RenderSingleChartAsync(
-        ChartState chartState,
-        string chartName,
-        ChartDataContext context,
-        MainChartsViewChartUpdateActions actions)
+    public async Task RenderSingleChartAsync(ChartState chartState, string chartName, ChartDataContext context, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(chartState);
         ArgumentException.ThrowIfNullOrWhiteSpace(chartName);
@@ -153,7 +155,7 @@ public sealed class MainChartsViewChartUpdateCoordinator
         return context != null && context.Data1 != null && context.Data1.Any();
     }
 
-    private static void ApplyVisibilityForToggle(ChartUpdateRequestedEventArgs args, MainChartsViewChartUpdateActions actions)
+    private static void ApplyVisibilityForToggle(ChartUpdateRequestedEventArgs args, Actions actions)
     {
         switch (args.ToggledChartName)
         {

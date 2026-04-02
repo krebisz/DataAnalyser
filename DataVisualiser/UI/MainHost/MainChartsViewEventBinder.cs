@@ -1,14 +1,25 @@
+using DataVisualiser.UI.Events;
 using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.MainHost;
 
 public sealed class MainChartsViewEventBinder
 {
-    private readonly MainChartsViewEventHandlers _handlers;
+    public sealed record Handlers(
+        EventHandler<ChartVisibilityChangedEventArgs> ChartVisibilityChanged,
+        EventHandler<ErrorEventArgs> ErrorOccured,
+        EventHandler<MetricTypesLoadedEventArgs> MetricTypesLoaded,
+        EventHandler<SubtypesLoadedEventArgs> SubtypesLoaded,
+        EventHandler<DateRangeLoadedEventArgs> DateRangeLoaded,
+        EventHandler<DataLoadedEventArgs> DataLoaded,
+        EventHandler<ChartUpdateRequestedEventArgs> ChartUpdateRequested,
+        EventHandler SelectionStateChanged);
+
+    private readonly Handlers _handlers;
     private readonly IMainChartsViewEventSource _source;
     private bool _isBound;
 
-    public MainChartsViewEventBinder(IMainChartsViewEventSource source, MainChartsViewEventHandlers handlers)
+    public MainChartsViewEventBinder(IMainChartsViewEventSource source, Handlers handlers)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
