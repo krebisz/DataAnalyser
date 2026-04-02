@@ -141,11 +141,11 @@ The hierarchy should make these distinctions obvious:
 
 Current observed shape:
 
-- `390` C# files
+- `391` C# files
 - `18` XAML files
 - `50` C# files under `UI/Charts/Presentation`
 - `35` C# files under `Core/Orchestration`
-- `14` C# files under `UI/MainHost`
+- `15` C# files under `UI/MainHost`
 - an explicit interactive navigation aid now exists in `documents/DATAVISUALISER_PIPELINE_SPINE.md`
 
 Current major concentration points:
@@ -197,12 +197,12 @@ Do not reopen these gains casually:
 
 Measured gains already banked:
 
-- overall `DataVisualiser` C# file count reduced from `430` to `390`
+- overall `DataVisualiser` C# file count reduced from `430` to `391`
 - `UI/Charts/Infrastructure` reduced from `10` files to `3`
 - `Core/Rendering/CartesianMetrics` reduced from `13` files to `5`
 - `Core/Rendering/Distribution` reduced from `12` files to `3`
 - `Core/Rendering/WeekdayTrend` reduced from `12` files to `3`
-- `UI/MainHost` reduced from `22` files to `14`
+- `UI/MainHost` reduced from `22` files to `15`
 
 Historical summary of that cycle lives in `documents/log.md`.
 This plan no longer serves as a line-by-line execution ledger for that earlier work.
@@ -670,6 +670,45 @@ Expected smoke posture for the next implementation slice:
 
 - likely required if the `MainChartsView` / `MainHost` path is mutated, because that work touches live controller / host / chart-update behavior
 
+### Active Phase B Work (Slice 1)
+
+The first live host-decomposition slice stayed narrow and separated export trigger behavior from the view.
+
+Bounded slice selected:
+
+- evidence export trigger handling and evidence clearing in `MainChartsView` / `MainHost`
+- primary files:
+  - `UI/MainChartsView.xaml.cs`
+  - `UI/MainHost/MainChartsViewEvidenceExportCoordinator.cs`
+  - `UI/MainHost/MainChartsEvidenceExportService.cs`
+
+Reason this slice was chosen:
+
+- export and diagnostic hooks were still triggered directly from `MainChartsView`
+- the rest of the host was already moving toward coordinator/factory seams
+- this was the smallest live path that reduced host gravity without mixing chart-update initiation into the same mutation
+
+Current result from this slice:
+
+- `MainChartsViewEvidenceExportCoordinator` now owns evidence clearing and export-trigger message flow
+- `MainChartsView` delegates the export action through a dedicated host seam instead of handling result messaging inline
+- the export path is more explicit without changing the underlying export payload service
+
+Validation recorded for this pass:
+
+- pre-mutation focused regression lane: `11` passed, `0` failed
+- post-mutation focused regression lane: `15` passed, `0` failed
+- `dotnet build DataAnalyser.sln -c Debug`: passed with `0` errors, `0` warnings
+- `dotnet test DataAnalyser.sln -c Debug -m:1`: `DataFileReader.Tests` `15` passed, `0` failed; `DataVisualiser.Tests` `397` passed, `0` failed
+
+Manual smoke:
+
+- required for this pass because the live export path was touched
+- targeted scope:
+  - trigger `Export Reachability` when no reachability records exist and confirm the informational message still appears before the success path
+  - trigger `Export Reachability` when parity warnings are present and confirm the warning dialog still appears
+  - confirm the export still writes a file successfully and reports the target path
+
 ### Banked MainHost sprawl-tightening pre-pass
 
 Bounded slice selected:
@@ -695,6 +734,7 @@ Validation recorded for this pass:
 - focused regression lane: `20` passed, `0` failed
 - `dotnet build DataAnalyser.sln -c Debug`: passed with `0` errors, existing warnings only
 - `dotnet test DataVisualiser.Tests\\DataVisualiser.Tests.csproj -c Debug -m:1`: `393` passed, `0` failed, `0` skipped
+- later whole-solution verification via `dotnet test DataAnalyser.sln -c Debug -m:1`: `DataFileReader.Tests` `15` passed, `0` failed; `DataVisualiser.Tests` `393` passed, `0` failed
 
 Manual smoke:
 

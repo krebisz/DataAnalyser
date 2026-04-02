@@ -38,6 +38,7 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("MainChartsViewThemeCoordinator", source);
         Assert.Contains("MainChartsEvidenceExportService", source);
+        Assert.Contains("MainChartsViewEvidenceExportCoordinator", source);
         Assert.Contains("MainChartsViewChartUpdateCoordinator", source);
         Assert.Contains("MainChartsViewChartPresentationCoordinator", source);
         Assert.Contains("MainChartsViewChartPipelineFactory", source);

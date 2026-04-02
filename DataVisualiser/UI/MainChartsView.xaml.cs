@@ -46,6 +46,7 @@ public partial class MainChartsView : UserControl
     private readonly MainChartsViewChartPipelineFactory _chartPipelineFactory = new();
     private readonly MainChartsViewChartPresentationCoordinator _chartPresentationCoordinator = new();
     private readonly MainChartsViewChartUpdateCoordinator _chartUpdateCoordinatorHost = new();
+    private readonly MainChartsViewEvidenceExportCoordinator _evidenceExportCoordinator = new();
     private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
     private MainChartsEvidenceExportService _evidenceExportService = null!;
     private readonly MainChartsViewStartupCoordinator _startupCoordinator = new();
@@ -1378,7 +1379,7 @@ public partial class MainChartsView : UserControl
         const string defaultResolution = "All";
 
         // Clear selection state and disable chart toggles immediately on reset.
-        _evidenceExportService.ClearEvidence();
+        _evidenceExportCoordinator.ClearEvidence(CreateEvidenceExportActions());
         _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
         _viewModel.ChartState.LastContext = new ChartDataContext();
         UpdatePrimaryDataRequiredButtonStates(0);
@@ -1395,22 +1396,11 @@ public partial class MainChartsView : UserControl
 
     private async void OnExportReachability(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            var result = await _evidenceExportService.ExportAsync(_viewModel.ChartState, _viewModel.MetricState, DateTime.UtcNow);
-
-            if (!result.HadReachabilityRecords)
-                MessageBox.Show("No reachability records captured yet. Export will include parity data if available.", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            if (result.Warnings.Count > 0)
-                MessageBox.Show($"Export will include parity warnings:\n- {string.Join("\n- ", result.Warnings)}", "Parity Warnings", MessageBoxButton.OK, MessageBoxImage.Warning);
-
-            MessageBox.Show($"Reachability snapshot exported to:\n{result.FilePath}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to export reachability snapshot:\n{ex.Message}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        await _evidenceExportCoordinator.ExportAsync(
+            _viewModel.ChartState,
+            _viewModel.MetricState,
+            DateTime.UtcNow,
+            CreateEvidenceExportActions());
     }
 
 
@@ -1456,6 +1446,16 @@ public partial class MainChartsView : UserControl
             HandleTransformVisibilityOnlyToggle,
             RenderChartAsync,
             ClearChart);
+    }
+
+    private MainChartsViewEvidenceExportCoordinator.Actions CreateEvidenceExportActions()
+    {
+        return new MainChartsViewEvidenceExportCoordinator.Actions(
+            (chartState, metricState, utcNow) => _evidenceExportService.ExportAsync(chartState, metricState, utcNow),
+            () => _evidenceExportService.ClearEvidence(),
+            (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information),
+            (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning),
+            (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error));
     }
 
     #endregion
