@@ -42,6 +42,7 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Contains("\"Reachability\"", contents);
             Assert.Contains("\"UiSurface\"", contents);
             Assert.Contains("\"SmokeChecks\"", contents);
+            Assert.Contains("\"Transition\"", contents);
         }
         finally
         {
@@ -95,6 +96,8 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Equal(3, diagnostics.GetProperty("Selection").GetProperty("SelectedSeriesCount").GetInt32());
             Assert.True(diagnostics.GetProperty("LoadedContext").GetProperty("ReusableForCurrentSelection").GetBoolean());
             Assert.Equal(1, diagnostics.GetProperty("MainChartPipeline").GetProperty("ExpectedAdditionalSeriesLoad").GetInt32());
+            Assert.Equal("SeriesCountMismatch", diagnostics.GetProperty("Transition").GetProperty("State").GetString());
+            Assert.True(diagnostics.GetProperty("Transition").GetProperty("ReloadLikelyRequired").GetBoolean());
 
             var orderedSeries = diagnostics.GetProperty("Selection").GetProperty("OrderedSeries");
             Assert.Equal(3, orderedSeries.GetArrayLength());
@@ -215,6 +218,7 @@ public sealed class MainChartsEvidenceExportServiceTests
             var diagnostics = document.RootElement.GetProperty("Diagnostics");
             var uiSurface = diagnostics.GetProperty("UiSurface");
             var smokeChecks = diagnostics.GetProperty("SmokeChecks");
+            var transition = diagnostics.GetProperty("Transition");
 
             Assert.Equal("Weight", uiSurface.GetProperty("MetricType").GetProperty("SelectedValue").GetString());
             Assert.Equal(2, uiSurface.GetProperty("Subtypes").GetProperty("ActiveComboCount").GetInt32());
@@ -223,6 +227,81 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.True(smokeChecks.GetProperty("LoadedSeriesCountMatchesSelection").GetBoolean());
             Assert.True(smokeChecks.GetProperty("RecentErrorsPresent").GetBoolean());
             Assert.Equal(1, smokeChecks.GetProperty("RecentErrorCount").GetInt32());
+            Assert.Equal("HostErrorObserved", transition.GetProperty("State").GetString());
+            Assert.Equal(2, transition.GetProperty("ExpectedSeriesCount").GetInt32());
+            Assert.Equal(2, transition.GetProperty("LoadedContextSeriesCount").GetInt32());
+            Assert.False(transition.GetProperty("ReloadLikelyRequired").GetBoolean());
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task ExportAsync_ShouldFlagStoredContextLaggingWhenReachabilityShowsMoreSeries()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var store = new StubEvidenceStore(
+            [
+                new StrategyReachabilityRecord(
+                    StrategyType.MultiMetric,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    "Rendered with two series",
+                    true,
+                    false,
+                    10,
+                    0,
+                    0,
+                    2,
+                    new DateTime(2026, 4, 1),
+                    new DateTime(2026, 4, 5),
+                    DateTime.UtcNow)
+            ]);
+
+            var service = CreateService(tempDir, store);
+            var chartState = new ChartState
+            {
+                LastContext = new ChartDataContext
+                {
+                    Data1 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 1m }],
+                    MetricType = "SkinTemperature",
+                    PrimaryMetricType = "SkinTemperature",
+                    PrimarySubtype = "left",
+                    ActualSeriesCount = 1,
+                    From = new DateTime(2026, 4, 1),
+                    To = new DateTime(2026, 4, 5)
+                }
+            };
+            var metricState = new MetricState
+            {
+                SelectedMetricType = "SkinTemperature",
+                FromDate = new DateTime(2026, 4, 1),
+                ToDate = new DateTime(2026, 4, 5),
+                ResolutionTableName = "HealthMetrics"
+            };
+            metricState.SetSeriesSelections(
+            [
+                new MetricSeriesSelection("SkinTemperature", "left"),
+                new MetricSeriesSelection("SkinTemperature", "right")
+            ]);
+
+            var result = await service.ExportAsync(chartState, metricState, new DateTime(2026, 4, 5, 10, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var transition = document.RootElement.GetProperty("Diagnostics").GetProperty("Transition");
+
+            Assert.Equal("StoredContextLagging", transition.GetProperty("State").GetString());
+            Assert.True(transition.GetProperty("RenderEvidenceExceedsStoredContext").GetBoolean());
+            Assert.True(transition.GetProperty("ReloadLikelyRequired").GetBoolean());
+            Assert.Equal(2, transition.GetProperty("LatestReachabilitySeriesCount").GetInt32());
         }
         finally
         {
@@ -264,11 +343,23 @@ public sealed class MainChartsEvidenceExportServiceTests
 
     private sealed class StubEvidenceStore : IReachabilityEvidenceStore
     {
+        private readonly IReadOnlyList<StrategyReachabilityRecord> _records;
+
+        public StubEvidenceStore()
+            : this(Array.Empty<StrategyReachabilityRecord>())
+        {
+        }
+
+        public StubEvidenceStore(IReadOnlyList<StrategyReachabilityRecord> records)
+        {
+            _records = records;
+        }
+
         public bool Cleared { get; private set; }
 
         public IReadOnlyList<StrategyReachabilityRecord> Snapshot()
         {
-            return Array.Empty<StrategyReachabilityRecord>();
+            return _records;
         }
 
         public void Clear()

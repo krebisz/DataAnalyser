@@ -229,6 +229,7 @@ public sealed class MainChartsEvidenceExportService
         public ReachabilityDiagnosticsSnapshot Reachability { get; set; } = new();
         public UiSurfaceDiagnosticsSnapshot UiSurface { get; set; } = new();
         public SmokeHeuristicsSnapshot SmokeChecks { get; set; } = new();
+        public TransitionDiagnosticsSnapshot Transition { get; set; } = new();
     }
 
     public sealed class UiSurfaceDiagnosticsSnapshot
@@ -305,6 +306,20 @@ public sealed class MainChartsEvidenceExportService
         public bool DateRangeMatchesExpectedDefaultWindow { get; set; }
         public int RecentErrorCount { get; set; }
         public bool RecentErrorsPresent { get; set; }
+    }
+
+    public sealed class TransitionDiagnosticsSnapshot
+    {
+        public string CurrentSelectionSignature { get; set; } = string.Empty;
+        public string? LoadedContextSignature { get; set; }
+        public string? LatestReachabilitySignature { get; set; }
+        public int ExpectedSeriesCount { get; set; }
+        public int LoadedContextSeriesCount { get; set; }
+        public int LatestReachabilitySeriesCount { get; set; }
+        public bool RenderEvidenceExceedsStoredContext { get; set; }
+        public bool ReloadLikelyRequired { get; set; }
+        public string State { get; set; } = string.Empty;
+        public string Interpretation { get; set; } = string.Empty;
     }
 
     public sealed class SelectionDiagnosticsSnapshot
@@ -387,6 +402,14 @@ public sealed class MainChartsEvidenceExportService
         var expectedSeriesCount = selectedSeries.Count(series => series.QuerySubtype != null);
         var recentErrorCount = uiSurface.RecentMessages.Count(message =>
             string.Equals(message.Severity, "Error", StringComparison.OrdinalIgnoreCase));
+        var transition = BuildTransitionDiagnostics(
+            metricState,
+            selectedSeries,
+            ctx,
+            reusableContext,
+            latestRecord,
+            expectedSeriesCount,
+            recentErrorCount);
 
         return new DiagnosticsSnapshot
         {
@@ -471,8 +494,133 @@ public sealed class MainChartsEvidenceExportService
                 DateRangeMatchesExpectedDefaultWindow = uiSurface.DateRange.MatchesExpectedDefaultWindow,
                 RecentErrorCount = recentErrorCount,
                 RecentErrorsPresent = recentErrorCount > 0
-            }
+            },
+            Transition = transition
         };
+    }
+
+    private static TransitionDiagnosticsSnapshot BuildTransitionDiagnostics(
+        MetricState metricState,
+        IReadOnlyList<MetricSeriesSelection> selectedSeries,
+        ChartDataContext? context,
+        bool reusableContext,
+        StrategyReachabilityRecord? latestRecord,
+        int expectedSeriesCount,
+        int recentErrorCount)
+    {
+        var loadedSeriesCount = context?.ActualSeriesCount ?? 0;
+        var latestReachabilitySeriesCount = latestRecord?.ActualSeriesCount ?? 0;
+        var renderEvidenceExceedsStoredContext = latestReachabilitySeriesCount > loadedSeriesCount;
+
+        string state;
+        string interpretation;
+        var reloadLikelyRequired = false;
+
+        if (recentErrorCount > 0)
+        {
+            state = "HostErrorObserved";
+            interpretation = "A host error dialog was recorded during this scenario.";
+        }
+        else if (selectedSeries.Count == 0)
+        {
+            state = "NoSelection";
+            interpretation = "No series are currently selected.";
+        }
+        else if (expectedSeriesCount == 0)
+        {
+            state = "SelectionIncomplete";
+            interpretation = "The selection exists, but one or more subtype values are still missing.";
+        }
+        else if (context == null || loadedSeriesCount == 0)
+        {
+            if (latestReachabilitySeriesCount >= expectedSeriesCount && expectedSeriesCount > 0)
+            {
+                state = "RenderRecordedWithoutStoredContext";
+                interpretation = "Reachability shows a render/load decision for the current selection, but the stored chart context is empty.";
+                reloadLikelyRequired = true;
+            }
+            else
+            {
+                state = "AwaitingLoad";
+                interpretation = "Selection state is configured, but no successful data load is reflected yet.";
+            }
+        }
+        else if (reusableContext && loadedSeriesCount == expectedSeriesCount)
+        {
+            state = "ContextAligned";
+            interpretation = "Stored chart context matches the current selection and expected series count.";
+        }
+        else if (reusableContext && loadedSeriesCount != expectedSeriesCount)
+        {
+            if (renderEvidenceExceedsStoredContext && latestReachabilitySeriesCount >= expectedSeriesCount)
+            {
+                state = "StoredContextLagging";
+                interpretation = "Reachability shows the newer series count, but the stored chart context still reflects an older count.";
+            }
+            else
+            {
+                state = "SeriesCountMismatch";
+                interpretation = "Stored chart context is reusable by metric family, but its series count does not match the current selection.";
+            }
+
+            reloadLikelyRequired = true;
+        }
+        else if (renderEvidenceExceedsStoredContext && latestReachabilitySeriesCount >= expectedSeriesCount)
+        {
+            state = "StaleContextAfterRender";
+            interpretation = "A newer render/load appears to have happened, but the stored chart context is stale for the current selection.";
+            reloadLikelyRequired = true;
+        }
+        else
+        {
+            state = "StaleContext";
+            interpretation = "Stored chart context does not match the current metric/subtype selection.";
+            reloadLikelyRequired = true;
+        }
+
+        return new TransitionDiagnosticsSnapshot
+        {
+            CurrentSelectionSignature = BuildSelectionSignature(metricState, selectedSeries),
+            LoadedContextSignature = BuildContextSignature(context),
+            LatestReachabilitySignature = BuildReachabilitySignature(latestRecord),
+            ExpectedSeriesCount = expectedSeriesCount,
+            LoadedContextSeriesCount = loadedSeriesCount,
+            LatestReachabilitySeriesCount = latestReachabilitySeriesCount,
+            RenderEvidenceExceedsStoredContext = renderEvidenceExceedsStoredContext,
+            ReloadLikelyRequired = reloadLikelyRequired,
+            State = state,
+            Interpretation = interpretation
+        };
+    }
+
+    private static string BuildSelectionSignature(MetricState metricState, IReadOnlyList<MetricSeriesSelection> selectedSeries)
+    {
+        var orderedSeries = string.Join(
+            "|",
+            selectedSeries.Select(series => $"{series.MetricType}:{series.QuerySubtype ?? "<none>"}"));
+
+        return $"{metricState.SelectedMetricType ?? "<none>"}::{metricState.ResolutionTableName ?? "<none>"}::{metricState.FromDate:O}->{metricState.ToDate:O}::{orderedSeries}";
+    }
+
+    private static string? BuildContextSignature(ChartDataContext? context)
+    {
+        if (context == null)
+            return null;
+
+        var metricType = context.PrimaryMetricType ?? context.MetricType ?? "<none>";
+        var secondaryMetricType = context.SecondaryMetricType ?? "<none>";
+        var primarySubtype = context.PrimarySubtype ?? "<none>";
+        var secondarySubtype = context.SecondarySubtype ?? "<none>";
+
+        return $"{metricType}:{primarySubtype}|{secondaryMetricType}:{secondarySubtype}::{context.From:O}->{context.To:O}::series={context.ActualSeriesCount}";
+    }
+
+    private static string? BuildReachabilitySignature(StrategyReachabilityRecord? latestRecord)
+    {
+        if (latestRecord == null)
+            return null;
+
+        return $"{latestRecord.StrategyType}::actual={latestRecord.ActualSeriesCount}::cms={latestRecord.CmsSeriesCount}::reason={latestRecord.DecisionReason}";
     }
 
     private async Task<bool?> DeterminePrimaryOptionsMatchSelectedMetricAsync(
