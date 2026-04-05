@@ -45,12 +45,17 @@ Use this section as the default handoff entry point in a new conversation.
 Current defaults:
 
 - scope is `DataVisualiser` only
-- posture is `Moderate`
+- posture is `Conservative-Pragmatic`
 - one iteration must have one primary objective
 - the default objective is now architectural legibility, not generic consolidation
 - safely coupled slices are allowed only when they already share a real contract / host / route / responsibility pattern and batching them reduces duplicated churn
 - validation must happen on every significant refactor
 - if live behavior changes, halt after automated validation and request targeted manual smoke before continuing
+- assume single-maintainer execution with limited time
+- prefer slices that can be completed in `1-3` focused sessions
+- do not open more than one live-behavior risk front at a time
+- reliability, performance tolerance, and legibility outrank theoretical purity
+- defer broad architectural inversion unless it directly removes recurring failures or high-friction maintenance pain
 
 Supporting navigation aids:
 
@@ -75,28 +80,28 @@ Default execution starting point for the current landscape:
 Optimized active iteration spine:
 
 1. `Iteration 1 / Phase A`
-   - refresh the hierarchy map around the current outliers and the presentation spine
-   - confirm the current highest-leverage outlier
-   - choose the smallest slice that most improves architectural legibility
-2. `Iteration 2-3 / Phase B`
-   - decompose the host / presentation spine
-   - separate view concerns, chart-update initiation, export hooks, and pipeline composition in `MainChartsView` / `MainHost`
-3. `Iteration 4-5 / Phase C`
-   - decompose the highest-value service outliers behind that spine
-   - prioritize `DataFetcher`, `MainChartsEvidenceExportService`, or `TransformDataPanelControllerAdapter`
-4. `Iteration 6 / Phase D`
-   - simplify delivery / rendering spillover only after host and service boundaries are clearer
-   - touch `ChartUpdateCoordinator`, `ChartRenderEngine`, `ChartHelper`, or vendor seams only where the earlier passes prove a cleaner owner
-5. `Iteration 7 / Phase E`
+   - refresh the hierarchy map only if recent changes materially altered the pressure points
+   - otherwise carry the current baseline forward and avoid inventory churn
+2. `Iteration 2 / Phase B`
+   - stabilize large-range load and render tolerance first
+   - verify whether the real bottleneck is query volume, preparation volume, or chart-library point pressure
+3. `Iteration 3-4 / Phase C`
+   - decompose the highest-value service outlier that improves both legibility and operational control
+   - default target is `DataFetcher`, then `MainChartsEvidenceExportService` or `TransformDataPanelControllerAdapter`
+4. `Iteration 5 / Phase D`
+   - simplify host / delivery spillover only where it removes recurring maintenance pain
+   - touch `MainChartsView`, `ChartUpdateCoordinator`, `ChartRenderEngine`, or vendor seams only when earlier slices prove a cleaner owner
+5. `Iteration 6 / Phase E`
    - audit what became clearer
-   - record remaining honest outliers and define the next cycle from them
+   - record remaining honest outliers and define the next smallest worthwhile cycle
 
 Default first-slice preference:
 
-1. start with `MainChartsView / MainHost`
-2. move next to `DataFetcher`, `MainChartsEvidenceExportService`, or `TransformDataPanelControllerAdapter`
-3. touch delivery/rendering internals only after the host/spine and service layers are less ambiguous
-4. reopen low-level helper clusters only if current code proves fresh duplication rather than historical residue
+1. start with large-range performance tolerance and point-volume control
+2. move next to `DataFetcher`
+3. then choose exactly one of `MainChartsEvidenceExportService` or `TransformDataPanelControllerAdapter`
+4. touch delivery/rendering internals only after the active bottleneck is proven there
+5. reopen low-level helper clusters only if current code proves fresh duplication rather than historical residue
 
 Default validation commands:
 
@@ -174,6 +179,7 @@ Current read:
 The central problem is now legibility:
 
 - the codebase does not yet explain itself clearly enough to show what is normal versus what is truly exceptional
+- the active maintenance constraint is time as much as architecture, so every slice must earn its keep quickly
 
 ---
 
@@ -215,6 +221,7 @@ Later April 2026 presentation/orchestration optimizations are also considered ba
 The primary mandate of the next cycle is:
 
 - make the hierarchy trustworthy enough that it exposes the real remaining entropy
+- do so in a way that a single maintainer can actually sustain
 
 In practice, that means:
 
@@ -229,6 +236,11 @@ In practice, that means:
    - what is rendering infrastructure
    - what is controller / host / client-specific
    - what is evidence / diagnostics
+6. Work should reduce future operator burden:
+   - fewer recurring smoke failures
+   - fewer places where state can drift
+   - fewer large-range performance surprises
+   - fewer refactors that require extensive manual reacclimation
 
 This is the standard against which future simplification should be judged.
 

@@ -48,6 +48,8 @@ This roadmap is governed by the following rules:
 9. Multiple chart backends may coexist intentionally, but only to strengthen modular rendering boundaries.
 10. No backend is treated as production-safe for a capability family until it has passed explicit qualification for that capability family.
 11. Future enhancement ideas are welcome, but they do not enter active work unless intentionally assigned to a phase and layer.
+12. For a single-maintainer project, bounded slices with immediate maintenance payoff take priority over broad theoretical cleanup.
+13. The roadmap may be executed through small opportunistic slices as long as each slice preserves truth, evidence discipline, and structural direction.
 
 ---
 
@@ -83,6 +85,14 @@ The architecture rehaul established that the project is not yet structurally rea
 
 Therefore, architecture rehaul was not a side quest, and its successor work is not cosmetic cleanup.  
 The next bridge is hierarchy legibility: the system must become coherent enough that true outliers are obvious and future capability can land without creating new exception-driven structure.
+
+That said, the project is maintained by one person with limited time.
+So the roadmap must remain ambitious in direction but conservative in execution:
+
+- solve the most expensive current pain first
+- prefer reliability and performance tolerance over elegance-only restructuring
+- avoid multi-front refactors that create more coordination burden than value
+- defer broad architectural inversions until a bounded slice proves they are the shortest path to relief
 
 ---
 

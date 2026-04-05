@@ -35,6 +35,7 @@ The project exists to provide a trustworthy canonical data reasoning environment
 The system favors clarity and auditability over automation or convenience.
 It should not be understood as a reporting tool that only exposes preselected outputs.
 It is intended to become a platform that can preserve data faithfully, standardize it, reason over it explicitly, and serve those results to multiple kinds of clients.
+It is also a single-maintainer project, so the near-term execution style must favor bounded, high-payoff steps that improve reliability, legibility, and operational tolerance without demanding constant large-scale reorientation.
 
 ---
 
@@ -106,6 +107,7 @@ The broader intended model is:
 UI components are controller-based, but full standardization is still an active architectural direction rather than finished reality.
 The intended direction is convergence toward standardized graph hosts, shared option/toggle affordances, and programmable derived-result composition on qualified chart surfaces, without making chart controllers the semantic center of the system.
 The recent architecture rehaul established explicit orchestration, rendering, theme, and evidence seams, while leaving a small number of large concentration points as intentional debt rather than hidden unfinished migration work.
+Current evolution therefore prioritizes sustainable control over aggressive expansion: fewer recurring failures, better tolerance of real-world dataset sizes, clearer ownership, and only then broader capability growth.
 
 ---
 
