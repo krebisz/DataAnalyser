@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Data.Abstractions;
@@ -35,6 +36,12 @@ public sealed class MainChartsEvidenceExportServiceTests
             var contents = File.ReadAllText(result.FilePath);
             Assert.Contains("\"ParityWarnings\"", contents);
             Assert.Contains("\"DistributionParity\"", contents);
+            Assert.Contains("\"Diagnostics\"", contents);
+            Assert.Contains("\"LoadedContext\"", contents);
+            Assert.Contains("\"MainChartPipeline\"", contents);
+            Assert.Contains("\"Reachability\"", contents);
+            Assert.Contains("\"UiSurface\"", contents);
+            Assert.Contains("\"SmokeChecks\"", contents);
         }
         finally
         {
@@ -42,7 +49,191 @@ public sealed class MainChartsEvidenceExportServiceTests
         }
     }
 
-    private static MainChartsEvidenceExportService CreateService(string targetDirectory, StubEvidenceStore? store = null)
+    [Fact]
+    public async Task ExportAsync_ShouldIncludeSelectionAndContextDiagnostics()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState
+            {
+                LastContext = new ChartDataContext
+                {
+                    Data1 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 1m }],
+                    Data2 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 2m }],
+                    MetricType = "Weight",
+                    PrimaryMetricType = "Weight",
+                    SecondaryMetricType = "Weight",
+                    PrimarySubtype = "morning",
+                    SecondarySubtype = "evening",
+                    ActualSeriesCount = 2,
+                    From = new DateTime(2024, 1, 1),
+                    To = new DateTime(2024, 1, 2)
+                }
+            };
+            var metricState = new MetricState
+            {
+                SelectedMetricType = "Weight",
+                FromDate = new DateTime(2024, 1, 1),
+                ToDate = new DateTime(2024, 1, 2),
+                ResolutionTableName = "HealthMetrics"
+            };
+            metricState.SetSeriesSelections(
+            [
+                new MetricSeriesSelection("Weight", "morning", "Weight", "Morning"),
+                new MetricSeriesSelection("Weight", "evening", "Weight", "Evening"),
+                new MetricSeriesSelection("Weight", "weekly_avg", "Weight", "Weekly Avg")
+            ]);
+
+            var result = await service.ExportAsync(chartState, metricState, new DateTime(2026, 4, 5, 10, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var diagnostics = document.RootElement.GetProperty("Diagnostics");
+
+            Assert.Equal(3, diagnostics.GetProperty("Selection").GetProperty("SelectedSeriesCount").GetInt32());
+            Assert.True(diagnostics.GetProperty("LoadedContext").GetProperty("ReusableForCurrentSelection").GetBoolean());
+            Assert.Equal(1, diagnostics.GetProperty("MainChartPipeline").GetProperty("ExpectedAdditionalSeriesLoad").GetInt32());
+
+            var orderedSeries = diagnostics.GetProperty("Selection").GetProperty("OrderedSeries");
+            Assert.Equal(3, orderedSeries.GetArrayLength());
+            Assert.True(orderedSeries[2].GetProperty("RequiresOnDemandResolution").GetBoolean());
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task ExportAsync_ShouldIncludeUiSurfaceDiagnosticsAndSmokeChecks()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var uiSnapshot = new MainChartsEvidenceExportService.UiSurfaceDiagnosticsSnapshot
+            {
+                MetricType = new MainChartsEvidenceExportService.MetricTypeUiDiagnosticsSnapshot
+                {
+                    SelectedValue = "Weight",
+                    SelectedDisplay = "Weight",
+                    OptionCount = 4
+                },
+                DateRange = new MainChartsEvidenceExportService.DateRangeUiDiagnosticsSnapshot
+                {
+                    SelectedFromDate = new DateTime(2026, 3, 6),
+                    SelectedToDate = new DateTime(2026, 4, 5),
+                    ExpectedDefaultFromDateUtc = new DateTime(2026, 3, 6),
+                    ExpectedDefaultToDateUtc = new DateTime(2026, 4, 5),
+                    MatchesExpectedDefaultWindow = true
+                },
+                Subtypes = new MainChartsEvidenceExportService.SubtypeUiDiagnosticsSnapshot
+                {
+                    ActiveComboCount = 2,
+                    PrimarySelectionMaterialized = true,
+                    AllCombosBoundToSelectedMetricType = true,
+                    OrderedCombos =
+                    [
+                        new MainChartsEvidenceExportService.SubtypeComboDiagnosticsSnapshot
+                        {
+                            Index = 0,
+                            BoundMetricType = "Weight",
+                            SelectedValue = "morning",
+                            SelectedDisplay = "Morning",
+                            OptionCount = 2,
+                            OptionValues = ["morning", "evening"]
+                        },
+                        new MainChartsEvidenceExportService.SubtypeComboDiagnosticsSnapshot
+                        {
+                            Index = 1,
+                            BoundMetricType = "Weight",
+                            SelectedValue = "evening",
+                            SelectedDisplay = "Evening",
+                            OptionCount = 2,
+                            OptionValues = ["morning", "evening"]
+                        }
+                    ]
+                },
+                Transform = new MainChartsEvidenceExportService.TransformUiDiagnosticsSnapshot
+                {
+                    PanelVisible = true,
+                    SecondaryPanelVisible = true,
+                    ComputeEnabled = true,
+                    SelectedOperation = "Add",
+                    SelectedPrimarySubtype = "morning",
+                    SelectedSecondarySubtype = "evening",
+                    PrimaryOptionCount = 2,
+                    SecondaryOptionCount = 2
+                },
+                RecentMessages =
+                [
+                    new MainChartsEvidenceExportService.HostMessageDiagnosticsSnapshot
+                    {
+                        TimestampUtc = new DateTime(2026, 4, 5, 10, 0, 0, DateTimeKind.Utc),
+                        Severity = "Error",
+                        Title = "Error",
+                        Message = "Synthetic export diagnostic"
+                    }
+                ]
+            };
+
+            var service = CreateService(tempDir, uiSnapshotFactory: () => uiSnapshot);
+            var chartState = new ChartState
+            {
+                LastContext = new ChartDataContext
+                {
+                    Data1 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 1m }],
+                    Data2 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 2m }],
+                    MetricType = "Weight",
+                    PrimaryMetricType = "Weight",
+                    SecondaryMetricType = "Weight",
+                    PrimarySubtype = "morning",
+                    SecondarySubtype = "evening",
+                    ActualSeriesCount = 2,
+                    From = new DateTime(2026, 3, 6),
+                    To = new DateTime(2026, 4, 5)
+                }
+            };
+            var metricState = new MetricState
+            {
+                SelectedMetricType = "Weight",
+                FromDate = new DateTime(2026, 3, 6),
+                ToDate = new DateTime(2026, 4, 5),
+                ResolutionTableName = "HealthMetrics"
+            };
+            metricState.SetSeriesSelections(
+            [
+                new MetricSeriesSelection("Weight", "morning", "Weight", "Morning"),
+                new MetricSeriesSelection("Weight", "evening", "Weight", "Evening")
+            ]);
+
+            var result = await service.ExportAsync(chartState, metricState, new DateTime(2026, 4, 5, 10, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var diagnostics = document.RootElement.GetProperty("Diagnostics");
+            var uiSurface = diagnostics.GetProperty("UiSurface");
+            var smokeChecks = diagnostics.GetProperty("SmokeChecks");
+
+            Assert.Equal("Weight", uiSurface.GetProperty("MetricType").GetProperty("SelectedValue").GetString());
+            Assert.Equal(2, uiSurface.GetProperty("Subtypes").GetProperty("ActiveComboCount").GetInt32());
+            Assert.True(uiSurface.GetProperty("Subtypes").GetProperty("PrimaryOptionsMatchSelectedMetric").GetBoolean());
+            Assert.True(smokeChecks.GetProperty("SubtypeComboCountMatchesSelectedSeries").GetBoolean());
+            Assert.True(smokeChecks.GetProperty("LoadedSeriesCountMatchesSelection").GetBoolean());
+            Assert.True(smokeChecks.GetProperty("RecentErrorsPresent").GetBoolean());
+            Assert.Equal(1, smokeChecks.GetProperty("RecentErrorCount").GetInt32());
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    private static MainChartsEvidenceExportService CreateService(
+        string targetDirectory,
+        StubEvidenceStore? store = null,
+        Func<MainChartsEvidenceExportService.UiSurfaceDiagnosticsSnapshot>? uiSnapshotFactory = null)
     {
         var metricService = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
         return new MainChartsEvidenceExportService(
@@ -52,7 +243,8 @@ public sealed class MainChartsEvidenceExportServiceTests
             metricService,
             () => null,
             () => null,
-            () => "Bar");
+            () => "Bar",
+            uiSnapshotFactory);
     }
 
     private sealed class StubPathResolver : IReachabilityExportPathResolver
@@ -104,7 +296,15 @@ public sealed class MainChartsEvidenceExportServiceTests
 
         public Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName)
         {
-            return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
+            IEnumerable<MetricNameOption> options = string.Equals(baseType, "Weight", StringComparison.OrdinalIgnoreCase)
+                ?
+                [
+                    new MetricNameOption("morning", "Morning"),
+                    new MetricNameOption("evening", "Evening")
+                ]
+                : Array.Empty<MetricNameOption>();
+
+            return Task.FromResult(options);
         }
 
         public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName)

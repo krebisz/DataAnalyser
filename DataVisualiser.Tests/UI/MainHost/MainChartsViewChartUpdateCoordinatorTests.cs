@@ -102,6 +102,115 @@ public sealed class MainChartsViewChartUpdateCoordinatorTests
     }
 
     [Fact]
+    public async Task RenderVisibleChartsAsync_ShouldRenderAllVisibleChartsWhenSecondaryDataExists()
+    {
+        var rendered = new List<string>();
+        var cleared = new List<string>();
+        var coordinator = new MainChartsViewChartUpdateCoordinator();
+        var chartState = new ChartState
+        {
+            IsMainVisible = true,
+            IsNormalizedVisible = true,
+            IsDiffRatioVisible = true,
+            IsDistributionVisible = true,
+            IsWeeklyTrendVisible = true,
+            IsTransformPanelVisible = true,
+            IsBarPieVisible = true
+        };
+
+        await coordinator.RenderVisibleChartsAsync(
+            chartState,
+            CreateContext(includeSecondary: true),
+            CreateActions(
+                renderChartAsync: (key, _) =>
+                {
+                    rendered.Add(key);
+                    return Task.CompletedTask;
+                },
+                clearChart: cleared.Add));
+
+        Assert.Equal(
+            [
+                ChartControllerKeys.Main,
+                ChartControllerKeys.Normalized,
+                ChartControllerKeys.DiffRatio,
+                ChartControllerKeys.Distribution,
+                ChartControllerKeys.WeeklyTrend,
+                ChartControllerKeys.Transform,
+                ChartControllerKeys.BarPie
+            ],
+            rendered);
+        Assert.Empty(cleared);
+    }
+
+    [Fact]
+    public async Task RenderVisibleChartsAsync_ShouldDoNothingWithoutRenderableContext()
+    {
+        var rendered = new List<string>();
+        var cleared = new List<string>();
+        var coordinator = new MainChartsViewChartUpdateCoordinator();
+
+        await coordinator.RenderVisibleChartsAsync(
+            new ChartState
+            {
+                IsMainVisible = true,
+                IsNormalizedVisible = true,
+                IsBarPieVisible = true
+            },
+            new ChartDataContext(),
+            CreateActions(
+                renderChartAsync: (key, _) =>
+                {
+                    rendered.Add(key);
+                    return Task.CompletedTask;
+                },
+                clearChart: cleared.Add));
+
+        Assert.Empty(rendered);
+        Assert.Empty(cleared);
+    }
+
+    [Fact]
+    public async Task RenderSingleChartAsync_ShouldRenderRequestedVisibleChart()
+    {
+        var rendered = new List<string>();
+        var coordinator = new MainChartsViewChartUpdateCoordinator();
+
+        await coordinator.RenderSingleChartAsync(
+            new ChartState { IsDistributionVisible = true },
+            ChartControllerKeys.Distribution,
+            CreateContext(includeSecondary: true),
+            CreateActions(
+                renderChartAsync: (key, _) =>
+                {
+                    rendered.Add(key);
+                    return Task.CompletedTask;
+                }));
+
+        Assert.Equal([ChartControllerKeys.Distribution], rendered);
+    }
+
+    [Fact]
+    public async Task RenderSingleChartAsync_ShouldNotRenderWhenRequestedChartIsHidden()
+    {
+        var rendered = new List<string>();
+        var coordinator = new MainChartsViewChartUpdateCoordinator();
+
+        await coordinator.RenderSingleChartAsync(
+            new ChartState { IsDistributionVisible = false },
+            ChartControllerKeys.Distribution,
+            CreateContext(includeSecondary: true),
+            CreateActions(
+                renderChartAsync: (key, _) =>
+                {
+                    rendered.Add(key);
+                    return Task.CompletedTask;
+                }));
+
+        Assert.Empty(rendered);
+    }
+
+    [Fact]
     public void ApplyAllChartVisibilities_ShouldApplyVisibilityAndSpecializedViewUpdates()
     {
         var updated = new List<string>();

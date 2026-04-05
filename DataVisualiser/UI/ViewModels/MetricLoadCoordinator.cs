@@ -4,6 +4,7 @@ using DataVisualiser.Core.Validation.DataLoad;
 using DataVisualiser.Core.Orchestration.Builders;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.Shared.Events;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 
@@ -92,6 +93,11 @@ public sealed class MetricLoadCoordinator
             }
 
             var subtypes = await _metricService.LoadSubtypesAsync(metricType, tableName);
+
+            // Mark subtype loading as complete before raising the loaded callback so
+            // host follow-up work (for example date-range refresh for the new selection)
+            // does not immediately trip the IsLoadingSubtypes guard and get dropped.
+            _uiState.IsLoadingSubtypes = false;
 
             onLoaded(new SubtypesLoadedEventArgs
             {

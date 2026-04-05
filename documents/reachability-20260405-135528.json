@@ -1,0 +1,391 @@
+{
+  "ExportedAtUtc": "2026-04-05T13:55:28.2683Z",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2023-11-16T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "body_fat_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat (mass)",
+        "DisplayName": "Weight - Fat (mass)",
+        "DisplayKey": "Weight:body_fat_mass"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "skeletal_muscle_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Skeletal Muscle (mass)",
+        "DisplayName": "Weight - Skeletal Muscle (mass)",
+        "DisplayKey": "Weight:skeletal_muscle_mass"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": false,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": true,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 0,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 25
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "Bar"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [],
+  "DistributionParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Selection": {
+      "MetricType": "Weight",
+      "Subtype": "body_fat_mass",
+      "DisplayMetricType": "Weight",
+      "DisplaySubtype": "Fat (mass)",
+      "DisplayName": "Weight - Fat (mass)",
+      "DisplayKey": "Weight:body_fat_mass"
+    },
+    "DataSource": "ChartContext.Primary",
+    "LegacySamples": 129,
+    "CmsSamplesTotal": 129,
+    "CmsSamplesInRange": 129,
+    "Weekly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    },
+    "Hourly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "CombinedMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "SingleMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "MultiMetricParity": {
+    "Status": "Unavailable",
+    "Reason": "At least three series required",
+    "Result": null
+  },
+  "NormalizedParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "WeekdayTrendParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "TransformParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Operation": "Subtract",
+    "IsUnary": false,
+    "ExpressionAvailable": true,
+    "LegacySamples": 128,
+    "NewSamples": 128,
+    "Result": {
+      "Passed": true,
+      "Message": "Transform parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "ParitySummary": {
+    "Status": "Completed",
+    "OverallPassed": true,
+    "WeeklyPassed": true,
+    "HourlyPassed": true,
+    "CombinedMetricPassed": true,
+    "SingleMetricPassed": true,
+    "MultiMetricPassed": null,
+    "NormalizedPassed": true,
+    "WeekdayTrendPassed": true,
+    "TransformPassed": true,
+    "StrategiesEvaluated": [
+      "WeeklyDistribution",
+      "HourlyDistribution",
+      "CombinedMetric",
+      "SingleMetric",
+      "MultiMetric",
+      "Normalized",
+      "WeekdayTrend",
+      "Transform"
+    ]
+  },
+  "ParityWarnings": [
+    "MultiMetric parity not completed: At least three series required"
+  ],
+  "Diagnostics": {
+    "Selection": {
+      "SelectedMetricType": "Weight",
+      "SelectedSeriesCount": 2,
+      "DistinctDisplayKeyCount": 2,
+      "OrderedSeries": [
+        {
+          "Index": 0,
+          "MetricType": "Weight",
+          "Subtype": "body_fat_mass",
+          "DisplayName": "Weight - Fat (mass)",
+          "DisplayKey": "Weight:body_fat_mass",
+          "MatchesLoadedPrimary": true,
+          "MatchesLoadedSecondary": false,
+          "RequiresOnDemandResolution": false
+        },
+        {
+          "Index": 1,
+          "MetricType": "Weight",
+          "Subtype": "skeletal_muscle_mass",
+          "DisplayName": "Weight - Skeletal Muscle (mass)",
+          "DisplayKey": "Weight:skeletal_muscle_mass",
+          "MatchesLoadedPrimary": false,
+          "MatchesLoadedSecondary": true,
+          "RequiresOnDemandResolution": false
+        }
+      ]
+    },
+    "LoadedContext": {
+      "Present": true,
+      "ReusableForCurrentSelection": true,
+      "MetricType": "Weight",
+      "PrimaryMetricType": "Weight",
+      "SecondaryMetricType": "Weight",
+      "PrimarySubtype": "body_fat_mass",
+      "SecondarySubtype": "skeletal_muscle_mass",
+      "DisplayName1": "Weight - Fat (mass)",
+      "DisplayName2": "Weight - Skeletal Muscle (mass)",
+      "ActualSeriesCount": 2,
+      "Data1Count": 129,
+      "Data2Count": 128,
+      "CmsSeriesCount": 2,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2023-11-16T00:00:00"
+    },
+    "MainChartPipeline": {
+      "ExpectedSeriesFromSelection": 2,
+      "ExpectedBaseSeriesLoad": 2,
+      "ExpectedAdditionalSeriesLoad": 0,
+      "ContextActualSeriesCount": 2,
+      "MultiMetricRequested": false,
+      "ContextLikelyStaleForSelection": false
+    },
+    "Reachability": {
+      "RecordCount": 0,
+      "MaxActualSeriesCount": 0,
+      "MaxCmsSeriesCount": 0,
+      "LatestStrategy": null,
+      "LatestActualSeriesCount": 0,
+      "LatestCmsSeriesCount": 0,
+      "LatestDecisionReason": null,
+      "LatestTimestampUtc": null
+    },
+    "UiSurface": {
+      "MetricType": {
+        "SelectedValue": "Weight",
+        "SelectedDisplay": "Weight",
+        "OptionCount": 11
+      },
+      "DateRange": {
+        "SelectedFromDate": "2023-08-15T12:05:48.2933333",
+        "SelectedToDate": "2023-11-16T00:00:00",
+        "ExpectedDefaultFromDateUtc": "2026-03-06T00:00:00Z",
+        "ExpectedDefaultToDateUtc": "2026-04-05T00:00:00Z",
+        "MatchesExpectedDefaultWindow": false
+      },
+      "Subtypes": {
+        "ActiveComboCount": 2,
+        "PrimarySelectionMaterialized": true,
+        "AllCombosBoundToSelectedMetricType": true,
+        "PrimaryOptionsMatchSelectedMetric": true,
+        "ExpectedPrimaryOptionValues": [
+          "body_fat_mass",
+          "fat_free_mass",
+          "skeletal_muscle_mass",
+          "total_body_water",
+          "weight"
+        ],
+        "OrderedCombos": [
+          {
+            "Index": 0,
+            "BoundMetricType": "Weight",
+            "SelectedValue": "body_fat_mass",
+            "SelectedDisplay": "Fat (mass)",
+            "OptionCount": 5,
+            "OptionValues": [
+              "body_fat_mass",
+              "fat_free_mass",
+              "skeletal_muscle_mass",
+              "total_body_water",
+              "weight"
+            ]
+          },
+          {
+            "Index": 1,
+            "BoundMetricType": "Weight",
+            "SelectedValue": "skeletal_muscle_mass",
+            "SelectedDisplay": "Skeletal Muscle (mass)",
+            "OptionCount": 5,
+            "OptionValues": [
+              "body_fat_mass",
+              "fat_free_mass",
+              "skeletal_muscle_mass",
+              "total_body_water",
+              "weight"
+            ]
+          }
+        ]
+      },
+      "Transform": {
+        "PanelVisible": true,
+        "SecondaryPanelVisible": true,
+        "ComputeEnabled": true,
+        "SelectedOperation": "Subtract",
+        "SelectedPrimarySubtype": "System.Windows.Controls.ComboBoxItem: Weight - Skeletal Muscle (mass)",
+        "SelectedSecondarySubtype": "System.Windows.Controls.ComboBoxItem: Weight - Skeletal Muscle (mass)",
+        "PrimaryOptionCount": 2,
+        "SecondaryOptionCount": 2
+      },
+      "RecentMessages": [
+        {
+          "TimestampUtc": "2026-04-05T13:51:48.398679Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- CombinedMetric parity not completed: Combined metric CMS series missing\n- MultiMetric parity not completed: At least three series required\n- Normalized parity not completed: CMS series missing\n- Transform parity not completed: No transform operation selected\n- Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:51:49.9972454Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135148.json"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:52:25.7650524Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- CombinedMetric parity not completed: Combined metric CMS series missing\n- MultiMetric parity not completed: At least three series required\n- Normalized parity not completed: CMS series missing\n- Transform parity not completed: No transform operation selected\n- Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:52:28.3583946Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135225.json"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:53:07.0036824Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- CombinedMetric parity not completed: Combined metric CMS series missing\n- MultiMetric parity not completed: At least three series required\n- Normalized parity not completed: CMS series missing\n- Transform parity not completed: No transform operation selected"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:53:08.4560216Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135306.json"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:53:21.9999136Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "No reachability records captured yet. Export will include parity data if available."
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:53:23.5775758Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- WeeklyDistribution parity not completed: No chart context available\n- CombinedMetric parity not completed: Combined metric requires primary and secondary data\n- SingleMetric parity not completed: Primary series required\n- MultiMetric parity not completed: Primary series required\n- Normalized parity not completed: Primary and secondary series required\n- WeekdayTrend parity not completed: Primary series required\n- Transform parity not completed: No chart context available\n- Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:53:24.994372Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135321.json"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:54:50.0823044Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- MultiMetric parity not completed: At least three series required"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:54:51.5732283Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135450.json"
+        }
+      ]
+    },
+    "SmokeChecks": {
+      "SelectedMetricMatchesUiMetric": true,
+      "SubtypeComboCountMatchesSelectedSeries": true,
+      "LoadedSeriesCountMatchesSelection": true,
+      "PrimarySubtypeOptionsMatchSelectedMetric": true,
+      "DateRangeMatchesExpectedDefaultWindow": false,
+      "RecentErrorCount": 0,
+      "RecentErrorsPresent": false
+    }
+  }
+}

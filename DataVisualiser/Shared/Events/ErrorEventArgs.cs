@@ -1,4 +1,4 @@
-namespace DataVisualiser.UI.Events;
+namespace DataVisualiser.Shared.Events;
 
 public class ErrorEventArgs : EventArgs
 {

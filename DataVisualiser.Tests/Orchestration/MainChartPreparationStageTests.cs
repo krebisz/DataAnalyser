@@ -48,4 +48,41 @@ public sealed class MainChartPreparationStageTests
         Assert.NotNull(prepared.WorkingContext.CmsSeries);
         Assert.Equal(3, prepared.WorkingContext.CmsSeries!.Count);
     }
+
+    [Fact]
+    public async Task PrepareAsync_WithSelectedSeriesSubset_UsesCurrentSelectionsInsteadOfStaleContextSeries()
+    {
+        var stage = new MainChartPreparationStage(metricSelectionService: null, connectionString: null);
+        var context = new ChartDataContext
+        {
+            Data1 = TestDataBuilders.HealthMetricData().WithTimestamp(new DateTime(2024, 1, 1)).BuildSeries(2, TimeSpan.FromDays(1)),
+            Data2 = TestDataBuilders.HealthMetricData().WithValue(20m).WithTimestamp(new DateTime(2024, 1, 1)).BuildSeries(2, TimeSpan.FromDays(1)),
+            DisplayName1 = "Old Primary",
+            DisplayName2 = "Old Secondary",
+            MetricType = "Weight",
+            PrimaryMetricType = "Weight",
+            SecondaryMetricType = "Weight",
+            PrimarySubtype = "morning",
+            SecondarySubtype = "evening",
+            From = new DateTime(2024, 1, 1),
+            To = new DateTime(2024, 1, 2),
+            ActualSeriesCount = 2
+        };
+
+        var prepared = await stage.PrepareAsync(
+            new MainChartRenderRequest(
+                context,
+                SelectedSeries:
+                [
+                    new MetricSeriesSelection("Weight", "morning", "Weight", "Morning")
+                ]));
+
+        Assert.Single(prepared.Series);
+        Assert.Equal(["Weight - Morning"], prepared.Labels);
+        Assert.Equal(1, prepared.WorkingContext.ActualSeriesCount);
+        Assert.Equal("Weight", prepared.WorkingContext.PrimaryMetricType);
+        Assert.Equal("morning", prepared.WorkingContext.PrimarySubtype);
+        Assert.Null(prepared.WorkingContext.SecondarySubtype);
+        Assert.Equal("Weight - Morning", prepared.WorkingContext.DisplayName1);
+    }
 }

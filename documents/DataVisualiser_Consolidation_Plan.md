@@ -141,11 +141,11 @@ The hierarchy should make these distinctions obvious:
 
 Current observed shape:
 
-- `391` C# files
+- `392` C# files
 - `18` XAML files
 - `50` C# files under `UI/Charts/Presentation`
 - `35` C# files under `Core/Orchestration`
-- `15` C# files under `UI/MainHost`
+- `16` C# files under `UI/MainHost`
 - an explicit interactive navigation aid now exists in `documents/DATAVISUALISER_PIPELINE_SPINE.md`
 
 Current major concentration points:
@@ -197,12 +197,12 @@ Do not reopen these gains casually:
 
 Measured gains already banked:
 
-- overall `DataVisualiser` C# file count reduced from `430` to `391`
+- overall `DataVisualiser` C# file count reduced from `430` to `392`
 - `UI/Charts/Infrastructure` reduced from `10` files to `3`
 - `Core/Rendering/CartesianMetrics` reduced from `13` files to `5`
 - `Core/Rendering/Distribution` reduced from `12` files to `3`
 - `Core/Rendering/WeekdayTrend` reduced from `12` files to `3`
-- `UI/MainHost` reduced from `22` files to `15`
+- `UI/MainHost` reduced from `22` files to `16`
 
 Historical summary of that cycle lives in `documents/log.md`.
 This plan no longer serves as a line-by-line execution ledger for that earlier work.
@@ -708,6 +708,85 @@ Manual smoke:
   - trigger `Export Reachability` when no reachability records exist and confirm the informational message still appears before the success path
   - trigger `Export Reachability` when parity warnings are present and confirm the warning dialog still appears
   - confirm the export still writes a file successfully and reports the target path
+
+### Active Phase B Work (Slice 2)
+
+The next live host-decomposition slice moved post-load chart-refresh initiation out of the view.
+
+Bounded slice selected:
+
+- data-loaded refresh preparation and first-pass render initiation in `MainChartsView` / `MainHost`
+- primary files:
+  - `UI/MainChartsView.xaml.cs`
+  - `UI/MainHost/MainChartsViewDataLoadedCoordinator.cs`
+  - `UI/MainHost/MainChartsViewChartUpdateCoordinator.cs`
+
+Reason this slice was chosen:
+
+- `OnDataLoaded` was still a mixed host block that combined transform completion, subtype refresh, button-state refresh, and initial chart-render initiation
+- the supporting render/update mechanics were already in host coordinators
+- this was the next smallest live path that materially reduced `MainChartsView` imperative gravity
+
+Current result from this slice:
+
+- `MainChartsViewDataLoadedCoordinator` now owns post-load refresh preparation and initial render initiation
+- `MainChartsView` delegates the data-loaded chart refresh path through a dedicated host seam instead of sequencing those actions inline
+- the live load-to-render path is more explicit without changing the underlying chart-update/rendering contracts
+
+Validation recorded for this pass:
+
+- focused regression lane: `19` passed, `0` failed
+- `dotnet build DataAnalyser.sln -c Debug`: passed with `0` errors, existing warnings only
+- `dotnet test DataAnalyser.sln -c Debug -m:1`: `DataFileReader.Tests` `15` passed, `0` failed; `DataVisualiser.Tests` `399` passed, `0` failed
+
+Manual smoke:
+
+- required for this pass because the live load/render path was touched
+- targeted scope:
+  - load a single-series metric and confirm the main chart and bar/pie path still render after data load
+  - load a two-series metric and confirm normalized / diff-ratio availability and post-load chart refresh behavior still work
+  - confirm the transform panel subtype options and compute-button state still refresh correctly after data load
+
+### Active Phase B Stabilization Slice
+
+The host-decomposition work exposed a broader selection-state invariant problem, so the next bounded pass hardened the shared selection lifecycle before further enhancement work.
+
+Bounded slice selected:
+
+- batched programmatic metric/subtype state updates and suppressed internal combo-change noise
+- primary files:
+  - `UI/ViewModels/MainWindowViewModel.cs`
+  - `UI/Charts/Presentation/SubtypeSelectorManager.cs`
+  - `UI/MainChartsView.xaml.cs`
+  - `UI/Syncfusion/SyncfusionChartsView.xaml.cs`
+
+Reason this slice was chosen:
+
+- repeated manual smoke failures were surfacing from the same class of issue: programmatic combo rebuilds and grouped state updates were still emitting partial selection changes mid-flight
+- the regressions were no longer isolated to one controller path; they were host-selection lifecycle problems
+- this was the smallest systematic fix that could reduce stale-context reuse, metric-type snapback, subtype drift, and host divergence without attempting a full architecture inversion
+
+Current result from this slice:
+
+- `MainWindowViewModel` now supports batched selection-state updates so grouped mutations emit one coherent `SelectionStateChanged` event
+- `SubtypeSelectorManager` now suppresses internal combo-change noise during programmatic item rebuilds, primary-selection materialization, and dynamic combo creation
+- both `MainChartsView` and `SyncfusionChartsView` now batch programmatic metric/subtype mutations and suppress internal selection churn during subtype rebuild/apply flows
+- host selection lifecycle behavior is more consistent across the two live clients before further Phase B mutation continues
+
+Validation recorded for this pass:
+
+- focused stabilization lane: `20` passed, `0` failed
+- `dotnet test DataAnalyser.sln -c Debug -m:1`: `DataFileReader.Tests` `15` passed, `0` failed; `DataVisualiser.Tests` `427` passed, `0` failed
+
+Manual smoke:
+
+- required for this pass because the live host selection/load path was hardened
+- targeted scope:
+  - metric type change should stay on the new selection and clear stale chart context
+  - subtype rebuild after metric type change should show only the new metric family options
+  - dynamic `Add Subtype` should work without manual re-selection of the primary combo
+  - loaded main-chart series count should match the number of selected subtype combos after `Load Data`
+  - transform should still handle unary-to-binary transitions and dynamic second-subtype addition correctly
 
 ### Banked MainHost sprawl-tightening pre-pass
 

@@ -1,0 +1,290 @@
+{
+  "ExportedAtUtc": "2026-04-05T13:53:21.9861567Z",
+  "MetricState": {
+    "SelectedMetricType": "AdvancedGlycationEndproduct",
+    "FromDate": "2025-06-03T12:40:14.0666667",
+    "ToDate": "2025-11-21T02:28:26.0866667",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeries": [
+      {
+        "MetricType": "AdvancedGlycationEndproduct",
+        "Subtype": "measurement_result",
+        "DisplayMetricType": "Glycation",
+        "DisplaySubtype": "Measurement Result",
+        "DisplayName": "Glycation - Measurement Result",
+        "DisplayKey": "AdvancedGlycationEndproduct:measurement_result"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": false,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": false,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 0,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 25
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "Bar"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [],
+  "DistributionParity": {
+    "Status": "Unavailable",
+    "Reason": "No chart context available",
+    "Selection": null,
+    "DataSource": null,
+    "LegacySamples": 0,
+    "CmsSamplesTotal": 0,
+    "CmsSamplesInRange": 0,
+    "Weekly": null,
+    "Hourly": null
+  },
+  "CombinedMetricParity": {
+    "Status": "Unavailable",
+    "Reason": "Combined metric requires primary and secondary data",
+    "Result": null
+  },
+  "SingleMetricParity": {
+    "Status": "Unavailable",
+    "Reason": "Primary series required",
+    "Result": null
+  },
+  "MultiMetricParity": {
+    "Status": "Unavailable",
+    "Reason": "Primary series required",
+    "Result": null
+  },
+  "NormalizedParity": {
+    "Status": "Unavailable",
+    "Reason": "Primary and secondary series required",
+    "Result": null
+  },
+  "WeekdayTrendParity": {
+    "Status": "Unavailable",
+    "Reason": "Primary series required",
+    "Result": null
+  },
+  "TransformParity": {
+    "Status": "Unavailable",
+    "Reason": "No chart context available",
+    "Operation": null,
+    "IsUnary": false,
+    "ExpressionAvailable": false,
+    "LegacySamples": 0,
+    "NewSamples": 0,
+    "Result": null
+  },
+  "ParitySummary": {
+    "Status": "Unavailable",
+    "OverallPassed": false,
+    "WeeklyPassed": null,
+    "HourlyPassed": null,
+    "CombinedMetricPassed": null,
+    "SingleMetricPassed": null,
+    "MultiMetricPassed": null,
+    "NormalizedPassed": null,
+    "WeekdayTrendPassed": null,
+    "TransformPassed": null,
+    "StrategiesEvaluated": [
+      "WeeklyDistribution",
+      "HourlyDistribution",
+      "CombinedMetric",
+      "SingleMetric",
+      "MultiMetric",
+      "Normalized",
+      "WeekdayTrend",
+      "Transform"
+    ]
+  },
+  "ParityWarnings": [
+    "WeeklyDistribution parity not completed: No chart context available",
+    "CombinedMetric parity not completed: Combined metric requires primary and secondary data",
+    "SingleMetric parity not completed: Primary series required",
+    "MultiMetric parity not completed: Primary series required",
+    "Normalized parity not completed: Primary and secondary series required",
+    "WeekdayTrend parity not completed: Primary series required",
+    "Transform parity not completed: No chart context available",
+    "Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+  ],
+  "Diagnostics": {
+    "Selection": {
+      "SelectedMetricType": "AdvancedGlycationEndproduct",
+      "SelectedSeriesCount": 1,
+      "DistinctDisplayKeyCount": 1,
+      "OrderedSeries": [
+        {
+          "Index": 0,
+          "MetricType": "AdvancedGlycationEndproduct",
+          "Subtype": "measurement_result",
+          "DisplayName": "Glycation - Measurement Result",
+          "DisplayKey": "AdvancedGlycationEndproduct:measurement_result",
+          "MatchesLoadedPrimary": false,
+          "MatchesLoadedSecondary": false,
+          "RequiresOnDemandResolution": true
+        }
+      ]
+    },
+    "LoadedContext": {
+      "Present": false,
+      "ReusableForCurrentSelection": false,
+      "MetricType": null,
+      "PrimaryMetricType": null,
+      "SecondaryMetricType": null,
+      "PrimarySubtype": null,
+      "SecondarySubtype": null,
+      "DisplayName1": null,
+      "DisplayName2": null,
+      "ActualSeriesCount": 0,
+      "Data1Count": 0,
+      "Data2Count": 0,
+      "CmsSeriesCount": 0,
+      "From": null,
+      "To": null
+    },
+    "MainChartPipeline": {
+      "ExpectedSeriesFromSelection": 1,
+      "ExpectedBaseSeriesLoad": 1,
+      "ExpectedAdditionalSeriesLoad": 0,
+      "ContextActualSeriesCount": 0,
+      "MultiMetricRequested": false,
+      "ContextLikelyStaleForSelection": true
+    },
+    "Reachability": {
+      "RecordCount": 0,
+      "MaxActualSeriesCount": 0,
+      "MaxCmsSeriesCount": 0,
+      "LatestStrategy": null,
+      "LatestActualSeriesCount": 0,
+      "LatestCmsSeriesCount": 0,
+      "LatestDecisionReason": null,
+      "LatestTimestampUtc": null
+    },
+    "UiSurface": {
+      "MetricType": {
+        "SelectedValue": "AdvancedGlycationEndproduct",
+        "SelectedDisplay": "Glycation",
+        "OptionCount": 11
+      },
+      "DateRange": {
+        "SelectedFromDate": "2025-06-03T12:40:14.0666667",
+        "SelectedToDate": "2025-11-21T02:28:26.0866667",
+        "ExpectedDefaultFromDateUtc": "2026-03-06T00:00:00Z",
+        "ExpectedDefaultToDateUtc": "2026-04-05T00:00:00Z",
+        "MatchesExpectedDefaultWindow": false
+      },
+      "Subtypes": {
+        "ActiveComboCount": 1,
+        "PrimarySelectionMaterialized": true,
+        "AllCombosBoundToSelectedMetricType": true,
+        "PrimaryOptionsMatchSelectedMetric": true,
+        "ExpectedPrimaryOptionValues": [
+          "measurement_result",
+          "percent",
+          "score"
+        ],
+        "OrderedCombos": [
+          {
+            "Index": 0,
+            "BoundMetricType": "AdvancedGlycationEndproduct",
+            "SelectedValue": "measurement_result",
+            "SelectedDisplay": "Measurement Result",
+            "OptionCount": 3,
+            "OptionValues": [
+              "measurement_result",
+              "percent",
+              "score"
+            ]
+          }
+        ]
+      },
+      "Transform": {
+        "PanelVisible": true,
+        "SecondaryPanelVisible": false,
+        "ComputeEnabled": false,
+        "SelectedOperation": null,
+        "SelectedPrimarySubtype": "System.Windows.Controls.ComboBoxItem: Glycation - Measurement Result",
+        "SelectedSecondarySubtype": null,
+        "PrimaryOptionCount": 1,
+        "SecondaryOptionCount": 1
+      },
+      "RecentMessages": [
+        {
+          "TimestampUtc": "2026-04-05T13:51:48.398679Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- CombinedMetric parity not completed: Combined metric CMS series missing\n- MultiMetric parity not completed: At least three series required\n- Normalized parity not completed: CMS series missing\n- Transform parity not completed: No transform operation selected\n- Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:51:49.9972454Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135148.json"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:52:25.7650524Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- CombinedMetric parity not completed: Combined metric CMS series missing\n- MultiMetric parity not completed: At least three series required\n- Normalized parity not completed: CMS series missing\n- Transform parity not completed: No transform operation selected\n- Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:52:28.3583946Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135225.json"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:53:07.0036824Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- CombinedMetric parity not completed: Combined metric CMS series missing\n- MultiMetric parity not completed: At least three series required\n- Normalized parity not completed: CMS series missing\n- Transform parity not completed: No transform operation selected"
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:53:08.4560216Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135306.json"
+        }
+      ]
+    },
+    "SmokeChecks": {
+      "SelectedMetricMatchesUiMetric": true,
+      "SubtypeComboCountMatchesSelectedSeries": true,
+      "LoadedSeriesCountMatchesSelection": null,
+      "PrimarySubtypeOptionsMatchSelectedMetric": true,
+      "DateRangeMatchesExpectedDefaultWindow": false,
+      "RecentErrorCount": 0,
+      "RecentErrorsPresent": false
+    }
+  }
+}

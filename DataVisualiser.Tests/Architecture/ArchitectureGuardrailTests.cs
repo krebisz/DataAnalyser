@@ -39,6 +39,7 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("MainChartsViewThemeCoordinator", source);
         Assert.Contains("MainChartsEvidenceExportService", source);
         Assert.Contains("MainChartsViewEvidenceExportCoordinator", source);
+        Assert.Contains("MainChartsViewDataLoadedCoordinator", source);
         Assert.Contains("MainChartsViewChartUpdateCoordinator", source);
         Assert.Contains("MainChartsViewChartPresentationCoordinator", source);
         Assert.Contains("MainChartsViewChartPipelineFactory", source);
@@ -55,6 +56,88 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void MainChartsView_OnDataLoaded_ShouldDelegateThroughDedicatedCoordinatorSeam()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var onDataLoadedBody = ExtractMethodBody(source, "private async void OnDataLoaded");
+
+        Assert.Contains("_dataLoadedCoordinator.HandleAsync", onDataLoadedBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("CompleteTransformSelectionsPendingLoad();", onDataLoadedBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateSubtypeOptions(ChartControllerKeys.Normalized);", onDataLoadedBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateTransformSubtypeOptions();", onDataLoadedBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateTransformComputeButtonState();", onDataLoadedBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("await RenderChartAsync(ChartControllerKeys.BarPie, ctx);", onDataLoadedBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("await RenderChartsFromLastContext();", onDataLoadedBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_UpdateSelectedSubtypes_ShouldRefreshTransformAlongsidePeerCharts()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private void UpdateSelectedSubtypesInViewModel");
+
+        Assert.Contains("UpdateTransformSubtypeOptions();", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain(".GroupBy(series => series.DisplayKey", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_HasLoadedData_ShouldUseSharedSelectionCompatibilityGuard()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private bool HasLoadedData");
+
+        Assert.Contains("ChartContextSelectionGuard.IsCompatibleWithCurrentSelection", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_OnMetricTypeSelectionChanged_ShouldClearSubtypeControlsBeforeLoadingNewSubtypes()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private void OnMetricTypeSelectionChanged");
+
+        Assert.Contains("_isApplyingSelectionSync = true;", methodBody, StringComparison.Ordinal);
+        Assert.Contains("ClearAllCharts();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_viewModel.SetSelectedMetricType(selectedMetricType);", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_selectorManager.ClearAllSubtypeControls();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("UpdateSelectedSubtypesInViewModel();", methodBody, StringComparison.Ordinal);
+
+        Assert.True(
+            methodBody.IndexOf("ClearAllCharts();", StringComparison.Ordinal) <
+            methodBody.IndexOf("_viewModel.SetSelectedMetricType(selectedMetricType);", StringComparison.Ordinal),
+            "Metric-type changes should clear the loaded chart context before new subtype state is committed.");
+
+        Assert.True(
+            methodBody.IndexOf("_viewModel.SetSelectedMetricType(selectedMetricType);", StringComparison.Ordinal) <
+            methodBody.IndexOf("_selectorManager.ClearAllSubtypeControls();", StringComparison.Ordinal),
+            "Metric type should be committed before subtype controls are cleared so selection sync cannot snap the combo back.");
+    }
+
+    [Fact]
+    public void MainChartsView_OnSubtypesLoaded_ShouldNotPreserveOnlyTheLastDynamicComboOnMetricTypeChange()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private void OnSubtypesLoaded");
+
+        Assert.DoesNotContain("UpdateLastDynamicComboItems", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_selectorManager.SuppressSelectionChanged()", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch()", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Hosts_ShouldBatchProgrammaticMetricAndSubtypeSelectionMutations()
+    {
+        var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(mainSource, "private void OnMetricTypesLoaded"), StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(mainSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
+        Assert.Contains("_selectorManager.SuppressSelectionChanged()", ExtractMethodBody(mainSource, "private void AddSubtypeComboBox"), StringComparison.Ordinal);
+
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(syncfusionSource, "private void OnMetricTypesLoaded"), StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(syncfusionSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
+        Assert.Contains("_selectorManager.SuppressSelectionChanged()", ExtractMethodBody(syncfusionSource, "private void AddSubtypeComboBox"), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MainChartsViewAndMainHost_ShouldNotReintroduceNamedControlFallbacks()
     {
         var mainChartsViewSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
@@ -68,6 +151,15 @@ public sealed class ArchitectureGuardrailTests
             ["FindName(", "VisualTreeHelper", "LogicalTreeHelper", "GetType().GetField"]);
 
         AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void CoreValidation_DataLoadHelpers_ShouldNotReferenceUiEventsNamespace()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Validation", "DataLoad", "MetricDataValidationHelper.cs");
+
+        Assert.DoesNotContain("DataVisualiser.UI.Events", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -135,5 +227,28 @@ public sealed class ArchitectureGuardrailTests
             builder.AppendLine(offender);
 
         Assert.True(offenders.Count == 0, builder.ToString());
+    }
+
+    private static string ExtractMethodBody(string source, string signature)
+    {
+        var start = source.IndexOf(signature, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Method signature '{signature}' was not found.");
+
+        var braceStart = source.IndexOf('{', start);
+        Assert.True(braceStart >= 0, $"Opening brace for '{signature}' was not found.");
+
+        var depth = 0;
+        for (var i = braceStart; i < source.Length; i++)
+        {
+            if (source[i] == '{')
+                depth++;
+            else if (source[i] == '}')
+                depth--;
+
+            if (depth == 0)
+                return source.Substring(braceStart, i - braceStart + 1);
+        }
+
+        throw new InvalidOperationException($"Closing brace for '{signature}' was not found.");
     }
 }

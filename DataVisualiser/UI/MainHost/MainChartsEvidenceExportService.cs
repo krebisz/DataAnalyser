@@ -12,6 +12,7 @@ using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.MainHost;
@@ -22,6 +23,7 @@ public sealed class MainChartsEvidenceExportService
     private readonly Func<string> _getBarPieMode;
     private readonly Func<string?> _getSelectedTransformOperation;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
+    private readonly Func<UiSurfaceDiagnosticsSnapshot>? _getUiSurfaceDiagnostics;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly IReachabilityEvidenceStore _reachabilityStore;
     private readonly IReachabilityExportPathResolver _targetPathResolver;
@@ -33,7 +35,8 @@ public sealed class MainChartsEvidenceExportService
         MetricSelectionService metricSelectionService,
         Func<IStrategyCutOverService?> getStrategyCutOverService,
         Func<string?> getSelectedTransformOperation,
-        Func<string> getBarPieMode)
+        Func<string> getBarPieMode,
+        Func<UiSurfaceDiagnosticsSnapshot>? getUiSurfaceDiagnostics = null)
     {
         _exportWriter = exportWriter ?? throw new ArgumentNullException(nameof(exportWriter));
         _targetPathResolver = targetPathResolver ?? throw new ArgumentNullException(nameof(targetPathResolver));
@@ -42,6 +45,7 @@ public sealed class MainChartsEvidenceExportService
         _getStrategyCutOverService = getStrategyCutOverService ?? throw new ArgumentNullException(nameof(getStrategyCutOverService));
         _getSelectedTransformOperation = getSelectedTransformOperation ?? throw new ArgumentNullException(nameof(getSelectedTransformOperation));
         _getBarPieMode = getBarPieMode ?? throw new ArgumentNullException(nameof(getBarPieMode));
+        _getUiSurfaceDiagnostics = getUiSurfaceDiagnostics;
     }
 
     public void ClearEvidence()
@@ -66,6 +70,7 @@ public sealed class MainChartsEvidenceExportService
         var paritySummary = BuildParitySummary(distributionParity, combinedParity, singleParity, multiParity, normalizedParity, weekdayTrendParity, transformParity);
         var parityWarnings = BuildParityWarnings(distributionParity, combinedParity, singleParity, multiParity, normalizedParity, weekdayTrendParity, transformParity, selectedSeries.Count);
         var selectedDistributionSettings = chartState.GetDistributionSettings(chartState.SelectedDistributionMode);
+        var diagnostics = await BuildDiagnosticsAsync(chartState, metricState, reachabilityRecords);
 
         var payload = new
         {
@@ -140,7 +145,8 @@ public sealed class MainChartsEvidenceExportService
             WeekdayTrendParity = weekdayTrendParity,
             TransformParity = transformParity,
             ParitySummary = paritySummary,
-            ParityWarnings = parityWarnings
+            ParityWarnings = parityWarnings,
+            Diagnostics = diagnostics
         };
 
         var result = _exportWriter.Write(payload, _targetPathResolver.ResolveDocumentsDirectory(), utcNow);
@@ -213,6 +219,295 @@ public sealed class MainChartsEvidenceExportService
         public int LegacySamples { get; set; }
         public int NewSamples { get; set; }
         public ParityResultSnapshot? Result { get; set; }
+    }
+
+    public sealed class DiagnosticsSnapshot
+    {
+        public SelectionDiagnosticsSnapshot Selection { get; set; } = new();
+        public LoadedContextDiagnosticsSnapshot LoadedContext { get; set; } = new();
+        public MainChartPipelineDiagnosticsSnapshot MainChartPipeline { get; set; } = new();
+        public ReachabilityDiagnosticsSnapshot Reachability { get; set; } = new();
+        public UiSurfaceDiagnosticsSnapshot UiSurface { get; set; } = new();
+        public SmokeHeuristicsSnapshot SmokeChecks { get; set; } = new();
+    }
+
+    public sealed class UiSurfaceDiagnosticsSnapshot
+    {
+        public MetricTypeUiDiagnosticsSnapshot MetricType { get; set; } = new();
+        public DateRangeUiDiagnosticsSnapshot DateRange { get; set; } = new();
+        public SubtypeUiDiagnosticsSnapshot Subtypes { get; set; } = new();
+        public TransformUiDiagnosticsSnapshot Transform { get; set; } = new();
+        public IReadOnlyList<HostMessageDiagnosticsSnapshot> RecentMessages { get; set; } = Array.Empty<HostMessageDiagnosticsSnapshot>();
+    }
+
+    public sealed class MetricTypeUiDiagnosticsSnapshot
+    {
+        public string? SelectedValue { get; set; }
+        public string? SelectedDisplay { get; set; }
+        public int OptionCount { get; set; }
+    }
+
+    public sealed class DateRangeUiDiagnosticsSnapshot
+    {
+        public DateTime? SelectedFromDate { get; set; }
+        public DateTime? SelectedToDate { get; set; }
+        public DateTime ExpectedDefaultFromDateUtc { get; set; }
+        public DateTime ExpectedDefaultToDateUtc { get; set; }
+        public bool MatchesExpectedDefaultWindow { get; set; }
+    }
+
+    public sealed class SubtypeUiDiagnosticsSnapshot
+    {
+        public int ActiveComboCount { get; set; }
+        public bool PrimarySelectionMaterialized { get; set; }
+        public bool AllCombosBoundToSelectedMetricType { get; set; }
+        public bool? PrimaryOptionsMatchSelectedMetric { get; set; }
+        public IReadOnlyList<string> ExpectedPrimaryOptionValues { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<SubtypeComboDiagnosticsSnapshot> OrderedCombos { get; set; } = Array.Empty<SubtypeComboDiagnosticsSnapshot>();
+    }
+
+    public sealed class SubtypeComboDiagnosticsSnapshot
+    {
+        public int Index { get; set; }
+        public string? BoundMetricType { get; set; }
+        public string? SelectedValue { get; set; }
+        public string? SelectedDisplay { get; set; }
+        public int OptionCount { get; set; }
+        public IReadOnlyList<string> OptionValues { get; set; } = Array.Empty<string>();
+    }
+
+    public sealed class TransformUiDiagnosticsSnapshot
+    {
+        public bool PanelVisible { get; set; }
+        public bool SecondaryPanelVisible { get; set; }
+        public bool ComputeEnabled { get; set; }
+        public string? SelectedOperation { get; set; }
+        public string? SelectedPrimarySubtype { get; set; }
+        public string? SelectedSecondarySubtype { get; set; }
+        public int PrimaryOptionCount { get; set; }
+        public int SecondaryOptionCount { get; set; }
+    }
+
+    public sealed class HostMessageDiagnosticsSnapshot
+    {
+        public DateTime TimestampUtc { get; set; }
+        public string Severity { get; set; } = string.Empty;
+        public string? Title { get; set; }
+        public string? Message { get; set; }
+    }
+
+    public sealed class SmokeHeuristicsSnapshot
+    {
+        public bool? SelectedMetricMatchesUiMetric { get; set; }
+        public bool? SubtypeComboCountMatchesSelectedSeries { get; set; }
+        public bool? LoadedSeriesCountMatchesSelection { get; set; }
+        public bool? PrimarySubtypeOptionsMatchSelectedMetric { get; set; }
+        public bool DateRangeMatchesExpectedDefaultWindow { get; set; }
+        public int RecentErrorCount { get; set; }
+        public bool RecentErrorsPresent { get; set; }
+    }
+
+    public sealed class SelectionDiagnosticsSnapshot
+    {
+        public string? SelectedMetricType { get; set; }
+        public int SelectedSeriesCount { get; set; }
+        public int DistinctDisplayKeyCount { get; set; }
+        public IReadOnlyList<SeriesSelectionDiagnosticsSnapshot> OrderedSeries { get; set; } = Array.Empty<SeriesSelectionDiagnosticsSnapshot>();
+    }
+
+    public sealed class SeriesSelectionDiagnosticsSnapshot
+    {
+        public int Index { get; set; }
+        public string? MetricType { get; set; }
+        public string? Subtype { get; set; }
+        public string? DisplayName { get; set; }
+        public string? DisplayKey { get; set; }
+        public bool MatchesLoadedPrimary { get; set; }
+        public bool MatchesLoadedSecondary { get; set; }
+        public bool RequiresOnDemandResolution { get; set; }
+    }
+
+    public sealed class LoadedContextDiagnosticsSnapshot
+    {
+        public bool Present { get; set; }
+        public bool ReusableForCurrentSelection { get; set; }
+        public string? MetricType { get; set; }
+        public string? PrimaryMetricType { get; set; }
+        public string? SecondaryMetricType { get; set; }
+        public string? PrimarySubtype { get; set; }
+        public string? SecondarySubtype { get; set; }
+        public string? DisplayName1 { get; set; }
+        public string? DisplayName2 { get; set; }
+        public int ActualSeriesCount { get; set; }
+        public int Data1Count { get; set; }
+        public int Data2Count { get; set; }
+        public int CmsSeriesCount { get; set; }
+        public DateTime? From { get; set; }
+        public DateTime? To { get; set; }
+    }
+
+    public sealed class MainChartPipelineDiagnosticsSnapshot
+    {
+        public int ExpectedSeriesFromSelection { get; set; }
+        public int ExpectedBaseSeriesLoad { get; set; }
+        public int ExpectedAdditionalSeriesLoad { get; set; }
+        public int ContextActualSeriesCount { get; set; }
+        public bool MultiMetricRequested { get; set; }
+        public bool ContextLikelyStaleForSelection { get; set; }
+    }
+
+    public sealed class ReachabilityDiagnosticsSnapshot
+    {
+        public int RecordCount { get; set; }
+        public int MaxActualSeriesCount { get; set; }
+        public int MaxCmsSeriesCount { get; set; }
+        public string? LatestStrategy { get; set; }
+        public int LatestActualSeriesCount { get; set; }
+        public int LatestCmsSeriesCount { get; set; }
+        public string? LatestDecisionReason { get; set; }
+        public DateTime? LatestTimestampUtc { get; set; }
+    }
+
+    private async Task<DiagnosticsSnapshot> BuildDiagnosticsAsync(
+        ChartState chartState,
+        MetricState metricState,
+        IReadOnlyList<StrategyReachabilityRecord> reachabilityRecords)
+    {
+        var selectedSeries = metricState.SelectedSeries.ToList();
+        var ctx = chartState.LastContext;
+        var uiSurface = _getUiSurfaceDiagnostics?.Invoke() ?? new UiSurfaceDiagnosticsSnapshot();
+        uiSurface.Subtypes.PrimaryOptionsMatchSelectedMetric = await DeterminePrimaryOptionsMatchSelectedMetricAsync(metricState, uiSurface.Subtypes);
+        var reusableContext = ChartContextSelectionGuard.IsCompatibleWithCurrentSelection(
+            ctx,
+            metricState.SelectedMetricType,
+            selectedSeries);
+        var latestRecord = reachabilityRecords
+            .OrderByDescending(record => record.TimestampUtc)
+            .FirstOrDefault();
+        var expectedSeriesCount = selectedSeries.Count(series => series.QuerySubtype != null);
+        var recentErrorCount = uiSurface.RecentMessages.Count(message =>
+            string.Equals(message.Severity, "Error", StringComparison.OrdinalIgnoreCase));
+
+        return new DiagnosticsSnapshot
+        {
+            Selection = new SelectionDiagnosticsSnapshot
+            {
+                SelectedMetricType = metricState.SelectedMetricType,
+                SelectedSeriesCount = selectedSeries.Count,
+                DistinctDisplayKeyCount = selectedSeries
+                    .Select(series => series.DisplayKey)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count(),
+                OrderedSeries = selectedSeries
+                    .Select((series, index) => new SeriesSelectionDiagnosticsSnapshot
+                    {
+                        Index = index,
+                        MetricType = series.MetricType,
+                        Subtype = series.Subtype,
+                        DisplayName = series.DisplayName,
+                        DisplayKey = series.DisplayKey,
+                        MatchesLoadedPrimary = IsSameSelection(series, ctx?.PrimaryMetricType ?? ctx?.MetricType, ctx?.PrimarySubtype),
+                        MatchesLoadedSecondary = IsSameSelection(series, ctx?.SecondaryMetricType, ctx?.SecondarySubtype),
+                        RequiresOnDemandResolution =
+                            !IsSameSelection(series, ctx?.PrimaryMetricType ?? ctx?.MetricType, ctx?.PrimarySubtype) &&
+                            !IsSameSelection(series, ctx?.SecondaryMetricType, ctx?.SecondarySubtype)
+                    })
+                    .ToList()
+            },
+            LoadedContext = new LoadedContextDiagnosticsSnapshot
+            {
+                Present = ctx != null,
+                ReusableForCurrentSelection = reusableContext,
+                MetricType = ctx?.MetricType,
+                PrimaryMetricType = ctx?.PrimaryMetricType,
+                SecondaryMetricType = ctx?.SecondaryMetricType,
+                PrimarySubtype = ctx?.PrimarySubtype,
+                SecondarySubtype = ctx?.SecondarySubtype,
+                DisplayName1 = ctx?.DisplayName1,
+                DisplayName2 = ctx?.DisplayName2,
+                ActualSeriesCount = ctx?.ActualSeriesCount ?? 0,
+                Data1Count = ctx?.Data1?.Count() ?? 0,
+                Data2Count = ctx?.Data2?.Count() ?? 0,
+                CmsSeriesCount = ctx?.CmsSeries?.Count ?? 0,
+                From = ctx?.From,
+                To = ctx?.To
+            },
+            MainChartPipeline = new MainChartPipelineDiagnosticsSnapshot
+            {
+                ExpectedSeriesFromSelection = selectedSeries.Count(series => series.QuerySubtype != null),
+                ExpectedBaseSeriesLoad = Math.Min(2, selectedSeries.Count(series => series.QuerySubtype != null)),
+                ExpectedAdditionalSeriesLoad = Math.Max(0, selectedSeries.Count(series => series.QuerySubtype != null) - 2),
+                ContextActualSeriesCount = ctx?.ActualSeriesCount ?? 0,
+                MultiMetricRequested = selectedSeries.Count(series => series.QuerySubtype != null) >= 3,
+                ContextLikelyStaleForSelection = selectedSeries.Count > 0 && !reusableContext
+            },
+            Reachability = new ReachabilityDiagnosticsSnapshot
+            {
+                RecordCount = reachabilityRecords.Count,
+                MaxActualSeriesCount = reachabilityRecords.Count == 0 ? 0 : reachabilityRecords.Max(record => record.ActualSeriesCount),
+                MaxCmsSeriesCount = reachabilityRecords.Count == 0 ? 0 : reachabilityRecords.Max(record => record.CmsSeriesCount),
+                LatestStrategy = latestRecord?.StrategyType.ToString(),
+                LatestActualSeriesCount = latestRecord?.ActualSeriesCount ?? 0,
+                LatestCmsSeriesCount = latestRecord?.CmsSeriesCount ?? 0,
+                LatestDecisionReason = latestRecord?.DecisionReason,
+                LatestTimestampUtc = latestRecord?.TimestampUtc
+            },
+            UiSurface = uiSurface,
+            SmokeChecks = new SmokeHeuristicsSnapshot
+            {
+                SelectedMetricMatchesUiMetric =
+                    string.IsNullOrWhiteSpace(uiSurface.MetricType.SelectedValue)
+                        ? null
+                        : string.Equals(metricState.SelectedMetricType, uiSurface.MetricType.SelectedValue, StringComparison.OrdinalIgnoreCase),
+                SubtypeComboCountMatchesSelectedSeries =
+                    uiSurface.Subtypes.ActiveComboCount > 0
+                        ? uiSurface.Subtypes.ActiveComboCount == selectedSeries.Count
+                        : null,
+                LoadedSeriesCountMatchesSelection =
+                    ctx == null || expectedSeriesCount == 0
+                        ? null
+                        : ctx.ActualSeriesCount == expectedSeriesCount,
+                PrimarySubtypeOptionsMatchSelectedMetric = uiSurface.Subtypes.PrimaryOptionsMatchSelectedMetric,
+                DateRangeMatchesExpectedDefaultWindow = uiSurface.DateRange.MatchesExpectedDefaultWindow,
+                RecentErrorCount = recentErrorCount,
+                RecentErrorsPresent = recentErrorCount > 0
+            }
+        };
+    }
+
+    private async Task<bool?> DeterminePrimaryOptionsMatchSelectedMetricAsync(
+        MetricState metricState,
+        SubtypeUiDiagnosticsSnapshot subtypes)
+    {
+        if (string.IsNullOrWhiteSpace(metricState.SelectedMetricType) ||
+            string.IsNullOrWhiteSpace(metricState.ResolutionTableName) ||
+            subtypes.OrderedCombos.Count == 0)
+            return null;
+
+        try
+        {
+            var expected = await _metricSelectionService.LoadSubtypesAsync(metricState.SelectedMetricType, metricState.ResolutionTableName);
+            var expectedValues = expected
+                .Select(option => option.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            subtypes.ExpectedPrimaryOptionValues = expectedValues;
+
+            var actualValues = subtypes.OrderedCombos[0].OptionValues
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return expectedValues.SequenceEqual(actualValues, StringComparer.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static ParitySummarySnapshot BuildParitySummary(DistributionParitySnapshot distributionSnapshot, CombinedMetricParitySnapshot combinedSnapshot, SimpleParitySnapshot singleSnapshot, SimpleParitySnapshot multiSnapshot, SimpleParitySnapshot normalizedSnapshot, SimpleParitySnapshot weekdayTrendSnapshot, TransformParitySnapshot transformSnapshot)

@@ -9,6 +9,7 @@ public sealed class MainChartsViewResolutionResetCoordinator
         Action ClearAllCharts,
         Action ClearSelectedMetricType,
         Action ClearLastContext,
+        Action ResetDateRange,
         Action ClearMetricTypeItems,
         Action ClearDynamicSubtypeSelectors,
         Action ClearSubtypeItems,
@@ -29,6 +30,7 @@ public sealed class MainChartsViewResolutionResetCoordinator
         actions.ClearAllCharts();
         actions.ClearSelectedMetricType();
         actions.ClearLastContext();
+        actions.ResetDateRange();
         actions.ClearMetricTypeItems();
         actions.ClearDynamicSubtypeSelectors();
         actions.ClearSubtypeItems();

@@ -36,7 +36,7 @@ using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.WPF;
 using CartesianChart = LiveCharts.Wpf.CartesianChart;
-using ErrorEventArgs = DataVisualiser.UI.Events.ErrorEventArgs;
+using ErrorEventArgs = DataVisualiser.Shared.Events.ErrorEventArgs;
 
 namespace DataVisualiser.UI;
 
@@ -46,6 +46,7 @@ public partial class MainChartsView : UserControl
     private readonly MainChartsViewChartPipelineFactory _chartPipelineFactory = new();
     private readonly MainChartsViewChartPresentationCoordinator _chartPresentationCoordinator = new();
     private readonly MainChartsViewChartUpdateCoordinator _chartUpdateCoordinatorHost = new();
+    private readonly MainChartsViewDataLoadedCoordinator _dataLoadedCoordinator = new();
     private readonly MainChartsViewEvidenceExportCoordinator _evidenceExportCoordinator = new();
     private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
     private MainChartsEvidenceExportService _evidenceExportService = null!;
@@ -54,6 +55,7 @@ public partial class MainChartsView : UserControl
     private ChartState _chartState = null!;
     private readonly IChartRendererResolver _chartRendererResolver = new ChartRendererResolver();
     private readonly IChartSurfaceFactory _chartSurfaceFactory;
+    private readonly List<MainChartsEvidenceExportService.HostMessageDiagnosticsSnapshot> _recentHostMessages = new();
 
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
@@ -70,6 +72,7 @@ public partial class MainChartsView : UserControl
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isApplyingSelectionSync;
+    private const int MaxTrackedHostMessages = 20;
     private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private MainChartsViewEventBinder? _viewModelEventBinder;
 
@@ -164,24 +167,25 @@ public partial class MainChartsView : UserControl
 
     private void UpdateSelectedSubtypesInViewModel()
     {
-        var distinctSeries = GetDistinctSelectedSeries();
-        var selectedSubtypeCount = CountSelectedSubtypes(distinctSeries);
+        var selectedSeries = GetSelectedSeriesFromUi();
+        var selectedSubtypeCount = CountSelectedSubtypes(selectedSeries);
 
-        _viewModel.SetSelectedSeries(distinctSeries);
+        _viewModel.SetSelectedSeries(selectedSeries);
         UpdateSubtypeOptions(ChartControllerKeys.Normalized);
         UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
         UpdateSubtypeOptions(ChartControllerKeys.Distribution);
         UpdateSubtypeOptions(ChartControllerKeys.WeeklyTrend);
         UpdateSubtypeOptions(ChartControllerKeys.Main);
+        UpdateTransformSubtypeOptions();
 
         // Update button states based on selected subtype count
         UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
         UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
     }
 
-    private List<MetricSeriesSelection> GetDistinctSelectedSeries()
+    private List<MetricSeriesSelection> GetSelectedSeriesFromUi()
     {
-        return _selectorManager.GetSelectedSeries().GroupBy(series => series.DisplayKey, StringComparer.OrdinalIgnoreCase).Select(group => group.First()).ToList();
+        return _selectorManager.GetSelectedSeries().ToList();
     }
 
     private static int CountSelectedSubtypes(IEnumerable<MetricSeriesSelection> selections)
@@ -191,7 +195,10 @@ public partial class MainChartsView : UserControl
 
     private bool HasLoadedData()
     {
-        return _viewModel.ChartState.LastContext?.Data1 != null && _viewModel.ChartState.LastContext.Data1.Any();
+        return ChartContextSelectionGuard.IsCompatibleWithCurrentSelection(
+            _viewModel.ChartState.LastContext,
+            _viewModel.MetricState.SelectedMetricType,
+            _viewModel.MetricState.SelectedSeries);
     }
 
     private bool ShouldRefreshDateRangeForCurrentSelection()
@@ -210,6 +217,124 @@ public partial class MainChartsView : UserControl
     private static MetricNameOption? GetSelectedMetricOption(ComboBox combo)
     {
         return combo.SelectedItem as MetricNameOption;
+    }
+
+    private void ShowTrackedMessage(string title, string message, MessageBoxImage image)
+    {
+        TrackHostMessage(title, message, image);
+        MessageBox.Show(message, title, MessageBoxButton.OK, image);
+    }
+
+    private void TrackHostMessage(string title, string message, MessageBoxImage image)
+    {
+        var severity = image switch
+        {
+            MessageBoxImage.Error => "Error",
+            MessageBoxImage.Warning => "Warning",
+            MessageBoxImage.Information => "Information",
+            _ => "None"
+        };
+
+        _recentHostMessages.Add(new MainChartsEvidenceExportService.HostMessageDiagnosticsSnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            Severity = severity,
+            Title = title,
+            Message = message
+        });
+
+        if (_recentHostMessages.Count <= MaxTrackedHostMessages)
+            return;
+
+        _recentHostMessages.RemoveRange(0, _recentHostMessages.Count - MaxTrackedHostMessages);
+    }
+
+    private MainChartsEvidenceExportService.UiSurfaceDiagnosticsSnapshot CaptureEvidenceExportUiSurfaceDiagnostics()
+    {
+        var selectedMetricValue = GetSelectedMetricValue(TablesCombo);
+        var selectedMetricOption = GetSelectedMetricOption(TablesCombo);
+        var expectedDefaultFromDate = DateTime.UtcNow.Date.AddDays(-30);
+        var expectedDefaultToDate = DateTime.UtcNow.Date;
+        var orderedSubtypeCombos = _selectorManager.GetActiveCombos()
+            .Select((combo, index) => new MainChartsEvidenceExportService.SubtypeComboDiagnosticsSnapshot
+            {
+                Index = index,
+                BoundMetricType = _selectorManager.GetMetricTypeForCombo(combo)?.Value,
+                SelectedValue = GetSelectedComboValue(combo),
+                SelectedDisplay = GetSelectedComboDisplay(combo),
+                OptionCount = combo.Items.Count,
+                OptionValues = ExtractComboOptionValues(combo)
+            })
+            .ToList();
+
+        var transformSnapshot = new MainChartsEvidenceExportService.TransformUiDiagnosticsSnapshot
+        {
+            PanelVisible = TransformDataPanelController.Visibility == Visibility.Visible,
+            SecondaryPanelVisible = TransformDataPanelController.TransformSecondarySubtypePanel.Visibility == Visibility.Visible,
+            ComputeEnabled = TransformDataPanelController.TransformComputeButton.IsEnabled,
+            SelectedOperation = GetSelectedOperationTag(TransformDataPanelController.TransformOperationCombo),
+            SelectedPrimarySubtype = GetSelectedComboValue(TransformDataPanelController.TransformPrimarySubtypeCombo),
+            SelectedSecondarySubtype = GetSelectedComboValue(TransformDataPanelController.TransformSecondarySubtypeCombo),
+            PrimaryOptionCount = TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Count,
+            SecondaryOptionCount = TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Count
+        };
+
+        return new MainChartsEvidenceExportService.UiSurfaceDiagnosticsSnapshot
+        {
+            MetricType = new MainChartsEvidenceExportService.MetricTypeUiDiagnosticsSnapshot
+            {
+                SelectedValue = selectedMetricValue,
+                SelectedDisplay = selectedMetricOption?.Display ?? TablesCombo.Text,
+                OptionCount = TablesCombo.Items.Count
+            },
+            DateRange = new MainChartsEvidenceExportService.DateRangeUiDiagnosticsSnapshot
+            {
+                SelectedFromDate = FromDate.SelectedDate,
+                SelectedToDate = ToDate.SelectedDate,
+                ExpectedDefaultFromDateUtc = expectedDefaultFromDate,
+                ExpectedDefaultToDateUtc = expectedDefaultToDate,
+                MatchesExpectedDefaultWindow =
+                    FromDate.SelectedDate?.Date == expectedDefaultFromDate &&
+                    ToDate.SelectedDate?.Date == expectedDefaultToDate
+            },
+            Subtypes = new MainChartsEvidenceExportService.SubtypeUiDiagnosticsSnapshot
+            {
+                ActiveComboCount = orderedSubtypeCombos.Count,
+                PrimarySelectionMaterialized = SubtypeCombo.SelectedItem != null,
+                AllCombosBoundToSelectedMetricType = orderedSubtypeCombos.All(combo =>
+                    string.Equals(combo.BoundMetricType, selectedMetricValue, StringComparison.OrdinalIgnoreCase)),
+                OrderedCombos = orderedSubtypeCombos
+            },
+            Transform = transformSnapshot,
+            RecentMessages = _recentHostMessages.ToList()
+        };
+    }
+
+    private static string? GetSelectedComboValue(ComboBox combo)
+    {
+        return (combo.SelectedItem as MetricNameOption)?.Value ??
+               combo.SelectedValue?.ToString() ??
+               combo.SelectedItem?.ToString();
+    }
+
+    private static string? GetSelectedComboDisplay(ComboBox combo)
+    {
+        return (combo.SelectedItem as MetricNameOption)?.Display ??
+               combo.SelectedItem?.ToString();
+    }
+
+    private static IReadOnlyList<string> ExtractComboOptionValues(ComboBox combo)
+    {
+        return combo.Items
+            .OfType<MetricNameOption>()
+            .Select(option => option.Value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToList();
+    }
+
+    private static string? GetSelectedOperationTag(ComboBox combo)
+    {
+        return combo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() : null;
     }
 
     /// <summary>
@@ -297,8 +422,18 @@ public partial class MainChartsView : UserControl
 
         if (TablesCombo.Items.Count > 0)
         {
-            TablesCombo.SelectedIndex = addedAllMetricType && TablesCombo.Items.Count > 1 ? 1 : 0;
-            _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
+            _isApplyingSelectionSync = true;
+            try
+            {
+                using var selectionBatch = _viewModel.BeginSelectionStateBatch();
+                TablesCombo.SelectedIndex = addedAllMetricType && TablesCombo.Items.Count > 1 ? 1 : 0;
+                _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
+            }
+            finally
+            {
+                _isApplyingSelectionSync = false;
+            }
+
             _viewModel.LoadSubtypesCommand.Execute(null);
         }
         else
@@ -318,23 +453,29 @@ public partial class MainChartsView : UserControl
         _subtypeList = subtypeListLocal;
         var selectedMetricType = GetSelectedMetricOption(TablesCombo);
 
+        _isApplyingSelectionSync = true;
+        try
+        {
+            using var comboSuppression = _selectorManager.SuppressSelectionChanged();
+            using var selectionBatch = _viewModel.BeginSelectionStateBatch();
+
+            RefreshPrimarySubtypeCombo(subtypeListLocal, false, selectedMetricType);
+            BuildDynamicSubtypeControls(subtypeListLocal);
+            UpdateSelectedSubtypesInViewModel();
+        }
+        finally
+        {
+            _isApplyingSelectionSync = false;
+        }
+
         if (_isMetricTypeChangePending)
         {
-            if (_selectorManager.HasDynamicCombos)
-                _selectorManager.UpdateLastDynamicComboItems(subtypeListLocal, selectedMetricType);
-            else
-                RefreshPrimarySubtypeCombo(subtypeListLocal, true, selectedMetricType);
-
             _isMetricTypeChangePending = false;
-            UpdateSelectedSubtypesInViewModel();
+            _ = LoadDateRangeForSelectedMetrics();
 
             return;
         }
 
-        RefreshPrimarySubtypeCombo(subtypeListLocal, false, selectedMetricType);
-
-        BuildDynamicSubtypeControls(subtypeListLocal);
-        UpdateSelectedSubtypesInViewModel();
         if (!HasLoadedData() && ShouldRefreshDateRangeForCurrentSelection())
             _ = LoadDateRangeForSelectedMetrics();
 
@@ -414,15 +555,13 @@ public partial class MainChartsView : UserControl
         if (_subtypeList == null || _subtypeList.Count == 0)
             return;
 
-        var selections = _viewModel.MetricState.SelectedSeries
-            .GroupBy(series => series.DisplayKey, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.First())
-            .ToList();
+        var selections = _viewModel.MetricState.SelectedSeries.ToList();
 
         if (selections.Count == 0)
             return;
 
         var metricType = GetSelectedMetricOption(TablesCombo);
+        using var comboSuppression = _selectorManager.SuppressSelectionChanged();
         _selectorManager.ClearDynamic();
         _selectorManager.SetPrimaryMetricType(metricType);
 
@@ -468,29 +607,11 @@ public partial class MainChartsView : UserControl
     private void BuildDynamicSubtypeControls(IEnumerable<MetricNameOption> subtypes)
     {
         _selectorManager.ClearDynamic();
-        UpdateSelectedSubtypesInViewModel();
     }
 
     private void RefreshPrimarySubtypeCombo(IEnumerable<MetricNameOption> subtypes, bool preserveSelection, MetricNameOption? selectedMetricType)
     {
-        var previousSelection = GetSelectedMetricValue(SubtypeCombo);
-
-        SubtypeCombo.Items.Clear();
-
-        foreach (var st in subtypes)
-            SubtypeCombo.Items.Add(st);
-
-        SubtypeCombo.IsEnabled = subtypes.Any();
-        _selectorManager.SetPrimaryMetricType(selectedMetricType);
-
-        if (preserveSelection && !string.IsNullOrWhiteSpace(previousSelection) && SubtypeCombo.Items.OfType<MetricNameOption>().Any(item => string.Equals(item.Value, previousSelection, StringComparison.OrdinalIgnoreCase)))
-        {
-            SubtypeCombo.SelectedItem = SubtypeCombo.Items.OfType<MetricNameOption>().First(item => string.Equals(item.Value, previousSelection, StringComparison.OrdinalIgnoreCase));
-            return;
-        }
-
-        if (SubtypeCombo.Items.Count > 0)
-            SubtypeCombo.SelectedIndex = 0;
+        _selectorManager.ReplacePrimaryItems(subtypes, selectedMetricType, preserveSelection);
     }
 
     private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
@@ -516,22 +637,11 @@ public partial class MainChartsView : UserControl
 
             var msg = $"Data1 count: {data1.Count}\n" + $"Data2 count: {data2.Count}\n" + $"First 3 timestamps (Data1):\n" + string.Join("\n", data1.Take(3).Select(d => d.NormalizedTimestamp)) + "\n\nFirst 3 timestamps (Data2):\n" + string.Join("\n", data2.Take(3).Select(d => d.NormalizedTimestamp));
 
-            MessageBox.Show(msg, "DEBUG - LastContext contents");
+            ShowTrackedMessage("DEBUG - LastContext contents", msg, MessageBoxImage.Information);
         }
 
-        CompleteTransformSelectionsPendingLoad();
-        UpdateSubtypeOptions(ChartControllerKeys.Normalized);
-        UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
-        UpdateSubtypeOptions(ChartControllerKeys.Main);
-        UpdateTransformSubtypeOptions();
-        UpdateTransformComputeButtonState();
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
-        UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
-        UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
-
-        await RenderChartAsync(ChartControllerKeys.BarPie, ctx);
-
-        await RenderChartsFromLastContext();
+        await _dataLoadedCoordinator.HandleAsync(ctx, selectedSubtypeCount, CreateDataLoadedActions());
     }
 
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
@@ -697,7 +807,7 @@ public partial class MainChartsView : UserControl
             return;
         }
 
-        MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        ShowTrackedMessage("Error", e.Message, MessageBoxImage.Error);
         ClearAllCharts();
     }
 
@@ -754,7 +864,8 @@ public partial class MainChartsView : UserControl
             _metricSelectionService,
             () => _strategyCutOverService,
             () => ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras transformController ? transformController.GetSelectedOperationTag() : null,
-            () => ResolveController(ChartControllerKeys.BarPie) is IBarPieChartControllerExtras barPieController ? barPieController.GetDisplayMode() : "Bar");
+            () => ResolveController(ChartControllerKeys.BarPie) is IBarPieChartControllerExtras barPieController ? barPieController.GetDisplayMode() : "Bar",
+            CaptureEvidenceExportUiSurfaceDiagnostics);
 
         InitializeTooltipManager();
     }
@@ -1217,6 +1328,7 @@ public partial class MainChartsView : UserControl
                 ClearAllCharts,
                 () => _viewModel.MetricState.SelectedMetricType = null,
                 () => _viewModel.ChartState.LastContext = new ChartDataContext(),
+                ResetDateRangeToDefault,
                 () => TablesCombo.Items.Clear(),
                 () => _selectorManager.ClearDynamic(),
                 () => SubtypeCombo.Items.Clear(),
@@ -1225,6 +1337,16 @@ public partial class MainChartsView : UserControl
                 () => _viewModel.LoadMetricsCommand.Execute(null),
                 UpdatePrimaryDataRequiredButtonStates,
                 UpdateSecondaryDataRequiredButtonStates));
+    }
+
+    private void ResetDateRangeToDefault()
+    {
+        var initialFromDate = DateTime.UtcNow.AddDays(-30);
+        var initialToDate = DateTime.UtcNow;
+
+        _viewModel.SetDateRange(initialFromDate, initialToDate);
+        FromDate.SelectedDate = _viewModel.MetricState.FromDate;
+        ToDate.SelectedDate = _viewModel.MetricState.ToDate;
     }
 
     /// <summary>
@@ -1238,8 +1360,27 @@ public partial class MainChartsView : UserControl
         if (_viewModel.UiState.IsLoadingMetricTypes)
             return;
 
+        var selectedMetricType = GetSelectedMetricValue(TablesCombo);
         _isMetricTypeChangePending = true;
-        _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
+        _isApplyingSelectionSync = true;
+        try
+        {
+            using var selectionBatch = _viewModel.BeginSelectionStateBatch();
+            _subtypeList = null;
+            // A metric-type change invalidates the loaded chart context. Clear it now so
+            // subsequent subtype changes refresh the new metric family's date range instead
+            // of rerendering stale chart data from the previous metric selection.
+            ClearAllCharts();
+            _viewModel.SetSelectedMetricType(selectedMetricType);
+            _selectorManager.ClearAllSubtypeControls();
+            UpdateSelectedSubtypesInViewModel();
+            UpdateChartTitlesFromSelections();
+        }
+        finally
+        {
+            _isApplyingSelectionSync = false;
+        }
+
         _viewModel.LoadSubtypesCommand.Execute(null);
     }
 
@@ -1254,6 +1395,9 @@ public partial class MainChartsView : UserControl
             return;
 
         UpdateSelectedSubtypesInViewModel();
+
+        if (_viewModel.ChartState.LastContext != null && !HasLoadedData())
+            ClearAllCharts();
 
         if (HasLoadedData())
         {
@@ -1300,23 +1444,25 @@ public partial class MainChartsView : UserControl
         var selectedMetricType = GetSelectedMetricValue(TablesCombo);
         if (selectedMetricType == null)
         {
-            MessageBox.Show("Please select a Metric Type", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ShowTrackedMessage("No Selection", "Please select a Metric Type", MessageBoxImage.Warning);
             return Task.FromResult(false);
         }
 
-        _viewModel.SetSelectedMetricType(selectedMetricType);
-        UpdateSelectedSubtypesInViewModel();
-
-        UpdateChartTitlesFromSelections();
-
         var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
         var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
-        _viewModel.SetDateRange(fromDate, toDate);
+        using (var selectionBatch = _viewModel.BeginSelectionStateBatch())
+        {
+            _viewModel.SetSelectedMetricType(selectedMetricType);
+            UpdateSelectedSubtypesInViewModel();
+            _viewModel.SetDateRange(fromDate, toDate);
+        }
+
+        UpdateChartTitlesFromSelections();
 
         var (isValid, errorMessage) = _viewModel.ValidateDataLoadRequirements();
         if (!isValid)
         {
-            MessageBox.Show(errorMessage ?? "The current selection is not valid.", "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+            ShowTrackedMessage("Invalid Selection", errorMessage ?? "The current selection is not valid.", MessageBoxImage.Warning);
             return Task.FromResult(false);
         }
 
@@ -1345,7 +1491,7 @@ public partial class MainChartsView : UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Error loading data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowTrackedMessage("Error", $"Error loading data: {ex.Message}", MessageBoxImage.Error);
             ClearAllCharts();
         }
     }
@@ -1355,11 +1501,14 @@ public partial class MainChartsView : UserControl
         if (_subtypeList == null || !_subtypeList.Any())
             return;
 
-        var metricType = GetSelectedMetricOption(TablesCombo);
-        var newCombo = _selectorManager.AddSubtypeCombo(_subtypeList, metricType);
-        newCombo.SelectedIndex = 0;
-        newCombo.IsEnabled = true;
+        using (var comboSuppression = _selectorManager.SuppressSelectionChanged())
+        {
+            _selectorManager.EnsurePrimarySelection();
+            var metricType = GetSelectedMetricOption(TablesCombo);
+            _selectorManager.AddSubtypeCombo(_subtypeList, metricType);
+        }
 
+        using var selectionBatch = _viewModel.BeginSelectionStateBatch();
         UpdateChartTitlesFromSelections();
         UpdateSelectedSubtypesInViewModel();
     }
@@ -1408,7 +1557,7 @@ public partial class MainChartsView : UserControl
     private void UpdateChartTitlesFromSelections()
     {
         _chartPresentationCoordinator.UpdateTitlesFromSelections(
-            GetDistinctSelectedSeries(),
+            GetSelectedSeriesFromUi(),
             _viewModel.ChartState.IsDiffRatioDifferenceMode,
             CreateChartPresentationActions());
     }
@@ -1448,14 +1597,27 @@ public partial class MainChartsView : UserControl
             ClearChart);
     }
 
+    private MainChartsViewDataLoadedCoordinator.Actions CreateDataLoadedActions()
+    {
+        return new MainChartsViewDataLoadedCoordinator.Actions(
+            CompleteTransformSelectionsPendingLoad,
+            UpdateSubtypeOptions,
+            UpdateTransformSubtypeOptions,
+            UpdateTransformComputeButtonState,
+            UpdatePrimaryDataRequiredButtonStates,
+            UpdateSecondaryDataRequiredButtonStates,
+            RenderChartAsync,
+            RenderChartsFromLastContext);
+    }
+
     private MainChartsViewEvidenceExportCoordinator.Actions CreateEvidenceExportActions()
     {
         return new MainChartsViewEvidenceExportCoordinator.Actions(
             (chartState, metricState, utcNow) => _evidenceExportService.ExportAsync(chartState, metricState, utcNow),
             () => _evidenceExportService.ClearEvidence(),
-            (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information),
-            (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning),
-            (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error));
+            (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Information),
+            (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Warning),
+            (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Error));
     }
 
     #endregion

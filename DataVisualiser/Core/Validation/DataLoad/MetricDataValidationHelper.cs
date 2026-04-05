@@ -1,5 +1,5 @@
+using DataVisualiser.Shared.Events;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Events;
 
 namespace DataVisualiser.Core.Validation.DataLoad;
 

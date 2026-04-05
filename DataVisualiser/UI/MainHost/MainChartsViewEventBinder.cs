@@ -1,3 +1,4 @@
+using DataVisualiser.Shared.Events;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.ViewModels;
 

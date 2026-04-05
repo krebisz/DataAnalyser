@@ -47,6 +47,28 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
             }
         }
 
+        var selectedSeries = request.SelectedSeries?
+            .Where(selection => selection.QuerySubtype != null)
+            .ToList();
+
+        if (selectedSeries != null && selectedSeries.Count > 0)
+        {
+            var (resolvedSeries, resolvedLabels, resolvedCmsSeries) =
+                await BuildSeriesFromSelectionsAsync(request.Context, selectedSeries, request.ResolutionTableName);
+
+            if (resolvedSeries.Count > 0)
+            {
+                var selectedWorkingContext = BuildWorkingContext(request.Context, selectedSeries, resolvedCmsSeries, resolvedSeries.Count);
+                return new MainChartPreparedData(
+                    selectedWorkingContext,
+                    resolvedSeries,
+                    resolvedLabels,
+                    request.IsStacked,
+                    request.IsCumulative,
+                    request.OverlaySeries);
+            }
+        }
+
         var (series, labels) = BuildSeriesAndLabels(request.Context, request.AdditionalSeries, request.AdditionalLabels);
         var cmsSeries = BuildInitialCmsSeries(request.Context);
 
@@ -220,6 +242,48 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
             cmsSeries.Add(secondaryCms);
 
         return cmsSeries;
+    }
+
+    private static ChartDataContext BuildWorkingContext(
+        ChartDataContext context,
+        IReadOnlyList<MetricSeriesSelection> selections,
+        IReadOnlyList<ICanonicalMetricSeries>? cmsSeries,
+        int seriesCount)
+    {
+        var primarySelection = selections.Count > 0 ? selections[0] : null;
+        var secondarySelection = selections.Count > 1 ? selections[1] : null;
+
+        return new ChartDataContext
+        {
+            PrimaryCms = context.PrimaryCms,
+            SecondaryCms = context.SecondaryCms,
+            CmsSeries = cmsSeries != null && cmsSeries.Count == seriesCount ? cmsSeries.ToList() : null,
+            Data1 = context.Data1,
+            Data2 = context.Data2,
+            Timestamps = context.Timestamps,
+            RawValues1 = context.RawValues1,
+            RawValues2 = context.RawValues2,
+            SmoothedValues1 = context.SmoothedValues1,
+            SmoothedValues2 = context.SmoothedValues2,
+            DifferenceValues = context.DifferenceValues,
+            RatioValues = context.RatioValues,
+            NormalizedValues1 = context.NormalizedValues1,
+            NormalizedValues2 = context.NormalizedValues2,
+            DisplayName1 = primarySelection?.DisplayName ?? context.DisplayName1,
+            DisplayName2 = secondarySelection?.DisplayName ?? string.Empty,
+            ActualSeriesCount = seriesCount,
+            MetricType = primarySelection?.MetricType ?? context.MetricType,
+            PrimaryMetricType = primarySelection?.MetricType ?? context.PrimaryMetricType,
+            SecondaryMetricType = secondarySelection?.MetricType,
+            PrimarySubtype = primarySelection?.Subtype ?? context.PrimarySubtype,
+            SecondarySubtype = secondarySelection?.Subtype,
+            DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? context.DisplayPrimaryMetricType,
+            DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType,
+            DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? context.DisplayPrimarySubtype,
+            DisplaySecondarySubtype = secondarySelection?.DisplaySubtype,
+            From = context.From,
+            To = context.To
+        };
     }
 
     private static ChartDataContext BuildWorkingContext(

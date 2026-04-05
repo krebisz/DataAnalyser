@@ -184,6 +184,60 @@ public sealed class TransformDataPanelControllerAdapterTests
     }
 
     [Fact]
+    public void HandleVisibilityOnlyToggle_WhenSecondarySelectionExistsOutsideLastContext_EnablesBinaryOperations()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var adapter = CreateAdapter(out var viewModel, out var controller, out var tooltipManager, out var window);
+
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem { Tag = "Log", Content = "Log" });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem { Tag = "Add", Content = "Add" });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem { Tag = "Subtract", Content = "Subtract" });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem { Tag = "Divide", Content = "Divide" });
+
+            viewModel.ChartState.IsTransformPanelVisible = true;
+            viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
+            {
+                new("MetricA", "SubA", "MetricA", "SubA"),
+                new("MetricB", "SubB", "MetricB", "SubB")
+            });
+
+            var data = new List<MetricData>
+            {
+                new()
+                {
+                    NormalizedTimestamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Value = 1m
+                }
+            };
+
+            var ctx = new ChartDataContext
+            {
+                Data1 = data,
+                MetricType = "MetricA",
+                PrimaryMetricType = "MetricA",
+                PrimarySubtype = "SubA",
+                DisplayPrimaryMetricType = "MetricA",
+                DisplayPrimarySubtype = "SubA",
+                DisplayName1 = "MetricA:SubA",
+                From = data[0].NormalizedTimestamp,
+                To = data[0].NormalizedTimestamp
+            };
+
+            viewModel.ChartState.LastContext = ctx;
+
+            adapter.HandleVisibilityOnlyToggle(ctx);
+
+            Assert.True(GetOperationItem(controller, "Add").IsEnabled);
+            Assert.True(GetOperationItem(controller, "Subtract").IsEnabled);
+            Assert.True(GetOperationItem(controller, "Divide").IsEnabled);
+
+            tooltipManager.Dispose();
+            window.Close();
+        });
+    }
+
+    [Fact]
     public async Task RefreshTransformGridsFromSelectionAsync_EnablesBinaryCompute_WhenSecondarySelectionExistsOutsideLastContext()
     {
         await StaTestHelper.RunAsync(async () =>
@@ -228,6 +282,16 @@ public sealed class TransformDataPanelControllerAdapterTests
                 Tag = "Add",
                 Content = "Add"
             });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Subtract",
+                Content = "Subtract"
+            });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Divide",
+                Content = "Divide"
+            });
 
             adapter.UpdateTransformSubtypeOptions();
             controller.TransformOperationCombo.SelectedIndex = 0;
@@ -239,6 +303,164 @@ public sealed class TransformDataPanelControllerAdapterTests
             await task;
 
             Assert.True(controller.TransformComputeButton.IsEnabled);
+
+            tooltipManager.Dispose();
+            window.Close();
+        });
+    }
+
+    [Fact]
+    public async Task ExecuteTransformOperation_ComputesBinaryTransform_WhenSecondarySelectionExistsOutsideLastContext()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var adapter = CreateAdapter(
+                out var viewModel,
+                out var controller,
+                out var tooltipManager,
+                out var window,
+                new ReturningMetricSelectionDataQueries());
+
+            viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
+            {
+                new("MetricA", "SubA", "MetricA", "SubA"),
+                new("MetricB", "SubB", "MetricB", "SubB")
+            });
+
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Add",
+                Content = "Add"
+            });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Subtract",
+                Content = "Subtract"
+            });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Divide",
+                Content = "Divide"
+            });
+
+            var data = new List<MetricData>
+            {
+                new()
+                {
+                    NormalizedTimestamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Value = 1m
+                }
+            };
+
+            var ctx = new ChartDataContext
+            {
+                Data1 = data,
+                MetricType = "MetricA",
+                PrimaryMetricType = "MetricA",
+                PrimarySubtype = "SubA",
+                DisplayPrimaryMetricType = "MetricA",
+                DisplayPrimarySubtype = "SubA",
+                DisplayName1 = "MetricA:SubA",
+                From = data[0].NormalizedTimestamp,
+                To = data[0].NormalizedTimestamp
+            };
+
+            viewModel.ChartState.LastContext = ctx;
+
+            adapter.UpdateTransformSubtypeOptions();
+            controller.TransformOperationCombo.SelectedIndex = 0;
+
+            var method = typeof(TransformDataPanelControllerAdapter).GetMethod("ExecuteTransformOperation", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(method);
+
+            var task = (Task)method!.Invoke(adapter, new object?[] { ctx, "Add" })!;
+            await task;
+
+            var items = controller.TransformGrid3.ItemsSource as IEnumerable;
+            Assert.NotNull(items);
+
+            var list = items.Cast<object>().ToList();
+            Assert.Single(list);
+
+            var first = list[0];
+            var valueProp = first.GetType().GetProperty("Value");
+            Assert.Equal("3.0000", valueProp?.GetValue(first));
+            Assert.Equal(Visibility.Visible, controller.TransformGrid3Panel.Visibility);
+            Assert.Equal(Visibility.Visible, controller.TransformChartContentPanel.Visibility);
+
+            tooltipManager.Dispose();
+            window.Close();
+        });
+    }
+
+    [Fact]
+    public async Task RenderAsync_WhenSecondarySeriesIsAddedWithoutReload_RefreshesTransformPanelFromSelection()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var adapter = CreateAdapter(
+                out var viewModel,
+                out var controller,
+                out var tooltipManager,
+                out var window,
+                new ReturningMetricSelectionDataQueries());
+
+            viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
+            {
+                new("MetricA", "SubA", "MetricA", "SubA"),
+                new("MetricB", "SubB", "MetricB", "SubB")
+            });
+
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Add",
+                Content = "Add"
+            });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Subtract",
+                Content = "Subtract"
+            });
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Divide",
+                Content = "Divide"
+            });
+
+            var data = new List<MetricData>
+            {
+                new()
+                {
+                    NormalizedTimestamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Value = 1m
+                }
+            };
+
+            var ctx = new ChartDataContext
+            {
+                Data1 = data,
+                MetricType = "MetricA",
+                PrimaryMetricType = "MetricA",
+                PrimarySubtype = "SubA",
+                DisplayPrimaryMetricType = "MetricA",
+                DisplayPrimarySubtype = "SubA",
+                DisplayName1 = "MetricA:SubA",
+                From = data[0].NormalizedTimestamp,
+                To = data[0].NormalizedTimestamp
+            };
+
+            viewModel.ChartState.LastContext = ctx;
+            controller.TransformOperationCombo.SelectedIndex = 0;
+
+            await adapter.RenderAsync(ctx);
+
+            Assert.Equal(Visibility.Visible, controller.TransformSecondarySubtypePanel.Visibility);
+            Assert.True(controller.TransformSecondarySubtypeCombo.IsEnabled);
+            Assert.NotNull(controller.TransformGrid2.ItemsSource);
+            Assert.True(controller.TransformComputeButton.IsEnabled);
+            Assert.True(GetOperationItem(controller, "Add").IsEnabled);
+            Assert.True(GetOperationItem(controller, "Subtract").IsEnabled);
+            Assert.True(GetOperationItem(controller, "Divide").IsEnabled);
 
             tooltipManager.Dispose();
             window.Close();
@@ -394,5 +616,10 @@ public sealed class TransformDataPanelControllerAdapterTests
         {
             return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
         }
+    }
+
+    private static ComboBoxItem GetOperationItem(ITransformDataPanelController controller, string tag)
+    {
+        return controller.TransformOperationCombo.Items.Cast<ComboBoxItem>().First(item => string.Equals(item.Tag?.ToString(), tag, StringComparison.Ordinal));
     }
 }

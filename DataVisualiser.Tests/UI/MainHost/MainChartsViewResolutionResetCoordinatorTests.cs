@@ -19,6 +19,7 @@ public sealed class MainChartsViewResolutionResetCoordinatorTests
                 () => calls.Add("clear-charts"),
                 () => calls.Add("clear-metric"),
                 () => calls.Add("clear-context"),
+                () => calls.Add("reset-dates"),
                 () => calls.Add("clear-metric-items"),
                 () => calls.Add("clear-dynamic"),
                 () => calls.Add("clear-subtypes"),
@@ -35,7 +36,7 @@ public sealed class MainChartsViewResolutionResetCoordinatorTests
         Assert.Equal(DataAccessDefaults.DefaultTableName, tableName);
         Assert.Contains("reload", calls);
         Assert.Equal(
-            ["start", "clear-charts", "clear-metric", "clear-context", "clear-metric-items", "clear-dynamic", "clear-subtypes", "disable-subtype", $"table:{DataAccessDefaults.DefaultTableName}", "reload", "primary:0", "secondary:0"],
+            ["start", "clear-charts", "clear-metric", "clear-context", "reset-dates", "clear-metric-items", "clear-dynamic", "clear-subtypes", "disable-subtype", $"table:{DataAccessDefaults.DefaultTableName}", "reload", "primary:0", "secondary:0"],
             calls);
     }
 

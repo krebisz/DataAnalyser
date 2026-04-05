@@ -51,13 +51,15 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     public override string Key => ChartControllerKeys.Transform;
     public override bool RequiresPrimaryData => true;
     public override bool RequiresSecondaryData => false;
-    public override Task RenderAsync(ChartDataContext context)
+    public override async Task RenderAsync(ChartDataContext context)
     {
         if (!_viewModel.ChartState.IsTransformPanelVisible)
-            return Task.CompletedTask;
+            return;
 
-        PopulateTransformGrids(context);
-        return Task.CompletedTask;
+        UpdateTransformSubtypeOptions();
+        var (_, _, transformContext) = await ResolveTransformDataAsync(context);
+        PopulateTransformGrids(transformContext);
+        UpdateTransformComputeButtonState();
     }
 
     public override void Clear(ChartState state)
@@ -227,21 +229,21 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         PopulateTransformGrid(ctx.Data1, _controller.TransformGrid1, _controller.TransformGrid1Title, ctx.DisplayName1 ?? "Primary Data", true);
 
         var hasSecondary = HasSecondaryData(ctx) && !string.IsNullOrEmpty(ctx.SecondarySubtype) && ctx.Data2 != null;
+        var hasAvailableSecondaryInput = hasSecondary || ResolveSelectedTransformSecondarySeries(ctx) != null;
 
         if (hasSecondary)
         {
             _controller.TransformGrid2Panel.Visibility = Visibility.Visible;
 
             PopulateTransformGrid(ctx.Data2, _controller.TransformGrid2, _controller.TransformGrid2Title, ctx.DisplayName2 ?? "Secondary Data", false);
-
-            SetBinaryTransformOperationsEnabled(true);
         }
         else
         {
             _controller.TransformGrid2Panel.Visibility = Visibility.Collapsed;
             _controller.TransformGrid2.ItemsSource = null;
-            SetBinaryTransformOperationsEnabled(false);
         }
+
+        SetBinaryTransformOperationsEnabled(hasAvailableSecondaryInput);
 
         if (resetResults)
             ResetTransformResultState();
@@ -273,7 +275,11 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     private void SetBinaryTransformOperationsEnabled(bool enabled)
     {
-        var binaryItems = _controller.TransformOperationCombo.Items.Cast<ComboBoxItem>().Where(i => i.Tag?.ToString() == "Add" || i.Tag?.ToString() == "Subtract");
+        var binaryItems = _controller.TransformOperationCombo.Items.Cast<ComboBoxItem>().Where(i =>
+        {
+            var tag = i.Tag?.ToString();
+            return tag == "Add" || tag == "Subtract" || tag == "Divide";
+        });
 
         foreach (var item in binaryItems)
             item.IsEnabled = enabled;
@@ -335,6 +341,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         {
             _controller.TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
             _controller.TransformSecondarySubtypeCombo.IsEnabled = true;
+            SetBinaryTransformOperationsEnabled(true);
 
             var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySeries;
 
@@ -349,6 +356,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
             _controller.TransformSecondarySubtypeCombo.IsEnabled = false;
             _controller.TransformSecondarySubtypeCombo.SelectedItem = null;
             _viewModel.ChartState.SelectedTransformSecondarySeries = null;
+            SetBinaryTransformOperationsEnabled(false);
         }
     }
 
@@ -366,7 +374,6 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     {
         var isUnary = IsUnaryTransformOperation(operationTag);
         var isBinary = IsBinaryTransformOperation(operationTag);
-        var hasSecondary = HasSecondaryData(ctx) && ResolveSelectedTransformSecondarySeries(ctx) != null;
 
         var (primaryData, secondaryData, transformContext) = await ResolveTransformDataAsync(ctx);
         if (primaryData == null)
@@ -374,7 +381,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
         if (isUnary)
             await ComputeUnaryTransform(primaryData, operationTag, transformContext);
-        else if (isBinary && hasSecondary && secondaryData != null)
+        else if (isBinary && secondaryData != null && secondaryData.Any())
             await ComputeBinaryTransform(primaryData, secondaryData, operationTag, transformContext);
     }
 

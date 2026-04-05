@@ -1,0 +1,357 @@
+{
+  "ExportedAtUtc": "2026-04-05T13:52:25.7435397Z",
+  "MetricState": {
+    "SelectedMetricType": "SkinTemperature",
+    "FromDate": "2023-08-18T19:46:00",
+    "ToDate": "2023-11-22T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeries": [
+      {
+        "MetricType": "SkinTemperature",
+        "Subtype": "baseline",
+        "DisplayMetricType": "Skin Temperature",
+        "DisplaySubtype": "Baseline",
+        "DisplayName": "Skin Temperature - Baseline",
+        "DisplayKey": "SkinTemperature:baseline"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": false,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": false,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 0,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 25
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "Bar"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [
+    {
+      "StrategyType": 0,
+      "UsedCms": true,
+      "CmsRequested": true,
+      "GlobalCmsEnabled": true,
+      "StrategyCmsEnabled": true,
+      "RealCmsSupported": true,
+      "DecisionReason": "Primary CMS data available",
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 106,
+      "SecondarySamples": 0,
+      "CmsSeriesCount": 1,
+      "ActualSeriesCount": 1,
+      "From": "2023-08-18T19:46:00",
+      "To": "2023-11-22T00:00:00",
+      "TimestampUtc": "2026-04-05T13:52:21.5814827Z"
+    },
+    {
+      "StrategyType": 0,
+      "UsedCms": true,
+      "CmsRequested": true,
+      "GlobalCmsEnabled": true,
+      "StrategyCmsEnabled": true,
+      "RealCmsSupported": true,
+      "DecisionReason": "Primary CMS data available",
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 106,
+      "SecondarySamples": 0,
+      "CmsSeriesCount": 1,
+      "ActualSeriesCount": 1,
+      "From": "2023-08-18T19:46:00",
+      "To": "2023-11-22T00:00:00",
+      "TimestampUtc": "2026-04-05T13:52:21.5823345Z"
+    },
+    {
+      "StrategyType": 0,
+      "UsedCms": true,
+      "CmsRequested": true,
+      "GlobalCmsEnabled": true,
+      "StrategyCmsEnabled": true,
+      "RealCmsSupported": true,
+      "DecisionReason": "Primary CMS data available",
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": false,
+      "PrimarySamples": 106,
+      "SecondarySamples": 0,
+      "CmsSeriesCount": 1,
+      "ActualSeriesCount": 1,
+      "From": "2023-08-18T19:46:00",
+      "To": "2023-11-22T00:00:00",
+      "TimestampUtc": "2026-04-05T13:52:21.5828337Z"
+    }
+  ],
+  "DistributionParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Selection": {
+      "MetricType": "SkinTemperature",
+      "Subtype": "baseline",
+      "DisplayMetricType": "Skin Temperature",
+      "DisplaySubtype": "Baseline",
+      "DisplayName": "Skin Temperature - Baseline",
+      "DisplayKey": "SkinTemperature:baseline"
+    },
+    "DataSource": "ChartContext.Primary",
+    "LegacySamples": 106,
+    "CmsSamplesTotal": 106,
+    "CmsSamplesInRange": 106,
+    "Weekly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    },
+    "Hourly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "CombinedMetricParity": {
+    "Status": "CmsUnavailable",
+    "Reason": "Combined metric CMS series missing",
+    "Result": null
+  },
+  "SingleMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "MultiMetricParity": {
+    "Status": "Unavailable",
+    "Reason": "At least three series required",
+    "Result": null
+  },
+  "NormalizedParity": {
+    "Status": "CmsUnavailable",
+    "Reason": "CMS series missing",
+    "Result": null
+  },
+  "WeekdayTrendParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "TransformParity": {
+    "Status": "Unavailable",
+    "Reason": "No transform operation selected",
+    "Operation": null,
+    "IsUnary": false,
+    "ExpressionAvailable": false,
+    "LegacySamples": 0,
+    "NewSamples": 0,
+    "Result": null
+  },
+  "ParitySummary": {
+    "Status": "Completed",
+    "OverallPassed": true,
+    "WeeklyPassed": true,
+    "HourlyPassed": true,
+    "CombinedMetricPassed": null,
+    "SingleMetricPassed": true,
+    "MultiMetricPassed": null,
+    "NormalizedPassed": null,
+    "WeekdayTrendPassed": true,
+    "TransformPassed": null,
+    "StrategiesEvaluated": [
+      "WeeklyDistribution",
+      "HourlyDistribution",
+      "CombinedMetric",
+      "SingleMetric",
+      "MultiMetric",
+      "Normalized",
+      "WeekdayTrend",
+      "Transform"
+    ]
+  },
+  "ParityWarnings": [
+    "CombinedMetric parity not completed: Combined metric CMS series missing",
+    "MultiMetric parity not completed: At least three series required",
+    "Normalized parity not completed: CMS series missing",
+    "Transform parity not completed: No transform operation selected",
+    "Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+  ],
+  "Diagnostics": {
+    "Selection": {
+      "SelectedMetricType": "SkinTemperature",
+      "SelectedSeriesCount": 1,
+      "DistinctDisplayKeyCount": 1,
+      "OrderedSeries": [
+        {
+          "Index": 0,
+          "MetricType": "SkinTemperature",
+          "Subtype": "baseline",
+          "DisplayName": "Skin Temperature - Baseline",
+          "DisplayKey": "SkinTemperature:baseline",
+          "MatchesLoadedPrimary": true,
+          "MatchesLoadedSecondary": false,
+          "RequiresOnDemandResolution": false
+        }
+      ]
+    },
+    "LoadedContext": {
+      "Present": true,
+      "ReusableForCurrentSelection": true,
+      "MetricType": "SkinTemperature",
+      "PrimaryMetricType": "SkinTemperature",
+      "SecondaryMetricType": null,
+      "PrimarySubtype": "baseline",
+      "SecondarySubtype": null,
+      "DisplayName1": "Skin Temperature - Baseline",
+      "DisplayName2": "Skin Temperature - Baseline",
+      "ActualSeriesCount": 1,
+      "Data1Count": 106,
+      "Data2Count": 0,
+      "CmsSeriesCount": 1,
+      "From": "2023-08-18T19:46:00",
+      "To": "2023-11-22T00:00:00"
+    },
+    "MainChartPipeline": {
+      "ExpectedSeriesFromSelection": 1,
+      "ExpectedBaseSeriesLoad": 1,
+      "ExpectedAdditionalSeriesLoad": 0,
+      "ContextActualSeriesCount": 1,
+      "MultiMetricRequested": false,
+      "ContextLikelyStaleForSelection": false
+    },
+    "Reachability": {
+      "RecordCount": 3,
+      "MaxActualSeriesCount": 1,
+      "MaxCmsSeriesCount": 1,
+      "LatestStrategy": "SingleMetric",
+      "LatestActualSeriesCount": 1,
+      "LatestCmsSeriesCount": 1,
+      "LatestDecisionReason": "Primary CMS data available",
+      "LatestTimestampUtc": "2026-04-05T13:52:21.5828337Z"
+    },
+    "UiSurface": {
+      "MetricType": {
+        "SelectedValue": "SkinTemperature",
+        "SelectedDisplay": "Skin Temperature",
+        "OptionCount": 11
+      },
+      "DateRange": {
+        "SelectedFromDate": "2023-08-18T19:46:00",
+        "SelectedToDate": "2023-11-22T00:00:00",
+        "ExpectedDefaultFromDateUtc": "2026-03-06T00:00:00Z",
+        "ExpectedDefaultToDateUtc": "2026-04-05T00:00:00Z",
+        "MatchesExpectedDefaultWindow": false
+      },
+      "Subtypes": {
+        "ActiveComboCount": 1,
+        "PrimarySelectionMaterialized": true,
+        "AllCombosBoundToSelectedMetricType": true,
+        "PrimaryOptionsMatchSelectedMetric": true,
+        "ExpectedPrimaryOptionValues": [
+          "baseline",
+          "lower_bound",
+          "max",
+          "min",
+          "stat_m1",
+          "stat_m2",
+          "stat_n",
+          "temperature",
+          "upper_bound"
+        ],
+        "OrderedCombos": [
+          {
+            "Index": 0,
+            "BoundMetricType": "SkinTemperature",
+            "SelectedValue": "baseline",
+            "SelectedDisplay": "Baseline",
+            "OptionCount": 9,
+            "OptionValues": [
+              "baseline",
+              "lower_bound",
+              "max",
+              "min",
+              "stat_m1",
+              "stat_m2",
+              "stat_n",
+              "temperature",
+              "upper_bound"
+            ]
+          }
+        ]
+      },
+      "Transform": {
+        "PanelVisible": true,
+        "SecondaryPanelVisible": false,
+        "ComputeEnabled": true,
+        "SelectedOperation": null,
+        "SelectedPrimarySubtype": "System.Windows.Controls.ComboBoxItem: Skin Temperature - Baseline",
+        "SelectedSecondarySubtype": null,
+        "PrimaryOptionCount": 1,
+        "SecondaryOptionCount": 1
+      },
+      "RecentMessages": [
+        {
+          "TimestampUtc": "2026-04-05T13:51:48.398679Z",
+          "Severity": "Warning",
+          "Title": "Parity Warnings",
+          "Message": "Export will include parity warnings:\n- CombinedMetric parity not completed: Combined metric CMS series missing\n- MultiMetric parity not completed: At least three series required\n- Normalized parity not completed: CMS series missing\n- Transform parity not completed: No transform operation selected\n- Multiple series required for CombinedMetric/Normalized/Transform parity; select at least two series."
+        },
+        {
+          "TimestampUtc": "2026-04-05T13:51:49.9972454Z",
+          "Severity": "Information",
+          "Title": "Reachability Export",
+          "Message": "Reachability snapshot exported to:\nC:\\Development\\POCs\\DataAnalyser\\documents\\reachability-20260405-135148.json"
+        }
+      ]
+    },
+    "SmokeChecks": {
+      "SelectedMetricMatchesUiMetric": true,
+      "SubtypeComboCountMatchesSelectedSeries": true,
+      "LoadedSeriesCountMatchesSelection": true,
+      "PrimarySubtypeOptionsMatchSelectedMetric": true,
+      "DateRangeMatchesExpectedDefaultWindow": false,
+      "RecentErrorCount": 0,
+      "RecentErrorsPresent": false
+    }
+  }
+}

@@ -15,6 +15,7 @@ public class SubtypeSelectorManager
     private readonly List<SubtypeControlPair> _dynamicControls = new();
     private readonly Dictionary<ComboBox, MetricNameOption?> _metricTypesByCombo = new();
     private readonly Panel _parentPanel;
+    private int _selectionChangedSuppressionDepth;
 
     public SubtypeSelectorManager(Panel parentPanel, ComboBox primaryCombo)
     {
@@ -23,7 +24,7 @@ public class SubtypeSelectorManager
         _metricTypesByCombo[primaryCombo] = null;
 
         // Hook the primary combo to our unified handler
-        PrimaryCombo.SelectionChanged += (s, e) => SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
+        PrimaryCombo.SelectionChanged += (_, _) => RaiseSubtypeSelectionChanged();
     }
 
 
@@ -40,11 +41,18 @@ public class SubtypeSelectorManager
     /// </summary>
     public event EventHandler? SubtypeSelectionChanged;
 
+    public IDisposable SuppressSelectionChanged()
+    {
+        _selectionChangedSuppressionDepth++;
+        return new SelectionChangedSuppressionScope(this);
+    }
+
     // ============================================================
     // Create a new dynamic subtype ComboBox
     // ============================================================
     public ComboBox AddSubtypeCombo(IEnumerable<MetricNameOption> subtypeList, MetricNameOption? metricType)
     {
+        using var _ = SuppressSelectionChanged();
         var index = _dynamicControls.Count + 2;
 
         var label = CreateSubtypeLabel(index);
@@ -62,6 +70,50 @@ public class SubtypeSelectorManager
     public void SetPrimaryMetricType(MetricNameOption? metricType)
     {
         _metricTypesByCombo[PrimaryCombo] = metricType;
+    }
+
+    public void ReplacePrimaryItems(IEnumerable<MetricNameOption> subtypeList, MetricNameOption? metricType, bool preserveSelection)
+    {
+        using var _ = SuppressSelectionChanged();
+        var previousSelection = GetSelectedValue(PrimaryCombo);
+        var subtypeOptions = subtypeList.ToList();
+
+        PrimaryCombo.Items.Clear();
+        foreach (var subtype in subtypeOptions)
+            PrimaryCombo.Items.Add(subtype);
+
+        PrimaryCombo.IsEnabled = subtypeOptions.Count > 0;
+        SetPrimaryMetricType(metricType);
+
+        if (preserveSelection && !string.IsNullOrWhiteSpace(previousSelection))
+        {
+            var preserved = PrimaryCombo.Items
+                .OfType<MetricNameOption>()
+                .FirstOrDefault(item => string.Equals(item.Value, previousSelection, StringComparison.OrdinalIgnoreCase));
+
+            if (preserved != null)
+            {
+                PrimaryCombo.SelectedItem = preserved;
+                return;
+            }
+        }
+
+        SelectFirstItem(PrimaryCombo);
+    }
+
+    public void ClearAllSubtypeControls()
+    {
+        using var _ = SuppressSelectionChanged();
+        ClearDynamic();
+        PrimaryCombo.Items.Clear();
+        PrimaryCombo.SelectedItem = null;
+        PrimaryCombo.IsEnabled = false;
+    }
+
+    public void EnsurePrimarySelection()
+    {
+        using var _ = SuppressSelectionChanged();
+        EnsureSelectionMaterialized(PrimaryCombo);
     }
 
     private static Label CreateSubtypeLabel(int index)
@@ -89,8 +141,8 @@ public class SubtypeSelectorManager
         foreach (var subtype in subtypeList)
             combo.Items.Add(subtype);
 
-        combo.SelectedIndex = 0;
-        combo.SelectionChanged += (_, _) => SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
+        SelectFirstItem(combo);
+        combo.SelectionChanged += (_, _) => RaiseSubtypeSelectionChanged();
 
         return combo;
     }
@@ -157,6 +209,8 @@ public class SubtypeSelectorManager
         var selections = new List<MetricSeriesSelection>();
         foreach (var combo in GetActiveCombos())
         {
+            EnsureSelectionMaterialized(combo);
+
             if (combo.SelectedItem == null)
                 continue;
 
@@ -181,6 +235,7 @@ public class SubtypeSelectorManager
         if (_dynamicControls.Count == 0)
             return false;
 
+        using var _ = SuppressSelectionChanged();
         var combo = _dynamicControls[^1].Combo;
         var previousSelection = (combo.SelectedItem as MetricNameOption)?.Value ?? combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
 
@@ -227,6 +282,7 @@ public class SubtypeSelectorManager
     // ============================================================
     public string? GetPrimarySubtype()
     {
+        EnsureSelectionMaterialized(PrimaryCombo);
         return (PrimaryCombo.SelectedItem as MetricNameOption)?.Value ?? PrimaryCombo.SelectedValue?.ToString();
     }
 
@@ -241,6 +297,65 @@ public class SubtypeSelectorManager
 
         foreach (var combo in _dynamicCombos)
             yield return (combo.SelectedItem as MetricNameOption)?.Value ?? combo.SelectedValue?.ToString() ?? string.Empty;
+    }
+
+    private static string? GetSelectedValue(ComboBox combo)
+    {
+        return (combo.SelectedItem as MetricNameOption)?.Value ?? combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
+    }
+
+    private static void SelectFirstItem(ComboBox combo)
+    {
+        if (combo.Items.Count == 0)
+        {
+            combo.SelectedItem = null;
+            return;
+        }
+
+        combo.SelectedItem = combo.Items[0];
+    }
+
+    private static void EnsureSelectionMaterialized(ComboBox combo)
+    {
+        if (combo.SelectedItem != null || combo.Items.Count == 0)
+            return;
+
+        if (combo.SelectedIndex >= 0 && combo.SelectedIndex < combo.Items.Count)
+        {
+            combo.SelectedItem = combo.Items[combo.SelectedIndex];
+            return;
+        }
+
+        combo.SelectedItem = combo.Items[0];
+    }
+
+    private void RaiseSubtypeSelectionChanged()
+    {
+        if (_selectionChangedSuppressionDepth > 0)
+            return;
+
+        SubtypeSelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private sealed class SelectionChangedSuppressionScope : IDisposable
+    {
+        private readonly SubtypeSelectorManager _owner;
+        private bool _disposed;
+
+        public SelectionChangedSuppressionScope(SubtypeSelectorManager owner)
+        {
+            _owner = owner;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            if (_owner._selectionChangedSuppressionDepth > 0)
+                _owner._selectionChangedSuppressionDepth--;
+        }
     }
 
     private sealed class SubtypeControlPair

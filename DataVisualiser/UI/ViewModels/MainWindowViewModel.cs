@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DataVisualiser.Core.Validation.DataLoad;
 using DataVisualiser.Core.Services;
+using DataVisualiser.Shared.Events;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 
@@ -14,6 +15,8 @@ public partial class MainWindowViewModel : INotifyPropertyChanged, IMainChartsVi
     private readonly ChartVisibilityController _chartVisibilityController;
     private readonly DataLoadValidator _dataLoadValidator;
     private readonly MetricLoadCoordinator _metricLoadCoordinator;
+    private int _selectionStateBatchDepth;
+    private bool _selectionStateChangedPending;
 
     // ======================
     // SERVICES (injected)
@@ -101,6 +104,51 @@ public partial class MainWindowViewModel : INotifyPropertyChanged, IMainChartsVi
 
     private void RaiseSelectionStateChanged()
     {
+        if (_selectionStateBatchDepth > 0)
+        {
+            _selectionStateChangedPending = true;
+            return;
+        }
+
         SelectionStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public IDisposable BeginSelectionStateBatch()
+    {
+        _selectionStateBatchDepth++;
+        return new SelectionStateBatchScope(this);
+    }
+
+    private void EndSelectionStateBatch()
+    {
+        if (_selectionStateBatchDepth == 0)
+            return;
+
+        _selectionStateBatchDepth--;
+        if (_selectionStateBatchDepth != 0 || !_selectionStateChangedPending)
+            return;
+
+        _selectionStateChangedPending = false;
+        SelectionStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private sealed class SelectionStateBatchScope : IDisposable
+    {
+        private readonly MainWindowViewModel _owner;
+        private bool _disposed;
+
+        public SelectionStateBatchScope(MainWindowViewModel owner)
+        {
+            _owner = owner;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            _owner.EndSelectionStateBatch();
+        }
     }
 }

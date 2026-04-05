@@ -1,4 +1,4 @@
-﻿# Codebase Index
+# Codebase Index
 
 Generated: 2026-01-26 14:23:01  
 Root: C:\Development\POCs\DataAnalyser
@@ -118,7 +118,7 @@ This file is auto-generated.
 | class | DistributionPolarRenderingService | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\DistributionPolarRenderingService.cs |
 | class | DistributionPolarTooltipState | internal | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionPolarTooltipState.cs |
 | class | DistributionRangeResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DistributionRangeResult.cs |
-| class | ErrorEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ErrorEventArgs.cs |
+| class | ErrorEventArgs | public | DataVisualiser.Shared.Events | .\DataVisualiser\Shared\Events\ErrorEventArgs.cs |
 | class | FileHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\FileHelper.cs |
 | class | FileProcessingService | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingService.cs |
 | class | FrequencyBasedShadingStrategy | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\FrequencyBasedShadingStrategy.cs |
