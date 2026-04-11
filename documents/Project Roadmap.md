@@ -2,7 +2,7 @@
 **Status:** Sequencing and Execution Authority  
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
-**Operational Execution Source:** `DataVisualiser_Consolidation_Plan.md` for the active hierarchy-reconciliation work; `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` remains the historical execution source for the completed Phase 5 rehaul  
+**Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for the active hierarchy-reconciliation and VNext activation work (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
 **Last Updated:** 2026-04-11  
 **Change Note:** Phase 6.3 advanced with first live VNext main-chart slice and evidence boundary decomposition
 
@@ -28,8 +28,7 @@ If a conflict exists:
 1. `Project Bible.md` wins on architectural law.
 2. `SYSTEM_MAP.md` wins on structural direction.
 3. This roadmap wins on sequencing and closure discipline.
-4. `DataVisualiser_Consolidation_Plan.md` operationalizes the active delivery-side hierarchy reconciliation permitted by this roadmap.
-5. `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` remains the historical execution source for the completed Phase 5 rehaul.
+4. `DataVisualiser_Subsystem_Plan.md` operationalizes the active delivery-side hierarchy reconciliation and VNext activation permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
 
 ---
 
@@ -241,7 +240,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 - eventual standardized programmable chart hosts and multi-result derived chart composition
 
 **Execution Source**
-- `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` is the historical execution source for this completed phase
+- `DataVisualiser_Subsystem_Plan.md` Section 6.1 contains the historical completion record for this phase
 
 #### Phase 5.1 - Closure Repair and Evidence Recovery
 

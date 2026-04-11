@@ -2,7 +2,7 @@
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `Project Roadmap.md`  
-**Active Subsystem Execution Reference:** `DataVisualiser_Consolidation_Plan.md` for the current delivery-side hierarchy reconciliation work
+**Active Subsystem Execution Reference:** `DataVisualiser_Subsystem_Plan.md` for the current delivery-side hierarchy reconciliation and VNext activation work
 
 ---
 
@@ -231,7 +231,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 
 - The immediate architectural need is to restore a coherent, trustworthy hierarchy before further capability expansion
 - Similar operations need one obvious home, large mixed-responsibility outliers need decomposition, and truth/derivation/delivery seams need clearer reconciliation
-- Current active execution in `DataVisualiser_Consolidation_Plan.md` exists to make the delivery side legible enough that the remaining true outliers are exposed cleanly
+- Current active execution in `DataVisualiser_Subsystem_Plan.md` exists to make the delivery side legible enough that the remaining true outliers are exposed cleanly
 - The expected cadence is: map the hierarchy, consolidate one or two irreducible operation clusters, reconcile one mixed boundary, standardize one proven delivery seam, decompose one major outlier, then audit the new baseline
 - Phase 6.3 work has produced the first live VNext vertical slice: the main-chart load path now routes through the VNext reasoning engine (`ReasoningSessionCoordinator`) when only the Main chart is visible, with automatic legacy fallback for all other chart configurations
 - The evidence/export boundary has been decomposed: `MainChartsEvidenceExportService` was split into standalone DTOs (`EvidenceExportModels`), a diagnostics builder (`EvidenceDiagnosticsBuilder`), and export orchestration

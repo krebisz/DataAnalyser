@@ -1,267 +1,172 @@
-📘 Workspace Workflow.md  
-(Updated — Automation Wired In, Strict Mode–Compliant, Drift-Hardened)
+# Workspace Workflow
+**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Current
 
-⚠️ This document is part of the frozen core documentation set.  
-See MASTER_OPERATING_PROTOCOL.md for governing authority.
+This document is part of the core documentation set.
+See `MASTER_OPERATING_PROTOCOL.md` for governing authority.
 
-------------------------------------------------------
-Workspace Initialization & Rehydration Protocol (Authoritative)
-------------------------------------------------------
+---
 
-This document defines the exact artifacts and step-by-step process required to initialize,
-refresh, or deliberately reset a ChatGPT workspace for the DataFileReaderRedux solution.
+## Purpose
+
+This document defines the artifacts, procedures, and per-workspace declarations required to initialize, refresh, or reset an AI assistant workspace for the DataAnalyser solution.
 
 It exists to:
 - prevent contextual drift
 - enforce grounding discipline
 - ensure deterministic rehydration
 - protect execution velocity during long-running collaborations
+- declare per-workspace execution context, observability, and termination semantics
 
-------------------------------------------------------
-🔒 SECTION 0 — SACRED WORKSPACE WORKFLOWS (IMMUTABLE)
-------------------------------------------------------
+It applies to any AI assistant used for this project (Claude Code, Codex, or other agents).
 
-⛔ Sacred Workflow A — Create a New Workspace (Authoritative Sequence)
+---
 
-Follow these steps exactly when starting a new ChatGPT workspace.
+## 1. Document Authority Hierarchy
 
-1. Run structural generators:
+When reconstructing a workspace, documents are interpreted strictly in this order:
 
-- Generate-ProjectTree.ps1 → produces project-tree.txt
-- Generate-CodebaseIndex.ps1 → produces codebase-index.md
-- Generate-DependencySummary.ps1 → produces dependency-summary.md
+1. `Project Bible.md` (architectural law)
+2. `SYSTEM_MAP.md` (structural boundaries)
+3. `MASTER_OPERATING_PROTOCOL.md` (execution governance)
+4. `Project Roadmap.md` (sequencing and phases)
+5. `Project Overview.md` (descriptive)
+6. `DataVisualiser_Subsystem_Plan.md` (active execution)
+7. `codebase-index.md`
+8. `dependency-summary.md`
+9. `project-tree.txt`
+10. Solution ZIP (reference only)
 
-2. Verify the following documents are current:
+---
 
-- MASTER_OPERATING_PROTOCOL.md
-- Project Bible.md
-- Project Overview.md
-- Project Roadmap.md
-- SYSTEM_MAP.md (if present)
+## 2. Required Rehydration Bundle
 
-3. Prepare the Rehydration Bundle:
+### Mandatory
 
-- project-tree.txt
-- codebase-index.md
-- dependency-summary.md
-- MASTER_OPERATING_PROTOCOL.md
-- Project Bible.md
-- Project Overview.md
-- Project Roadmap.md
-- SYSTEM_MAP.md (if present)
+- `MASTER_OPERATING_PROTOCOL.md`
+- `Project Bible.md`
+- `Project Overview.md`
+- `Project Roadmap.md`
+- `SYSTEM_MAP.md`
+- `DataVisualiser_Subsystem_Plan.md`
+- `project-tree.txt` (if generated)
+- `codebase-index.md` (if generated)
+- `dependency-summary.md` (if generated)
 
-(Optional) Latest solution ZIP or package
+### Optional but Recommended
 
-4. Start a new ChatGPT conversation.
+- Solution ZIP / package (reference only)
 
-(Optional but Recommended) Declare a workspace label:
+---
 
-Workspace: <Project> — <Context> — <Qualifier>
+## 3. Workspace Lifecycle
 
-This label defines the identity and scope of the workspace for the duration of the conversation
-and is treated as the canonical workspace reference.
+### 3.1 Create a New Workspace
 
-5. Upload ALL files from the Rehydration Bundle.
+1. Run structural generators (if available):
+   - `Generate-ProjectTree.ps1` -> `project-tree.txt`
+   - `Generate-CodebaseIndex.ps1` -> `codebase-index.md`
+   - `Generate-DependencySummary.ps1` -> `dependency-summary.md`
 
-6. Enter the initialization command:
+2. Verify all mandatory documents are current.
 
-Initialize workspace with the uploaded files.
+3. Start a new conversation with the AI assistant.
 
-7. Do NOT proceed with any development tasks until ChatGPT explicitly confirms:
+4. (Recommended) Declare a workspace label: `Workspace: <Project> - <Context> - <Qualifier>`
 
-Workspace successfully initialized.
+5. Provide ALL files from the rehydration bundle.
 
-------------------------------------------------------
-⛔ Sacred Workflow B — Refresh an Existing Workspace (Authoritative Sequence)
-------------------------------------------------------
+6. Enter: `Initialize workspace with the uploaded files.`
 
-Follow these steps exactly when updating an existing workspace.
+7. Do NOT proceed until the assistant confirms initialization and declares workspace state (Section 5).
 
-1. Re-run required generators:
+### 3.2 Refresh an Existing Workspace
 
-- Always run Generate-ProjectTree.ps1
-- Run Generate-CodebaseIndex.ps1 if code structure changed
-- Run Generate-DependencySummary.ps1 if dependencies may have changed
+1. Re-run generators if structure, code, or dependencies changed.
 
-2. Identify which documents require updating:
+2. Identify which documents need updating:
+   - `MASTER_OPERATING_PROTOCOL.md` -> collaboration rules change
+   - `Project Bible.md` -> architecture change
+   - `Project Overview.md` -> capabilities change
+   - `Project Roadmap.md` -> phase or trajectory change
+   - `SYSTEM_MAP.md` -> structural intent change
+   - `DataVisualiser_Subsystem_Plan.md` -> execution plan or VNext state change
 
-- MASTER_OPERATING_PROTOCOL.md → only if collaboration rules change
-- Project Bible.md → only if architecture changes
-- Project Overview.md → only if system capabilities change
-- Project Roadmap.md → only if phase or trajectory changes
-- SYSTEM_MAP.md → only if structural intent changes
+3. Provide the refresh bundle.
 
-3. Prepare the Refresh Bundle:
+4. Enter: `Refresh workspace with the updated files.`
 
-- Updated generated artifacts
-- Any updated documentation
-- (Optional) Updated solution ZIP
+5. Wait for explicit confirmation before proceeding.
 
-4. Upload the Refresh Bundle to the existing ChatGPT workspace.
+### 3.3 Phase Transition Guardrail
 
-5. Enter the refresh command:
+Creating a new workspace is a controlled phase sub-step, not an escape hatch. Before resetting:
+- Documentation alignment must be complete
+- Parity obligations must be explicitly closed or deferred
+- Reset justification must be stated
 
-Refresh workspace with the updated files.
+### 3.4 Systemic Failure Re-Entry
 
-6. Wait for explicit confirmation:
+If a task triggers systemic failure (per `MASTER_OPERATING_PROTOCOL`):
+- Workspace is considered tainted
+- Execution halts
+- Only rehydration, inspection, or protocol repair may occur
+- No forward progress resumes until a clean state is acknowledged
 
-Workspace successfully refreshed.
+---
 
-Proceed with development only after confirmation.
-
-------------------------------------------------------
-⚠️ Notes (Immutable)
-------------------------------------------------------
+## 4. Immutable Workflow Notes
 
 - Generated artifacts are authoritative for structure, not intent.
 - Generated files must never be edited by hand.
 - These workflows MUST NOT be altered without explicit agreement.
 - These workflows override all other procedural descriptions.
 
-------------------------------------------------------
-1. Required Rehydration Bundle
-------------------------------------------------------
+---
 
-A. Mandatory Files
+## 5. Workspace State Declaration (Mandatory)
 
-- project-tree.txt  
-- codebase-index.md  
-- dependency-summary.md  
-- MASTER_OPERATING_PROTOCOL.md  
-- Project Bible.md  
-- Project Overview.md  
-- Project Roadmap.md  
-- SYSTEM_MAP.md (if present)
-
-B. Optional but Recommended
-
-- Solution ZIP / Package (reference only)
-
-------------------------------------------------------
-2. Workspace State Declaration (Additive · Mandatory)
-------------------------------------------------------
-
-> **Additive rule — derived from collaboration drift observations.**
-
-After initialization or refresh, the assistant MUST explicitly declare the workspace state
-before proposing or executing changes.
+After initialization or refresh, the assistant MUST explicitly declare the workspace state before proposing or executing changes.
 
 The declaration MUST include:
 
 - Documents loaded (explicit list)
-- Code snapshot status (ZIP present or not)
-- Active project phase (e.g., Phase 4)
-- Parity status (e.g., none / partial / active / closed)
+- Code snapshot status (ZIP present or live codebase access)
+- Active project phase
+- VNext activation status (active slice scope, legacy fallback posture)
+- Parity status
+- Test count
 - Any missing or unknown artifacts
 
 Example:
 
+```
 Workspace State:
-- Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Roadmap
-- Code snapshot: present (dated YYYY-MM-DD)
-- Phase: Phase 4 — Consumer Adoption
-- Parity: SingleMetric complete, CombinedMetric in progress
-- Unknowns: DifferenceStrategy CMS status
+- Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Roadmap, Execution Plan
+- Code snapshot: live codebase access
+- Phase: Phase 6 — Architectural Legibility and Concern Reconciliation
+- VNext: main-chart slice active, legacy fallback for extended charts
+- Parity: all 8 strategies passing (April 2026 exports)
+- Tests: 471 passing
+- Unknowns: none
+```
 
 No execution may proceed until this declaration is acknowledged.
 
-------------------------------------------------------
-3. Grounding Gate (Additive · Enforcement Rule)
-------------------------------------------------------
+---
 
-Before proposing **any code change**, the assistant MUST pass a grounding gate.
+## 6. Execution Enforcement Rules
 
-The gate requires:
+### 6.1 Grounding Gate
+
+Before proposing any code change, the assistant MUST pass a grounding gate:
 
 - Explicit list of files inspected
 - Explicit list of symbols verified
 - Explicit list of unknown or missing artifacts
 
-If a required file or symbol is missing:
-- execution MUST stop
-- the file must be requested explicitly
+If a required file or symbol is missing, execution MUST stop and the file must be requested explicitly. Conceptual, assumed, or "simplified" substitutions are prohibited.
 
-Conceptual, assumed, or “simplified” substitutions are prohibited in active phases.
-
-------------------------------------------------------
-4. Change Atomicity & Drop-In Safety (Additive)
-------------------------------------------------------
-
-All implementation guidance MUST be one of:
-
-- Full method replacement
-- Full class replacement
-- Explicit before/after diff block
-
-Prohibited:
-
-- Partial snippets without surrounding context
-- “Modify this part” instructions
-- Multi-location changes without enumeration
-
-------------------------------------------------------
-5. Phase Transition Guardrail (Additive)
-------------------------------------------------------
-
-Creating a new workspace is treated as a **controlled phase sub-step**, not an escape hatch.
-
-Before resetting a workspace, the following must be true:
-
-- Documentation alignment complete
-- Parity obligations explicitly closed or deferred
-- Reset justification stated
-
-------------------------------------------------------
-6. Active Phase Artifacts (Reference-Only · Phase 4)
-------------------------------------------------------
-
-> **Additive section. No existing rules are modified.**
-
-The following files are actively relevant during Phase 4 (CMS adoption & parity):
-
-DataVisualiser — Strategies:
-- SingleMetricLegacyStrategy.cs
-- SingleMetricCmsStrategy.cs
-- CombinedMetricStrategy.cs
-- CombinedMetricCmsStrategy.cs
-- MultiMetricStrategy.cs
-
-DataVisualiser — Parity:
-- IStrategyParityHarness.cs
-- CombinedMetricParityHarness.cs
-
-DataVisualiser — Context & Wiring:
-- ChartDataContext.cs
-- ChartDataContextBuilder.cs
-- MetricSelectionService.cs
-- MainWindow.xaml.cs
-- MainWindowViewModel.cs
-
-DataFileReader — Canonical:
-- ICanonicalMetricSeries.cs
-- CanonicalMetricSeries.cs
-
-These files define the **CMS ↔ legacy coexistence boundary**.
-
-------------------------------------------------------
-7. Document Authority Hierarchy
-------------------------------------------------------
-
-When reconstructing a workspace, documents are interpreted strictly in this order:
-
-1. MASTER_OPERATING_PROTOCOL.md
-2. Project Bible.md
-3. SYSTEM_MAP.md
-4. Project Overview.md
-5. Project Roadmap.md
-6. codebase-index.md
-7. dependency-summary.md
-8. project-tree.txt
-9. Solution ZIP (reference only)
-
-------------------------------------------------------
-8. Cut-Over Locus Declaration (Additive · Mandatory)
-------------------------------------------------------
+### 6.2 Cut-Over Locus Declaration
 
 Before beginning any migration or refactor task, the following MUST be explicitly declared:
 
@@ -270,13 +175,21 @@ Before beginning any migration or refactor task, the following MUST be explicitl
 - Method name
 - Call site (who invokes it)
 
-This declaration establishes the **single locus of behavioral change**.
-
 No implementation may proceed without this declaration being acknowledged.
 
-------------------------------------------------------
-9. Reachability Proof Requirement (Additive · Mandatory)
-------------------------------------------------------
+### 6.3 Change Atomicity
+
+All implementation guidance MUST be one of:
+- Full method replacement
+- Full class replacement
+- Explicit before/after diff block
+
+Prohibited:
+- Partial snippets without surrounding context
+- "Modify this part" instructions
+- Multi-location changes without enumeration
+
+### 6.4 Reachability Proof Requirement
 
 For any new or migrated logic, the assistant MUST declare:
 
@@ -284,23 +197,142 @@ For any new or migrated logic, the assistant MUST declare:
 - Where a breakpoint/log/test confirms reachability
 
 Examples:
-- Parity harness invocation
 - Unit test assertion
+- Parity harness invocation
+- Evidence export artifact with `RuntimePath` and signature chain
 - Service-layer call confirmed via breakpoint
 
-A task without reachability proof is considered **non-executable**.
+A task without reachability proof is considered non-executable.
 
-------------------------------------------------------
-10. Systemic Failure Re-Entry Rule (Additive)
-------------------------------------------------------
+---
 
-If a task triggers systemic failure (per MASTER_OPERATING_PROTOCOL):
+## 7. Active Phase Artifacts (Phase 6)
 
-- Workspace is considered **tainted**
-- Execution halts
-- Only rehydration, inspection, or protocol repair may occur
-- No forward progress resumes until a clean state is acknowledged
+The following files are actively relevant during Phase 6 (Architectural Legibility and VNext Activation):
 
-------------------------------------------------------
-End of Workspace Workflow.md
-------------------------------------------------------
+**VNext:**
+- `VNext/Application/ReasoningSessionCoordinator.cs`
+- `VNext/Application/ReasoningEngineFactory.cs`
+- `VNext/Application/LegacyChartProgramProjector.cs`
+- `VNext/Application/ChartProgramPlanner.cs`
+- `VNext/Contracts/ChartProgram.cs`
+- `VNext/Contracts/MetricSelectionRequest.cs`
+- `VNext/State/ReasoningSessionTransitions.cs`
+
+**Integration Bridge:**
+- `UI/MainHost/VNextMainChartIntegrationCoordinator.cs`
+- `UI/ViewModels/MetricLoadCoordinator.cs`
+- `UI/State/ChartState.cs` (`LoadRuntimeState`)
+
+**Evidence Boundary:**
+- `UI/MainHost/EvidenceExportModels.cs`
+- `UI/MainHost/EvidenceDiagnosticsBuilder.cs`
+- `UI/MainHost/MainChartsEvidenceExportService.cs`
+
+**Orchestration:**
+- `Core/Orchestration/ChartRenderingOrchestrator.cs`
+- `Core/Orchestration/ChartDataContextBuilder.cs`
+- `UI/MainHost/MainChartsViewChartUpdateCoordinator.cs`
+
+**Current Priority Outliers:**
+- `UI/MainChartsView.xaml.cs`
+- `Core/Data/Repositories/DataFetcher.cs`
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
+
+---
+
+## Appendix A. Per-Workspace Context Declaration Template
+
+Copy and fill in this template when starting a workspace that requires explicit execution context tracking. This declaration is disposable — discard it when the workspace is formally closed or terminated.
+
+```
+WORKSPACE CONTEXT DECLARATION
+
+1. Workspace Identity
+
+   Workspace Name:
+   Date / Time Initialized:
+   Primary Objective:
+   Active Phase: (e.g. Phase 6.3 — VNext Widening, Phase C — DataFetcher Decomposition)
+   AI Assistant(s): (e.g. Claude Code, Codex, or both in parallel)
+
+2. Execution Context
+
+   2.1 Execution Locus
+       Executable Entry Point(s):
+         File:
+         Class:
+         Method / Runner / Host:
+       Non-Executable Components: (explicit list or "None")
+
+   2.2 VNext Routing State
+       VNext Active Slice: (e.g. Main chart only / Main + Normalized / None)
+       Legacy Fallback: (e.g. Automatic for extended charts / Full legacy)
+       Runtime Path Tracking: (e.g. LoadRuntimeState on ChartState)
+
+3. Observability Strategy
+
+   Primary Observability Mode:
+     - Inspection-only
+     - Temporary instrumentation
+     - Parity harness
+     - Evidence export with RuntimePath and signature chain
+     - Mixed (declare per step)
+
+   Constraints / Notes:
+
+4. Temporary Instrumentation Policy
+
+   Instrumentation Allowed: Yes / No
+   Permitted Scope:
+   Mandatory Removal Phase / Step:
+
+5. Legacy Parity Anchor
+
+   Legacy Strategy / Path:
+   Dataset / Scenario:
+   Snapshot / Hash / Output Reference:
+   VNext Signature Chain Reference:
+     (e.g. RequestSignature, SnapshotSignature, ProgramSourceSignature, ProjectedContextSignature)
+
+6. Test & Verification Posture
+
+   Testing Enabled: Yes / Deferred / Parity-only
+   Test Project(s) in Scope:
+   Current Test Count: (e.g. 471 passing)
+   Manual Smoke Required: Yes / No / Conditional on live behavior change
+
+7. Termination Semantics
+
+   Permitted Termination Modes:
+     - Clean closure
+     - Pause (resumable)
+     - Terminate without closure (unsynced)
+   Default on Failure:
+
+8. Signal & Interaction Contract
+
+   Preferred Interaction Mode:
+     - Procedural
+     - Minimal / execute-mode
+     - Exploratory
+   Verbosity Attenuation Expected: Yes / No
+   Multi-Agent Coordination: (e.g. Claude Code + Codex in parallel with cross-review)
+
+9. Acknowledgement
+
+   This declaration instantiates contextual commitments for this workspace only.
+   It does not modify or override foundational documents.
+
+   Declared by:
+   Acknowledged by:
+
+10. Status
+
+    Workspace State: ACTIVE / PAUSED / UNSYNCED / TERMINATED
+    Last Updated:
+```
+
+---
+
+**End of Workspace Workflow**

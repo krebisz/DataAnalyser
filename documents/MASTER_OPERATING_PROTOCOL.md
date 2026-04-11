@@ -24,9 +24,11 @@ SYSTEM_MAP.md — conceptual structure and boundaries
 
 MASTER_OPERATING_PROTOCOL.md — execution and governance rules
 
-Collaboration Protocol.md — collaboration quick-reference
-
 Project Roadmap.md — sequencing and planning
+
+DataVisualiser_Subsystem_Plan.md — active subsystem execution authority
+
+Collaboration Protocol.md — collaboration quick-reference
 
 In the event of conflict, higher-authority documents prevail.
 
@@ -293,7 +295,11 @@ code snapshot or commit reference
 
 active phase
 
+VNext activation status (active slice scope and legacy fallback posture)
+
 parity status
+
+test count
 
 Work may not proceed until workspace is explicitly locked.
 
@@ -331,7 +337,9 @@ vague “modify this”
 
 unnumbered multi-location changes
 
-10C.4 Strategy Migration Protocol (Phase 4)
+10C.4 Strategy Migration Protocol (Phase 4 — Closed)
+
+Phase 4 strategy migration is closed. The following rules remain as reference for any future strategy work:
 
 A strategy is not migrated unless:
 
@@ -347,7 +355,9 @@ activation flag present
 
 equivalence demonstrated
 
-10C.5 Parity as Phase-Exit Artifact
+10C.5 Parity as Phase-Exit Artifact (Phase 4 — Closed)
+
+Phase 4 parity obligations are satisfied with current April 2026 evidence. The rules remain as reference:
 
 One parity harness per strategy
 
@@ -355,7 +365,7 @@ Explicit activation switch
 
 Diagnostic + strict modes
 
-Phase 4 cannot close without parity sign-off.
+Phase closure requires parity sign-off.
 
 10C.6 Document Impact Declaration
 
@@ -439,6 +449,38 @@ Lock behavior and update specifications
 
 Deviation from this cycle requires explicit justification.
 
+10C.12 Multi-Agent Coordination Discipline (Additive)
+
+When multiple AI assistants operate on the same codebase:
+
+Each agent must declare its scope before starting work
+
+Plan alignment between agents must be achieved before execution begins
+
+Cross-review of implementation is permitted and encouraged at the user's direction
+
+Disagreements between agents are resolved by the user, not by the agents
+
+One agent's implementation may be refined by another if the user directs it
+
+No agent may assume another agent's work is correct without verification
+
+10C.13 VNext / Legacy Runtime Path Discipline (Additive)
+
+When VNext and legacy execution paths coexist:
+
+The routing decision must be deterministic and visibility-based
+
+VNext must not change the semantic content of the projected context relative to legacy
+
+Each load must record which runtime path was used via explicit state (LoadRuntimeState)
+
+Evidence exports must include runtime path, signature chain, and alignment flags
+
+VNext failure must fall back to legacy automatically without new logging infrastructure
+
+Each VNext widening must be a bounded slice with automatic legacy fallback
+
 10D. Execution Feasibility & Observability Invariants (Additive)
 10D.1 Execution Locus Requirement
 
@@ -453,6 +495,12 @@ Steps lacking an execution locus may not proceed.
 Correctness without observability is treated as non-existence.
 
 Any success criterion must be paired with a declared observability mechanism.
+
+Valid observability mechanisms include:
+- unit test assertion
+- parity harness invocation
+- evidence export artifact with RuntimePath and signature chain
+- breakpoint or diagnostic log confirmation
 
 Heuristic verification is prohibited unless explicitly sanctioned.
 
@@ -481,6 +529,82 @@ As operator signal tightens (fatigue, terseness, correction cadence):
 verbosity must strictly decrease
 
 protocol adherence supersedes pattern inference
+
+10E. Review and Assessment Discipline (Additive)
+
+These rules apply to any review of work — self-review, cross-agent review, or retrospective audit.
+
+10E.1 Review Standard
+
+Any review must:
+
+evaluate against the governing iteration cycle (establish regression protection, select slice, inventory, constrain, consolidate, generalize only if proven, retire, validate, record)
+
+distinguish between completed work, remaining intentional debt, and true regressions
+
+judge from the current repository state, not from partial historical checkpoints
+
+avoid cosmetic criticism not tied to maintainability, correctness, risk, or plan alignment
+
+respect the difference between a bounded decision that left intentional debt and a bad decision
+
+10E.2 Safety and Integrity Rules
+
+Incorrect, broken, or regressive implementations are treated as a forfeit
+
+Substantial regressions count more heavily than minor missed cleanups
+
+Speculative abstraction or cosmetic churn without structural payoff is not acceptable
+
+If a suggested cycle cannot be completed safely within one major cycle, that must be stated plainly
+
+No credit is given for pretending that remaining debt is solved when it is only renamed or moved
+
+10E.3 Evaluation Criteria
+
+Work is judged by:
+
+honesty
+
+consistency
+
+integrity
+
+alignment with the execution plan
+
+correctness of technical reasoning
+
+willingness to state limits instead of over-claiming
+
+10E.4 Change Proposal Requirements
+
+Any proposed next cycle must:
+
+identify the primary objective of each proposed iteration
+
+identify the bounded slice for each proposed iteration
+
+state what regression protection should exist first
+
+state what validation should be run
+
+state whether manual smoke would likely be required
+
+state what should remain intentionally deferred
+
+follow the governing iteration flow or justify the deviation explicitly
+
+Proposals must not:
+
+pretend all remaining debt can be removed safely in one sweep if that is not credible
+
+reopen stabilized seams without a concrete structural reason
+
+optimize for file-count alone
+
+force abstractions across honest outliers without proving convergence
+
+replace the bounded iteration model with vague architectural preference
 
 11. Enforcement
 

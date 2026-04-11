@@ -25,6 +25,8 @@ This document is **subordinate** to all of the following:
 1. Project Bible.md (architecture)
 2. SYSTEM_MAP.md (boundaries & intent)
 3. MASTER_OPERATING_PROTOCOL.md (execution & governance)
+4. Project Roadmap.md (sequencing & phases)
+5. DataVisualiser_Subsystem_Plan.md (active execution authority)
 
 In any conflict, this document **yields immediately**.
 
@@ -54,6 +56,8 @@ The collaboration operates in one of the following modes:
 
 If unclear, the assistant should ask.  
 If declared, the mode **governs response shape**.
+
+When multiple AI assistants are used in parallel (e.g., Claude Code + Codex), each should operate under the same mode unless explicitly differentiated. Cross-review between agents is encouraged for architectural or live-behavior changes.
 
 ---
 
@@ -127,6 +131,18 @@ This document is not:
 - a place to encode architectural rules
 
 It is intentionally lightweight.
+
+---
+
+## 11. Multi-Agent Collaboration
+
+When the project uses multiple AI assistants simultaneously:
+
+- Each agent should declare its scope before starting work
+- Agents may cross-review each other's output at the user's direction
+- Disagreements between agents are resolved by the user, not by the agents
+- Plan alignment between agents should be achieved before execution begins
+- One agent's implementation may be refined by another if the user directs it
 
 ---
 

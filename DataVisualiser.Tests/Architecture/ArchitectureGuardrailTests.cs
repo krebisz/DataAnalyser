@@ -244,11 +244,10 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void ExecutionPlan_ShouldKeepLateGeneralizationGuardrailsDocumented()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Execution_Plan.md");
 
         Assert.Contains("2-3", source, StringComparison.Ordinal);
-        Assert.Contains("logical component/layer", source, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("thin adapters, pure renderers, and simple state holders", source, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("do not generalize before", source, StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AssertNoMatches(IReadOnlyList<string> offenders)
