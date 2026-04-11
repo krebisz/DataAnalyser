@@ -36,6 +36,21 @@ When reconstructing a workspace, documents are interpreted strictly in this orde
 9. `project-tree.txt`
 10. Solution ZIP (reference only)
 
+### Document Purpose Reference
+
+| Document | Role | Why it is separate |
+|---|---|---|
+| `Project Bible.md` | Architectural law | Immutable authority. Must not carry operational or descriptive weight. |
+| `SYSTEM_MAP.md` | Structural boundaries | Defines allowed reality. Includes pipeline spine as appendix. |
+| `MASTER_OPERATING_PROTOCOL.md` | Execution governance | Binding behavioral rules for how work proceeds. Distinct from architecture or planning. |
+| `Project Roadmap.md` | Sequencing authority | Phase gates, closure criteria, and evolutionary gating. |
+| `Project Overview.md` | Descriptive snapshot | What the system is today. Audience: someone orienting, not executing. |
+| `Project Philosophy.md` | Non-binding values | Intent and trade-off guidance. Deliberately non-authoritative. |
+| `DataVisualiser_Subsystem_Plan.md` | Active execution plan | Single plan for DataVisualiser architectural work, VNext activation, and consolidation. |
+| `Collaboration Protocol.md` | Human quick-reference | Lightweight behavioral guide so the user doesn't have to read the MOP for simple questions. |
+| `Workspace Workflow.md` | Procedural rehydration | How to set up, refresh, and maintain an AI assistant workspace. (This document.) |
+| `TODO Enhancements.md` | Ideas backlog | Running list of future enhancement ideas. Not governed by the authority chain. |
+
 ---
 
 ## 2. Required Rehydration Bundle

@@ -146,8 +146,8 @@ Use these status labels literally:
 - Active closure scope excludes the retired live `Difference/Ratio` chart surface
 - `Syncfusion` remains outside CMS reachability closure because its export is still explicitly `NotApplicable`
 
-**Historical evidence references (now treated as historical, not sufficient by themselves)**
-- `documents/reachability-20260121-160503.json`
+**Historical evidence references**
+- January 2026 reachability artifacts have been retired from the repository. Current closure is based on April 2026 evidence and green default test lanes.
 
 **Closure Condition**
 1. All active strategies are CMS-capable.
@@ -164,11 +164,8 @@ Use these status labels literally:
 **Objective**
 - Prove that CMS paths are actually exercised in live pipelines and not merely implemented in isolation
 
-**Historical evidence references (now treated as historical, not sufficient by themselves)**
-- `documents/reachability-20260121-074430.json`
-- `documents/reachability-20260121-074900.json`
-- `documents/reachability-20260121-075301.json`
-- `documents/reachability-20260121-085510.json`
+**Historical evidence references**
+- January 2026 reachability artifacts have been retired from the repository. Current closure is based on April 2026 evidence and green default test lanes.
 
 **Closure Condition**
 1. CMS execution is observable for all active strategy families.
@@ -184,9 +181,8 @@ Use these status labels literally:
 **Objective**
 - Prove that CMS behavior is preserved through consumer-facing pipelines and parity obligations remain satisfied
 
-**Historical evidence references (now treated as historical, not sufficient by themselves)**
-- `documents/reachability-20260121-151124.json`
-- `documents/reachability-20260121-114215.json`
+**Historical evidence references**
+- January 2026 reachability artifacts have been retired from the repository. Current closure is based on April 2026 evidence and green default test lanes.
 
 #### Phase 4A - Core Strategy Parity  
 **Status:** CLOSED
@@ -403,6 +399,11 @@ The goal is to make the system legible enough that:
 - `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports with signature-chain alignment flags
 - Smoke-verified with April 2026 exports: VNext path produces aligned signatures, legacy fallback produces correct state, all 8 parity strategies pass
 - 471 automated tests pass (26 new covering VNext routing, fallback, signature preservation, display mode, and CMS independence)
+
+**Current evidence artifacts (April 2026):**
+- `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
+- `documents/reachability-20260411-093604.json` — VNext path, 2-series, CMS enabled, signature chain aligned
+- `documents/reachability-20260411-093813.json` — VNext path, 2-series, CMS disabled, signature chain aligned
 
 **Closure Condition**
 - consumers ask for explicit result shapes through consistent seams rather than through special-case controller logic

@@ -312,6 +312,19 @@ First live VNext main-chart slice is proven and stable. Next VNext slices to con
 - Widen the routing condition to include more chart combinations
 - Each widening must be a bounded slice with automatic legacy fallback
 
+#### VNext Widening Tracker
+
+| Chart Family | VNext Status | Routing Condition | Evidence | Notes |
+|---|---|---|---|---|
+| Main | Live | Main visible, all others hidden | April 2026 exports (3 artifacts) | First vertical slice, fresh coordinator per load |
+| Normalized | Not started | — | — | Engine supports `BuildNormalizedProgram` |
+| Difference | Not started | — | — | Engine supports `BuildDifferenceProgram` |
+| Ratio | Not started | — | — | Engine supports `BuildRatioProgram` |
+| Distribution | Not planned | — | — | No VNext program builder yet |
+| WeekdayTrend | Not planned | — | — | No VNext program builder yet |
+| Transform | Not planned | — | — | Separate computation path |
+| BarPie | Not planned | — | — | Separate computation path |
+
 ---
 
 ## 11. Current Priority Outliers
