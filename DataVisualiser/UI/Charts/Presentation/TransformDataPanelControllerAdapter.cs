@@ -2,17 +2,13 @@ using DataVisualiser.UI.Charts.Interfaces;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Threading;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Core.Transforms;
 using DataVisualiser.Core.Transforms.Expressions;
-using DataVisualiser.Core.Transforms.Operations;
-using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
@@ -27,12 +23,13 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly ITransformRenderingContract _transformRenderingContract;
+    private readonly TransformComputationService _transformComputationService;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
 
-    public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ITransformRenderingContract transformRenderingContract)
+    public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ITransformRenderingContract transformRenderingContract, TransformComputationService? transformComputationService = null)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -41,6 +38,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _transformRenderingContract = transformRenderingContract ?? throw new ArgumentNullException(nameof(transformRenderingContract));
+        _transformComputationService = transformComputationService ?? new TransformComputationService();
     }
 
     public override void ClearCache()
@@ -100,7 +98,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _isUpdatingTransformSubtypeCombos = true;
         try
         {
-            ResetTransformSelectionControls();
+            TransformSubtypeSelectionCoordinator.ResetSelectionControls(_controller);
         }
         finally
         {
@@ -121,25 +119,17 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     public void UpdateTransformSubtypeOptions()
     {
-        if (!CanUpdateTransformSubtypeOptions())
+        if (!TransformSubtypeSelectionCoordinator.CanUpdateSubtypeOptions(_controller, _isTransformSelectionPendingLoad))
             return;
 
         _isUpdatingTransformSubtypeCombos = true;
         try
         {
-            ClearTransformSubtypeCombos();
-
-            var selectedSeries = _viewModel.MetricState.SelectedSeries;
-            if (selectedSeries.Count == 0)
-            {
-                HandleNoSelectedSeries();
-                return;
-            }
-
-            PopulateTransformSubtypeCombos(selectedSeries);
-            UpdatePrimaryTransformSubtype(selectedSeries);
-            UpdateSecondaryTransformSubtype(selectedSeries);
-
+            TransformSubtypeSelectionCoordinator.ApplySubtypeOptions(
+                _controller,
+                _viewModel.ChartState,
+                _viewModel.MetricState.SelectedSeries,
+                SetBinaryTransformOperationsEnabled);
             UpdateTransformComputeButtonState();
         }
         finally
@@ -226,138 +216,20 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     private void PopulateTransformGrids(ChartDataContext ctx, bool resetResults = true)
     {
-        PopulateTransformGrid(ctx.Data1, _controller.TransformGrid1, _controller.TransformGrid1Title, ctx.DisplayName1 ?? "Primary Data", true);
-
-        var hasSecondary = HasSecondaryData(ctx) && !string.IsNullOrEmpty(ctx.SecondarySubtype) && ctx.Data2 != null;
+        var hasSecondary = TransformGridPresentationCoordinator.HasSecondaryData(ctx) && !string.IsNullOrEmpty(ctx.SecondarySubtype) && ctx.Data2 != null;
         var hasAvailableSecondaryInput = hasSecondary || ResolveSelectedTransformSecondarySeries(ctx) != null;
 
-        if (hasSecondary)
-        {
-            _controller.TransformGrid2Panel.Visibility = Visibility.Visible;
-
-            PopulateTransformGrid(ctx.Data2, _controller.TransformGrid2, _controller.TransformGrid2Title, ctx.DisplayName2 ?? "Secondary Data", false);
-        }
-        else
-        {
-            _controller.TransformGrid2Panel.Visibility = Visibility.Collapsed;
-            _controller.TransformGrid2.ItemsSource = null;
-        }
-
-        SetBinaryTransformOperationsEnabled(hasAvailableSecondaryInput);
-
-        if (resetResults)
-            ResetTransformResultState();
-    }
-
-    private void PopulateTransformGrid(IEnumerable<MetricData>? data, DataGrid grid, TextBlock title, string titleText, bool alwaysVisible)
-    {
-        if (data == null && !alwaysVisible)
-            return;
-
-        var rows = data?.Where(d => d.Value.HasValue)
-                       .OrderBy(d => d.NormalizedTimestamp)
-                       .Select(d => new
-                       {
-                               Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                               Value = d.Value!.Value.ToString("F4")
-                       })
-                       .ToList();
-
-        grid.ItemsSource = rows;
-        title.Text = titleText;
-
-        if (grid.Columns.Count >= 2)
-        {
-            grid.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            grid.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-        }
+        TransformGridPresentationCoordinator.PopulateInputGrids(
+            _controller,
+            ctx,
+            hasAvailableSecondaryInput,
+            SetBinaryTransformOperationsEnabled,
+            resetResults);
     }
 
     private void SetBinaryTransformOperationsEnabled(bool enabled)
     {
-        var binaryItems = _controller.TransformOperationCombo.Items.Cast<ComboBoxItem>().Where(i =>
-        {
-            var tag = i.Tag?.ToString();
-            return tag == "Add" || tag == "Subtract" || tag == "Divide";
-        });
-
-        foreach (var item in binaryItems)
-            item.IsEnabled = enabled;
-    }
-
-    private void ResetTransformResultState()
-    {
-        _controller.TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        _controller.TransformChartContentPanel.Visibility = Visibility.Collapsed;
-        _controller.TransformGrid3.ItemsSource = null;
-        _controller.TransformComputeButton.IsEnabled = false;
-    }
-
-    private bool CanUpdateTransformSubtypeOptions()
-    {
-        if (_controller.TransformPrimarySubtypeCombo == null || _controller.TransformSecondarySubtypeCombo == null)
-            return false;
-
-        return !_isTransformSelectionPendingLoad;
-    }
-
-    private void ClearTransformSubtypeCombos()
-    {
-        _controller.TransformPrimarySubtypeCombo.Items.Clear();
-        _controller.TransformSecondarySubtypeCombo.Items.Clear();
-    }
-
-    private void HandleNoSelectedSeries()
-    {
-        _controller.TransformPrimarySubtypeCombo.IsEnabled = false;
-        _controller.TransformSecondarySubtypeCombo.IsEnabled = false;
-        _controller.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-
-        _viewModel.ChartState.SelectedTransformPrimarySeries = null;
-        _viewModel.ChartState.SelectedTransformSecondarySeries = null;
-
-        _controller.TransformPrimarySubtypeCombo.SelectedItem = null;
-        _controller.TransformSecondarySubtypeCombo.SelectedItem = null;
-    }
-
-    private void PopulateTransformSubtypeCombos(IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        ChartSubtypeComboHelper.PopulateCombo(_controller.TransformPrimarySubtypeCombo, selectedSeries);
-        ChartSubtypeComboHelper.PopulateCombo(_controller.TransformSecondarySubtypeCombo, selectedSeries);
-    }
-
-    private void UpdatePrimaryTransformSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        var primaryCurrent = _viewModel.ChartState.SelectedTransformPrimarySeries;
-
-        var primarySelection = ChartSubtypeComboHelper.ResolveSelection(selectedSeries, primaryCurrent) ?? selectedSeries[0];
-        ChartSubtypeComboHelper.SelectComboItem(_controller.TransformPrimarySubtypeCombo, primarySelection);
-        _viewModel.ChartState.SelectedTransformPrimarySeries = primarySelection;
-    }
-
-    private void UpdateSecondaryTransformSubtype(IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        if (selectedSeries.Count > 1)
-        {
-            _controller.TransformSecondarySubtypePanel.Visibility = Visibility.Visible;
-            _controller.TransformSecondarySubtypeCombo.IsEnabled = true;
-            SetBinaryTransformOperationsEnabled(true);
-
-            var secondaryCurrent = _viewModel.ChartState.SelectedTransformSecondarySeries;
-
-            var secondarySelection = secondaryCurrent != null && selectedSeries.Any(series => string.Equals(series.DisplayKey, secondaryCurrent.DisplayKey, StringComparison.OrdinalIgnoreCase)) ? secondaryCurrent : selectedSeries[1];
-
-            ChartSubtypeComboHelper.SelectComboItem(_controller.TransformSecondarySubtypeCombo, secondarySelection);
-            _viewModel.ChartState.SelectedTransformSecondarySeries = secondarySelection;
-        }
-        else
-        {
-            _controller.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-            _controller.TransformSecondarySubtypeCombo.IsEnabled = false;
-            _controller.TransformSecondarySubtypeCombo.SelectedItem = null;
-            _viewModel.ChartState.SelectedTransformSecondarySeries = null;
-            SetBinaryTransformOperationsEnabled(false);
-        }
+        TransformGridPresentationCoordinator.SetBinaryTransformOperationsEnabled(_controller, enabled);
     }
 
     private bool TryGetSelectedOperation(out string operationTag)
@@ -387,245 +259,44 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     private async Task ComputeUnaryTransform(IEnumerable<MetricData> data, string operation, ChartDataContext transformContext)
     {
-        var allDataList = data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-
-        if (allDataList.Count == 0)
+        var computation = _transformComputationService.ComputeUnaryTransform(data, operation);
+        if (!computation.IsSuccess || computation.DataList.Count == 0)
             return;
 
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0);
-        List<double> computedResults;
-        List<IReadOnlyList<MetricData>> metricsList;
-
-        if (expression == null)
-        {
-            Debug.WriteLine($"[Transform] UNARY - Using LEGACY approach for operation: {operation}");
-            var op = operation switch
-            {
-                    "Log" => UnaryOperators.Logarithm,
-                    "Sqrt" => UnaryOperators.SquareRoot,
-                    _ => x => x
-            };
-            var allValues = allDataList.Select(d => (double)d.Value!.Value).ToList();
-            computedResults = MathHelper.ApplyUnaryOperation(allValues, op);
-            metricsList = new List<IReadOnlyList<MetricData>>
-            {
-                    allDataList
-            };
-        }
-        else
-        {
-            Debug.WriteLine($"[Transform] UNARY - Using NEW infrastructure for operation: {operation}, expression built successfully");
-            metricsList = new List<IReadOnlyList<MetricData>>
-            {
-                    allDataList
-            };
-            computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-            Debug.WriteLine($"[Transform] UNARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
-        }
-
-        await RenderTransformResults(allDataList, computedResults, operation, metricsList, transformContext);
+        await RenderTransformResults(computation.DataList, computation.ComputedResults, operation, computation.MetricsList, transformContext);
     }
 
     private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext, string? overrideLabel = null)
     {
         var resultData = TransformExpressionEvaluator.CreateTransformResultData(dataList, results);
-        PopulateTransformResultGrid(resultData);
+        TransformGridPresentationCoordinator.PopulateResultGrid(_controller, resultData);
 
         if (resultData.Count == 0)
             return;
 
-        ShowTransformResultPanels();
-        await PrepareTransformChartLayout();
-        await RenderTransformChart(dataList, results, operation, metrics, transformContext, overrideLabel);
-        await FinalizeTransformChartRendering();
+        TransformGridPresentationCoordinator.ShowResultPanels(_controller);
+        await TransformChartPresentationCoordinator.RenderResultsAsync(
+            _controller,
+            _transformRenderingContract,
+            CreateRenderHost(),
+            dataList,
+            results,
+            operation,
+            metrics,
+            transformContext,
+            overrideLabel);
 
         if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
             v2.UpdateMinMaxLines();
     }
 
-    private void PopulateTransformResultGrid(List<object> resultData)
-    {
-        _controller.TransformGrid3.ItemsSource = resultData;
-        if (_controller.TransformGrid3.Columns.Count >= 2)
-        {
-            if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2)
-            {
-                _controller.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells);
-                _controller.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells);
-            }
-            else
-            {
-                _controller.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-                _controller.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-            }
-        }
-    }
-
-    private void ShowTransformResultPanels()
-    {
-        _controller.TransformGrid3Panel.Visibility = Visibility.Visible;
-        _controller.TransformChartContentPanel.Visibility = Visibility.Visible;
-    }
-
-    private async Task PrepareTransformChartLayout()
-    {
-        _controller.TransformChartContentPanel.UpdateLayout();
-        await _controller.Dispatcher.InvokeAsync(() =>
-                {
-                },
-                DispatcherPriority.Render);
-        await CalculateAndSetTransformChartWidth();
-        Debug.WriteLine($"[TransformChart] Before render - ActualWidth={_controller.ChartTransformResult.ActualWidth}, ActualHeight={_controller.ChartTransformResult.ActualHeight}, IsVisible={_controller.ChartTransformResult.IsVisible}, PanelVisible={_controller.TransformChartContentPanel.Visibility}");
-    }
-
-    private async Task FinalizeTransformChartRendering()
-    {
-        _controller.ChartTransformResult.Update(true, true);
-        _controller.TransformChartContentPanel.UpdateLayout();
-        await _controller.Dispatcher.InvokeAsync(() =>
-                {
-                    _controller.ChartTransformResult.InvalidateVisual();
-                    _controller.ChartTransformResult.Update(true, true);
-                },
-                DispatcherPriority.Render);
-        Debug.WriteLine($"[TransformChart] After render - ActualWidth={_controller.ChartTransformResult.ActualWidth}, ActualHeight={_controller.ChartTransformResult.ActualHeight}, SeriesCount={_controller.ChartTransformResult.Series?.Count ?? 0}");
-    }
-
-    private async Task CalculateAndSetTransformChartWidth()
-    {
-        await _controller.Dispatcher.InvokeAsync(() =>
-                {
-                    if (_controller.TransformChartContainer == null)
-                        return;
-
-                    if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2)
-                    {
-                        _controller.TransformChartContainer.ClearValue(FrameworkElement.WidthProperty);
-                        return;
-                    }
-
-                    var parentStackPanel = _controller.TransformChartContainer.Parent as FrameworkElement;
-                    if (parentStackPanel?.Parent is not FrameworkElement parentContainer)
-                        return;
-
-                    var usedWidth = CalculateUsedWidthForTransformGrids();
-                    usedWidth += 40;
-
-                    var availableWidth = parentContainer.ActualWidth > 0 ? parentContainer.ActualWidth : 1800;
-                    var chartWidth = Math.Max(400, availableWidth - usedWidth - 40);
-                    _controller.TransformChartContainer.Width = chartWidth;
-
-                    Debug.WriteLine($"[TransformChart] Calculated width - parentWidth={parentContainer.ActualWidth}, usedWidth={usedWidth}, chartWidth={chartWidth}");
-                },
-                DispatcherPriority.Render);
-    }
-
-    private double CalculateUsedWidthForTransformGrids()
-    {
-        double usedWidth = 0;
-
-        var grid1StackPanel = _controller.TransformGrid1.Parent as FrameworkElement;
-        usedWidth += grid1StackPanel?.ActualWidth > 0 ? grid1StackPanel.ActualWidth : 250;
-
-        if (_controller.TransformGrid2Panel.IsVisible)
-            usedWidth += _controller.TransformGrid2Panel.ActualWidth > 0 ? _controller.TransformGrid2Panel.ActualWidth : 250;
-
-        if (_controller.TransformGrid3Panel.IsVisible)
-            usedWidth += _controller.TransformGrid3Panel.ActualWidth > 0 ? _controller.TransformGrid3Panel.ActualWidth : 250;
-
-        return usedWidth;
-    }
-
-    private async Task RenderTransformChart(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext, string? overrideLabel = null)
-    {
-        if (dataList.Count == 0 || results.Count == 0)
-            return;
-
-        var from = transformContext.From != default ? transformContext.From : dataList.Min(d => d.NormalizedTimestamp);
-        var to = transformContext.To != default ? transformContext.To : dataList.Max(d => d.NormalizedTimestamp);
-
-        var label = overrideLabel ?? TransformExpressionEvaluator.GenerateTransformLabel(operation, metrics, transformContext);
-
-        var strategy = new TransformResultStrategy(dataList, results, label, from, to);
-
-        var operationTag = _controller.TransformOperationCombo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() ?? "Transform" : "Transform";
-        var operationType = operationTag == "Subtract" ? "-" : operationTag == "Add" ? "+" : operationTag == "Divide" ? "/" : null;
-        var isOperationChart = operationTag == "Subtract" || operationTag == "Add" || operationTag == "Divide";
-
-        await _transformRenderingContract.RenderAsync(
-            new TransformChartRenderRequest(
-                TransformRenderingRoute.ResultCartesian,
-                transformContext,
-                strategy,
-                label,
-                operationType,
-                isOperationChart),
-            CreateRenderHost());
-    }
-
     private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation, ChartDataContext transformContext)
     {
-        var allData1List = PrepareMetricData(data1);
-        var allData2List = PrepareMetricData(data2);
-
-        if (allData1List.Count == 0 || allData2List.Count == 0)
+        var computation = _transformComputationService.ComputeBinaryTransform(data1, data2, operation);
+        if (!computation.IsSuccess || computation.DataList.Count == 0)
             return;
 
-        var alignedData = TransformExpressionEvaluator.AlignMetricsByTimestamp(allData1List, allData2List);
-
-        if (alignedData.Item1.Count == 0 || alignedData.Item2.Count == 0)
-            return;
-
-        var computation = ComputeBinaryResults(alignedData, operation);
-
-        await RenderTransformResults(alignedData.Item1, computation.Results, operation, computation.MetricsList, transformContext);
-    }
-
-    private static List<MetricData> PrepareMetricData(IEnumerable<MetricData> data)
-    {
-        return data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-    }
-
-    private static(List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults((List<MetricData> Item1, List<MetricData> Item2) alignedData, string operation)
-    {
-        var metricsList = new List<IReadOnlyList<MetricData>>
-        {
-                alignedData.Item1,
-                alignedData.Item2
-        };
-
-        var expression = TransformExpressionBuilder.BuildFromOperation(operation, 0, 1);
-
-        if (expression == null)
-        {
-            Debug.WriteLine($"[Transform] BINARY - Using LEGACY approach for operation: {operation}");
-
-            var op = operation switch
-            {
-                    "Add" => BinaryOperators.Sum,
-                    "Subtract" => BinaryOperators.Difference,
-                    "Divide" => BinaryOperators.Ratio,
-                    _ => (a, b) => a
-            };
-
-            var values1 = alignedData.Item1.Select(d => (double)d.Value!.Value).ToList();
-
-            var values2 = alignedData.Item2.Select(d => (double)d.Value!.Value).ToList();
-
-            var results = MathHelper.ApplyBinaryOperation(values1, values2, op);
-
-            Debug.WriteLine($"[Transform] BINARY - Legacy computation completed: {results.Count} results");
-
-            return (results, metricsList);
-        }
-
-        Debug.WriteLine($"[Transform] BINARY - Using NEW infrastructure for operation: {operation}");
-
-        var computedResults = TransformExpressionEvaluator.Evaluate(expression, metricsList);
-
-        Debug.WriteLine($"[Transform] BINARY - Evaluated {computedResults.Count} results using TransformExpressionEvaluator");
-
-        return (computedResults, metricsList);
+        await RenderTransformResults(computation.DataList, computation.ComputedResults, operation, computation.MetricsList, transformContext);
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveTransformDataAsync(ChartDataContext ctx)
@@ -673,19 +344,6 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         var (_, _, transformContext) = await ResolveTransformDataAsync(ctx);
         PopulateTransformGrids(transformContext);
         UpdateTransformComputeButtonState();
-    }
-
-    private void ResetTransformSelectionControls()
-    {
-        _controller.TransformPrimarySubtypeCombo.Items.Clear();
-        _controller.TransformSecondarySubtypeCombo.Items.Clear();
-        _controller.TransformPrimarySubtypeCombo.IsEnabled = false;
-        _controller.TransformSecondarySubtypeCombo.IsEnabled = false;
-        _controller.TransformSecondarySubtypePanel.Visibility = Visibility.Collapsed;
-        _controller.TransformPrimarySubtypeCombo.SelectedItem = null;
-        _controller.TransformSecondarySubtypeCombo.SelectedItem = null;
-        _controller.TransformOperationCombo.SelectedItem = null;
-        _controller.TransformComputeButton.IsEnabled = false;
     }
 
     private bool CanComputeTransformOperation(ChartDataContext ctx, string operationTag)
@@ -821,23 +479,17 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     private void ClearTransformGrids(ChartState state)
     {
-        _controller.TransformGrid1.ItemsSource = null;
-        _controller.TransformGrid2.ItemsSource = null;
-        _controller.TransformGrid3.ItemsSource = null;
-        _controller.TransformGrid2Panel.Visibility = Visibility.Collapsed;
-        _controller.TransformGrid3Panel.Visibility = Visibility.Collapsed;
-        _controller.TransformChartContentPanel.Visibility = Visibility.Collapsed;
-        _controller.TransformComputeButton.IsEnabled = false;
+        TransformGridPresentationCoordinator.ClearAllGrids(_controller);
     }
 
     private static bool ShouldRenderCharts(ChartDataContext? ctx)
     {
-        return ctx != null && ctx.Data1 != null && ctx.Data1.Any();
+        return TransformGridPresentationCoordinator.ShouldRenderCharts(ctx);
     }
 
     private static bool HasSecondaryData(ChartDataContext ctx)
     {
-        return ctx.Data2 != null && ctx.Data2.Any();
+        return TransformGridPresentationCoordinator.HasSecondaryData(ctx);
     }
 
     private TransformChartRenderHost CreateRenderHost()

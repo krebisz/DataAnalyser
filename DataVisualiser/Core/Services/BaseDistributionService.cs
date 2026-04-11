@@ -202,12 +202,7 @@ public abstract class BaseDistributionService : IDistributionService
 
     protected Dictionary<int, List<double>> GetBucketValuesFromResult(BucketDistributionResult? frequencyData)
     {
-        var bucketValues = new Dictionary<int, List<double>>(Configuration.BucketCount);
-
-        for (var i = 0; i < Configuration.BucketCount; i++)
-            bucketValues[i] = frequencyData?.BucketValues?.TryGetValue(i, out var values) == true ? values : new List<double>();
-
-        return bucketValues;
+        return DistributionComputationHelper.GetBucketValues(frequencyData, Configuration.BucketCount);
     }
 
     protected abstract void SetupTooltip(CartesianChart targetChart, ChartComputationResult result, BucketDistributionResult extendedResult, bool useFrequencyShading, int intervalCount);
@@ -308,14 +303,7 @@ public abstract class BaseDistributionService : IDistributionService
 
     protected(double Min, double Max) CalculateGlobalMinMax(List<double> mins, List<double> ranges)
     {
-        var min = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0).Min();
-
-        var max = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).Where(v => !double.IsNaN(v)).DefaultIfEmpty(min + 1).Max();
-
-        if (max <= min)
-            max = min + 1;
-
-        return (min, max);
+        return DistributionComputationHelper.CalculateGlobalMinMax(mins, ranges);
     }
 
     protected FrequencyShadingData BuildFrequencyShadingData(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax, int intervalCount)
@@ -480,132 +468,16 @@ public abstract class BaseDistributionService : IDistributionService
     /// </summary>
     protected Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> CalculateTooltipData(ChartComputationResult result, BucketDistributionResult? frequencyData, int intervalCount = 25)
     {
-        var tooltipData = new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
-
-        if (result == null || frequencyData == null)
-            return tooltipData;
-
-        var mins = result.PrimaryRawValues;
-        var ranges = result.PrimarySmoothed;
-
-        if (mins == null || ranges == null || mins.Count != Configuration.BucketCount || ranges.Count != Configuration.BucketCount)
-            return tooltipData;
-
-        // Get bucket values
-        var bucketValues = GetBucketValuesFromResult(frequencyData);
-
-        // Calculate global min/max
-        var globalMin = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0).Min();
-        var globalMax = mins.Zip(ranges, (m, r) => double.IsNaN(m) || double.IsNaN(r) ? double.NaN : m + r).Where(v => !double.IsNaN(v)).DefaultIfEmpty(1).Max();
-
-        if (globalMax <= globalMin)
-            globalMax = globalMin + 1;
-
-        // Create intervals (same as in RenderOriginalMinMaxChart)
-        var intervals = FrequencyBinningHelper.CreateUniformIntervals(globalMin, globalMax, intervalCount);
-
-        // Count frequencies per interval per bucket
-        var frequenciesPerBucket = FrequencyBinningHelper.CountFrequenciesPerBucket(bucketValues, intervals, Configuration.BucketCount);
-
-        // Calculate percentages for each bucket
-        for (var bucketIndex = 0; bucketIndex < Configuration.BucketCount; bucketIndex++)
-        {
-            var bucketIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
-
-            // Get total count for this bucket
-            var totalCount = 0;
-            if (bucketValues.TryGetValue(bucketIndex, out var values))
-                totalCount = values.Count;
-
-            // Calculate bucket min/max to determine which intervals are within the bucket's range
-            var bucketMin = double.IsNaN(mins[bucketIndex]) ? 0.0 : mins[bucketIndex];
-            var bucketMax = bucketMin + (double.IsNaN(ranges[bucketIndex]) ? 0.0 : ranges[bucketIndex]);
-
-            // For each interval, calculate count and percentage
-            for (var intervalIndex = 0; intervalIndex < intervals.Count; intervalIndex++)
-            {
-                var interval = intervals[intervalIndex];
-
-                // Check if interval overlaps with bucket's range
-                var intervalOverlapsBucketRange = interval.Min < bucketMax && interval.Max > bucketMin;
-
-                if (intervalOverlapsBucketRange && ranges[bucketIndex] > 0 && !double.IsNaN(ranges[bucketIndex]))
-                {
-                    // Get frequency for this interval
-                    var count = 0;
-                    if (frequenciesPerBucket.TryGetValue(bucketIndex, out var bucketFreqs) && bucketFreqs.TryGetValue(intervalIndex, out var freq))
-                        count = freq;
-
-                    // Calculate percentage (percentage of total values for this bucket)
-                    var percentage = totalCount > 0 ? (double)count / totalCount * 100.0 : 0.0;
-
-                    bucketIntervals.Add((interval.Min, interval.Max, count, percentage));
-                }
-            }
-
-            tooltipData[bucketIndex] = bucketIntervals;
-        }
-
-        return tooltipData;
+        return DistributionComputationHelper.CalculateTooltipData(result, frequencyData, Configuration.BucketCount, intervalCount);
     }
 
     protected Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> CalculateSimpleRangeTooltipData(ChartComputationResult result, BucketDistributionResult? extendedResult)
     {
-        var tooltipData = new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
-
-        if (result == null || extendedResult == null)
-            return tooltipData;
-
-        var mins = result.PrimaryRawValues;
-        var ranges = result.PrimarySmoothed;
-
-        if (mins == null || ranges == null || mins.Count != Configuration.BucketCount || ranges.Count != Configuration.BucketCount)
-            return tooltipData;
-
-        // For each bucket, create a single "interval" representing the entire bucket's range
-        for (var bucketIndex = 0; bucketIndex < Configuration.BucketCount; bucketIndex++)
-        {
-            var bucketIntervals = new List<(double Min, double Max, int Count, double Percentage)>();
-
-            // Check if we have valid min value (not NaN)
-            if (double.IsNaN(mins[bucketIndex]))
-                continue; // Skip buckets with invalid min values
-
-            var bucketMin = mins[bucketIndex];
-            var bucketRange = double.IsNaN(ranges[bucketIndex]) ? 0.0 : ranges[bucketIndex];
-            var bucketMax = bucketMin + bucketRange;
-
-            // Get count for this bucket
-            var count = 0;
-            if (bucketIndex < extendedResult.Counts.Count)
-                count = extendedResult.Counts[bucketIndex];
-
-            // Add interval if there's valid data (count > 0 and valid min)
-            // Note: bucketRange can be 0 (all values for the bucket are the same), which is valid
-            if (count > 0)
-                    // Single interval representing the entire bucket's range
-                    // Percentage is 100% since this is the only interval for the bucket
-                bucketIntervals.Add((bucketMin, bucketMax, count, 100.0));
-
-            if (bucketIntervals.Count > 0)
-                tooltipData[bucketIndex] = bucketIntervals;
-        }
-
-        return tooltipData;
+        return DistributionComputationHelper.CalculateSimpleRangeTooltipData(result, extendedResult, Configuration.BucketCount);
     }
 
     protected Dictionary<int, double> CalculateBucketAverages(BucketDistributionResult? extendedResult)
     {
-        var bucketValues = GetBucketValuesFromResult(extendedResult);
-        var averages = new Dictionary<int, double>(Configuration.BucketCount);
-
-        for (var i = 0; i < Configuration.BucketCount; i++)
-        {
-            var values = bucketValues.TryGetValue(i, out var bucket) ? bucket : new List<double>();
-            var validValues = values.Where(v => !double.IsNaN(v)).ToList();
-            averages[i] = validValues.Count > 0 ? validValues.Average() : double.NaN;
-        }
-
-        return averages;
+        return DistributionComputationHelper.CalculateBucketAverages(extendedResult, Configuration.BucketCount);
     }
 }

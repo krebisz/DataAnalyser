@@ -1,7 +1,6 @@
 using DataVisualiser.UI.Charts.Interfaces;
 using System.Windows.Controls;
 using System.Windows.Media;
-using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
@@ -316,13 +315,13 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
             {
                 var (primaryCms, _, primaryLegacy, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, from, to, tableName);
                 if (primaryCms != null && primaryCms.Samples.Count > 0)
-                    return new BarPieSeriesTotals(selection, BuildBucketTotals(primaryCms, plan));
+                    return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(primaryCms, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
 
                 var fallbackLegacy = primaryLegacy?.ToList() ?? new List<MetricData>();
                 if (fallbackLegacy.Count == 0)
                     return null;
 
-                return new BarPieSeriesTotals(selection, BuildBucketTotals(fallbackLegacy, plan));
+                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(fallbackLegacy, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
             }
 
             var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
@@ -330,7 +329,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
             if (dataList.Count == 0)
                 return null;
 
-            return new BarPieSeriesTotals(selection, BuildBucketTotals(dataList, plan));
+            return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(dataList, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
         }
         catch
         {
@@ -373,75 +372,6 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         }
 
         return new BarPieBucketPlan(from, to, bucketTicks, buckets);
-    }
-
-    private static double?[] BuildBucketTotals(IReadOnlyList<MetricData> data, BarPieBucketPlan plan)
-    {
-        var totals = new double?[plan.Buckets.Count];
-        var sums = new double[plan.Buckets.Count];
-        var counts = new int[plan.Buckets.Count];
-
-        foreach (var point in data)
-        {
-            if (!point.Value.HasValue)
-                continue;
-
-            var index = ResolveBucketIndex(point.NormalizedTimestamp, plan);
-            if (index < 0 || index >= sums.Length)
-                continue;
-
-            sums[index] += (double)point.Value.Value;
-            counts[index] += 1;
-        }
-
-        for (var i = 0; i < sums.Length; i++)
-            totals[i] = counts[i] > 0 ? sums[i] / counts[i] : null;
-
-        return totals;
-    }
-
-    private static double?[] BuildBucketTotals(ICanonicalMetricSeries series, BarPieBucketPlan plan)
-    {
-        var totals = new double?[plan.Buckets.Count];
-        var sums = new double[plan.Buckets.Count];
-        var counts = new int[plan.Buckets.Count];
-
-        foreach (var sample in series.Samples)
-        {
-            if (!sample.Value.HasValue)
-                continue;
-
-            var timestamp = sample.Timestamp.LocalDateTime;
-            var index = ResolveBucketIndex(timestamp, plan);
-            if (index < 0 || index >= sums.Length)
-                continue;
-
-            sums[index] += (double)sample.Value.Value;
-            counts[index] += 1;
-        }
-
-        for (var i = 0; i < sums.Length; i++)
-            totals[i] = counts[i] > 0 ? sums[i] / counts[i] : null;
-
-        return totals;
-    }
-
-    private static int ResolveBucketIndex(DateTime timestamp, BarPieBucketPlan plan)
-    {
-        if (timestamp < plan.From || timestamp > plan.To)
-            return -1;
-
-        if (plan.BucketTicks <= 0)
-            return 0;
-
-        var offsetTicks = timestamp.Ticks - plan.From.Ticks;
-        var index = (int)Math.Floor(offsetTicks / plan.BucketTicks);
-        if (index < 0)
-            return -1;
-        if (index >= plan.Buckets.Count)
-            return plan.Buckets.Count - 1;
-
-        return index;
     }
 
     private bool TryResolveBarPieDateRange(out DateTime from, out DateTime to)

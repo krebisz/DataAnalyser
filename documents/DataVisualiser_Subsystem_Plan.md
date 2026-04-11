@@ -128,16 +128,15 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 Current observed shape:
 
 - `~395` C# files (after Phase 6.5 hierarchy cleanup and file merges)
-- `471` automated tests passing
+- `480` automated tests passing
 - first live VNext vertical slice active for main-chart loads
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
 
 - `UI/MainChartsView.xaml.cs` (~1,627 lines)
-- `Core/Data/Repositories/DataFetcher.cs` (~920 lines)
 - `UI/MainHost/MainChartsEvidenceExportService.cs` (~700 lines, reduced from 1,209)
-- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~857 lines)
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~555 lines, reduced from ~857)
 - `Core/Services/BaseDistributionService.cs` (~612 lines)
 - `Core/Rendering/Engines/ChartRenderEngine.cs` (~588 lines)
 - `Core/Rendering/Helpers/ChartHelper.cs` (~595 lines)
@@ -149,6 +148,8 @@ Current read:
 - the evidence boundary is clean: DTOs, diagnostics, and export orchestration are separate concerns
 - runtime-path tracking distinguishes VNext from legacy loads with full signature-chain diagnostics
 - the chart/rendering delivery seams are materially cleaner than before the Phase 5 rehaul
+- `DataFetcher` is now a facade over focused query groups for catalog, metric-data, date/count, and admin concerns
+- transform subtype-combo lifecycle is now isolated in `TransformSubtypeSelectionCoordinator`
 - the remaining architectural noise is concentrated in the outliers listed above
 - low-level helper duplication is no longer the dominant problem; mixed host/orchestration/evidence/data-access responsibilities are
 
@@ -195,11 +196,15 @@ Documents absorbed from Phase 5:
 
 ### 6.2 Phase 6 — Banked Consolidation Work
 
-**Phase 6.1 (Irreducible operations):** Mostly complete.
+**Phase 6.1 (Irreducible operations):** Closed.
 - Frequency binning consolidated into `FrequencyBinningHelper`
 - Transform preparation consolidated into `TransformComputationService`
 - Chart-context series preparation separated into `ChartDataSeriesPreparationHelper`
 - Smoothing, data selection, temporal alignment already centralized in dedicated services
+- Time-bucket averaging and bucket-index resolution consolidated into `TimeBucketAggregationHelper`
+- `BarPieChartControllerAdapter` and `SyncfusionSunburstChartControllerAdapter` now consume the shared bucket helper
+- `TransformDataPanelControllerAdapter` now delegates unary/binary computation to `TransformComputationService`
+- Architecture guardrails lock the shared owners so irreducible-operation sprawl does not silently re-enter the outliers
 
 **Phase 6.5 (Physical hierarchy):** Complete for current cycle.
 - 11 single-file directories eliminated
@@ -286,8 +291,9 @@ Multiple slices banked (export, data-loaded, selection stabilization, request-dr
 Evidence boundary decomposition is complete (`MainChartsEvidenceExportService` split).
 
 Remaining targets in priority order:
-1. `Core/Data/Repositories/DataFetcher.cs`
-2. `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
+1. `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
+2. `Core/Services/BaseDistributionService.cs`
+3. `Core/Rendering/Helpers/ChartHelper.cs`
 
 ### 10.4 Phase D — Delivery and Rendering Spillover Simplification
 

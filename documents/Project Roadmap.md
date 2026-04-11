@@ -350,6 +350,8 @@ The goal is to make the system legible enough that:
 
 #### Phase 6.1 - Irreducible Operation Consolidation
 
+**Status:** CLOSED (April 2026)
+
 **Scope**
 - consolidate repeated low-level operations such as interval resolution, bucketing, binning, smoothing, alignment, selection, and other algebraic or structural helpers into one obvious home per concern
 - remove parallel variations that differ only because of local history or controller-specific exception handling
@@ -646,14 +648,13 @@ Remaining open phases:
 3. `Phase 8 - UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
 
 Major next steps in sequence:
-1. `Phase 6.1` - irreducible operation consolidation
-2. `Phase 6.2` - truth / derivation / delivery boundary reconciliation
-3. `Phase 6.3` - request, consumer, and delivery standardization
-4. `Phase 6.4` - outlier decomposition
-5. `Phase 6.5` - physical hierarchy and naming realignment
-6. `Phase 6.6` - architecture audit and baseline refresh
-7. `Phase 7` - exploratory and confidence capability expansion after Phase 6 is sufficiently advanced
-8. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
+1. `Phase 6.2` - truth / derivation / delivery boundary reconciliation
+2. `Phase 6.3` - request, consumer, and delivery standardization
+3. `Phase 6.4` - outlier decomposition
+4. `Phase 6.5` - physical hierarchy and naming realignment
+5. `Phase 6.6` - architecture audit and baseline refresh
+6. `Phase 7` - exploratory and confidence capability expansion after Phase 6 is sufficiently advanced
+7. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
 
 ---
 

@@ -159,6 +159,49 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void ChartAdapters_ShouldUseSharedTimeBucketAggregationHelper()
+    {
+        var barPieSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "BarPieChartControllerAdapter.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "SyncfusionSunburstChartControllerAdapter.cs");
+
+        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", barPieSource, StringComparison.Ordinal);
+        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", syncfusionSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static double?[] BuildBucketTotals", barPieSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static double?[] BuildBucketTotals", syncfusionSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static int ResolveBucketIndex", barPieSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static int ResolveBucketIndex", syncfusionSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TransformAdapter_ShouldDelegateTransformComputationToSharedService()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
+
+        Assert.Contains("_transformComputationService.ComputeUnaryTransform", source, StringComparison.Ordinal);
+        Assert.Contains("_transformComputationService.ComputeBinaryTransform", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static List<MetricData> PrepareMetricData", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static(List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TransformAdapter_ShouldDelegateSubtypeSelectionUiToDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
+
+        Assert.Contains("TransformSubtypeSelectionCoordinator.ApplySubtypeOptions", source, StringComparison.Ordinal);
+        Assert.Contains("TransformSubtypeSelectionCoordinator.ResetSelectionControls", source, StringComparison.Ordinal);
+        Assert.Contains("TransformGridPresentationCoordinator.PopulateInputGrids", source, StringComparison.Ordinal);
+        Assert.Contains("TransformGridPresentationCoordinator.PopulateResultGrid", source, StringComparison.Ordinal);
+        Assert.Contains("TransformChartPresentationCoordinator.RenderResultsAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private bool CanUpdateTransformSubtypeOptions()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ResetTransformSelectionControls()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void UpdatePrimaryTransformSubtype(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void UpdateSecondaryTransformSubtype(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void PopulateTransformResultGrid(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private async Task RenderTransformChart(", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Hosts_ShouldBatchProgrammaticMetricAndSubtypeSelectionMutations()
     {
         var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
@@ -195,6 +238,48 @@ public sealed class ArchitectureGuardrailTests
             "DataVisualiser", "Core", "Validation", "DataLoad", "MetricDataValidationHelper.cs");
 
         Assert.DoesNotContain("DataVisualiser.UI.Events", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DataFetcher_ShouldRemainFacadeOverFocusedQueryGroups()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Data", "Repositories", "DataFetcher.cs");
+
+        Assert.Contains("DataFetcherMetricCatalogQueries", source, StringComparison.Ordinal);
+        Assert.Contains("DataFetcherMetricDataQueries", source, StringComparison.Ordinal);
+        Assert.Contains("DataFetcherDateRangeQueries", source, StringComparison.Ordinal);
+        Assert.Contains("DataFetcherAdminQueries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("SELECT ", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("MERGE ", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("QueryAsync<", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExecuteAsync(", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BaseDistributionService_ShouldDelegatePureDistributionComputationToSharedHelper()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Services", "BaseDistributionService.cs");
+
+        Assert.Contains("DistributionComputationHelper.GetBucketValues", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionComputationHelper.CalculateGlobalMinMax", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionComputationHelper.CalculateTooltipData", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionComputationHelper.CalculateSimpleRangeTooltipData", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionComputationHelper.CalculateBucketAverages", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartHelper_ShouldDelegateTooltipFormattingToDedicatedHelper()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Helpers", "ChartHelper.cs");
+
+        Assert.Contains("ChartTooltipFormattingHelper.GetChartValuesAtIndex", source, StringComparison.Ordinal);
+        Assert.Contains("ChartTooltipFormattingHelper.GetChartValuesFormattedAtIndex", source, StringComparison.Ordinal);
+        Assert.Contains("ChartTooltipFormattingHelper.ParseSeriesTitle", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static string BuildStackedValuesFormattedString", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static string BuildCumulativeTooltipFromSeries", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -244,7 +329,7 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void ExecutionPlan_ShouldKeepLateGeneralizationGuardrailsDocumented()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Execution_Plan.md");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Subsystem_Plan.md");
 
         Assert.Contains("2-3", source, StringComparison.Ordinal);
         Assert.Contains("do not generalize before", source, StringComparison.OrdinalIgnoreCase);
