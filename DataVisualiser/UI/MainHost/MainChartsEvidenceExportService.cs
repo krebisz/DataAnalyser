@@ -19,11 +19,11 @@ namespace DataVisualiser.UI.MainHost;
 
 public sealed class MainChartsEvidenceExportService
 {
+    private readonly EvidenceDiagnosticsBuilder _diagnosticsBuilder;
     private readonly ReachabilityExportWriter _exportWriter;
     private readonly Func<string> _getBarPieMode;
     private readonly Func<string?> _getSelectedTransformOperation;
     private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
-    private readonly Func<UiSurfaceDiagnosticsSnapshot>? _getUiSurfaceDiagnostics;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly IReachabilityEvidenceStore _reachabilityStore;
     private readonly IReachabilityExportPathResolver _targetPathResolver;
@@ -45,7 +45,7 @@ public sealed class MainChartsEvidenceExportService
         _getStrategyCutOverService = getStrategyCutOverService ?? throw new ArgumentNullException(nameof(getStrategyCutOverService));
         _getSelectedTransformOperation = getSelectedTransformOperation ?? throw new ArgumentNullException(nameof(getSelectedTransformOperation));
         _getBarPieMode = getBarPieMode ?? throw new ArgumentNullException(nameof(getBarPieMode));
-        _getUiSurfaceDiagnostics = getUiSurfaceDiagnostics;
+        _diagnosticsBuilder = new EvidenceDiagnosticsBuilder(metricSelectionService, getUiSurfaceDiagnostics);
     }
 
     public void ClearEvidence()
@@ -70,7 +70,7 @@ public sealed class MainChartsEvidenceExportService
         var paritySummary = BuildParitySummary(distributionParity, combinedParity, singleParity, multiParity, normalizedParity, weekdayTrendParity, transformParity);
         var parityWarnings = BuildParityWarnings(distributionParity, combinedParity, singleParity, multiParity, normalizedParity, weekdayTrendParity, transformParity, selectedSeries.Count);
         var selectedDistributionSettings = chartState.GetDistributionSettings(chartState.SelectedDistributionMode);
-        var diagnostics = await BuildDiagnosticsAsync(chartState, metricState, reachabilityRecords);
+        var diagnostics = await _diagnosticsBuilder.BuildDiagnosticsAsync(chartState, metricState, reachabilityRecords);
 
         var payload = new
         {
@@ -159,514 +159,6 @@ public sealed class MainChartsEvidenceExportService
         return new ReachabilityEvidenceExportResult(result.FilePath, reachabilityRecords.Count > 0, parityWarnings, notes);
     }
 
-    public sealed class DistributionParitySnapshot
-    {
-        public string Status { get; set; } = string.Empty;
-        public string? Reason { get; set; }
-        public object? Selection { get; set; }
-        public string? DataSource { get; set; }
-        public int LegacySamples { get; set; }
-        public int CmsSamplesTotal { get; set; }
-        public int CmsSamplesInRange { get; set; }
-        public ParityResultSnapshot? Weekly { get; set; }
-        public ParityResultSnapshot? Hourly { get; set; }
-    }
-
-    public sealed class ParityResultSnapshot
-    {
-        public bool Passed { get; set; }
-        public string? Message { get; set; }
-        public object? Details { get; set; }
-        public string? Error { get; set; }
-    }
-
-    public sealed class ParitySummarySnapshot
-    {
-        public string Status { get; set; } = string.Empty;
-        public bool? OverallPassed { get; set; }
-        public bool? WeeklyPassed { get; set; }
-        public bool? HourlyPassed { get; set; }
-        public bool? CombinedMetricPassed { get; set; }
-        public bool? SingleMetricPassed { get; set; }
-        public bool? MultiMetricPassed { get; set; }
-        public bool? NormalizedPassed { get; set; }
-        public bool? WeekdayTrendPassed { get; set; }
-        public bool? TransformPassed { get; set; }
-        public string[] StrategiesEvaluated { get; set; } = Array.Empty<string>();
-    }
-
-    public sealed class CombinedMetricParitySnapshot
-    {
-        public string Status { get; set; } = string.Empty;
-        public string? Reason { get; set; }
-        public ParityResultSnapshot? Result { get; set; }
-    }
-
-    public sealed class SimpleParitySnapshot
-    {
-        public string Status { get; set; } = string.Empty;
-        public string? Reason { get; set; }
-        public ParityResultSnapshot? Result { get; set; }
-    }
-
-    public sealed class TransformParitySnapshot
-    {
-        public string Status { get; set; } = string.Empty;
-        public string? Reason { get; set; }
-        public string? Operation { get; set; }
-        public bool IsUnary { get; set; }
-        public bool ExpressionAvailable { get; set; }
-        public int LegacySamples { get; set; }
-        public int NewSamples { get; set; }
-        public ParityResultSnapshot? Result { get; set; }
-    }
-
-    public sealed class DiagnosticsSnapshot
-    {
-        public SelectionDiagnosticsSnapshot Selection { get; set; } = new();
-        public LoadedContextDiagnosticsSnapshot LoadedContext { get; set; } = new();
-        public MainChartPipelineDiagnosticsSnapshot MainChartPipeline { get; set; } = new();
-        public ReachabilityDiagnosticsSnapshot Reachability { get; set; } = new();
-        public UiSurfaceDiagnosticsSnapshot UiSurface { get; set; } = new();
-        public SmokeHeuristicsSnapshot SmokeChecks { get; set; } = new();
-        public TransitionDiagnosticsSnapshot Transition { get; set; } = new();
-    }
-
-    public sealed class UiSurfaceDiagnosticsSnapshot
-    {
-        public MetricTypeUiDiagnosticsSnapshot MetricType { get; set; } = new();
-        public DateRangeUiDiagnosticsSnapshot DateRange { get; set; } = new();
-        public SubtypeUiDiagnosticsSnapshot Subtypes { get; set; } = new();
-        public TransformUiDiagnosticsSnapshot Transform { get; set; } = new();
-        public IReadOnlyList<HostMessageDiagnosticsSnapshot> RecentMessages { get; set; } = Array.Empty<HostMessageDiagnosticsSnapshot>();
-    }
-
-    public sealed class MetricTypeUiDiagnosticsSnapshot
-    {
-        public string? SelectedValue { get; set; }
-        public string? SelectedDisplay { get; set; }
-        public int OptionCount { get; set; }
-    }
-
-    public sealed class DateRangeUiDiagnosticsSnapshot
-    {
-        public DateTime? SelectedFromDate { get; set; }
-        public DateTime? SelectedToDate { get; set; }
-        public DateTime ExpectedDefaultFromDateUtc { get; set; }
-        public DateTime ExpectedDefaultToDateUtc { get; set; }
-        public bool MatchesExpectedDefaultWindow { get; set; }
-    }
-
-    public sealed class SubtypeUiDiagnosticsSnapshot
-    {
-        public int ActiveComboCount { get; set; }
-        public bool PrimarySelectionMaterialized { get; set; }
-        public bool AllCombosBoundToSelectedMetricType { get; set; }
-        public bool? PrimaryOptionsMatchSelectedMetric { get; set; }
-        public IReadOnlyList<string> ExpectedPrimaryOptionValues { get; set; } = Array.Empty<string>();
-        public IReadOnlyList<SubtypeComboDiagnosticsSnapshot> OrderedCombos { get; set; } = Array.Empty<SubtypeComboDiagnosticsSnapshot>();
-    }
-
-    public sealed class SubtypeComboDiagnosticsSnapshot
-    {
-        public int Index { get; set; }
-        public string? BoundMetricType { get; set; }
-        public string? SelectedValue { get; set; }
-        public string? SelectedDisplay { get; set; }
-        public int OptionCount { get; set; }
-        public IReadOnlyList<string> OptionValues { get; set; } = Array.Empty<string>();
-    }
-
-    public sealed class TransformUiDiagnosticsSnapshot
-    {
-        public bool PanelVisible { get; set; }
-        public bool SecondaryPanelVisible { get; set; }
-        public bool ComputeEnabled { get; set; }
-        public string? SelectedOperation { get; set; }
-        public string? SelectedPrimarySubtype { get; set; }
-        public string? SelectedSecondarySubtype { get; set; }
-        public int PrimaryOptionCount { get; set; }
-        public int SecondaryOptionCount { get; set; }
-    }
-
-    public sealed class HostMessageDiagnosticsSnapshot
-    {
-        public DateTime TimestampUtc { get; set; }
-        public string Severity { get; set; } = string.Empty;
-        public string? Title { get; set; }
-        public string? Message { get; set; }
-    }
-
-    public sealed class SmokeHeuristicsSnapshot
-    {
-        public bool? SelectedMetricMatchesUiMetric { get; set; }
-        public bool? SubtypeComboCountMatchesSelectedSeries { get; set; }
-        public bool? LoadedSeriesCountMatchesSelection { get; set; }
-        public bool? PrimarySubtypeOptionsMatchSelectedMetric { get; set; }
-        public bool DateRangeMatchesExpectedDefaultWindow { get; set; }
-        public int RecentErrorCount { get; set; }
-        public bool RecentErrorsPresent { get; set; }
-    }
-
-    public sealed class TransitionDiagnosticsSnapshot
-    {
-        public string CurrentSelectionSignature { get; set; } = string.Empty;
-        public bool? LoadedRequestMatchesCurrentSelection { get; set; }
-        public string? LoadedContextSignature { get; set; }
-        public string? LatestReachabilitySignature { get; set; }
-        public int ExpectedSeriesCount { get; set; }
-        public int LoadedContextSeriesCount { get; set; }
-        public int LatestReachabilitySeriesCount { get; set; }
-        public bool RenderEvidenceExceedsStoredContext { get; set; }
-        public bool ReloadLikelyRequired { get; set; }
-        public string State { get; set; } = string.Empty;
-        public string Interpretation { get; set; } = string.Empty;
-    }
-
-    public sealed class SelectionDiagnosticsSnapshot
-    {
-        public string? SelectedMetricType { get; set; }
-        public int SelectedSeriesCount { get; set; }
-        public int DistinctDisplayKeyCount { get; set; }
-        public IReadOnlyList<SeriesSelectionDiagnosticsSnapshot> OrderedSeries { get; set; } = Array.Empty<SeriesSelectionDiagnosticsSnapshot>();
-    }
-
-    public sealed class SeriesSelectionDiagnosticsSnapshot
-    {
-        public int Index { get; set; }
-        public string? MetricType { get; set; }
-        public string? Subtype { get; set; }
-        public string? DisplayName { get; set; }
-        public string? DisplayKey { get; set; }
-        public bool MatchesLoadedPrimary { get; set; }
-        public bool MatchesLoadedSecondary { get; set; }
-        public bool RequiresOnDemandResolution { get; set; }
-    }
-
-    public sealed class LoadedContextDiagnosticsSnapshot
-    {
-        public bool Present { get; set; }
-        public bool ReusableForCurrentSelection { get; set; }
-        public string? LoadRequestSignature { get; set; }
-        public string? MetricType { get; set; }
-        public string? PrimaryMetricType { get; set; }
-        public string? SecondaryMetricType { get; set; }
-        public string? PrimarySubtype { get; set; }
-        public string? SecondarySubtype { get; set; }
-        public string? DisplayName1 { get; set; }
-        public string? DisplayName2 { get; set; }
-        public int ActualSeriesCount { get; set; }
-        public int Data1Count { get; set; }
-        public int Data2Count { get; set; }
-        public int CmsSeriesCount { get; set; }
-        public DateTime? From { get; set; }
-        public DateTime? To { get; set; }
-    }
-
-    public sealed class MainChartPipelineDiagnosticsSnapshot
-    {
-        public int ExpectedSeriesFromSelection { get; set; }
-        public int ExpectedBaseSeriesLoad { get; set; }
-        public int ExpectedAdditionalSeriesLoad { get; set; }
-        public int ContextActualSeriesCount { get; set; }
-        public bool MultiMetricRequested { get; set; }
-        public bool ContextLikelyStaleForSelection { get; set; }
-    }
-
-    public sealed class ReachabilityDiagnosticsSnapshot
-    {
-        public int RecordCount { get; set; }
-        public int MaxActualSeriesCount { get; set; }
-        public int MaxCmsSeriesCount { get; set; }
-        public string? LatestStrategy { get; set; }
-        public int LatestActualSeriesCount { get; set; }
-        public int LatestCmsSeriesCount { get; set; }
-        public string? LatestDecisionReason { get; set; }
-        public DateTime? LatestTimestampUtc { get; set; }
-    }
-
-    private async Task<DiagnosticsSnapshot> BuildDiagnosticsAsync(
-        ChartState chartState,
-        MetricState metricState,
-        IReadOnlyList<StrategyReachabilityRecord> reachabilityRecords)
-    {
-        var selectedSeries = metricState.SelectedSeries.ToList();
-        var ctx = chartState.LastContext;
-        var uiSurface = _getUiSurfaceDiagnostics?.Invoke() ?? new UiSurfaceDiagnosticsSnapshot();
-        uiSurface.Subtypes.PrimaryOptionsMatchSelectedMetric = await DeterminePrimaryOptionsMatchSelectedMetricAsync(metricState, uiSurface.Subtypes);
-        var reusableContext = ChartContextSelectionGuard.IsCompatibleWithCurrentSelection(
-            ctx,
-            metricState.SelectedMetricType,
-            selectedSeries,
-            metricState.FromDate,
-            metricState.ToDate,
-            metricState.ResolutionTableName);
-        var latestRecord = reachabilityRecords
-            .OrderByDescending(record => record.TimestampUtc)
-            .FirstOrDefault();
-        var expectedSeriesCount = selectedSeries.Count(series => series.QuerySubtype != null);
-        var recentErrorCount = uiSurface.RecentMessages.Count(message =>
-            string.Equals(message.Severity, "Error", StringComparison.OrdinalIgnoreCase));
-        var transition = BuildTransitionDiagnostics(
-            metricState,
-            selectedSeries,
-            ctx,
-            reusableContext,
-            latestRecord,
-            expectedSeriesCount,
-            recentErrorCount);
-
-        return new DiagnosticsSnapshot
-        {
-            Selection = new SelectionDiagnosticsSnapshot
-            {
-                SelectedMetricType = metricState.SelectedMetricType,
-                SelectedSeriesCount = selectedSeries.Count,
-                DistinctDisplayKeyCount = selectedSeries
-                    .Select(series => series.DisplayKey)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .Count(),
-                OrderedSeries = selectedSeries
-                    .Select((series, index) => new SeriesSelectionDiagnosticsSnapshot
-                    {
-                        Index = index,
-                        MetricType = series.MetricType,
-                        Subtype = series.Subtype,
-                        DisplayName = series.DisplayName,
-                        DisplayKey = series.DisplayKey,
-                        MatchesLoadedPrimary = IsSameSelection(series, ctx?.PrimaryMetricType ?? ctx?.MetricType, ctx?.PrimarySubtype),
-                        MatchesLoadedSecondary = IsSameSelection(series, ctx?.SecondaryMetricType, ctx?.SecondarySubtype),
-                        RequiresOnDemandResolution =
-                            !IsSameSelection(series, ctx?.PrimaryMetricType ?? ctx?.MetricType, ctx?.PrimarySubtype) &&
-                            !IsSameSelection(series, ctx?.SecondaryMetricType, ctx?.SecondarySubtype)
-                    })
-                    .ToList()
-            },
-            LoadedContext = new LoadedContextDiagnosticsSnapshot
-            {
-                Present = ctx != null,
-                ReusableForCurrentSelection = reusableContext,
-                LoadRequestSignature = ctx?.LoadRequestSignature,
-                MetricType = ctx?.MetricType,
-                PrimaryMetricType = ctx?.PrimaryMetricType,
-                SecondaryMetricType = ctx?.SecondaryMetricType,
-                PrimarySubtype = ctx?.PrimarySubtype,
-                SecondarySubtype = ctx?.SecondarySubtype,
-                DisplayName1 = ctx?.DisplayName1,
-                DisplayName2 = ctx?.DisplayName2,
-                ActualSeriesCount = ctx?.ActualSeriesCount ?? 0,
-                Data1Count = ctx?.Data1?.Count() ?? 0,
-                Data2Count = ctx?.Data2?.Count() ?? 0,
-                CmsSeriesCount = ctx?.CmsSeries?.Count ?? 0,
-                From = ctx?.From,
-                To = ctx?.To
-            },
-            MainChartPipeline = new MainChartPipelineDiagnosticsSnapshot
-            {
-                ExpectedSeriesFromSelection = selectedSeries.Count(series => series.QuerySubtype != null),
-                ExpectedBaseSeriesLoad = Math.Min(2, selectedSeries.Count(series => series.QuerySubtype != null)),
-                ExpectedAdditionalSeriesLoad = Math.Max(0, selectedSeries.Count(series => series.QuerySubtype != null) - 2),
-                ContextActualSeriesCount = ctx?.ActualSeriesCount ?? 0,
-                MultiMetricRequested = selectedSeries.Count(series => series.QuerySubtype != null) >= 3,
-                ContextLikelyStaleForSelection = selectedSeries.Count > 0 && !reusableContext
-            },
-            Reachability = new ReachabilityDiagnosticsSnapshot
-            {
-                RecordCount = reachabilityRecords.Count,
-                MaxActualSeriesCount = reachabilityRecords.Count == 0 ? 0 : reachabilityRecords.Max(record => record.ActualSeriesCount),
-                MaxCmsSeriesCount = reachabilityRecords.Count == 0 ? 0 : reachabilityRecords.Max(record => record.CmsSeriesCount),
-                LatestStrategy = latestRecord?.StrategyType.ToString(),
-                LatestActualSeriesCount = latestRecord?.ActualSeriesCount ?? 0,
-                LatestCmsSeriesCount = latestRecord?.CmsSeriesCount ?? 0,
-                LatestDecisionReason = latestRecord?.DecisionReason,
-                LatestTimestampUtc = latestRecord?.TimestampUtc
-            },
-            UiSurface = uiSurface,
-            SmokeChecks = new SmokeHeuristicsSnapshot
-            {
-                SelectedMetricMatchesUiMetric =
-                    string.IsNullOrWhiteSpace(uiSurface.MetricType.SelectedValue)
-                        ? null
-                        : string.Equals(metricState.SelectedMetricType, uiSurface.MetricType.SelectedValue, StringComparison.OrdinalIgnoreCase),
-                SubtypeComboCountMatchesSelectedSeries =
-                    uiSurface.Subtypes.ActiveComboCount > 0
-                        ? uiSurface.Subtypes.ActiveComboCount == selectedSeries.Count
-                        : null,
-                LoadedSeriesCountMatchesSelection =
-                    ctx == null || expectedSeriesCount == 0
-                        ? null
-                        : ctx.ActualSeriesCount == expectedSeriesCount,
-                PrimarySubtypeOptionsMatchSelectedMetric = uiSurface.Subtypes.PrimaryOptionsMatchSelectedMetric,
-                DateRangeMatchesExpectedDefaultWindow = uiSurface.DateRange.MatchesExpectedDefaultWindow,
-                RecentErrorCount = recentErrorCount,
-                RecentErrorsPresent = recentErrorCount > 0
-            },
-            Transition = transition
-        };
-    }
-
-    private static TransitionDiagnosticsSnapshot BuildTransitionDiagnostics(
-        MetricState metricState,
-        IReadOnlyList<MetricSeriesSelection> selectedSeries,
-        ChartDataContext? context,
-        bool reusableContext,
-        StrategyReachabilityRecord? latestRecord,
-        int expectedSeriesCount,
-        int recentErrorCount)
-    {
-        var loadedSeriesCount = context?.ActualSeriesCount ?? 0;
-        var latestReachabilitySeriesCount = latestRecord?.ActualSeriesCount ?? 0;
-        var renderEvidenceExceedsStoredContext = latestReachabilitySeriesCount > loadedSeriesCount;
-
-        string state;
-        string interpretation;
-        var reloadLikelyRequired = false;
-
-        if (recentErrorCount > 0)
-        {
-            state = "HostErrorObserved";
-            interpretation = "A host error dialog was recorded during this scenario.";
-        }
-        else if (selectedSeries.Count == 0)
-        {
-            state = "NoSelection";
-            interpretation = "No series are currently selected.";
-        }
-        else if (expectedSeriesCount == 0)
-        {
-            state = "SelectionIncomplete";
-            interpretation = "The selection exists, but one or more subtype values are still missing.";
-        }
-        else if (context == null || loadedSeriesCount == 0)
-        {
-            if (latestReachabilitySeriesCount >= expectedSeriesCount && expectedSeriesCount > 0)
-            {
-                state = "RenderRecordedWithoutStoredContext";
-                interpretation = "Reachability shows a render/load decision for the current selection, but the stored chart context is empty.";
-                reloadLikelyRequired = true;
-            }
-            else
-            {
-                state = "AwaitingLoad";
-                interpretation = "Selection state is configured, but no successful data load is reflected yet.";
-            }
-        }
-        else if (reusableContext && loadedSeriesCount == expectedSeriesCount)
-        {
-            state = "ContextAligned";
-            interpretation = "Stored chart context matches the current selection and expected series count.";
-        }
-        else if (reusableContext && loadedSeriesCount != expectedSeriesCount)
-        {
-            if (renderEvidenceExceedsStoredContext && latestReachabilitySeriesCount >= expectedSeriesCount)
-            {
-                state = "StoredContextLagging";
-                interpretation = "Reachability shows the newer series count, but the stored chart context still reflects an older count.";
-            }
-            else
-            {
-                state = "SeriesCountMismatch";
-                interpretation = "Stored chart context is reusable by metric family, but its series count does not match the current selection.";
-            }
-
-            reloadLikelyRequired = true;
-        }
-        else if (renderEvidenceExceedsStoredContext && latestReachabilitySeriesCount >= expectedSeriesCount)
-        {
-            state = "StaleContextAfterRender";
-            interpretation = "A newer render/load appears to have happened, but the stored chart context is stale for the current selection.";
-            reloadLikelyRequired = true;
-        }
-        else
-        {
-            state = "StaleContext";
-            interpretation = "Stored chart context does not match the current metric/subtype selection.";
-            reloadLikelyRequired = true;
-        }
-
-        return new TransitionDiagnosticsSnapshot
-        {
-            CurrentSelectionSignature = BuildSelectionSignature(metricState, selectedSeries),
-            LoadedRequestMatchesCurrentSelection = string.IsNullOrWhiteSpace(context?.LoadRequestSignature)
-                ? null
-                : string.Equals(context.LoadRequestSignature, BuildSelectionSignature(metricState, selectedSeries), StringComparison.Ordinal),
-            LoadedContextSignature = BuildContextSignature(context),
-            LatestReachabilitySignature = BuildReachabilitySignature(latestRecord),
-            ExpectedSeriesCount = expectedSeriesCount,
-            LoadedContextSeriesCount = loadedSeriesCount,
-            LatestReachabilitySeriesCount = latestReachabilitySeriesCount,
-            RenderEvidenceExceedsStoredContext = renderEvidenceExceedsStoredContext,
-            ReloadLikelyRequired = reloadLikelyRequired,
-            State = state,
-            Interpretation = interpretation
-        };
-    }
-
-    private static string BuildSelectionSignature(MetricState metricState, IReadOnlyList<MetricSeriesSelection> selectedSeries)
-    {
-        var orderedSeries = string.Join(
-            "|",
-            selectedSeries.Select(series => $"{series.MetricType}:{series.QuerySubtype ?? "<none>"}"));
-
-        return $"{metricState.SelectedMetricType ?? "<none>"}::{metricState.ResolutionTableName ?? "<none>"}::{metricState.FromDate:O}->{metricState.ToDate:O}::{orderedSeries}";
-    }
-
-    private static string? BuildContextSignature(ChartDataContext? context)
-    {
-        if (context == null)
-            return null;
-
-        var metricType = context.PrimaryMetricType ?? context.MetricType ?? "<none>";
-        var secondaryMetricType = context.SecondaryMetricType ?? "<none>";
-        var primarySubtype = context.PrimarySubtype ?? "<none>";
-        var secondarySubtype = context.SecondarySubtype ?? "<none>";
-
-        return $"{metricType}:{primarySubtype}|{secondaryMetricType}:{secondarySubtype}::{context.From:O}->{context.To:O}::series={context.ActualSeriesCount}";
-    }
-
-    private static string? BuildReachabilitySignature(StrategyReachabilityRecord? latestRecord)
-    {
-        if (latestRecord == null)
-            return null;
-
-        return $"{latestRecord.StrategyType}::actual={latestRecord.ActualSeriesCount}::cms={latestRecord.CmsSeriesCount}::reason={latestRecord.DecisionReason}";
-    }
-
-    private async Task<bool?> DeterminePrimaryOptionsMatchSelectedMetricAsync(
-        MetricState metricState,
-        SubtypeUiDiagnosticsSnapshot subtypes)
-    {
-        if (string.IsNullOrWhiteSpace(metricState.SelectedMetricType) ||
-            string.IsNullOrWhiteSpace(metricState.ResolutionTableName) ||
-            subtypes.OrderedCombos.Count == 0)
-            return null;
-
-        try
-        {
-            var expected = await _metricSelectionService.LoadSubtypesAsync(metricState.SelectedMetricType, metricState.ResolutionTableName);
-            var expectedValues = expected
-                .Select(option => option.Value)
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            subtypes.ExpectedPrimaryOptionValues = expectedValues;
-
-            var actualValues = subtypes.OrderedCombos[0].OptionValues
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            return expectedValues.SequenceEqual(actualValues, StringComparer.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     private static ParitySummarySnapshot BuildParitySummary(DistributionParitySnapshot distributionSnapshot, CombinedMetricParitySnapshot combinedSnapshot, SimpleParitySnapshot singleSnapshot, SimpleParitySnapshot multiSnapshot, SimpleParitySnapshot normalizedSnapshot, SimpleParitySnapshot weekdayTrendSnapshot, TransformParitySnapshot transformSnapshot)
     {
         var weeklyPassed = distributionSnapshot.Weekly?.Passed;
@@ -734,16 +226,6 @@ public sealed class MainChartsEvidenceExportService
     private IStrategyCutOverService ResolveStrategyCutOverService()
     {
         return _getStrategyCutOverService() ?? new StrategyCutOverService(new DataPreparationService(), StrategyReachabilityStoreProbe.Default);
-    }
-
-    private static bool IsSameSelection(MetricSeriesSelection selection, string? metricType, string? subtype)
-    {
-        if (!string.Equals(selection.MetricType, metricType ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        var normalizedSubtype = string.IsNullOrWhiteSpace(subtype) || subtype == "(All)" ? null : subtype;
-        var selectionSubtype = selection.QuerySubtype;
-        return string.Equals(selectionSubtype ?? string.Empty, normalizedSubtype ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     private static int CountCmsSamples(ICanonicalMetricSeries? series, DateTime? from = null, DateTime? to = null)
@@ -951,10 +433,10 @@ public sealed class MainChartsEvidenceExportService
 
     private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveMultiMetricParitySeriesAsync(ChartDataContext ctx, MetricSeriesSelection selection, string tableName)
     {
-        if (ctx.Data1 != null && IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (ctx.Data1 != null && EvidenceDiagnosticsBuilder.IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
 
-        if (ctx.Data2 != null && IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (ctx.Data2 != null && EvidenceDiagnosticsBuilder.IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return (ctx.Data2, ctx.SecondaryCms as ICanonicalMetricSeries);
 
         if (ctx.CmsSeries != null)
@@ -1083,10 +565,10 @@ public sealed class MainChartsEvidenceExportService
         if (selection == null)
             return null;
 
-        if (ctx.Data1 != null && IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (ctx.Data1 != null && EvidenceDiagnosticsBuilder.IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return ctx.Data1;
 
-        if (ctx.Data2 != null && IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (ctx.Data2 != null && EvidenceDiagnosticsBuilder.IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return ctx.Data2;
 
         if (string.IsNullOrWhiteSpace(selection.MetricType))
@@ -1168,10 +650,10 @@ public sealed class MainChartsEvidenceExportService
 
     private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms, string DataSource)> ResolveDistributionParityDataAsync(ChartDataContext ctx, MetricSeriesSelection selection, string tableName)
     {
-        if (ctx.Data1 != null && IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
+        if (ctx.Data1 != null && EvidenceDiagnosticsBuilder.IsSameSelection(selection, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
             return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries, "ChartContext.Primary");
 
-        if (ctx.Data2 != null && IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
+        if (ctx.Data2 != null && EvidenceDiagnosticsBuilder.IsSameSelection(selection, ctx.SecondaryMetricType, ctx.SecondarySubtype))
             return (ctx.Data2, ctx.SecondaryCms as ICanonicalMetricSeries, "ChartContext.Secondary");
 
         if (string.IsNullOrWhiteSpace(selection.MetricType))

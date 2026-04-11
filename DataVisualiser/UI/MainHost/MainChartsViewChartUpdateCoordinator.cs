@@ -209,4 +209,26 @@ public sealed class MainChartsViewChartUpdateCoordinator
     {
         return context.Data2 != null && context.Data2.Any();
     }
+
+
+    private static void ClearExtendedCharts(ChartState chartState, Actions actions)
+    {
+        if (chartState.IsNormalizedVisible)
+            actions.ClearChart(ChartControllerKeys.Normalized);
+
+        if (chartState.IsDiffRatioVisible)
+            actions.ClearChart(ChartControllerKeys.DiffRatio);
+
+        if (chartState.IsDistributionVisible)
+            actions.ClearChart(ChartControllerKeys.Distribution);
+
+        if (chartState.IsWeeklyTrendVisible)
+            actions.ClearChart(ChartControllerKeys.WeeklyTrend);
+
+        if (chartState.IsTransformPanelVisible)
+            actions.ClearChart(ChartControllerKeys.Transform);
+
+        if (chartState.IsBarPieVisible)
+            actions.ClearChart(ChartControllerKeys.BarPie);
+    }
 }

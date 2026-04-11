@@ -211,6 +211,7 @@ public partial class SyncfusionChartsView : UserControl
 
         _viewModel.MetricState.SelectedMetricType = null;
         _viewModel.ChartState.LastContext = new ChartDataContext();
+        _viewModel.ChartState.LastLoadRuntime = null;
         ResetDateRangeToDefault();
 
         TablesCombo.Items.Clear();
@@ -236,6 +237,7 @@ public partial class SyncfusionChartsView : UserControl
             _subtypeList = null;
             ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
             _viewModel.ChartState.LastContext = null;
+            _viewModel.ChartState.LastLoadRuntime = null;
             _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
             _selectorManager.ClearAllSubtypeControls();
             UpdateSelectedSubtypesInViewModel();
@@ -359,6 +361,7 @@ public partial class SyncfusionChartsView : UserControl
 
         MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         _viewModel.ChartState.LastContext = null;
+        _viewModel.ChartState.LastLoadRuntime = null;
     }
 
     private async void OnAnySubtypeSelectionChanged(object? sender, SelectionChangedEventArgs? e)
@@ -372,6 +375,7 @@ public partial class SyncfusionChartsView : UserControl
         {
             ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
             _viewModel.ChartState.LastContext = null;
+            _viewModel.ChartState.LastLoadRuntime = null;
             UpdateSyncfusionToggleEnabled();
         }
 
@@ -475,6 +479,7 @@ public partial class SyncfusionChartsView : UserControl
             if (!dataLoaded)
             {
                 _viewModel.ChartState.LastContext = null;
+                _viewModel.ChartState.LastLoadRuntime = null;
                 return;
             }
 
@@ -484,6 +489,7 @@ public partial class SyncfusionChartsView : UserControl
         {
             MessageBox.Show($"Error loading data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             _viewModel.ChartState.LastContext = null;
+            _viewModel.ChartState.LastLoadRuntime = null;
         }
     }
 
@@ -553,6 +559,7 @@ public partial class SyncfusionChartsView : UserControl
         _evidenceExportService.ClearEvidence();
         _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
         _viewModel.ChartState.LastContext = new ChartDataContext();
+        _viewModel.ChartState.LastLoadRuntime = null;
         ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
         UpdateSyncfusionToggleEnabled();
 

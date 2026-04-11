@@ -144,6 +144,57 @@ public sealed class MainChartsViewChartUpdateCoordinatorTests
     }
 
     [Fact]
+    public async Task RenderVisibleChartsAsync_ShouldRenderAllVisibleChartsEvenWhenLastLoadRuntimeSupportsOnlyMainChart()
+    {
+        var rendered = new List<string>();
+        var cleared = new List<string>();
+        var coordinator = new MainChartsViewChartUpdateCoordinator();
+        var chartState = new ChartState
+        {
+            IsMainVisible = true,
+            IsNormalizedVisible = true,
+            IsDiffRatioVisible = true,
+            IsDistributionVisible = true,
+            IsWeeklyTrendVisible = true,
+            IsTransformPanelVisible = true,
+            IsBarPieVisible = true,
+            LastLoadRuntime = new LoadRuntimeState(
+                EvidenceRuntimePath.VNextMain,
+                "req",
+                "snap",
+                null,
+                "req",
+                "ctx",
+                null,
+                true)
+        };
+
+        await coordinator.RenderVisibleChartsAsync(
+            chartState,
+            CreateContext(includeSecondary: true),
+            CreateActions(
+                renderChartAsync: (key, _) =>
+                {
+                    rendered.Add(key);
+                    return Task.CompletedTask;
+                },
+                clearChart: cleared.Add));
+
+        Assert.Equal(
+            [
+                ChartControllerKeys.Main,
+                ChartControllerKeys.Normalized,
+                ChartControllerKeys.DiffRatio,
+                ChartControllerKeys.Distribution,
+                ChartControllerKeys.WeeklyTrend,
+                ChartControllerKeys.Transform,
+                ChartControllerKeys.BarPie
+            ],
+            rendered);
+        Assert.Empty(cleared);
+    }
+
+    [Fact]
     public async Task RenderVisibleChartsAsync_ShouldDoNothingWithoutRenderableContext()
     {
         var rendered = new List<string>();
@@ -208,6 +259,41 @@ public sealed class MainChartsViewChartUpdateCoordinatorTests
                 }));
 
         Assert.Empty(rendered);
+    }
+
+    [Fact]
+    public async Task RenderSingleChartAsync_ShouldRenderExtendedChartEvenWhenMainOnlyRuntimeIsActive()
+    {
+        var rendered = new List<string>();
+        var cleared = new List<string>();
+        var coordinator = new MainChartsViewChartUpdateCoordinator();
+
+        await coordinator.RenderSingleChartAsync(
+            new ChartState
+            {
+                IsDistributionVisible = true,
+                LastLoadRuntime = new LoadRuntimeState(
+                    EvidenceRuntimePath.VNextMain,
+                    "req",
+                    "snap",
+                    null,
+                    "req",
+                    "ctx",
+                    null,
+                    true)
+            },
+            ChartControllerKeys.Distribution,
+            CreateContext(includeSecondary: true),
+            CreateActions(
+                renderChartAsync: (key, _) =>
+                {
+                    rendered.Add(key);
+                    return Task.CompletedTask;
+                },
+                clearChart: cleared.Add));
+
+        Assert.Equal([ChartControllerKeys.Distribution], rendered);
+        Assert.Empty(cleared);
     }
 
     [Fact]

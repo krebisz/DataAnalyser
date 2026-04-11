@@ -203,16 +203,23 @@ The orchestration layer coordinates execution, not meaning.
 **Responsibilities**
 - accept explicit downstream requests for result shaping, composition, or delivery
 - strategy selection through explicit declared mechanisms
-- execution routing
+- execution routing, including runtime-path selection between VNext and legacy load paths
 - consumer-request / chart-program result composition handoff
 - migration coexistence handling
 - evidence/export initiation
+- runtime-path tracking via explicit state (`LoadRuntimeState`) so downstream diagnostics and evidence can observe which path was used
+
+**Current execution paths**
+- **VNext path**: `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `ChartProgram` → `LegacyChartProgramProjector` → `ChartDataContext`. Activated when only the Main chart is visible. Fresh coordinator per load. Produces signature-tracked runtime state.
+- **Legacy path**: `MetricLoadCoordinator` → `MetricSelectionService` → `ChartDataContextBuilder` → `ChartDataContext`. Activated when extended charts are visible or as automatic fallback on VNext failure.
+- Path selection is deterministic, visibility-based, and independent of CMS configuration.
 
 **Constraints**
 - no semantic branching
 - no heuristic overrides
 - no hidden controller-specific execution shortcuts
 - no silent bypass paths
+- VNext path must not change the semantic content of the projected context relative to legacy — it is an execution-path alternative, not a semantic one
 
 Execution reachability must be observable.
 
@@ -361,9 +368,15 @@ Evidence generation is structurally downstream of execution.
 It may observe:
 
 - which strategy ran
-- which path was used
+- which execution path was used (VNext or legacy, via `LoadRuntimeState`)
+- request/snapshot/program/projected-context signature alignment
 - parity outcomes
 - backend qualification outcomes
+
+Evidence infrastructure is decomposed into:
+- `EvidenceExportModels` — standalone DTOs for parity snapshots, diagnostics, and VNext runtime state
+- `EvidenceDiagnosticsBuilder` — assembles diagnostic state from chart state, metric state, and runtime path
+- `MainChartsEvidenceExportService` — orchestrates parity evaluation and JSON export
 
 It must not influence live semantic decisions.
 

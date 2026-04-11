@@ -3,8 +3,8 @@
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
 **Operational Execution Source:** `DataVisualiser_Consolidation_Plan.md` for the active hierarchy-reconciliation work; `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md` remains the historical execution source for the completed Phase 5 rehaul  
-**Last Updated:** 2026-03-27  
-**Change Note:** Roadmap updated to make architectural legibility and concern reconciliation the next critical path before renewed exploratory expansion
+**Last Updated:** 2026-04-11  
+**Change Note:** Phase 6.3 advanced with first live VNext main-chart slice and evidence boundary decomposition
 
 ---
 
@@ -393,6 +393,17 @@ The goal is to make the system legible enough that:
 - do not force false abstractions
 - keep consumer-specific behavior explicit where it is genuinely different
 - preserve qualified rendering and evidence boundaries
+
+**Current Progress (April 2026)**
+- First live VNext vertical slice activated: `MetricLoadCoordinator` routes main-chart loads through `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `LegacyChartProgramProjector` when only the Main chart is visible
+- Automatic legacy fallback when any extended chart family is visible or when VNext fails
+- Fresh `ReasoningSessionCoordinator` per load attempt — no shared session state across loads
+- `MainChartDisplayMode` propagated through VNext path — Regular/Summed/Stacked behavior preserved
+- Evidence boundary decomposed: `MainChartsEvidenceExportService` split into `EvidenceExportModels` (21 standalone DTOs), `EvidenceDiagnosticsBuilder` (diagnostics assembly), and export orchestration
+- `LoadRuntimeState` on `ChartState` tracks runtime path (`Legacy`/`VNextMain`), request/snapshot/program/projected-context signatures, and failure reason
+- `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports with signature-chain alignment flags
+- Smoke-verified with April 2026 exports: VNext path produces aligned signatures, legacy fallback produces correct state, all 8 parity strategies pass
+- 471 automated tests pass (26 new covering VNext routing, fallback, signature preservation, display mode, and CMS independence)
 
 **Closure Condition**
 - consumers ask for explicit result shapes through consistent seams rather than through special-case controller logic

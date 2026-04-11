@@ -1,5 +1,7 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.MainHost;
+using DataVisualiser.VNext.Contracts;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.State;
@@ -58,6 +60,7 @@ public class ChartState
 
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }
+    public LoadRuntimeState? LastLoadRuntime { get; set; }
 
     // Current chart titles (left + right)
     public string LeftTitle { get; set; } = string.Empty;
@@ -77,3 +80,13 @@ public class ChartState
         return settings;
     }
 }
+
+public sealed record LoadRuntimeState(
+    EvidenceRuntimePath RuntimePath,
+    string RequestSignature,
+    string? SnapshotSignature,
+    ChartProgramKind? ProgramKind,
+    string? ProgramSourceSignature,
+    string? ProjectedContextSignature,
+    string? FailureReason,
+    bool SupportsOnlyMainChart);

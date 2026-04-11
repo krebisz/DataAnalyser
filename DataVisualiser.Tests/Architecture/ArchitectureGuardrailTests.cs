@@ -18,6 +18,14 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void EvidenceDiagnosticsBuilder_ShouldNotDependBackOnExportServiceHelpers()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "EvidenceDiagnosticsBuilder.cs");
+
+        Assert.DoesNotContain("MainChartsEvidenceExportService.IsSameSelection", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MainChartsView_ShouldNotReacquireParityAssemblyOrTransformParityHelpers()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
@@ -121,6 +129,33 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("UpdateLastDynamicComboItems", methodBody, StringComparison.Ordinal);
         Assert.Contains("_selectorManager.SuppressSelectionChanged()", methodBody, StringComparison.Ordinal);
         Assert.Contains("_viewModel.BeginSelectionStateBatch()", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_OnAnySubtypeSelectionChanged_ShouldNotClearLoadedChartsJustBecauseSelectionChanged()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private async void OnAnySubtypeSelectionChanged");
+
+        Assert.Contains("UpdateSelectedSubtypesInViewModel();", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("ClearAllCharts();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("if (HasLoadedData())", methodBody, StringComparison.Ordinal);
+        Assert.Contains("await RenderChartsFromLastContext();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("await LoadDateRangeForSelectedMetrics();", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ToggleEnablement_ShouldUseLoadedContextCapabilities_NotSelectionCompatibility()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var primaryMethodBody = ExtractMethodBody(source, "private void UpdatePrimaryDataRequiredButtonStates");
+        var secondaryMethodBody = ExtractMethodBody(source, "private void UpdateSecondaryDataRequiredButtonStates");
+
+        Assert.Contains("MainChartsViewToggleStateEvaluator.CanTogglePrimaryCharts(_viewModel.ChartState.LastContext)", primaryMethodBody, StringComparison.Ordinal);
+        Assert.Contains("MainChartsViewToggleStateEvaluator.HasLoadedSecondaryData(_viewModel.ChartState.LastContext)", secondaryMethodBody, StringComparison.Ordinal);
+        Assert.Contains("MainChartsViewToggleStateEvaluator.CanToggleSecondaryCharts(_viewModel.ChartState.LastContext)", secondaryMethodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("HasLoadedData()", primaryMethodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("HasLoadedData()", secondaryMethodBody, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -8,7 +8,7 @@ public sealed class ParityExportShapeTests
     [Fact]
     public void ParitySummarySnapshot_ShouldExposeExpectedProperties()
     {
-        var summaryType = GetNestedType("ParitySummarySnapshot");
+        var summaryType = GetSnapshotType("ParitySummarySnapshot");
         var names = summaryType.GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(p => p.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var expected = new[]
@@ -59,16 +59,16 @@ public sealed class ParityExportShapeTests
         Assert.NotEmpty(warnings);
     }
 
-    private static Type GetNestedType(string name)
+    private static Type GetSnapshotType(string name)
     {
-        var type = typeof(MainChartsEvidenceExportService).GetNestedType(name, BindingFlags.Public);
+        var type = typeof(MainChartsEvidenceExportService).Assembly.GetType($"DataVisualiser.UI.MainHost.{name}");
         Assert.NotNull(type);
         return type!;
     }
 
     private static object CreateSnapshot(string typeName, string status, string? reason)
     {
-        var type = GetNestedType(typeName);
+        var type = GetSnapshotType(typeName);
         var instance = Activator.CreateInstance(type, true)!;
 
         type.GetProperty("Status")?.SetValue(instance, status);

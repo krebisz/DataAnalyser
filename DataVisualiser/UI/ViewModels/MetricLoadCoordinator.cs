@@ -6,6 +6,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Shared;
 using DataVisualiser.UI.Events;
+using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.ViewModels;
@@ -18,8 +19,9 @@ public sealed class MetricLoadCoordinator
     private readonly MetricState _metricState;
     private readonly UiState _uiState;
     private readonly DataLoadValidator _validator;
+    private readonly VNextMainChartIntegrationCoordinator _vnextMainChartIntegrationCoordinator;
 
-    private MetricLoadCoordinator(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError)
+    private MetricLoadCoordinator(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError, VNextMainChartIntegrationCoordinator? vnextMainChartIntegrationCoordinator = null)
     {
         _chartState = chartState ?? throw new ArgumentNullException(nameof(chartState));
         _metricState = metricState ?? throw new ArgumentNullException(nameof(metricState));
@@ -27,11 +29,17 @@ public sealed class MetricLoadCoordinator
         _metricService = metricService ?? throw new ArgumentNullException(nameof(metricService));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _formatError = formatError ?? throw new ArgumentNullException(nameof(formatError));
+        _vnextMainChartIntegrationCoordinator = vnextMainChartIntegrationCoordinator ?? new VNextMainChartIntegrationCoordinator(metricService);
     }
 
     public static MetricLoadCoordinator CreateInstance(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError)
     {
         return new MetricLoadCoordinator(chartState, metricState, uiState, metricService, validator, formatError);
+    }
+
+    internal static MetricLoadCoordinator CreateInstance(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError, VNextMainChartIntegrationCoordinator vnextMainChartIntegrationCoordinator)
+    {
+        return new MetricLoadCoordinator(chartState, metricState, uiState, metricService, validator, formatError, vnextMainChartIntegrationCoordinator);
     }
 
     public async Task LoadMetricsAsync(Action<MetricTypesLoadedEventArgs> onLoaded, Action<string> onError)
@@ -139,6 +147,35 @@ public sealed class MetricLoadCoordinator
         {
             _uiState.IsLoadingData = true;
 
+            if (ShouldUseVNextMainPath())
+            {
+                var vnextResult = await _vnextMainChartIntegrationCoordinator.LoadMainChartAsync(request, _chartState.MainChartDisplayMode);
+                if (vnextResult.Success && vnextResult.ProjectedContext != null)
+                {
+                    _chartState.LastContext = vnextResult.ProjectedContext;
+                    _chartState.LastLoadRuntime = new LoadRuntimeState(
+                        EvidenceRuntimePath.VNextMain,
+                        vnextResult.RequestSignature ?? request.Signature,
+                        vnextResult.SnapshotSignature,
+                        vnextResult.ProgramKind,
+                        vnextResult.ProgramSourceSignature,
+                        vnextResult.ProjectedContextSignature,
+                        null,
+                        true);
+                    return true;
+                }
+
+                _chartState.LastLoadRuntime = new LoadRuntimeState(
+                    EvidenceRuntimePath.VNextMain,
+                    vnextResult.RequestSignature ?? request.Signature,
+                    vnextResult.SnapshotSignature,
+                    vnextResult.ProgramKind,
+                    vnextResult.ProgramSourceSignature,
+                    vnextResult.ProjectedContextSignature,
+                    vnextResult.FailureReason,
+                    false);
+            }
+
             var dataLoaded = await LoadAndValidateMetricDataAsync(request, primarySelection, secondarySelection, onError);
 
             if (!dataLoaded)
@@ -153,6 +190,8 @@ public sealed class MetricLoadCoordinator
                     Message = _formatError(ex)
             });
             _chartState.LastContext = null;
+            if (_chartState.LastLoadRuntime?.RuntimePath != EvidenceRuntimePath.VNextMain)
+                _chartState.LastLoadRuntime = null;
             return false;
         }
         finally
@@ -301,6 +340,8 @@ public sealed class MetricLoadCoordinator
         if (!MetricDataValidationHelper.ValidatePrimaryData(primarySelection.MetricType, primarySelection.QuerySubtype, primaryCms, data1, errorHandler))
         {
             _chartState.LastContext = null;
+            if (_chartState.LastLoadRuntime?.RuntimePath != EvidenceRuntimePath.VNextMain)
+                _chartState.LastLoadRuntime = null;
             return false;
         }
 
@@ -308,6 +349,8 @@ public sealed class MetricLoadCoordinator
         if (secondarySelection != null && !MetricDataValidationHelper.ValidateSecondaryData(secondarySelection.MetricType, secondarySelection.QuerySubtype, secondaryCms, data2, errorHandler))
         {
             _chartState.LastContext = null;
+            if (_chartState.LastLoadRuntime?.RuntimePath != EvidenceRuntimePath.VNextMain)
+                _chartState.LastLoadRuntime = null;
             return false;
         }
 
@@ -316,9 +359,29 @@ public sealed class MetricLoadCoordinator
 
         _chartState.LastContext = ctxBuilder.Build(primarySelection, secondarySelection, data1, data2, request.From, request.To, primaryCms, secondaryCms);
         _chartState.LastContext.LoadRequestSignature = request.Signature;
+        _chartState.LastLoadRuntime = new LoadRuntimeState(
+            EvidenceRuntimePath.Legacy,
+            request.Signature,
+            null,
+            null,
+            null,
+            EvidenceDiagnosticsBuilder.BuildContextSignature(_chartState.LastContext),
+            null,
+            false);
 
         Debug.WriteLine($"[CTX] ActualSeriesCount={_chartState.LastContext.ActualSeriesCount}, " + $"PrimaryCms={(_chartState.LastContext.PrimaryCms == null ? "NULL" : "SET")}");
 
         return true;
+    }
+
+    private bool ShouldUseVNextMainPath()
+    {
+        return _chartState.IsMainVisible &&
+               !_chartState.IsNormalizedVisible &&
+               !_chartState.IsDiffRatioVisible &&
+               !_chartState.IsDistributionVisible &&
+               !_chartState.IsWeeklyTrendVisible &&
+               !_chartState.IsTransformPanelVisible &&
+               !_chartState.IsBarPieVisible;
     }
 }

@@ -54,7 +54,7 @@ public partial class MainChartsView : UserControl
     private ChartState _chartState = null!;
     private readonly IChartRendererResolver _chartRendererResolver = new ChartRendererResolver();
     private readonly IChartSurfaceFactory _chartSurfaceFactory;
-    private readonly List<MainChartsEvidenceExportService.HostMessageDiagnosticsSnapshot> _recentHostMessages = new();
+    private readonly List<HostMessageDiagnosticsSnapshot> _recentHostMessages = new();
 
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
@@ -237,7 +237,7 @@ public partial class MainChartsView : UserControl
             _ => "None"
         };
 
-        _recentHostMessages.Add(new MainChartsEvidenceExportService.HostMessageDiagnosticsSnapshot
+        _recentHostMessages.Add(new HostMessageDiagnosticsSnapshot
         {
             TimestampUtc = DateTime.UtcNow,
             Severity = severity,
@@ -251,14 +251,14 @@ public partial class MainChartsView : UserControl
         _recentHostMessages.RemoveRange(0, _recentHostMessages.Count - MaxTrackedHostMessages);
     }
 
-    private MainChartsEvidenceExportService.UiSurfaceDiagnosticsSnapshot CaptureEvidenceExportUiSurfaceDiagnostics()
+    private UiSurfaceDiagnosticsSnapshot CaptureEvidenceExportUiSurfaceDiagnostics()
     {
         var selectedMetricValue = GetSelectedMetricValue(TablesCombo);
         var selectedMetricOption = GetSelectedMetricOption(TablesCombo);
         var expectedDefaultFromDate = DateTime.UtcNow.Date.AddDays(-30);
         var expectedDefaultToDate = DateTime.UtcNow.Date;
         var orderedSubtypeCombos = _selectorManager.GetActiveCombos()
-            .Select((combo, index) => new MainChartsEvidenceExportService.SubtypeComboDiagnosticsSnapshot
+            .Select((combo, index) => new SubtypeComboDiagnosticsSnapshot
             {
                 Index = index,
                 BoundMetricType = _selectorManager.GetMetricTypeForCombo(combo)?.Value,
@@ -269,7 +269,7 @@ public partial class MainChartsView : UserControl
             })
             .ToList();
 
-        var transformSnapshot = new MainChartsEvidenceExportService.TransformUiDiagnosticsSnapshot
+        var transformSnapshot = new TransformUiDiagnosticsSnapshot
         {
             PanelVisible = TransformDataPanelController.Visibility == Visibility.Visible,
             SecondaryPanelVisible = TransformDataPanelController.TransformSecondarySubtypePanel.Visibility == Visibility.Visible,
@@ -281,15 +281,15 @@ public partial class MainChartsView : UserControl
             SecondaryOptionCount = TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Count
         };
 
-        return new MainChartsEvidenceExportService.UiSurfaceDiagnosticsSnapshot
+        return new UiSurfaceDiagnosticsSnapshot
         {
-            MetricType = new MainChartsEvidenceExportService.MetricTypeUiDiagnosticsSnapshot
+            MetricType = new MetricTypeUiDiagnosticsSnapshot
             {
                 SelectedValue = selectedMetricValue,
                 SelectedDisplay = selectedMetricOption?.Display ?? TablesCombo.Text,
                 OptionCount = TablesCombo.Items.Count
             },
-            DateRange = new MainChartsEvidenceExportService.DateRangeUiDiagnosticsSnapshot
+            DateRange = new DateRangeUiDiagnosticsSnapshot
             {
                 SelectedFromDate = FromDate.SelectedDate,
                 SelectedToDate = ToDate.SelectedDate,
@@ -299,7 +299,7 @@ public partial class MainChartsView : UserControl
                     FromDate.SelectedDate?.Date == expectedDefaultFromDate &&
                     ToDate.SelectedDate?.Date == expectedDefaultToDate
             },
-            Subtypes = new MainChartsEvidenceExportService.SubtypeUiDiagnosticsSnapshot
+            Subtypes = new SubtypeUiDiagnosticsSnapshot
             {
                 ActiveComboCount = orderedSubtypeCombos.Count,
                 PrimarySelectionMaterialized = SubtypeCombo.SelectedItem != null,
@@ -346,8 +346,8 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void UpdateSecondaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
-        var hasSecondaryData = selectedSubtypeCount >= 2;
-        var canToggle = hasSecondaryData && HasLoadedData();
+        var hasSecondaryData = MainChartsViewToggleStateEvaluator.HasLoadedSecondaryData(_viewModel.ChartState.LastContext);
+        var canToggle = MainChartsViewToggleStateEvaluator.CanToggleSecondaryCharts(_viewModel.ChartState.LastContext);
 
         // If secondary data is no longer available, use the ViewModel state setters to trigger
         // visibility updates while clearing stale chart data.
@@ -377,10 +377,9 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void UpdatePrimaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
-        var hasPrimaryData = selectedSubtypeCount >= 1;
-        var canToggle = hasPrimaryData && HasLoadedData();
+        var canToggle = MainChartsViewToggleStateEvaluator.CanTogglePrimaryCharts(_viewModel.ChartState.LastContext);
 
-        ResolveController(ChartControllerKeys.Main).SetToggleEnabled(HasLoadedData());
+        ResolveController(ChartControllerKeys.Main).SetToggleEnabled(canToggle);
         UpdateMainChartStackedAvailability(selectedSubtypeCount);
         ResolveController(ChartControllerKeys.WeeklyTrend).SetToggleEnabled(canToggle);
         ResolveController(ChartControllerKeys.Distribution).SetToggleEnabled(canToggle);
@@ -390,7 +389,7 @@ public partial class MainChartsView : UserControl
 
     private void UpdateMainChartStackedAvailability(int selectedSubtypeCount)
     {
-        var canStack = selectedSubtypeCount >= 2;
+        var canStack = MainChartsViewToggleStateEvaluator.CanUseStackedDisplay(_viewModel.ChartState.LastContext, selectedSubtypeCount);
         if (ResolveController(ChartControllerKeys.Main) is IMainChartControllerExtras controller)
             controller.SetStackedAvailability(canStack);
     }
@@ -817,6 +816,7 @@ public partial class MainChartsView : UserControl
     {
         ClearRegisteredCharts();
         _viewModel.ChartState.LastContext = null;
+        _viewModel.ChartState.LastLoadRuntime = null;
     }
 
     #region Chart Visibility Toggle Handlers
@@ -1167,6 +1167,7 @@ public partial class MainChartsView : UserControl
 
         _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
         _viewModel.ChartState.LastContext = new ChartDataContext();
+        _viewModel.ChartState.LastLoadRuntime = null;
 
         SyncMainDisplayModeSelection();
 
@@ -1329,7 +1330,11 @@ public partial class MainChartsView : UserControl
                 () => _isChangingResolution = true,
                 ClearAllCharts,
                 () => _viewModel.MetricState.SelectedMetricType = null,
-                () => _viewModel.ChartState.LastContext = new ChartDataContext(),
+                () =>
+                {
+                    _viewModel.ChartState.LastContext = new ChartDataContext();
+                    _viewModel.ChartState.LastLoadRuntime = null;
+                },
                 ResetDateRangeToDefault,
                 () => TablesCombo.Items.Clear(),
                 () => _selectorManager.ClearDynamic(),
@@ -1397,9 +1402,6 @@ public partial class MainChartsView : UserControl
             return;
 
         UpdateSelectedSubtypesInViewModel();
-
-        if (_viewModel.ChartState.LastContext != null && !HasLoadedData())
-            ClearAllCharts();
 
         if (HasLoadedData())
         {
@@ -1533,6 +1535,7 @@ public partial class MainChartsView : UserControl
         _evidenceExportCoordinator.ClearEvidence(CreateEvidenceExportActions());
         _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
         _viewModel.ChartState.LastContext = new ChartDataContext();
+        _viewModel.ChartState.LastLoadRuntime = null;
         UpdatePrimaryDataRequiredButtonStates(0);
         UpdateSecondaryDataRequiredButtonStates(0);
 

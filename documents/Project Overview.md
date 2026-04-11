@@ -233,6 +233,9 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Similar operations need one obvious home, large mixed-responsibility outliers need decomposition, and truth/derivation/delivery seams need clearer reconciliation
 - Current active execution in `DataVisualiser_Consolidation_Plan.md` exists to make the delivery side legible enough that the remaining true outliers are exposed cleanly
 - The expected cadence is: map the hierarchy, consolidate one or two irreducible operation clusters, reconcile one mixed boundary, standardize one proven delivery seam, decompose one major outlier, then audit the new baseline
+- Phase 6.3 work has produced the first live VNext vertical slice: the main-chart load path now routes through the VNext reasoning engine (`ReasoningSessionCoordinator`) when only the Main chart is visible, with automatic legacy fallback for all other chart configurations
+- The evidence/export boundary has been decomposed: `MainChartsEvidenceExportService` was split into standalone DTOs (`EvidenceExportModels`), a diagnostics builder (`EvidenceDiagnosticsBuilder`), and export orchestration
+- Runtime-path tracking (`LoadRuntimeState`) and VNext diagnostics are now emitted in evidence exports, providing observable proof of which execution path was used for each load
 
 ---
 
