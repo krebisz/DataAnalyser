@@ -1,9 +1,7 @@
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Orchestration.DistributionCharts;
 using DataVisualiser.Core.Orchestration.MainChart;
 using DataVisualiser.Core.Orchestration.SecondaryCharts;
-using DataVisualiser.Core.Orchestration.Selection;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
@@ -163,7 +161,7 @@ public sealed class ChartRenderingOrchestrator
             chartDistribution);
     }
 
-    public async Task RenderPrimaryChart(
+    public async Task<ChartDataContext?> RenderPrimaryChart(
         ChartDataContext ctx,
         CartesianChart chartMain,
         IReadOnlyList<IEnumerable<MetricData>>? additionalSeries = null,
@@ -173,9 +171,9 @@ public sealed class ChartRenderingOrchestrator
         IReadOnlyList<SeriesResult>? overlaySeries = null)
     {
         if (ctx == null || chartMain == null)
-            return;
+            return null;
 
-        await _mainChartOrchestrationPipeline.RenderAsync(
+        var preparedData = await _mainChartOrchestrationPipeline.RenderAsync(
             new MainChartRenderRequest(
                 ctx,
                 IsStacked: isStacked,
@@ -184,9 +182,10 @@ public sealed class ChartRenderingOrchestrator
                 AdditionalSeries: additionalSeries,
                 AdditionalLabels: additionalLabels),
             chartMain);
+        return preparedData.WorkingContext;
     }
 
-    public async Task RenderPrimaryChartAsync(
+    public async Task<ChartDataContext?> RenderPrimaryChartAsync(
         ChartDataContext ctx,
         CartesianChart chartMain,
         IEnumerable<MetricData> data1,
@@ -203,11 +202,11 @@ public sealed class ChartRenderingOrchestrator
         IReadOnlyList<SeriesResult>? overlaySeries = null)
     {
         if (ctx == null || chartMain == null)
-            return;
+            return null;
 
         var requestedContext = BuildPrimaryRequestContext(ctx, data1, data2, displayName1, displayName2, from, to, metricType);
 
-        await _mainChartOrchestrationPipeline.RenderAsync(
+        var preparedData = await _mainChartOrchestrationPipeline.RenderAsync(
             new MainChartRenderRequest(
                 requestedContext,
                 selectedSeries,
@@ -216,6 +215,7 @@ public sealed class ChartRenderingOrchestrator
                 isCumulative,
                 overlaySeries),
             chartMain);
+        return preparedData.WorkingContext;
     }
 
     private async Task RenderPrimaryIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartMain)

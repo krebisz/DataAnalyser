@@ -43,7 +43,7 @@ This file is auto-generated.
 | class | ChartControllerRegistry | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerRegistry.cs |
 | class | ChartControllerRegistryTests | public | DataVisualiser.Tests.Controls | .\DataVisualiser.Tests\Controls\ChartControllerRegistryTests.cs |
 | class | ChartDataContext | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartDataContext.cs |
-| class | ChartDataContextBuilder | public | DataVisualiser.Core.Orchestration.Builders | .\DataVisualiser\Core\Orchestration\Builders\ChartDataContextBuilder.cs |
+| class | ChartDataContextBuilder | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartDataContextBuilder.cs |
 | class | ChartDataContextBuilderTests | public | DataVisualiser.Tests.Orchestration | .\DataVisualiser.Tests\Orchestration\ChartDataContextBuilderTests.cs |
 | class | ChartFacetModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartFacetModel.cs |
 | class | ChartHelper | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartHelper.cs |
@@ -58,7 +58,7 @@ This file is auto-generated.
 | class | ChartRenderingContextAdapter | public | DataVisualiser.UI | .\DataVisualiser\UI\ChartRenderingContextAdapter.cs |
 | class | ChartRenderingOrchestrator | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartRenderingOrchestrator.cs |
 | class | ChartRenderingOrchestratorTests | public | DataVisualiser.Tests.Orchestration | .\DataVisualiser.Tests\Orchestration\ChartRenderingOrchestratorTests.cs |
-| class | ChartRenderModel | public | DataVisualiser.Core.Rendering.Models | .\DataVisualiser\Core\Rendering\Models\ChartRenderModel.cs |
+| class | ChartRenderModel | public | DataVisualiser.Core.Rendering | .\DataVisualiser\Core\Rendering\ChartRenderModel.cs |
 | class | ChartSeriesHelper | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartSeriesHelper.cs |
 | class | ChartSeriesModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartSeriesModel.cs |
 | class | ChartStackingTooltipState | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartStackingTooltipState.cs |
@@ -66,7 +66,7 @@ This file is auto-generated.
 | class | ChartTooltipManager | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartTooltipManager.cs |
 | class | ChartUiDefaults | public | DataVisualiser.UI.Defaults | .\DataVisualiser\UI\Defaults\ChartUiDefaults.cs |
 | class | ChartUiHelper | public | DataVisualiser.UI.Helpers | .\DataVisualiser\UI\Helpers\ChartUiHelper.cs |
-| class | ChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration.Coordinator | .\DataVisualiser\Core\Orchestration\Coordinator\ChartUpdateCoordinator.cs |
+| class | ChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartUpdateCoordinator.cs |
 | class | ChartUpdateRequestedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ChartUpdateRequestedEventArgs.cs |
 | class | ChartVisibilityChangedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ChartVisibilityChangedEventArgs.cs |
 | class | ChartVisibilityController | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\ChartVisibilityController.cs |
@@ -118,7 +118,7 @@ This file is auto-generated.
 | class | DistributionPolarRenderingService | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\DistributionPolarRenderingService.cs |
 | class | DistributionPolarTooltipState | internal | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionPolarTooltipState.cs |
 | class | DistributionRangeResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DistributionRangeResult.cs |
-| class | ErrorEventArgs | public | DataVisualiser.Shared.Events | .\DataVisualiser\Shared\Events\ErrorEventArgs.cs |
+| class | ErrorEventArgs | public | DataVisualiser.Shared | .\DataVisualiser\Shared\ErrorEventArgs.cs |
 | class | FileHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\FileHelper.cs |
 | class | FileProcessingService | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingService.cs |
 | class | FrequencyBasedShadingStrategy | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\FrequencyBasedShadingStrategy.cs |
@@ -224,7 +224,7 @@ This file is auto-generated.
 | class | SmoothedDataPoint | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\SmoothedDataPoint.cs |
 | class | SmoothingService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\SmoothingService.cs |
 | class | SQLHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\SQLHelper.cs |
-| class | SqlQueryBuilder | public | DataVisualiser.Core.Data.QueryBuilders | .\DataVisualiser\Core\Data\QueryBuilders\SqlQueryBuilder.cs |
+| class | SqlQueryBuilder | public | DataVisualiser.Core.Data | .\DataVisualiser\Core\Data\SqlQueryBuilder.cs |
 | class | StaTestHelper | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\StaTestHelper.cs |
 | class | StrategyComputationHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\StrategyComputationHelper.cs |
 | class | StrategyComputationHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\StrategyComputationHelperTests.cs |
@@ -234,7 +234,7 @@ This file is auto-generated.
 | class | StrategyFactoryBase | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\StrategyFactoryBase.cs |
 | class | StrategyParityContext | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\StrategyParityContext.cs |
 | class | StrategyReachabilityStoreProbe | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\StrategyReachabilityStoreProbe.cs |
-| class | StrategySelectionService | public | DataVisualiser.Core.Orchestration.Selection | .\DataVisualiser\Core\Orchestration\Selection\StrategySelectionService.cs |
+| class | StrategySelectionService | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\StrategySelectionService.cs |
 | class | StrategySelectionServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\StrategySelectionServiceTests.cs |
 | class | StrategyTypeMetadata | public | DataVisualiser.Core.Strategies | .\DataVisualiser\Core\Strategies\StrategyTypeMetadata.cs |
 | class | SubtypeControlPair | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\SubtypeControlPair.cs |
@@ -254,7 +254,7 @@ This file is auto-generated.
 | class | TransformExpression | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformExpression.cs |
 | class | TransformExpressionBuilder | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformExpressionBuilder.cs |
 | class | TransformExpressionBuilderTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformExpressionBuilderTests.cs |
-| class | TransformExpressionEvaluator | public | DataVisualiser.Core.Transforms.Evaluators | .\DataVisualiser\Core\Transforms\Evaluators\TransformExpressionEvaluator.cs |
+| class | TransformExpressionEvaluator | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformExpressionEvaluator.cs |
 | class | TransformExpressionEvaluatorTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformExpressionEvaluatorTests.cs |
 | class | TransformOperand | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformOperand.cs |
 | class | TransformOperation | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\TransformOperation.cs |
@@ -273,7 +273,7 @@ This file is auto-generated.
 | class | UnitResolutionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\UnitResolutionService.cs |
 | class | WeekdayTrendAverageToggleEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\WeekdayTrendAverageToggleEventArgs.cs |
 | class | WeekdayTrendChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\WeekdayTrendChartControllerAdapter.cs |
-| class | WeekdayTrendChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration.Coordinator | .\DataVisualiser\Core\Orchestration\Coordinator\WeekdayTrendChartUpdateCoordinator.cs |
+| class | WeekdayTrendChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\WeekdayTrendChartUpdateCoordinator.cs |
 | class | WeekdayTrendComputationStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\WeekdayTrendComputationStrategy.cs |
 | class | WeekdayTrendComputationStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\WeekdayTrendComputationStrategyTests.cs |
 | class | WeekdayTrendDayToggleEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\WeekdayTrendDayToggleEventArgs.cs |
@@ -297,7 +297,7 @@ This file is auto-generated.
 | class | WeeklyIntervalRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\WeeklyIntervalRenderer.cs |
 | enum | AggregationPeriod | public | DataFileReader.Class | .\DataFileReader\Class\AggregationPeriod.cs |
 | enum | ChartLegendPlacement | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartLegendPlacement.cs |
-| enum | ChartSeriesMode | public | DataVisualiser.Core.Rendering.Models | .\DataVisualiser\Core\Rendering\Models\ChartSeriesMode.cs |
+| enum | ChartSeriesMode | public | DataVisualiser.Core.Rendering | .\DataVisualiser\Core\Rendering\ChartSeriesMode.cs |
 | enum | ChartSeriesType | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartSeriesType.cs |
 | enum | DataCompleteness | public | DataFileReader.Canonical | .\DataFileReader\Canonical\DataCompleteness.cs |
 | enum | DistributionMode | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DistributionMode.cs |

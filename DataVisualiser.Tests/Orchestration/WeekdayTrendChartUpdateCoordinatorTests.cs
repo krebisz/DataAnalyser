@@ -1,5 +1,5 @@
 using DataVisualiser.Core.Configuration.Defaults;
-using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;

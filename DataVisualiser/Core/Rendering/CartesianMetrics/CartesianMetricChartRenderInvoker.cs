@@ -40,7 +40,19 @@ public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRen
         if (context.Data1 == null)
             return Task.CompletedTask;
 
-        return orchestrator.RenderPrimaryChartAsync(
+        return RenderMainAndCaptureContextAsync(
+            orchestrator,
+            request,
+            host);
+    }
+
+    private static async Task RenderMainAndCaptureContextAsync(
+        ChartRenderingOrchestrator orchestrator,
+        CartesianMetricChartRenderRequest request,
+        CartesianMetricChartRenderHost host)
+    {
+        var context = request.Context;
+        var renderedContext = await orchestrator.RenderPrimaryChartAsync(
             context,
             host.Chart,
             context.Data1,
@@ -55,5 +67,8 @@ public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRen
             request.IsStacked,
             request.IsCumulative,
             request.OverlaySeries);
+
+        if (renderedContext != null)
+            host.ChartState.LastContext = renderedContext;
     }
 }

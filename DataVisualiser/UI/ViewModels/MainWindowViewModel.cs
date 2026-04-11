@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using DataVisualiser.Core.Validation.DataLoad;
 using DataVisualiser.Core.Services;
-using DataVisualiser.Shared.Events;
+using DataVisualiser.Shared;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.State;
 

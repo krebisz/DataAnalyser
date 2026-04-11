@@ -28,6 +28,7 @@ public sealed class MainChartPreparationStageTests
             PrimaryCms = cmsSeries[0],
             SecondaryCms = cmsSeries[1],
             CmsSeries = cmsSeries,
+            LoadRequestSignature = "Weight::HealthMetrics::2024-01-01T00:00:00.0000000->2024-01-02T00:00:00.0000000::Weight:a|Weight:b|Weight:c",
             From = new DateTime(2024, 1, 1),
             To = new DateTime(2024, 1, 2),
             ActualSeriesCount = 2
@@ -47,6 +48,9 @@ public sealed class MainChartPreparationStageTests
         Assert.Equal(3, prepared.WorkingContext.ActualSeriesCount);
         Assert.NotNull(prepared.WorkingContext.CmsSeries);
         Assert.Equal(3, prepared.WorkingContext.CmsSeries!.Count);
+        Assert.Equal("Weight::HealthMetrics::2024-01-01T00:00:00.0000000->2024-01-02T00:00:00.0000000::Weight:a|Weight:b|Weight:c", prepared.WorkingContext.LoadRequestSignature);
+        Assert.NotNull(prepared.WorkingContext.Data1);
+        Assert.NotNull(prepared.WorkingContext.Data2);
     }
 
     [Fact]
@@ -75,7 +79,8 @@ public sealed class MainChartPreparationStageTests
                 SelectedSeries:
                 [
                     new MetricSeriesSelection("Weight", "morning", "Weight", "Morning")
-                ]));
+                ],
+                ResolutionTableName: "HealthMetrics"));
 
         Assert.Single(prepared.Series);
         Assert.Equal(["Weight - Morning"], prepared.Labels);
@@ -84,5 +89,8 @@ public sealed class MainChartPreparationStageTests
         Assert.Equal("morning", prepared.WorkingContext.PrimarySubtype);
         Assert.Null(prepared.WorkingContext.SecondarySubtype);
         Assert.Equal("Weight - Morning", prepared.WorkingContext.DisplayName1);
+        Assert.Equal("Weight::HealthMetrics::2024-01-01T00:00:00.0000000->2024-01-02T00:00:00.0000000::Weight:morning", prepared.WorkingContext.LoadRequestSignature);
+        Assert.Equal(2, prepared.WorkingContext.Data1!.Count);
+        Assert.Null(prepared.WorkingContext.Data2);
     }
 }

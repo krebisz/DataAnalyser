@@ -7,17 +7,16 @@ using System.Windows.Controls.Primitives;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Helpers;
-using DataVisualiser.Core.Rendering.Models;
+using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Reachability;
-using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Core.Transforms;
 using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
@@ -36,7 +35,7 @@ using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.WPF;
 using CartesianChart = LiveCharts.Wpf.CartesianChart;
-using ErrorEventArgs = DataVisualiser.Shared.Events.ErrorEventArgs;
+using ErrorEventArgs = DataVisualiser.Shared.ErrorEventArgs;
 
 namespace DataVisualiser.UI;
 
@@ -198,7 +197,10 @@ public partial class MainChartsView : UserControl
         return ChartContextSelectionGuard.IsCompatibleWithCurrentSelection(
             _viewModel.ChartState.LastContext,
             _viewModel.MetricState.SelectedMetricType,
-            _viewModel.MetricState.SelectedSeries);
+            _viewModel.MetricState.SelectedSeries,
+            _viewModel.MetricState.FromDate,
+            _viewModel.MetricState.ToDate,
+            _viewModel.MetricState.ResolutionTableName);
     }
 
     private bool ShouldRefreshDateRangeForCurrentSelection()

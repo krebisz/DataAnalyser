@@ -1,7 +1,6 @@
 ﻿using System.Configuration;
 using System.Reflection;
 using DataVisualiser.Core.Data;
-using DataVisualiser.Core.Data.Abstractions;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 

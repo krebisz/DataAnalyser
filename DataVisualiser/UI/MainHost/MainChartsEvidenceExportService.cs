@@ -7,7 +7,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Reachability;
-using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Core.Transforms;
 using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;
@@ -311,6 +311,7 @@ public sealed class MainChartsEvidenceExportService
     public sealed class TransitionDiagnosticsSnapshot
     {
         public string CurrentSelectionSignature { get; set; } = string.Empty;
+        public bool? LoadedRequestMatchesCurrentSelection { get; set; }
         public string? LoadedContextSignature { get; set; }
         public string? LatestReachabilitySignature { get; set; }
         public int ExpectedSeriesCount { get; set; }
@@ -346,6 +347,7 @@ public sealed class MainChartsEvidenceExportService
     {
         public bool Present { get; set; }
         public bool ReusableForCurrentSelection { get; set; }
+        public string? LoadRequestSignature { get; set; }
         public string? MetricType { get; set; }
         public string? PrimaryMetricType { get; set; }
         public string? SecondaryMetricType { get; set; }
@@ -395,7 +397,10 @@ public sealed class MainChartsEvidenceExportService
         var reusableContext = ChartContextSelectionGuard.IsCompatibleWithCurrentSelection(
             ctx,
             metricState.SelectedMetricType,
-            selectedSeries);
+            selectedSeries,
+            metricState.FromDate,
+            metricState.ToDate,
+            metricState.ResolutionTableName);
         var latestRecord = reachabilityRecords
             .OrderByDescending(record => record.TimestampUtc)
             .FirstOrDefault();
@@ -441,6 +446,7 @@ public sealed class MainChartsEvidenceExportService
             {
                 Present = ctx != null,
                 ReusableForCurrentSelection = reusableContext,
+                LoadRequestSignature = ctx?.LoadRequestSignature,
                 MetricType = ctx?.MetricType,
                 PrimaryMetricType = ctx?.PrimaryMetricType,
                 SecondaryMetricType = ctx?.SecondaryMetricType,
@@ -581,6 +587,9 @@ public sealed class MainChartsEvidenceExportService
         return new TransitionDiagnosticsSnapshot
         {
             CurrentSelectionSignature = BuildSelectionSignature(metricState, selectedSeries),
+            LoadedRequestMatchesCurrentSelection = string.IsNullOrWhiteSpace(context?.LoadRequestSignature)
+                ? null
+                : string.Equals(context.LoadRequestSignature, BuildSelectionSignature(metricState, selectedSeries), StringComparison.Ordinal),
             LoadedContextSignature = BuildContextSignature(context),
             LatestReachabilitySignature = BuildReachabilitySignature(latestRecord),
             ExpectedSeriesCount = expectedSeriesCount,

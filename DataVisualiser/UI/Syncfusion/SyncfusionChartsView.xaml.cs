@@ -11,7 +11,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Presentation;
-using DataVisualiser.Shared.Events;
+using DataVisualiser.Shared;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI;
 using DataVisualiser.UI.MainHost;
@@ -390,7 +390,10 @@ public partial class SyncfusionChartsView : UserControl
         return ChartContextSelectionGuard.IsCompatibleWithCurrentSelection(
             _viewModel.ChartState.LastContext,
             _viewModel.MetricState.SelectedMetricType,
-            _viewModel.MetricState.SelectedSeries);
+            _viewModel.MetricState.SelectedSeries,
+            _viewModel.MetricState.FromDate,
+            _viewModel.MetricState.ToDate,
+            _viewModel.MetricState.ResolutionTableName);
     }
 
     private bool ShouldRefreshDateRangeForCurrentSelection()

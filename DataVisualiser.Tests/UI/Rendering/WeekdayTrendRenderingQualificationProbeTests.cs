@@ -1,5 +1,5 @@
 using System.Windows;
-using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Shared.Models;

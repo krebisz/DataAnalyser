@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Events;
 
 namespace DataVisualiser.UI.ViewModels;
@@ -21,7 +22,13 @@ public partial class MainWindowViewModel
     /// </summary>
     public async Task<bool> LoadMetricDataAsync()
     {
-        return await _metricLoadCoordinator.LoadMetricDataAsync(args => ErrorOccured?.Invoke(this, args));
+        if (!TryCaptureCurrentLoadRequest(out var request, out var errorMessage))
+        {
+            RaiseError(errorMessage ?? "Unable to capture a valid load request.");
+            return false;
+        }
+
+        return await _metricLoadCoordinator.LoadMetricDataAsync(request!, args => ErrorOccured?.Invoke(this, args));
     }
 
     private async Task LoadDateRangeForSelectedMetricAsync()
@@ -81,5 +88,28 @@ public partial class MainWindowViewModel
     {
         // Minimal guard so the button isn't enabled when obviously invalid.
         return ValidateMetricTypeSelected() && MetricState.FromDate.HasValue && MetricState.ToDate.HasValue;
+    }
+
+    private bool TryCaptureCurrentLoadRequest(out MetricLoadRequest? request, out string? errorMessage)
+    {
+        request = null;
+        errorMessage = null;
+
+        if (!ValidateDataLoadRequirements(out errorMessage))
+            return false;
+
+        if (string.IsNullOrWhiteSpace(MetricState.ResolutionTableName))
+        {
+            errorMessage = "Resolution is not selected. Please select a resolution before loading data.";
+            return false;
+        }
+
+        request = new MetricLoadRequest(
+            MetricState.SelectedMetricType!,
+            MetricState.SelectedSeries.ToList(),
+            MetricState.FromDate!.Value,
+            MetricState.ToDate!.Value,
+            MetricState.ResolutionTableName);
+        return true;
     }
 }

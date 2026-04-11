@@ -9,7 +9,7 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Implementations;
-using DataVisualiser.Core.Transforms.Evaluators;
+using DataVisualiser.Core.Transforms;
 using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Core.Transforms.Operations;
 using DataVisualiser.Shared.Helpers;

@@ -1,5 +1,5 @@
 using System.Globalization;
-using DataVisualiser.UI.Charts.Converters;
+using DataVisualiser.UI.Converters;
 
 namespace DataVisualiser.Tests.Converters;
 

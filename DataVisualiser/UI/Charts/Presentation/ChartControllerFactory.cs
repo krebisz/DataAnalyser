@@ -10,7 +10,6 @@ using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using System.Windows.Controls;

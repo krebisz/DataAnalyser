@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Coordinator;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;

@@ -1,5 +1,4 @@
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.Core.Orchestration.Selection;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;

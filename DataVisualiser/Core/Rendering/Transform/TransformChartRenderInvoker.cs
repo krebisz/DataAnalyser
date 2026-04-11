@@ -1,4 +1,4 @@
-using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Orchestration;
 
 namespace DataVisualiser.Core.Rendering.Transform;
 

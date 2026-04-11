@@ -35,7 +35,13 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
 
                 if (stackedSeries.Count >= 2)
                 {
-                    var stackedContext = BuildWorkingContext(request.Context, stackedCmsSeries, stackedSeries.Count);
+                    var stackedContext = BuildWorkingContext(
+                        request.Context,
+                        stackedSelections,
+                        stackedSeries,
+                        stackedLabels,
+                        stackedCmsSeries,
+                        request.ResolutionTableName);
                     return new MainChartPreparedData(
                         stackedContext,
                         stackedSeries,
@@ -58,7 +64,13 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
 
             if (resolvedSeries.Count > 0)
             {
-                var selectedWorkingContext = BuildWorkingContext(request.Context, selectedSeries, resolvedCmsSeries, resolvedSeries.Count);
+                var selectedWorkingContext = BuildWorkingContext(
+                    request.Context,
+                    selectedSeries,
+                    resolvedSeries,
+                    resolvedLabels,
+                    resolvedCmsSeries,
+                    request.ResolutionTableName);
                 return new MainChartPreparedData(
                     selectedWorkingContext,
                     resolvedSeries,
@@ -83,7 +95,7 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
             request.ResolutionTableName);
 
         var workingContext = series.Count > 2
-            ? BuildWorkingContext(request.Context, cmsSeries, series.Count)
+            ? BuildWorkingContext(request.Context, series, labels, cmsSeries)
             : request.Context;
 
         return new MainChartPreparedData(
@@ -247,19 +259,25 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
     private static ChartDataContext BuildWorkingContext(
         ChartDataContext context,
         IReadOnlyList<MetricSeriesSelection> selections,
+        IReadOnlyList<IEnumerable<MetricData>> series,
+        IReadOnlyList<string> labels,
         IReadOnlyList<ICanonicalMetricSeries>? cmsSeries,
-        int seriesCount)
+        string? resolutionTableName)
     {
         var primarySelection = selections.Count > 0 ? selections[0] : null;
         var secondarySelection = selections.Count > 1 ? selections[1] : null;
+        var primarySeries = series.Count > 0 ? series[0].ToList() : context.Data1;
+        var secondarySeries = series.Count > 1 ? series[1].ToList() : null;
+        var primaryCms = cmsSeries != null && cmsSeries.Count > 0 ? cmsSeries[0] : context.PrimaryCms as ICanonicalMetricSeries;
+        var secondaryCms = cmsSeries != null && cmsSeries.Count > 1 ? cmsSeries[1] : context.SecondaryCms as ICanonicalMetricSeries;
 
         return new ChartDataContext
         {
-            PrimaryCms = context.PrimaryCms,
-            SecondaryCms = context.SecondaryCms,
-            CmsSeries = cmsSeries != null && cmsSeries.Count == seriesCount ? cmsSeries.ToList() : null,
-            Data1 = context.Data1,
-            Data2 = context.Data2,
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
+            CmsSeries = cmsSeries != null && cmsSeries.Count == series.Count ? cmsSeries.ToList() : null,
+            Data1 = primarySeries,
+            Data2 = secondarySeries,
             Timestamps = context.Timestamps,
             RawValues1 = context.RawValues1,
             RawValues2 = context.RawValues2,
@@ -269,9 +287,9 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
             RatioValues = context.RatioValues,
             NormalizedValues1 = context.NormalizedValues1,
             NormalizedValues2 = context.NormalizedValues2,
-            DisplayName1 = primarySelection?.DisplayName ?? context.DisplayName1,
-            DisplayName2 = secondarySelection?.DisplayName ?? string.Empty,
-            ActualSeriesCount = seriesCount,
+            DisplayName1 = labels.Count > 0 ? labels[0] : primarySelection?.DisplayName ?? context.DisplayName1,
+            DisplayName2 = labels.Count > 1 ? labels[1] : secondarySelection?.DisplayName ?? string.Empty,
+            ActualSeriesCount = series.Count,
             MetricType = primarySelection?.MetricType ?? context.MetricType,
             PrimaryMetricType = primarySelection?.MetricType ?? context.PrimaryMetricType,
             SecondaryMetricType = secondarySelection?.MetricType,
@@ -281,6 +299,7 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
             DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType,
             DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? context.DisplayPrimarySubtype,
             DisplaySecondarySubtype = secondarySelection?.DisplaySubtype,
+            LoadRequestSignature = TryBuildSelectionSignature(primarySelection?.MetricType, selections, context.From, context.To, resolutionTableName) ?? context.LoadRequestSignature,
             From = context.From,
             To = context.To
         };
@@ -288,16 +307,22 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
 
     private static ChartDataContext BuildWorkingContext(
         ChartDataContext context,
-        IReadOnlyList<ICanonicalMetricSeries>? cmsSeries,
-        int seriesCount)
+        IReadOnlyList<IEnumerable<MetricData>> series,
+        IReadOnlyList<string> labels,
+        IReadOnlyList<ICanonicalMetricSeries>? cmsSeries)
     {
+        var primarySeries = series.Count > 0 ? series[0].ToList() : context.Data1;
+        var secondarySeries = series.Count > 1 ? series[1].ToList() : context.Data2;
+        var primaryCms = cmsSeries != null && cmsSeries.Count > 0 ? cmsSeries[0] : context.PrimaryCms as ICanonicalMetricSeries;
+        var secondaryCms = cmsSeries != null && cmsSeries.Count > 1 ? cmsSeries[1] : context.SecondaryCms as ICanonicalMetricSeries;
+
         return new ChartDataContext
         {
-            PrimaryCms = context.PrimaryCms,
-            SecondaryCms = context.SecondaryCms,
-            CmsSeries = cmsSeries != null && cmsSeries.Count == seriesCount ? cmsSeries.ToList() : null,
-            Data1 = context.Data1,
-            Data2 = context.Data2,
+            PrimaryCms = primaryCms,
+            SecondaryCms = secondaryCms,
+            CmsSeries = cmsSeries != null && cmsSeries.Count == series.Count ? cmsSeries.ToList() : null,
+            Data1 = primarySeries,
+            Data2 = secondarySeries,
             Timestamps = context.Timestamps,
             RawValues1 = context.RawValues1,
             RawValues2 = context.RawValues2,
@@ -307,9 +332,9 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
             RatioValues = context.RatioValues,
             NormalizedValues1 = context.NormalizedValues1,
             NormalizedValues2 = context.NormalizedValues2,
-            DisplayName1 = context.DisplayName1,
-            DisplayName2 = context.DisplayName2,
-            ActualSeriesCount = seriesCount,
+            DisplayName1 = labels.Count > 0 ? labels[0] : context.DisplayName1,
+            DisplayName2 = labels.Count > 1 ? labels[1] : context.DisplayName2,
+            ActualSeriesCount = series.Count,
             MetricType = context.MetricType,
             PrimaryMetricType = context.PrimaryMetricType,
             SecondaryMetricType = context.SecondaryMetricType,
@@ -319,9 +344,23 @@ public sealed class MainChartPreparationStage : IMainChartPreparationStage
             DisplaySecondaryMetricType = context.DisplaySecondaryMetricType,
             DisplayPrimarySubtype = context.DisplayPrimarySubtype,
             DisplaySecondarySubtype = context.DisplaySecondarySubtype,
+            LoadRequestSignature = context.LoadRequestSignature,
             From = context.From,
             To = context.To
         };
+    }
+
+    private static string? TryBuildSelectionSignature(
+        string? metricType,
+        IReadOnlyList<MetricSeriesSelection> selections,
+        DateTime from,
+        DateTime to,
+        string? resolutionTableName)
+    {
+        if (string.IsNullOrWhiteSpace(metricType) || string.IsNullOrWhiteSpace(resolutionTableName) || selections.Count == 0)
+            return null;
+
+        return new MetricLoadRequest(metricType, selections, from, to, resolutionTableName).Signature;
     }
 
     private static IEnumerable<MetricData>? ResolveContextSeries(ChartDataContext context, MetricSeriesSelection selection)

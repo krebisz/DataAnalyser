@@ -190,7 +190,7 @@ public sealed class ArchitectureGuardrailTests
     {
         var guardedFiles = new[]
         {
-            Path.Combine("DataVisualiser", "Core", "Orchestration", "Coordinator", "ChartUpdateCoordinator.cs"),
+            Path.Combine("DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs"),
             Path.Combine("DataVisualiser", "Core", "Orchestration", "SecondaryCharts", "SecondaryMetricChartOrchestrationPipeline.cs"),
             Path.Combine("DataVisualiser", "Core", "Orchestration", "DistributionCharts", "DistributionChartOrchestrationPipeline.cs"),
             Path.Combine("DataVisualiser", "Core", "Services", "BaseDistributionService.cs")

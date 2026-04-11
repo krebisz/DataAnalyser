@@ -2,7 +2,6 @@ using System.IO;
 using System.Text.Json;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Data;
-using DataVisualiser.Core.Data.Abstractions;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
@@ -70,6 +69,7 @@ public sealed class MainChartsEvidenceExportServiceTests
                     SecondaryMetricType = "Weight",
                     PrimarySubtype = "morning",
                     SecondarySubtype = "evening",
+                    LoadRequestSignature = "Weight::HealthMetrics::2024-01-01T00:00:00.0000000->2024-01-02T00:00:00.0000000::Weight:morning|Weight:evening|Weight:weekly_avg",
                     ActualSeriesCount = 2,
                     From = new DateTime(2024, 1, 1),
                     To = new DateTime(2024, 1, 2)
@@ -95,6 +95,7 @@ public sealed class MainChartsEvidenceExportServiceTests
 
             Assert.Equal(3, diagnostics.GetProperty("Selection").GetProperty("SelectedSeriesCount").GetInt32());
             Assert.True(diagnostics.GetProperty("LoadedContext").GetProperty("ReusableForCurrentSelection").GetBoolean());
+            Assert.True(diagnostics.GetProperty("Transition").GetProperty("LoadedRequestMatchesCurrentSelection").GetBoolean());
             Assert.Equal(1, diagnostics.GetProperty("MainChartPipeline").GetProperty("ExpectedAdditionalSeriesLoad").GetInt32());
             Assert.Equal("SeriesCountMismatch", diagnostics.GetProperty("Transition").GetProperty("State").GetString());
             Assert.True(diagnostics.GetProperty("Transition").GetProperty("ReloadLikelyRequired").GetBoolean());
@@ -195,6 +196,7 @@ public sealed class MainChartsEvidenceExportServiceTests
                     SecondaryMetricType = "Weight",
                     PrimarySubtype = "morning",
                     SecondarySubtype = "evening",
+                    LoadRequestSignature = "Weight::HealthMetrics::2026-03-06T00:00:00.0000000->2026-04-05T00:00:00.0000000::Weight:morning|Weight:evening",
                     ActualSeriesCount = 2,
                     From = new DateTime(2026, 3, 6),
                     To = new DateTime(2026, 4, 5)
@@ -227,6 +229,7 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.True(smokeChecks.GetProperty("LoadedSeriesCountMatchesSelection").GetBoolean());
             Assert.True(smokeChecks.GetProperty("RecentErrorsPresent").GetBoolean());
             Assert.Equal(1, smokeChecks.GetProperty("RecentErrorCount").GetInt32());
+            Assert.True(transition.GetProperty("LoadedRequestMatchesCurrentSelection").GetBoolean());
             Assert.Equal("HostErrorObserved", transition.GetProperty("State").GetString());
             Assert.Equal(2, transition.GetProperty("ExpectedSeriesCount").GetInt32());
             Assert.Equal(2, transition.GetProperty("LoadedContextSeriesCount").GetInt32());
@@ -298,7 +301,7 @@ public sealed class MainChartsEvidenceExportServiceTests
             using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
             var transition = document.RootElement.GetProperty("Diagnostics").GetProperty("Transition");
 
-            Assert.Equal("StoredContextLagging", transition.GetProperty("State").GetString());
+            Assert.Equal("StaleContextAfterRender", transition.GetProperty("State").GetString());
             Assert.True(transition.GetProperty("RenderEvidenceExceedsStoredContext").GetBoolean());
             Assert.True(transition.GetProperty("ReloadLikelyRequired").GetBoolean());
             Assert.Equal(2, transition.GetProperty("LatestReachabilitySeriesCount").GetInt32());

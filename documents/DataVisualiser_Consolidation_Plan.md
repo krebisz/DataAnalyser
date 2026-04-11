@@ -831,6 +831,52 @@ Manual smoke:
 
 - not required for this pass because the change stayed structural-only and behavior-preserving
 
+### Active Phase B Request-Driven Load Slice
+
+The next bounded pass started the architectural pivot away from mutable UI state being read directly during load execution.
+
+Bounded slice selected:
+
+- capture an immutable load request before metric data load begins
+- stamp the resulting chart context with the request identity that produced it
+- expose that request/context relationship through export diagnostics
+- primary files:
+  - `Core/Orchestration/MetricLoadRequest.cs`
+  - `UI/ViewModels/MainWindowViewModel.DataLoading.cs`
+  - `UI/ViewModels/MetricLoadCoordinator.cs`
+  - `Core/Orchestration/ChartDataContext.cs`
+  - `UI/MainHost/MainChartsEvidenceExportService.cs`
+
+Reason this slice was chosen:
+
+- current load behavior still depended on mutable host state and `LastContext`
+- the intended future architecture needs `request -> load -> context -> delivery` to be an explicit seam
+- this was the smallest safe slice that materially changes direction without pretending to finish the full state/result architecture in one pass
+
+Current result from this slice:
+
+- `MetricLoadRequest` now captures metric type, ordered selected series, date range, table, and a stable signature before load begins
+- `MainWindowViewModel` now captures a request snapshot instead of having the coordinator reread mutable state mid-flight
+- `MetricLoadCoordinator` now loads from the captured request and stamps `ChartState.LastContext` with `LoadRequestSignature`
+- evidence export now reports whether the loaded request still matches the current selection, making stale-context diagnosis more explicit
+- follow-up hardening tightened `ChartContextSelectionGuard` so a stored context is only reusable when its request/selection identity still matches the current selection
+- the main-chart render path now promotes the prepared working context back into `ChartState.LastContext`, so export diagnostics and later controllers observe the same resolved series set the renderer just used
+
+Validation recorded for this pass:
+
+- focused guard/preparation/export lane: `13` passed, `0` failed
+- `dotnet test DataAnalyser.sln -c Debug -m:1`: `DataFileReader.Tests` `15` passed, `0` failed; `DataVisualiser.Tests` `433` passed, `0` failed
+- `dotnet build DataVisualiser\\DataVisualiser.csproj -c Debug`: passed with `0` warnings and `0` errors
+
+Manual smoke:
+
+- required for this pass because the live load path changed
+- targeted scope:
+  - load a single subtype and confirm main / bar-pie still load normally
+  - load two subtypes and confirm the main chart renders both series
+  - export after successful load and confirm `LoadedContext.LoadRequestSignature` is present
+  - export after successful load and confirm `Transition.LoadedRequestMatchesCurrentSelection = true`
+
 ---
 
 ## 10. Current Priority Outliers

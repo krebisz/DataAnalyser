@@ -1,4 +1,3 @@
-using DataVisualiser.Core.Orchestration.Coordinator;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration.MainChart;

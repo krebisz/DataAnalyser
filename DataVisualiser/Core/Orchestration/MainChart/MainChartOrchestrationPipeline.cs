@@ -18,7 +18,7 @@ public sealed class MainChartOrchestrationPipeline : IMainChartOrchestrationPipe
         _renderInvocationStage = renderInvocationStage ?? throw new ArgumentNullException(nameof(renderInvocationStage));
     }
 
-    public async Task RenderAsync(MainChartRenderRequest request, CartesianChart chart)
+    public async Task<MainChartPreparedData> RenderAsync(MainChartRenderRequest request, CartesianChart chart)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
@@ -28,5 +28,6 @@ public sealed class MainChartOrchestrationPipeline : IMainChartOrchestrationPipe
         var preparedData = await _preparationStage.PrepareAsync(request);
         var strategyPlan = _strategySelectionStage.Select(preparedData);
         await _renderInvocationStage.RenderAsync(strategyPlan, chart);
+        return preparedData;
     }
 }

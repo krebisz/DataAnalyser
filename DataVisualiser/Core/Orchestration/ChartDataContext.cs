@@ -47,6 +47,7 @@ public class ChartDataContext
     public string? DisplaySecondaryMetricType { get; init; }
     public string? DisplayPrimarySubtype { get; init; }
     public string? DisplaySecondarySubtype { get; init; }
+    public string? LoadRequestSignature { get; set; }
 
     public DateTime From { get; init; }
     public DateTime To { get; init; }

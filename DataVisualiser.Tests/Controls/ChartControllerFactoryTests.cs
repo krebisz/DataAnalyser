@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Computation;
-using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
@@ -272,7 +272,7 @@ public sealed class ChartControllerFactoryTests
         }
     }
 
-    private sealed class StubMetricSelectionDataQueries : Core.Data.Abstractions.IMetricSelectionDataQueries
+    private sealed class StubMetricSelectionDataQueries : Core.Data.IMetricSelectionDataQueries
     {
         public Task<long> GetRecordCount(string metricType, string? metricSubtype = null) => Task.FromResult(0L);
         public Task<IEnumerable<DataVisualiser.Shared.Models.MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype, DateTime? from, DateTime? to, string tableName, int? maxRecords = null, DataVisualiser.Core.Data.SamplingMode samplingMode = DataVisualiser.Core.Data.SamplingMode.None, int? targetSamples = null)

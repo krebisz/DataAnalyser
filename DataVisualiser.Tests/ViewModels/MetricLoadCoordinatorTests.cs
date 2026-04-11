@@ -1,5 +1,5 @@
 using DataVisualiser.Core.Data;
-using DataVisualiser.Core.Data.Abstractions;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Validation.DataLoad;
 using DataVisualiser.Shared.Models;
@@ -48,6 +48,54 @@ public sealed class MetricLoadCoordinatorTests
         Assert.Equal(2, loadedSubtypes!.Count);
     }
 
+    [Fact]
+    public async Task LoadMetricDataAsync_ShouldUseCapturedRequestInsteadOfAmbientMutableState()
+    {
+        var chartState = new ChartState();
+        var metricState = new MetricState
+        {
+            SelectedMetricType = "(All)",
+            ResolutionTableName = "HealthMetrics",
+            FromDate = new DateTime(2024, 01, 01),
+            ToDate = new DateTime(2024, 01, 02)
+        };
+        metricState.SetSeriesSelections([new MetricSeriesSelection("(All)", "(All)")]);
+
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message);
+
+        var capturedRequest = new MetricLoadRequest(
+            "(All)",
+            [new MetricSeriesSelection("(All)", "(All)")],
+            new DateTime(2024, 01, 01),
+            new DateTime(2024, 01, 02),
+            "HealthMetrics");
+
+        metricState.SelectedMetricType = "Weight";
+        metricState.SetSeriesSelections([new MetricSeriesSelection("Weight", "morning")]);
+        metricState.FromDate = new DateTime(2025, 01, 01);
+        metricState.ToDate = new DateTime(2025, 01, 02);
+
+        var loaded = await coordinator.LoadMetricDataAsync(
+            capturedRequest,
+            args => throw new Xunit.Sdk.XunitException(args.Message));
+
+        Assert.True(loaded);
+        Assert.NotNull(chartState.LastContext);
+        Assert.Equal(capturedRequest.Signature, chartState.LastContext!.LoadRequestSignature);
+        Assert.Equal("(All)", chartState.LastContext.MetricType);
+        Assert.Equal(new DateTime(2024, 01, 01), chartState.LastContext.From);
+        Assert.Equal(new DateTime(2024, 01, 02), chartState.LastContext.To);
+    }
+
     private sealed class StubMetricSelectionDataQueries : IMetricSelectionDataQueries
     {
         public Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
@@ -65,7 +113,17 @@ public sealed class MetricLoadCoordinatorTests
             SamplingMode samplingMode = SamplingMode.None,
             int? targetSamples = null)
         {
-            return Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+            IEnumerable<MetricData> result =
+            [
+                new MetricData
+                {
+                    NormalizedTimestamp = from ?? new DateTime(2024, 01, 01),
+                    Value = 1m,
+                    Unit = "u"
+                }
+            ];
+
+            return Task.FromResult(result);
         }
 
         public Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName)

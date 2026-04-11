@@ -1,4 +1,3 @@
-using DataVisualiser.Core.Orchestration.Selection;
 using DataVisualiser.Core.Strategies.Abstractions;
 
 namespace DataVisualiser.Core.Orchestration.MainChart;

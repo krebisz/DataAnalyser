@@ -1,4 +1,4 @@
-using DataVisualiser.Core.Orchestration.Coordinator;
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
