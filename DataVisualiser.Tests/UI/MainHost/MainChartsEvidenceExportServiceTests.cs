@@ -42,6 +42,7 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Contains("\"UiSurface\"", contents);
             Assert.Contains("\"SmokeChecks\"", contents);
             Assert.Contains("\"Transition\"", contents);
+            Assert.Contains("\"SessionMilestones\"", contents);
         }
         finally
         {
@@ -373,6 +374,67 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.True(vnext.GetProperty("SnapshotMatchesProgramSource").GetBoolean());
             Assert.True(vnext.GetProperty("ProgramSourceMatchesProjectedContext").GetBoolean());
             Assert.True(vnext.GetProperty("SupportsOnlyMainChart").GetBoolean());
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task ExportAsync_ShouldIncludeSessionMilestonesAcrossScenarioFlow()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState();
+            chartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+            {
+                TimestampUtc = new DateTime(2026, 4, 11, 18, 0, 0, DateTimeKind.Utc),
+                Kind = "TransformPrimaryProjectionRendered",
+                Outcome = "Success",
+                MetricType = "Weight",
+                SelectedSeriesCount = 1,
+                SelectedDisplayKeys = ["Weight:body_fat_mass"],
+                RuntimePath = EvidenceRuntimePath.Legacy,
+                LoadedSeriesCount = 1,
+                ContextSignature = "ctx-1",
+                OperationArity = 1,
+                PrimarySeriesDisplayKey = "Weight:body_fat_mass",
+                ResultPointCount = 12,
+                Note = "Primary data projected without an explicit transform operation."
+            });
+            chartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+            {
+                TimestampUtc = new DateTime(2026, 4, 11, 18, 5, 0, DateTimeKind.Utc),
+                Kind = "TransformOperationRendered",
+                Outcome = "Success",
+                MetricType = "Weight",
+                SelectedSeriesCount = 2,
+                SelectedDisplayKeys = ["Weight:body_fat_mass", "Weight:skeletal_muscle_mass"],
+                RuntimePath = EvidenceRuntimePath.Legacy,
+                LoadedSeriesCount = 2,
+                ContextSignature = "ctx-2",
+                Operation = "Add",
+                OperationArity = 2,
+                PrimarySeriesDisplayKey = "Weight:body_fat_mass",
+                SecondarySeriesDisplayKey = "Weight:skeletal_muscle_mass",
+                ResultPointCount = 12
+            });
+
+            var result = await service.ExportAsync(chartState, new MetricState(), new DateTime(2026, 4, 11, 20, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var milestones = document.RootElement.GetProperty("SessionMilestones");
+
+            Assert.Equal(2, milestones.GetArrayLength());
+            Assert.Equal("TransformPrimaryProjectionRendered", milestones[0].GetProperty("Kind").GetString());
+            Assert.Equal(1, milestones[0].GetProperty("SelectedSeriesCount").GetInt32());
+            Assert.Equal("TransformOperationRendered", milestones[1].GetProperty("Kind").GetString());
+            Assert.Equal("Add", milestones[1].GetProperty("Operation").GetString());
+            Assert.Equal(2, milestones[1].GetProperty("OperationArity").GetInt32());
         }
         finally
         {

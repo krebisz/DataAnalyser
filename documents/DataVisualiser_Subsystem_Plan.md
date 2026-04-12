@@ -101,6 +101,7 @@ All actions must preserve:
 12. Transform-like chart programmability is a downstream derived/interpretive capability, not a semantic authority.
 13. Support for rendering more than one derived result set on a qualified chart surface is future-facing intent and must not be blocked by single-result assumptions.
 14. VNext path must not change the semantic content of the projected context relative to legacy — it is an execution-path alternative, not a semantic one.
+15. Transform/controller decomposition must preserve the path toward reusable programmable chart capability over multiple datasets, multiple operations, and multiple rendered graphs on one qualified chart surface.
 
 ---
 
@@ -128,18 +129,22 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 Current observed shape:
 
 - `~395` C# files (after Phase 6.5 hierarchy cleanup and file merges)
-- `480` automated tests passing
+- `499` automated tests passing
 - first live VNext vertical slice active for main-chart loads
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
 
 - `UI/MainChartsView.xaml.cs` (~1,627 lines)
-- `UI/MainHost/MainChartsEvidenceExportService.cs` (~700 lines, reduced from 1,209)
-- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~555 lines, reduced from ~857)
-- `Core/Services/BaseDistributionService.cs` (~612 lines)
-- `Core/Rendering/Engines/ChartRenderEngine.cs` (~588 lines)
-- `Core/Rendering/Helpers/ChartHelper.cs` (~595 lines)
+- `UI/MainHost/EvidenceParityBuilder.cs` (~478 lines)
+- `UI/MainHost/EvidenceTransformParityEvaluator.cs` (~161 lines)
+- `UI/MainHost/MainChartsEvidenceExportService.cs` (~138 lines, reduced from 1,209)
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~324 lines, reduced from ~857)
+- `UI/Charts/Presentation/TransformDataResolutionCoordinator.cs` (~171 lines)
+- `UI/Charts/Presentation/TransformOperationExecutionCoordinator.cs` (~106 lines)
+- `Core/Rendering/Helpers/ChartTooltipFormattingHelper.cs` (~464 lines)
+- `Core/Services/BaseDistributionService.cs` (~483 lines)
+- `Core/Rendering/Engines/ChartRenderEngine.cs` (~452 lines)
 - `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` (~503 lines)
 
 Current read:
@@ -150,6 +155,16 @@ Current read:
 - the chart/rendering delivery seams are materially cleaner than before the Phase 5 rehaul
 - `DataFetcher` is now a facade over focused query groups for catalog, metric-data, date/count, and admin concerns
 - transform subtype-combo lifecycle is now isolated in `TransformSubtypeSelectionCoordinator`
+- transform grid/result/chart presentation is now split across dedicated presentation coordinators
+- the remaining transform decomposition work must preserve future seams for dataset resolution, operation planning/execution, result-set production, and chart delivery rather than reinforcing unary/binary-only assumptions
+- transform dataset/selection resolution is now isolated in `TransformDataResolutionCoordinator`
+- transform operation eligibility and execution are now isolated in `TransformOperationExecutionCoordinator`
+- distribution bucket extraction, min/max, tooltip, and averaging computations are now delegated to `DistributionComputationHelper`
+- chart tooltip formatting is now delegated to `ChartTooltipFormattingHelper`
+- chart-series label formatting and materialization are now delegated to `ChartSeriesLabelFormatter` and `ChartSeriesMaterializer`
+- chart cumulative-series construction and Y-axis normalization-data preparation are now delegated to `ChartCumulativeSeriesBuilder` and `ChartYAxisDataBuilder`
+- parity assembly is now delegated out of `MainChartsEvidenceExportService` into `EvidenceParityBuilder`
+- transform parity evaluation is now delegated out of `EvidenceParityBuilder` into `EvidenceTransformParityEvaluator`
 - the remaining architectural noise is concentrated in the outliers listed above
 - low-level helper duplication is no longer the dominant problem; mixed host/orchestration/evidence/data-access responsibilities are
 
@@ -291,8 +306,8 @@ Multiple slices banked (export, data-loaded, selection stabilization, request-dr
 Evidence boundary decomposition is complete (`MainChartsEvidenceExportService` split).
 
 Remaining targets in priority order:
-1. `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
-2. `Core/Services/BaseDistributionService.cs`
+1. `Core/Services/BaseDistributionService.cs`
+2. `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (`next slice, if reopened, should be chart/grid/result-program handoff only`)
 3. `Core/Rendering/Helpers/ChartHelper.cs`
 
 ### 10.4 Phase D — Delivery and Rendering Spillover Simplification
@@ -337,7 +352,7 @@ First live VNext main-chart slice is proven and stable. Next VNext slices to con
 
 - `UI/MainChartsView.xaml.cs` — largest host concentration point
 - `Core/Data/Repositories/DataFetcher.cs` — query shaping, normalization, subtype resolution
-- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` — selection, compute, grid, render mixed
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` — remaining transform workflow and chart/grid handoff concentration
 - `Core/Services/BaseDistributionService.cs` — computation + rendering mixed
 - `Core/Rendering/Engines/ChartRenderEngine.cs` — render normalization, axis shaping, tooltip range
 - `Core/Rendering/Helpers/ChartHelper.cs` — scattered tooltip/axis/clearing helpers
@@ -351,6 +366,7 @@ First live VNext main-chart slice is proven and stable. Next VNext slices to con
 - presentation-spine publication and host orchestration handoff
 - data-fetch query shaping, table normalization, subtype resolution
 - transform panel workflow composition across selection, compute, render, grid sync
+- future programmable chart/controller seams for dynamic data generated from multiple datasets and operations, including multiple graphs on one chart surface
 - render normalization, axis shaping, tooltip range shaping, chart helper spillover
 - client-specific repair logic ownership classification
 
@@ -442,6 +458,7 @@ It must not collapse back upward into normalization, canonical identity, or sema
 4. Special-case transform programmability should eventually become a reusable capability, not remain trapped in one controller lineage.
 5. Multi-result rendering must expose provenance clearly enough that the user can tell what each result set represents and how it was produced.
 6. The first live VNext vertical slice (April 2026) proves request → snapshot → program → delivery for the Main chart family, which is the foundational execution shape that programmable chart composition will eventually build upon.
+7. Transform decomposition in Phase 6 should preserve eventual controller capability for dynamic data generation from multiple datasets and operations, including rendering multiple graphs in a single qualified chart.
 
 ### A.4 Open Questions
 

@@ -81,6 +81,7 @@ The architecture rehaul established that the project is not yet structurally rea
    - uneven assurance quality
 4. Multi-backend chart support is not a cosmetic preference. It is a deliberate architectural probe into whether rendering has actually been isolated from the rest of the application.
 5. Standardized programmable chart hosts are intended future product behavior, but that future is unsafe unless controller convergence, rendering contracts, and orchestration seams are made explicit first.
+6. Transform is the first real programmable-chart prototype; Phase 6 work must preserve a path to multi-dataset, multi-operation, multi-graph result delivery instead of hardening unary/binary special cases.
 
 Therefore, architecture rehaul was not a side quest, and its successor work is not cosmetic cleanup.  
 The next bridge is hierarchy legibility: the system must become coherent enough that true outliers are obvious and future capability can land without creating new exception-driven structure.
@@ -415,6 +416,7 @@ The goal is to make the system legible enough that:
 **Scope**
 - decompose large mixed-responsibility concentration points such as `MainChartsView`, `TransformDataPanelControllerAdapter`, `MainChartsEvidenceExportService`, `DataFetcher`, `BaseDistributionService`, and similar verified outliers
 - split only where the resulting ownership is clearer than the current concentration
+- preserve future programmable-chart/controller seams where the current outlier is an early prototype of broader chart capability
 
 **Constraints**
 - no decomposition for its own sake
@@ -423,6 +425,7 @@ The goal is to make the system legible enough that:
 
 **Closure Condition**
 - the remaining large outliers are reduced materially or explicitly bounded as intentional next-cycle debt
+- transform/controller outlier work leaves the system more ready for reusable multi-input, multi-operation, multi-result chart programming
 
 #### Phase 6.5 - Physical Hierarchy and Naming Realignment
 
@@ -520,6 +523,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 - standardize graph parent controllers and shared option/toggle surfaces where capability semantics align
 - allow transform-style programming across qualified chart families, including selected submetrics and unary, binary, ternary, or higher-order derived operations
 - support rendering more than one derived result set on the same qualified chart surface where the chart family supports it
+- support dynamic result generation from multiple datasets and operations, including multiple graphs within a single qualified chart
 - preserve provenance and explicit derived identity for each result set
 
 **Constraints**

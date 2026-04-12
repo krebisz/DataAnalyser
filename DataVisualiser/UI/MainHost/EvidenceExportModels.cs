@@ -84,6 +84,25 @@ public sealed class DiagnosticsSnapshot
     public VNextDiagnosticsSnapshot? VNext { get; set; }
 }
 
+public sealed class SessionMilestoneSnapshot
+{
+    public DateTime TimestampUtc { get; set; }
+    public string Kind { get; set; } = string.Empty;
+    public string Outcome { get; set; } = "Info";
+    public string? MetricType { get; set; }
+    public int SelectedSeriesCount { get; set; }
+    public IReadOnlyList<string> SelectedDisplayKeys { get; set; } = Array.Empty<string>();
+    public EvidenceRuntimePath? RuntimePath { get; set; }
+    public int LoadedSeriesCount { get; set; }
+    public string? ContextSignature { get; set; }
+    public string? Operation { get; set; }
+    public int? OperationArity { get; set; }
+    public string? PrimarySeriesDisplayKey { get; set; }
+    public string? SecondarySeriesDisplayKey { get; set; }
+    public int? ResultPointCount { get; set; }
+    public string? Note { get; set; }
+}
+
 public sealed class UiSurfaceDiagnosticsSnapshot
 {
     public MetricTypeUiDiagnosticsSnapshot MetricType { get; set; } = new();

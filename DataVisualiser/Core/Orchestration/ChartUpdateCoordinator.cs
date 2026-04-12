@@ -163,135 +163,15 @@ public class ChartUpdateCoordinator
 
     private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeries(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)
     {
-        if (result.Series != null && result.Series.Count > 0)
-            return BuildCumulativeSeriesFromMulti(result.Series);
-
-        return BuildCumulativeSeriesFromLegacy(result, strategy, primaryLabel, secondaryLabel);
-    }
-
-    private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromMulti(IReadOnlyList<SeriesResult> seriesResults)
-    {
-        var mainTimeline = seriesResults.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
-        if (mainTimeline.Count == 0)
-            return (null, null);
-
-        var cumulativeRaw = new double[mainTimeline.Count];
-        var cumulativeSmoothed = new double[mainTimeline.Count];
-        var cumulativeSeries = new List<SeriesResult>();
-        var originalSeries = new List<SeriesResult>();
-
-        foreach (var series in seriesResults)
-        {
-            var alignedRaw = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.RawValues, mainTimeline);
-            var alignedSmooth = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.Smoothed ?? series.RawValues, mainTimeline);
-
-            originalSeries.Add(new SeriesResult
-            {
-                    SeriesId = series.SeriesId,
-                    DisplayName = series.DisplayName,
-                    Timestamps = mainTimeline.ToList(),
-                    RawValues = alignedRaw.ToList(),
-                    Smoothed = alignedSmooth.ToList()
-            });
-
-            AddIntoCumulative(cumulativeRaw, alignedRaw);
-            AddIntoCumulative(cumulativeSmoothed, alignedSmooth);
-
-            cumulativeSeries.Add(new SeriesResult
-            {
-                    SeriesId = series.SeriesId,
-                    DisplayName = series.DisplayName,
-                    Timestamps = mainTimeline.ToList(),
-                    RawValues = cumulativeRaw.ToList(),
-                    Smoothed = cumulativeSmoothed.ToList()
-            });
-        }
-
-        return (cumulativeSeries, originalSeries);
-    }
-
-    private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromLegacy(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)
-    {
-        var timeline = result.Timestamps ?? new List<DateTime>();
-        if (timeline.Count == 0)
-            return (null, null);
-
-        var cumulativeRaw = new double[timeline.Count];
-        var cumulativeSmoothed = new double[timeline.Count];
-        var cumulativeSeries = new List<SeriesResult>();
-        var originalSeries = new List<SeriesResult>();
-
-        AddIntoCumulative(cumulativeRaw, result.PrimaryRawValues);
-        AddIntoCumulative(cumulativeSmoothed, result.PrimarySmoothed.Count > 0 ? result.PrimarySmoothed : result.PrimaryRawValues);
-
-        originalSeries.Add(new SeriesResult
-        {
-                SeriesId = "primary-original",
-                DisplayName = strategy.PrimaryLabel ?? primaryLabel,
-                Timestamps = timeline.ToList(),
-                RawValues = result.PrimaryRawValues.ToList(),
-                Smoothed = result.PrimarySmoothed.Count > 0 ? result.PrimarySmoothed.ToList() : result.PrimaryRawValues.ToList()
-        });
-
-        cumulativeSeries.Add(new SeriesResult
-        {
-                SeriesId = "primary",
-                DisplayName = strategy.PrimaryLabel ?? primaryLabel,
-                Timestamps = timeline.ToList(),
-                RawValues = cumulativeRaw.ToList(),
-                Smoothed = cumulativeSmoothed.ToList()
-        });
-
-        if (result.SecondaryRawValues != null && result.SecondaryRawValues.Count > 0)
-        {
-            AddIntoCumulative(cumulativeRaw, result.SecondaryRawValues);
-            var secondarySmooth = result.SecondarySmoothed != null && result.SecondarySmoothed.Count > 0 ? result.SecondarySmoothed : result.SecondaryRawValues;
-            AddIntoCumulative(cumulativeSmoothed, secondarySmooth);
-
-            originalSeries.Add(new SeriesResult
-            {
-                    SeriesId = "secondary-original",
-                    DisplayName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
-                    Timestamps = timeline.ToList(),
-                    RawValues = result.SecondaryRawValues.ToList(),
-                    Smoothed = secondarySmooth.ToList()
-            });
-
-            cumulativeSeries.Add(new SeriesResult
-            {
-                    SeriesId = "secondary",
-                    DisplayName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
-                    Timestamps = timeline.ToList(),
-                    RawValues = cumulativeRaw.ToList(),
-                    Smoothed = cumulativeSmoothed.ToList()
-            });
-        }
-
-        return (cumulativeSeries, originalSeries);
-    }
-
-    private static void AddIntoCumulative(double[] cumulative, IList<double> values)
-    {
-        var count = Math.Min(cumulative.Length, values.Count);
-        for (var i = 0; i < count; i++)
-        {
-            var value = values[i];
-            if (double.IsNaN(value) || double.IsInfinity(value))
-                continue;
-
-            cumulative[i] += value;
-        }
+        return ChartCumulativeSeriesBuilder.Build(result, strategy, primaryLabel, secondaryLabel);
     }
 
     private static bool ShouldUseStackedTotals(ChartRenderModel model)
     {
-        if (!model.IsStacked)
-            return false;
-
-        if (model.Series != null && model.Series.Count > 1)
-            return true;
-
-        return model.SecondaryRaw != null || model.SecondarySmoothed != null;
+        return model.IsStacked && (
+            (model.Series != null && model.Series.Count > 1) ||
+            model.SecondaryRaw != null ||
+            model.SecondarySmoothed != null);
     }
 
     /// <summary>
@@ -300,143 +180,7 @@ public class ChartUpdateCoordinator
     /// </summary>
     private List<MetricData> BuildSyntheticRawData(ChartRenderModel model)
     {
-        var metrics = ShouldUseStackedTotals(model) ? BuildStackedRawData(model) : EnumerateRawPoints(model).Select(p => CreateMetric(p.Timestamp, p.Value, model.Unit)).ToList();
-
-        AppendOverlayRawData(metrics, model);
-        return metrics;
-    }
-
-    private List<MetricData> BuildStackedRawData(ChartRenderModel model)
-    {
-        var timestamps = GetStackTimeline(model);
-        var totals = new double[timestamps.Count];
-        var hasValue = new bool[timestamps.Count];
-
-        if (model.Series != null && model.Series.Count > 0)
-        {
-            foreach (var series in model.Series)
-            {
-                var aligned = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.RawValues, timestamps);
-                for (var i = 0; i < aligned.Count; i++)
-                {
-                    var value = aligned[i];
-                    if (double.IsNaN(value) || double.IsInfinity(value))
-                        continue;
-
-                    totals[i] += value;
-                    hasValue[i] = true;
-                }
-            }
-        }
-        else
-        {
-            var primaryRaw = model.PrimaryRaw ?? new List<double>();
-            var secondaryRaw = model.SecondaryRaw;
-            var count = timestamps.Count;
-
-            for (var i = 0; i < count; i++)
-            {
-                var sum = 0.0;
-                var found = false;
-
-                if (i < primaryRaw.Count && !double.IsNaN(primaryRaw[i]) && !double.IsInfinity(primaryRaw[i]))
-                {
-                    sum += primaryRaw[i];
-                    found = true;
-                }
-
-                if (secondaryRaw != null && i < secondaryRaw.Count && !double.IsNaN(secondaryRaw[i]) && !double.IsInfinity(secondaryRaw[i]))
-                {
-                    sum += secondaryRaw[i];
-                    found = true;
-                }
-
-                if (found)
-                {
-                    totals[i] = sum;
-                    hasValue[i] = true;
-                }
-            }
-        }
-
-        var metrics = new List<MetricData>(timestamps.Count);
-        for (var i = 0; i < timestamps.Count; i++)
-        {
-            var value = hasValue[i] ? (decimal)totals[i] : (decimal?)null;
-            metrics.Add(new MetricData
-            {
-                    NormalizedTimestamp = timestamps[i],
-                    Value = value,
-                    Unit = model.Unit
-            });
-        }
-
-        return metrics;
-    }
-
-    private static MetricData CreateMetric(DateTime timestamp, double value, string? unit)
-    {
-        return new MetricData
-        {
-                NormalizedTimestamp = timestamp,
-                Value = double.IsNaN(value) ? null : (decimal)value,
-                Unit = unit
-        };
-    }
-
-    private IEnumerable<(DateTime Timestamp, double Value)> EnumerateRawPoints(ChartRenderModel model)
-    {
-        // Multi-series mode
-        if (model.Series != null && model.Series.Count > 0)
-        {
-            foreach (var series in model.Series)
-            {
-                var count = Math.Min(series.Timestamps.Count, series.RawValues.Count);
-
-                for (var i = 0; i < count; i++)
-                    yield return (series.Timestamps[i], series.RawValues[i]);
-            }
-
-            yield break;
-        }
-
-        // Legacy primary/secondary mode
-        var timestamps = model.Timestamps;
-        var primaryRaw = model.PrimaryRaw ?? new List<double>();
-        var secondaryRaw = model.SecondaryRaw;
-
-        var primaryCount = Math.Min(timestamps.Count, primaryRaw.Count);
-
-        for (var i = 0; i < primaryCount; i++)
-        {
-            yield return (timestamps[i], primaryRaw[i]);
-
-            if (secondaryRaw != null && i < secondaryRaw.Count)
-                yield return (timestamps[i], secondaryRaw[i]);
-        }
-    }
-
-    private static void AppendOverlayRawData(List<MetricData> metrics, ChartRenderModel model)
-    {
-        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
-            return;
-
-        foreach (var point in EnumerateOverlayRawPoints(model))
-            metrics.Add(CreateMetric(point.Timestamp, point.Value, model.Unit));
-    }
-
-    private static IEnumerable<(DateTime Timestamp, double Value)> EnumerateOverlayRawPoints(ChartRenderModel model)
-    {
-        if (model.OverlaySeries == null)
-            yield break;
-
-        foreach (var series in model.OverlaySeries)
-        {
-            var count = Math.Min(series.Timestamps.Count, series.RawValues.Count);
-
-            for (var i = 0; i < count; i++)
-                yield return (series.Timestamps[i], series.RawValues[i]);
-        }
+        return ChartYAxisDataBuilder.BuildSyntheticRawData(model);
     }
 
     /// <summary>
@@ -445,120 +189,7 @@ public class ChartUpdateCoordinator
     /// </summary>
     private List<double> CollectSmoothedValues(ChartRenderModel model)
     {
-        if (ShouldUseStackedTotals(model))
-            return BuildStackedSmoothedValues(model);
-
-        var smoothedList = new List<double>();
-
-        if (model.Series != null && model.Series.Count > 0)
-        {
-            // Collect smoothed values from all series
-            foreach (var series in model.Series)
-                if (series.Smoothed != null)
-                    smoothedList.AddRange(series.Smoothed);
-        }
-        else
-        {
-            // Fallback to primary/secondary for backward compatibility
-            if (model.PrimarySmoothed != null)
-                smoothedList.AddRange(model.PrimarySmoothed);
-            if (model.SecondarySmoothed != null)
-                smoothedList.AddRange(model.SecondarySmoothed);
-        }
-
-        AppendOverlaySmoothedValues(smoothedList, model);
-        return smoothedList;
-    }
-
-    private static void AppendOverlaySmoothedValues(List<double> values, ChartRenderModel model)
-    {
-        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
-            return;
-
-        foreach (var series in model.OverlaySeries)
-        {
-            if (series.Smoothed != null && series.Smoothed.Count > 0)
-            {
-                values.AddRange(series.Smoothed);
-                continue;
-            }
-
-            if (series.RawValues != null && series.RawValues.Count > 0)
-                values.AddRange(series.RawValues);
-        }
-    }
-
-    private List<double> BuildStackedSmoothedValues(ChartRenderModel model)
-    {
-        var timestamps = GetStackTimeline(model);
-        var totals = new double[timestamps.Count];
-        var hasValue = new bool[timestamps.Count];
-
-        if (model.Series != null && model.Series.Count > 0)
-        {
-            foreach (var series in model.Series)
-            {
-                if (series.Smoothed == null)
-                    continue;
-
-                var aligned = SeriesAlignmentHelper.AlignSeriesToTimeline(series.Timestamps, series.Smoothed, timestamps);
-                for (var i = 0; i < aligned.Count; i++)
-                {
-                    var value = aligned[i];
-                    if (double.IsNaN(value) || double.IsInfinity(value))
-                        continue;
-
-                    totals[i] += value;
-                    hasValue[i] = true;
-                }
-            }
-        }
-        else
-        {
-            var primarySmoothed = model.PrimarySmoothed ?? new List<double>();
-            var secondarySmoothed = model.SecondarySmoothed;
-            var count = timestamps.Count;
-
-            for (var i = 0; i < count; i++)
-            {
-                var sum = 0.0;
-                var found = false;
-
-                if (i < primarySmoothed.Count && !double.IsNaN(primarySmoothed[i]) && !double.IsInfinity(primarySmoothed[i]))
-                {
-                    sum += primarySmoothed[i];
-                    found = true;
-                }
-
-                if (secondarySmoothed != null && i < secondarySmoothed.Count && !double.IsNaN(secondarySmoothed[i]) && !double.IsInfinity(secondarySmoothed[i]))
-                {
-                    sum += secondarySmoothed[i];
-                    found = true;
-                }
-
-                if (found)
-                {
-                    totals[i] = sum;
-                    hasValue[i] = true;
-                }
-            }
-        }
-
-        var values = new List<double>(timestamps.Count);
-        for (var i = 0; i < timestamps.Count; i++)
-            values.Add(hasValue[i] ? totals[i] : double.NaN);
-
-        return values;
-    }
-
-    private static List<DateTime> GetStackTimeline(ChartRenderModel model)
-    {
-        var timeline = model.Timestamps;
-        if (timeline == null || timeline.Count == 0)
-            if (model.Series != null)
-                timeline = model.Series.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
-
-        return timeline ?? new List<DateTime>();
+        return ChartYAxisDataBuilder.CollectSmoothedValues(model);
     }
 
     /// <summary>
@@ -571,10 +202,10 @@ public class ChartUpdateCoordinator
         var syntheticRawData = BuildSyntheticRawData(model);
         var smoothedList = CollectSmoothedValues(model);
 
-        EnsureOverlayExtremes(syntheticRawData, model.OverlaySeries, model.Unit);
+        ChartYAxisDataBuilder.EnsureOverlayExtremes(syntheticRawData, model.OverlaySeries, model.Unit);
 
         if (model.IsStacked)
-            EnsureStackedBaseline(syntheticRawData, smoothedList, model.Unit);
+            ChartYAxisDataBuilder.EnsureStackedBaseline(syntheticRawData, smoothedList, model.Unit);
 
         Debug.WriteLine($"[TransformChart] NormalizeYAxisForChart: chart={targetChart.Name}, syntheticRawData={syntheticRawData.Count}, smoothedList={smoothedList.Count}");
 
@@ -594,7 +225,7 @@ public class ChartUpdateCoordinator
         if (overlaySeries == null || overlaySeries.Count == 0 || yAxis == null)
             return;
 
-        var (min, max) = GetOverlayMinMax(overlaySeries);
+        var (min, max) = ChartYAxisDataBuilder.GetOverlayMinMax(overlaySeries);
         if (!min.HasValue || !max.HasValue)
             return;
 
@@ -633,101 +264,4 @@ public class ChartUpdateCoordinator
         yAxis.Labels = null;
     }
 
-    private static(double? Min, double? Max) GetOverlayMinMax(IReadOnlyList<SeriesResult> overlaySeries)
-    {
-        double? min = null;
-        double? max = null;
-
-        foreach (var series in overlaySeries)
-        {
-            AccumulateMinMax(series.RawValues, ref min, ref max);
-            AccumulateMinMax(series.Smoothed, ref min, ref max);
-        }
-
-        return (min, max);
-    }
-
-    private static void EnsureStackedBaseline(List<MetricData> rawData, List<double> smoothedValues, string? unit)
-    {
-        var min = GetMinimumValue(rawData, smoothedValues);
-        if (double.IsNaN(min) || min <= 0)
-            return;
-
-        var timestamp = rawData.FirstOrDefault()?.NormalizedTimestamp ?? DateTime.UtcNow;
-        rawData.Add(new MetricData
-        {
-                NormalizedTimestamp = timestamp,
-                Value = 0m,
-                Unit = unit
-        });
-    }
-
-    private static double GetMinimumValue(List<MetricData> rawData, List<double> smoothedValues)
-    {
-        double? min = null;
-
-        foreach (var point in rawData)
-            if (point.Value.HasValue)
-            {
-                var value = (double)point.Value.Value;
-                min = min.HasValue ? Math.Min(min.Value, value) : value;
-            }
-
-        foreach (var value in smoothedValues)
-        {
-            if (double.IsNaN(value) || double.IsInfinity(value))
-                continue;
-
-            min = min.HasValue ? Math.Min(min.Value, value) : value;
-        }
-
-        return min ?? double.NaN;
-    }
-
-    private static void EnsureOverlayExtremes(List<MetricData> rawData, IReadOnlyList<SeriesResult>? overlaySeries, string? unit)
-    {
-        if (overlaySeries == null || overlaySeries.Count == 0)
-            return;
-
-        double? min = null;
-        double? max = null;
-
-        foreach (var series in overlaySeries)
-        {
-            AccumulateMinMax(series.RawValues, ref min, ref max);
-            AccumulateMinMax(series.Smoothed, ref min, ref max);
-        }
-
-        if (!min.HasValue || !max.HasValue)
-            return;
-
-        var timestamp = rawData.FirstOrDefault()?.NormalizedTimestamp ?? DateTime.UtcNow;
-        rawData.Add(new MetricData
-        {
-                NormalizedTimestamp = timestamp,
-                Value = (decimal)min.Value,
-                Unit = unit
-        });
-        rawData.Add(new MetricData
-        {
-                NormalizedTimestamp = timestamp,
-                Value = (decimal)max.Value,
-                Unit = unit
-        });
-    }
-
-    private static void AccumulateMinMax(IReadOnlyList<double>? values, ref double? min, ref double? max)
-    {
-        if (values == null)
-            return;
-
-        foreach (var value in values)
-        {
-            if (double.IsNaN(value) || double.IsInfinity(value))
-                continue;
-
-            min = min.HasValue ? Math.Min(min.Value, value) : value;
-            max = max.HasValue ? Math.Max(max.Value, value) : value;
-        }
-    }
 }

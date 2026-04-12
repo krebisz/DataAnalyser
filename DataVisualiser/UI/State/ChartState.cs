@@ -9,6 +9,8 @@ namespace DataVisualiser.UI.State;
 public class ChartState
 {
     private readonly Dictionary<DistributionMode, DistributionModeSettings> _distributionSettings = new();
+    private readonly List<SessionMilestoneSnapshot> _sessionMilestones = new();
+    private const int MaxSessionMilestones = 50;
 
     public ChartState()
     {
@@ -61,6 +63,7 @@ public class ChartState
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }
     public LoadRuntimeState? LastLoadRuntime { get; set; }
+    public IReadOnlyList<SessionMilestoneSnapshot> SessionMilestones => _sessionMilestones;
 
     // Current chart titles (left + right)
     public string LeftTitle { get; set; } = string.Empty;
@@ -78,6 +81,17 @@ public class ChartState
         settings = new DistributionModeSettings(true, definition.DefaultIntervalCount);
         _distributionSettings[mode] = settings;
         return settings;
+    }
+
+    public void RecordSessionMilestone(SessionMilestoneSnapshot milestone)
+    {
+        ArgumentNullException.ThrowIfNull(milestone);
+
+        _sessionMilestones.Add(milestone);
+        if (_sessionMilestones.Count <= MaxSessionMilestones)
+            return;
+
+        _sessionMilestones.RemoveRange(0, _sessionMilestones.Count - MaxSessionMilestones);
     }
 }
 

@@ -386,6 +386,48 @@ public sealed class TransformDataPanelControllerAdapterTests
             Assert.Equal(Visibility.Visible, controller.TransformGrid3Panel.Visibility);
             Assert.Equal(Visibility.Visible, controller.TransformChartContentPanel.Visibility);
 
+            var milestone = Assert.Single(viewModel.ChartState.SessionMilestones);
+            Assert.Equal("TransformOperationRendered", milestone.Kind);
+            Assert.Equal("MetricA:SubA", milestone.PrimarySeriesDisplayKey);
+            Assert.Equal("MetricB:SubB", milestone.SecondarySeriesDisplayKey);
+
+            tooltipManager.Dispose();
+            window.Close();
+        });
+    }
+
+    [Fact]
+    public void OnToggleRequested_RecordsTransformToggleMilestone()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var adapter = CreateAdapter(out var viewModel, out var controller, out var tooltipManager, out var window);
+
+            viewModel.MetricState.SelectedMetricType = "MetricA";
+            viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
+            {
+                new("MetricA", "SubA", "MetricA", "SubA")
+            });
+
+            viewModel.ChartState.LastContext = new ChartDataContext
+            {
+                MetricType = "MetricA",
+                PrimaryMetricType = "MetricA",
+                PrimarySubtype = "SubA",
+                DisplayPrimaryMetricType = "MetricA",
+                DisplayPrimarySubtype = "SubA"
+            };
+
+            adapter.OnToggleRequested(null, EventArgs.Empty);
+
+            var milestone = Assert.Single(viewModel.ChartState.SessionMilestones);
+            Assert.Equal("TransformToggleRequested", milestone.Kind);
+            Assert.Equal("Info", milestone.Outcome);
+            Assert.Equal("MetricA", milestone.MetricType);
+            Assert.Equal(1, milestone.SelectedSeriesCount);
+            Assert.Equal("MetricA:SubA", Assert.Single(milestone.SelectedDisplayKeys));
+            Assert.Equal("Transform panel hidden.", milestone.Note);
+
             tooltipManager.Dispose();
             window.Close();
         });

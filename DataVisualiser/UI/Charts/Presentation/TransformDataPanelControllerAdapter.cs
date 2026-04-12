@@ -2,17 +2,13 @@ using DataVisualiser.UI.Charts.Interfaces;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Services;
-using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Core.Transforms;
-using DataVisualiser.Core.Transforms.Expressions;
-using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
-using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
@@ -21,9 +17,9 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ITransformDataPanelController _controller;
     private readonly Func<bool> _isInitializing;
-    private readonly MetricSelectionService _metricSelectionService;
+    private readonly TransformDataResolutionCoordinator _transformDataResolutionCoordinator;
+    private readonly TransformOperationExecutionCoordinator _transformOperationExecutionCoordinator;
     private readonly ITransformRenderingContract _transformRenderingContract;
-    private readonly TransformComputationService _transformComputationService;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
     private bool _isTransformSelectionPendingLoad;
@@ -36,9 +32,10 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
-        _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _transformRenderingContract = transformRenderingContract ?? throw new ArgumentNullException(nameof(transformRenderingContract));
-        _transformComputationService = transformComputationService ?? new TransformComputationService();
+        var computationService = transformComputationService ?? new TransformComputationService();
+        _transformDataResolutionCoordinator = new TransformDataResolutionCoordinator(_controller, _viewModel, metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService)), _selectionCache);
+        _transformOperationExecutionCoordinator = new TransformOperationExecutionCoordinator(computationService);
     }
 
     public override void ClearCache()
@@ -55,8 +52,8 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
             return;
 
         UpdateTransformSubtypeOptions();
-        var (_, _, transformContext) = await ResolveTransformDataAsync(context);
-        PopulateTransformGrids(transformContext);
+        var resolution = await _transformDataResolutionCoordinator.ResolveAsync(context, _isTransformSelectionPendingLoad);
+        PopulateTransformGrids(resolution);
         UpdateTransformComputeButtonState();
     }
 
@@ -149,11 +146,12 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
         if (!TryGetSelectedOperation(out var operationTag))
         {
-            _controller.TransformComputeButton.IsEnabled = CanRenderPrimarySelection(ctx);
+            _controller.TransformComputeButton.IsEnabled = TransformDataResolutionCoordinator.CanRenderPrimarySelection(ctx);
             return;
         }
 
-        _controller.TransformComputeButton.IsEnabled = CanComputeTransformOperation(ctx, operationTag);
+        var selection = _transformDataResolutionCoordinator.ResolveSelections(ctx, _isTransformSelectionPendingLoad);
+        _controller.TransformComputeButton.IsEnabled = _transformOperationExecutionCoordinator.CanExecute(ctx, selection, operationTag);
     }
 
     public string? GetSelectedOperationTag()
@@ -164,6 +162,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     public void OnToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleTransformPanel();
+        RecordTransformToggleMilestone();
     }
 
     public void OnOperationChanged(object? sender, EventArgs e)
@@ -205,23 +204,26 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
         var ctx = _viewModel.ChartState.LastContext;
         using var _ = _beginUiBusyScope();
-        if (!TryGetSelectedOperation(out var operationTag))
-        {
-            await RenderPrimarySelectionAsResult(ctx);
-            return;
-        }
-
+        var operationTag = TryGetSelectedOperation(out var selectedOperationTag) ? selectedOperationTag : null;
         await ExecuteTransformOperation(ctx, operationTag);
     }
 
     private void PopulateTransformGrids(ChartDataContext ctx, bool resetResults = true)
     {
-        var hasSecondary = TransformGridPresentationCoordinator.HasSecondaryData(ctx) && !string.IsNullOrEmpty(ctx.SecondarySubtype) && ctx.Data2 != null;
-        var hasAvailableSecondaryInput = hasSecondary || ResolveSelectedTransformSecondarySeries(ctx) != null;
+        var selection = _transformDataResolutionCoordinator.ResolveSelections(ctx, _isTransformSelectionPendingLoad);
+        PopulateTransformGrids(ctx, selection.HasAvailableSecondaryInput, resetResults);
+    }
 
+    private void PopulateTransformGrids(TransformResolutionResult resolution, bool resetResults = true)
+    {
+        PopulateTransformGrids(resolution.Context, resolution.Selection.HasAvailableSecondaryInput, resetResults);
+    }
+
+    private void PopulateTransformGrids(ChartDataContext context, bool hasAvailableSecondaryInput, bool resetResults)
+    {
         TransformGridPresentationCoordinator.PopulateInputGrids(
             _controller,
-            ctx,
+            context,
             hasAvailableSecondaryInput,
             SetBinaryTransformOperationsEnabled,
             resetResults);
@@ -242,33 +244,20 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         return true;
     }
 
-    private async Task ExecuteTransformOperation(ChartDataContext ctx, string operationTag)
+    private async Task ExecuteTransformOperation(ChartDataContext ctx, string? operationTag)
     {
-        var isUnary = IsUnaryTransformOperation(operationTag);
-        var isBinary = IsBinaryTransformOperation(operationTag);
-
-        var (primaryData, secondaryData, transformContext) = await ResolveTransformDataAsync(ctx);
-        if (primaryData == null)
+        var resolution = await _transformDataResolutionCoordinator.ResolveAsync(ctx, _isTransformSelectionPendingLoad);
+        var execution = _transformOperationExecutionCoordinator.Execute(resolution, operationTag);
+        if (execution == null)
             return;
 
-        if (isUnary)
-            await ComputeUnaryTransform(primaryData, operationTag, transformContext);
-        else if (isBinary && secondaryData != null && secondaryData.Any())
-            await ComputeBinaryTransform(primaryData, secondaryData, operationTag, transformContext);
+        await RenderTransformResults(execution, resolution);
     }
 
-    private async Task ComputeUnaryTransform(IEnumerable<MetricData> data, string operation, ChartDataContext transformContext)
+    private async Task RenderTransformResults(TransformExecutionResult execution, TransformResolutionResult resolution)
     {
-        var computation = _transformComputationService.ComputeUnaryTransform(data, operation);
-        if (!computation.IsSuccess || computation.DataList.Count == 0)
-            return;
-
-        await RenderTransformResults(computation.DataList, computation.ComputedResults, operation, computation.MetricsList, transformContext);
-    }
-
-    private async Task RenderTransformResults(List<MetricData> dataList, List<double> results, string operation, List<IReadOnlyList<MetricData>> metrics, ChartDataContext transformContext, string? overrideLabel = null)
-    {
-        var resultData = TransformExpressionEvaluator.CreateTransformResultData(dataList, results);
+        var transformContext = resolution.Context;
+        var resultData = DataVisualiser.Core.Transforms.TransformExpressionEvaluator.CreateTransformResultData(execution.DataList, execution.Results);
         TransformGridPresentationCoordinator.PopulateResultGrid(_controller, resultData);
 
         if (resultData.Count == 0)
@@ -279,60 +268,27 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
             _controller,
             _transformRenderingContract,
             CreateRenderHost(),
-            dataList,
-            results,
-            operation,
-            metrics,
+            execution.DataList,
+            execution.Results,
+            execution.OperationTag,
+            execution.Metrics,
             transformContext,
-            overrideLabel);
+            execution.OverrideLabel);
 
         if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
             v2.UpdateMinMaxLines();
-    }
 
-    private async Task ComputeBinaryTransform(IEnumerable<MetricData> data1, IEnumerable<MetricData> data2, string operation, ChartDataContext transformContext)
-    {
-        var computation = _transformComputationService.ComputeBinaryTransform(data1, data2, operation);
-        if (!computation.IsSuccess || computation.DataList.Count == 0)
-            return;
-
-        await RenderTransformResults(computation.DataList, computation.ComputedResults, operation, computation.MetricsList, transformContext);
-    }
-
-    private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveTransformDataAsync(ChartDataContext ctx)
-    {
-        var primarySelection = ResolveSelectedTransformPrimarySeries(ctx);
-        var secondarySelection = ResolveSelectedTransformSecondarySeries(ctx);
-
-        var primaryData = await ResolveTransformDataAsync(ctx, primarySelection);
-        IReadOnlyList<MetricData>? secondaryData = null;
-
-        if (secondarySelection != null)
-            secondaryData = await ResolveTransformDataAsync(ctx, secondarySelection);
-
-        var transformContext = BuildTransformContext(ctx, primarySelection, secondarySelection, primaryData, secondaryData);
-
-        return (primaryData, secondaryData, transformContext);
+        RecordTransformMilestone(execution, resolution);
     }
 
     private async Task RenderPrimarySelectionAsResult(ChartDataContext ctx)
     {
-        var (primaryData, _, transformContext) = await ResolveTransformDataAsync(ctx);
-        if (primaryData == null)
+        var resolution = await _transformDataResolutionCoordinator.ResolveAsync(ctx, _isTransformSelectionPendingLoad);
+        var execution = _transformOperationExecutionCoordinator.Execute(resolution, null);
+        if (execution == null)
             return;
 
-        var dataList = primaryData.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
-        if (dataList.Count == 0)
-            return;
-
-        var results = dataList.Select(d => (double)d.Value!.Value).ToList();
-        var metricsList = new List<IReadOnlyList<MetricData>>
-        {
-                dataList
-        };
-
-        var label = string.IsNullOrWhiteSpace(transformContext.DisplayName1) ? "Primary Data" : transformContext.DisplayName1;
-        await RenderTransformResults(dataList, results, string.Empty, metricsList, transformContext, label);
+        await RenderTransformResults(execution, resolution);
     }
 
     private async Task RefreshTransformGridsFromSelectionAsync()
@@ -341,141 +297,10 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         if (ctx == null)
             return;
 
-        var (_, _, transformContext) = await ResolveTransformDataAsync(ctx);
-        PopulateTransformGrids(transformContext);
+        var resolution = await _transformDataResolutionCoordinator.ResolveAsync(ctx, _isTransformSelectionPendingLoad);
+        PopulateTransformGrids(resolution);
         UpdateTransformComputeButtonState();
     }
-
-    private bool CanComputeTransformOperation(ChartDataContext ctx, string operationTag)
-    {
-        if (IsUnaryTransformOperation(operationTag))
-            return CanRenderPrimarySelection(ctx);
-
-        return IsBinaryTransformOperation(operationTag) && ResolveSelectedTransformSecondarySeries(ctx) != null;
-    }
-
-    private static bool CanRenderPrimarySelection(ChartDataContext ctx)
-    {
-        return ctx.Data1 != null && ctx.Data1.Any();
-    }
-
-    private static bool IsUnaryTransformOperation(string operationTag)
-    {
-        return operationTag == "Log" || operationTag == "Sqrt";
-    }
-
-    private static bool IsBinaryTransformOperation(string operationTag)
-    {
-        return operationTag == "Add" || operationTag == "Subtract" || operationTag == "Divide";
-    }
-
-    private static ChartDataContext BuildTransformContext(ChartDataContext ctx, MetricSeriesSelection? primarySelection, MetricSeriesSelection? secondarySelection, IReadOnlyList<MetricData>? primaryData, IReadOnlyList<MetricData>? secondaryData)
-    {
-        return new ChartDataContext
-        {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                DisplayName1 = ResolveTransformDisplayName(ctx, primarySelection),
-                DisplayName2 = ResolveTransformDisplayName(ctx, secondarySelection),
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                From = ctx.From,
-                To = ctx.To
-        };
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (ctx.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return ctx.Data1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
-
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_selectionCache.TryGetData(cacheKey, out var cached))
-            return cached;
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _selectionCache.SetData(cacheKey, data);
-        return data;
-    }
-
-    private MetricSeriesSelection? ResolveSelectedTransformPrimarySeries(ChartDataContext ctx)
-    {
-        if (!_isTransformSelectionPendingLoad && _controller.TransformPrimarySubtypeCombo != null)
-        {
-            var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformPrimarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedTransformPrimarySeries != null)
-            return _viewModel.ChartState.SelectedTransformPrimarySeries;
-
-        var metricType = ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.PrimarySubtype);
-    }
-
-    private MetricSeriesSelection? ResolveSelectedTransformSecondarySeries(ChartDataContext ctx)
-    {
-        if (!_isTransformSelectionPendingLoad && _controller.TransformSecondarySubtypeCombo != null)
-        {
-            var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformSecondarySubtypeCombo);
-            if (selection != null)
-                return selection;
-        }
-
-        if (_viewModel.ChartState.SelectedTransformSecondarySeries != null)
-            return _viewModel.ChartState.SelectedTransformSecondarySeries;
-
-        // If no secondary data is loaded and no explicit secondary selection exists,
-        // treat the transform as single-input rather than fabricating a second series.
-        if (!HasSecondaryData(ctx))
-            return null;
-
-        var metricType = ctx.SecondaryMetricType ?? ctx.PrimaryMetricType ?? ctx.MetricType;
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return new MetricSeriesSelection(metricType, ctx.SecondarySubtype);
-    }
-
-    private static string ResolveTransformDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        if (selectedSeries == null)
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.DisplayName1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.DisplayName2;
-
-        return selectedSeries.DisplayName;
-    }
-
 
     private void ClearTransformGrids(ChartState state)
     {
@@ -485,11 +310,6 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private static bool ShouldRenderCharts(ChartDataContext? ctx)
     {
         return TransformGridPresentationCoordinator.ShouldRenderCharts(ctx);
-    }
-
-    private static bool HasSecondaryData(ChartDataContext ctx)
-    {
-        return TransformGridPresentationCoordinator.HasSecondaryData(ctx);
     }
 
     private TransformChartRenderHost CreateRenderHost()
@@ -504,6 +324,62 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     {
         if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
             v2.ResetMinMaxLines();
+    }
+
+    private void RecordTransformMilestone(TransformExecutionResult execution, TransformResolutionResult resolution)
+    {
+        var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
+        var context = resolution.Context;
+        var primarySelection = resolution.Selection.PrimarySelection;
+        var secondarySelection = resolution.Selection.SecondarySelection;
+
+        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            Kind = string.IsNullOrWhiteSpace(execution.OperationTag) ? "TransformPrimaryProjectionRendered" : "TransformOperationRendered",
+            Outcome = "Success",
+            MetricType = _viewModel.MetricState.SelectedMetricType,
+            SelectedSeriesCount = selectedSeries.Count,
+            SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
+            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
+            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
+            Operation = string.IsNullOrWhiteSpace(execution.OperationTag) ? null : execution.OperationTag,
+            OperationArity = execution.OperationArity,
+            PrimarySeriesDisplayKey = primarySelection?.DisplayKey ?? BuildSeriesDisplayKey(context.PrimaryMetricType ?? context.MetricType, context.PrimarySubtype),
+            SecondarySeriesDisplayKey = secondarySelection?.DisplayKey ?? BuildSeriesDisplayKey(context.SecondaryMetricType, context.SecondarySubtype),
+            ResultPointCount = execution.Results.Count,
+            Note = string.IsNullOrWhiteSpace(execution.OperationTag) ? "Primary data projected without an explicit transform operation." : null
+        });
+    }
+
+    private void RecordTransformToggleMilestone()
+    {
+        var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
+        var context = _viewModel.ChartState.LastContext;
+        var isVisible = _viewModel.ChartState.IsTransformPanelVisible;
+
+        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            Kind = "TransformToggleRequested",
+            Outcome = "Info",
+            MetricType = _viewModel.MetricState.SelectedMetricType,
+            SelectedSeriesCount = selectedSeries.Count,
+            SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
+            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+            LoadedSeriesCount = context?.ActualSeriesCount ?? 0,
+            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(context),
+            Note = isVisible ? "Transform panel visible." : "Transform panel hidden."
+        });
+    }
+
+    private static string? BuildSeriesDisplayKey(string? metricType, string? subtype)
+    {
+        if (string.IsNullOrWhiteSpace(metricType))
+            return null;
+
+        return $"{metricType}:{subtype ?? "<none>"}";
     }
 
 }

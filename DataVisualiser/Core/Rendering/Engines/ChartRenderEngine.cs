@@ -158,43 +158,9 @@ public sealed class ChartRenderEngine
 
         var title = $"{result.DisplayName} ({(isSmoothed ? "smooth" : "raw")})";
 
-        var series = CreateAndPopulateSeries(title, isSmoothed ? ChartRenderDefaults.SmoothedPointSize : ChartRenderDefaults.RawPointSize, isSmoothed ? ChartRenderDefaults.SmoothedLineThickness : ChartRenderDefaults.RawLineThickness, color, values, isStacked);
+        var series = ChartSeriesMaterializer.CreateAndPopulateSeries(title, isSmoothed ? ChartRenderDefaults.SmoothedPointSize : ChartRenderDefaults.RawPointSize, isSmoothed ? ChartRenderDefaults.SmoothedLineThickness : ChartRenderDefaults.RawLineThickness, color, values, isStacked);
 
         chart.Series.Add(series);
-    }
-
-    /// <summary>
-    ///     Creates a line series and populates it with the provided values.
-    /// </summary>
-    private static LineSeries CreateAndPopulateSeries(string title, int pointSize, int lineThickness, Color color, IList<double> values, bool isStacked)
-    {
-        var series = CreateSeries(title, pointSize, lineThickness, color, isStacked);
-
-        var validCount = 0;
-        var nanCount = 0;
-        double? firstValue = null;
-        double? lastValue = null;
-
-        foreach (var value in values)
-        {
-            var normalized = isStacked && (double.IsNaN(value) || double.IsInfinity(value)) ? 0.0 : value;
-            series.Values.Add(normalized);
-            if (double.IsNaN(value) || double.IsInfinity(value))
-            {
-                nanCount++;
-            }
-            else
-            {
-                validCount++;
-                if (firstValue == null)
-                    firstValue = normalized;
-                lastValue = normalized;
-            }
-        }
-
-        Debug.WriteLine($"[TransformChart] CreateAndPopulateSeries: title={title}, total={values.Count}, valid={validCount}, NaN={nanCount}, first={firstValue}, last={lastValue}");
-
-        return series;
     }
 
     /// <summary>
@@ -217,11 +183,11 @@ public sealed class ChartRenderEngine
     {
         foreach (var seriesResult in seriesResults)
         {
-            var values = ResolveStackedSeriesValues(seriesResult, mainTimeline, out var usedSmoothed);
-            var stats = GetValueStats(values);
+            var values = ChartSeriesMaterializer.ResolveStackedSeriesValues(seriesResult, mainTimeline, out var usedSmoothed);
+            var stats = ChartSeriesMaterializer.GetValueStats(values);
             Debug.WriteLine($"[StackedRender] chart={targetChart.Name}, series={seriesResult.DisplayName}, usedSmoothed={usedSmoothed}, rawCount={seriesResult.RawValues?.Count ?? 0}, smoothCount={seriesResult.Smoothed?.Count ?? 0}, alignedCount={values.Count}, valid={stats.Valid}, NaN={stats.NaN}");
 
-            if (!HasAnyValidValue(values))
+            if (!ChartSeriesMaterializer.HasAnyValidValue(values))
             {
                 Debug.WriteLine($"[StackedRender] chart={targetChart.Name}, series={seriesResult.DisplayName} skipped (no valid values).");
                 continue;
@@ -229,7 +195,7 @@ public sealed class ChartRenderEngine
 
             var title = $"{seriesResult.DisplayName} ({(usedSmoothed ? "smooth" : "raw")})";
             var color = ColourPalette.Next(targetChart);
-            var series = CreateAndPopulateSeries(title, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, color, values, true);
+            var series = ChartSeriesMaterializer.CreateAndPopulateSeries(title, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, color, values, true);
             targetChart.Series.Add(series);
         }
     }
@@ -252,9 +218,9 @@ public sealed class ChartRenderEngine
 
         var title = FormatSeriesLabel(model, isPrimary, useSmoothed);
         var color = isPrimary ? model.PrimaryColor : model.SecondaryColor;
-        var stats = GetValueStats(values);
+        var stats = ChartSeriesMaterializer.GetValueStats(values);
         Debug.WriteLine($"[StackedRender] chart={targetChart.Name}, series={title}, usedSmoothed={useSmoothed}, count={values.Count}, valid={stats.Valid}, NaN={stats.NaN}");
-        var series = CreateAndPopulateSeries(title, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, color, values, true);
+        var series = ChartSeriesMaterializer.CreateAndPopulateSeries(title, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, color, values, true);
         targetChart.Series.Add(series);
     }
 
@@ -267,8 +233,8 @@ public sealed class ChartRenderEngine
 
         foreach (var seriesResult in model.OverlaySeries)
         {
-            var values = ResolveStackedSeriesValues(seriesResult, mainTimeline, out var usedSmoothed);
-            if (!HasAnyValidValue(values))
+            var values = ChartSeriesMaterializer.ResolveStackedSeriesValues(seriesResult, mainTimeline, out var usedSmoothed);
+            if (!ChartSeriesMaterializer.HasAnyValidValue(values))
                 continue;
 
             var title = $"{seriesResult.DisplayName} ({(usedSmoothed ? "smooth" : "raw")})";
@@ -276,7 +242,7 @@ public sealed class ChartRenderEngine
             var pointSize = usedSmoothed ? ChartRenderDefaults.SmoothedPointSize : ChartRenderDefaults.RawPointSize;
             var lineThickness = usedSmoothed ? ChartRenderDefaults.SmoothedLineThickness : ChartRenderDefaults.RawLineThickness;
 
-            var series = CreateAndPopulateSeries(title, pointSize, lineThickness, color, values, false);
+            var series = ChartSeriesMaterializer.CreateAndPopulateSeries(title, pointSize, lineThickness, color, values, false);
             targetChart.Series.Add(series);
         }
     }
@@ -331,7 +297,7 @@ public sealed class ChartRenderEngine
             {
                 var primarySmoothedLabel = FormatSeriesLabel(model, true, true);
                 // Values should already be aligned to dataTimestamps from the strategy
-                var smoothedPrimary = CreateAndPopulateSeries(primarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.PrimaryColor, model.PrimarySmoothed.ToList(), isStacked);
+                var smoothedPrimary = ChartSeriesMaterializer.CreateAndPopulateSeries(primarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.PrimaryColor, model.PrimarySmoothed.ToList(), isStacked);
                 targetChart.Series.Add(smoothedPrimary);
                 Debug.WriteLine($"[TransformChart] Added smoothed series: {primarySmoothedLabel}, values={model.PrimarySmoothed.Count}");
             }
@@ -342,7 +308,7 @@ public sealed class ChartRenderEngine
             {
                 var primaryRawLabel = FormatSeriesLabel(model, true, false);
                 // Values should already be aligned to dataTimestamps from the strategy
-                var rawPrimary = CreateAndPopulateSeries(primaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.PrimaryRaw.ToList(), isStacked);
+                var rawPrimary = ChartSeriesMaterializer.CreateAndPopulateSeries(primaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.PrimaryRaw.ToList(), isStacked);
                 targetChart.Series.Add(rawPrimary);
                 Debug.WriteLine($"[TransformChart] Added raw series: {primaryRawLabel}, values={model.PrimaryRaw.Count}");
             }
@@ -363,7 +329,7 @@ public sealed class ChartRenderEngine
             if (model.SecondarySmoothed.Count > 0)
             {
                 var secondarySmoothedLabel = FormatSeriesLabel(model, false, true);
-                var smoothedSecondary = CreateAndPopulateSeries(secondarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.SecondaryColor, model.SecondarySmoothed.ToList(), isStacked);
+                var smoothedSecondary = ChartSeriesMaterializer.CreateAndPopulateSeries(secondarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.SecondaryColor, model.SecondarySmoothed.ToList(), isStacked);
                 targetChart.Series.Add(smoothedSecondary);
             }
 
@@ -372,7 +338,7 @@ public sealed class ChartRenderEngine
             if (model.SecondaryRaw.Count > 0)
             {
                 var secondaryRawLabel = FormatSeriesLabel(model, false, false);
-                var rawSecondary = CreateAndPopulateSeries(secondaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.SecondaryRaw.ToList(), isStacked);
+                var rawSecondary = ChartSeriesMaterializer.CreateAndPopulateSeries(secondaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.SecondaryRaw.ToList(), isStacked);
                 targetChart.Series.Add(rawSecondary);
             }
     }
@@ -393,60 +359,6 @@ public sealed class ChartRenderEngine
         return ChartSeriesMode.SmoothedOnly;
     }
 
-    private static IList<double> ResolveStackedSeriesValues(SeriesResult seriesResult, List<DateTime> mainTimeline, out bool usedSmoothed)
-    {
-        usedSmoothed = false;
-
-        if (seriesResult.Smoothed != null && seriesResult.Smoothed.Count > 0)
-        {
-            var alignedSmoothed = SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline);
-            if (HasAnyValidValue(alignedSmoothed))
-            {
-                usedSmoothed = true;
-                return alignedSmoothed;
-            }
-        }
-
-        return SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
-    }
-
-    private static bool HasAnyValidValue(IList<double> values)
-    {
-        return values.Any(value => !double.IsNaN(value) && !double.IsInfinity(value));
-    }
-
-    private static(int Valid, int NaN) GetValueStats(IList<double> values)
-    {
-        var valid = 0;
-        var nan = 0;
-
-        foreach (var value in values)
-            if (double.IsNaN(value) || double.IsInfinity(value))
-                nan++;
-            else
-                valid++;
-
-        return (valid, nan);
-    }
-
-    private static LineSeries CreateSeries(string title, int pointSize, int lineThickness, Color color, bool isStacked)
-    {
-        var series = isStacked ? new StackedAreaSeries() : new LineSeries();
-
-        series.Title = title;
-        series.Values = new ChartValues<double>();
-        series.PointGeometrySize = pointSize;
-        series.StrokeThickness = lineThickness;
-        series.Stroke = new SolidColorBrush(color);
-        series.DataLabels = false;
-        series.Fill = isStacked ? new SolidColorBrush(Color.FromArgb(110, color.R, color.G, color.B)) : Brushes.Transparent;
-        series.LineSmoothness = 0;
-
-        if (series is StackedAreaSeries stackedArea)
-            stackedArea.StackMode = StackMode.Values;
-
-        return series;
-    }
 
     /// <summary>
     ///     Configures the X-axis with uniform spacing, label formatting, and tick intervals.
@@ -530,55 +442,7 @@ public sealed class ChartRenderEngine
     /// </summary>
     private static string FormatSeriesLabel(ChartRenderModel model, bool isPrimary, bool isSmoothed)
     {
-        var smoothRaw = isSmoothed ? "smooth" : "raw";
-
-        // If we have metric type and subtype information, use the new format
-        var primaryMetricType = model.DisplayPrimaryMetricType ?? model.PrimaryMetricType ?? model.MetricType;
-        var secondaryMetricType = model.DisplaySecondaryMetricType ?? model.SecondaryMetricType ?? primaryMetricType;
-        var primarySubtype = model.DisplayPrimarySubtype ?? model.PrimarySubtype;
-        var secondarySubtype = model.DisplaySecondarySubtype ?? model.SecondarySubtype;
-
-        if (!string.IsNullOrEmpty(primaryMetricType))
-        {
-            if (model.IsOperationChart && !string.IsNullOrEmpty(model.OperationType))
-            {
-                // Operation chart format: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth)"
-                var operation = model.OperationType;
-                var primaryLabel = FormatMetricLabel(primaryMetricType, primarySubtype);
-                var secondaryLabel = FormatMetricLabel(secondaryMetricType, secondarySubtype);
-
-                if (isPrimary)
-                        // Primary series shows: "Weight:fat_free_mass (-) Weight:body_fat_mass (smooth/raw)"
-                    return $"{primaryLabel} ({operation}) {secondaryLabel} ({smoothRaw})";
-
-                // Secondary series (shouldn't happen for operation charts, but handle it)
-                return $"{secondaryLabel} ({smoothRaw})";
-            }
-
-            // Independent chart format: "Weight:fat_free_mass (smooth/raw)"
-            var subtype = isPrimary ? primarySubtype ?? string.Empty : secondarySubtype ?? string.Empty;
-            var metricType = isPrimary ? primaryMetricType : secondaryMetricType;
-
-            var metricLabel = FormatMetricLabel(metricType, subtype);
-
-            // Fallback if no subtype
-            return $"{metricLabel} ({smoothRaw})";
-        }
-
-        // Fallback to old format if metric type info is not available
-        var seriesName = isPrimary ? model.PrimarySeriesName : model.SecondarySeriesName;
-        return $"{seriesName} ({smoothRaw})";
-    }
-
-    private static string FormatMetricLabel(string? metricType, string? subtype)
-    {
-        if (string.IsNullOrWhiteSpace(metricType))
-            return string.Empty;
-
-        if (string.IsNullOrWhiteSpace(subtype) || subtype == "(All)")
-            return metricType;
-
-        return $"{metricType} : {subtype}";
+        return ChartSeriesLabelFormatter.FormatSeriesLabel(model, isPrimary, isSmoothed);
     }
 
     /// <summary>

@@ -77,7 +77,7 @@ The system supports multiple computation strategies, including:
 - combined metrics
 - multi-metric comparisons
 - temporal distributions
-- transformations, currently including unary and binary flows with broader programmable composition intended
+- transformations, currently including unary and binary flows with broader programmable composition intended across multiple datasets, operations, and result graphs
 - explicit downstream result composition over selected metrics, submetrics, and contextual slices
 
 Strategies may exist in both legacy and CMS forms during migration, with parity validation enforcing correctness.
@@ -106,6 +106,7 @@ The broader intended model is:
 
 UI components are controller-based, but full standardization is still an active architectural direction rather than finished reality.
 The intended direction is convergence toward standardized graph hosts, shared option/toggle affordances, and programmable derived-result composition on qualified chart surfaces, without making chart controllers the semantic center of the system.
+That direction explicitly includes future controller capability for dynamic data generation from multiple datasets and operations, with more than one graph rendered on a single qualified chart where the chart family supports it.
 The recent architecture rehaul established explicit orchestration, rendering, theme, and evidence seams, while leaving a small number of large concentration points as intentional debt rather than hidden unfinished migration work.
 Current evolution therefore prioritizes sustainable control over aggressive expansion: fewer recurring failures, better tolerance of real-world dataset sizes, clearer ownership, and only then broader capability growth.
 
@@ -160,6 +161,7 @@ Characteristics:
 - derived metrics are non-canonical by default
 - promotion to canonical truth is explicit and declarative
 - future chart programs may compose and render more than one derived result set at a time on qualified chart families
+- future transform-style chart controllers are intended to generate dynamic result sets from multiple datasets and operations, not remain limited to one unary/binary result at a time
 - future non-chart consumers should be able to consume those same explicit result sets through uniform downstream contracts
 
 Derived results may be ephemeral (session-scoped) or persisted, depending on intent.

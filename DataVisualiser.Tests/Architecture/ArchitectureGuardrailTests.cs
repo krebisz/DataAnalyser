@@ -26,6 +26,29 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void MainChartsEvidenceExportService_ShouldDelegateParityAssemblyToDedicatedBuilder()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "MainChartsEvidenceExportService.cs");
+
+        Assert.Contains("EvidenceParityBuilder", source, StringComparison.Ordinal);
+        Assert.Contains("_parityBuilder.BuildAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildTransformParitySnapshotAsync(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildMultiMetricParitySnapshotAsync(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExecuteParitySafe(", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EvidenceParityBuilder_ShouldDelegateTransformParityToDedicatedEvaluator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "EvidenceParityBuilder.cs");
+
+        Assert.Contains("EvidenceTransformParityEvaluator", source, StringComparison.Ordinal);
+        Assert.Contains("_transformParityEvaluator.BuildAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ComputeBinaryTransformParity(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("ComputeUnaryTransformParity(", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MainChartsView_ShouldNotReacquireParityAssemblyOrTransformParityHelpers()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
@@ -173,21 +196,30 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
-    public void TransformAdapter_ShouldDelegateTransformComputationToSharedService()
+    public void TransformExecutionCoordinator_ShouldDelegateTransformComputationToSharedService()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
+        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformOperationExecutionCoordinator.cs");
 
-        Assert.Contains("_transformComputationService.ComputeUnaryTransform", source, StringComparison.Ordinal);
-        Assert.Contains("_transformComputationService.ComputeBinaryTransform", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("private static List<MetricData> PrepareMetricData", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("private static(List<double> Results, List<IReadOnlyList<MetricData>> MetricsList) ComputeBinaryResults", source, StringComparison.Ordinal);
+        Assert.Contains("_transformOperationExecutionCoordinator.Execute", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("_transformComputationService.ComputeUnaryTransform", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("_transformComputationService.ComputeBinaryTransform", coordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("PrepareMetricData", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ComputeUnaryTransform(", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ComputeBinaryTransform(", adapterSource, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void TransformAdapter_ShouldDelegateSubtypeSelectionUiToDedicatedCoordinator()
+    public void TransformAdapter_ShouldDelegateSelectionResolutionAndExecutionToDedicatedCoordinators()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
 
+        Assert.Contains("TransformDataResolutionCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("TransformOperationExecutionCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_transformDataResolutionCoordinator.ResolveSelections", source, StringComparison.Ordinal);
+        Assert.Contains("_transformDataResolutionCoordinator.ResolveAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_transformOperationExecutionCoordinator.CanExecute", source, StringComparison.Ordinal);
+        Assert.Contains("_transformOperationExecutionCoordinator.Execute", source, StringComparison.Ordinal);
         Assert.Contains("TransformSubtypeSelectionCoordinator.ApplySubtypeOptions", source, StringComparison.Ordinal);
         Assert.Contains("TransformSubtypeSelectionCoordinator.ResetSelectionControls", source, StringComparison.Ordinal);
         Assert.Contains("TransformGridPresentationCoordinator.PopulateInputGrids", source, StringComparison.Ordinal);
@@ -199,6 +231,10 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("private void UpdateSecondaryTransformSubtype(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private void PopulateTransformResultGrid(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private async Task RenderTransformChart(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private async Task<IReadOnlyList<MetricData>?> ResolveTransformDataAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private MetricSeriesSelection? ResolveSelectedTransformPrimarySeries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private MetricSeriesSelection? ResolveSelectedTransformSecondarySeries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static ChartDataContext BuildTransformContext", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -280,6 +316,36 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("ChartTooltipFormattingHelper.ParseSeriesTitle", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private static string BuildStackedValuesFormattedString", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private static string BuildCumulativeTooltipFromSeries", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartRenderEngine_ShouldDelegateSeriesFormattingAndMaterializationToDedicatedHelpers()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Engines", "ChartRenderEngine.cs");
+
+        Assert.Contains("ChartSeriesMaterializer.CreateAndPopulateSeries", source, StringComparison.Ordinal);
+        Assert.Contains("ChartSeriesMaterializer.ResolveStackedSeriesValues", source, StringComparison.Ordinal);
+        Assert.Contains("ChartSeriesLabelFormatter.FormatSeriesLabel", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static LineSeries CreateAndPopulateSeries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static IList<double> ResolveStackedSeriesValues", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static string FormatMetricLabel", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartUpdateCoordinator_ShouldDelegateCumulativeAndYAxisPreparationToDedicatedHelpers()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
+
+        Assert.Contains("ChartCumulativeSeriesBuilder.Build", source, StringComparison.Ordinal);
+        Assert.Contains("ChartYAxisDataBuilder.BuildSyntheticRawData", source, StringComparison.Ordinal);
+        Assert.Contains("ChartYAxisDataBuilder.CollectSmoothedValues", source, StringComparison.Ordinal);
+        Assert.Contains("ChartYAxisDataBuilder.EnsureOverlayExtremes", source, StringComparison.Ordinal);
+        Assert.Contains("ChartYAxisDataBuilder.EnsureStackedBaseline", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromMulti", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private List<double> BuildStackedSmoothedValues", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void EnsureOverlayExtremes", source, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -245,6 +245,8 @@ public partial class MainChartsView : UserControl
             Message = message
         });
 
+        RecordSessionMilestone("HostMessage", severity, $"{title}: {message}");
+
         if (_recentHostMessages.Count <= MaxTrackedHostMessages)
             return;
 
@@ -643,6 +645,7 @@ public partial class MainChartsView : UserControl
 
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
         await _dataLoadedCoordinator.HandleAsync(ctx, selectedSubtypeCount, CreateDataLoadedActions());
+        RecordSessionMilestone("DataLoaded", "Success");
     }
 
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
@@ -1531,6 +1534,8 @@ public partial class MainChartsView : UserControl
     {
         const string defaultResolution = "All";
 
+        RecordSessionMilestone("ClearInvoked", "Info", "User cleared current selection and chart state.");
+
         // Clear selection state and disable chart toggles immediately on reset.
         _evidenceExportCoordinator.ClearEvidence(CreateEvidenceExportActions());
         _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
@@ -1623,6 +1628,23 @@ public partial class MainChartsView : UserControl
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Information),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Warning),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Error));
+    }
+
+    private void RecordSessionMilestone(string kind, string outcome, string? note = null)
+    {
+        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            Kind = kind,
+            Outcome = outcome,
+            MetricType = _viewModel.MetricState.SelectedMetricType,
+            SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
+            SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
+            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
+            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
+            Note = note
+        });
     }
 
     #endregion
