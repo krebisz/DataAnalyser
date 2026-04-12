@@ -46,6 +46,28 @@ public sealed class ChartProgramPlannerTests
         Assert.Equal([-1d, -1d], program.Series[0].RawValues);
     }
 
+    [Fact]
+    public void BuildProgram_Transform_ShouldSupportMultipleDerivedSeries()
+    {
+        var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
+        var snapshot = CreateSnapshot();
+        var request = ChartProgramRequest.Transform(
+            "Weight transform",
+            [
+                SeriesOperationRequest.Difference(0, 1, "Delta"),
+                SeriesOperationRequest.Ratio(0, 1, "Ratio")
+            ]);
+
+        var program = planner.BuildProgram(snapshot, request);
+
+        Assert.Equal(ChartProgramKind.Transform, program.Kind);
+        Assert.Equal("Weight transform", program.Title);
+        Assert.Equal(2, program.Series.Count);
+        Assert.Equal("Delta", program.Series[0].Label);
+        Assert.Equal([-1d, -1d], program.Series[0].RawValues);
+        Assert.Equal([0.5d, 2d / 3d], program.Series[1].RawValues);
+    }
+
     private static MetricLoadSnapshot CreateSnapshot()
     {
         var request = new MetricSelectionRequest(

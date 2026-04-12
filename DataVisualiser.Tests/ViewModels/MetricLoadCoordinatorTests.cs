@@ -143,6 +143,98 @@ public sealed class MetricLoadCoordinatorTests
     }
 
     [Fact]
+    public async Task LoadMetricDataAsync_ShouldUseVNextForMainAndNormalizedVisibility()
+    {
+        var chartState = new ChartState
+        {
+            IsMainVisible = true,
+            IsNormalizedVisible = true
+        };
+        var metricState = new MetricState
+        {
+            SelectedMetricType = "Weight",
+            ResolutionTableName = "HealthMetrics",
+            FromDate = new DateTime(2024, 01, 01),
+            ToDate = new DateTime(2024, 01, 02)
+        };
+        metricState.SetSeriesSelections(
+        [
+            new MetricSeriesSelection("Weight", "morning"),
+            new MetricSeriesSelection("Weight", "evening")
+        ]);
+
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
+        var vnext = new VNextMainChartIntegrationCoordinator(CreateStubSessionCoordinator);
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message,
+            vnext);
+
+        var request = new MetricLoadRequest("Weight", metricState.SelectedSeries.ToList(), metricState.FromDate!.Value, metricState.ToDate!.Value, metricState.ResolutionTableName!);
+        var loaded = await coordinator.LoadMetricDataAsync(request, args => throw new Xunit.Sdk.XunitException(args.Message));
+
+        Assert.True(loaded);
+        Assert.NotNull(chartState.LastContext);
+        Assert.NotNull(chartState.LastLoadRuntime);
+        Assert.Equal(EvidenceRuntimePath.VNextMain, chartState.LastLoadRuntime!.RuntimePath);
+        Assert.False(chartState.LastLoadRuntime.SupportsOnlyMainChart);
+        Assert.Equal(request.Signature, chartState.LastLoadRuntime.RequestSignature);
+        Assert.Equal(request.Signature, chartState.LastContext!.LoadRequestSignature);
+    }
+
+    [Fact]
+    public async Task LoadMetricDataAsync_ShouldUseVNextForMainAndDiffRatioVisibility()
+    {
+        var chartState = new ChartState
+        {
+            IsMainVisible = true,
+            IsDiffRatioVisible = true
+        };
+        var metricState = new MetricState
+        {
+            SelectedMetricType = "Weight",
+            ResolutionTableName = "HealthMetrics",
+            FromDate = new DateTime(2024, 01, 01),
+            ToDate = new DateTime(2024, 01, 02)
+        };
+        metricState.SetSeriesSelections(
+        [
+            new MetricSeriesSelection("Weight", "morning"),
+            new MetricSeriesSelection("Weight", "evening")
+        ]);
+
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
+        var vnext = new VNextMainChartIntegrationCoordinator(CreateStubSessionCoordinator);
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message,
+            vnext);
+
+        var request = new MetricLoadRequest("Weight", metricState.SelectedSeries.ToList(), metricState.FromDate!.Value, metricState.ToDate!.Value, metricState.ResolutionTableName!);
+        var loaded = await coordinator.LoadMetricDataAsync(request, args => throw new Xunit.Sdk.XunitException(args.Message));
+
+        Assert.True(loaded);
+        Assert.NotNull(chartState.LastContext);
+        Assert.NotNull(chartState.LastLoadRuntime);
+        Assert.Equal(EvidenceRuntimePath.VNextMain, chartState.LastLoadRuntime!.RuntimePath);
+        Assert.False(chartState.LastLoadRuntime.SupportsOnlyMainChart);
+        Assert.Equal(request.Signature, chartState.LastLoadRuntime.RequestSignature);
+        Assert.Equal(request.Signature, chartState.LastContext!.LoadRequestSignature);
+    }
+
+    [Fact]
     public async Task LoadMetricDataAsync_ShouldFallbackToLegacyWhenNonSlicedChartsVisible()
     {
         var chartState = new ChartState

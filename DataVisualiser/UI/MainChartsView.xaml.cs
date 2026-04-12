@@ -48,14 +48,15 @@ public partial class MainChartsView : UserControl
     private readonly MainChartsViewDataLoadedCoordinator _dataLoadedCoordinator = new();
     private readonly MainChartsViewEvidenceExportCoordinator _evidenceExportCoordinator = new();
     private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
+    private readonly MainChartsViewZoomResetCoordinator _zoomResetCoordinator = new();
+    private MainChartsSessionDiagnosticsRecorder _sessionDiagnosticsRecorder = null!;
+    private MainChartsUiSurfaceDiagnosticsReader _uiSurfaceDiagnosticsReader = null!;
     private MainChartsEvidenceExportService _evidenceExportService = null!;
     private readonly MainChartsViewStartupCoordinator _startupCoordinator = new();
 
     private ChartState _chartState = null!;
     private readonly IChartRendererResolver _chartRendererResolver = new ChartRendererResolver();
     private readonly IChartSurfaceFactory _chartSurfaceFactory;
-    private readonly List<HostMessageDiagnosticsSnapshot> _recentHostMessages = new();
-
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
     private IChartControllerRegistry? _chartControllerRegistry;
@@ -71,7 +72,6 @@ public partial class MainChartsView : UserControl
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isApplyingSelectionSync;
-    private const int MaxTrackedHostMessages = 20;
     private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private MainChartsViewEventBinder? _viewModelEventBinder;
 
@@ -223,122 +223,13 @@ public partial class MainChartsView : UserControl
 
     private void ShowTrackedMessage(string title, string message, MessageBoxImage image)
     {
-        TrackHostMessage(title, message, image);
+        _sessionDiagnosticsRecorder.TrackHostMessage(title, message, image);
         MessageBox.Show(message, title, MessageBoxButton.OK, image);
-    }
-
-    private void TrackHostMessage(string title, string message, MessageBoxImage image)
-    {
-        var severity = image switch
-        {
-            MessageBoxImage.Error => "Error",
-            MessageBoxImage.Warning => "Warning",
-            MessageBoxImage.Information => "Information",
-            _ => "None"
-        };
-
-        _recentHostMessages.Add(new HostMessageDiagnosticsSnapshot
-        {
-            TimestampUtc = DateTime.UtcNow,
-            Severity = severity,
-            Title = title,
-            Message = message
-        });
-
-        RecordSessionMilestone("HostMessage", severity, $"{title}: {message}");
-
-        if (_recentHostMessages.Count <= MaxTrackedHostMessages)
-            return;
-
-        _recentHostMessages.RemoveRange(0, _recentHostMessages.Count - MaxTrackedHostMessages);
     }
 
     private UiSurfaceDiagnosticsSnapshot CaptureEvidenceExportUiSurfaceDiagnostics()
     {
-        var selectedMetricValue = GetSelectedMetricValue(TablesCombo);
-        var selectedMetricOption = GetSelectedMetricOption(TablesCombo);
-        var expectedDefaultFromDate = DateTime.UtcNow.Date.AddDays(-30);
-        var expectedDefaultToDate = DateTime.UtcNow.Date;
-        var orderedSubtypeCombos = _selectorManager.GetActiveCombos()
-            .Select((combo, index) => new SubtypeComboDiagnosticsSnapshot
-            {
-                Index = index,
-                BoundMetricType = _selectorManager.GetMetricTypeForCombo(combo)?.Value,
-                SelectedValue = GetSelectedComboValue(combo),
-                SelectedDisplay = GetSelectedComboDisplay(combo),
-                OptionCount = combo.Items.Count,
-                OptionValues = ExtractComboOptionValues(combo)
-            })
-            .ToList();
-
-        var transformSnapshot = new TransformUiDiagnosticsSnapshot
-        {
-            PanelVisible = TransformDataPanelController.Visibility == Visibility.Visible,
-            SecondaryPanelVisible = TransformDataPanelController.TransformSecondarySubtypePanel.Visibility == Visibility.Visible,
-            ComputeEnabled = TransformDataPanelController.TransformComputeButton.IsEnabled,
-            SelectedOperation = GetSelectedOperationTag(TransformDataPanelController.TransformOperationCombo),
-            SelectedPrimarySubtype = GetSelectedComboValue(TransformDataPanelController.TransformPrimarySubtypeCombo),
-            SelectedSecondarySubtype = GetSelectedComboValue(TransformDataPanelController.TransformSecondarySubtypeCombo),
-            PrimaryOptionCount = TransformDataPanelController.TransformPrimarySubtypeCombo.Items.Count,
-            SecondaryOptionCount = TransformDataPanelController.TransformSecondarySubtypeCombo.Items.Count
-        };
-
-        return new UiSurfaceDiagnosticsSnapshot
-        {
-            MetricType = new MetricTypeUiDiagnosticsSnapshot
-            {
-                SelectedValue = selectedMetricValue,
-                SelectedDisplay = selectedMetricOption?.Display ?? TablesCombo.Text,
-                OptionCount = TablesCombo.Items.Count
-            },
-            DateRange = new DateRangeUiDiagnosticsSnapshot
-            {
-                SelectedFromDate = FromDate.SelectedDate,
-                SelectedToDate = ToDate.SelectedDate,
-                ExpectedDefaultFromDateUtc = expectedDefaultFromDate,
-                ExpectedDefaultToDateUtc = expectedDefaultToDate,
-                MatchesExpectedDefaultWindow =
-                    FromDate.SelectedDate?.Date == expectedDefaultFromDate &&
-                    ToDate.SelectedDate?.Date == expectedDefaultToDate
-            },
-            Subtypes = new SubtypeUiDiagnosticsSnapshot
-            {
-                ActiveComboCount = orderedSubtypeCombos.Count,
-                PrimarySelectionMaterialized = SubtypeCombo.SelectedItem != null,
-                AllCombosBoundToSelectedMetricType = orderedSubtypeCombos.All(combo =>
-                    string.Equals(combo.BoundMetricType, selectedMetricValue, StringComparison.OrdinalIgnoreCase)),
-                OrderedCombos = orderedSubtypeCombos
-            },
-            Transform = transformSnapshot,
-            RecentMessages = _recentHostMessages.ToList()
-        };
-    }
-
-    private static string? GetSelectedComboValue(ComboBox combo)
-    {
-        return (combo.SelectedItem as MetricNameOption)?.Value ??
-               combo.SelectedValue?.ToString() ??
-               combo.SelectedItem?.ToString();
-    }
-
-    private static string? GetSelectedComboDisplay(ComboBox combo)
-    {
-        return (combo.SelectedItem as MetricNameOption)?.Display ??
-               combo.SelectedItem?.ToString();
-    }
-
-    private static IReadOnlyList<string> ExtractComboOptionValues(ComboBox combo)
-    {
-        return combo.Items
-            .OfType<MetricNameOption>()
-            .Select(option => option.Value)
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .ToList();
-    }
-
-    private static string? GetSelectedOperationTag(ComboBox combo)
-    {
-        return combo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() : null;
+        return _uiSurfaceDiagnosticsReader.Capture(TablesCombo, FromDate, ToDate, TransformDataPanelController);
     }
 
     /// <summary>
@@ -645,7 +536,7 @@ public partial class MainChartsView : UserControl
 
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
         await _dataLoadedCoordinator.HandleAsync(ctx, selectedSubtypeCount, CreateDataLoadedActions());
-        RecordSessionMilestone("DataLoaded", "Success");
+        _sessionDiagnosticsRecorder.RecordSessionMilestone("DataLoaded", "Success");
     }
 
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
@@ -899,6 +790,7 @@ public partial class MainChartsView : UserControl
     {
         if (_viewModel == null)
             throw new InvalidOperationException("Shared MainWindowViewModel was not initialized.");
+        _sessionDiagnosticsRecorder = new MainChartsSessionDiagnosticsRecorder(_viewModel);
         DataContext = _viewModel;
     }
 
@@ -1181,6 +1073,7 @@ public partial class MainChartsView : UserControl
     private void InitializeSubtypeSelector()
     {
         _selectorManager = new SubtypeSelectorManager(TopControlMetricSubtypePanel, SubtypeCombo);
+        _uiSurfaceDiagnosticsReader = new MainChartsUiSurfaceDiagnosticsReader(_selectorManager, _sessionDiagnosticsRecorder);
 
         _selectorManager.SubtypeSelectionChanged += (s, e) =>
         {
@@ -1250,15 +1143,13 @@ public partial class MainChartsView : UserControl
 
     private void ResetRegisteredChartsZoom()
     {
-        if (_chartControllerRegistry == null)
-        {
-            foreach (var key in ChartControllerKeys.All)
-                ResolveController(key).ResetZoom();
-            return;
-        }
+        var controllers = _chartControllerRegistry != null
+            ? _chartControllerRegistry.All()
+            : ChartControllerKeys.All.Select(ResolveController).ToList();
 
-        foreach (var controller in _chartControllerRegistry.All())
-            controller.ResetZoom();
+        _zoomResetCoordinator.ResetRegisteredCharts(
+            controllers,
+            new MainChartsViewZoomResetCoordinator.Actions(_sessionDiagnosticsRecorder.TrackHostMessage));
     }
 
     private void DisableAxisLabelsWhenNoData()
@@ -1534,7 +1425,7 @@ public partial class MainChartsView : UserControl
     {
         const string defaultResolution = "All";
 
-        RecordSessionMilestone("ClearInvoked", "Info", "User cleared current selection and chart state.");
+        _sessionDiagnosticsRecorder.RecordSessionMilestone("ClearInvoked", "Info", "User cleared current selection and chart state.");
 
         // Clear selection state and disable chart toggles immediately on reset.
         _evidenceExportCoordinator.ClearEvidence(CreateEvidenceExportActions());
@@ -1628,23 +1519,6 @@ public partial class MainChartsView : UserControl
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Information),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Warning),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Error));
-    }
-
-    private void RecordSessionMilestone(string kind, string outcome, string? note = null)
-    {
-        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
-        {
-            TimestampUtc = DateTime.UtcNow,
-            Kind = kind,
-            Outcome = outcome,
-            MetricType = _viewModel.MetricState.SelectedMetricType,
-            SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
-            SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
-            Note = note
-        });
     }
 
     #endregion

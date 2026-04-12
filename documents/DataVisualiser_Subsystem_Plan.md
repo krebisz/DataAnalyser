@@ -3,7 +3,7 @@
 **Scope:** `DataVisualiser` hierarchy repair, boundary clarification, entropy reduction, subsystem consolidation, and VNext activation  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `Project Overview.md`  
 **Supersedes:** `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`  
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-12
 
 ---
 
@@ -129,8 +129,8 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 Current observed shape:
 
 - `~395` C# files (after Phase 6.5 hierarchy cleanup and file merges)
-- `499` automated tests passing
-- first live VNext vertical slice active for main-chart loads
+- `530` automated tests passing
+- first live VNext vertical slice active for the main chart family (`Main`, `Normalized`, `Diff/Ratio`)
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
@@ -143,13 +143,13 @@ Current major concentration points:
 - `UI/Charts/Presentation/TransformDataResolutionCoordinator.cs` (~171 lines)
 - `UI/Charts/Presentation/TransformOperationExecutionCoordinator.cs` (~106 lines)
 - `Core/Rendering/Helpers/ChartTooltipFormattingHelper.cs` (~464 lines)
-- `Core/Services/BaseDistributionService.cs` (~483 lines)
+- `Core/Services/BaseDistributionService.cs` (~429 lines)
 - `Core/Rendering/Engines/ChartRenderEngine.cs` (~452 lines)
 - `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` (~503 lines)
 
 Current read:
 
-- the VNext reasoning engine is live for main-chart loads, proving request → snapshot → program → delivery
+- the VNext reasoning engine is live for the main chart family, proving request -> snapshot -> program -> delivery
 - the evidence boundary is clean: DTOs, diagnostics, and export orchestration are separate concerns
 - runtime-path tracking distinguishes VNext from legacy loads with full signature-chain diagnostics
 - the chart/rendering delivery seams are materially cleaner than before the Phase 5 rehaul
@@ -160,11 +160,18 @@ Current read:
 - transform dataset/selection resolution is now isolated in `TransformDataResolutionCoordinator`
 - transform operation eligibility and execution are now isolated in `TransformOperationExecutionCoordinator`
 - distribution bucket extraction, min/max, tooltip, and averaging computations are now delegated to `DistributionComputationHelper`
+- distribution simple-range result assembly is now delegated to `DistributionRangeResultBuilder`
+- distribution baseline/range/average series construction is now delegated to `DistributionSeriesBuilder`
 - chart tooltip formatting is now delegated to `ChartTooltipFormattingHelper`
 - chart-series label formatting and materialization are now delegated to `ChartSeriesLabelFormatter` and `ChartSeriesMaterializer`
 - chart cumulative-series construction and Y-axis normalization-data preparation are now delegated to `ChartCumulativeSeriesBuilder` and `ChartYAxisDataBuilder`
 - parity assembly is now delegated out of `MainChartsEvidenceExportService` into `EvidenceParityBuilder`
 - transform parity evaluation is now delegated out of `EvidenceParityBuilder` into `EvidenceTransformParityEvaluator`
+- session milestone and tracked-host-message bookkeeping is now delegated out of `MainChartsView` into `MainChartsSessionDiagnosticsRecorder`
+- transform execution/toggle milestone construction is now delegated out of `TransformDataPanelControllerAdapter` into `TransformSessionMilestoneRecorder`
+- transform operation-tag and compute-button state logic is now delegated out of `TransformDataPanelControllerAdapter` into `TransformOperationStateCoordinator`
+- UI-surface diagnostics capture is now delegated out of `MainChartsView` into `MainChartsUiSurfaceDiagnosticsReader`
+- VNext workflow state now carries explicit `WorkflowPlanRequest` plans, and the bridge accepts explicit `ChartProgramRequest` input for non-live program projection
 - the remaining architectural noise is concentrated in the outliers listed above
 - low-level helper duplication is no longer the dominant problem; mixed host/orchestration/evidence/data-access responsibilities are
 
@@ -229,10 +236,12 @@ Documents absorbed from Phase 5:
 **Phase 6.2/6.3 (Boundary reconciliation + request/delivery standardization):**
 - Evidence boundary decomposed: `MainChartsEvidenceExportService` (1,209 → 700 lines) split into `EvidenceExportModels` (21 DTOs), `EvidenceDiagnosticsBuilder`, and export orchestration
 - `VNextMainChartIntegrationCoordinator` built and tested as the VNext → legacy bridge
-- First live VNext main-chart slice activated in `MetricLoadCoordinator`
+- First live VNext main-chart-family slice activated in `MetricLoadCoordinator`
 - `LoadRuntimeState` on `ChartState` tracks runtime path, signatures, and failure reason
 - `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports
 - Smoke-verified with April 2026 exports: VNext signature chain aligned, legacy fallback correct, all 8 parity strategies pass
+
+ - `VNext` workflow planning now supports explicit `ChartProgramRequest` / multi-derived-program shaping behind non-live tests
 
 **Phase B host spine decomposition (banked slices):**
 - Export trigger extraction → `MainChartsViewEvidenceExportCoordinator`
@@ -328,19 +337,19 @@ Any next-cycle proposal must follow the governing iteration flow (Section 9) or 
 
 ### 10.6 VNext Activation (ACTIVE — Parallel Track)
 
-First live VNext main-chart slice is proven and stable. Next VNext slices to consider:
-- Extend VNext to handle Normalized, Difference, and Ratio programs (the reasoning engine already supports `BuildNormalizedProgram`, `BuildDifferenceProgram`, `BuildRatioProgram`)
-- Widen the routing condition to include more chart combinations
+First live VNext main-chart-family slice is proven and stable. Next VNext slices to consider:
+- Preserve the current `Main + Normalized + Diff/Ratio` live slice with evidence and targeted smoke as the bounded family baseline
+- Widen the routing condition only to additional chart families that can consume the projected context safely
 - Each widening must be a bounded slice with automatic legacy fallback
 
 #### VNext Widening Tracker
 
 | Chart Family | VNext Status | Routing Condition | Evidence | Notes |
 |---|---|---|---|---|
-| Main | Live | Main visible, all others hidden | April 2026 exports (3 artifacts) | First vertical slice, fresh coordinator per load |
-| Normalized | Not started | — | — | Engine supports `BuildNormalizedProgram` |
-| Difference | Not started | — | — | Engine supports `BuildDifferenceProgram` |
-| Ratio | Not started | — | — | Engine supports `BuildRatioProgram` |
+| Main | Live | Main visible and no non-main-family chart visible | April 2026 exports + current smoke gate | First vertical slice, fresh coordinator per load |
+| Normalized | Live via main-family route | Main + Normalized, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Rendered from the projected two-series context |
+| Difference | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Unified Diff/Ratio surface consumes projected two-series context |
+| Ratio | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Unified Diff/Ratio surface consumes projected two-series context |
 | Distribution | Not planned | — | — | No VNext program builder yet |
 | WeekdayTrend | Not planned | — | — | No VNext program builder yet |
 | Transform | Not planned | — | — | Separate computation path |

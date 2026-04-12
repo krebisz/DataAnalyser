@@ -18,6 +18,11 @@ public sealed class ReasoningEngine : IReasoningEngine
         return _gateway.LoadAsync(request, cancellationToken);
     }
 
+    public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
+    {
+        return _planner.BuildProgram(snapshot, request);
+    }
+
     public ChartProgram BuildMainProgram(MetricLoadSnapshot snapshot, ChartDisplayMode displayMode = ChartDisplayMode.Regular)
     {
         return _planner.BuildMainProgram(snapshot, displayMode);

@@ -19,6 +19,8 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private readonly Func<bool> _isInitializing;
     private readonly TransformDataResolutionCoordinator _transformDataResolutionCoordinator;
     private readonly TransformOperationExecutionCoordinator _transformOperationExecutionCoordinator;
+    private readonly TransformOperationStateCoordinator _transformOperationStateCoordinator;
+    private readonly TransformSessionMilestoneRecorder _transformSessionMilestoneRecorder;
     private readonly ITransformRenderingContract _transformRenderingContract;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
@@ -36,6 +38,8 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         var computationService = transformComputationService ?? new TransformComputationService();
         _transformDataResolutionCoordinator = new TransformDataResolutionCoordinator(_controller, _viewModel, metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService)), _selectionCache);
         _transformOperationExecutionCoordinator = new TransformOperationExecutionCoordinator(computationService);
+        _transformOperationStateCoordinator = new TransformOperationStateCoordinator();
+        _transformSessionMilestoneRecorder = new TransformSessionMilestoneRecorder(_viewModel);
     }
 
     public override void ClearCache()
@@ -137,32 +141,23 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     public void UpdateTransformComputeButtonState()
     {
-        var ctx = _viewModel.ChartState.LastContext;
-        if (_isTransformSelectionPendingLoad || ctx == null)
-        {
-            _controller.TransformComputeButton.IsEnabled = false;
-            return;
-        }
-
-        if (!TryGetSelectedOperation(out var operationTag))
-        {
-            _controller.TransformComputeButton.IsEnabled = TransformDataResolutionCoordinator.CanRenderPrimarySelection(ctx);
-            return;
-        }
-
-        var selection = _transformDataResolutionCoordinator.ResolveSelections(ctx, _isTransformSelectionPendingLoad);
-        _controller.TransformComputeButton.IsEnabled = _transformOperationExecutionCoordinator.CanExecute(ctx, selection, operationTag);
+        _transformOperationStateCoordinator.UpdateComputeButtonState(
+            _controller,
+            _viewModel.ChartState.LastContext,
+            _isTransformSelectionPendingLoad,
+            ctx => _transformDataResolutionCoordinator.ResolveSelections(ctx, _isTransformSelectionPendingLoad),
+            _transformOperationExecutionCoordinator);
     }
 
     public string? GetSelectedOperationTag()
     {
-        return _controller.TransformOperationCombo.SelectedItem is ComboBoxItem item ? item.Tag?.ToString() : null;
+        return _transformOperationStateCoordinator.GetSelectedOperationTag(_controller);
     }
 
     public void OnToggleRequested(object? sender, EventArgs e)
     {
         _viewModel.ToggleTransformPanel();
-        RecordTransformToggleMilestone();
+        _transformSessionMilestoneRecorder.RecordToggle();
     }
 
     public void OnOperationChanged(object? sender, EventArgs e)
@@ -204,7 +199,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
         var ctx = _viewModel.ChartState.LastContext;
         using var _ = _beginUiBusyScope();
-        var operationTag = TryGetSelectedOperation(out var selectedOperationTag) ? selectedOperationTag : null;
+        var operationTag = _transformOperationStateCoordinator.GetSelectedOperationTag(_controller);
         await ExecuteTransformOperation(ctx, operationTag);
     }
 
@@ -232,16 +227,6 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private void SetBinaryTransformOperationsEnabled(bool enabled)
     {
         TransformGridPresentationCoordinator.SetBinaryTransformOperationsEnabled(_controller, enabled);
-    }
-
-    private bool TryGetSelectedOperation(out string operationTag)
-    {
-        operationTag = string.Empty;
-        if (_controller.TransformOperationCombo.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Tag is not string tag)
-            return false;
-
-        operationTag = tag;
-        return true;
     }
 
     private async Task ExecuteTransformOperation(ChartDataContext ctx, string? operationTag)
@@ -278,7 +263,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
             v2.UpdateMinMaxLines();
 
-        RecordTransformMilestone(execution, resolution);
+        _transformSessionMilestoneRecorder.RecordExecution(execution, resolution);
     }
 
     private async Task RenderPrimarySelectionAsResult(ChartDataContext ctx)
@@ -324,62 +309,6 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     {
         if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
             v2.ResetMinMaxLines();
-    }
-
-    private void RecordTransformMilestone(TransformExecutionResult execution, TransformResolutionResult resolution)
-    {
-        var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
-        var context = resolution.Context;
-        var primarySelection = resolution.Selection.PrimarySelection;
-        var secondarySelection = resolution.Selection.SecondarySelection;
-
-        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
-        {
-            TimestampUtc = DateTime.UtcNow,
-            Kind = string.IsNullOrWhiteSpace(execution.OperationTag) ? "TransformPrimaryProjectionRendered" : "TransformOperationRendered",
-            Outcome = "Success",
-            MetricType = _viewModel.MetricState.SelectedMetricType,
-            SelectedSeriesCount = selectedSeries.Count,
-            SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
-            Operation = string.IsNullOrWhiteSpace(execution.OperationTag) ? null : execution.OperationTag,
-            OperationArity = execution.OperationArity,
-            PrimarySeriesDisplayKey = primarySelection?.DisplayKey ?? BuildSeriesDisplayKey(context.PrimaryMetricType ?? context.MetricType, context.PrimarySubtype),
-            SecondarySeriesDisplayKey = secondarySelection?.DisplayKey ?? BuildSeriesDisplayKey(context.SecondaryMetricType, context.SecondarySubtype),
-            ResultPointCount = execution.Results.Count,
-            Note = string.IsNullOrWhiteSpace(execution.OperationTag) ? "Primary data projected without an explicit transform operation." : null
-        });
-    }
-
-    private void RecordTransformToggleMilestone()
-    {
-        var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
-        var context = _viewModel.ChartState.LastContext;
-        var isVisible = _viewModel.ChartState.IsTransformPanelVisible;
-
-        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
-        {
-            TimestampUtc = DateTime.UtcNow,
-            Kind = "TransformToggleRequested",
-            Outcome = "Info",
-            MetricType = _viewModel.MetricState.SelectedMetricType,
-            SelectedSeriesCount = selectedSeries.Count,
-            SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = context?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(context),
-            Note = isVisible ? "Transform panel visible." : "Transform panel hidden."
-        });
-    }
-
-    private static string? BuildSeriesDisplayKey(string? metricType, string? subtype)
-    {
-        if (string.IsNullOrWhiteSpace(metricType))
-            return null;
-
-        return $"{metricType}:{subtype ?? "<none>"}";
     }
 
 }

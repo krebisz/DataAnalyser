@@ -22,6 +22,44 @@ namespace DataVisualiser.Tests.Controls;
 public sealed class TransformCoordinatorTests
 {
     [Fact]
+    public void OperationStateCoordinator_UpdateComputeButtonState_EnablesWithoutExplicitOperation_WhenPrimaryDataExists()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var controller = new FakeTransformDataPanelController();
+            var coordinator = new TransformOperationStateCoordinator();
+            var executionCoordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+            var context = CreatePrimaryOnlyContext();
+
+            coordinator.UpdateComputeButtonState(
+                controller,
+                context,
+                isSelectionPendingLoad: false,
+                _ => new TransformSelectionResolution(new MetricSeriesSelection("MetricA", "SubA"), null, false),
+                executionCoordinator);
+
+            Assert.True(controller.TransformComputeButton.IsEnabled);
+        });
+    }
+
+    [Fact]
+    public void OperationStateCoordinator_GetSelectedOperationTag_ReturnsCurrentComboSelection()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var controller = new FakeTransformDataPanelController();
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem { Tag = "Add", Content = "Add" });
+            controller.TransformOperationCombo.SelectedIndex = 0;
+
+            var coordinator = new TransformOperationStateCoordinator();
+
+            var operationTag = coordinator.GetSelectedOperationTag(controller);
+
+            Assert.Equal("Add", operationTag);
+        });
+    }
+
+    [Fact]
     public void OperationExecutionCoordinator_CanExecuteBinary_WhenSecondarySelectionExistsOutsideLoadedContext()
     {
         var coordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());

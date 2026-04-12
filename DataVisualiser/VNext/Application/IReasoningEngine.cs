@@ -5,6 +5,7 @@ namespace DataVisualiser.VNext.Application;
 public interface IReasoningEngine
 {
     Task<MetricLoadSnapshot> LoadAsync(MetricSelectionRequest request, CancellationToken cancellationToken = default);
+    ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request);
     ChartProgram BuildMainProgram(MetricLoadSnapshot snapshot, ChartDisplayMode displayMode = ChartDisplayMode.Regular);
     ChartProgram BuildNormalizedProgram(MetricLoadSnapshot snapshot);
     ChartProgram BuildDifferenceProgram(MetricLoadSnapshot snapshot);

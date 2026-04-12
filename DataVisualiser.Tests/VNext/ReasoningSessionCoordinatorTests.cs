@@ -44,6 +44,56 @@ public sealed class ReasoningSessionCoordinatorTests
     }
 
     [Fact]
+    public async Task BuildProgram_ShouldRouteThroughExplicitProgramRequest()
+    {
+        var coordinator = new ReasoningSessionCoordinator(new StubReasoningEngine());
+        coordinator.ApplyMetricType("Weight");
+        coordinator.ApplyResolution("HealthMetrics");
+        coordinator.ApplyDateRange(new DateTime(2026, 1, 1), new DateTime(2026, 1, 2));
+        coordinator.ApplySeries(
+        [
+            new MetricSeriesRequest("Weight", "morning"),
+            new MetricSeriesRequest("Weight", "evening")
+        ]);
+
+        await coordinator.LoadAsync();
+        var program = coordinator.BuildProgram(ChartProgramRequest.Difference());
+
+        Assert.Equal(ChartProgramKind.Difference, program.Kind);
+        Assert.Single(program.Series);
+    }
+
+    [Fact]
+    public async Task BuildWorkflowProgram_ShouldUsePlannedOperationsAndCurrentDisplayMode()
+    {
+        var coordinator = new ReasoningSessionCoordinator(new StubReasoningEngine());
+        coordinator.ApplyMetricType("Weight");
+        coordinator.ApplyResolution("HealthMetrics");
+        coordinator.ApplyDateRange(new DateTime(2026, 1, 1), new DateTime(2026, 1, 2));
+        coordinator.ApplySeries(
+        [
+            new MetricSeriesRequest("Weight", "morning"),
+            new MetricSeriesRequest("Weight", "evening")
+        ]);
+        coordinator.ApplyMainDisplayMode(ChartDisplayMode.Summed);
+        coordinator.ApplyWorkflowPlan(new WorkflowPlanRequest(
+        [
+            SeriesOperationRequest.Normalize(0, "morning-normalized", "Morning normalized"),
+            SeriesOperationRequest.Difference(0, 1, "Delta")
+        ],
+        "transform",
+        "Weight transform"));
+
+        await coordinator.LoadAsync();
+        var program = coordinator.BuildWorkflowProgram();
+
+        Assert.Equal(ChartProgramKind.Transform, program.Kind);
+        Assert.Equal(ChartDisplayMode.Summed, program.DisplayMode);
+        Assert.Equal("Weight transform", program.Title);
+        Assert.Equal(2, program.Series.Count);
+    }
+
+    [Fact]
     public void Clear_ShouldResetSelectionAndLoad()
     {
         var coordinator = new ReasoningSessionCoordinator(new StubReasoningEngine());
@@ -69,6 +119,31 @@ public sealed class ReasoningSessionCoordinatorTests
                     [new MetricData { NormalizedTimestamp = request.From, Value = 1m }],
                     null)).ToArray(),
                 DateTime.UtcNow));
+        }
+
+        public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
+        {
+            return request.Kind switch
+            {
+                ChartProgramKind.Main => BuildMainProgram(snapshot, request.DisplayMode),
+                ChartProgramKind.Normalized => BuildNormalizedProgram(snapshot),
+                ChartProgramKind.Difference => BuildDifferenceProgram(snapshot),
+                ChartProgramKind.Ratio => BuildRatioProgram(snapshot),
+                ChartProgramKind.Transform => new ChartProgram(
+                    ChartProgramKind.Transform,
+                    request.DisplayMode,
+                    request.TitleOverride ?? "Derived",
+                    snapshot.Request.From,
+                    snapshot.Request.To,
+                    [snapshot.Request.From],
+                    request.SeriesOperations.Select(operation => new ChartSeriesProgram(
+                        operation.Id,
+                        operation.Label,
+                        [1d],
+                        [1d])).ToArray(),
+                    snapshot.Signature),
+                _ => throw new InvalidOperationException()
+            };
         }
 
         public ChartProgram BuildMainProgram(MetricLoadSnapshot snapshot, ChartDisplayMode displayMode = ChartDisplayMode.Regular)

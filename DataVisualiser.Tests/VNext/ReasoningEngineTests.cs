@@ -29,6 +29,57 @@ public sealed class ReasoningEngineTests
         Assert.Equal(2, program.Series.Count);
     }
 
+    [Fact]
+    public async Task BuildProgram_ShouldUseExplicitProgramRequest()
+    {
+        var engine = new ReasoningEngine(
+            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
+
+        var request = new MetricSelectionRequest(
+            "Weight",
+            [new MetricSeriesRequest("Weight", "morning"), new MetricSeriesRequest("Weight", "evening")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics");
+
+        var snapshot = await engine.LoadAsync(request);
+        var program = engine.BuildProgram(snapshot, ChartProgramRequest.Ratio());
+
+        Assert.Equal(ChartProgramKind.Ratio, program.Kind);
+        Assert.Equal(request.Signature, program.SourceSignature);
+    }
+
+    [Fact]
+    public async Task BuildProgram_Transform_ShouldPreserveSnapshotSignatureAndBuildMultipleSeries()
+    {
+        var engine = new ReasoningEngine(
+            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
+
+        var request = new MetricSelectionRequest(
+            "Weight",
+            [new MetricSeriesRequest("Weight", "morning"), new MetricSeriesRequest("Weight", "evening")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics");
+
+        var snapshot = await engine.LoadAsync(request);
+        var program = engine.BuildProgram(
+            snapshot,
+            ChartProgramRequest.Transform(
+                "Weight transform",
+                [
+                    SeriesOperationRequest.Normalize(0, "morning-normalized", "Morning normalized"),
+                    SeriesOperationRequest.Difference(0, 1, "Delta")
+                ]));
+
+        Assert.Equal(ChartProgramKind.Transform, program.Kind);
+        Assert.Equal(request.Signature, program.SourceSignature);
+        Assert.Equal("Weight transform", program.Title);
+        Assert.Equal(2, program.Series.Count);
+    }
+
     private sealed class StubMetricSeriesLoader : IMetricSeriesLoader
     {
         public Task<LoadedMetricSeries> LoadAsync(

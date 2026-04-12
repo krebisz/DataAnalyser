@@ -66,6 +66,29 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
     }
 
     [Fact]
+    public async Task LoadProgramAsync_Transform_ShouldProjectMultipleDerivedSeries()
+    {
+        var coordinator = CreateCoordinator();
+        var request = CreateLoadRequest("Weight", "morning", "evening");
+        var programRequest = ChartProgramRequest.Transform(
+            "Weight transform",
+            [
+                SeriesOperationRequest.Normalize(0, "morning-normalized", "Morning normalized"),
+                SeriesOperationRequest.Difference(0, 1, "Delta")
+            ]);
+
+        var result = await coordinator.LoadProgramAsync(request, programRequest);
+
+        Assert.True(result.Success);
+        Assert.Equal(ChartProgramKind.Transform, result.ProgramKind);
+        Assert.NotNull(result.ProjectedContext);
+        Assert.Equal(2, result.ProjectedContext!.ActualSeriesCount);
+        Assert.Equal("Weight transform", result.ProjectedContext.MetricType);
+        Assert.Equal(result.RequestSignature, result.ProgramSourceSignature);
+        Assert.Equal(result.ProgramSourceSignature, result.ProjectedContextSignature);
+    }
+
+    [Fact]
     public async Task LoadMainChartAsync_WithSummedMode_ShouldBuildSummedProgram()
     {
         var coordinator = CreateCoordinator();

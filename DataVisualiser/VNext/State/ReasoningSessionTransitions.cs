@@ -97,6 +97,22 @@ public static class ReasoningSessionTransitions
         };
     }
 
+    public static ReasoningSessionState ApplyWorkflowPlan(ReasoningSessionState state, WorkflowPlanRequest workflowPlan)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(workflowPlan);
+
+        return state with
+        {
+            Workflow = new WorkflowState(workflowPlan)
+        };
+    }
+
+    public static ReasoningSessionState ApplyWorkflowPlan(ReasoningSessionState state, IReadOnlyList<SeriesOperationRequest> plannedOperations, string? consumerIntent = null)
+    {
+        return ApplyWorkflowPlan(state, new WorkflowPlanRequest(plannedOperations, consumerIntent));
+    }
+
     private static LoadState InvalidateIfSelectionDrifted(LoadState load, SelectionState selection)
     {
         if (load.Snapshot == null || !selection.IsComplete)

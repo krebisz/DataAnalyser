@@ -20,6 +20,7 @@ public sealed record VNextMainChartLoadResult(
 public sealed class VNextMainChartIntegrationCoordinator
 {
     private readonly Func<ReasoningSessionCoordinator> _coordinatorFactory;
+    private readonly LegacyChartProgramProjector _projector = new();
 
     public VNextMainChartIntegrationCoordinator(MetricSelectionService metricSelectionService)
     {
@@ -37,7 +38,19 @@ public sealed class VNextMainChartIntegrationCoordinator
         MainChartDisplayMode displayMode,
         CancellationToken cancellationToken = default)
     {
+        return await LoadProgramAsync(
+            request,
+            ChartProgramRequest.MainProgram(TranslateDisplayMode(displayMode)),
+            cancellationToken);
+    }
+
+    public async Task<VNextMainChartLoadResult> LoadProgramAsync(
+        MetricLoadRequest request,
+        ChartProgramRequest programRequest,
+        CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(programRequest);
 
         try
         {
@@ -47,12 +60,19 @@ public sealed class VNextMainChartIntegrationCoordinator
             coordinator.ApplySeries(TranslateSelections(request.SelectedSeries));
             coordinator.ApplyDateRange(request.From, request.To);
             coordinator.ApplyResolution(request.ResolutionTableName);
-            coordinator.ApplyMainDisplayMode(TranslateDisplayMode(displayMode));
+
+            if (programRequest.Kind == ChartProgramKind.Main)
+                coordinator.ApplyMainDisplayMode(programRequest.DisplayMode);
+
+            if (programRequest.SeriesOperations.Count > 0)
+                coordinator.ApplyWorkflowPlan(new WorkflowPlanRequest(
+                    programRequest.SeriesOperations,
+                    programRequest.Kind.ToString(),
+                    programRequest.TitleOverride));
 
             var snapshot = await coordinator.LoadAsync(cancellationToken);
-            var program = coordinator.BuildMainProgram();
-            var projector = new LegacyChartProgramProjector();
-            var projectedContext = projector.ProjectToChartContext(program);
+            var program = coordinator.BuildProgram(programRequest);
+            var projectedContext = _projector.ProjectToChartContext(program);
 
             return new VNextMainChartLoadResult(
                 Success: true,

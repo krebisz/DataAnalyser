@@ -14,6 +14,22 @@ public sealed class ChartProgramPlanner
         _operationKernel = operationKernel ?? throw new ArgumentNullException(nameof(operationKernel));
     }
 
+    public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentNullException.ThrowIfNull(request);
+
+        return request.Kind switch
+        {
+            ChartProgramKind.Main => BuildMainProgram(snapshot, request.DisplayMode),
+            ChartProgramKind.Normalized => BuildNormalizedProgram(snapshot),
+            ChartProgramKind.Difference => BuildDifferenceProgram(snapshot),
+            ChartProgramKind.Ratio => BuildRatioProgram(snapshot),
+            ChartProgramKind.Transform => BuildDerivedProgram(snapshot, request),
+            _ => throw new InvalidOperationException($"Unsupported program kind '{request.Kind}'.")
+        };
+    }
+
     public ChartProgram BuildMainProgram(MetricLoadSnapshot snapshot, ChartDisplayMode displayMode = ChartDisplayMode.Regular)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -21,11 +37,9 @@ public sealed class ChartProgramPlanner
         var aligned = _alignmentKernel.Align(snapshot);
         var series = displayMode == ChartDisplayMode.Summed
             ? new[] { _operationKernel.BuildSummedSeries(aligned) }
-            : aligned.Series.Select(series => new ChartSeriesProgram(
-                    series.Request.SignatureToken,
-                    series.Request.DisplayName,
-                    series.RawValues,
-                    series.SmoothedValues))
+            : aligned.Series.Select((series, index) => _operationKernel.BuildSeries(
+                    aligned,
+                    SeriesOperationRequest.Identity(index, series.Request.SignatureToken, series.Request.DisplayName)))
                 .ToArray();
 
         return new ChartProgram(
@@ -94,6 +108,29 @@ public sealed class ChartProgramPlanner
             snapshot.Request.To,
             aligned.Timeline,
             new[] { _operationKernel.BuildRatioSeries(aligned.Series[0], aligned.Series[1]) },
+            snapshot.Signature);
+    }
+
+    private ChartProgram BuildDerivedProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.SeriesOperations.Count == 0)
+            throw new InvalidOperationException("Derived program requires at least one series operation.");
+
+        var aligned = _alignmentKernel.Align(snapshot);
+        var series = request.SeriesOperations
+            .Select(operation => _operationKernel.BuildSeries(aligned, operation))
+            .ToArray();
+
+        return new ChartProgram(
+            request.Kind,
+            request.DisplayMode,
+            request.TitleOverride ?? $"{snapshot.Request.MetricType} derived",
+            snapshot.Request.From,
+            snapshot.Request.To,
+            aligned.Timeline,
+            series,
             snapshot.Signature);
     }
 }

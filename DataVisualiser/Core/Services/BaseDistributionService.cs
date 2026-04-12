@@ -13,7 +13,6 @@ using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
-using ChartHelper = DataVisualiser.Core.Rendering.Helpers.ChartHelper;
 
 namespace DataVisualiser.Core.Services;
 
@@ -116,45 +115,7 @@ public abstract class BaseDistributionService : IDistributionService
 
         var useCmsStrategy = cmsSeries != null;
         var (result, extendedResult) = await ComputeDistributionAsync(data, cmsSeries, displayName, from, to, useCmsStrategy, enableParity);
-        if (result?.PrimaryRawValues == null || result.PrimarySmoothed == null)
-            return null;
-
-        var mins = result.PrimaryRawValues;
-        var ranges = result.PrimarySmoothed;
-        if (mins.Count != Configuration.BucketCount || ranges.Count != Configuration.BucketCount)
-            return null;
-
-        var maxs = mins.Zip(ranges,
-                               (min, range) =>
-                               {
-                                   if (double.IsNaN(min))
-                                       return double.NaN;
-
-                                   if (double.IsNaN(range))
-                                       range = 0.0;
-
-                                   return min + range;
-                               })
-                       .ToList();
-
-        var globalMin = mins.Where(m => !double.IsNaN(m)).DefaultIfEmpty(0.0).Min();
-        var globalMax = maxs.Where(m => !double.IsNaN(m)).DefaultIfEmpty(globalMin + 1.0).Max();
-        if (globalMax <= globalMin)
-            globalMax = globalMin + 1.0;
-
-        var averages = new List<double>(Configuration.BucketCount);
-        for (var i = 0; i < Configuration.BucketCount; i++)
-            if (extendedResult?.BucketValues.TryGetValue(i, out var values) == true)
-            {
-                var validValues = values.Where(v => !double.IsNaN(v)).ToList();
-                averages.Add(validValues.Count > 0 ? validValues.Average() : double.NaN);
-            }
-            else
-            {
-                averages.Add(double.NaN);
-            }
-
-        return new DistributionRangeResult(mins, maxs, averages, globalMin, globalMax, result.Unit);
+        return DistributionRangeResultBuilder.Build(result, extendedResult, Configuration.BucketCount);
     }
 
     // Abstract methods that must be implemented by derived classes
@@ -275,10 +236,10 @@ public abstract class BaseDistributionService : IDistributionService
 
         var shadingData = useFrequencyShading ? BuildFrequencyShadingData(bucketValues, globalMin, globalMax, intervalCount) : FrequencyShadingData.Empty;
 
-        AddBaselineAndRangeSeries(targetChart, mins, ranges, globalMin, displayName, useFrequencyShading);
+        DistributionSeriesBuilder.AddBaselineAndRangeSeries(targetChart, mins, ranges, globalMin, displayName, useFrequencyShading, Configuration.BucketCount);
 
         if (!useFrequencyShading)
-            AddAverageSeries(targetChart, bucketValues, displayName);
+            DistributionSeriesBuilder.AddAverageSeries(targetChart, bucketValues, displayName, Configuration.BucketCount);
 
         if (useFrequencyShading)
             ApplyFrequencyShadingViaRenderer(targetChart, mins, ranges, shadingData, globalMin, globalMax);
@@ -309,68 +270,6 @@ public abstract class BaseDistributionService : IDistributionService
     protected FrequencyShadingData BuildFrequencyShadingData(Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax, int intervalCount)
     {
         return _frequencyShadingCalculator.BuildFrequencyShadingData(bucketValues, globalMin, globalMax, intervalCount);
-    }
-
-    protected void AddBaselineAndRangeSeries(CartesianChart chart, List<double> mins, List<double> ranges, double globalMin, string displayName, bool useFrequencyShading)
-    {
-        var baseline = CreateBaselineSeries(displayName);
-        var range = CreateRangeSeries(displayName);
-
-        for (var i = 0; i < Configuration.BucketCount; i++)
-        {
-            var rangeVal = double.IsNaN(ranges[i]) || ranges[i] < 0 ? 0.0 : ranges[i];
-
-            var baselineVal = useFrequencyShading ? globalMin : double.IsNaN(mins[i]) ? 0.0 : mins[i];
-
-            baseline.Values.Add(baselineVal);
-            range.Values.Add(rangeVal);
-        }
-
-        chart.Series.Add(baseline);
-        chart.Series.Add(range);
-    }
-
-    protected void AddAverageSeries(CartesianChart chart, Dictionary<int, List<double>> bucketValues, string displayName)
-    {
-        var series = ChartHelper.CreateLineSeries($"{displayName} avg", 5, 2, Color.FromRgb(235, 200, 40));
-        if (series == null)
-            return;
-
-        series.LineSmoothness = 0;
-
-        for (var i = 0; i < Configuration.BucketCount; i++)
-        {
-            var values = bucketValues.TryGetValue(i, out var bucket) ? bucket : new List<double>();
-            var validValues = values.Where(v => !double.IsNaN(v)).ToList();
-            series.Values.Add(validValues.Count > 0 ? validValues.Average() : double.NaN);
-        }
-
-        chart.Series.Add(series);
-    }
-
-    protected StackedColumnSeries CreateBaselineSeries(string displayName)
-    {
-        return new StackedColumnSeries
-        {
-                Title = $"{displayName} baseline",
-                Values = new ChartValues<double>(),
-                Fill = Brushes.Transparent,
-                StrokeThickness = 0,
-                MaxColumnWidth = RenderingDefaults.MaxColumnWidth
-        };
-    }
-
-    protected StackedColumnSeries CreateRangeSeries(string displayName)
-    {
-        return new StackedColumnSeries
-        {
-                Title = $"{displayName} range",
-                Values = new ChartValues<double>(),
-                Fill = new SolidColorBrush(Color.FromRgb(173, 216, 230)),
-                Stroke = new SolidColorBrush(Color.FromRgb(60, 120, 200)),
-                StrokeThickness = 1,
-                MaxColumnWidth = RenderingDefaults.MaxColumnWidth
-        };
     }
 
     protected void ApplyFrequencyShadingViaRenderer(CartesianChart chart, List<double> mins, List<double> ranges, FrequencyShadingData data, double globalMin, double globalMax)

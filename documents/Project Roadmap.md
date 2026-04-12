@@ -3,8 +3,8 @@
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for the active hierarchy-reconciliation and VNext activation work (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
-**Last Updated:** 2026-04-11  
-**Change Note:** Phase 6.3 advanced with first live VNext main-chart slice and evidence boundary decomposition
+**Last Updated:** 2026-04-12  
+**Change Note:** Phase 6.3 widened the live VNext slice to the main chart family (`Main`, `Normalized`, `Diff/Ratio`) and kept legacy fallback for the remaining chart families
 
 ---
 
@@ -393,8 +393,8 @@ The goal is to make the system legible enough that:
 - preserve qualified rendering and evidence boundaries
 
 **Current Progress (April 2026)**
-- First live VNext vertical slice activated: `MetricLoadCoordinator` routes main-chart loads through `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `LegacyChartProgramProjector` when only the Main chart is visible
-- Automatic legacy fallback when any extended chart family is visible or when VNext fails
+- First live VNext vertical slice widened: `MetricLoadCoordinator` now routes the main chart family (`Main`, `Normalized`, `Diff/Ratio`) through `VNextMainChartIntegrationCoordinator` -> `ReasoningSessionCoordinator` -> `LegacyChartProgramProjector`
+- Automatic legacy fallback remains for `Distribution`, `WeekdayTrend`, `Transform`, `BarPie`, and any VNext load failure
 - Fresh `ReasoningSessionCoordinator` per load attempt — no shared session state across loads
 - `MainChartDisplayMode` propagated through VNext path — Regular/Summed/Stacked behavior preserved
 - Evidence boundary decomposed: `MainChartsEvidenceExportService` split into `EvidenceExportModels` (21 standalone DTOs), `EvidenceDiagnosticsBuilder` (diagnostics assembly), and export orchestration
@@ -677,3 +677,4 @@ This roadmap defines how the project grows without lying to itself, and without 
 ---
 
 **End of Project Roadmap**
+

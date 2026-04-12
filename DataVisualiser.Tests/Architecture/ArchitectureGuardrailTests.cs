@@ -216,10 +216,15 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("TransformDataResolutionCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("TransformOperationExecutionCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("TransformOperationStateCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("TransformSessionMilestoneRecorder", source, StringComparison.Ordinal);
         Assert.Contains("_transformDataResolutionCoordinator.ResolveSelections", source, StringComparison.Ordinal);
         Assert.Contains("_transformDataResolutionCoordinator.ResolveAsync", source, StringComparison.Ordinal);
-        Assert.Contains("_transformOperationExecutionCoordinator.CanExecute", source, StringComparison.Ordinal);
         Assert.Contains("_transformOperationExecutionCoordinator.Execute", source, StringComparison.Ordinal);
+        Assert.Contains("_transformOperationStateCoordinator.UpdateComputeButtonState", source, StringComparison.Ordinal);
+        Assert.Contains("_transformOperationStateCoordinator.GetSelectedOperationTag", source, StringComparison.Ordinal);
+        Assert.Contains("_transformSessionMilestoneRecorder.RecordExecution", source, StringComparison.Ordinal);
+        Assert.Contains("_transformSessionMilestoneRecorder.RecordToggle", source, StringComparison.Ordinal);
         Assert.Contains("TransformSubtypeSelectionCoordinator.ApplySubtypeOptions", source, StringComparison.Ordinal);
         Assert.Contains("TransformSubtypeSelectionCoordinator.ResetSelectionControls", source, StringComparison.Ordinal);
         Assert.Contains("TransformGridPresentationCoordinator.PopulateInputGrids", source, StringComparison.Ordinal);
@@ -235,6 +240,18 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("private MetricSeriesSelection? ResolveSelectedTransformPrimarySeries", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private MetricSeriesSelection? ResolveSelectedTransformSecondarySeries", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private static ChartDataContext BuildTransformContext", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void RecordTransformMilestone", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void RecordTransformToggleMilestone", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private bool TryGetSelectedOperation", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TransformOperationStateCoordinator_ShouldOwnComputeButtonExecutionEligibility()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformOperationStateCoordinator.cs");
+
+        Assert.Contains("TransformDataResolutionCoordinator.CanRenderPrimarySelection", source, StringComparison.Ordinal);
+        Assert.Contains("executionCoordinator.CanExecute", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -303,6 +320,13 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("DistributionComputationHelper.CalculateTooltipData", source, StringComparison.Ordinal);
         Assert.Contains("DistributionComputationHelper.CalculateSimpleRangeTooltipData", source, StringComparison.Ordinal);
         Assert.Contains("DistributionComputationHelper.CalculateBucketAverages", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionRangeResultBuilder.Build", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionSeriesBuilder.AddBaselineAndRangeSeries", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionSeriesBuilder.AddAverageSeries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected void AddBaselineAndRangeSeries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected void AddAverageSeries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected StackedColumnSeries CreateBaselineSeries", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected StackedColumnSeries CreateRangeSeries", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -346,6 +370,69 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeriesFromMulti", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private List<double> BuildStackedSmoothedValues", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private static void EnsureOverlayExtremes", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateSessionDiagnosticsBookkeepingToDedicatedRecorder()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsSessionDiagnosticsRecorder", source, StringComparison.Ordinal);
+        Assert.Contains("_sessionDiagnosticsRecorder.TrackHostMessage", source, StringComparison.Ordinal);
+        Assert.Contains("_sessionDiagnosticsRecorder.RecordSessionMilestone", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void TrackHostMessage", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void RecordSessionMilestone", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateUiSurfaceDiagnosticsReadingToDedicatedReader()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private UiSurfaceDiagnosticsSnapshot CaptureEvidenceExportUiSurfaceDiagnostics");
+
+        Assert.Contains("MainChartsUiSurfaceDiagnosticsReader", source, StringComparison.Ordinal);
+        Assert.Contains("_uiSurfaceDiagnosticsReader.Capture", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformUiDiagnosticsSnapshot", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("SubtypeComboDiagnosticsSnapshot", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateZoomResetThroughDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private void ResetRegisteredChartsZoom");
+
+        Assert.Contains("MainChartsViewZoomResetCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_zoomResetCoordinator.ResetRegisteredCharts", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("controller.ResetZoom();", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("ResolveController(key).ResetZoom();", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VNextBridge_ShouldAcceptExplicitProgramRequests()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainHost", "VNextMainChartIntegrationCoordinator.cs");
+
+        Assert.Contains("LoadProgramAsync(", source, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramRequest", source, StringComparison.Ordinal);
+        Assert.Contains("WorkflowPlanRequest", source, StringComparison.Ordinal);
+        Assert.Contains("coordinator.BuildProgram(programRequest)", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VNextWorkflowState_ShouldUseExplicitWorkflowPlanRequest()
+    {
+        var stateSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "State", "WorkflowState.cs");
+        var transitionSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "State", "ReasoningSessionTransitions.cs");
+
+        Assert.Contains("WorkflowPlanRequest", stateSource, StringComparison.Ordinal);
+        Assert.Contains("WorkflowPlanRequest", transitionSource, StringComparison.Ordinal);
     }
 
     [Fact]

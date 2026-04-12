@@ -65,4 +65,25 @@ public sealed class ReasoningSessionTransitionsTests
         Assert.Null(updated.Selection.MetricType);
         Assert.Empty(updated.Selection.Series);
     }
+
+    [Fact]
+    public void ApplyWorkflowPlan_ShouldReplaceWorkflowOperationsAndIntent()
+    {
+        var state = ReasoningSessionState.Empty;
+        var workflowPlan = new WorkflowPlanRequest(
+        [
+            SeriesOperationRequest.Normalize(0, "morning-normalized", "Morning normalized"),
+            SeriesOperationRequest.Difference(0, 1, "Delta")
+        ],
+        "transform",
+        "Weight transform");
+
+        var updated = ReasoningSessionTransitions.ApplyWorkflowPlan(state, workflowPlan);
+
+        Assert.Equal("transform", updated.Workflow.ConsumerIntent);
+        Assert.Equal("Weight transform", updated.Workflow.TitleOverride);
+        Assert.Equal(2, updated.Workflow.PlannedOperations.Count);
+        Assert.Equal(SeriesOperationKind.Normalize, updated.Workflow.PlannedOperations[0].Kind);
+        Assert.Equal(SeriesOperationKind.Difference, updated.Workflow.PlannedOperations[1].Kind);
+    }
 }

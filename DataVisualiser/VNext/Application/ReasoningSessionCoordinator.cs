@@ -59,6 +59,18 @@ public sealed class ReasoningSessionCoordinator
             };
     }
 
+    public void ApplyWorkflowPlan(IReadOnlyList<SeriesOperationRequest> plannedOperations, string? consumerIntent = null)
+    {
+        lock (_sync)
+            _state = ReasoningSessionTransitions.ApplyWorkflowPlan(_state, plannedOperations, consumerIntent);
+    }
+
+    public void ApplyWorkflowPlan(WorkflowPlanRequest workflowPlan)
+    {
+        lock (_sync)
+            _state = ReasoningSessionTransitions.ApplyWorkflowPlan(_state, workflowPlan);
+    }
+
     public void Clear()
     {
         lock (_sync)
@@ -96,36 +108,59 @@ public sealed class ReasoningSessionCoordinator
 
     public ChartProgram BuildMainProgram()
     {
-        var (snapshot, presentation) = GetLoadedSnapshotAndPresentation();
-        return _engine.BuildMainProgram(snapshot, presentation.MainChartDisplayMode);
+        var (_, presentation) = GetLoadedSnapshotAndPresentation();
+        return BuildProgram(ChartProgramRequest.MainProgram(presentation.MainChartDisplayMode));
     }
 
     public ChartProgram BuildNormalizedProgram()
     {
-        var (snapshot, _) = GetLoadedSnapshotAndPresentation();
-        return _engine.BuildNormalizedProgram(snapshot);
+        return BuildProgram(ChartProgramRequest.Normalized());
     }
 
     public ChartProgram BuildDifferenceProgram()
     {
-        var (snapshot, _) = GetLoadedSnapshotAndPresentation();
-        return _engine.BuildDifferenceProgram(snapshot);
+        return BuildProgram(ChartProgramRequest.Difference());
     }
 
     public ChartProgram BuildRatioProgram()
     {
+        return BuildProgram(ChartProgramRequest.Ratio());
+    }
+
+    public ChartProgram BuildWorkflowProgram(string? title = null)
+    {
+        var (snapshot, presentation, workflow) = GetLoadedSnapshotPresentationAndWorkflow();
+        if (workflow.PlannedOperations.Count == 0)
+            throw new InvalidOperationException("No workflow operations are available.");
+
+        var request = ChartProgramRequest.Transform(
+            title ?? workflow.TitleOverride ?? $"{snapshot.Request.MetricType ?? "Derived"} transform",
+            workflow.PlannedOperations,
+            presentation.MainChartDisplayMode);
+
+        return BuildProgram(request);
+    }
+
+    public ChartProgram BuildProgram(ChartProgramRequest request)
+    {
         var (snapshot, _) = GetLoadedSnapshotAndPresentation();
-        return _engine.BuildRatioProgram(snapshot);
+        return _engine.BuildProgram(snapshot, request);
     }
 
     private (MetricLoadSnapshot Snapshot, PresentationState Presentation) GetLoadedSnapshotAndPresentation()
+    {
+        var (snapshot, presentation, _) = GetLoadedSnapshotPresentationAndWorkflow();
+        return (snapshot, presentation);
+    }
+
+    private (MetricLoadSnapshot Snapshot, PresentationState Presentation, WorkflowState Workflow) GetLoadedSnapshotPresentationAndWorkflow()
     {
         lock (_sync)
         {
             if (_state.Load.Snapshot == null)
                 throw new InvalidOperationException("No loaded snapshot is available.");
 
-            return (_state.Load.Snapshot, _state.Presentation);
+            return (_state.Load.Snapshot, _state.Presentation, _state.Workflow);
         }
     }
 }

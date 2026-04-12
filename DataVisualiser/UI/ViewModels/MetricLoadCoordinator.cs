@@ -147,11 +147,12 @@ public sealed class MetricLoadCoordinator
         {
             _uiState.IsLoadingData = true;
 
-            if (ShouldUseVNextMainPath())
+            if (ShouldUseVNextMainFamilyPath())
             {
                 var vnextResult = await _vnextMainChartIntegrationCoordinator.LoadMainChartAsync(request, _chartState.MainChartDisplayMode);
                 if (vnextResult.Success && vnextResult.ProjectedContext != null)
                 {
+                    var supportsOnlyMainChart = SupportsOnlyMainChartRoute();
                     _chartState.LastContext = vnextResult.ProjectedContext;
                     _chartState.LastLoadRuntime = new LoadRuntimeState(
                         EvidenceRuntimePath.VNextMain,
@@ -161,7 +162,7 @@ public sealed class MetricLoadCoordinator
                         vnextResult.ProgramSourceSignature,
                         vnextResult.ProjectedContextSignature,
                         null,
-                        true);
+                        supportsOnlyMainChart);
                     return true;
                 }
 
@@ -374,14 +375,19 @@ public sealed class MetricLoadCoordinator
         return true;
     }
 
-    private bool ShouldUseVNextMainPath()
+    private bool ShouldUseVNextMainFamilyPath()
     {
         return _chartState.IsMainVisible &&
-               !_chartState.IsNormalizedVisible &&
-               !_chartState.IsDiffRatioVisible &&
                !_chartState.IsDistributionVisible &&
                !_chartState.IsWeeklyTrendVisible &&
                !_chartState.IsTransformPanelVisible &&
                !_chartState.IsBarPieVisible;
+    }
+
+    private bool SupportsOnlyMainChartRoute()
+    {
+        return _chartState.IsMainVisible &&
+               !_chartState.IsNormalizedVisible &&
+               !_chartState.IsDiffRatioVisible;
     }
 }
