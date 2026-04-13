@@ -6,7 +6,11 @@ namespace DataVisualiser.UI.MainHost.Evidence;
 public enum EvidenceRuntimePath
 {
     Legacy,
-    VNextMain
+    VNextMain,
+    VNextDistribution,
+    VNextWeekdayTrend,
+    VNextTransform,
+    VNextBarPie
 }
 
 public sealed class DistributionParitySnapshot
@@ -82,6 +86,10 @@ public sealed class DiagnosticsSnapshot
     public SmokeHeuristicsSnapshot SmokeChecks { get; set; } = new();
     public TransitionDiagnosticsSnapshot Transition { get; set; } = new();
     public VNextDiagnosticsSnapshot? VNext { get; set; }
+    public VNextDiagnosticsSnapshot? VNextDistribution { get; set; }
+    public VNextDiagnosticsSnapshot? VNextWeekdayTrend { get; set; }
+    public VNextDiagnosticsSnapshot? VNextTransform { get; set; }
+    public VNextDiagnosticsSnapshot? VNextBarPie { get; set; }
 }
 
 public sealed class SessionMilestoneSnapshot

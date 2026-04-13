@@ -29,7 +29,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
 
-    public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ITransformRenderingContract transformRenderingContract, TransformComputationService? transformComputationService = null)
+    public TransformDataPanelControllerAdapter(ITransformDataPanelController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, ITransformRenderingContract transformRenderingContract, TransformComputationService? transformComputationService = null, VNextSeriesLoadCoordinator? vnextCoordinator = null)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -38,7 +38,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
         ArgumentNullException.ThrowIfNull(transformRenderingContract);
         var computationService = transformComputationService ?? new TransformComputationService();
-        _transformDataResolutionCoordinator = new TransformDataResolutionCoordinator(_controller, _viewModel, metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService)), _selectionCache);
+        _transformDataResolutionCoordinator = new TransformDataResolutionCoordinator(_controller, _viewModel, metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService)), _selectionCache, vnextCoordinator);
         _transformOperationExecutionCoordinator = new TransformOperationExecutionCoordinator(computationService);
         _transformOperationStateCoordinator = new TransformOperationStateCoordinator();
         _transformRenderCoordinator = new TransformRenderCoordinator(_controller, _viewModel.ChartState, transformRenderingContract);

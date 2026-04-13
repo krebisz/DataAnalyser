@@ -6,5 +6,8 @@ public enum ChartProgramKind
     Normalized = 1,
     Difference = 2,
     Ratio = 3,
-    Transform = 4
+    Transform = 4,
+    Distribution = 5,
+    WeekdayTrend = 6,
+    BarPie = 7
 }

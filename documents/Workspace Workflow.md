@@ -1,5 +1,5 @@
 # Workspace Workflow
-**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Closed (except 6.3), Phase 7 Entry Gate Satisfied
+**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Fully Closed, Phase 7 Entry Gate Satisfied
 
 This document is part of the core documentation set.
 See `MASTER_OPERATING_PROTOCOL.md` for governing authority.
@@ -158,10 +158,10 @@ Example:
 Workspace State:
 - Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Roadmap, Execution Plan
 - Code snapshot: live codebase access
-- Phase: Phase 6 — Architectural Legibility and Concern Reconciliation
-- VNext: main-chart slice active, legacy fallback for extended charts
+- Phase: Phase 6 closed, Phase 7 entry gate satisfied
+- VNext: all chart families routed through VNext reasoning engine with automatic legacy fallback
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 471 passing
+- Tests: 636 passing
 - Unknowns: none
 ```
 
@@ -221,9 +221,9 @@ A task without reachability proof is considered non-executable.
 
 ---
 
-## 7. Active Phase Artifacts (Phase 6)
+## 7. Active Phase Artifacts (Phase 7 / VNext Infrastructure)
 
-The following files are actively relevant during Phase 6 (Architectural Legibility and VNext Activation):
+The following files are actively relevant for VNext reasoning engine integration:
 
 **VNext:**
 - `VNext/Application/ReasoningSessionCoordinator.cs`
@@ -231,13 +231,16 @@ The following files are actively relevant during Phase 6 (Architectural Legibili
 - `VNext/Application/LegacyChartProgramProjector.cs`
 - `VNext/Application/ChartProgramPlanner.cs`
 - `VNext/Contracts/ChartProgram.cs`
+- `VNext/Contracts/ChartProgramKind.cs`
 - `VNext/Contracts/MetricSelectionRequest.cs`
 - `VNext/State/ReasoningSessionTransitions.cs`
 
 **Integration Bridge:**
-- `UI/MainHost/VNextMainChartIntegrationCoordinator.cs`
+- `UI/MainHost/VNextMainChartIntegrationCoordinator.cs` (Main/Normalized/Diff/Ratio)
+- `UI/MainHost/VNextDistributionIntegrationCoordinator.cs` (Distribution)
+- `UI/MainHost/VNextSeriesLoadCoordinator.cs` (WeekdayTrend, Transform, BarPie — shared)
 - `UI/ViewModels/MetricLoadCoordinator.cs`
-- `UI/State/ChartState.cs` (`LoadRuntimeState`)
+- `UI/State/ChartState.cs` (`LoadRuntimeState`, per-family runtime tracking)
 
 **Evidence Boundary** (`UI/MainHost/Evidence/`):
 - `UI/MainHost/Evidence/EvidenceExportModels.cs`

@@ -10,8 +10,11 @@ using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.WPF;
@@ -28,11 +31,13 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
     private readonly Func<ToolTip?> _getPolarTooltip;
     private readonly Func<bool> _isInitializing;
     private readonly MetricSelectionService _metricSelectionService;
+    private readonly DistributionSessionMilestoneRecorder _milestoneRecorder;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
+    private readonly VNextDistributionIntegrationCoordinator _vnextDistributionCoordinator;
     private bool _isUpdatingSubtypeCombo;
 
-    public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, IDistributionRenderingContract distributionRenderingContract, Func<ToolTip?> getPolarTooltip)
+    public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, IDistributionRenderingContract distributionRenderingContract, Func<ToolTip?> getPolarTooltip, VNextDistributionIntegrationCoordinator? vnextDistributionCoordinator = null)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -42,6 +47,8 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _distributionRenderingContract = distributionRenderingContract ?? throw new ArgumentNullException(nameof(distributionRenderingContract));
         _getPolarTooltip = getPolarTooltip ?? throw new ArgumentNullException(nameof(getPolarTooltip));
+        _vnextDistributionCoordinator = vnextDistributionCoordinator ?? new VNextDistributionIntegrationCoordinator(metricSelectionService);
+        _milestoneRecorder = new DistributionSessionMilestoneRecorder(viewModel);
     }
 
     public override void ClearCache()
@@ -168,6 +175,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         try
         {
             _viewModel.SetDistributionFrequencyShading(mode, useFrequencyShading);
+            _milestoneRecorder.RecordFrequencyShadingToggle(mode, useFrequencyShading);
             await RerenderDistributionIfVisibleAsync(mode);
         }
         catch
@@ -184,6 +192,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         try
         {
             _viewModel.SetDistributionIntervalCount(mode, intervalCount);
+            _milestoneRecorder.RecordIntervalCountChange(mode, intervalCount);
             await RerenderDistributionIfVisibleAsync(mode);
         }
         catch
@@ -201,6 +210,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
     {
         using var _ = _beginUiBusyScope();
         _viewModel.ToggleDistributionChartType();
+        _milestoneRecorder.RecordChartTypeToggle(_viewModel.ChartState.IsDistributionPolarMode);
         UpdateChartTypeVisibility();
 
         if (_viewModel.ChartState.IsDistributionVisible && _viewModel.ChartState.LastContext != null)
@@ -226,6 +236,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
         var mode = GetSelectedDistributionMode();
         _viewModel.SetDistributionMode(mode);
+        _milestoneRecorder.RecordModeChange(mode);
         ApplyModeDefinition(mode);
         ApplySettingsToUi(mode);
     }
@@ -237,6 +248,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
 
         var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.SubtypeCombo);
         _viewModel.SetDistributionSeries(selection);
+        _milestoneRecorder.RecordSubtypeChange(selection);
     }
 
     private void SelectDistributionMode(DistributionMode mode)
@@ -348,10 +360,46 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         if (_selectionCache.TryGetDataWithCms(cacheKey, out var cached, out var cachedCms))
             return (cached, cachedCms);
 
-        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, ctx.From, ctx.To, tableName);
-        var data = primaryData.ToList();
-        _selectionCache.SetDataWithCms(cacheKey, data, primaryCms);
-        return (data, primaryCms);
+        return await LoadFreshDistributionDataAsync(selectedSeries, ctx.From, ctx.To, tableName, cacheKey);
+    }
+
+    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> LoadFreshDistributionDataAsync(
+        MetricSeriesSelection selectedSeries, DateTime from, DateTime to, string tableName, string cacheKey)
+    {
+        var vnextResult = await _vnextDistributionCoordinator.LoadDistributionAsync(selectedSeries, from, to, tableName);
+        if (vnextResult.Success && vnextResult.Data != null)
+        {
+            _viewModel.ChartState.LastDistributionLoadRuntime = new LoadRuntimeState(
+                EvidenceRuntimePath.VNextDistribution,
+                vnextResult.RequestSignature ?? string.Empty,
+                vnextResult.SnapshotSignature,
+                vnextResult.ProgramKind,
+                vnextResult.ProgramSourceSignature,
+                null,
+                null,
+                false);
+
+            var data = vnextResult.Data is List<MetricData> list ? list : vnextResult.Data.ToList();
+            _selectionCache.SetDataWithCms(cacheKey, data, vnextResult.CmsSeries);
+            return (data, vnextResult.CmsSeries);
+        }
+
+        // VNext failed — fall back to legacy loading
+        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, from, to, tableName);
+        var legacyData = primaryData.ToList();
+        _selectionCache.SetDataWithCms(cacheKey, legacyData, primaryCms);
+
+        _viewModel.ChartState.LastDistributionLoadRuntime = new LoadRuntimeState(
+            EvidenceRuntimePath.Legacy,
+            vnextResult.RequestSignature ?? string.Empty,
+            null,
+            null,
+            null,
+            null,
+            vnextResult.FailureReason,
+            false);
+
+        return (legacyData, primaryCms);
     }
 
     private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)

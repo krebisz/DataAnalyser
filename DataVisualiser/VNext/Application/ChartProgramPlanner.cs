@@ -25,7 +25,11 @@ public sealed class ChartProgramPlanner
             ChartProgramKind.Normalized => BuildNormalizedProgram(snapshot),
             ChartProgramKind.Difference => BuildDifferenceProgram(snapshot),
             ChartProgramKind.Ratio => BuildRatioProgram(snapshot),
-            ChartProgramKind.Transform => BuildDerivedProgram(snapshot, request),
+            ChartProgramKind.Transform when request.SeriesOperations.Count > 0 => BuildDerivedProgram(snapshot, request),
+            ChartProgramKind.Transform => BuildIdentityProgram(snapshot, ChartProgramKind.Transform),
+            ChartProgramKind.Distribution => BuildDistributionProgram(snapshot),
+            ChartProgramKind.WeekdayTrend => BuildIdentityProgram(snapshot, ChartProgramKind.WeekdayTrend),
+            ChartProgramKind.BarPie => BuildIdentityProgram(snapshot, ChartProgramKind.BarPie),
             _ => throw new InvalidOperationException($"Unsupported program kind '{request.Kind}'.")
         };
     }
@@ -108,6 +112,33 @@ public sealed class ChartProgramPlanner
             snapshot.Request.To,
             aligned.Timeline,
             new[] { _operationKernel.BuildRatioSeries(aligned.Series[0], aligned.Series[1]) },
+            snapshot.Signature);
+    }
+
+    public ChartProgram BuildDistributionProgram(MetricLoadSnapshot snapshot)
+    {
+        return BuildIdentityProgram(snapshot, ChartProgramKind.Distribution);
+    }
+
+    public ChartProgram BuildIdentityProgram(MetricLoadSnapshot snapshot, ChartProgramKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        var aligned = _alignmentKernel.Align(snapshot);
+        var series = aligned.Series
+            .Select((alignedSeries, index) => _operationKernel.BuildSeries(
+                aligned,
+                SeriesOperationRequest.Identity(index, alignedSeries.Request.SignatureToken, alignedSeries.Request.DisplayName)))
+            .ToArray();
+
+        return new ChartProgram(
+            kind,
+            ChartDisplayMode.Regular,
+            snapshot.Request.MetricType,
+            snapshot.Request.From,
+            snapshot.Request.To,
+            aligned.Timeline,
+            series,
             snapshot.Signature);
     }
 

@@ -7,6 +7,7 @@ using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Presentation.Rendering;
+using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Core.Orchestration;
@@ -52,6 +53,8 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             context.HourlyDistributionService,
             context.DistributionPolarRenderingService);
 
+        var vnextDistributionCoordinator = new VNextDistributionIntegrationCoordinator(context.MetricSelectionService);
+
         var distributionAdapter = new DistributionChartControllerAdapter(
             context.DistributionChartController,
             context.ViewModel,
@@ -59,11 +62,13 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             context.BeginUiBusyScope,
             context.MetricSelectionService,
             distributionRenderingContract,
-            context.GetPolarTooltip);
+            context.GetPolarTooltip,
+            vnextDistributionCoordinator);
 
         var weekdayTrendRenderingContract = new WeekdayTrendRenderingContract(context.WeekdayTrendChartUpdateCoordinator);
+        var vnextSeriesCoordinator = new VNextSeriesLoadCoordinator(context.MetricSelectionService);
 
-        var weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(context.WeekdayTrendChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetStrategyCutOverService, weekdayTrendRenderingContract);
+        var weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(context.WeekdayTrendChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetStrategyCutOverService, weekdayTrendRenderingContract, vnextSeriesCoordinator);
 
         var normalizedAdapter = new NormalizedChartControllerAdapter(context.NormalizedChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, cartesianMetricRenderingContract);
 
@@ -71,7 +76,7 @@ public sealed class ChartControllerFactory : IChartControllerFactory
 
         var transformRenderingContract = new TransformRenderingContract(new TransformChartRenderInvoker(context.ChartUpdateCoordinator));
 
-        var transformAdapter = new TransformDataPanelControllerAdapter(context.TransformDataPanelController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, transformRenderingContract);
+        var transformAdapter = new TransformDataPanelControllerAdapter(context.TransformDataPanelController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, transformRenderingContract, vnextCoordinator: vnextSeriesCoordinator);
 
         var barPieRenderingContract = new BarPieRenderingContract();
         var barPieAdapter = new BarPieChartControllerAdapter(
@@ -81,7 +86,8 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             context.MetricSelectionService,
             barPieRenderingContract,
             context.ChartRendererResolver,
-            context.ChartSurfaceFactory);
+            context.ChartSurfaceFactory,
+            vnextSeriesCoordinator);
 
         var registry = new ChartControllerRegistry();
         registry.Register(mainAdapter);

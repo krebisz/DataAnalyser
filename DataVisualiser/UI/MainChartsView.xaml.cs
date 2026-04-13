@@ -205,6 +205,16 @@ public partial class MainChartsView : UserControl
             _viewModel.MetricState.ResolutionTableName);
     }
 
+    private bool HasRenderableContext()
+    {
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx?.Data1 == null || !ctx.Data1.Any())
+            return false;
+
+        var contextMetric = ctx.PrimaryMetricType ?? ctx.MetricType;
+        return string.Equals(contextMetric, _viewModel.MetricState.SelectedMetricType, StringComparison.OrdinalIgnoreCase);
+    }
+
     private bool ShouldRefreshDateRangeForCurrentSelection()
     {
         return !string.IsNullOrWhiteSpace(_viewModel.MetricState.SelectedMetricType);
@@ -992,7 +1002,7 @@ public partial class MainChartsView : UserControl
 
         UpdateSelectedSubtypesInViewModel();
         await _selectionCoordinator.HandleSubtypeSelectionChangedAsync(
-            HasLoadedData(),
+            HasRenderableContext(),
             ShouldRefreshDateRangeForCurrentSelection(),
             CreateSelectionActions());
     }
@@ -1044,7 +1054,7 @@ public partial class MainChartsView : UserControl
         await _loadCoordinator.ExecuteLoadAsync(CreateLoadExecutionActions());
     }
 
-    private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
+    private async void AddSubtypeComboBox(object sender, RoutedEventArgs e)
     {
         if (_subtypeList == null || !_subtypeList.Any())
             return;
@@ -1059,6 +1069,14 @@ public partial class MainChartsView : UserControl
         using var selectionBatch = _viewModel.BeginSelectionStateBatch();
         UpdateChartTitlesFromSelections();
         UpdateSelectedSubtypesInViewModel();
+
+        // Self-loading chart families (BarPie, Distribution, WeekdayTrend, Transform)
+        // load their own data per-series and do not require the main context to match
+        // the full selection. Render if any context data exists.
+        if (_viewModel.ChartState.LastContext != null)
+            await RenderChartsFromLastContext();
+        else if (ShouldRefreshDateRangeForCurrentSelection())
+            await LoadDateRangeForSelectedMetrics();
     }
 
     #endregion

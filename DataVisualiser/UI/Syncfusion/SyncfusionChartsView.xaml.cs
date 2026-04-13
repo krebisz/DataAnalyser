@@ -315,15 +315,7 @@ public partial class SyncfusionChartsView : UserControl
 
         UpdateSelectedSubtypesInViewModel();
 
-        if (_viewModel.ChartState.LastContext != null && !HasLoadedData())
-        {
-            ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
-            _viewModel.ChartState.LastContext = null;
-            _viewModel.ChartState.LastLoadRuntime = null;
-            UpdateSyncfusionToggleEnabled();
-        }
-
-        if (_coordinator.ShouldRenderAfterSubtypeSelectionChange(_isApplyingSelectionSync, HasLoadedData(), _viewModel.ChartState.LastContext))
+        if (_coordinator.ShouldRenderAfterSubtypeSelectionChange(_isApplyingSelectionSync, HasRenderableContext(), _viewModel.ChartState.LastContext))
         {
             await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext!);
             return;
@@ -342,6 +334,16 @@ public partial class SyncfusionChartsView : UserControl
             _viewModel.MetricState.FromDate,
             _viewModel.MetricState.ToDate,
             _viewModel.MetricState.ResolutionTableName);
+    }
+
+    private bool HasRenderableContext()
+    {
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx?.Data1 == null || !ctx.Data1.Any())
+            return false;
+
+        var contextMetric = ctx.PrimaryMetricType ?? ctx.MetricType;
+        return string.Equals(contextMetric, _viewModel.MetricState.SelectedMetricType, StringComparison.OrdinalIgnoreCase);
     }
 
     private bool ShouldRefreshDateRangeForCurrentSelection()
@@ -443,7 +445,7 @@ public partial class SyncfusionChartsView : UserControl
         ApplySelectionStateToUi();
     }
 
-    private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
+    private async void AddSubtypeComboBox(object sender, RoutedEventArgs e)
     {
         if (_subtypeList == null || !_subtypeList.Any())
             return;
@@ -457,6 +459,11 @@ public partial class SyncfusionChartsView : UserControl
 
         using var selectionBatch = _viewModel.BeginSelectionStateBatch();
         UpdateSelectedSubtypesInViewModel();
+
+        if (_viewModel.ChartState.LastContext != null)
+            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext);
+        else if (ShouldRefreshDateRangeForCurrentSelection())
+            await LoadDateRangeForSelectedMetrics();
     }
 
     private void OnSunburstBucketCountChanged(object? sender, int bucketCount)

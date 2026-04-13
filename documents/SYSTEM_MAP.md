@@ -210,8 +210,9 @@ The orchestration layer coordinates execution, not meaning.
 - runtime-path tracking via explicit state (`LoadRuntimeState`) so downstream diagnostics and evidence can observe which path was used
 
 **Current execution paths**
-- **VNext path**: `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `ChartProgram` → `LegacyChartProgramProjector` → `ChartDataContext`. Activated when only the Main chart is visible. Fresh coordinator per load. Produces signature-tracked runtime state.
-- **Legacy path**: `MetricLoadCoordinator` → `MetricSelectionService` → `ChartDataContextBuilder` → `ChartDataContext`. Activated when extended charts are visible or as automatic fallback on VNext failure.
+- **VNext main-chart path**: `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `ChartProgram` → `LegacyChartProgramProjector` → `ChartDataContext`. Activated when only the Main chart family is visible. Fresh coordinator per load. Produces signature-tracked runtime state.
+- **VNext per-family path**: `VNextDistributionIntegrationCoordinator` or `VNextSeriesLoadCoordinator` → `ReasoningSessionCoordinator` → identity `ChartProgram` → `LegacyChartProgramProjector` → raw `MetricData`. Activated for Distribution, WeekdayTrend, Transform, and BarPie fresh data loads. Per-family runtime tracking via `LastDistributionLoadRuntime`, `LastWeekdayTrendLoadRuntime`, `LastTransformLoadRuntime`, `LastBarPieLoadRuntime`.
+- **Legacy path**: `MetricLoadCoordinator` → `MetricSelectionService` → `ChartDataContextBuilder` → `ChartDataContext`. Automatic fallback on any VNext failure.
 - Path selection is deterministic, visibility-based, and independent of CMS configuration.
 
 **Constraints**
@@ -467,8 +468,9 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 
 1. **UI validation** — Selection + date range; `MainWindowViewModel.ValidateDataLoadRequirements` / view guards.
 2. **Load metrics into context** — `MainWindowViewModel.LoadMetricDataAsync` → `MetricLoadCoordinator.LoadMetricDataAsync`:
-   - **VNext path** (when only Main chart visible): `VNextMainChartIntegrationCoordinator` → fresh `ReasoningSessionCoordinator` → `LoadAsync` → `BuildMainProgram` → `LegacyChartProgramProjector.ProjectToChartContext` → `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.VNextMain`).
-   - **Legacy path** (when extended charts visible, or VNext fails): `MetricSelectionService.LoadMetricDataWithCmsAsync` → `ChartDataContextBuilder.Build` → `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.Legacy`).
+   - **VNext main-chart path** (when only Main chart visible): `VNextMainChartIntegrationCoordinator` → fresh `ReasoningSessionCoordinator` → `LoadAsync` → `BuildMainProgram` → `LegacyChartProgramProjector.ProjectToChartContext` → `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.VNextMain`).
+   - **VNext per-family path** (for Distribution, WeekdayTrend, Transform, BarPie fresh data loads): `VNextDistributionIntegrationCoordinator` / `VNextSeriesLoadCoordinator` → fresh `ReasoningSessionCoordinator` → identity `ChartProgram` → projected `MetricData`. Runtime tracked via per-family `LastXxxLoadRuntime`.
+   - **Legacy path** (automatic fallback on VNext failure): `MetricSelectionService.LoadMetricDataWithCmsAsync` → `ChartDataContextBuilder.Build` → `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.Legacy`).
 3. **Publish + schedule chart work** — `LoadDataCommand` → `LoadData()` raises `DataLoaded` and calls `RequestChartUpdate()`. Facade: `ChartPresentationSpine.PublishLastContextAndRequestChartUpdate`.
 4. **Composition of engines** — `MainChartsViewChartPipelineFactory` builds `ChartUpdateCoordinator`, `ChartRenderingOrchestrator`, distribution services, etc.
 5. **Per-chart orchestration** — `ChartRenderingOrchestrator` / `*OrchestrationPipeline` / `ChartUpdateCoordinator` drive prep and render for each chart family.
@@ -477,9 +479,10 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 
 | Stage | Types |
 |--------|--------|
-| Load + context (VNext) | `VNextMainChartIntegrationCoordinator`, `ReasoningSessionCoordinator`, `LegacyChartProgramProjector` |
+| Load + context (VNext main) | `VNextMainChartIntegrationCoordinator`, `ReasoningSessionCoordinator`, `LegacyChartProgramProjector` |
+| Load + context (VNext per-family) | `VNextDistributionIntegrationCoordinator`, `VNextSeriesLoadCoordinator`, `ReasoningSessionCoordinator` |
 | Load + context (Legacy) | `MetricLoadCoordinator`, `MetricSelectionService`, `ChartDataContextBuilder` |
-| Runtime state | `ChartState.LastLoadRuntime` (`LoadRuntimeState`), `EvidenceRuntimePath` |
+| Runtime state | `ChartState.LastLoadRuntime`, `LastDistributionLoadRuntime`, `LastWeekdayTrendLoadRuntime`, `LastTransformLoadRuntime`, `LastBarPieLoadRuntime` (`LoadRuntimeState`), `EvidenceRuntimePath` |
 | VM seam | `MainWindowViewModel` (`LoadMetricDataAsync`, `LoadDataCommand`, `RequestChartUpdate`) |
 | Factory | `MainChartsViewChartPipelineFactory`, `MainChartsViewChartPipelineFactoryResult` |
 | Render | `ChartRenderingOrchestrator`, `ChartUpdateCoordinator` |
@@ -487,10 +490,18 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 
 ### A.3 VNext Routing Decision
 
-The routing gate lives in `MetricLoadCoordinator.ShouldUseVNextMainPath()`. It evaluates `ChartState` visibility flags directly:
-- VNext activates when `IsMainVisible == true` and all extended charts (`Normalized`, `DiffRatio`, `Distribution`, `WeeklyTrend`, `Transform`, `BarPie`) are hidden.
+**Main-chart family routing** lives in `MetricLoadCoordinator.ShouldUseVNextMainFamilyPath()`. It evaluates `ChartState` visibility flags directly:
+- VNext main-chart path activates when `IsMainVisible == true` and all extended charts (`Distribution`, `WeeklyTrend`, `Transform`, `BarPie`) are hidden.
 - Legacy activates otherwise, or as automatic fallback on VNext failure.
-- Routing is independent of CMS configuration.
+
+**Per-family routing** is embedded in each adapter's data resolution path:
+- Distribution: `DistributionChartControllerAdapter.LoadFreshDistributionDataAsync` → `VNextDistributionIntegrationCoordinator`
+- WeekdayTrend: `WeekdayTrendChartControllerAdapter.LoadFreshWeekdayTrendDataAsync` → `VNextSeriesLoadCoordinator`
+- Transform: `TransformDataResolutionCoordinator.LoadFreshTransformDataAsync` → `VNextSeriesLoadCoordinator`
+- BarPie: `BarPieRenderModelBuilder.LoadSeriesTotalsAsync` → `VNextSeriesLoadCoordinator` (per-series, parallel)
+- Each fires when a fresh load is needed (selected series differs from main context primary/secondary) and falls back to legacy on failure.
+
+All routing is independent of CMS configuration.
 
 ### A.4 Legacy / Parallel Paths (Not the Spine)
 

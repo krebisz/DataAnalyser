@@ -2,9 +2,9 @@
 **Status:** Sequencing and Execution Authority  
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
-**Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion and Phase 6.3 VNext family widening (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
+**Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
 **Last Updated:** 2026-04-13  
-**Change Note:** Phase 6 is closed except for `6.3` (VNext widening), which remains open until all active chart families route through the VNext reasoning engine. All other sub-phases (`6.1`, `6.2`, `6.4`–`6.7`) closed, all 5 global closure conditions met. Phase 7 entry gate is satisfied — new capabilities may proceed in parallel with VNext family widening.
+**Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening (all active chart families now route through the VNext reasoning engine). Phase 7 entry gate is satisfied — new capabilities may proceed.
 
 ---
 
@@ -28,7 +28,7 @@ If a conflict exists:
 1. `Project Bible.md` wins on architectural law.
 2. `SYSTEM_MAP.md` wins on structural direction.
 3. This roadmap wins on sequencing and closure discipline.
-4. `DataVisualiser_Subsystem_Plan.md` operationalizes Phase 7 exploratory capability expansion and Phase 6.3 VNext family widening permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
+4. `DataVisualiser_Subsystem_Plan.md` operationalizes Phase 7 exploratory capability expansion permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
 
 ---
 
@@ -325,7 +325,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 ---
 
 ### Phase 6 - Architectural Legibility and Concern Reconciliation  
-**Status:** CLOSED (April 2026) — except 6.3 (VNext widening open)  
+**Status:** CLOSED (April 2026)  
 **Entry Gate:** Opened now that Phases 3, 3.5, 4, and 5 are closed under current evidence rules
 
 **Purpose**
@@ -394,21 +394,22 @@ The goal is to make the system legible enough that:
 - keep consumer-specific behavior explicit where it is genuinely different
 - preserve qualified rendering and evidence boundaries
 
-**Current Progress (April 2026)**
-- First live VNext vertical slice widened: `MetricLoadCoordinator` now routes the main chart family (`Main`, `Normalized`, `Diff/Ratio`) through `VNextMainChartIntegrationCoordinator` -> `ReasoningSessionCoordinator` -> `LegacyChartProgramProjector`
-- Automatic legacy fallback remains for `Distribution`, `WeekdayTrend`, `Transform`, `BarPie`, and any VNext load failure
+**Current Progress (April 2026) — CLOSED**
+- First live VNext vertical slice: `MetricLoadCoordinator` routes the main chart family (`Main`, `Normalized`, `Diff/Ratio`) through `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `LegacyChartProgramProjector`
+- VNext widening complete: all remaining chart families (`Distribution`, `WeekdayTrend`, `Transform`, `BarPie`) now route fresh data loads through the VNext reasoning engine via `VNextDistributionIntegrationCoordinator` and shared `VNextSeriesLoadCoordinator`, with identity program builders, per-family signature-chain tracking (`EvidenceRuntimePath.VNextDistribution/VNextWeekdayTrend/VNextTransform/VNextBarPie`), and automatic legacy fallback on failure
 - Fresh `ReasoningSessionCoordinator` per load attempt — no shared session state across loads
 - `MainChartDisplayMode` propagated through VNext path — Regular/Summed/Stacked behavior preserved
 - Evidence boundary decomposed: `MainChartsEvidenceExportService` split into `EvidenceExportModels` (21 standalone DTOs), `EvidenceDiagnosticsBuilder` (diagnostics assembly), and export orchestration
-- `LoadRuntimeState` on `ChartState` tracks runtime path (`Legacy`/`VNextMain`), request/snapshot/program/projected-context signatures, and failure reason
-- `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports with signature-chain alignment flags
+- `LoadRuntimeState` on `ChartState` tracks runtime path per family, request/snapshot/program/projected-context signatures, and failure reason
+- `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports with signature-chain alignment flags for all chart families
+- Distribution interaction milestones recorded for frequency shading, interval count, mode, chart type, and subtype changes
 - `MainChartsView` now delegates session diagnostics, UI-surface diagnostics, subtype-selection bookkeeping, load/clear bookkeeping, resolution reset, zoom reset, startup, evidence export, data-loaded flow, chart update, and chart presentation through dedicated host seams
 - metric-type list initialization, metric-type-change reset/reload, and subtype-loaded follow-up behavior are now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostMetricSelectionCoordinator`
 - `MainChartsView` host/controller-extras interaction, registry-wide controller resolution, and chart-surface startup/no-data presentation are now delegated through dedicated coordinators
 - `TransformDataPanelControllerAdapter` now delegates subtype-selection interaction, operation state, execution, milestone recording, data resolution, and render/grid handoff through dedicated coordinators
 - `BaseDistributionService` now delegates pure computation, simple-range assembly, series construction, axis shaping, and debug-summary formatting through dedicated helpers
-- Smoke-verified with April 2026 exports: VNext path produces aligned signatures, legacy fallback produces correct state, all 8 parity strategies pass
-- 609 automated tests pass in the current default full-solution lane
+- Smoke-verified with April 2026 exports: VNext path produces aligned signatures across all chart families, legacy fallback produces correct state, all 8 parity strategies pass
+- 636 automated tests pass in the current default full-solution lane
 
 **Current evidence artifacts (April 2026):**
 - `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
@@ -463,10 +464,10 @@ The goal is to make the system legible enough that:
 - refresh current execution maps, success criteria, and architectural evidence
 
 **Audit Record (April 2026)**
-- 448 C# source files (~36,900 lines), 153 test files, 609 automated tests, 48 architecture guardrails
-- Sub-phases `6.1`, `6.2`, `6.4`, `6.5`, `6.7` closed; `6.3` has live proof through VNext main-chart-family route with legacy fallback and export-backed signature-chain diagnostics
+- 452 C# source files (~36,900 lines), 153 test files, 636 automated tests, 48 architecture guardrails
+- All sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext widening — all active chart families route through the VNext reasoning engine with automatic legacy fallback
 - All 5 global closure conditions assessed and met (full record in `DataVisualiser_Subsystem_Plan.md` Phase 6.6 section)
-- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,401 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~775 lines, parallel host), VNext covers Main/Normalized/Diff/Ratio only, controller adapter pattern variation accepted as domain variation
+- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,401 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~775 lines, parallel host), controller adapter pattern variation accepted as domain variation
 
 **Closure Condition**
 - the next cycle starts from an auditable baseline rather than from accumulated guesswork — **satisfied**
@@ -676,12 +677,10 @@ This policy protects both long-term trust and long-term extensibility.
 ## 8. Current Critical Path (Authoritative)
 
 1. Preserve the qualified seams produced by the completed Phase 5 rehaul and Phase 6 reconciliation.
-2. Widen VNext family coverage (Phase 6.3) incrementally — one chart family per slice, with automatic legacy fallback preserved.
-3. Build Phase 7 exploratory capabilities as reasoning-engine features that delivery surfaces consume, not as chart-specific additions.
-4. Keep residual debt explicit and bounded rather than allowing silent structural drift.
-5. Revalidate future closure claims with present evidence and repository-visible artifacts.
-6. Introduce further generalization only when the codebase has earned it through repeated real slices.
-7. Phase 7 and Phase 6.3 widening may proceed in parallel, but each must remain a bounded slice with its own validation.
+2. Build Phase 7 exploratory capabilities as reasoning-engine features that delivery surfaces consume, not as chart-specific additions.
+3. Keep residual debt explicit and bounded rather than allowing silent structural drift.
+4. Revalidate future closure claims with present evidence and repository-visible artifacts.
+5. Introduce further generalization only when the codebase has earned it through repeated real slices.
 
 Phase 7 is now structurally ready to proceed.
 The reasoning engine is the composition surface; new capabilities should strengthen its generality rather than binding power to specific delivery surfaces.
@@ -691,25 +690,24 @@ The reasoning engine is the composition surface; new capabilities should strengt
 ## 8.5 Open Phase Summary
 
 Remaining open phases:
-1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `CLOSED (except 6.3 — VNext widening open)`
+1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `CLOSED`
 2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `PLANNED / ENTRY GATE SATISFIED`
 3. `Phase 8 - UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
 
 Phase 6 sub-phase status:
 - `Phase 6.1` - irreducible operation consolidation: **CLOSED**
 - `Phase 6.2` - truth / derivation / delivery boundary reconciliation: **CLOSED**
-- `Phase 6.3` - request, consumer, and delivery standardization: **OPEN** (VNext widening ongoing)
+- `Phase 6.3` - request, consumer, and delivery standardization: **CLOSED** (all active chart families route through VNext)
 - `Phase 6.4` - outlier decomposition: **CLOSED**
 - `Phase 6.5` - physical hierarchy and naming realignment: **CLOSED**
 - `Phase 6.6` - architecture audit and baseline refresh: **CLOSED**
 - `Phase 6.7` - pre-Phase 7 structural consolidation: **CLOSED**
 
-**Phase 6 is closed except for 6.3.** All 5 global closure conditions met. 6.3 remains open until all active chart families (Distribution, WeekdayTrend, Transform, Bar/Pie) route through the VNext reasoning engine.
+**Phase 6 is fully closed.** All 5 global closure conditions met. All sub-phases closed including 6.3 — all active chart families now route through the VNext reasoning engine with automatic legacy fallback.
 
 Major next steps in sequence:
-1. `Phase 6.3` - widen VNext to remaining chart families (may proceed in parallel with Phase 7)
-2. `Phase 7` - exploratory and confidence capability expansion (entry gate satisfied)
-3. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
+1. `Phase 7` - exploratory and confidence capability expansion (entry gate satisfied)
+2. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
 
 ---
 
@@ -718,7 +716,7 @@ Major next steps in sequence:
 - Early phases built truthful foundations.
 - Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
 - Phase 5 is the completed bridge between what the system already does and what it is intended to become.
-- Phase 6 established a trustworthy hierarchy; it is closed except for VNext family widening (6.3).
+- Phase 6 established a trustworthy hierarchy; it is fully closed. All active chart families route through the VNext reasoning engine.
 - Phase 7 is now the active sanctioned home of exploration, confidence, and richer interpretive power. Its entry gate is satisfied.
 - The reasoning engine is the center of the system. New capabilities should be built as reasoning-engine features that delivery surfaces consume.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.

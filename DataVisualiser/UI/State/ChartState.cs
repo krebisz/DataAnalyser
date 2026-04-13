@@ -64,6 +64,10 @@ public class ChartState
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }
     public LoadRuntimeState? LastLoadRuntime { get; set; }
+    public LoadRuntimeState? LastDistributionLoadRuntime { get; set; }
+    public LoadRuntimeState? LastWeekdayTrendLoadRuntime { get; set; }
+    public LoadRuntimeState? LastTransformLoadRuntime { get; set; }
+    public LoadRuntimeState? LastBarPieLoadRuntime { get; set; }
     public IReadOnlyList<SessionMilestoneSnapshot> SessionMilestones => _sessionMilestones;
 
     // Current chart titles (left + right)

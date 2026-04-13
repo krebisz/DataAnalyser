@@ -376,14 +376,18 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(mainSource, "private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions"), StringComparison.Ordinal);
         Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(mainSource, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions"), StringComparison.Ordinal);
         Assert.Contains("_loadCoordinator.ValidateAndPrepareLoad", ExtractMethodBody(mainSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
-        Assert.Contains("_selectorManager.SuppressSelectionChanged()", ExtractMethodBody(mainSource, "private void AddSubtypeComboBox"), StringComparison.Ordinal);
+        var mainAddSubtypeBody = ExtractMethodBody(mainSource, "private async void AddSubtypeComboBox");
+        Assert.Contains("_selectorManager.SuppressSelectionChanged()", mainAddSubtypeBody, StringComparison.Ordinal);
+        Assert.Contains("RenderChartsFromLastContext", mainAddSubtypeBody, StringComparison.Ordinal);
 
         var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
         Assert.Contains("ChartHostMetricSelectionCoordinator", syncfusionSource, StringComparison.Ordinal);
         Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(syncfusionSource, "private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions"), StringComparison.Ordinal);
         Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(syncfusionSource, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions"), StringComparison.Ordinal);
         Assert.Contains("_loadCoordinator.ValidateAndPrepareLoad", ExtractMethodBody(syncfusionSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
-        Assert.Contains("_selectorManager.SuppressSelectionChanged()", ExtractMethodBody(syncfusionSource, "private void AddSubtypeComboBox"), StringComparison.Ordinal);
+        var syncfusionAddSubtypeBody = ExtractMethodBody(syncfusionSource, "private async void AddSubtypeComboBox");
+        Assert.Contains("_selectorManager.SuppressSelectionChanged()", syncfusionAddSubtypeBody, StringComparison.Ordinal);
+        Assert.Contains("RenderChartAsync", syncfusionAddSubtypeBody, StringComparison.Ordinal);
     }
 
     [Fact]

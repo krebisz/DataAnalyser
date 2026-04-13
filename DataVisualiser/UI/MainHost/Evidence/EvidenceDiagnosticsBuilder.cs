@@ -140,7 +140,11 @@ public sealed class EvidenceDiagnosticsBuilder
                 RecentErrorsPresent = recentErrorCount > 0
             },
             Transition = transition,
-            VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime)
+            VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime),
+            VNextDistribution = BuildVNextDiagnostics(chartState.LastDistributionLoadRuntime),
+            VNextWeekdayTrend = BuildVNextDiagnostics(chartState.LastWeekdayTrendLoadRuntime),
+            VNextTransform = BuildVNextDiagnostics(chartState.LastTransformLoadRuntime),
+            VNextBarPie = BuildVNextDiagnostics(chartState.LastBarPieLoadRuntime)
         };
     }
 
@@ -286,7 +290,7 @@ public sealed class EvidenceDiagnosticsBuilder
 
     internal static VNextDiagnosticsSnapshot? BuildVNextDiagnostics(LoadRuntimeState? runtime)
     {
-        if (runtime == null || runtime.RuntimePath != EvidenceRuntimePath.VNextMain)
+        if (runtime == null || runtime.RuntimePath == EvidenceRuntimePath.Legacy)
             return null;
 
         return new VNextDiagnosticsSnapshot

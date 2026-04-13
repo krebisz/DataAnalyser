@@ -7,6 +7,7 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.UI.Defaults;
 using DataVisualiser.UI.Charts.Presentation.Rendering;
+using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using UiChartRenderModel = DataVisualiser.UI.Charts.Presentation.Rendering.UiChartRenderModel;
@@ -33,7 +34,8 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         MetricSelectionService metricSelectionService,
         IBarPieRenderingContract barPieRenderingContract,
         IChartRendererResolver rendererResolver,
-        IChartSurfaceFactory surfaceFactory)
+        IChartSurfaceFactory surfaceFactory,
+        VNextSeriesLoadCoordinator? vnextCoordinator = null)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -43,7 +45,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         _barPieRenderingContract = barPieRenderingContract ?? throw new ArgumentNullException(nameof(barPieRenderingContract));
         _rendererResolver = rendererResolver ?? throw new ArgumentNullException(nameof(rendererResolver));
         _surfaceFactory = surfaceFactory ?? throw new ArgumentNullException(nameof(surfaceFactory));
-        _renderModelBuilder = new BarPieRenderModelBuilder(viewModel, metricSelectionService, controller);
+        _renderModelBuilder = new BarPieRenderModelBuilder(viewModel, metricSelectionService, controller, vnextCoordinator);
     }
 
     public void InitializeControls()

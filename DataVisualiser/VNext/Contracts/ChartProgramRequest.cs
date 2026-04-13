@@ -25,4 +25,8 @@ public sealed record ChartProgramRequest
     public static ChartProgramRequest Ratio() => new(ChartProgramKind.Ratio);
     public static ChartProgramRequest Transform(string title, IReadOnlyList<SeriesOperationRequest> seriesOperations, ChartDisplayMode displayMode = ChartDisplayMode.Regular) =>
         new(ChartProgramKind.Transform, displayMode, title, seriesOperations);
+
+    public static ChartProgramRequest Distribution() => new(ChartProgramKind.Distribution);
+    public static ChartProgramRequest WeekdayTrend() => new(ChartProgramKind.WeekdayTrend);
+    public static ChartProgramRequest BarPie() => new(ChartProgramKind.BarPie);
 }

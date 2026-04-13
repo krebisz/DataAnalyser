@@ -34,10 +34,10 @@ Use this section as the default handoff entry point in a new conversation.
 
 Current state:
 
-- Phase 6 is closed except 6.3 (VNext widening — Distribution, WeekdayTrend, Transform, Bar/Pie remain legacy-only)
+- Phase 6.3 VNext widening is complete — all active chart families route through the VNext reasoning engine for fresh data loads
 - Phase 7 entry gate is satisfied — exploratory and confidence capabilities may proceed
-- 448 source files, 609 tests, 48 architecture guardrails
-- known debt: `MainChartsView` host concentration (~1,401 lines), VNext family coverage, adapter pattern variation
+- 452 source files, 636 tests, 48 architecture guardrails
+- known debt: `MainChartsView` host concentration (~1,401 lines), adapter pattern variation
 
 Current defaults:
 
@@ -136,8 +136,8 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `448` C# source files (Phase 6.6 audit baseline, after hierarchy cleanup, file merges, and Phase 6.7 structural consolidation)
-- `609` automated tests passing
+- `452` C# source files (Phase 6.6 audit baseline + VNext widening coordinators and milestone recorder)
+- `636` automated tests passing
 - first live VNext vertical slice active for the main chart family (`Main`, `Normalized`, `Diff/Ratio`)
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
@@ -290,6 +290,12 @@ Documents absorbed from Phase 5:
 - Smoke-verified with April 2026 exports: VNext signature chain aligned, legacy fallback correct, all 8 parity strategies pass
 
  - `VNext` workflow planning now supports explicit `ChartProgramRequest` / multi-derived-program shaping behind non-live tests
+ - Distribution fresh data loads now route through the VNext reasoning engine (`VNextDistributionIntegrationCoordinator`), with identity program builder, signature-chain tracking, and automatic legacy fallback
+ - Distribution runtime path tracked separately via `ChartState.LastDistributionLoadRuntime` with `EvidenceRuntimePath.VNextDistribution`
+ - WeekdayTrend, Transform, and BarPie fresh data loads now route through VNext via shared `VNextSeriesLoadCoordinator`; each family has its own `ChartProgramKind`, `EvidenceRuntimePath`, and `LastXxxLoadRuntime` tracking
+ - BarPie VNext integration preserves CMS preference: if CMS is available via VNext snapshot, it is used for bucket aggregation
+ - All four non-main chart families (Distribution, WeekdayTrend, Transform, BarPie) have automatic legacy fallback on VNext failure
+ - Distribution interaction milestones (frequency shading, interval count, mode, chart type, subtype changes) are now recorded as session milestones
 
 **Phase 6.7 (Pre-Phase 7 structural consolidation):** Closed.
 - Dead code removed: `IDistributionResultExtractor` (0 implementations, 0 references)
@@ -342,7 +348,7 @@ These are accepted as known debt, not open work:
 | 4. Remaining outliers are explicit, bounded, and visible | Yes | `MainChartsView` (host gravity), `SyncfusionChartsView` (parallel host), adapter pattern variation — all documented, all bounded |
 | 5. Current capabilities preserved or replaced | Yes | 609 tests pass; all chart families render; evidence exports include runtime-path tracking; no regressions |
 
-**Phase 6 is closed except for 6.3**, which remains open until all active chart families route through the VNext reasoning engine. Phase 7 entry gate is satisfied — new capabilities may proceed in parallel with VNext family widening.
+**Phase 6 is closed.** All active chart families now route through the VNext reasoning engine for fresh data loads. Phase 7 entry gate is satisfied — new capabilities may proceed.
 
 **Phase B host spine decomposition (banked slices):**
 - Export trigger extraction → `MainChartsViewEvidenceExportCoordinator`
@@ -468,10 +474,10 @@ First live VNext main-chart-family slice is proven and stable. Next VNext slices
 | Normalized | Live via main-family route | Main + Normalized, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Rendered from the projected two-series context |
 | Difference | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Unified Diff/Ratio surface consumes projected two-series context |
 | Ratio | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Unified Diff/Ratio surface consumes projected two-series context |
-| Distribution | Not planned | — | — | No VNext program builder yet |
-| WeekdayTrend | Not planned | — | — | No VNext program builder yet |
-| Transform | Not planned | — | — | Separate computation path |
-| BarPie | Not planned | — | — | Separate computation path |
+| Distribution | Live (independent route) | Distribution visible + fresh series load (series differs from main context) | Targeted smoke required after widening | Single-series VNext load with identity program; distribution computation stays in legacy services; automatic legacy fallback on failure; runtime path tracked as VNextDistribution |
+| WeekdayTrend | Live (independent route) | WeekdayTrend visible + fresh series load (series differs from main context) | Targeted smoke required after widening | Single-series VNext load via shared VNextSeriesLoadCoordinator; automatic legacy fallback; runtime path tracked as VNextWeekdayTrend |
+| Transform | Live (independent route) | Transform visible + fresh series load (primary or secondary differs from main context) | Targeted smoke required after widening | Per-series VNext load in TransformDataResolutionCoordinator; automatic legacy fallback; runtime path tracked as VNextTransform |
+| BarPie | Live (independent route) | BarPie visible (all series loaded per-selection) | Targeted smoke required after widening | Per-series VNext load in BarPieRenderModelBuilder; CMS preference preserved; automatic legacy fallback; runtime path tracked as VNextBarPie |
 
 ---
 

@@ -6,7 +6,11 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.Defaults;
+using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
+using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
 using UiChartRenderModel = DataVisualiser.UI.Charts.Presentation.Rendering.UiChartRenderModel;
 
 namespace DataVisualiser.UI.Charts.Presentation;
@@ -15,13 +19,15 @@ internal sealed class BarPieRenderModelBuilder
 {
     private readonly MetricSelectionService _metricSelectionService;
     private readonly object _paletteKey;
+    private readonly VNextSeriesLoadCoordinator _vnextCoordinator;
     private readonly MainWindowViewModel _viewModel;
 
-    public BarPieRenderModelBuilder(MainWindowViewModel viewModel, MetricSelectionService metricSelectionService, object paletteKey)
+    public BarPieRenderModelBuilder(MainWindowViewModel viewModel, MetricSelectionService metricSelectionService, object paletteKey, VNextSeriesLoadCoordinator? vnextCoordinator = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _paletteKey = paletteKey ?? throw new ArgumentNullException(nameof(paletteKey));
+        _vnextCoordinator = vnextCoordinator ?? new VNextSeriesLoadCoordinator(metricSelectionService);
     }
 
     public async Task<UiChartRenderModel> BuildAsync(bool isPieMode)
@@ -167,30 +173,58 @@ internal sealed class BarPieRenderModelBuilder
 
         try
         {
-            if (useCms)
+            var vnextResult = await _vnextCoordinator.LoadAsync(selection, from, to, tableName, ChartProgramKind.BarPie);
+            if (vnextResult.Success && vnextResult.Data != null && vnextResult.Data.Count > 0)
             {
-                var (primaryCms, _, primaryLegacy, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, from, to, tableName);
-                if (primaryCms != null && primaryCms.Samples.Count > 0)
-                    return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(primaryCms, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+                _viewModel.ChartState.LastBarPieLoadRuntime = new LoadRuntimeState(
+                    EvidenceRuntimePath.VNextBarPie,
+                    vnextResult.RequestSignature ?? string.Empty,
+                    vnextResult.SnapshotSignature,
+                    vnextResult.ProgramKind,
+                    vnextResult.ProgramSourceSignature,
+                    null, null, false);
 
-                var fallbackLegacy = primaryLegacy?.ToList() ?? new List<MetricData>();
-                if (fallbackLegacy.Count == 0)
-                    return null;
+                if (useCms && vnextResult.CmsSeries != null && vnextResult.CmsSeries.Samples.Count > 0)
+                    return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(vnextResult.CmsSeries, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
 
-                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(fallbackLegacy, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(vnextResult.Data.ToList(), plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
             }
 
-            var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
-            var dataList = primary?.ToList() ?? new List<MetricData>();
-            if (dataList.Count == 0)
-                return null;
-
-            return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(dataList, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+            // VNext failed or returned no data — fall back to legacy
+            return await LoadSeriesTotalsLegacyAsync(selection, from, to, tableName, plan, useCms, vnextResult.FailureReason);
         }
         catch
         {
             return null;
         }
+    }
+
+    private async Task<BarPieSeriesTotals?> LoadSeriesTotalsLegacyAsync(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName, BarPieBucketPlan plan, bool useCms, string? vnextFailureReason)
+    {
+        _viewModel.ChartState.LastBarPieLoadRuntime = new LoadRuntimeState(
+            EvidenceRuntimePath.Legacy,
+            string.Empty, null, null, null, null,
+            vnextFailureReason, false);
+
+        if (useCms)
+        {
+            var (primaryCms, _, primaryLegacy, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, from, to, tableName);
+            if (primaryCms != null && primaryCms.Samples.Count > 0)
+                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(primaryCms, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+
+            var fallbackLegacy = primaryLegacy?.ToList() ?? new List<MetricData>();
+            if (fallbackLegacy.Count == 0)
+                return null;
+
+            return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(fallbackLegacy, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+        }
+
+        var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
+        var dataList = primary?.ToList() ?? new List<MetricData>();
+        if (dataList.Count == 0)
+            return null;
+
+        return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(dataList, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
     }
 
     private int ResolveBucketCount(DateTime from, DateTime to)
