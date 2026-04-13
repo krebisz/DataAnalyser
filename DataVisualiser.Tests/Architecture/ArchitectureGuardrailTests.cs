@@ -20,7 +20,7 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void EvidenceDiagnosticsBuilder_ShouldNotDependBackOnExportServiceHelpers()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "EvidenceDiagnosticsBuilder.cs");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Evidence", "EvidenceDiagnosticsBuilder.cs");
 
         Assert.DoesNotContain("MainChartsEvidenceExportService.IsSameSelection", source, StringComparison.Ordinal);
     }
@@ -28,7 +28,7 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void MainChartsEvidenceExportService_ShouldDelegateParityAssemblyToDedicatedBuilder()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "MainChartsEvidenceExportService.cs");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Evidence", "MainChartsEvidenceExportService.cs");
 
         Assert.Contains("EvidenceParityBuilder", source, StringComparison.Ordinal);
         Assert.Contains("_parityBuilder.BuildAsync", source, StringComparison.Ordinal);
@@ -40,7 +40,7 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void EvidenceParityBuilder_ShouldDelegateTransformParityToDedicatedEvaluator()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "EvidenceParityBuilder.cs");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Evidence", "EvidenceParityBuilder.cs");
 
         Assert.Contains("EvidenceDistributionParityEvaluator", source, StringComparison.Ordinal);
         Assert.Contains("EvidenceMultiMetricParityEvaluator", source, StringComparison.Ordinal);
@@ -63,7 +63,7 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void EvidenceTransformParityEvaluator_ShouldDelegateResolutionAndComputationToDedicatedHelpers()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "EvidenceTransformParityEvaluator.cs");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Evidence", "EvidenceTransformParityEvaluator.cs");
 
         Assert.Contains("EvidenceTransformParityDataResolver", source, StringComparison.Ordinal);
         Assert.Contains("EvidenceTransformParityComputer", source, StringComparison.Ordinal);
@@ -706,7 +706,7 @@ public sealed class ArchitectureGuardrailTests
             Assert.DoesNotContain("MessageBoxUserNotificationService.Instance", source, StringComparison.Ordinal);
         }
 
-        var compositionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "MainChartsViewChartPipelineFactory.cs");
+        var compositionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Coordination", "MainChartsViewChartPipelineFactory.cs");
         Assert.Contains("MessageBoxUserNotificationService.Instance", compositionSource);
     }
 

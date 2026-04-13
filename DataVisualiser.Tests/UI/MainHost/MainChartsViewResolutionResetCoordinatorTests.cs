@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 
 namespace DataVisualiser.Tests.UI.MainHost;
 

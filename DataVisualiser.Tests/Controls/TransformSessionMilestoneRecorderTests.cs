@@ -5,6 +5,7 @@ using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 

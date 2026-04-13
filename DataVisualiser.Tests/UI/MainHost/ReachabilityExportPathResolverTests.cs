@@ -1,6 +1,6 @@
 using System.IO;
 using System.Reflection;
-using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Export;
 
 namespace DataVisualiser.Tests.UI.MainHost;
 

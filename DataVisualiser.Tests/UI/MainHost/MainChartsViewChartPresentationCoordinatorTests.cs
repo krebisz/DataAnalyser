@@ -1,6 +1,7 @@
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.Tests.UI.MainHost;

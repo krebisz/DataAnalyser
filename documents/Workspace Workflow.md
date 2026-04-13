@@ -239,15 +239,16 @@ The following files are actively relevant during Phase 6 (Architectural Legibili
 - `UI/ViewModels/MetricLoadCoordinator.cs`
 - `UI/State/ChartState.cs` (`LoadRuntimeState`)
 
-**Evidence Boundary:**
-- `UI/MainHost/EvidenceExportModels.cs`
-- `UI/MainHost/EvidenceDiagnosticsBuilder.cs`
-- `UI/MainHost/MainChartsEvidenceExportService.cs`
+**Evidence Boundary** (`UI/MainHost/Evidence/`):
+- `UI/MainHost/Evidence/EvidenceExportModels.cs`
+- `UI/MainHost/Evidence/EvidenceDiagnosticsBuilder.cs`
+- `UI/MainHost/Evidence/EvidenceDataResolutionHelper.cs`
+- `UI/MainHost/Evidence/MainChartsEvidenceExportService.cs`
 
 **Orchestration:**
 - `Core/Orchestration/ChartRenderingOrchestrator.cs`
 - `Core/Orchestration/ChartDataContextBuilder.cs`
-- `UI/MainHost/MainChartsViewChartUpdateCoordinator.cs`
+- `UI/MainHost/Coordination/MainChartsViewChartUpdateCoordinator.cs`
 
 **Current Priority Outliers:**
 - `UI/MainChartsView.xaml.cs`

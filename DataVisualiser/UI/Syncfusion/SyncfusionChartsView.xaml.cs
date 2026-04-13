@@ -15,10 +15,13 @@ using DataVisualiser.Shared;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
+using DataVisualiser.UI.MainHost.Evidence;
+using DataVisualiser.UI.MainHost.Export;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 
-namespace DataVisualiser.UI.SyncfusionViews;
+namespace DataVisualiser.UI.Syncfusion;
 
 public partial class SyncfusionChartsView : UserControl
 {

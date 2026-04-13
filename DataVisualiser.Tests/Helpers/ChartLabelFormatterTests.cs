@@ -8,7 +8,7 @@ public sealed class ChartLabelFormatterTests
     [Fact]
     public void FormatDateTimeLabel_ShouldUseMonthFormat_ForMonthInterval()
     {
-        var result = ChartLabelFormatter.FormatDateTimeLabel(new DateTime(2024, 03, 15, 14, 30, 00), TickInterval.Month);
+        var result = ChartSeriesLabelFormatter.FormatDateTimeLabel(new DateTime(2024, 03, 15, 14, 30, 00), TickInterval.Month);
 
         Assert.Equal("Mar 2024", result);
     }
@@ -16,7 +16,7 @@ public sealed class ChartLabelFormatterTests
     [Fact]
     public void FormatDateTimeLabel_ShouldUseHourFormat_ForHourInterval()
     {
-        var result = ChartLabelFormatter.FormatDateTimeLabel(new DateTime(2024, 03, 15, 14, 30, 00), TickInterval.Hour);
+        var result = ChartSeriesLabelFormatter.FormatDateTimeLabel(new DateTime(2024, 03, 15, 14, 30, 00), TickInterval.Hour);
 
         Assert.EndsWith("14:30", result);
         Assert.Contains("03", result);

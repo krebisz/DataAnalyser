@@ -7,6 +7,7 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.Shared;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.ViewModels;

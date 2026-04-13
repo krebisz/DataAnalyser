@@ -2,6 +2,7 @@ using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 
 namespace DataVisualiser.Tests.UI.MainHost;
 

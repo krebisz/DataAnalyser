@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Rendering;
+using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Rendering.Helpers;
 
@@ -36,6 +37,18 @@ internal static class ChartSeriesLabelFormatter
 
         var seriesName = isPrimary ? model.PrimarySeriesName : model.SecondarySeriesName;
         return $"{seriesName} ({smoothRaw})";
+    }
+
+    internal static string FormatDateTimeLabel(DateTime dateTime, TickInterval interval)
+    {
+        return interval switch
+        {
+                TickInterval.Month => dateTime.ToString("MMM yyyy"),
+                TickInterval.Week => dateTime.ToString("MMM dd"),
+                TickInterval.Day => dateTime.ToString("MM/dd"),
+                TickInterval.Hour => dateTime.ToString("MM/dd HH:mm"),
+                _ => dateTime.ToString("MM/dd HH:mm")
+        };
     }
 
     private static string FormatMetricLabel(string? metricType, string? subtype)

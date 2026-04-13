@@ -1,5 +1,6 @@
 using System.Windows;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.Theming;
 
 namespace DataVisualiser.Tests.UI.MainHost;

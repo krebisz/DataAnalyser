@@ -229,24 +229,25 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 ---
 
 ### Phase 6 - Architectural Legibility & Concern Reconciliation  
-**Open / Next Critical Path**
+**Closed — except 6.3 (VNext widening open)**
 
-- The immediate architectural need is to restore a coherent, trustworthy hierarchy before further capability expansion
-- Similar operations need one obvious home, large mixed-responsibility outliers need decomposition, and truth/derivation/delivery seams need clearer reconciliation
-- Current active execution in `DataVisualiser_Subsystem_Plan.md` exists to make the delivery side legible enough that the remaining true outliers are exposed cleanly
-- The expected cadence is: map the hierarchy, consolidate one or two irreducible operation clusters, reconcile one mixed boundary, standardize one proven delivery seam, decompose one major outlier, then audit the new baseline
-- Phase 6.3 work has produced the first live VNext vertical slice: the main-chart family load path now routes through the VNext reasoning engine (`ReasoningSessionCoordinator`) for `Main`, `Normalized`, and `Diff/Ratio`, with automatic legacy fallback for the other chart families
-- The evidence/export boundary has been decomposed: `MainChartsEvidenceExportService` was split into standalone DTOs (`EvidenceExportModels`), a diagnostics builder (`EvidenceDiagnosticsBuilder`), and export orchestration
-- Runtime-path tracking (`LoadRuntimeState`) and VNext diagnostics are now emitted in evidence exports, providing observable proof of which execution path was used for each load
-- `MainChartsView` remains the largest host concentration point, but it is now substantially thinner and more compositional than it was at Phase 6 entry; the project is now at the point where the next meaningful move is likely either one live-sensitive slice with targeted smoke or the closing Phase 6 audit
+- Sub-phases 6.1, 6.2, 6.4, 6.5, 6.6, 6.7 all closed; 6.3 remains open until all active chart families route through the VNext reasoning engine (Distribution, WeekdayTrend, Transform, Bar/Pie still legacy-only)
+- All 5 global closure conditions met: similar responsibilities have obvious homes, irreducible operations are centralized, truth/derivation/orchestration/delivery seams are defended, outliers are explicit and bounded, all capabilities are preserved
+- Named outliers materially reduced: `MainChartsEvidenceExportService` (1,209→139), `TransformDataPanelControllerAdapter` (857→257), `BaseDistributionService` (612→296), `BarPieChartControllerAdapter` (503→197), `ChartRenderEngine` (452→333), `DataFetcher` decomposed into focused query groups
+- Evidence/export boundary decomposed into `UI/MainHost/Evidence/`, `UI/MainHost/Export/`, and `UI/MainHost/Coordination/` sub-namespaces
+- First live VNext slice active for Main/Normalized/Diff/Ratio chart families with automatic legacy fallback
+- Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports
+- Known debt carried to Phase 7: `MainChartsView` host concentration (~1,401 lines, genuinely host-level), VNext family coverage (4 families remain legacy-only), adapter pattern variation (accepted as domain variation)
+- 448 source files, 609 automated tests, 48 architecture guardrails
 
 ---
 
 ### Phase 7 - Exploratory & Confidence Capability Expansion  
-**Planned / Blocked**
+**Planned / Entry Gate Satisfied**
 
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
-- They are now intentionally blocked on Phase 6 because exploratory power added on top of an illegible hierarchy would amplify entropy instead of improving the system
+- Phase 6 closure satisfies the entry gate: the hierarchy is now legible enough that new power can be added without amplifying entropy
+- Known debt inherited from Phase 6 is documented and bounded
 
 ---
 

@@ -4,6 +4,7 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.Tests.UI.MainHost;

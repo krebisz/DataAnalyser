@@ -2,8 +2,10 @@ using System.IO;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Reachability;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
+using DataVisualiser.UI.MainHost.Export;
 using DataVisualiser.UI.State;
-using DataVisualiser.UI.SyncfusionViews;
+using DataVisualiser.UI.Syncfusion;
 
 namespace DataVisualiser.Tests.UI.MainHost;
 

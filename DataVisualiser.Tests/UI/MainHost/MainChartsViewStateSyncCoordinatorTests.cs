@@ -2,6 +2,7 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 

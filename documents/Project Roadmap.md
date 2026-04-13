@@ -4,7 +4,7 @@
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for the active hierarchy-reconciliation and VNext activation work (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
 **Last Updated:** 2026-04-13  
-**Change Note:** Phase 6 is now late-stage: `6.1` and `6.5` are closed, the live VNext slice is established for the main chart family, and the `6.6` audit/baseline refresh is underway
+**Change Note:** Phase 6 is closed except for `6.3` (VNext widening), which remains open until all active chart families route through the VNext reasoning engine. All other sub-phases (`6.1`, `6.2`, `6.4`–`6.7`) closed, all 5 global closure conditions met. Phase 7 entry gate is satisfied — new capabilities may proceed in parallel with VNext family widening.
 
 ---
 
@@ -325,7 +325,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 ---
 
 ### Phase 6 - Architectural Legibility and Concern Reconciliation  
-**Status:** OPEN / NEXT CRITICAL PATH  
+**Status:** CLOSED (April 2026) — except 6.3 (VNext widening open)  
 **Entry Gate:** Opened now that Phases 3, 3.5, 4, and 5 are closed under current evidence rules
 
 **Purpose**
@@ -366,6 +366,8 @@ The goal is to make the system legible enough that:
 - repeated irreducible operations no longer sprawl across unrelated layers, and any retained duplicates are explicitly justified
 
 #### Phase 6.2 - Truth / Derivation / Delivery Boundary Reconciliation
+
+**Status:** CLOSED (April 2026)
 
 **Scope**
 - clarify where raw, normalized, canonical, derived, overlay, request, and delivery concerns live
@@ -418,6 +420,8 @@ The goal is to make the system legible enough that:
 
 #### Phase 6.4 - Outlier Decomposition
 
+**Status:** CLOSED (April 2026)
+
 **Scope**
 - decompose large mixed-responsibility concentration points such as `MainChartsView`, `TransformDataPanelControllerAdapter`, `MainChartsEvidenceExportService`, `DataFetcher`, `BaseDistributionService`, and similar verified outliers
 - split only where the resulting ownership is clearer than the current concentration
@@ -434,6 +438,8 @@ The goal is to make the system legible enough that:
 
 #### Phase 6.5 - Physical Hierarchy and Naming Realignment
 
+**Status:** CLOSED (April 2026)
+
 **Scope**
 - align folders, namespaces, and names with stabilized responsibility boundaries
 - remove leftover boilerplate micro-types only when ownership is already clear
@@ -449,19 +455,42 @@ The goal is to make the system legible enough that:
 
 #### Phase 6.6 - Architecture Audit and Baseline Refresh
 
+**Status:** CLOSED (April 2026)
+
 **Scope**
 - measure the new hierarchy
 - record remaining outliers and repeated debt patterns
 - refresh current execution maps, success criteria, and architectural evidence
 
-**Current Audit Read (April 2026)**
-- The hierarchy is materially more trustworthy than it was at Phase 6 entry: repeated low-level operations are no longer the dominant problem, and the remaining debt is now concentrated in explicit outliers.
-- `6.1` is closed, `6.5` is closed for the current cycle, and `6.3` has real architectural proof through the live main-chart-family VNext route with legacy fallback and export-backed signature-chain diagnostics.
-- `MainChartsView` remains the largest host concentration point, but it is now substantially thinner and more compositional; further reduction is possible, but the next meaningful slices are increasingly behavior-adjacent rather than free structural cleanup.
-- The next decision is no longer “keep extracting until the file is smaller”. It is “open one more live-sensitive seam with targeted smoke, or treat the current baseline as sufficient to close Phase 6 after the audit”.
+**Audit Record (April 2026)**
+- 448 C# source files (~36,900 lines), 153 test files, 609 automated tests, 48 architecture guardrails
+- Sub-phases `6.1`, `6.2`, `6.4`, `6.5`, `6.7` closed; `6.3` has live proof through VNext main-chart-family route with legacy fallback and export-backed signature-chain diagnostics
+- All 5 global closure conditions assessed and met (full record in `DataVisualiser_Subsystem_Plan.md` Phase 6.6 section)
+- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,401 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~775 lines, parallel host), VNext covers Main/Normalized/Diff/Ratio only, controller adapter pattern variation accepted as domain variation
 
 **Closure Condition**
-- the next cycle starts from an auditable baseline rather than from accumulated guesswork
+- the next cycle starts from an auditable baseline rather than from accumulated guesswork — **satisfied**
+
+#### Phase 6.7 - Pre-Phase 7 Structural Consolidation
+
+**Status:** CLOSED (April 2026)
+
+**Scope**
+- eliminate dead code, namespace mismatches, and scattered micro-types
+- extract shared patterns duplicated across evidence evaluators
+- decompose the largest flat folder (`UI/MainHost/`, 41 files) into logical sub-namespaces
+
+**Completed Work**
+- `IDistributionResultExtractor` deleted (0 implementations, 0 references)
+- Syncfusion namespace corrected: `SyncfusionViews` → `Syncfusion` across 9 files
+- 6 parity type files consolidated into `ParityTypes.cs`
+- Rendering helpers merged: `ChartLabelFormatter` → `ChartSeriesLabelFormatter`, `TransformChartAxisLayout` → `TransformChartAxisCalculator`
+- `EvidenceDataResolutionHelper` extracted: shared data-resolution and strategy cut-over resolution
+- `UI/MainHost/` decomposed into `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
+- Net -7 files; 609 tests pass; no behavior changes
+
+**Closure Condition**
+- structural sprawl is materially reduced and the codebase is primed for Phase 7 capability expansion
 
 **Global Closure Condition for Phase 6**
 1. Similar responsibilities have one obvious home often enough that the hierarchy becomes trustworthy again.
@@ -473,8 +502,8 @@ The goal is to make the system legible enough that:
 ---
 
 ### Phase 7 - Exploratory and Confidence Capability Expansion (Intentional)  
-**Status:** PLANNED / BLOCKED  
-**Entry Gate:** Phase 6 must restore enough hierarchy legibility that new power can be added without amplifying entropy
+**Status:** PLANNED / ENTRY GATE SATISFIED  
+**Entry Gate:** Phase 6 must restore enough hierarchy legibility that new power can be added without amplifying entropy — **satisfied** (Phase 6 closed April 2026)
 
 **Purpose**
 Phase 7 increases interpretive power without eroding truth or reintroducing exception-driven structure.
@@ -658,19 +687,25 @@ It opens only when the system is structurally able to absorb them safely.
 ## 8.5 Open Phase Summary
 
 Remaining open phases:
-1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `OPEN / NEXT CRITICAL PATH`
-2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `PLANNED / BLOCKED`
+1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `CLOSED (except 6.3 — VNext widening open)`
+2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `PLANNED / ENTRY GATE SATISFIED`
 3. `Phase 8 - UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
 
+Phase 6 sub-phase status:
+- `Phase 6.1` - irreducible operation consolidation: **CLOSED**
+- `Phase 6.2` - truth / derivation / delivery boundary reconciliation: **CLOSED**
+- `Phase 6.3` - request, consumer, and delivery standardization: **OPEN** (VNext widening ongoing)
+- `Phase 6.4` - outlier decomposition: **CLOSED**
+- `Phase 6.5` - physical hierarchy and naming realignment: **CLOSED**
+- `Phase 6.6` - architecture audit and baseline refresh: **CLOSED**
+- `Phase 6.7` - pre-Phase 7 structural consolidation: **CLOSED**
+
+**Phase 6 is closed except for 6.3.** All 5 global closure conditions met. 6.3 remains open until all active chart families (Distribution, WeekdayTrend, Transform, Bar/Pie) route through the VNext reasoning engine.
+
 Major next steps in sequence:
-1. `Phase 6.2` - truth / derivation / delivery boundary reconciliation
-2. `Phase 6.3` - request, consumer, and delivery standardization
-3. `Phase 6.4` - outlier decomposition
-4. `Phase 6.5` - physical hierarchy and naming realignment
-5. `Phase 6.6` - architecture audit and baseline refresh
-6. decide whether one more bounded live-sensitive Phase 6 slice is justified, or whether the current baseline is sufficient for closure
-7. `Phase 7` - exploratory and confidence capability expansion after Phase 6 is sufficiently advanced
-8. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
+1. `Phase 6.3` - widen VNext to remaining chart families (may proceed in parallel with Phase 7)
+2. `Phase 7` - exploratory and confidence capability expansion (entry gate satisfied)
+3. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
 
 ---
 

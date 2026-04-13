@@ -1,6 +1,7 @@
 using DataVisualiser.Shared;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.Tests.UI.MainHost;

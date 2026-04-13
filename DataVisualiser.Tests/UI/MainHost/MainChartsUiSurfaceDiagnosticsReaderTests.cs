@@ -9,6 +9,7 @@ using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;

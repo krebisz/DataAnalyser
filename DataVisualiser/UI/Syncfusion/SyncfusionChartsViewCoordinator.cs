@@ -3,7 +3,7 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Events;
 
-namespace DataVisualiser.UI.SyncfusionViews;
+namespace DataVisualiser.UI.Syncfusion;
 
 public sealed class SyncfusionChartsViewCoordinator
 {

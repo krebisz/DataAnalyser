@@ -5,6 +5,7 @@ using DataVisualiser.Core.Validation.DataLoad;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Application;

@@ -1,4 +1,5 @@
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.Tests.Helpers;
 using LiveCharts.Wpf;
 using System.Windows.Controls;

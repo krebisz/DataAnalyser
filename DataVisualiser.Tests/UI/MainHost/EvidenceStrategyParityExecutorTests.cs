@@ -4,6 +4,7 @@ using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Validation;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 
 namespace DataVisualiser.Tests.UI.MainHost;
 

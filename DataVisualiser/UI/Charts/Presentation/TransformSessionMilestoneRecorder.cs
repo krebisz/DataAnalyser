@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.Charts.Presentation;

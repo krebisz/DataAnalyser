@@ -373,10 +373,13 @@ It may observe:
 - parity outcomes
 - backend qualification outcomes
 
-Evidence infrastructure is decomposed into:
+Evidence infrastructure lives in `UI/MainHost/Evidence/` and is decomposed into:
 - `EvidenceExportModels` — standalone DTOs for parity snapshots, diagnostics, and VNext runtime state
 - `EvidenceDiagnosticsBuilder` — assembles diagnostic state from chart state, metric state, and runtime path
+- `EvidenceDataResolutionHelper` — shared context-series resolution and strategy cut-over resolution
 - `MainChartsEvidenceExportService` — orchestrates parity evaluation and JSON export
+
+Reachability export infrastructure lives in `UI/MainHost/Export/`. Host coordination lives in `UI/MainHost/Coordination/`.
 
 It must not influence live semantic decisions.
 
@@ -476,7 +479,7 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 | VM seam | `MainWindowViewModel` (`LoadMetricDataAsync`, `LoadDataCommand`, `RequestChartUpdate`) |
 | Factory | `MainChartsViewChartPipelineFactory`, `MainChartsViewChartPipelineFactoryResult` |
 | Render | `ChartRenderingOrchestrator`, `ChartUpdateCoordinator` |
-| Evidence | `EvidenceExportModels`, `EvidenceDiagnosticsBuilder`, `MainChartsEvidenceExportService` |
+| Evidence | `EvidenceExportModels`, `EvidenceDiagnosticsBuilder`, `EvidenceDataResolutionHelper`, `MainChartsEvidenceExportService` (all in `UI/MainHost/Evidence/`) |
 
 ### A.3 VNext Routing Decision
 

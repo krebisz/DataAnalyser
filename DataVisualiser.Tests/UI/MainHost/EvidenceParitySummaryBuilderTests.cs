@@ -1,4 +1,5 @@
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 
 namespace DataVisualiser.Tests.UI.MainHost;
 

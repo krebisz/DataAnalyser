@@ -1,5 +1,5 @@
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.SyncfusionViews;
+using DataVisualiser.UI.Syncfusion;
 
 namespace DataVisualiser.Tests.UI.Syncfusion;
 

@@ -1,9 +1,8 @@
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Export;
 using DataVisualiser.UI.State;
-using DataVisualiser.UI.SyncfusionViews;
-
-namespace DataVisualiser.UI.SyncfusionViews;
+namespace DataVisualiser.UI.Syncfusion;
 
 public sealed class SyncfusionEvidenceExportService
 {

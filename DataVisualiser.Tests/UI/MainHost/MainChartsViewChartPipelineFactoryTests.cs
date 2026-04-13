@@ -3,6 +3,7 @@ using System.Windows.Threading;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Coordination;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.UI.MainHost;

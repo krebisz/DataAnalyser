@@ -1,6 +1,6 @@
 using DataVisualiser.Shared.Models;
 
-namespace DataVisualiser.UI.SyncfusionViews;
+namespace DataVisualiser.UI.Syncfusion;
 
 public sealed class SyncfusionChartsViewLoadCoordinator
 {

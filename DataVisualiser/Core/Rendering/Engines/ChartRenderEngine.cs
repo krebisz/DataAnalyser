@@ -303,10 +303,10 @@ public sealed class ChartRenderEngine
                 return string.Empty;
 
             if (idx < dataTimestamps.Count)
-                return ChartLabelFormatter.FormatDateTimeLabel(dataTimestamps[idx], model.TickInterval);
+                return ChartSeriesLabelFormatter.FormatDateTimeLabel(dataTimestamps[idx], model.TickInterval);
 
             if (idx < normalizedIntervals.Count)
-                return ChartLabelFormatter.FormatDateTimeLabel(normalizedIntervals[idx], model.TickInterval);
+                return ChartSeriesLabelFormatter.FormatDateTimeLabel(normalizedIntervals[idx], model.TickInterval);
 
             return string.Empty;
         };

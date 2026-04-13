@@ -1,5 +1,6 @@
 using System.Reflection;
 using DataVisualiser.UI.MainHost;
+using DataVisualiser.UI.MainHost.Evidence;
 
 namespace DataVisualiser.Tests.Parity;
 
@@ -33,7 +34,7 @@ public sealed class ParityExportShapeTests
     [Fact]
     public void BuildParityWarnings_ShouldWarn_WhenUnavailable()
     {
-        var builderType = typeof(MainChartsEvidenceExportService).Assembly.GetType("DataVisualiser.UI.MainHost.EvidenceParitySummaryBuilder");
+        var builderType = typeof(MainChartsEvidenceExportService).Assembly.GetType("DataVisualiser.UI.MainHost.Evidence.EvidenceParitySummaryBuilder");
         Assert.NotNull(builderType);
 
         var buildWarnings = builderType!.GetMethod("BuildWarnings", BindingFlags.NonPublic | BindingFlags.Static);
@@ -63,7 +64,7 @@ public sealed class ParityExportShapeTests
 
     private static Type GetSnapshotType(string name)
     {
-        var type = typeof(MainChartsEvidenceExportService).Assembly.GetType($"DataVisualiser.UI.MainHost.{name}");
+        var type = typeof(MainChartsEvidenceExportService).Assembly.GetType($"DataVisualiser.UI.MainHost.Evidence.{name}");
         Assert.NotNull(type);
         return type!;
     }
