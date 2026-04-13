@@ -163,6 +163,11 @@ internal sealed class BarPieRenderModelBuilder
         var useCms = CmsConfiguration.ShouldUseCms("BarPieStrategy");
         var tasks = selections.Select(selection => LoadSeriesTotalsAsync(selection, from, to, tableName, plan, useCms)).ToList();
         var results = await Task.WhenAll(tasks);
+
+        var lastVNext = results.FirstOrDefault(r => r?.Runtime?.RuntimePath == EvidenceRuntimePath.VNextBarPie);
+        var lastLegacy = results.FirstOrDefault(r => r?.Runtime?.RuntimePath == EvidenceRuntimePath.Legacy);
+        _viewModel.ChartState.LastBarPieLoadRuntime = lastVNext?.Runtime ?? lastLegacy?.Runtime;
+
         return results.Where(result => result != null).Select(result => result!).ToList();
     }
 
@@ -176,21 +181,16 @@ internal sealed class BarPieRenderModelBuilder
             var vnextResult = await _vnextCoordinator.LoadAsync(selection, from, to, tableName, ChartProgramKind.BarPie);
             if (vnextResult.Success && vnextResult.Data != null && vnextResult.Data.Count > 0)
             {
-                _viewModel.ChartState.LastBarPieLoadRuntime = new LoadRuntimeState(
-                    EvidenceRuntimePath.VNextBarPie,
-                    vnextResult.RequestSignature ?? string.Empty,
-                    vnextResult.SnapshotSignature,
-                    vnextResult.ProgramKind,
-                    vnextResult.ProgramSourceSignature,
-                    null, null, false);
+                var runtime = LoadRuntimeState.FromVNextSuccess(
+                    EvidenceRuntimePath.VNextBarPie, vnextResult.RequestSignature,
+                    vnextResult.SnapshotSignature, vnextResult.ProgramKind, vnextResult.ProgramSourceSignature);
 
                 if (useCms && vnextResult.CmsSeries != null && vnextResult.CmsSeries.Samples.Count > 0)
-                    return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(vnextResult.CmsSeries, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+                    return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(vnextResult.CmsSeries, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count), runtime);
 
-                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(vnextResult.Data.ToList(), plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(vnextResult.Data.ToList(), plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count), runtime);
             }
 
-            // VNext failed or returned no data — fall back to legacy
             return await LoadSeriesTotalsLegacyAsync(selection, from, to, tableName, plan, useCms, vnextResult.FailureReason);
         }
         catch
@@ -201,22 +201,19 @@ internal sealed class BarPieRenderModelBuilder
 
     private async Task<BarPieSeriesTotals?> LoadSeriesTotalsLegacyAsync(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName, BarPieBucketPlan plan, bool useCms, string? vnextFailureReason)
     {
-        _viewModel.ChartState.LastBarPieLoadRuntime = new LoadRuntimeState(
-            EvidenceRuntimePath.Legacy,
-            string.Empty, null, null, null, null,
-            vnextFailureReason, false);
+        var runtime = LoadRuntimeState.LegacyFallback(string.Empty, vnextFailureReason);
 
         if (useCms)
         {
             var (primaryCms, _, primaryLegacy, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, from, to, tableName);
             if (primaryCms != null && primaryCms.Samples.Count > 0)
-                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(primaryCms, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(primaryCms, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count), runtime);
 
             var fallbackLegacy = primaryLegacy?.ToList() ?? new List<MetricData>();
             if (fallbackLegacy.Count == 0)
                 return null;
 
-            return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(fallbackLegacy, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+            return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(fallbackLegacy, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count), runtime);
         }
 
         var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
@@ -224,7 +221,7 @@ internal sealed class BarPieRenderModelBuilder
         if (dataList.Count == 0)
             return null;
 
-        return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(dataList, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
+        return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(dataList, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count), runtime);
     }
 
     private int ResolveBucketCount(DateTime from, DateTime to)
@@ -286,7 +283,7 @@ internal sealed class BarPieRenderModelBuilder
         return false;
     }
 
-    private sealed record BarPieSeriesTotals(MetricSeriesSelection Selection, double?[] Totals);
+    private sealed record BarPieSeriesTotals(MetricSeriesSelection Selection, double?[] Totals, LoadRuntimeState? Runtime = null);
     private sealed record BarPieSeriesValues(MetricSeriesSelection Selection, double?[] Totals, Color Color);
     private sealed record BarPieBucket(int Index, DateTime Start, DateTime End, string Label);
     private sealed record BarPieBucketPlan(DateTime From, DateTime To, double BucketTicks, IReadOnlyList<BarPieBucket> Buckets);

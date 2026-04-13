@@ -53,7 +53,7 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             context.HourlyDistributionService,
             context.DistributionPolarRenderingService);
 
-        var vnextDistributionCoordinator = new VNextDistributionIntegrationCoordinator(context.MetricSelectionService);
+        var vnextSeriesCoordinator = new VNextSeriesLoadCoordinator(context.MetricSelectionService);
 
         var distributionAdapter = new DistributionChartControllerAdapter(
             context.DistributionChartController,
@@ -63,10 +63,9 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             context.MetricSelectionService,
             distributionRenderingContract,
             context.GetPolarTooltip,
-            vnextDistributionCoordinator);
+            vnextSeriesCoordinator);
 
         var weekdayTrendRenderingContract = new WeekdayTrendRenderingContract(context.WeekdayTrendChartUpdateCoordinator);
-        var vnextSeriesCoordinator = new VNextSeriesLoadCoordinator(context.MetricSelectionService);
 
         var weekdayTrendAdapter = new WeekdayTrendChartControllerAdapter(context.WeekdayTrendChartController, context.ViewModel, context.IsInitializing, context.BeginUiBusyScope, context.MetricSelectionService, context.GetStrategyCutOverService, weekdayTrendRenderingContract, vnextSeriesCoordinator);
 

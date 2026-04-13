@@ -91,13 +91,9 @@ internal sealed class TransformDataResolutionCoordinator
         var vnextResult = await _vnextCoordinator.LoadAsync(selectedSeries, from, to, tableName, ChartProgramKind.Transform);
         if (vnextResult.Success && vnextResult.Data != null)
         {
-            _viewModel.ChartState.LastTransformLoadRuntime = new LoadRuntimeState(
-                EvidenceRuntimePath.VNextTransform,
-                vnextResult.RequestSignature ?? string.Empty,
-                vnextResult.SnapshotSignature,
-                vnextResult.ProgramKind,
-                vnextResult.ProgramSourceSignature,
-                null, null, false);
+            _viewModel.ChartState.LastTransformLoadRuntime = LoadRuntimeState.FromVNextSuccess(
+                EvidenceRuntimePath.VNextTransform, vnextResult.RequestSignature,
+                vnextResult.SnapshotSignature, vnextResult.ProgramKind, vnextResult.ProgramSourceSignature);
 
             var data = vnextResult.Data is List<MetricData> list ? list : vnextResult.Data.ToList();
             _selectionCache.SetData(cacheKey, data);
@@ -108,11 +104,8 @@ internal sealed class TransformDataResolutionCoordinator
         var legacyData = primaryData.ToList();
         _selectionCache.SetData(cacheKey, legacyData);
 
-        _viewModel.ChartState.LastTransformLoadRuntime = new LoadRuntimeState(
-            EvidenceRuntimePath.Legacy,
-            vnextResult.RequestSignature ?? string.Empty,
-            null, null, null, null,
-            vnextResult.FailureReason, false);
+        _viewModel.ChartState.LastTransformLoadRuntime = LoadRuntimeState.LegacyFallback(
+            vnextResult.RequestSignature, vnextResult.FailureReason);
 
         return legacyData;
     }

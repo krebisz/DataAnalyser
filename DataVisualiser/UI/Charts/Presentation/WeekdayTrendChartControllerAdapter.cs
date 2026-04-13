@@ -271,13 +271,9 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         var vnextResult = await _vnextCoordinator.LoadAsync(selectedSeries, from, to, tableName, ChartProgramKind.WeekdayTrend);
         if (vnextResult.Success && vnextResult.Data != null)
         {
-            _viewModel.ChartState.LastWeekdayTrendLoadRuntime = new LoadRuntimeState(
-                EvidenceRuntimePath.VNextWeekdayTrend,
-                vnextResult.RequestSignature ?? string.Empty,
-                vnextResult.SnapshotSignature,
-                vnextResult.ProgramKind,
-                vnextResult.ProgramSourceSignature,
-                null, null, false);
+            _viewModel.ChartState.LastWeekdayTrendLoadRuntime = LoadRuntimeState.FromVNextSuccess(
+                EvidenceRuntimePath.VNextWeekdayTrend, vnextResult.RequestSignature,
+                vnextResult.SnapshotSignature, vnextResult.ProgramKind, vnextResult.ProgramSourceSignature);
 
             var data = vnextResult.Data is List<MetricData> list ? list : vnextResult.Data.ToList();
             _selectionCache.SetData(cacheKey, data);
@@ -288,11 +284,8 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         var legacyData = primaryData.ToList();
         _selectionCache.SetData(cacheKey, legacyData);
 
-        _viewModel.ChartState.LastWeekdayTrendLoadRuntime = new LoadRuntimeState(
-            EvidenceRuntimePath.Legacy,
-            vnextResult.RequestSignature ?? string.Empty,
-            null, null, null, null,
-            vnextResult.FailureReason, false);
+        _viewModel.ChartState.LastWeekdayTrendLoadRuntime = LoadRuntimeState.LegacyFallback(
+            vnextResult.RequestSignature, vnextResult.FailureReason);
 
         return legacyData;
     }

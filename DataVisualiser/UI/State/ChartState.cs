@@ -108,4 +108,19 @@ public sealed record LoadRuntimeState(
     string? ProgramSourceSignature,
     string? ProjectedContextSignature,
     string? FailureReason,
-    bool SupportsOnlyMainChart);
+    bool SupportsOnlyMainChart)
+{
+    public static LoadRuntimeState FromVNextSuccess(
+        EvidenceRuntimePath path, string? requestSignature, string? snapshotSignature,
+        ChartProgramKind? programKind, string? programSourceSignature)
+    {
+        return new LoadRuntimeState(path, requestSignature ?? string.Empty,
+            snapshotSignature, programKind, programSourceSignature, null, null, false);
+    }
+
+    public static LoadRuntimeState LegacyFallback(string? requestSignature, string? failureReason)
+    {
+        return new LoadRuntimeState(EvidenceRuntimePath.Legacy, requestSignature ?? string.Empty,
+            null, null, null, null, failureReason, false);
+    }
+}

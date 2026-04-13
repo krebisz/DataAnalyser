@@ -34,10 +34,10 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
     private readonly DistributionSessionMilestoneRecorder _milestoneRecorder;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
-    private readonly VNextDistributionIntegrationCoordinator _vnextDistributionCoordinator;
+    private readonly VNextSeriesLoadCoordinator _vnextCoordinator;
     private bool _isUpdatingSubtypeCombo;
 
-    public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, IDistributionRenderingContract distributionRenderingContract, Func<ToolTip?> getPolarTooltip, VNextDistributionIntegrationCoordinator? vnextDistributionCoordinator = null)
+    public DistributionChartControllerAdapter(IDistributionChartController controller, MainWindowViewModel viewModel, Func<bool> isInitializing, Func<IDisposable> beginUiBusyScope, MetricSelectionService metricSelectionService, IDistributionRenderingContract distributionRenderingContract, Func<ToolTip?> getPolarTooltip, VNextSeriesLoadCoordinator? vnextCoordinator = null)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -47,7 +47,7 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
         _distributionRenderingContract = distributionRenderingContract ?? throw new ArgumentNullException(nameof(distributionRenderingContract));
         _getPolarTooltip = getPolarTooltip ?? throw new ArgumentNullException(nameof(getPolarTooltip));
-        _vnextDistributionCoordinator = vnextDistributionCoordinator ?? new VNextDistributionIntegrationCoordinator(metricSelectionService);
+        _vnextCoordinator = vnextCoordinator ?? new VNextSeriesLoadCoordinator(metricSelectionService);
         _milestoneRecorder = new DistributionSessionMilestoneRecorder(viewModel);
     }
 
@@ -366,38 +366,24 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
     private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> LoadFreshDistributionDataAsync(
         MetricSeriesSelection selectedSeries, DateTime from, DateTime to, string tableName, string cacheKey)
     {
-        var vnextResult = await _vnextDistributionCoordinator.LoadDistributionAsync(selectedSeries, from, to, tableName);
+        var vnextResult = await _vnextCoordinator.LoadAsync(selectedSeries, from, to, tableName, ChartProgramKind.Distribution);
         if (vnextResult.Success && vnextResult.Data != null)
         {
-            _viewModel.ChartState.LastDistributionLoadRuntime = new LoadRuntimeState(
-                EvidenceRuntimePath.VNextDistribution,
-                vnextResult.RequestSignature ?? string.Empty,
-                vnextResult.SnapshotSignature,
-                vnextResult.ProgramKind,
-                vnextResult.ProgramSourceSignature,
-                null,
-                null,
-                false);
+            _viewModel.ChartState.LastDistributionLoadRuntime = LoadRuntimeState.FromVNextSuccess(
+                EvidenceRuntimePath.VNextDistribution, vnextResult.RequestSignature,
+                vnextResult.SnapshotSignature, vnextResult.ProgramKind, vnextResult.ProgramSourceSignature);
 
             var data = vnextResult.Data is List<MetricData> list ? list : vnextResult.Data.ToList();
             _selectionCache.SetDataWithCms(cacheKey, data, vnextResult.CmsSeries);
             return (data, vnextResult.CmsSeries);
         }
 
-        // VNext failed — fall back to legacy loading
         var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, from, to, tableName);
         var legacyData = primaryData.ToList();
         _selectionCache.SetDataWithCms(cacheKey, legacyData, primaryCms);
 
-        _viewModel.ChartState.LastDistributionLoadRuntime = new LoadRuntimeState(
-            EvidenceRuntimePath.Legacy,
-            vnextResult.RequestSignature ?? string.Empty,
-            null,
-            null,
-            null,
-            null,
-            vnextResult.FailureReason,
-            false);
+        _viewModel.ChartState.LastDistributionLoadRuntime = LoadRuntimeState.LegacyFallback(
+            vnextResult.RequestSignature, vnextResult.FailureReason);
 
         return (legacyData, primaryCms);
     }

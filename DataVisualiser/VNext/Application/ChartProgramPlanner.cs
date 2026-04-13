@@ -27,7 +27,7 @@ public sealed class ChartProgramPlanner
             ChartProgramKind.Ratio => BuildRatioProgram(snapshot),
             ChartProgramKind.Transform when request.SeriesOperations.Count > 0 => BuildDerivedProgram(snapshot, request),
             ChartProgramKind.Transform => BuildIdentityProgram(snapshot, ChartProgramKind.Transform),
-            ChartProgramKind.Distribution => BuildDistributionProgram(snapshot),
+            ChartProgramKind.Distribution => BuildIdentityProgram(snapshot, ChartProgramKind.Distribution),
             ChartProgramKind.WeekdayTrend => BuildIdentityProgram(snapshot, ChartProgramKind.WeekdayTrend),
             ChartProgramKind.BarPie => BuildIdentityProgram(snapshot, ChartProgramKind.BarPie),
             _ => throw new InvalidOperationException($"Unsupported program kind '{request.Kind}'.")
@@ -115,10 +115,6 @@ public sealed class ChartProgramPlanner
             snapshot.Signature);
     }
 
-    public ChartProgram BuildDistributionProgram(MetricLoadSnapshot snapshot)
-    {
-        return BuildIdentityProgram(snapshot, ChartProgramKind.Distribution);
-    }
 
     public ChartProgram BuildIdentityProgram(MetricLoadSnapshot snapshot, ChartProgramKind kind)
     {

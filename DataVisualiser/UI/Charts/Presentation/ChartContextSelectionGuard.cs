@@ -86,4 +86,13 @@ public static class ChartContextSelectionGuard
 
         return $"{metricType ?? "<none>"}::{resolutionTableName}::{fromDate:O}->{toDate:O}::{orderedSeries}";
     }
+
+    public static bool HasRenderableContext(ChartDataContext? context, string? selectedMetricType)
+    {
+        if (context?.Data1 == null || context.Data1.Count == 0)
+            return false;
+
+        var contextMetric = context.PrimaryMetricType ?? context.MetricType;
+        return string.Equals(contextMetric, selectedMetricType, StringComparison.OrdinalIgnoreCase);
+    }
 }

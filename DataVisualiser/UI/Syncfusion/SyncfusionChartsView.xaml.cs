@@ -338,12 +338,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private bool HasRenderableContext()
     {
-        var ctx = _viewModel.ChartState.LastContext;
-        if (ctx?.Data1 == null || !ctx.Data1.Any())
-            return false;
-
-        var contextMetric = ctx.PrimaryMetricType ?? ctx.MetricType;
-        return string.Equals(contextMetric, _viewModel.MetricState.SelectedMetricType, StringComparison.OrdinalIgnoreCase);
+        return ChartContextSelectionGuard.HasRenderableContext(_viewModel.ChartState.LastContext, _viewModel.MetricState.SelectedMetricType);
     }
 
     private bool ShouldRefreshDateRangeForCurrentSelection()

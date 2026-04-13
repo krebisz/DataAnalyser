@@ -11,7 +11,6 @@ using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Application;
 using DataVisualiser.VNext.Contracts;
-using DataVisualiser.VNext.Kernel;
 
 namespace DataVisualiser.Tests.VNext;
 
@@ -121,7 +120,7 @@ public sealed class VNextDistributionRuntimePreservationTests
         var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
         var controller = new DistributionChartController();
         var renderingContract = new FakeDistributionRenderingContract();
-        var vnextCoordinator = new VNextDistributionIntegrationCoordinator(CreateStubSessionCoordinator);
+        var vnextCoordinator = new VNextSeriesLoadCoordinator(CreateStubSessionCoordinator);
 
         var adapter = new DistributionChartControllerAdapter(
             controller,
@@ -156,26 +155,7 @@ public sealed class VNextDistributionRuntimePreservationTests
 
     private static ReasoningSessionCoordinator CreateStubSessionCoordinator()
     {
-        var loader = new StubMetricSeriesLoader();
-        var gateway = new LegacyMetricViewGateway(loader);
-        var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
-        var engine = new ReasoningEngine(gateway, planner);
-        return new ReasoningSessionCoordinator(engine);
-    }
-
-    private sealed class StubMetricSeriesLoader : IMetricSeriesLoader
-    {
-        public Task<LoadedMetricSeries> LoadAsync(
-            MetricSeriesRequest request,
-            DateTime from,
-            DateTime to,
-            string resolutionTableName,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(new LoadedMetricSeries(
-                [new MetricData { NormalizedTimestamp = from, Value = 1m }],
-                null));
-        }
+        return VNextTestStubs.CreateSessionCoordinator();
     }
 
     private sealed class NoOpScope : IDisposable
