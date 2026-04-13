@@ -9,7 +9,6 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
-using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
@@ -171,58 +170,6 @@ public abstract class BaseDistributionService : IDistributionService
     protected abstract IIntervalRenderer CreateIntervalRenderer();
 
     // Common methods shared by all distribution services
-    protected static void ConfigureYAxis(CartesianChart targetChart, IList<double> mins, IList<double> ranges, int bucketCount)
-    {
-        // Ensure Y-axis exists
-        if (targetChart.AxisY.Count == 0)
-            targetChart.AxisY.Add(new Axis());
-
-        var allValues = new List<double>();
-        for (var i = 0; i < bucketCount; i++)
-        {
-            if (!double.IsNaN(mins[i]))
-                allValues.Add(mins[i]);
-
-            if (!double.IsNaN(mins[i]) && !double.IsNaN(ranges[i]))
-                allValues.Add(mins[i] + ranges[i]);
-        }
-
-        if (allValues.Count == 0)
-        {
-            // Set default range if no values
-            var defaultYAxis = targetChart.AxisY[0];
-            defaultYAxis.MinValue = 0;
-            defaultYAxis.MaxValue = 100;
-            defaultYAxis.ShowLabels = true;
-            return;
-        }
-
-        // Round to nearest YAxisRoundingStep and apply padding
-        var min = Math.Floor(allValues.Min() / DistributionDefaults.YAxisRoundingStep) * DistributionDefaults.YAxisRoundingStep;
-        var max = Math.Ceiling(allValues.Max() / DistributionDefaults.YAxisRoundingStep) * DistributionDefaults.YAxisRoundingStep;
-
-        var rawRange = max - min;
-        var pad = Math.Max(DistributionDefaults.MinYAxisPadding, rawRange * DistributionDefaults.YAxisPaddingPercentage);
-        var yMin = Math.Max(0, min - pad);
-        var yMax = max + pad;
-
-        var yAxis = targetChart.AxisY[0];
-        yAxis.MinValue = yMin;
-        yAxis.MaxValue = yMax;
-
-        // Set a sensible step
-        var step = MathHelper.RoundToThreeSignificantDigits((yMax - yMin) / 8.0);
-        if (step > 0 && !double.IsNaN(step) && !double.IsInfinity(step))
-            yAxis.Separator = new Separator
-            {
-                    Step = step
-            };
-
-        yAxis.LabelFormatter = value => MathHelper.FormatDisplayedValue(value);
-        yAxis.ShowLabels = true; // Re-enable labels when rendering data
-        yAxis.Title = "Value";   // Ensure title is set
-    }
-
     protected void RenderOriginalMinMaxChart(CartesianChart targetChart, ChartComputationResult result, string displayName, double minHeight, BucketDistributionResult? frequencyData, bool useFrequencyShading = true, int intervalCount = 25)
     {
         if (!TryExtractMinMax(result, targetChart, out var mins, out var ranges))
@@ -232,7 +179,15 @@ public abstract class BaseDistributionService : IDistributionService
 
         var (globalMin, globalMax) = CalculateGlobalMinMax(mins, ranges);
 
-        LogSummary(mins, ranges, bucketValues, globalMin, globalMax);
+        DistributionDebugSummaryLogger.LogSummary(
+            Configuration.LogPrefix,
+            Configuration.BucketName,
+            Configuration.BucketCount,
+            mins,
+            ranges,
+            bucketValues,
+            globalMin,
+            globalMax);
 
         var shadingData = useFrequencyShading ? BuildFrequencyShadingData(bucketValues, globalMin, globalMax, intervalCount) : FrequencyShadingData.Empty;
 
@@ -244,8 +199,8 @@ public abstract class BaseDistributionService : IDistributionService
         if (useFrequencyShading)
             ApplyFrequencyShadingViaRenderer(targetChart, mins, ranges, shadingData, globalMin, globalMax);
 
-        ConfigureYAxis(targetChart, mins, ranges, Configuration.BucketCount);
-        ConfigureXAxis(targetChart);
+        DistributionAxisCoordinator.ConfigureYAxis(targetChart, mins, ranges, Configuration.BucketCount);
+        DistributionAxisCoordinator.ConfigureXAxis(targetChart, Configuration.BucketLabels, Configuration.XAxisTitle);
         targetChart.LegendLocation = LegendLocation.None;
     }
 
@@ -284,47 +239,6 @@ public abstract class BaseDistributionService : IDistributionService
         };
 
         _frequencyRenderer.Render(chart, mins, ranges, data.Intervals, data.FrequenciesPerBucket, data.ColorMap, globalMin, globalMax, context);
-    }
-
-    protected void ConfigureXAxis(CartesianChart chart)
-    {
-        if (chart.AxisX.Count == 0)
-            chart.AxisX.Add(new Axis());
-
-        var axis = chart.AxisX[0];
-        axis.MinValue = double.NaN;
-        axis.MaxValue = double.NaN;
-        axis.Labels = Configuration.BucketLabels;
-        axis.Title = Configuration.XAxisTitle;
-        axis.ShowLabels = true;
-        axis.Separator = new Separator
-        {
-                Step = 1,
-                IsEnabled = false
-        };
-    }
-
-    protected void LogSummary(List<double> mins, List<double> ranges, Dictionary<int, List<double>> bucketValues, double globalMin, double globalMax)
-    {
-        Debug.WriteLine($"=== {Configuration.LogPrefix}: Data Summary ===");
-        Debug.WriteLine($"Global Min: {globalMin:F4}, Global Max: {globalMax:F4}, Range: {globalMax - globalMin:F4}");
-        Debug.WriteLine($"{Configuration.BucketName} Min/Max values:");
-
-        for (var i = 0; i < Configuration.BucketCount; i++)
-        {
-            var bucketMin = double.IsNaN(mins[i]) ? 0.0 : mins[i];
-            var bucketMax = bucketMin + (double.IsNaN(ranges[i]) ? 0.0 : ranges[i]);
-            Debug.WriteLine($"  {Configuration.BucketName} {i}: Min={bucketMin:F4}, Max={bucketMax:F4}, Range={ranges[i]:F4}");
-        }
-
-        // Log sample raw values for first bucket with data
-        for (var bucketIndex = 0; bucketIndex < Configuration.BucketCount; bucketIndex++)
-            if (bucketValues.TryGetValue(bucketIndex, out var values) && values.Count > 0)
-            {
-                Debug.WriteLine($"{Configuration.BucketName} {bucketIndex} raw values (first 10): {string.Join(", ", values.Take(10).Select(v => v.ToString("F4")))}");
-                Debug.WriteLine($"{Configuration.BucketName} {bucketIndex} total value count: {values.Count}");
-                break;
-            }
     }
 
     protected int RenderIntervals(CartesianChart chart, List<double> mins, List<double> ranges, List<(double Min, double Max)> intervals, Dictionary<int, Dictionary<int, int>> frequenciesPerBucket, Dictionary<int, Dictionary<int, Color>> colorMap, double uniformIntervalHeight, double[] cumulativeStackHeight, int globalMaxFreq)

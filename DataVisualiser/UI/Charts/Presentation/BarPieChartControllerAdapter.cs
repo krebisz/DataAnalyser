@@ -1,13 +1,10 @@
 using DataVisualiser.UI.Charts.Interfaces;
 using System.Windows.Controls;
-using System.Windows.Media;
 using DataVisualiser.Core.Configuration;
-using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
-using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Defaults;
 using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.State;
@@ -22,10 +19,10 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
     private readonly IBarPieChartController _controller;
     private readonly Func<bool> _isInitializing;
     private readonly IBarPieRenderingContract _barPieRenderingContract;
-    private readonly MetricSelectionService _metricSelectionService;
     private readonly IChartRendererResolver _rendererResolver;
     private readonly IChartSurfaceFactory _surfaceFactory;
     private readonly MainWindowViewModel _viewModel;
+    private readonly BarPieRenderModelBuilder _renderModelBuilder;
     private IChartRenderer? _renderer;
     private IChartSurface? _surface;
 
@@ -42,10 +39,11 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
-        _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
+        ArgumentNullException.ThrowIfNull(metricSelectionService);
         _barPieRenderingContract = barPieRenderingContract ?? throw new ArgumentNullException(nameof(barPieRenderingContract));
         _rendererResolver = rendererResolver ?? throw new ArgumentNullException(nameof(rendererResolver));
         _surfaceFactory = surfaceFactory ?? throw new ArgumentNullException(nameof(surfaceFactory));
+        _renderModelBuilder = new BarPieRenderModelBuilder(viewModel, metricSelectionService, controller);
     }
 
     public void InitializeControls()
@@ -149,7 +147,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         }
 
         var isPieMode = _controller.PieModeRadio.IsChecked == true;
-        var model = await BuildBarPieRenderModelAsync(isPieMode);
+        var model = await _renderModelBuilder.BuildAsync(isPieMode);
         await _barPieRenderingContract.RenderAsync(
             new BarPieChartRenderRequest(ResolveRenderingRoute(), model),
             CreateRenderHost());
@@ -158,125 +156,6 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
     private Task RerenderBarPieIfVisibleAsync()
     {
         return _viewModel.ChartState.IsBarPieVisible ? RenderBarPieChartAsync() : Task.CompletedTask;
-    }
-
-    private async Task<UiChartRenderModel> BuildBarPieRenderModelAsync(bool isPieMode)
-    {
-        var selections = GetDistinctSelectedSeries();
-        if (selections.Count == 0)
-            return CreateEmptyBarPieModel();
-
-        if (!TryResolveBarPieDateRange(out var from, out var to))
-            return CreateEmptyBarPieModel();
-
-        var bucketCount = ResolveBarPieBucketCount(from, to);
-        var bucketPlan = BuildBarPieBucketPlan(from, to, bucketCount);
-
-        var seriesTotals = await LoadBarPieSeriesTotalsAsync(selections, from, to, bucketPlan);
-        if (seriesTotals.Count == 0)
-            return CreateEmptyBarPieModel();
-
-        var paletteKey = _controller;
-        ColourPalette.Reset(paletteKey);
-
-        var coloredSeries = seriesTotals.Select(data => new BarPieSeriesValues(data.Selection, data.Totals, ColourPalette.Next(paletteKey))).ToList();
-
-        if (isPieMode)
-        {
-            var facets = bucketPlan.Buckets.Select(bucket =>
-                                   {
-                                       var series = coloredSeries.Select(item => new ChartSeriesModel
-                                                                 {
-                                                                         Name = item.Selection.DisplayName,
-                                                                         SeriesType = ChartSeriesType.Pie,
-                                                                         Values = new[]
-                                                                         {
-                                                                                 item.Totals[bucket.Index]
-                                                                         },
-                                                                         Color = item.Color
-                                                                 })
-                                                                 .ToList();
-
-                                       return new ChartFacetModel
-                                       {
-                                               Title = bucket.Label,
-                                               Series = series
-                                       };
-                                   })
-                                   .ToList();
-
-            return new UiChartRenderModel
-            {
-                    ChartName = RenderingDefaults.BarPieChartName,
-                    Title = ChartUiDefaults.BarPieChartTitle,
-                    IsVisible = _viewModel.ChartState.IsBarPieVisible,
-                    Facets = facets,
-                    Legend = new ChartLegendModel
-                    {
-                            IsVisible = true,
-                            Placement = ChartLegendPlacement.Right
-                    },
-                    Interactions = new ChartInteractionModel
-                    {
-                            Hoverable = ChartUiDefaults.DefaultHoverable
-                    }
-            };
-        }
-
-        var barSeries = coloredSeries.Select(item => new ChartSeriesModel
-                                     {
-                                             Name = item.Selection.DisplayName,
-                                             SeriesType = ChartSeriesType.Column,
-                                             Values = item.Totals,
-                                             Color = item.Color
-                                     })
-                                     .ToList();
-
-        return new UiChartRenderModel
-        {
-                ChartName = RenderingDefaults.BarPieChartName,
-                Title = ChartUiDefaults.BarPieChartTitle,
-                IsVisible = _viewModel.ChartState.IsBarPieVisible,
-                Series = barSeries,
-                AxesX = new[]
-                {
-                        new ChartAxisModel
-                        {
-                                Title = "Interval",
-                                Labels = bucketPlan.Buckets.Select(bucket => bucket.Label).ToList()
-                        }
-                },
-                AxesY = new[]
-                {
-                        new ChartAxisModel
-                        {
-                                Title = "Value"
-                        }
-                },
-                Legend = new ChartLegendModel
-                {
-                        IsVisible = true,
-                        Placement = ChartLegendPlacement.Right
-                },
-                Interactions = new ChartInteractionModel
-                {
-                        EnableZoomX = true,
-                        EnablePanX = true,
-                        Hoverable = ChartUiDefaults.DefaultHoverable
-                }
-        };
-    }
-
-    private UiChartRenderModel CreateEmptyBarPieModel()
-    {
-        return new UiChartRenderModel
-        {
-                ChartName = RenderingDefaults.BarPieChartName,
-                Title = ChartUiDefaults.BarPieChartTitle,
-                IsVisible = _viewModel.ChartState.IsBarPieVisible,
-                Series = Array.Empty<ChartSeriesModel>(),
-                Facets = Array.Empty<ChartFacetModel>()
-        };
     }
 
     private BarPieRenderingRoute ResolveRenderingRoute()
@@ -288,112 +167,6 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
     {
         EnsureSurfaceAndRenderer();
         return new BarPieChartRenderHost(_surface!, _renderer!, _rendererResolver.ResolveKind(Key), _viewModel.ChartState.IsBarPieVisible);
-    }
-
-    private List<MetricSeriesSelection> GetDistinctSelectedSeries()
-    {
-        return _viewModel.MetricState.SelectedSeries.GroupBy(series => series.DisplayKey, StringComparer.OrdinalIgnoreCase).Select(group => group.First()).ToList();
-    }
-
-    private async Task<IReadOnlyList<BarPieSeriesTotals>> LoadBarPieSeriesTotalsAsync(IReadOnlyList<MetricSeriesSelection> selections, DateTime from, DateTime to, BarPieBucketPlan plan)
-    {
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var useCms = CmsConfiguration.ShouldUseCms("BarPieStrategy");
-        var tasks = selections.Select(selection => LoadBarPieSeriesTotalsAsync(selection, from, to, tableName, plan, useCms)).ToList();
-        var results = await Task.WhenAll(tasks);
-        return results.Where(result => result != null).Select(result => result!).ToList();
-    }
-
-    private async Task<BarPieSeriesTotals?> LoadBarPieSeriesTotalsAsync(MetricSeriesSelection selection, DateTime from, DateTime to, string tableName, BarPieBucketPlan plan, bool useCms)
-    {
-        if (string.IsNullOrWhiteSpace(selection.MetricType))
-            return null;
-
-        try
-        {
-            if (useCms)
-            {
-                var (primaryCms, _, primaryLegacy, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selection, null, from, to, tableName);
-                if (primaryCms != null && primaryCms.Samples.Count > 0)
-                    return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(primaryCms, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
-
-                var fallbackLegacy = primaryLegacy?.ToList() ?? new List<MetricData>();
-                if (fallbackLegacy.Count == 0)
-                    return null;
-
-                return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(fallbackLegacy, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
-            }
-
-            var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(selection.MetricType, selection.QuerySubtype, null, from, to, tableName);
-            var dataList = primary?.ToList() ?? new List<MetricData>();
-            if (dataList.Count == 0)
-                return null;
-
-            return new BarPieSeriesTotals(selection, TimeBucketAggregationHelper.BuildAverageTotals(dataList, plan.From, plan.To, plan.BucketTicks, plan.Buckets.Count));
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private int ResolveBarPieBucketCount(DateTime from, DateTime to)
-    {
-        const int bucketMax = 20;
-
-        if (to <= from)
-            return 1;
-
-        var bucketCount = _viewModel.ChartState.BarPieBucketCount;
-        return Math.Max(1, Math.Min(bucketCount, bucketMax));
-    }
-
-    private static BarPieBucketPlan BuildBarPieBucketPlan(DateTime from, DateTime to, int bucketCount)
-    {
-        if (to < from)
-            (from, to) = (to, from);
-
-        bucketCount = Math.Max(1, bucketCount);
-        var totalTicks = Math.Max(1, (to - from).Ticks);
-        var bucketTicks = totalTicks / (double)bucketCount;
-
-        var buckets = new List<BarPieBucket>(bucketCount);
-        for (var i = 0; i < bucketCount; i++)
-        {
-            var startTicks = from.Ticks + (long)Math.Floor(i * bucketTicks);
-            var endTicks = i == bucketCount - 1 ? to.Ticks : from.Ticks + (long)Math.Floor((i + 1) * bucketTicks);
-
-            if (endTicks < startTicks)
-                endTicks = startTicks;
-
-            var start = new DateTime(startTicks);
-            var end = new DateTime(Math.Min(endTicks, to.Ticks));
-            buckets.Add(new BarPieBucket(i, start, end, $"{start:yyyy-MM-dd} - {end:yyyy-MM-dd}"));
-        }
-
-        return new BarPieBucketPlan(from, to, bucketTicks, buckets);
-    }
-
-    private bool TryResolveBarPieDateRange(out DateTime from, out DateTime to)
-    {
-        if (_viewModel.MetricState.FromDate.HasValue && _viewModel.MetricState.ToDate.HasValue)
-        {
-            from = _viewModel.MetricState.FromDate.Value;
-            to = _viewModel.MetricState.ToDate.Value;
-            return true;
-        }
-
-        var context = _viewModel.ChartState.LastContext;
-        if (context != null && context.From != default && context.To != default)
-        {
-            from = context.From;
-            to = context.To;
-            return true;
-        }
-
-        from = default;
-        to = default;
-        return false;
     }
 
     private void SelectBarPieBucketCount(int bucketCount)
@@ -421,13 +194,4 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
                 return false;
         }
     }
-
-    private sealed record BarPieSeriesTotals(MetricSeriesSelection Selection, double?[] Totals);
-
-    private sealed record BarPieSeriesValues(MetricSeriesSelection Selection, double?[] Totals, Color Color);
-
-    private sealed record BarPieBucket(int Index, DateTime Start, DateTime End, string Label);
-
-    private sealed record BarPieBucketPlan(DateTime From, DateTime To, double BucketTicks, IReadOnlyList<BarPieBucket> Buckets);
-
 }

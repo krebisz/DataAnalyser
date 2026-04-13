@@ -1,5 +1,6 @@
 using System.Windows.Media;
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
@@ -206,7 +207,7 @@ public sealed class BaseDistributionServiceTests
 
         public void PublicConfigureXAxis(CartesianChart chart)
         {
-            ConfigureXAxis(chart);
+            DistributionAxisCoordinator.ConfigureXAxis(chart, Configuration.BucketLabels, Configuration.XAxisTitle);
         }
 
         protected override BucketDistributionResult? ExtractExtendedResult(object strategy)

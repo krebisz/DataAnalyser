@@ -20,8 +20,10 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private readonly TransformDataResolutionCoordinator _transformDataResolutionCoordinator;
     private readonly TransformOperationExecutionCoordinator _transformOperationExecutionCoordinator;
     private readonly TransformOperationStateCoordinator _transformOperationStateCoordinator;
+    private readonly TransformRenderCoordinator _transformRenderCoordinator;
+    private readonly TransformSelectionInteractionCoordinator _transformSelectionInteractionCoordinator;
     private readonly TransformSessionMilestoneRecorder _transformSessionMilestoneRecorder;
-    private readonly ITransformRenderingContract _transformRenderingContract;
+    private readonly TransformWorkflowCoordinator _transformWorkflowCoordinator;
     private readonly MetricSeriesSelectionCache _selectionCache = new();
     private readonly MainWindowViewModel _viewModel;
     private bool _isTransformSelectionPendingLoad;
@@ -34,12 +36,19 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
-        _transformRenderingContract = transformRenderingContract ?? throw new ArgumentNullException(nameof(transformRenderingContract));
+        ArgumentNullException.ThrowIfNull(transformRenderingContract);
         var computationService = transformComputationService ?? new TransformComputationService();
         _transformDataResolutionCoordinator = new TransformDataResolutionCoordinator(_controller, _viewModel, metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService)), _selectionCache);
         _transformOperationExecutionCoordinator = new TransformOperationExecutionCoordinator(computationService);
         _transformOperationStateCoordinator = new TransformOperationStateCoordinator();
+        _transformRenderCoordinator = new TransformRenderCoordinator(_controller, _viewModel.ChartState, transformRenderingContract);
+        _transformSelectionInteractionCoordinator = new TransformSelectionInteractionCoordinator();
         _transformSessionMilestoneRecorder = new TransformSessionMilestoneRecorder(_viewModel);
+        _transformWorkflowCoordinator = new TransformWorkflowCoordinator(
+            _transformDataResolutionCoordinator,
+            _transformOperationExecutionCoordinator,
+            _transformRenderCoordinator,
+            _transformSessionMilestoneRecorder);
     }
 
     public override void ClearCache()
@@ -63,18 +72,17 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     public override void Clear(ChartState state)
     {
-        ClearTransformGrids(state);
-        _transformRenderingContract.Clear(TransformRenderingRoute.ResultCartesian, CreateRenderHost());
+        _transformRenderCoordinator.Clear();
     }
 
     public override void ResetZoom()
     {
-        _transformRenderingContract.ResetView(TransformRenderingRoute.ResultCartesian, CreateRenderHost());
+        _transformRenderCoordinator.ResetZoom();
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return _transformRenderingContract.HasRenderableContent(TransformRenderingRoute.ResultCartesian, CreateRenderHost());
+        return _transformRenderCoordinator.HasRenderableContent();
     }
 
     public override void UpdateSubtypeOptions()
@@ -167,26 +175,24 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     public async void OnPrimarySubtypeChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing() || _isUpdatingTransformSubtypeCombos)
-            return;
-
-        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformPrimarySubtypeCombo);
-        _viewModel.SetTransformPrimarySeries(selection);
-
-        UpdateTransformComputeButtonState();
-        await RefreshTransformGridsFromSelectionAsync();
+        await _transformSelectionInteractionCoordinator.HandleSelectionChangedAsync(
+            _isInitializing(),
+            _isUpdatingTransformSubtypeCombos,
+            _controller.TransformPrimarySubtypeCombo,
+            _viewModel.SetTransformPrimarySeries,
+            UpdateTransformComputeButtonState,
+            RefreshTransformGridsFromSelectionAsync);
     }
 
     public async void OnSecondarySubtypeChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing() || _isUpdatingTransformSubtypeCombos)
-            return;
-
-        var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.TransformSecondarySubtypeCombo);
-        _viewModel.SetTransformSecondarySeries(selection);
-
-        UpdateTransformComputeButtonState();
-        await RefreshTransformGridsFromSelectionAsync();
+        await _transformSelectionInteractionCoordinator.HandleSelectionChangedAsync(
+            _isInitializing(),
+            _isUpdatingTransformSubtypeCombos,
+            _controller.TransformSecondarySubtypeCombo,
+            _viewModel.SetTransformSecondarySeries,
+            UpdateTransformComputeButtonState,
+            RefreshTransformGridsFromSelectionAsync);
     }
 
     public async void OnComputeRequested(object? sender, EventArgs e)
@@ -216,12 +222,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     private void PopulateTransformGrids(ChartDataContext context, bool hasAvailableSecondaryInput, bool resetResults)
     {
-        TransformGridPresentationCoordinator.PopulateInputGrids(
-            _controller,
-            context,
-            hasAvailableSecondaryInput,
-            SetBinaryTransformOperationsEnabled,
-            resetResults);
+        _transformRenderCoordinator.PopulateInputGrids(context, hasAvailableSecondaryInput, resetResults, SetBinaryTransformOperationsEnabled);
     }
 
     private void SetBinaryTransformOperationsEnabled(bool enabled)
@@ -231,84 +232,26 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     private async Task ExecuteTransformOperation(ChartDataContext ctx, string? operationTag)
     {
-        var resolution = await _transformDataResolutionCoordinator.ResolveAsync(ctx, _isTransformSelectionPendingLoad);
-        var execution = _transformOperationExecutionCoordinator.Execute(resolution, operationTag);
-        if (execution == null)
-            return;
-
-        await RenderTransformResults(execution, resolution);
-    }
-
-    private async Task RenderTransformResults(TransformExecutionResult execution, TransformResolutionResult resolution)
-    {
-        var transformContext = resolution.Context;
-        var resultData = DataVisualiser.Core.Transforms.TransformExpressionEvaluator.CreateTransformResultData(execution.DataList, execution.Results);
-        TransformGridPresentationCoordinator.PopulateResultGrid(_controller, resultData);
-
-        if (resultData.Count == 0)
-            return;
-
-        TransformGridPresentationCoordinator.ShowResultPanels(_controller);
-        await TransformChartPresentationCoordinator.RenderResultsAsync(
-            _controller,
-            _transformRenderingContract,
-            CreateRenderHost(),
-            execution.DataList,
-            execution.Results,
-            execution.OperationTag,
-            execution.Metrics,
-            transformContext,
-            execution.OverrideLabel);
-
-        if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
-            v2.UpdateMinMaxLines();
-
-        _transformSessionMilestoneRecorder.RecordExecution(execution, resolution);
+        await _transformWorkflowCoordinator.ExecuteOperationAsync(ctx, _isTransformSelectionPendingLoad, operationTag);
     }
 
     private async Task RenderPrimarySelectionAsResult(ChartDataContext ctx)
     {
-        var resolution = await _transformDataResolutionCoordinator.ResolveAsync(ctx, _isTransformSelectionPendingLoad);
-        var execution = _transformOperationExecutionCoordinator.Execute(resolution, null);
-        if (execution == null)
-            return;
-
-        await RenderTransformResults(execution, resolution);
+        await _transformWorkflowCoordinator.RenderPrimarySelectionAsync(ctx, _isTransformSelectionPendingLoad);
     }
 
     private async Task RefreshTransformGridsFromSelectionAsync()
     {
-        var ctx = _viewModel.ChartState.LastContext;
-        if (ctx == null)
-            return;
-
-        var resolution = await _transformDataResolutionCoordinator.ResolveAsync(ctx, _isTransformSelectionPendingLoad);
-        PopulateTransformGrids(resolution);
-        UpdateTransformComputeButtonState();
-    }
-
-    private void ClearTransformGrids(ChartState state)
-    {
-        TransformGridPresentationCoordinator.ClearAllGrids(_controller);
+        await _transformWorkflowCoordinator.RefreshFromSelectionAsync(
+            _viewModel.ChartState.LastContext,
+            _isTransformSelectionPendingLoad,
+            resolution => PopulateTransformGrids(resolution),
+            UpdateTransformComputeButtonState);
     }
 
     private static bool ShouldRenderCharts(ChartDataContext? ctx)
     {
-        return TransformGridPresentationCoordinator.ShouldRenderCharts(ctx);
-    }
-
-    private TransformChartRenderHost CreateRenderHost()
-    {
-        return new TransformChartRenderHost(
-            _controller.ChartTransformResult,
-            _viewModel.ChartState,
-            ResetTransformAuxiliaryVisuals);
-    }
-
-    private void ResetTransformAuxiliaryVisuals()
-    {
-        if (_controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2 v2)
-            v2.ResetMinMaxLines();
+        return TransformRenderCoordinator.ShouldRenderCharts(ctx);
     }
 
 }

@@ -23,6 +23,10 @@ namespace DataVisualiser.UI.SyncfusionViews;
 public partial class SyncfusionChartsView : UserControl
 {
     private readonly SyncfusionChartsViewCoordinator _coordinator = new();
+    private readonly ChartHostMetricSelectionCoordinator _metricSelectionCoordinator = new();
+    private readonly ChartHostDateRangeCoordinator _dateRangeCoordinator = new();
+    private readonly SyncfusionChartsViewLoadCoordinator _loadCoordinator = new();
+    private readonly MainChartsViewStateSyncCoordinator _stateSyncCoordinator = new();
     private SyncfusionEvidenceExportService _evidenceExportService = null!;
     private ChartState _chartState = null!;
     private MetricState _metricState = null!;
@@ -127,13 +131,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void InitializeDateRange()
     {
-        var initialFromDate = DateTime.UtcNow.AddDays(-30);
-        var initialToDate = DateTime.UtcNow;
-
-        _viewModel.SetDateRange(initialFromDate, initialToDate);
-
-        FromDate.SelectedDate = _viewModel.MetricState.FromDate;
-        ToDate.SelectedDate = _viewModel.MetricState.ToDate;
+        _dateRangeCoordinator.ApplyDefaultRange(DateTime.UtcNow, CreateDateRangeActions());
     }
 
     private void InitializeResolution()
@@ -229,25 +227,9 @@ public partial class SyncfusionChartsView : UserControl
         if (_viewModel.UiState.IsLoadingMetricTypes)
             return;
 
-        _isMetricTypeChangePending = true;
-        _isApplyingSelectionSync = true;
-        try
-        {
-            using var selectionBatch = _viewModel.BeginSelectionStateBatch();
-            _subtypeList = null;
-            ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
-            _viewModel.ChartState.LastContext = null;
-            _viewModel.ChartState.LastLoadRuntime = null;
-            _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
-            _selectorManager.ClearAllSubtypeControls();
-            UpdateSelectedSubtypesInViewModel();
-        }
-        finally
-        {
-            _isApplyingSelectionSync = false;
-        }
-
-        _viewModel.LoadSubtypesCommand.Execute(null);
+        _metricSelectionCoordinator.HandleMetricTypeSelectionChanged(
+            GetSelectedMetricValue(TablesCombo),
+            CreateMetricTypeSelectionChangedActions());
     }
 
     private static string? GetSelectedMetricValue(ComboBox combo)
@@ -266,39 +248,7 @@ public partial class SyncfusionChartsView : UserControl
     private void OnMetricTypesLoaded(object? sender, MetricTypesLoadedEventArgs e)
     {
         _isMetricTypeChangePending = false;
-        TablesCombo.Items.Clear();
-
-        var addedAllMetricType = !e.MetricTypes.Any(type => string.Equals(type.Value, "(All)", StringComparison.OrdinalIgnoreCase));
-
-        if (addedAllMetricType)
-            TablesCombo.Items.Add(new MetricNameOption("(All)", "(All)"));
-
-        foreach (var type in e.MetricTypes)
-            TablesCombo.Items.Add(type);
-
-        if (TablesCombo.Items.Count > 0)
-        {
-            _isApplyingSelectionSync = true;
-            try
-            {
-                using var selectionBatch = _viewModel.BeginSelectionStateBatch();
-                TablesCombo.SelectedIndex = addedAllMetricType && TablesCombo.Items.Count > 1 ? 1 : 0;
-                _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
-            }
-            finally
-            {
-                _isApplyingSelectionSync = false;
-            }
-
-            _viewModel.LoadSubtypesCommand.Execute(null);
-        }
-        else
-        {
-            SubtypeCombo.Items.Clear();
-            SubtypeCombo.IsEnabled = false;
-            _selectorManager.ClearDynamic();
-        }
-
+        _metricSelectionCoordinator.HandleMetricTypesLoaded(e.MetricTypes.ToList(), CreateMetricTypesLoadedActions());
         _isChangingResolution = false;
     }
 
@@ -308,33 +258,24 @@ public partial class SyncfusionChartsView : UserControl
 
         _subtypeList = subtypeListLocal;
         var selectedMetricType = GetSelectedMetricOption(TablesCombo);
+        var followUp = _metricSelectionCoordinator.HandleSubtypesLoaded(
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedInput(
+                subtypeListLocal,
+                selectedMetricType,
+                _isMetricTypeChangePending,
+                HasLoadedData(),
+                ShouldRefreshDateRangeForCurrentSelection(),
+                _isInitializing,
+                _viewModel.MetricState.SelectedSeries.Count),
+            CreateSubtypesLoadedActions());
 
-        _isApplyingSelectionSync = true;
-        try
+        if (followUp == ChartHostMetricSelectionCoordinator.SubtypesFollowUp.LoadDateRange)
         {
-            using var comboSuppression = _selectorManager.SuppressSelectionChanged();
-            using var selectionBatch = _viewModel.BeginSelectionStateBatch();
-
-            RefreshPrimarySubtypeCombo(subtypeListLocal, false, selectedMetricType);
-            BuildDynamicSubtypeControls(subtypeListLocal);
-            UpdateSelectedSubtypesInViewModel();
-        }
-        finally
-        {
-            _isApplyingSelectionSync = false;
-        }
-
-        if (_isMetricTypeChangePending)
-        {
-            _isMetricTypeChangePending = false;
             _ = LoadDateRangeForSelectedMetrics();
             return;
         }
 
-        if (!HasLoadedData() && ShouldRefreshDateRangeForCurrentSelection())
-            _ = LoadDateRangeForSelectedMetrics();
-
-        if (!_isInitializing && _viewModel.MetricState.SelectedSeries.Count > 0)
+        if (followUp == ChartHostMetricSelectionCoordinator.SubtypesFollowUp.ApplySelectionState)
             ApplySelectionStateToUi();
     }
 
@@ -445,52 +386,34 @@ public partial class SyncfusionChartsView : UserControl
 
     private Task<bool> LoadDataAndValidate()
     {
-        var selectedMetricType = GetSelectedMetricValue(TablesCombo);
-        if (selectedMetricType == null)
-        {
-            MessageBox.Show("Please select a Metric Type", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return Task.FromResult(false);
-        }
+        var isValid = _loadCoordinator.ValidateAndPrepareLoad(
+            new SyncfusionChartsViewLoadCoordinator.LoadValidationInput(
+                GetSelectedMetricValue(TablesCombo),
+                FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30),
+                ToDate.SelectedDate ?? DateTime.UtcNow),
+            new SyncfusionChartsViewLoadCoordinator.ValidationActions(
+                _viewModel.BeginSelectionStateBatch,
+                _viewModel.SetSelectedMetricType,
+                UpdateSelectedSubtypesInViewModel,
+                (fromDate, toDate) => _viewModel.SetDateRange(fromDate, toDate),
+                _viewModel.ValidateDataLoadRequirements,
+                (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning)));
 
-        var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
-        var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
-        using (var selectionBatch = _viewModel.BeginSelectionStateBatch())
-        {
-            _viewModel.SetSelectedMetricType(selectedMetricType);
-            UpdateSelectedSubtypesInViewModel();
-            _viewModel.SetDateRange(fromDate, toDate);
-        }
-
-        var (isValid, errorMessage) = _viewModel.ValidateDataLoadRequirements();
-        if (!isValid)
-        {
-            MessageBox.Show(errorMessage ?? "The current selection is not valid.", "Invalid Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return Task.FromResult(false);
-        }
-
-        return Task.FromResult(true);
+        return Task.FromResult(isValid);
     }
 
     private async Task LoadMetricData()
     {
-        try
-        {
-            var dataLoaded = await ChartPresentationSpine.LoadMetricDataIntoLastContextAsync(_viewModel);
-            if (!dataLoaded)
-            {
-                _viewModel.ChartState.LastContext = null;
-                _viewModel.ChartState.LastLoadRuntime = null;
-                return;
-            }
-
-            ChartPresentationSpine.PublishLastContextAndRequestChartUpdate(_viewModel);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Error loading data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            _viewModel.ChartState.LastContext = null;
-            _viewModel.ChartState.LastLoadRuntime = null;
-        }
+        await _loadCoordinator.ExecuteLoadAsync(
+            new SyncfusionChartsViewLoadCoordinator.LoadExecutionActions(
+                () => ChartPresentationSpine.LoadMetricDataIntoLastContextAsync(_viewModel),
+                () =>
+                {
+                    _viewModel.ChartState.LastContext = null;
+                    _viewModel.ChartState.LastLoadRuntime = null;
+                },
+                () => ChartPresentationSpine.PublishLastContextAndRequestChartUpdate(_viewModel),
+                (title, message) => MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error)));
     }
 
     private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
@@ -543,8 +466,9 @@ public partial class SyncfusionChartsView : UserControl
         if (_viewModel.ChartState.IsBarPieVisible)
             _viewModel.RequestChartUpdate(false, ChartControllerKeys.BarPie);
 
-        if (HasLoadedData())
-            _ = RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext ?? new ChartDataContext());
+        var ctx = _viewModel.ChartState.LastContext;
+        if (ctx != null)
+            _ = RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx);
     }
 
     private void OnResetZoom(object sender, RoutedEventArgs e)
@@ -556,30 +480,26 @@ public partial class SyncfusionChartsView : UserControl
     {
         const string defaultResolution = "All";
 
-        _evidenceExportService.ClearEvidence();
-        _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
-        _viewModel.ChartState.LastContext = new ChartDataContext();
-        _viewModel.ChartState.LastLoadRuntime = null;
-        ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
-        UpdateSyncfusionToggleEnabled();
-
-        if (ResolutionCombo.SelectedItem?.ToString() == defaultResolution)
-        {
-            ResetForResolutionChange(defaultResolution);
-            return;
-        }
-
-        ResolutionCombo.SelectedItem = defaultResolution;
+        _loadCoordinator.ClearSelection(
+            defaultResolution,
+            isDefaultResolutionSelected: ResolutionCombo.SelectedItem?.ToString() == defaultResolution,
+            new SyncfusionChartsViewLoadCoordinator.ClearActions(
+                _evidenceExportService.ClearEvidence,
+                _viewModel.SetSelectedSeries,
+                () =>
+                {
+                    _viewModel.ChartState.LastContext = new ChartDataContext();
+                    _viewModel.ChartState.LastLoadRuntime = null;
+                },
+                () => ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey),
+                UpdateSyncfusionToggleEnabled,
+                ResetForResolutionChange,
+                resolution => ResolutionCombo.SelectedItem = resolution));
     }
 
     private void ResetDateRangeToDefault()
     {
-        var initialFromDate = DateTime.UtcNow.AddDays(-30);
-        var initialToDate = DateTime.UtcNow;
-
-        _viewModel.SetDateRange(initialFromDate, initialToDate);
-        FromDate.SelectedDate = _viewModel.MetricState.FromDate;
-        ToDate.SelectedDate = _viewModel.MetricState.ToDate;
+        _dateRangeCoordinator.ApplyDefaultRange(DateTime.UtcNow, CreateDateRangeActions());
     }
 
     private void OnExportReachability(object sender, RoutedEventArgs e)
@@ -719,11 +639,7 @@ public partial class SyncfusionChartsView : UserControl
         _isApplyingSelectionSync = true;
         try
         {
-            ApplyResolutionFromState();
-            ApplyDateRangeFromState();
-            ApplyMetricTypeFromState();
-            ApplySubtypeSelectionsFromState();
-            SunburstPanel.SetBucketCount(_viewModel.ChartState.BarPieBucketCount);
+            _stateSyncCoordinator.Apply(_viewModel, TablesCombo.Items.OfType<MetricNameOption>(), CreateStateSyncActions());
         }
         finally
         {
@@ -731,84 +647,106 @@ public partial class SyncfusionChartsView : UserControl
         }
     }
 
-    private void ApplyResolutionFromState()
+    private MainChartsViewStateSyncCoordinator.Actions CreateStateSyncActions()
     {
-        var targetResolution = ChartUiHelper.GetResolutionFromTableName(_viewModel.MetricState.ResolutionTableName);
-        if (ResolutionCombo.SelectedItem?.ToString() != targetResolution)
-            ResolutionCombo.SelectedItem = targetResolution;
+        return new MainChartsViewStateSyncCoordinator.Actions(
+            targetResolution =>
+            {
+                if (ResolutionCombo.SelectedItem?.ToString() != targetResolution)
+                    ResolutionCombo.SelectedItem = targetResolution;
+            },
+            fromDate =>
+            {
+                if (FromDate.SelectedDate != fromDate)
+                    FromDate.SelectedDate = fromDate;
+            },
+            toDate =>
+            {
+                if (ToDate.SelectedDate != toDate)
+                    ToDate.SelectedDate = toDate;
+            },
+            metricType =>
+            {
+                if (metricType == null)
+                    return;
+
+                var existing = TablesCombo.SelectedItem as MetricNameOption;
+                if (existing != null && string.Equals(existing.Value, metricType.Value, StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                TablesCombo.SelectedItem = metricType;
+            },
+            (selections, selectedMetricType) =>
+            {
+                if (_subtypeList == null || _subtypeList.Count == 0)
+                    return;
+
+                MainChartsViewStateSyncCoordinator.ApplySubtypeSelections(
+                    _selectorManager,
+                    SubtypeCombo,
+                    _subtypeList,
+                    selections,
+                    selectedMetricType);
+            },
+            bucketCount => SunburstPanel.SetBucketCount(bucketCount));
     }
 
-    private void ApplyDateRangeFromState()
+    private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions()
     {
-        if (_viewModel.MetricState.FromDate.HasValue && FromDate.SelectedDate != _viewModel.MetricState.FromDate)
-            FromDate.SelectedDate = _viewModel.MetricState.FromDate;
-
-        if (_viewModel.MetricState.ToDate.HasValue && ToDate.SelectedDate != _viewModel.MetricState.ToDate)
-            ToDate.SelectedDate = _viewModel.MetricState.ToDate;
+        return new ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions(
+            () => TablesCombo.Items.Clear(),
+            option => TablesCombo.Items.Add(option),
+            () => TablesCombo.Items.Count,
+            value => _isApplyingSelectionSync = value,
+            _viewModel.BeginSelectionStateBatch,
+            index => TablesCombo.SelectedIndex = index,
+            () => GetSelectedMetricValue(TablesCombo),
+            _viewModel.SetSelectedMetricType,
+            () => _viewModel.LoadSubtypesCommand.Execute(null),
+            () => SubtypeCombo.Items.Clear(),
+            value => SubtypeCombo.IsEnabled = value,
+            () => _selectorManager.ClearDynamic());
     }
 
-    private void ApplyMetricTypeFromState()
+    private ChartHostMetricSelectionCoordinator.MetricTypeSelectionChangedActions CreateMetricTypeSelectionChangedActions()
     {
-        var selectedMetric = _viewModel.MetricState.SelectedMetricType;
-        if (string.IsNullOrWhiteSpace(selectedMetric))
-            return;
-
-        var existing = TablesCombo.SelectedItem as MetricNameOption;
-        if (existing != null && string.Equals(existing.Value, selectedMetric, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        var match = TablesCombo.Items.OfType<MetricNameOption>()
-            .FirstOrDefault(item => string.Equals(item.Value, selectedMetric, StringComparison.OrdinalIgnoreCase));
-
-        if (match != null)
-            TablesCombo.SelectedItem = match;
+        return new ChartHostMetricSelectionCoordinator.MetricTypeSelectionChangedActions(
+            value => _isMetricTypeChangePending = value,
+            value => _isApplyingSelectionSync = value,
+            _viewModel.BeginSelectionStateBatch,
+            () =>
+            {
+                _subtypeList = null;
+                ClearChart(SyncfusionChartsViewCoordinator.ManagedChartKey);
+                _viewModel.ChartState.LastContext = null;
+                _viewModel.ChartState.LastLoadRuntime = null;
+            },
+            _viewModel.SetSelectedMetricType,
+            () => _selectorManager.ClearAllSubtypeControls(),
+            UpdateSelectedSubtypesInViewModel,
+            () => _viewModel.LoadSubtypesCommand.Execute(null));
     }
 
-    private void ApplySubtypeSelectionsFromState()
+    private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions()
     {
-        if (_subtypeList == null || _subtypeList.Count == 0)
-            return;
-
-        var selections = _viewModel.MetricState.SelectedSeries.ToList();
-
-        if (selections.Count == 0)
-            return;
-
-        var metricType = GetSelectedMetricOption(TablesCombo);
-        using var comboSuppression = _selectorManager.SuppressSelectionChanged();
-        _selectorManager.ClearDynamic();
-        _selectorManager.SetPrimaryMetricType(metricType);
-
-        SetComboSelectionByValue(SubtypeCombo, selections[0].QuerySubtype);
-
-        for (var i = 1; i < selections.Count; i++)
-        {
-            var combo = _selectorManager.AddSubtypeCombo(_subtypeList, metricType);
-            SetComboSelectionByValue(combo, selections[i].QuerySubtype);
-        }
+        return new ChartHostMetricSelectionCoordinator.SubtypesLoadedActions(
+            value => _isApplyingSelectionSync = value,
+            _selectorManager.SuppressSelectionChanged,
+            _viewModel.BeginSelectionStateBatch,
+            (subtypes, preserveSelection, selectedMetricType) => RefreshPrimarySubtypeCombo(subtypes, preserveSelection, selectedMetricType),
+            subtypes => BuildDynamicSubtypeControls(subtypes),
+            UpdateSelectedSubtypesInViewModel,
+            value => _isMetricTypeChangePending = value);
     }
 
-    private static void SetComboSelectionByValue(ComboBox combo, string? value)
+    private ChartHostDateRangeCoordinator.Actions CreateDateRangeActions()
     {
-        if (combo.Items.Count == 0)
-            return;
-
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            combo.SelectedIndex = 0;
-            return;
-        }
-
-        var match = combo.Items.OfType<MetricNameOption>()
-            .FirstOrDefault(item => string.Equals(item.Value, value, StringComparison.OrdinalIgnoreCase));
-
-        if (match != null)
-        {
-            combo.SelectedItem = match;
-            return;
-        }
-
-        combo.SelectedIndex = 0;
+        return new ChartHostDateRangeCoordinator.Actions(
+            _viewModel.SetDateRange,
+            value => FromDate.SelectedDate = value,
+            value => ToDate.SelectedDate = value,
+            () => _viewModel.MetricState.FromDate,
+            () => _viewModel.MetricState.ToDate);
     }
 
 

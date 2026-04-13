@@ -42,10 +42,40 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "EvidenceParityBuilder.cs");
 
+        Assert.Contains("EvidenceDistributionParityEvaluator", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceMultiMetricParityEvaluator", source, StringComparison.Ordinal);
         Assert.Contains("EvidenceTransformParityEvaluator", source, StringComparison.Ordinal);
+        Assert.Contains("_distributionParityEvaluator.BuildAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_multiMetricParityEvaluator.BuildAsync", source, StringComparison.Ordinal);
         Assert.Contains("_transformParityEvaluator.BuildAsync", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceParitySummaryBuilder.BuildSummary", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceParitySummaryBuilder.BuildWarnings", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceStrategyParityExecutor.ExecuteSafe", source, StringComparison.Ordinal);
         Assert.DoesNotContain("ComputeBinaryTransformParity(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("ComputeUnaryTransformParity(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private async Task<DistributionParitySnapshot> BuildDistributionParitySnapshotAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private async Task<SimpleParitySnapshot> BuildMultiMetricParitySnapshotAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static ParitySummarySnapshot BuildParitySummary(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static IReadOnlyList<string> BuildParityWarnings(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private ParityResultSnapshot ExecuteParitySafe(", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EvidenceTransformParityEvaluator_ShouldDelegateResolutionAndComputationToDedicatedHelpers()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "EvidenceTransformParityEvaluator.cs");
+
+        Assert.Contains("EvidenceTransformParityDataResolver", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceTransformParityComputer", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceTransformParityDataResolver.ResolveSelections", source, StringComparison.Ordinal);
+        Assert.Contains("_dataResolver.ResolveAsync", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceTransformParityComputer.IsUnaryTransform", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceTransformParityComputer.ComputeUnary", source, StringComparison.Ordinal);
+        Assert.Contains("EvidenceTransformParityComputer.ComputeBinary", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static bool IsUnaryTransform(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private async Task<IReadOnlyList<MetricData>?> ResolveTransformParityDataAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static (ParityResultSnapshot Result, int LegacySamples, int NewSamples, bool ExpressionAvailable) ComputeUnaryTransformParity", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static (ParityResultSnapshot Result, int LegacySamples, int NewSamples, bool ExpressionAvailable) ComputeBinaryTransformParity", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -107,7 +137,8 @@ public sealed class ArchitectureGuardrailTests
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
         var methodBody = ExtractMethodBody(source, "private void UpdateSelectedSubtypesInViewModel");
 
-        Assert.Contains("UpdateTransformSubtypeOptions();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_selectionCoordinator.UpdateSelectedSubtypes", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateTransformSubtypeOptions();", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain(".GroupBy(series => series.DisplayKey", methodBody, StringComparison.Ordinal);
     }
 
@@ -125,21 +156,21 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
         var methodBody = ExtractMethodBody(source, "private void OnMetricTypeSelectionChanged");
+        var actionFactoryBody = ExtractMethodBody(source, "private ChartHostMetricSelectionCoordinator.MetricTypeSelectionChangedActions CreateMetricTypeSelectionChangedActions");
 
-        Assert.Contains("_isApplyingSelectionSync = true;", methodBody, StringComparison.Ordinal);
-        Assert.Contains("ClearAllCharts();", methodBody, StringComparison.Ordinal);
-        Assert.Contains("_viewModel.SetSelectedMetricType(selectedMetricType);", methodBody, StringComparison.Ordinal);
-        Assert.Contains("_selectorManager.ClearAllSubtypeControls();", methodBody, StringComparison.Ordinal);
-        Assert.Contains("UpdateSelectedSubtypesInViewModel();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_metricSelectionCoordinator.HandleMetricTypeSelectionChanged", methodBody, StringComparison.Ordinal);
+        Assert.Contains("UpdateChartTitlesFromSelections();", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("ClearAllCharts();", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("_viewModel.LoadSubtypesCommand.Execute(null);", methodBody, StringComparison.Ordinal);
 
         Assert.True(
-            methodBody.IndexOf("ClearAllCharts();", StringComparison.Ordinal) <
-            methodBody.IndexOf("_viewModel.SetSelectedMetricType(selectedMetricType);", StringComparison.Ordinal),
+            actionFactoryBody.IndexOf("ClearAllCharts();", StringComparison.Ordinal) <
+            actionFactoryBody.IndexOf("_viewModel.SetSelectedMetricType", StringComparison.Ordinal),
             "Metric-type changes should clear the loaded chart context before new subtype state is committed.");
 
         Assert.True(
-            methodBody.IndexOf("_viewModel.SetSelectedMetricType(selectedMetricType);", StringComparison.Ordinal) <
-            methodBody.IndexOf("_selectorManager.ClearAllSubtypeControls();", StringComparison.Ordinal),
+            actionFactoryBody.IndexOf("_viewModel.SetSelectedMetricType", StringComparison.Ordinal) <
+            actionFactoryBody.IndexOf("_selectorManager.ClearAllSubtypeControls()", StringComparison.Ordinal),
             "Metric type should be committed before subtype controls are cleared so selection sync cannot snap the combo back.");
     }
 
@@ -148,10 +179,13 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
         var methodBody = ExtractMethodBody(source, "private void OnSubtypesLoaded");
+        var actionFactoryBody = ExtractMethodBody(source, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions");
 
         Assert.DoesNotContain("UpdateLastDynamicComboItems", methodBody, StringComparison.Ordinal);
-        Assert.Contains("_selectorManager.SuppressSelectionChanged()", methodBody, StringComparison.Ordinal);
-        Assert.Contains("_viewModel.BeginSelectionStateBatch()", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_metricSelectionCoordinator.HandleSubtypesLoaded", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("_selectorManager.SuppressSelectionChanged()", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_selectorManager.SuppressSelectionChanged", actionFactoryBody, StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch", actionFactoryBody, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -162,9 +196,10 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("UpdateSelectedSubtypesInViewModel();", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("ClearAllCharts();", methodBody, StringComparison.Ordinal);
-        Assert.Contains("if (HasLoadedData())", methodBody, StringComparison.Ordinal);
-        Assert.Contains("await RenderChartsFromLastContext();", methodBody, StringComparison.Ordinal);
-        Assert.Contains("await LoadDateRangeForSelectedMetrics();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_selectionCoordinator.HandleSubtypeSelectionChangedAsync", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (HasLoadedData())", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("await RenderChartsFromLastContext();", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("await LoadDateRangeForSelectedMetrics();", methodBody, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -174,39 +209,87 @@ public sealed class ArchitectureGuardrailTests
         var primaryMethodBody = ExtractMethodBody(source, "private void UpdatePrimaryDataRequiredButtonStates");
         var secondaryMethodBody = ExtractMethodBody(source, "private void UpdateSecondaryDataRequiredButtonStates");
 
-        Assert.Contains("MainChartsViewToggleStateEvaluator.CanTogglePrimaryCharts(_viewModel.ChartState.LastContext)", primaryMethodBody, StringComparison.Ordinal);
-        Assert.Contains("MainChartsViewToggleStateEvaluator.HasLoadedSecondaryData(_viewModel.ChartState.LastContext)", secondaryMethodBody, StringComparison.Ordinal);
-        Assert.Contains("MainChartsViewToggleStateEvaluator.CanToggleSecondaryCharts(_viewModel.ChartState.LastContext)", secondaryMethodBody, StringComparison.Ordinal);
+        Assert.Contains("MainChartsViewToggleStateCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_toggleStateCoordinator.UpdatePrimaryChartToggles", primaryMethodBody, StringComparison.Ordinal);
+        Assert.Contains("_toggleStateCoordinator.UpdateSecondaryChartToggles", secondaryMethodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("HasLoadedData()", primaryMethodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("HasLoadedData()", secondaryMethodBody, StringComparison.Ordinal);
     }
 
     [Fact]
+    public void MainChartsView_ShouldDelegateCmsToggleFlowThroughDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewCmsToggleCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_cmsToggleCoordinator.SyncStates", ExtractMethodBody(source, "private void SyncCmsToggleStates"), StringComparison.Ordinal);
+        Assert.Contains("_cmsToggleCoordinator.HandleCmsToggleChangedAsync", ExtractMethodBody(source, "private async void OnCmsToggleChanged"), StringComparison.Ordinal);
+        Assert.Contains("_cmsToggleCoordinator.HandleStrategyToggleChangedAsync", ExtractMethodBody(source, "private async void OnCmsStrategyToggled"), StringComparison.Ordinal);
+        Assert.DoesNotContain("CmsConfiguration.UseCmsData =", ExtractMethodBody(source, "private async void OnCmsToggleChanged"), StringComparison.Ordinal);
+        Assert.DoesNotContain("CmsConfiguration.UseCmsForSingleMetric =", ExtractMethodBody(source, "private async void OnCmsStrategyToggled"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Hosts_ShouldReuseSharedDateRangeCoordinator()
+    {
+        var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        Assert.Contains("ChartHostDateRangeCoordinator", mainSource, StringComparison.Ordinal);
+        Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(mainSource, "private void InitializeDateRange"), StringComparison.Ordinal);
+        Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(mainSource, "private void ResetDateRangeToDefault"), StringComparison.Ordinal);
+
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        Assert.Contains("ChartHostDateRangeCoordinator", syncfusionSource, StringComparison.Ordinal);
+        Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(syncfusionSource, "private void InitializeDateRange"), StringComparison.Ordinal);
+        Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(syncfusionSource, "private void ResetDateRangeToDefault"), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ChartAdapters_ShouldUseSharedTimeBucketAggregationHelper()
     {
-        var barPieSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "BarPieChartControllerAdapter.cs");
+        var barPieBuilderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "BarPieRenderModelBuilder.cs");
         var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "SyncfusionSunburstChartControllerAdapter.cs");
 
-        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", barPieSource, StringComparison.Ordinal);
+        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", barPieBuilderSource, StringComparison.Ordinal);
         Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", syncfusionSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("private static double?[] BuildBucketTotals", barPieSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static double?[] BuildBucketTotals", barPieBuilderSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private static double?[] BuildBucketTotals", syncfusionSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("private static int ResolveBucketIndex", barPieSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static int ResolveBucketIndex", barPieBuilderSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private static int ResolveBucketIndex", syncfusionSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BarPieAdapter_ShouldDelegateModelPlanningToDedicatedBuilder()
+    {
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "Charts", "Presentation", "BarPieChartControllerAdapter.cs");
+        var builderSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "Charts", "Presentation", "BarPieRenderModelBuilder.cs");
+
+        Assert.Contains("BarPieRenderModelBuilder", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("_renderModelBuilder.BuildAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private async Task<UiChartRenderModel> BuildBarPieRenderModelAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private bool TryResolveBarPieDateRange", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private int ResolveBarPieBucketCount", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static BarPieBucketPlan BuildBarPieBucketPlan", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private async Task<IReadOnlyList<BarPieSeriesTotals>> LoadBarPieSeriesTotalsAsync", adapterSource, StringComparison.Ordinal);
+
+        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", builderSource, StringComparison.Ordinal);
+        Assert.Contains("LoadSeriesTotalsAsync", builderSource, StringComparison.Ordinal);
+        Assert.Contains("BuildBucketPlan", builderSource, StringComparison.Ordinal);
     }
 
     [Fact]
     public void TransformExecutionCoordinator_ShouldDelegateTransformComputationToSharedService()
     {
-        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
+        var workflowSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformWorkflowCoordinator.cs");
         var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformOperationExecutionCoordinator.cs");
 
-        Assert.Contains("_transformOperationExecutionCoordinator.Execute", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("_transformOperationExecutionCoordinator.Execute", workflowSource, StringComparison.Ordinal);
         Assert.Contains("_transformComputationService.ComputeUnaryTransform", coordinatorSource, StringComparison.Ordinal);
         Assert.Contains("_transformComputationService.ComputeBinaryTransform", coordinatorSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("PrepareMetricData", adapterSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("ComputeUnaryTransform(", adapterSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("ComputeBinaryTransform(", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("PrepareMetricData", workflowSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ComputeUnaryTransform(", workflowSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ComputeBinaryTransform(", workflowSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -217,19 +300,23 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("TransformDataResolutionCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("TransformOperationExecutionCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("TransformOperationStateCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("TransformRenderCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("TransformSelectionInteractionCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("TransformSessionMilestoneRecorder", source, StringComparison.Ordinal);
+        Assert.Contains("TransformWorkflowCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("_transformDataResolutionCoordinator.ResolveSelections", source, StringComparison.Ordinal);
-        Assert.Contains("_transformDataResolutionCoordinator.ResolveAsync", source, StringComparison.Ordinal);
-        Assert.Contains("_transformOperationExecutionCoordinator.Execute", source, StringComparison.Ordinal);
         Assert.Contains("_transformOperationStateCoordinator.UpdateComputeButtonState", source, StringComparison.Ordinal);
         Assert.Contains("_transformOperationStateCoordinator.GetSelectedOperationTag", source, StringComparison.Ordinal);
-        Assert.Contains("_transformSessionMilestoneRecorder.RecordExecution", source, StringComparison.Ordinal);
+        Assert.Contains("_transformRenderCoordinator.PopulateInputGrids", source, StringComparison.Ordinal);
         Assert.Contains("_transformSessionMilestoneRecorder.RecordToggle", source, StringComparison.Ordinal);
+        Assert.Contains("_transformWorkflowCoordinator.ExecuteOperationAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_transformWorkflowCoordinator.RenderPrimarySelectionAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_transformWorkflowCoordinator.RefreshFromSelectionAsync", source, StringComparison.Ordinal);
         Assert.Contains("TransformSubtypeSelectionCoordinator.ApplySubtypeOptions", source, StringComparison.Ordinal);
         Assert.Contains("TransformSubtypeSelectionCoordinator.ResetSelectionControls", source, StringComparison.Ordinal);
-        Assert.Contains("TransformGridPresentationCoordinator.PopulateInputGrids", source, StringComparison.Ordinal);
-        Assert.Contains("TransformGridPresentationCoordinator.PopulateResultGrid", source, StringComparison.Ordinal);
-        Assert.Contains("TransformChartPresentationCoordinator.RenderResultsAsync", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformGridPresentationCoordinator.PopulateInputGrids", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformGridPresentationCoordinator.PopulateResultGrid", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformChartPresentationCoordinator.RenderResultsAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private bool CanUpdateTransformSubtypeOptions()", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private void ResetTransformSelectionControls()", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private void UpdatePrimaryTransformSubtype(", source, StringComparison.Ordinal);
@@ -240,9 +327,36 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("private MetricSeriesSelection? ResolveSelectedTransformPrimarySeries", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private MetricSeriesSelection? ResolveSelectedTransformSecondarySeries", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private static ChartDataContext BuildTransformContext", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private TransformChartRenderHost CreateRenderHost", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ResetTransformAuxiliaryVisuals", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private void RecordTransformMilestone", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private void RecordTransformToggleMilestone", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private bool TryGetSelectedOperation", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TransformWorkflowCoordinator_ShouldOwnExecutionRefreshAndResultRenderSequencing()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformWorkflowCoordinator.cs");
+
+        Assert.Contains("_transformDataResolutionCoordinator.ResolveAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_transformOperationExecutionCoordinator.Execute", source, StringComparison.Ordinal);
+        Assert.Contains("_transformRenderCoordinator.RenderResultsAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_transformSessionMilestoneRecorder.RecordExecution", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BaseDistributionService_ShouldDelegateAxisAndSummaryFormattingToDedicatedHelpers()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Services", "BaseDistributionService.cs");
+
+        Assert.Contains("DistributionAxisCoordinator.ConfigureYAxis", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionAxisCoordinator.ConfigureXAxis", source, StringComparison.Ordinal);
+        Assert.Contains("DistributionDebugSummaryLogger.LogSummary", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected static void ConfigureYAxis(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected void ConfigureXAxis(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("protected void LogSummary(", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -258,14 +372,74 @@ public sealed class ArchitectureGuardrailTests
     public void Hosts_ShouldBatchProgrammaticMetricAndSubtypeSelectionMutations()
     {
         var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
-        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(mainSource, "private void OnMetricTypesLoaded"), StringComparison.Ordinal);
-        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(mainSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
+        Assert.Contains("ChartHostMetricSelectionCoordinator", mainSource, StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(mainSource, "private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions"), StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(mainSource, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions"), StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ValidateAndPrepareLoad", ExtractMethodBody(mainSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
         Assert.Contains("_selectorManager.SuppressSelectionChanged()", ExtractMethodBody(mainSource, "private void AddSubtypeComboBox"), StringComparison.Ordinal);
 
         var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
-        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(syncfusionSource, "private void OnMetricTypesLoaded"), StringComparison.Ordinal);
-        Assert.Contains("_viewModel.BeginSelectionStateBatch()", ExtractMethodBody(syncfusionSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
+        Assert.Contains("ChartHostMetricSelectionCoordinator", syncfusionSource, StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(syncfusionSource, "private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions"), StringComparison.Ordinal);
+        Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(syncfusionSource, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions"), StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ValidateAndPrepareLoad", ExtractMethodBody(syncfusionSource, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
         Assert.Contains("_selectorManager.SuppressSelectionChanged()", ExtractMethodBody(syncfusionSource, "private void AddSubtypeComboBox"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateLoadValidationExecutionAndClearFlowThroughDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewLoadCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ValidateAndPrepareLoad", ExtractMethodBody(source, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ExecuteLoadAsync", ExtractMethodBody(source, "private async Task LoadMetricData"), StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ClearSelection", ExtractMethodBody(source, "private void OnClear"), StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartPresentationSpine.LoadMetricDataIntoLastContextAsync", ExtractMethodBody(source, "private async Task LoadMetricData"), StringComparison.Ordinal);
+        Assert.DoesNotContain("_evidenceExportCoordinator.ClearEvidence", ExtractMethodBody(source, "private void OnClear"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateStateProjectionToDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewStateSyncCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_stateSyncCoordinator.Apply", ExtractMethodBody(source, "private void ApplySelectionStateToUi"), StringComparison.Ordinal);
+        Assert.Contains("CreateStateSyncActions", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplyResolutionFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplyDateRangeFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplyMetricTypeFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplySubtypeSelectionsFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplyBucketCountFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void SetComboSelectionByValue", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionChartsView_ShouldReuseSharedStateProjectionCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewStateSyncCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_stateSyncCoordinator.Apply", ExtractMethodBody(source, "private void ApplySelectionStateToUi"), StringComparison.Ordinal);
+        Assert.Contains("CreateStateSyncActions", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplyResolutionFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplyDateRangeFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplyMetricTypeFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void ApplySubtypeSelectionsFromState()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void SetComboSelectionByValue", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionChartsView_ShouldDelegateLoadValidationExecutionAndClearFlowThroughDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        Assert.Contains("SyncfusionChartsViewLoadCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ValidateAndPrepareLoad", ExtractMethodBody(source, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ExecuteLoadAsync", ExtractMethodBody(source, "private async Task LoadMetricData"), StringComparison.Ordinal);
+        Assert.Contains("_loadCoordinator.ClearSelection", ExtractMethodBody(source, "private void OnClear"), StringComparison.Ordinal);
+        Assert.DoesNotContain("try", ExtractMethodBody(source, "private async Task LoadMetricData"), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -409,6 +583,63 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("_zoomResetCoordinator.ResetRegisteredCharts", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("controller.ResetZoom();", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("ResolveController(key).ResetZoom();", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateControllerExtrasInteractionThroughDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewControllerExtrasCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_controllerExtrasCoordinator.InitializeBarPieControls", ExtractMethodBody(source, "private void InitializeBarPieControlsFromRegistry"), StringComparison.Ordinal);
+        Assert.Contains("_controllerExtrasCoordinator.InitializeDistributionControls", ExtractMethodBody(source, "private void InitializeDistributionControlsFromRegistry"), StringComparison.Ordinal);
+        Assert.Contains("_controllerExtrasCoordinator.InitializeWeekdayTrendControls", ExtractMethodBody(source, "private void InitializeWeekdayTrendControls"), StringComparison.Ordinal);
+        Assert.Contains("_controllerExtrasCoordinator.CompleteTransformSelectionsPendingLoad", ExtractMethodBody(source, "private void CompleteTransformSelectionsPendingLoad"), StringComparison.Ordinal);
+        Assert.Contains("_controllerExtrasCoordinator.UpdateTransformComputeButtonState", ExtractMethodBody(source, "private void UpdateTransformComputeButtonState"), StringComparison.Ordinal);
+        Assert.Contains("_controllerExtrasCoordinator.UpdateDiffRatioOperationButton", ExtractMethodBody(source, "private void UpdateDiffRatioOperationButton"), StringComparison.Ordinal);
+        Assert.Contains("_controllerExtrasCoordinator.SyncMainDisplayModeSelection", ExtractMethodBody(source, "private void SyncMainDisplayModeSelection"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is IBarPieChartControllerExtras ", ExtractMethodBody(source, "private void InitializeBarPieControlsFromRegistry"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is IDistributionChartControllerExtras ", ExtractMethodBody(source, "private void InitializeDistributionControlsFromRegistry"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is IWeekdayTrendChartControllerExtras ", ExtractMethodBody(source, "private void InitializeWeekdayTrendControls"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is IDistributionChartControllerExtras ", ExtractMethodBody(source, "private void UpdateDistributionChartTypeVisibility"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is IWeekdayTrendChartControllerExtras ", ExtractMethodBody(source, "private void UpdateWeekdayTrendChartTypeVisibility"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is ITransformPanelControllerExtras ", ExtractMethodBody(source, "private void CompleteTransformSelectionsPendingLoad"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is ITransformPanelControllerExtras ", ExtractMethodBody(source, "private void ResetTransformSelectionsPendingLoad"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is ITransformPanelControllerExtras ", ExtractMethodBody(source, "private void HandleTransformVisibilityOnlyToggle"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is ITransformPanelControllerExtras ", ExtractMethodBody(source, "private void UpdateTransformSubtypeOptions"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is ITransformPanelControllerExtras ", ExtractMethodBody(source, "private void UpdateTransformComputeButtonState"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is IDiffRatioChartControllerExtras ", ExtractMethodBody(source, "private void UpdateDiffRatioOperationButton"), StringComparison.Ordinal);
+        Assert.DoesNotContain(" is IMainChartControllerExtras ", ExtractMethodBody(source, "private void SyncMainDisplayModeSelection"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateRegistryWideControllerOperationsThroughDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewRegistryCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_registryCoordinator.ClearRegisteredCharts", ExtractMethodBody(source, "private void ClearRegisteredCharts"), StringComparison.Ordinal);
+        Assert.Contains("_registryCoordinator.ResolveControllers", ExtractMethodBody(source, "private void ResetRegisteredChartsZoom"), StringComparison.Ordinal);
+        Assert.DoesNotContain("foreach (var key in ChartControllerKeys.All)", ExtractMethodBody(source, "private void ClearRegisteredCharts"), StringComparison.Ordinal);
+        Assert.DoesNotContain("foreach (var controller in _chartControllerRegistry.All())", ExtractMethodBody(source, "private void ClearRegisteredCharts"), StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartControllerKeys.All.Select(ResolveController)", ExtractMethodBody(source, "private void ResetRegisteredChartsZoom"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldDelegateSurfaceStartupAndNoDataPresentationThroughDedicatedCoordinator()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("MainChartsViewSurfaceCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("_surfaceCoordinator.InitializeSurfaces", ExtractMethodBody(source, "private void InitializeCharts"), StringComparison.Ordinal);
+        Assert.DoesNotContain("private void InitializeDistributionPolarTooltip()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void InitializeDistributionChartBehavior(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void DisableAxisLabelsWhenNoData()", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void DisableAxisLabels(", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("private void SetDefaultChartTitles()", source, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -46,9 +46,19 @@ public partial class MainChartsView : UserControl
     private readonly MainChartsViewChartPresentationCoordinator _chartPresentationCoordinator = new();
     private readonly MainChartsViewChartUpdateCoordinator _chartUpdateCoordinatorHost = new();
     private readonly MainChartsViewDataLoadedCoordinator _dataLoadedCoordinator = new();
+    private readonly ChartHostMetricSelectionCoordinator _metricSelectionCoordinator = new();
+    private readonly ChartHostDateRangeCoordinator _dateRangeCoordinator = new();
     private readonly MainChartsViewEvidenceExportCoordinator _evidenceExportCoordinator = new();
+    private readonly MainChartsViewLoadCoordinator _loadCoordinator = new();
+    private readonly MainChartsViewControllerExtrasCoordinator _controllerExtrasCoordinator = new();
+    private readonly MainChartsViewRegistryCoordinator _registryCoordinator = new();
+    private readonly MainChartsViewSurfaceCoordinator _surfaceCoordinator = new();
     private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
+    private readonly MainChartsViewStateSyncCoordinator _stateSyncCoordinator = new();
+    private readonly MainChartsViewCmsToggleCoordinator _cmsToggleCoordinator = new();
     private readonly MainChartsViewZoomResetCoordinator _zoomResetCoordinator = new();
+    private readonly MainChartsViewSelectionCoordinator _selectionCoordinator = new();
+    private readonly MainChartsViewToggleStateCoordinator _toggleStateCoordinator = new();
     private MainChartsSessionDiagnosticsRecorder _sessionDiagnosticsRecorder = null!;
     private MainChartsUiSurfaceDiagnosticsReader _uiSurfaceDiagnosticsReader = null!;
     private MainChartsEvidenceExportService _evidenceExportService = null!;
@@ -166,20 +176,9 @@ public partial class MainChartsView : UserControl
 
     private void UpdateSelectedSubtypesInViewModel()
     {
-        var selectedSeries = GetSelectedSeriesFromUi();
-        var selectedSubtypeCount = CountSelectedSubtypes(selectedSeries);
-
-        _viewModel.SetSelectedSeries(selectedSeries);
-        UpdateSubtypeOptions(ChartControllerKeys.Normalized);
-        UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
-        UpdateSubtypeOptions(ChartControllerKeys.Distribution);
-        UpdateSubtypeOptions(ChartControllerKeys.WeeklyTrend);
-        UpdateSubtypeOptions(ChartControllerKeys.Main);
-        UpdateTransformSubtypeOptions();
-
-        // Update button states based on selected subtype count
-        UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
-        UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
+        _selectionCoordinator.UpdateSelectedSubtypes(
+            GetSelectedSeriesFromUi(),
+            CreateSelectionActions());
     }
 
     private List<MetricSeriesSelection> GetSelectedSeriesFromUi()
@@ -239,29 +238,7 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void UpdateSecondaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
-        var hasSecondaryData = MainChartsViewToggleStateEvaluator.HasLoadedSecondaryData(_viewModel.ChartState.LastContext);
-        var canToggle = MainChartsViewToggleStateEvaluator.CanToggleSecondaryCharts(_viewModel.ChartState.LastContext);
-
-        // If secondary data is no longer available, use the ViewModel state setters to trigger
-        // visibility updates while clearing stale chart data.
-        if (!hasSecondaryData)
-        {
-            if (_viewModel.ChartState.IsNormalizedVisible)
-            {
-                ClearChart(ChartControllerKeys.Normalized);
-                _viewModel.SetNormalizedVisible(false);
-            }
-
-            if (_viewModel.ChartState.IsDiffRatioVisible)
-            {
-                ClearChart(ChartControllerKeys.DiffRatio);
-                _viewModel.SetDiffRatioVisible(false);
-            }
-        }
-
-        // Update button enabled states (this is UI-only, not part of the rendering pipeline)
-        ResolveController(ChartControllerKeys.Normalized).SetToggleEnabled(canToggle);
-        ResolveController(ChartControllerKeys.DiffRatio).SetToggleEnabled(canToggle);
+        _toggleStateCoordinator.UpdateSecondaryChartToggles(_viewModel.ChartState.LastContext, CreateToggleStateActions());
     }
 
     /// <summary>
@@ -270,21 +247,7 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void UpdatePrimaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
-        var canToggle = MainChartsViewToggleStateEvaluator.CanTogglePrimaryCharts(_viewModel.ChartState.LastContext);
-
-        ResolveController(ChartControllerKeys.Main).SetToggleEnabled(canToggle);
-        UpdateMainChartStackedAvailability(selectedSubtypeCount);
-        ResolveController(ChartControllerKeys.WeeklyTrend).SetToggleEnabled(canToggle);
-        ResolveController(ChartControllerKeys.Distribution).SetToggleEnabled(canToggle);
-        ResolveController(ChartControllerKeys.Transform).SetToggleEnabled(canToggle);
-        ResolveController(ChartControllerKeys.BarPie).SetToggleEnabled(canToggle);
-    }
-
-    private void UpdateMainChartStackedAvailability(int selectedSubtypeCount)
-    {
-        var canStack = MainChartsViewToggleStateEvaluator.CanUseStackedDisplay(_viewModel.ChartState.LastContext, selectedSubtypeCount);
-        if (ResolveController(ChartControllerKeys.Main) is IMainChartControllerExtras controller)
-            controller.SetStackedAvailability(canStack);
+        _toggleStateCoordinator.UpdatePrimaryChartToggles(_viewModel.ChartState.LastContext, selectedSubtypeCount, CreateToggleStateActions());
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -304,39 +267,7 @@ public partial class MainChartsView : UserControl
     private void OnMetricTypesLoaded(object? sender, MetricTypesLoadedEventArgs e)
     {
         _isMetricTypeChangePending = false;
-        TablesCombo.Items.Clear();
-
-        var addedAllMetricType = !e.MetricTypes.Any(type => string.Equals(type.Value, "(All)", StringComparison.OrdinalIgnoreCase));
-
-        if (addedAllMetricType)
-            TablesCombo.Items.Add(new MetricNameOption("(All)", "(All)"));
-
-        foreach (var type in e.MetricTypes)
-            TablesCombo.Items.Add(type);
-
-        if (TablesCombo.Items.Count > 0)
-        {
-            _isApplyingSelectionSync = true;
-            try
-            {
-                using var selectionBatch = _viewModel.BeginSelectionStateBatch();
-                TablesCombo.SelectedIndex = addedAllMetricType && TablesCombo.Items.Count > 1 ? 1 : 0;
-                _viewModel.SetSelectedMetricType(GetSelectedMetricValue(TablesCombo));
-            }
-            finally
-            {
-                _isApplyingSelectionSync = false;
-            }
-
-            _viewModel.LoadSubtypesCommand.Execute(null);
-        }
-        else
-        {
-            SubtypeCombo.Items.Clear();
-            SubtypeCombo.IsEnabled = false;
-            _selectorManager.ClearDynamic();
-        }
-
+        _metricSelectionCoordinator.HandleMetricTypesLoaded(e.MetricTypes.ToList(), CreateMetricTypesLoadedActions());
         _isChangingResolution = false;
     }
 
@@ -346,34 +277,24 @@ public partial class MainChartsView : UserControl
 
         _subtypeList = subtypeListLocal;
         var selectedMetricType = GetSelectedMetricOption(TablesCombo);
+        var followUp = _metricSelectionCoordinator.HandleSubtypesLoaded(
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedInput(
+                subtypeListLocal,
+                selectedMetricType,
+                _isMetricTypeChangePending,
+                HasLoadedData(),
+                ShouldRefreshDateRangeForCurrentSelection(),
+                _isInitializing,
+                _viewModel.MetricState.SelectedSeries.Count),
+            CreateSubtypesLoadedActions());
 
-        _isApplyingSelectionSync = true;
-        try
+        if (followUp == ChartHostMetricSelectionCoordinator.SubtypesFollowUp.LoadDateRange)
         {
-            using var comboSuppression = _selectorManager.SuppressSelectionChanged();
-            using var selectionBatch = _viewModel.BeginSelectionStateBatch();
-
-            RefreshPrimarySubtypeCombo(subtypeListLocal, false, selectedMetricType);
-            BuildDynamicSubtypeControls(subtypeListLocal);
-            UpdateSelectedSubtypesInViewModel();
-        }
-        finally
-        {
-            _isApplyingSelectionSync = false;
-        }
-
-        if (_isMetricTypeChangePending)
-        {
-            _isMetricTypeChangePending = false;
             _ = LoadDateRangeForSelectedMetrics();
-
             return;
         }
 
-        if (!HasLoadedData() && ShouldRefreshDateRangeForCurrentSelection())
-            _ = LoadDateRangeForSelectedMetrics();
-
-        if (!_isInitializing && _viewModel.MetricState.SelectedSeries.Count > 0)
+        if (followUp == ChartHostMetricSelectionCoordinator.SubtypesFollowUp.ApplySelectionState)
             ApplySelectionStateToUi();
     }
 
@@ -399,103 +320,12 @@ public partial class MainChartsView : UserControl
         _isApplyingSelectionSync = true;
         try
         {
-            ApplyResolutionFromState();
-            ApplyDateRangeFromState();
-            ApplyMetricTypeFromState();
-            ApplySubtypeSelectionsFromState();
-            ApplyBucketCountFromState();
+            _stateSyncCoordinator.Apply(_viewModel, TablesCombo.Items.OfType<MetricNameOption>(), CreateStateSyncActions());
         }
         finally
         {
             _isApplyingSelectionSync = false;
         }
-    }
-
-    private void ApplyResolutionFromState()
-    {
-        var targetResolution = ChartUiHelper.GetResolutionFromTableName(_viewModel.MetricState.ResolutionTableName);
-        if (ResolutionCombo.SelectedItem?.ToString() != targetResolution)
-            ResolutionCombo.SelectedItem = targetResolution;
-    }
-
-    private void ApplyDateRangeFromState()
-    {
-        if (_viewModel.MetricState.FromDate.HasValue && FromDate.SelectedDate != _viewModel.MetricState.FromDate)
-            FromDate.SelectedDate = _viewModel.MetricState.FromDate;
-
-        if (_viewModel.MetricState.ToDate.HasValue && ToDate.SelectedDate != _viewModel.MetricState.ToDate)
-            ToDate.SelectedDate = _viewModel.MetricState.ToDate;
-    }
-
-    private void ApplyMetricTypeFromState()
-    {
-        var selectedMetric = _viewModel.MetricState.SelectedMetricType;
-        if (string.IsNullOrWhiteSpace(selectedMetric))
-            return;
-
-        var existing = TablesCombo.SelectedItem as MetricNameOption;
-        if (existing != null && string.Equals(existing.Value, selectedMetric, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        var match = TablesCombo.Items.OfType<MetricNameOption>()
-            .FirstOrDefault(item => string.Equals(item.Value, selectedMetric, StringComparison.OrdinalIgnoreCase));
-
-        if (match != null)
-            TablesCombo.SelectedItem = match;
-    }
-
-    private void ApplySubtypeSelectionsFromState()
-    {
-        if (_subtypeList == null || _subtypeList.Count == 0)
-            return;
-
-        var selections = _viewModel.MetricState.SelectedSeries.ToList();
-
-        if (selections.Count == 0)
-            return;
-
-        var metricType = GetSelectedMetricOption(TablesCombo);
-        using var comboSuppression = _selectorManager.SuppressSelectionChanged();
-        _selectorManager.ClearDynamic();
-        _selectorManager.SetPrimaryMetricType(metricType);
-
-        SetComboSelectionByValue(SubtypeCombo, selections[0].QuerySubtype);
-
-        for (var i = 1; i < selections.Count; i++)
-        {
-            var combo = _selectorManager.AddSubtypeCombo(_subtypeList, metricType);
-            SetComboSelectionByValue(combo, selections[i].QuerySubtype);
-        }
-    }
-
-    private void ApplyBucketCountFromState()
-    {
-        var target = _viewModel.ChartState.BarPieBucketCount;
-        if (ResolveController(ChartControllerKeys.BarPie) is IBarPieChartControllerExtras controller)
-            controller.SelectBucketCount(target);
-    }
-
-    private static void SetComboSelectionByValue(ComboBox combo, string? value)
-    {
-        if (combo.Items.Count == 0)
-            return;
-
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            combo.SelectedIndex = 0;
-            return;
-        }
-
-        var match = combo.Items.OfType<MetricNameOption>()
-            .FirstOrDefault(item => string.Equals(item.Value, value, StringComparison.OrdinalIgnoreCase));
-
-        if (match != null)
-        {
-            combo.SelectedItem = match;
-            return;
-        }
-
-        combo.SelectedIndex = 0;
     }
 
     private void BuildDynamicSubtypeControls(IEnumerable<MetricNameOption> subtypes)
@@ -578,68 +408,57 @@ public partial class MainChartsView : UserControl
 
     private void InitializeDistributionControlsFromRegistry()
     {
-        if (ResolveController(ChartControllerKeys.Distribution) is IDistributionChartControllerExtras controller)
-            controller.InitializeControls();
+        _controllerExtrasCoordinator.InitializeDistributionControls(CreateControllerExtrasActions());
     }
 
     private void InitializeWeekdayTrendControls()
     {
-        if (ResolveController(ChartControllerKeys.WeeklyTrend) is IWeekdayTrendChartControllerExtras controller)
-            controller.InitializeControls();
+        _controllerExtrasCoordinator.InitializeWeekdayTrendControls(CreateControllerExtrasActions());
     }
 
     private void UpdateDistributionChartTypeVisibility()
     {
-        if (ResolveController(ChartControllerKeys.Distribution) is IDistributionChartControllerExtras controller)
-            controller.UpdateChartTypeVisibility();
+        _controllerExtrasCoordinator.UpdateDistributionChartTypeVisibility(CreateControllerExtrasActions());
     }
 
     private void UpdateWeekdayTrendChartTypeVisibility()
     {
-        if (ResolveController(ChartControllerKeys.WeeklyTrend) is IWeekdayTrendChartControllerExtras controller)
-            controller.UpdateChartTypeVisibility();
+        _controllerExtrasCoordinator.UpdateWeekdayTrendChartTypeVisibility(CreateControllerExtrasActions());
     }
 
     private void CompleteTransformSelectionsPendingLoad()
     {
-        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
-            controller.CompleteSelectionsPendingLoad();
+        _controllerExtrasCoordinator.CompleteTransformSelectionsPendingLoad(CreateControllerExtrasActions());
     }
 
     private void ResetTransformSelectionsPendingLoad()
     {
-        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
-            controller.ResetSelectionsPendingLoad();
+        _controllerExtrasCoordinator.ResetTransformSelectionsPendingLoad(CreateControllerExtrasActions());
     }
 
     private void HandleTransformVisibilityOnlyToggle(ChartDataContext? context)
     {
-        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
-            controller.HandleVisibilityOnlyToggle(context);
+        _controllerExtrasCoordinator.HandleTransformVisibilityOnlyToggle(context, CreateControllerExtrasActions());
     }
 
     private void UpdateTransformSubtypeOptions()
     {
-        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
-            controller.UpdateTransformSubtypeOptions();
+        _controllerExtrasCoordinator.UpdateTransformSubtypeOptions(CreateControllerExtrasActions());
     }
 
     private void UpdateTransformComputeButtonState()
     {
-        if (ResolveController(ChartControllerKeys.Transform) is ITransformPanelControllerExtras controller)
-            controller.UpdateTransformComputeButtonState();
+        _controllerExtrasCoordinator.UpdateTransformComputeButtonState(CreateControllerExtrasActions());
     }
 
     private void UpdateDiffRatioOperationButton()
     {
-        if (ResolveController(ChartControllerKeys.DiffRatio) is IDiffRatioChartControllerExtras controller)
-            controller.UpdateOperationButton();
+        _controllerExtrasCoordinator.UpdateDiffRatioOperationButton(CreateControllerExtrasActions());
     }
 
     private void SyncMainDisplayModeSelection()
     {
-        if (ResolveController(ChartControllerKeys.Main) is IMainChartControllerExtras controller)
-            controller.SyncDisplayModeSelection();
+        _controllerExtrasCoordinator.SyncMainDisplayModeSelection(CreateControllerExtrasActions());
     }
 
     private Task HandleSingleChartUpdateAsync(ChartUpdateRequestedEventArgs e)
@@ -877,22 +696,11 @@ public partial class MainChartsView : UserControl
 
     private void SyncCmsToggleStates()
     {
-        CmsEnableCheckBox.IsChecked = CmsConfiguration.UseCmsData;
-        CmsSingleCheckBox.IsChecked = CmsConfiguration.UseCmsForSingleMetric;
-        CmsCombinedCheckBox.IsChecked = CmsConfiguration.UseCmsForCombinedMetric;
-        CmsMultiCheckBox.IsChecked = CmsConfiguration.UseCmsForMultiMetric;
-        CmsNormalizedCheckBox.IsChecked = CmsConfiguration.UseCmsForNormalized;
-        CmsWeeklyCheckBox.IsChecked = CmsConfiguration.UseCmsForWeeklyDistribution;
-        CmsWeekdayTrendCheckBox.IsChecked = CmsConfiguration.UseCmsForWeekdayTrend;
-        CmsHourlyCheckBox.IsChecked = CmsConfiguration.UseCmsForHourlyDistribution;
-        CmsBarPieCheckBox.IsChecked = CmsConfiguration.UseCmsForBarPie;
-
-        UpdateCmsToggleEnablement();
+        _cmsToggleCoordinator.SyncStates(CreateCmsToggleSyncActions());
     }
 
-    private void UpdateCmsToggleEnablement()
+    private void UpdateCmsToggleEnablement(bool enabled)
     {
-        var enabled = CmsEnableCheckBox.IsChecked == true;
         CmsSingleCheckBox.IsEnabled = enabled;
         CmsCombinedCheckBox.IsEnabled = enabled;
         CmsMultiCheckBox.IsEnabled = enabled;
@@ -903,37 +711,32 @@ public partial class MainChartsView : UserControl
         CmsBarPieCheckBox.IsEnabled = enabled;
     }
 
-    private void OnCmsToggleChanged(object sender, RoutedEventArgs e)
+    private async void OnCmsToggleChanged(object sender, RoutedEventArgs e)
     {
-        if (_isInitializing)
-            return;
-
-        CmsConfiguration.UseCmsData = CmsEnableCheckBox.IsChecked == true;
-        UpdateCmsToggleEnablement();
-        Debug.WriteLine($"[CMS] Enabled={CmsConfiguration.UseCmsData}");
-
-        if (_viewModel.ChartState.IsBarPieVisible)
-            _ = RenderChartAsync(ChartControllerKeys.BarPie, _viewModel.ChartState.LastContext ?? new ChartDataContext());
+        await _cmsToggleCoordinator.HandleCmsToggleChangedAsync(
+            _isInitializing,
+            CmsEnableCheckBox.IsChecked == true,
+            _viewModel.ChartState.IsBarPieVisible,
+            _viewModel.ChartState.LastContext,
+            CreateCmsToggleChangeActions());
     }
 
-    private void OnCmsStrategyToggled(object sender, RoutedEventArgs e)
+    private async void OnCmsStrategyToggled(object sender, RoutedEventArgs e)
     {
-        if (_isInitializing)
-            return;
-
-        CmsConfiguration.UseCmsForSingleMetric = CmsSingleCheckBox.IsChecked == true;
-        CmsConfiguration.UseCmsForCombinedMetric = CmsCombinedCheckBox.IsChecked == true;
-        CmsConfiguration.UseCmsForMultiMetric = CmsMultiCheckBox.IsChecked == true;
-        CmsConfiguration.UseCmsForNormalized = CmsNormalizedCheckBox.IsChecked == true;
-        CmsConfiguration.UseCmsForWeeklyDistribution = CmsWeeklyCheckBox.IsChecked == true;
-        CmsConfiguration.UseCmsForWeekdayTrend = CmsWeekdayTrendCheckBox.IsChecked == true;
-        CmsConfiguration.UseCmsForHourlyDistribution = CmsHourlyCheckBox.IsChecked == true;
-        CmsConfiguration.UseCmsForBarPie = CmsBarPieCheckBox.IsChecked == true;
-
-        Debug.WriteLine($"[CMS] Enabled={CmsConfiguration.UseCmsData}, Single={CmsConfiguration.UseCmsForSingleMetric}, Combined={CmsConfiguration.UseCmsForCombinedMetric}, Multi={CmsConfiguration.UseCmsForMultiMetric}, Normalized={CmsConfiguration.UseCmsForNormalized}, Weekly={CmsConfiguration.UseCmsForWeeklyDistribution}, WeekdayTrend={CmsConfiguration.UseCmsForWeekdayTrend}, Hourly={CmsConfiguration.UseCmsForHourlyDistribution}, BarPie={CmsConfiguration.UseCmsForBarPie}");
-
-        if (_viewModel.ChartState.IsBarPieVisible)
-            _ = RenderChartAsync(ChartControllerKeys.BarPie, _viewModel.ChartState.LastContext ?? new ChartDataContext());
+        await _cmsToggleCoordinator.HandleStrategyToggleChangedAsync(
+            _isInitializing,
+            new MainChartsViewCmsToggleCoordinator.StrategyToggleInput(
+                CmsSingleCheckBox.IsChecked == true,
+                CmsCombinedCheckBox.IsChecked == true,
+                CmsMultiCheckBox.IsChecked == true,
+                CmsNormalizedCheckBox.IsChecked == true,
+                CmsWeeklyCheckBox.IsChecked == true,
+                CmsWeekdayTrendCheckBox.IsChecked == true,
+                CmsHourlyCheckBox.IsChecked == true,
+                CmsBarPieCheckBox.IsChecked == true),
+            _viewModel.ChartState.IsBarPieVisible,
+            _viewModel.ChartState.LastContext,
+            CreateCmsToggleChangeActions());
     }
 
     #endregion
@@ -951,13 +754,7 @@ public partial class MainChartsView : UserControl
 
     private void InitializeDateRange()
     {
-        var initialFromDate = DateTime.UtcNow.AddDays(-30);
-        var initialToDate = DateTime.UtcNow;
-
-        _viewModel.SetDateRange(initialFromDate, initialToDate);
-
-        FromDate.SelectedDate = _viewModel.MetricState.FromDate;
-        ToDate.SelectedDate = _viewModel.MetricState.ToDate;
+        _dateRangeCoordinator.ApplyDefaultRange(DateTime.UtcNow, CreateDateRangeActions());
     }
 
     private void InitializeResolution()
@@ -977,18 +774,13 @@ public partial class MainChartsView : UserControl
         InitializeBarPieControlsFromRegistry();
         InitializeDistributionControlsFromRegistry();
         InitializeWeekdayTrendControls();
-        InitializeChartBehavior();
-        ClearChartsOnStartup();
-        DisableAxisLabelsWhenNoData();
-        SetDefaultChartTitles();
         UpdateDistributionChartTypeVisibility();
-        InitializeDistributionPolarTooltip();
+        _surfaceCoordinator.InitializeSurfaces(CreateSurfaceActions());
     }
 
     private void InitializeBarPieControlsFromRegistry()
     {
-        if (ResolveController(ChartControllerKeys.BarPie) is IBarPieChartControllerExtras controller)
-            controller.InitializeControls();
+        _controllerExtrasCoordinator.InitializeBarPieControls(CreateControllerExtrasActions());
     }
 
     private void SyncInitialButtonStates()
@@ -1097,96 +889,18 @@ public partial class MainChartsView : UserControl
         InitializeDistributionControlsFromRegistry();
     }
 
-    private void InitializeChartBehavior()
-    {
-        ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Main));
-        InitializeDistributionChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Distribution));
-        ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Normalized));
-        ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.DiffRatio));
-    }
-
-    private void InitializeDistributionPolarTooltip()
-    {
-        _distributionPolarTooltip = new ToolTip
-        {
-                Placement = PlacementMode.Mouse,
-                StaysOpen = true
-        };
-    }
-
-    /// <summary>
-    ///     Common method to initialize distribution chart behavior.
-    /// </summary>
-    private void InitializeDistributionChartBehavior(CartesianChart chart)
-    {
-        ChartUiHelper.InitializeChartBehavior(chart);
-    }
-
-    private void ClearChartsOnStartup()
-    {
-        // Clear charts on startup to prevent gibberish tick labels
-        ClearRegisteredCharts();
-    }
-
     private void ClearRegisteredCharts()
     {
-        if (_chartControllerRegistry == null)
-        {
-            foreach (var key in ChartControllerKeys.All)
-                ResolveController(key).Clear(_viewModel.ChartState);
-            return;
-        }
-
-        foreach (var controller in _chartControllerRegistry.All())
-            controller.Clear(_viewModel.ChartState);
+        _registryCoordinator.ClearRegisteredCharts(_viewModel.ChartState, CreateRegistryActions());
     }
 
     private void ResetRegisteredChartsZoom()
     {
-        var controllers = _chartControllerRegistry != null
-            ? _chartControllerRegistry.All()
-            : ChartControllerKeys.All.Select(ResolveController).ToList();
+        var controllers = _registryCoordinator.ResolveControllers(CreateRegistryActions());
 
         _zoomResetCoordinator.ResetRegisteredCharts(
             controllers,
             new MainChartsViewZoomResetCoordinator.Actions(_sessionDiagnosticsRecorder.TrackHostMessage));
-    }
-
-    private void DisableAxisLabelsWhenNoData()
-    {
-        DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Main));
-        DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Normalized));
-        DisableAxisLabels(GetWpfCartesianChart(ChartControllerKeys.DiffRatio));
-        DisableDistributionAxisLabels(GetWpfCartesianChart(ChartControllerKeys.Distribution));
-        DisableDistributionPolarAxisLabels();
-    }
-
-    /// <summary>
-    ///     Common method to disable axis labels for distribution charts.
-    /// </summary>
-    private void DisableDistributionAxisLabels(CartesianChart chart)
-    {
-        DisableAxisLabels(chart);
-    }
-
-    private void DisableDistributionPolarAxisLabels()
-    {
-        if (_distributionPolarTooltip != null)
-            _distributionPolarTooltip.IsOpen = false;
-    }
-
-    private static void DisableAxisLabels(CartesianChart chart)
-    {
-        if (chart.AxisX.Count > 0)
-            chart.AxisX[0].ShowLabels = false;
-        if (chart.AxisY.Count > 0)
-            chart.AxisY[0].ShowLabels = false;
-    }
-
-    private void SetDefaultChartTitles()
-    {
-        _chartPresentationCoordinator.ApplyDefaultTitles(CreateChartPresentationActions());
-        UpdateDiffRatioOperationButton(); // Initialize button state
     }
 
     #endregion
@@ -1242,12 +956,7 @@ public partial class MainChartsView : UserControl
 
     private void ResetDateRangeToDefault()
     {
-        var initialFromDate = DateTime.UtcNow.AddDays(-30);
-        var initialToDate = DateTime.UtcNow;
-
-        _viewModel.SetDateRange(initialFromDate, initialToDate);
-        FromDate.SelectedDate = _viewModel.MetricState.FromDate;
-        ToDate.SelectedDate = _viewModel.MetricState.ToDate;
+        _dateRangeCoordinator.ApplyDefaultRange(DateTime.UtcNow, CreateDateRangeActions());
     }
 
     /// <summary>
@@ -1262,27 +971,10 @@ public partial class MainChartsView : UserControl
             return;
 
         var selectedMetricType = GetSelectedMetricValue(TablesCombo);
-        _isMetricTypeChangePending = true;
-        _isApplyingSelectionSync = true;
-        try
-        {
-            using var selectionBatch = _viewModel.BeginSelectionStateBatch();
-            _subtypeList = null;
-            // A metric-type change invalidates the loaded chart context. Clear it now so
-            // subsequent subtype changes refresh the new metric family's date range instead
-            // of rerendering stale chart data from the previous metric selection.
-            ClearAllCharts();
-            _viewModel.SetSelectedMetricType(selectedMetricType);
-            _selectorManager.ClearAllSubtypeControls();
-            UpdateSelectedSubtypesInViewModel();
-            UpdateChartTitlesFromSelections();
-        }
-        finally
-        {
-            _isApplyingSelectionSync = false;
-        }
-
-        _viewModel.LoadSubtypesCommand.Execute(null);
+        _metricSelectionCoordinator.HandleMetricTypeSelectionChanged(
+            selectedMetricType,
+            CreateMetricTypeSelectionChangedActions());
+        UpdateChartTitlesFromSelections();
     }
 
     /// <summary>
@@ -1296,16 +988,10 @@ public partial class MainChartsView : UserControl
             return;
 
         UpdateSelectedSubtypesInViewModel();
-
-        if (HasLoadedData())
-        {
-            UpdateChartTitlesFromSelections();
-            await RenderChartsFromLastContext();
-            return;
-        }
-
-        if (ShouldRefreshDateRangeForCurrentSelection())
-            await LoadDateRangeForSelectedMetrics();
+        await _selectionCoordinator.HandleSubtypeSelectionChangedAsync(
+            HasLoadedData(),
+            ShouldRefreshDateRangeForCurrentSelection(),
+            CreateSelectionActions());
     }
 
     private async Task LoadDateRangeForSelectedMetrics()
@@ -1340,58 +1026,19 @@ public partial class MainChartsView : UserControl
     private Task<bool> LoadDataAndValidate()
     {
         var selectedMetricType = GetSelectedMetricValue(TablesCombo);
-        if (selectedMetricType == null)
-        {
-            ShowTrackedMessage("No Selection", "Please select a Metric Type", MessageBoxImage.Warning);
-            return Task.FromResult(false);
-        }
-
         var fromDate = FromDate.SelectedDate ?? DateTime.UtcNow.AddDays(-30);
         var toDate = ToDate.SelectedDate ?? DateTime.UtcNow;
-        using (var selectionBatch = _viewModel.BeginSelectionStateBatch())
-        {
-            _viewModel.SetSelectedMetricType(selectedMetricType);
-            UpdateSelectedSubtypesInViewModel();
-            _viewModel.SetDateRange(fromDate, toDate);
-        }
 
-        UpdateChartTitlesFromSelections();
+        var isValid = _loadCoordinator.ValidateAndPrepareLoad(
+            new MainChartsViewLoadCoordinator.LoadValidationInput(selectedMetricType, fromDate, toDate),
+            CreateLoadValidationActions());
 
-        var (isValid, errorMessage) = _viewModel.ValidateDataLoadRequirements();
-        if (!isValid)
-        {
-            ShowTrackedMessage("Invalid Selection", errorMessage ?? "The current selection is not valid.", MessageBoxImage.Warning);
-            return Task.FromResult(false);
-        }
-
-        return Task.FromResult(true);
+        return Task.FromResult(isValid);
     }
 
     private async Task LoadMetricData()
     {
-        try
-        {
-            ClearChartCache(ChartControllerKeys.Distribution);
-            ClearChartCache(ChartControllerKeys.WeeklyTrend);
-            ClearChartCache(ChartControllerKeys.Normalized);
-            ClearChartCache(ChartControllerKeys.DiffRatio);
-            ClearChartCache(ChartControllerKeys.Transform);
-            ResetTransformSelectionsPendingLoad();
-            var dataLoaded = await ChartPresentationSpine.LoadMetricDataIntoLastContextAsync(_viewModel);
-            if (!dataLoaded)
-            {
-                ClearAllCharts();
-                return;
-            }
-
-            _chartPresentationCoordinator.ClearHiddenCharts(_viewModel.ChartState, CreateChartPresentationActions());
-            ChartPresentationSpine.PublishLastContextAndRequestChartUpdate(_viewModel);
-        }
-        catch (Exception ex)
-        {
-            ShowTrackedMessage("Error", $"Error loading data: {ex.Message}", MessageBoxImage.Error);
-            ClearAllCharts();
-        }
+        await _loadCoordinator.ExecuteLoadAsync(CreateLoadExecutionActions());
     }
 
     private void AddSubtypeComboBox(object sender, RoutedEventArgs e)
@@ -1424,24 +1071,10 @@ public partial class MainChartsView : UserControl
     private void OnClear(object sender, RoutedEventArgs e)
     {
         const string defaultResolution = "All";
-
-        _sessionDiagnosticsRecorder.RecordSessionMilestone("ClearInvoked", "Info", "User cleared current selection and chart state.");
-
-        // Clear selection state and disable chart toggles immediately on reset.
-        _evidenceExportCoordinator.ClearEvidence(CreateEvidenceExportActions());
-        _viewModel.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
-        _viewModel.ChartState.LastContext = new ChartDataContext();
-        _viewModel.ChartState.LastLoadRuntime = null;
-        UpdatePrimaryDataRequiredButtonStates(0);
-        UpdateSecondaryDataRequiredButtonStates(0);
-
-        if (ResolutionCombo.SelectedItem?.ToString() == defaultResolution)
-        {
-            ResetForResolutionChange(defaultResolution);
-            return;
-        }
-
-        ResolutionCombo.SelectedItem = defaultResolution;
+        _loadCoordinator.ClearSelection(
+            defaultResolution,
+            ResolutionCombo.SelectedItem?.ToString() == defaultResolution,
+            CreateClearActions());
     }
 
     private async void OnExportReachability(object sender, RoutedEventArgs e)
@@ -1519,6 +1152,245 @@ public partial class MainChartsView : UserControl
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Information),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Warning),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Error));
+    }
+
+    private MainChartsViewSelectionCoordinator.Actions CreateSelectionActions()
+    {
+        return new MainChartsViewSelectionCoordinator.Actions(
+            selections => _viewModel.SetSelectedSeries(selections),
+            UpdateSubtypeOptions,
+            UpdateTransformSubtypeOptions,
+            UpdatePrimaryDataRequiredButtonStates,
+            UpdateSecondaryDataRequiredButtonStates,
+            UpdateChartTitlesFromSelections,
+            RenderChartsFromLastContext,
+            LoadDateRangeForSelectedMetrics);
+    }
+
+    private MainChartsViewLoadCoordinator.ValidationActions CreateLoadValidationActions()
+    {
+        return new MainChartsViewLoadCoordinator.ValidationActions(
+            _viewModel.BeginSelectionStateBatch,
+            _viewModel.SetSelectedMetricType,
+            UpdateSelectedSubtypesInViewModel,
+            (from, to) => _viewModel.SetDateRange(from, to),
+            UpdateChartTitlesFromSelections,
+            _viewModel.ValidateDataLoadRequirements,
+            (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Warning));
+    }
+
+    private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions()
+    {
+        return new ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions(
+            () => TablesCombo.Items.Clear(),
+            option => TablesCombo.Items.Add(option),
+            () => TablesCombo.Items.Count,
+            value => _isApplyingSelectionSync = value,
+            _viewModel.BeginSelectionStateBatch,
+            index => TablesCombo.SelectedIndex = index,
+            () => GetSelectedMetricValue(TablesCombo),
+            _viewModel.SetSelectedMetricType,
+            () => _viewModel.LoadSubtypesCommand.Execute(null),
+            () => SubtypeCombo.Items.Clear(),
+            value => SubtypeCombo.IsEnabled = value,
+            () => _selectorManager.ClearDynamic());
+    }
+
+    private ChartHostMetricSelectionCoordinator.MetricTypeSelectionChangedActions CreateMetricTypeSelectionChangedActions()
+    {
+        return new ChartHostMetricSelectionCoordinator.MetricTypeSelectionChangedActions(
+            value => _isMetricTypeChangePending = value,
+            value => _isApplyingSelectionSync = value,
+            _viewModel.BeginSelectionStateBatch,
+            () =>
+            {
+                _subtypeList = null;
+                ClearAllCharts();
+            },
+            _viewModel.SetSelectedMetricType,
+            () => _selectorManager.ClearAllSubtypeControls(),
+            UpdateSelectedSubtypesInViewModel,
+            () => _viewModel.LoadSubtypesCommand.Execute(null));
+    }
+
+    private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions()
+    {
+        return new ChartHostMetricSelectionCoordinator.SubtypesLoadedActions(
+            value => _isApplyingSelectionSync = value,
+            _selectorManager.SuppressSelectionChanged,
+            _viewModel.BeginSelectionStateBatch,
+            (subtypes, preserveSelection, selectedMetricType) => RefreshPrimarySubtypeCombo(subtypes, preserveSelection, selectedMetricType),
+            subtypes => BuildDynamicSubtypeControls(subtypes),
+            UpdateSelectedSubtypesInViewModel,
+            value => _isMetricTypeChangePending = value);
+    }
+
+    private MainChartsViewLoadCoordinator.LoadExecutionActions CreateLoadExecutionActions()
+    {
+        return new MainChartsViewLoadCoordinator.LoadExecutionActions(
+            ClearChartCache,
+            ResetTransformSelectionsPendingLoad,
+            () => ChartPresentationSpine.LoadMetricDataIntoLastContextAsync(_viewModel),
+            ClearAllCharts,
+            () => _chartPresentationCoordinator.ClearHiddenCharts(_viewModel.ChartState, CreateChartPresentationActions()),
+            () => ChartPresentationSpine.PublishLastContextAndRequestChartUpdate(_viewModel),
+            (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Error));
+    }
+
+    private MainChartsViewLoadCoordinator.ClearActions CreateClearActions()
+    {
+        return new MainChartsViewLoadCoordinator.ClearActions(
+            _sessionDiagnosticsRecorder.RecordSessionMilestone,
+            () => _evidenceExportCoordinator.ClearEvidence(CreateEvidenceExportActions()),
+            selections => _viewModel.SetSelectedSeries(selections),
+            () =>
+            {
+                _viewModel.ChartState.LastContext = new ChartDataContext();
+                _viewModel.ChartState.LastLoadRuntime = null;
+            },
+            UpdatePrimaryDataRequiredButtonStates,
+            UpdateSecondaryDataRequiredButtonStates,
+            ResetForResolutionChange,
+            resolution => ResolutionCombo.SelectedItem = resolution);
+    }
+
+    private MainChartsViewStateSyncCoordinator.Actions CreateStateSyncActions()
+    {
+        return new MainChartsViewStateSyncCoordinator.Actions(
+            targetResolution =>
+            {
+                if (ResolutionCombo.SelectedItem?.ToString() != targetResolution)
+                    ResolutionCombo.SelectedItem = targetResolution;
+            },
+            fromDate =>
+            {
+                if (FromDate.SelectedDate != fromDate)
+                    FromDate.SelectedDate = fromDate;
+            },
+            toDate =>
+            {
+                if (ToDate.SelectedDate != toDate)
+                    ToDate.SelectedDate = toDate;
+            },
+            metricType =>
+            {
+                if (metricType == null)
+                    return;
+
+                var existing = TablesCombo.SelectedItem as MetricNameOption;
+                if (existing != null && string.Equals(existing.Value, metricType.Value, StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                TablesCombo.SelectedItem = metricType;
+            },
+            (selections, selectedMetricType) =>
+            {
+                if (_subtypeList == null || _subtypeList.Count == 0)
+                    return;
+
+                MainChartsViewStateSyncCoordinator.ApplySubtypeSelections(
+                    _selectorManager,
+                    SubtypeCombo,
+                    _subtypeList,
+                    selections,
+                    selectedMetricType);
+            },
+            bucketCount =>
+            {
+                if (ResolveController(ChartControllerKeys.BarPie) is IBarPieChartControllerExtras controller)
+                    controller.SelectBucketCount(bucketCount);
+            });
+    }
+
+    private MainChartsViewToggleStateCoordinator.Actions CreateToggleStateActions()
+    {
+        return new MainChartsViewToggleStateCoordinator.Actions(
+            ResolveController,
+            ClearChart,
+            () =>
+            {
+                if (_viewModel.ChartState.IsNormalizedVisible)
+                    _viewModel.SetNormalizedVisible(false);
+            },
+            () =>
+            {
+                if (_viewModel.ChartState.IsDiffRatioVisible)
+                    _viewModel.SetDiffRatioVisible(false);
+            });
+    }
+
+    private MainChartsViewCmsToggleCoordinator.SyncActions CreateCmsToggleSyncActions()
+    {
+        return new MainChartsViewCmsToggleCoordinator.SyncActions(
+            value => CmsEnableCheckBox.IsChecked = value,
+            value => CmsSingleCheckBox.IsChecked = value,
+            value => CmsCombinedCheckBox.IsChecked = value,
+            value => CmsMultiCheckBox.IsChecked = value,
+            value => CmsNormalizedCheckBox.IsChecked = value,
+            value => CmsWeeklyCheckBox.IsChecked = value,
+            value => CmsWeekdayTrendCheckBox.IsChecked = value,
+            value => CmsHourlyCheckBox.IsChecked = value,
+            value => CmsBarPieCheckBox.IsChecked = value,
+            value => CmsSingleCheckBox.IsEnabled = value,
+            value => CmsCombinedCheckBox.IsEnabled = value,
+            value => CmsMultiCheckBox.IsEnabled = value,
+            value => CmsNormalizedCheckBox.IsEnabled = value,
+            value => CmsWeeklyCheckBox.IsEnabled = value,
+            value => CmsWeekdayTrendCheckBox.IsEnabled = value,
+            value => CmsHourlyCheckBox.IsEnabled = value,
+            value => CmsBarPieCheckBox.IsEnabled = value);
+    }
+
+    private MainChartsViewCmsToggleCoordinator.ChangeActions CreateCmsToggleChangeActions()
+    {
+        return new MainChartsViewCmsToggleCoordinator.ChangeActions(
+            UpdateCmsToggleEnablement,
+            RenderChartAsync);
+    }
+
+    private ChartHostDateRangeCoordinator.Actions CreateDateRangeActions()
+    {
+        return new ChartHostDateRangeCoordinator.Actions(
+            _viewModel.SetDateRange,
+            value => FromDate.SelectedDate = value,
+            value => ToDate.SelectedDate = value,
+            () => _viewModel.MetricState.FromDate,
+            () => _viewModel.MetricState.ToDate);
+    }
+
+    private MainChartsViewControllerExtrasCoordinator.Actions CreateControllerExtrasActions()
+    {
+        return new MainChartsViewControllerExtrasCoordinator.Actions(ResolveController);
+    }
+
+    private MainChartsViewRegistryCoordinator.Actions CreateRegistryActions()
+    {
+        return new MainChartsViewRegistryCoordinator.Actions(
+            () => _chartControllerRegistry?.All().ToList(),
+            ResolveController);
+    }
+
+    private MainChartsViewSurfaceCoordinator.Actions CreateSurfaceActions()
+    {
+        return new MainChartsViewSurfaceCoordinator.Actions(
+            () => GetWpfCartesianChart(ChartControllerKeys.Main),
+            () => GetWpfCartesianChart(ChartControllerKeys.Normalized),
+            () => GetWpfCartesianChart(ChartControllerKeys.DiffRatio),
+            () => GetWpfCartesianChart(ChartControllerKeys.Distribution),
+            () =>
+            {
+                ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Main));
+                ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Normalized));
+                ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.DiffRatio));
+            },
+            () => ChartUiHelper.InitializeChartBehavior(GetWpfCartesianChart(ChartControllerKeys.Distribution)),
+            ClearRegisteredCharts,
+            () =>
+            {
+                _chartPresentationCoordinator.ApplyDefaultTitles(CreateChartPresentationActions());
+                UpdateDiffRatioOperationButton();
+            },
+            tooltip => _distributionPolarTooltip = tooltip);
     }
 
     #endregion

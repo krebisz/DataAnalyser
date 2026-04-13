@@ -3,8 +3,8 @@
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for the active hierarchy-reconciliation and VNext activation work (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
-**Last Updated:** 2026-04-12  
-**Change Note:** Phase 6.3 widened the live VNext slice to the main chart family (`Main`, `Normalized`, `Diff/Ratio`) and kept legacy fallback for the remaining chart families
+**Last Updated:** 2026-04-13  
+**Change Note:** Phase 6 is now late-stage: `6.1` and `6.5` are closed, the live VNext slice is established for the main chart family, and the `6.6` audit/baseline refresh is underway
 
 ---
 
@@ -400,8 +400,13 @@ The goal is to make the system legible enough that:
 - Evidence boundary decomposed: `MainChartsEvidenceExportService` split into `EvidenceExportModels` (21 standalone DTOs), `EvidenceDiagnosticsBuilder` (diagnostics assembly), and export orchestration
 - `LoadRuntimeState` on `ChartState` tracks runtime path (`Legacy`/`VNextMain`), request/snapshot/program/projected-context signatures, and failure reason
 - `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports with signature-chain alignment flags
+- `MainChartsView` now delegates session diagnostics, UI-surface diagnostics, subtype-selection bookkeeping, load/clear bookkeeping, resolution reset, zoom reset, startup, evidence export, data-loaded flow, chart update, and chart presentation through dedicated host seams
+- metric-type list initialization, metric-type-change reset/reload, and subtype-loaded follow-up behavior are now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostMetricSelectionCoordinator`
+- `MainChartsView` host/controller-extras interaction, registry-wide controller resolution, and chart-surface startup/no-data presentation are now delegated through dedicated coordinators
+- `TransformDataPanelControllerAdapter` now delegates subtype-selection interaction, operation state, execution, milestone recording, data resolution, and render/grid handoff through dedicated coordinators
+- `BaseDistributionService` now delegates pure computation, simple-range assembly, series construction, axis shaping, and debug-summary formatting through dedicated helpers
 - Smoke-verified with April 2026 exports: VNext path produces aligned signatures, legacy fallback produces correct state, all 8 parity strategies pass
-- 471 automated tests pass (26 new covering VNext routing, fallback, signature preservation, display mode, and CMS independence)
+- 609 automated tests pass in the current default full-solution lane
 
 **Current evidence artifacts (April 2026):**
 - `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
@@ -448,6 +453,12 @@ The goal is to make the system legible enough that:
 - measure the new hierarchy
 - record remaining outliers and repeated debt patterns
 - refresh current execution maps, success criteria, and architectural evidence
+
+**Current Audit Read (April 2026)**
+- The hierarchy is materially more trustworthy than it was at Phase 6 entry: repeated low-level operations are no longer the dominant problem, and the remaining debt is now concentrated in explicit outliers.
+- `6.1` is closed, `6.5` is closed for the current cycle, and `6.3` has real architectural proof through the live main-chart-family VNext route with legacy fallback and export-backed signature-chain diagnostics.
+- `MainChartsView` remains the largest host concentration point, but it is now substantially thinner and more compositional; further reduction is possible, but the next meaningful slices are increasingly behavior-adjacent rather than free structural cleanup.
+- The next decision is no longer “keep extracting until the file is smaller”. It is “open one more live-sensitive seam with targeted smoke, or treat the current baseline as sufficient to close Phase 6 after the audit”.
 
 **Closure Condition**
 - the next cycle starts from an auditable baseline rather than from accumulated guesswork
@@ -657,8 +668,9 @@ Major next steps in sequence:
 3. `Phase 6.4` - outlier decomposition
 4. `Phase 6.5` - physical hierarchy and naming realignment
 5. `Phase 6.6` - architecture audit and baseline refresh
-6. `Phase 7` - exploratory and confidence capability expansion after Phase 6 is sufficiently advanced
-7. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
+6. decide whether one more bounded live-sensitive Phase 6 slice is justified, or whether the current baseline is sufficient for closure
+7. `Phase 7` - exploratory and confidence capability expansion after Phase 6 is sufficiently advanced
+8. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
 
 ---
 

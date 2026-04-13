@@ -46,18 +46,27 @@ public sealed class TransformOperationRegistryTests
     [Fact]
     public void Register_ShouldOverrideOperationWithSameId()
     {
+        var original = TransformOperationRegistry.GetOperation("Log");
         var op = TransformOperation.Unary("Log", "Logarithm", x => 123.0);
 
-        TransformOperationRegistry.Register(op);
-
-        var fetched = TransformOperationRegistry.GetOperation("Log");
-        Assert.NotNull(fetched);
-
-        var v = fetched!.Execute(new[]
+        try
         {
-                0.0
-        });
-        Assert.Equal(123.0, v);
+            TransformOperationRegistry.Register(op);
+
+            var fetched = TransformOperationRegistry.GetOperation("Log");
+            Assert.NotNull(fetched);
+
+            var v = fetched!.Execute(new[]
+            {
+                    0.0
+            });
+            Assert.Equal(123.0, v);
+        }
+        finally
+        {
+            if (original != null)
+                TransformOperationRegistry.Register(original);
+        }
     }
 
     [Fact]

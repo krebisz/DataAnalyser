@@ -21,13 +21,15 @@ public sealed class ChartRenderEngine
     /// </summary>
     public void Render(CartesianChart targetChart, ChartRenderModel model, double minHeight = 400.0)
     {
-        ValidateInputs(targetChart, model);
-        PrepareChart(targetChart);
+        ArgumentNullException.ThrowIfNull(targetChart);
+        ArgumentNullException.ThrowIfNull(model);
 
-        LogRenderStart(targetChart, model);
+        ChartHelper.ClearChart(targetChart);
+
+        Debug.WriteLine($"[ChartRenderEngine] Render: chart={targetChart.Name}, Timestamps={model.Timestamps?.Count ?? 0}, PrimaryRaw={model.PrimaryRaw?.Count ?? 0}, PrimarySmoothed={model.PrimarySmoothed?.Count ?? 0}, NormalizedIntervals={model.NormalizedIntervals?.Count ?? 0}");
 
         var isStacked = ShouldStackSeries(model);
-        var seriesMode = isStacked ? ResolveStackedSeriesMode() : model.SeriesMode;
+        var seriesMode = isStacked ? ChartSeriesMode.SmoothedOnly : model.SeriesMode;
 
         if (HasMultiSeriesMode(model))
             RenderMultiSeriesMode(targetChart, model, isStacked, seriesMode);
@@ -37,54 +39,12 @@ public sealed class ChartRenderEngine
         RenderOverlaySeries(targetChart, model);
         BringOverlaySeriesToFront(targetChart, model);
 
-        LogRenderEnd(targetChart);
+        Debug.WriteLine($"[ChartRenderEngine] After Render: chart={targetChart.Name}, SeriesCount={targetChart.Series?.Count ?? 0}");
 
-        ConfigureAxes(targetChart, model);
+        ConfigureXAxis(targetChart, model);
+        ConfigureYAxis(targetChart);
     }
 
-    private static void PrepareChart(CartesianChart chart)
-    {
-        ChartHelper.ClearChart(chart);
-    }
-
-    private static void ConfigureAxes(CartesianChart chart, ChartRenderModel model)
-    {
-        ConfigureXAxis(chart, model);
-        ConfigureYAxis(chart);
-    }
-
-    private static void LogRenderStart(CartesianChart chart, ChartRenderModel model)
-    {
-        Debug.WriteLine($"[TransformChart] Render: chart={chart.Name}, " + $"Timestamps={model.Timestamps?.Count ?? 0}, " + $"PrimaryRaw={model.PrimaryRaw?.Count ?? 0}, " + $"PrimarySmoothed={model.PrimarySmoothed?.Count ?? 0}, " + $"NormalizedIntervals={model.NormalizedIntervals?.Count ?? 0}");
-    }
-
-    private static void LogRenderEnd(CartesianChart chart)
-    {
-        Debug.WriteLine($"[TransformChart] After Render: chart={chart.Name}, " + $"SeriesCount={chart.Series?.Count ?? 0}");
-    }
-
-    /// <summary>
-    ///     Validates that required inputs are not null.
-    /// </summary>
-    private static void ValidateInputs(CartesianChart targetChart, ChartRenderModel model)
-    {
-        if (targetChart == null)
-            throw new ArgumentNullException(nameof(targetChart));
-        if (model == null)
-            throw new ArgumentNullException(nameof(model));
-    }
-
-    /// <summary>
-    ///     Clears all series from the target chart.
-    /// </summary>
-    private static void ClearChart(CartesianChart targetChart)
-    {
-        targetChart.Series.Clear();
-    }
-
-    /// <summary>
-    ///     Determines if the model uses multi-series mode (Series array is present and non-empty).
-    /// </summary>
     private static bool HasMultiSeriesMode(ChartRenderModel model)
     {
         return model.Series != null && model.Series.Count > 0;
@@ -96,7 +56,6 @@ public sealed class ChartRenderEngine
     /// </summary>
     private void RenderMultiSeriesMode(CartesianChart targetChart, ChartRenderModel model, bool isStacked, ChartSeriesMode seriesMode)
     {
-        // Reset color palette for this chart to ensure consistent color assignment
         ColourPalette.Reset(targetChart);
 
         var mainTimeline = GetMainTimeline(model);
@@ -114,34 +73,24 @@ public sealed class ChartRenderEngine
             RenderSingleSeries(targetChart, seriesResult, mainTimeline, seriesMode, isStacked);
     }
 
-    /// <summary>
-    ///     Gets the main timeline for series alignment, using model.Timestamps or falling back to union of all series
-    ///     timestamps.
-    /// </summary>
     private static List<DateTime> GetMainTimeline(ChartRenderModel model)
     {
         var mainTimeline = model.Timestamps;
         if (mainTimeline == null || mainTimeline.Count == 0)
-                // Fallback: use union of all series timestamps
             if (model.Series != null)
                 mainTimeline = model.Series.SelectMany(s => s.Timestamps).Distinct().OrderBy(t => t).ToList();
 
         return mainTimeline ?? new List<DateTime>();
     }
 
-    /// <summary>
-    ///     Renders a single series result, including both raw and smoothed series based on SeriesMode.
-    /// </summary>
     private void RenderSingleSeries(CartesianChart targetChart, SeriesResult seriesResult, List<DateTime> mainTimeline, ChartSeriesMode seriesMode, bool isStacked)
     {
         var seriesColor = ColourPalette.Next(targetChart);
 
         var alignedRaw = SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.RawValues, mainTimeline);
-
         var alignedSmoothed = seriesResult.Smoothed != null ? SeriesAlignmentHelper.AlignSeriesToTimeline(seriesResult.Timestamps, seriesResult.Smoothed, mainTimeline) : null;
 
         TryRenderSeries(targetChart, seriesResult, alignedSmoothed, seriesColor, seriesMode, true, isStacked);
-
         TryRenderSeries(targetChart, seriesResult, alignedRaw, Colors.DarkGray, seriesMode, false, isStacked);
     }
 
@@ -157,15 +106,12 @@ public sealed class ChartRenderEngine
             return;
 
         var title = $"{result.DisplayName} ({(isSmoothed ? "smooth" : "raw")})";
-
         var series = ChartSeriesMaterializer.CreateAndPopulateSeries(title, isSmoothed ? ChartRenderDefaults.SmoothedPointSize : ChartRenderDefaults.RawPointSize, isSmoothed ? ChartRenderDefaults.SmoothedLineThickness : ChartRenderDefaults.RawLineThickness, color, values, isStacked);
-
         chart.Series.Add(series);
     }
 
     /// <summary>
     ///     Renders chart in legacy mode, using PrimaryRaw/PrimarySmoothed and optionally SecondaryRaw/SecondarySmoothed.
-    ///     Values are aligned to NormalizedIntervals for proper X-axis rendering.
     /// </summary>
     private void RenderLegacyMode(CartesianChart targetChart, ChartRenderModel model, bool isStacked, ChartSeriesMode seriesMode)
     {
@@ -216,7 +162,7 @@ public sealed class ChartRenderEngine
         if (values == null || values.Count == 0)
             return;
 
-        var title = FormatSeriesLabel(model, isPrimary, useSmoothed);
+        var title = ChartSeriesLabelFormatter.FormatSeriesLabel(model, isPrimary, useSmoothed);
         var color = isPrimary ? model.PrimaryColor : model.SecondaryColor;
         var stats = ChartSeriesMaterializer.GetValueStats(values);
         Debug.WriteLine($"[StackedRender] chart={targetChart.Name}, series={title}, usedSmoothed={useSmoothed}, count={values.Count}, valid={stats.Valid}, NaN={stats.NaN}");
@@ -279,67 +225,48 @@ public sealed class ChartRenderEngine
         }
     }
 
-    /// <summary>
-    ///     Renders the primary series (raw and/or smoothed) in legacy mode, respecting SeriesMode.
-    ///     Values are aligned to actual data timestamps - X-axis formatter maps positions to normalized intervals for display.
-    /// </summary>
     private void RenderPrimarySeries(CartesianChart targetChart, ChartRenderModel model, bool isStacked, ChartSeriesMode seriesMode)
     {
-        // Values must be aligned to actual data timestamps (not normalized intervals)
-        // The X-axis range uses data timestamps count, and formatter maps to normalized intervals for labels
         var dataTimestamps = model.Timestamps ?? new List<DateTime>();
 
-        Debug.WriteLine($"[TransformChart] RenderPrimarySeries: chart={targetChart.Name}, dataTimestamps={dataTimestamps.Count}, PrimaryRaw={model.PrimaryRaw?.Count ?? 0}, PrimarySmoothed={model.PrimarySmoothed?.Count ?? 0}");
+        Debug.WriteLine($"[ChartRenderEngine] RenderPrimarySeries: chart={targetChart.Name}, dataTimestamps={dataTimestamps.Count}, PrimaryRaw={model.PrimaryRaw?.Count ?? 0}, PrimarySmoothed={model.PrimarySmoothed?.Count ?? 0}");
 
-        // Render smoothed series if available and enabled
         if (seriesMode == ChartSeriesMode.RawAndSmoothed || seriesMode == ChartSeriesMode.SmoothedOnly)
             if (model.PrimarySmoothed != null && model.PrimarySmoothed.Count > 0)
             {
-                var primarySmoothedLabel = FormatSeriesLabel(model, true, true);
-                // Values should already be aligned to dataTimestamps from the strategy
-                var smoothedPrimary = ChartSeriesMaterializer.CreateAndPopulateSeries(primarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.PrimaryColor, model.PrimarySmoothed.ToList(), isStacked);
-                targetChart.Series.Add(smoothedPrimary);
-                Debug.WriteLine($"[TransformChart] Added smoothed series: {primarySmoothedLabel}, values={model.PrimarySmoothed.Count}");
+                var label = ChartSeriesLabelFormatter.FormatSeriesLabel(model, true, true);
+                var series = ChartSeriesMaterializer.CreateAndPopulateSeries(label, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.PrimaryColor, model.PrimarySmoothed.ToList(), isStacked);
+                targetChart.Series.Add(series);
             }
 
-        // Render raw series if enabled
         if (seriesMode == ChartSeriesMode.RawAndSmoothed || seriesMode == ChartSeriesMode.RawOnly)
             if (model.PrimaryRaw != null && model.PrimaryRaw.Count > 0)
             {
-                var primaryRawLabel = FormatSeriesLabel(model, true, false);
-                // Values should already be aligned to dataTimestamps from the strategy
-                var rawPrimary = ChartSeriesMaterializer.CreateAndPopulateSeries(primaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.PrimaryRaw.ToList(), isStacked);
-                targetChart.Series.Add(rawPrimary);
-                Debug.WriteLine($"[TransformChart] Added raw series: {primaryRawLabel}, values={model.PrimaryRaw.Count}");
+                var label = ChartSeriesLabelFormatter.FormatSeriesLabel(model, true, false);
+                var series = ChartSeriesMaterializer.CreateAndPopulateSeries(label, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.PrimaryRaw.ToList(), isStacked);
+                targetChart.Series.Add(series);
             }
     }
 
-    /// <summary>
-    ///     Renders the secondary series (raw and/or smoothed) in legacy mode, if available, respecting SeriesMode.
-    ///     Values are aligned to actual data timestamps - X-axis formatter maps positions to normalized intervals for display.
-    /// </summary>
     private void RenderSecondarySeries(CartesianChart targetChart, ChartRenderModel model, bool isStacked, ChartSeriesMode seriesMode)
     {
         if (model.SecondarySmoothed == null || model.SecondaryRaw == null)
             return;
 
-        // Values should already be aligned to dataTimestamps from the strategy
-        // Render smoothed series if available and enabled
         if (seriesMode == ChartSeriesMode.RawAndSmoothed || seriesMode == ChartSeriesMode.SmoothedOnly)
             if (model.SecondarySmoothed.Count > 0)
             {
-                var secondarySmoothedLabel = FormatSeriesLabel(model, false, true);
-                var smoothedSecondary = ChartSeriesMaterializer.CreateAndPopulateSeries(secondarySmoothedLabel, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.SecondaryColor, model.SecondarySmoothed.ToList(), isStacked);
-                targetChart.Series.Add(smoothedSecondary);
+                var label = ChartSeriesLabelFormatter.FormatSeriesLabel(model, false, true);
+                var series = ChartSeriesMaterializer.CreateAndPopulateSeries(label, ChartRenderDefaults.SmoothedPointSize, ChartRenderDefaults.SmoothedLineThickness, model.SecondaryColor, model.SecondarySmoothed.ToList(), isStacked);
+                targetChart.Series.Add(series);
             }
 
-        // Render raw series if enabled
         if (seriesMode == ChartSeriesMode.RawAndSmoothed || seriesMode == ChartSeriesMode.RawOnly)
             if (model.SecondaryRaw.Count > 0)
             {
-                var secondaryRawLabel = FormatSeriesLabel(model, false, false);
-                var rawSecondary = ChartSeriesMaterializer.CreateAndPopulateSeries(secondaryRawLabel, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.SecondaryRaw.ToList(), isStacked);
-                targetChart.Series.Add(rawSecondary);
+                var label = ChartSeriesLabelFormatter.FormatSeriesLabel(model, false, false);
+                var series = ChartSeriesMaterializer.CreateAndPopulateSeries(label, ChartRenderDefaults.RawPointSize, ChartRenderDefaults.RawLineThickness, Colors.DarkGray, model.SecondaryRaw.ToList(), isStacked);
+                targetChart.Series.Add(series);
             }
     }
 
@@ -354,17 +281,6 @@ public sealed class ChartRenderEngine
         return model.SecondaryRaw != null || model.SecondarySmoothed != null;
     }
 
-    private static ChartSeriesMode ResolveStackedSeriesMode()
-    {
-        return ChartSeriesMode.SmoothedOnly;
-    }
-
-
-    /// <summary>
-    ///     Configures the X-axis with uniform spacing, label formatting, and tick intervals.
-    ///     Forces every data point to live at x = 0,1,2,... so tick spacing is uniform.
-    ///     The formatter retrieves proper datetime labels from ChartRenderModel.
-    /// </summary>
     private static void ConfigureXAxis(CartesianChart targetChart, ChartRenderModel model)
     {
         if (targetChart.AxisX.Count == 0)
@@ -372,46 +288,31 @@ public sealed class ChartRenderEngine
 
         var xAxis = targetChart.AxisX[0];
         xAxis.Title = ChartRenderDefaults.AxisTitleTime;
-        xAxis.ShowLabels = true; // Re-enable labels when rendering data
+        xAxis.ShowLabels = true;
 
-        // Use actual data timestamps for axis range (this determines how many values we have)
         var dataTimestamps = model.Timestamps ?? new List<DateTime>();
         var normalizedIntervals = model.NormalizedIntervals ?? new List<DateTime>();
-
-        // The axis range must match the number of data points (values array length)
         var total = dataTimestamps.Count > 0 ? dataTimestamps.Count : normalizedIntervals.Count;
 
-        Debug.WriteLine($"[TransformChart] ConfigureXAxis: dataTimestamps={dataTimestamps.Count}, normalizedIntervals={normalizedIntervals.Count}, total={total}, chart={targetChart.Name}");
+        Debug.WriteLine($"[ChartRenderEngine] ConfigureXAxis: dataTimestamps={dataTimestamps.Count}, normalizedIntervals={normalizedIntervals.Count}, total={total}, chart={targetChart.Name}");
 
-        // Use normalized intervals for label formatting, but map indices from data timestamps
-        var timestampsForLabels = normalizedIntervals.Count > 0 ? normalizedIntervals : dataTimestamps;
-
-        // === LABEL FORMATTER ===
-        // Map data point index to timestamp for label display
-        // Use data timestamps directly (they're what the values are aligned to)
         xAxis.LabelFormatter = indexAsDouble =>
         {
             var idx = (int)indexAsDouble;
             if (idx < 0 || idx >= total)
                 return string.Empty;
 
-            // Use data timestamp directly if available (this is what the values are aligned to)
             if (idx < dataTimestamps.Count)
                 return ChartLabelFormatter.FormatDateTimeLabel(dataTimestamps[idx], model.TickInterval);
 
-            // Fallback to normalized interval if data timestamps not available
             if (idx < normalizedIntervals.Count)
                 return ChartLabelFormatter.FormatDateTimeLabel(normalizedIntervals[idx], model.TickInterval);
 
             return string.Empty;
         };
 
-        // === UNIFORM STEP ===
-        // Roughly 10 visible ticks, auto-adjusted
         var desiredTicks = ChartRenderDefaults.DesiredXAxisTickCount;
         var step = Math.Max(1, total / (double)desiredTicks);
-
-        // Cleaner numbers
         step = MathHelper.RoundToThreeSignificantDigits(step);
 
         xAxis.Separator = new Separator
@@ -419,34 +320,14 @@ public sealed class ChartRenderEngine
                 Step = step
         };
 
-        // These three settings ensure LiveCharts does NOT compress or stretch based on time
         xAxis.MinValue = 0;
         xAxis.MaxValue = total - 1;
-        xAxis.Labels = null; // Force formatter rather than static label array
+        xAxis.Labels = null;
     }
 
-    /// <summary>
-    ///     Configures the Y-axis by re-enabling labels when rendering data.
-    ///     Y-axis is already uniform by definition (numeric axis automatically spaces evenly).
-    /// </summary>
     private static void ConfigureYAxis(CartesianChart targetChart)
     {
         if (targetChart.AxisY.Count > 0)
             targetChart.AxisY[0].ShowLabels = true;
     }
-
-    /// <summary>
-    ///     Formats series labels according to the new requirements:
-    ///     - For operation charts: "MetricType : subtype (operation) MetricType : subtype (smooth/raw)"
-    ///     - For independent charts: "MetricType : subtype (smooth/raw)"
-    /// </summary>
-    private static string FormatSeriesLabel(ChartRenderModel model, bool isPrimary, bool isSmoothed)
-    {
-        return ChartSeriesLabelFormatter.FormatSeriesLabel(model, isPrimary, isSmoothed);
-    }
-
-    /// <summary>
-    ///     Aligns a series' values to the main timeline by interpolating/mapping values.
-    ///     Uses forward-fill for missing values (carries last known value forward).
-    /// </summary>
 }

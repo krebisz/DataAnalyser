@@ -3,7 +3,7 @@
 **Scope:** `DataVisualiser` hierarchy repair, boundary clarification, entropy reduction, subsystem consolidation, and VNext activation  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `Project Overview.md`  
 **Supersedes:** `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`  
-**Last Updated:** 2026-04-12
+**Last Updated:** 2026-04-13
 
 ---
 
@@ -129,23 +129,39 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 Current observed shape:
 
 - `~395` C# files (after Phase 6.5 hierarchy cleanup and file merges)
-- `530` automated tests passing
+- `609` automated tests passing
 - first live VNext vertical slice active for the main chart family (`Main`, `Normalized`, `Diff/Ratio`)
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
 
-- `UI/MainChartsView.xaml.cs` (~1,627 lines)
-- `UI/MainHost/EvidenceParityBuilder.cs` (~478 lines)
-- `UI/MainHost/EvidenceTransformParityEvaluator.cs` (~161 lines)
+- `UI/MainChartsView.xaml.cs` (~1,194 lines)
+- `UI/Syncfusion/SyncfusionChartsView.xaml.cs` (~650 lines)
+- `UI/MainHost/ChartHostDateRangeCoordinator.cs` (~19 lines)
+- `UI/MainHost/ChartHostMetricSelectionCoordinator.cs` (~89 lines)
+- `UI/MainHost/MainChartsViewControllerExtrasCoordinator.cs` (~73 lines)
+- `UI/MainHost/MainChartsViewRegistryCoordinator.cs` (~26 lines)
+- `UI/MainHost/MainChartsViewSurfaceCoordinator.cs` (~49 lines)
+- `UI/MainHost/MainChartsViewCmsToggleCoordinator.cs` (~88 lines)
+- `UI/MainHost/MainChartsViewStateSyncCoordinator.cs` (~95 lines)
+- `UI/MainHost/MainChartsViewToggleStateCoordinator.cs` (~45 lines)
+- `UI/MainHost/EvidenceParityBuilder.cs` (~171 lines)
+- `UI/MainHost/EvidenceDistributionParityEvaluator.cs` (~149 lines)
+- `UI/MainHost/EvidenceMultiMetricParityEvaluator.cs` (~147 lines)
+- `UI/MainHost/EvidenceTransformParityEvaluator.cs` (~59 lines)
+- `UI/MainHost/EvidenceTransformParityDataResolver.cs` (~52 lines)
+- `UI/MainHost/EvidenceTransformParityComputer.cs` (~76 lines)
 - `UI/MainHost/MainChartsEvidenceExportService.cs` (~138 lines, reduced from 1,209)
-- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~324 lines, reduced from ~857)
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~220 lines, reduced from ~857)
+- `UI/Charts/Presentation/TransformRenderCoordinator.cs` (~100 lines)
+- `UI/Charts/Presentation/TransformWorkflowCoordinator.cs` (~50 lines)
 - `UI/Charts/Presentation/TransformDataResolutionCoordinator.cs` (~171 lines)
 - `UI/Charts/Presentation/TransformOperationExecutionCoordinator.cs` (~106 lines)
 - `Core/Rendering/Helpers/ChartTooltipFormattingHelper.cs` (~464 lines)
-- `Core/Services/BaseDistributionService.cs` (~429 lines)
+- `Core/Services/BaseDistributionService.cs` (~296 lines)
 - `Core/Rendering/Engines/ChartRenderEngine.cs` (~452 lines)
-- `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` (~503 lines)
+- `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` (~197 lines)
+- `UI/Charts/Presentation/BarPieRenderModelBuilder.cs` (~259 lines)
 
 Current read:
 
@@ -166,11 +182,32 @@ Current read:
 - chart-series label formatting and materialization are now delegated to `ChartSeriesLabelFormatter` and `ChartSeriesMaterializer`
 - chart cumulative-series construction and Y-axis normalization-data preparation are now delegated to `ChartCumulativeSeriesBuilder` and `ChartYAxisDataBuilder`
 - parity assembly is now delegated out of `MainChartsEvidenceExportService` into `EvidenceParityBuilder`
+- distribution parity evaluation is now delegated out of `EvidenceParityBuilder` into `EvidenceDistributionParityEvaluator`
+- multi-series parity input resolution and evaluation are now delegated out of `EvidenceParityBuilder` into `EvidenceMultiMetricParityEvaluator`
 - transform parity evaluation is now delegated out of `EvidenceParityBuilder` into `EvidenceTransformParityEvaluator`
+- transform parity selection/data resolution is now delegated out of `EvidenceTransformParityEvaluator` into `EvidenceTransformParityDataResolver`
+- transform unary/binary parity computation is now delegated out of `EvidenceTransformParityEvaluator` into `EvidenceTransformParityComputer`
 - session milestone and tracked-host-message bookkeeping is now delegated out of `MainChartsView` into `MainChartsSessionDiagnosticsRecorder`
 - transform execution/toggle milestone construction is now delegated out of `TransformDataPanelControllerAdapter` into `TransformSessionMilestoneRecorder`
 - transform operation-tag and compute-button state logic is now delegated out of `TransformDataPanelControllerAdapter` into `TransformOperationStateCoordinator`
+- transform subtype-change interaction is now delegated out of `TransformDataPanelControllerAdapter` into `TransformSelectionInteractionCoordinator`
+- transform grid/result/render-host handoff is now delegated out of `TransformDataPanelControllerAdapter` into `TransformRenderCoordinator`
+- transform execution, refresh, and result-render sequencing are now delegated out of `TransformDataPanelControllerAdapter` into `TransformWorkflowCoordinator`
+- Bar/Pie model planning, date-range resolution, bucket planning, and series-total loading are now delegated out of `BarPieChartControllerAdapter` into `BarPieRenderModelBuilder`
 - UI-surface diagnostics capture is now delegated out of `MainChartsView` into `MainChartsUiSurfaceDiagnosticsReader`
+- selection/date/resolution/bar-pie state projection back into the WPF surface is now delegated out of `MainChartsView` into `MainChartsViewStateSyncCoordinator`
+- primary/secondary chart toggle enablement and main-chart stacked-availability bookkeeping are now delegated out of `MainChartsView` into `MainChartsViewToggleStateCoordinator`
+- CMS checkbox state projection, enablement, and config-change handling are now delegated out of `MainChartsView` into `MainChartsViewCmsToggleCoordinator`
+- Syncfusion state projection now reuses the shared `MainChartsViewStateSyncCoordinator`
+- default date-range initialization/reset is now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostDateRangeCoordinator`
+- metric-type list initialization, metric-type-change reset/reload, and subtype-loaded follow-up behavior are now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostMetricSelectionCoordinator`
+- controller-extras interaction for Bar/Pie, Distribution, WeekdayTrend, Transform, Diff/Ratio, and Main is now delegated out of `MainChartsView` into `MainChartsViewControllerExtrasCoordinator`
+- registry-wide controller enumeration and startup/zoom-clear fallback resolution are now delegated out of `MainChartsView` into `MainChartsViewRegistryCoordinator`
+- chart-surface startup, no-data axis-label suppression, default-title initialization, and distribution-polar tooltip creation are now delegated out of `MainChartsView` into `MainChartsViewSurfaceCoordinator`
+- subtype-selection bookkeeping and loaded-vs-refresh branching are now delegated out of `MainChartsView` into `MainChartsViewSelectionCoordinator`
+- load validation, load execution, and clear/reset bookkeeping are now delegated out of `MainChartsView` into `MainChartsViewLoadCoordinator`
+- Syncfusion load validation, load execution, and clear/reset bookkeeping are now delegated out of `SyncfusionChartsView` into `SyncfusionChartsViewLoadCoordinator`
+- distribution axis formatting and debug-summary logging are now delegated out of `BaseDistributionService` into `DistributionAxisCoordinator` and `DistributionDebugSummaryLogger`
 - VNext workflow state now carries explicit `WorkflowPlanRequest` plans, and the bridge accepts explicit `ChartProgramRequest` input for non-live program projection
 - the remaining architectural noise is concentrated in the outliers listed above
 - low-level helper duplication is no longer the dominant problem; mixed host/orchestration/evidence/data-access responsibilities are
@@ -326,6 +363,14 @@ Reassess `ChartUpdateCoordinator`, `ChartRenderEngine`, `ChartHelper`, and vendo
 ### 10.5 Phase E — Architecture Audit and Next-Cycle Gate
 
 Measure concentration reduction. List what became more legible. Name the next cycle from remaining outliers.
+
+Current baseline snapshot (April 2026):
+
+- host responsibilities in `MainChartsView` are materially thinner, but it remains the largest composition concentration point
+- transform workflow is now split across selection, resolution, execution, operation-state, milestone, and render-handoff seams; the remaining debt is mostly workflow composition rather than mixed utility logic
+- `BaseDistributionService` is no longer a mixed computation/render monolith; the remaining debt is narrower strategy/render coordination
+- the live VNext main-chart-family route is stable enough to count as real architectural proof, not scaffolding
+- the remaining major outliers are now explicit enough to define the next cycle without guesswork
 
 The audit must answer these three questions directly:
 

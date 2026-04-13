@@ -33,10 +33,10 @@ public sealed class ParityExportShapeTests
     [Fact]
     public void BuildParityWarnings_ShouldWarn_WhenUnavailable()
     {
-        var builderType = typeof(MainChartsEvidenceExportService).Assembly.GetType("DataVisualiser.UI.MainHost.EvidenceParityBuilder");
+        var builderType = typeof(MainChartsEvidenceExportService).Assembly.GetType("DataVisualiser.UI.MainHost.EvidenceParitySummaryBuilder");
         Assert.NotNull(builderType);
 
-        var buildWarnings = builderType!.GetMethod("BuildParityWarnings", BindingFlags.NonPublic | BindingFlags.Static);
+        var buildWarnings = builderType!.GetMethod("BuildWarnings", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(buildWarnings);
 
         var distribution = CreateSnapshot("DistributionParitySnapshot", "Unavailable", "No chart context available");
