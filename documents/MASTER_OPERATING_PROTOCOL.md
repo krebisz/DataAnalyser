@@ -22,15 +22,17 @@ Project Bible.md — architectural law
 
 SYSTEM_MAP.md — conceptual structure and boundaries
 
-MASTER_OPERATING_PROTOCOL.md — execution and governance rules
+Project Roadmap.md — sequencing, closure, and phase discipline
 
-Project Roadmap.md — sequencing and planning
+MASTER_OPERATING_PROTOCOL.md — execution governance and interaction rules
+
+Project Overview.md — descriptive system overview
 
 DataVisualiser_Subsystem_Plan.md — active subsystem execution authority
 
 Collaboration Protocol.md — collaboration quick-reference
 
-In the event of conflict, higher-authority documents prevail.
+In the event of conflict, higher-authority documents prevail. The Roadmap governs what work proceeds and when; this protocol governs how that work is conducted.
 
 3. Scope of This Protocol
 

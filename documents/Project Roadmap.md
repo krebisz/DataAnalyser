@@ -2,7 +2,7 @@
 **Status:** Sequencing and Execution Authority  
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
-**Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for the active hierarchy-reconciliation and VNext activation work (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
+**Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion and Phase 6.3 VNext family widening (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
 **Last Updated:** 2026-04-13  
 **Change Note:** Phase 6 is closed except for `6.3` (VNext widening), which remains open until all active chart families route through the VNext reasoning engine. All other sub-phases (`6.1`, `6.2`, `6.4`–`6.7`) closed, all 5 global closure conditions met. Phase 7 entry gate is satisfied — new capabilities may proceed in parallel with VNext family widening.
 
@@ -28,7 +28,7 @@ If a conflict exists:
 1. `Project Bible.md` wins on architectural law.
 2. `SYSTEM_MAP.md` wins on structural direction.
 3. This roadmap wins on sequencing and closure discipline.
-4. `DataVisualiser_Subsystem_Plan.md` operationalizes the active delivery-side hierarchy reconciliation and VNext activation permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
+4. `DataVisualiser_Subsystem_Plan.md` operationalizes Phase 7 exploratory capability expansion and Phase 6.3 VNext family widening permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
 
 ---
 
@@ -83,8 +83,8 @@ The architecture rehaul established that the project is not yet structurally rea
 5. Standardized programmable chart hosts are intended future product behavior, but that future is unsafe unless controller convergence, rendering contracts, and orchestration seams are made explicit first.
 6. Transform is the first real programmable-chart prototype; Phase 6 work must preserve a path to multi-dataset, multi-operation, multi-graph result delivery instead of hardening unary/binary special cases.
 
-Therefore, architecture rehaul was not a side quest, and its successor work is not cosmetic cleanup.  
-The next bridge is hierarchy legibility: the system must become coherent enough that true outliers are obvious and future capability can land without creating new exception-driven structure.
+Therefore, architecture rehaul was not a side quest, and hierarchy legibility (Phase 6) was not cosmetic cleanup.  
+That bridge is now crossed: the hierarchy is trustworthy, true outliers are obvious, and future capability can land without creating new exception-driven structure. The reasoning engine is the composition center going forward.
 
 That said, the project is maintained by one person with limited time.
 So the roadmap must remain ambitious in direction but conservative in execution:
@@ -511,6 +511,8 @@ Phase 7 increases interpretive power without eroding truth or reintroducing exce
 This phase remains the sanctioned home for exploratory capability, confidence-aware interpretation, and richer analytical views.
 It is also the sanctioned home for standardized programmable chart composition once Phase 6 has earned the structural right to support it safely.
 
+**Architectural orientation:** Exploratory capabilities should be built as reasoning-engine features that delivery surfaces consume, not as chart-specific features. The VNext reasoning engine is the composition surface; charts, reports, APIs, and future consumers are delivery targets. Each Phase 7 capability should strengthen the reasoning engine's generality rather than binding new power to a specific rendering backend.
+
 #### Phase 7.1 - Interpretive Visual Overlays (Render-Only)
 
 **Scope**
@@ -622,12 +624,14 @@ It is also the sanctioned home for standardized programmable chart composition o
 
 **Objective**
 - ensure the UI accurately reflects truth, interpretation, uncertainty, qualified rendering behavior, and standardized programmable chart capabilities without compensating for architectural weakness
+- establish the first non-chart consumer of reasoning-engine output, proving that the engine's analytical programs are genuinely consumer-agnostic and not implicitly chart-shaped
 
 **Closure Condition**
 1. Qualified chart families share standardized parent controller/host behavior wherever capability semantics genuinely align.
 2. UI state reflects truth, uncertainty, and programmable chart composition without distortion.
 3. Integration behavior is predictable across supported chart families and qualified backends.
 4. The UI no longer acts as a repair layer for missing architectural boundaries.
+5. At least one non-chart consumer successfully consumes reasoning-engine output through the same downstream contracts as chart consumers.
 
 ## 6. Rendering Backend Introduction Policy (Explicit)
 
@@ -671,16 +675,16 @@ This policy protects both long-term trust and long-term extensibility.
 
 ## 8. Current Critical Path (Authoritative)
 
-1. Preserve the qualified seams produced by the completed Phase 5 rehaul.
-2. Execute Phase 6 through bounded hierarchy-reconciliation slices that make the architecture more legible and the remaining outliers more obvious.
-3. Keep residual debt explicit and bounded rather than allowing silent structural drift.
-4. Revalidate future closure claims with present evidence and repository-visible artifacts.
-5. Do not open exploratory expansion until the hierarchy is coherent enough to absorb it safely.
+1. Preserve the qualified seams produced by the completed Phase 5 rehaul and Phase 6 reconciliation.
+2. Widen VNext family coverage (Phase 6.3) incrementally — one chart family per slice, with automatic legacy fallback preserved.
+3. Build Phase 7 exploratory capabilities as reasoning-engine features that delivery surfaces consume, not as chart-specific additions.
+4. Keep residual debt explicit and bounded rather than allowing silent structural drift.
+5. Revalidate future closure claims with present evidence and repository-visible artifacts.
 6. Introduce further generalization only when the codebase has earned it through repeated real slices.
-7. Keep future phase entry explicit rather than reopening rehaul work implicitly.
+7. Phase 7 and Phase 6.3 widening may proceed in parallel, but each must remain a bounded slice with its own validation.
 
-Phase 7 must not be treated as open merely because ideas are ready.  
-It opens only when the system is structurally able to absorb them safely.
+Phase 7 is now structurally ready to proceed.
+The reasoning engine is the composition surface; new capabilities should strengthen its generality rather than binding power to specific delivery surfaces.
 
 ---
 
@@ -714,8 +718,9 @@ Major next steps in sequence:
 - Early phases built truthful foundations.
 - Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
 - Phase 5 is the completed bridge between what the system already does and what it is intended to become.
-- Phase 6 is now the active sanctioned home of hierarchy repair, legibility, and concern reconciliation.
-- Phase 7 remains the sanctioned home of exploration, confidence, and richer interpretive power, but only after Phase 6 earns that right.
+- Phase 6 established a trustworthy hierarchy; it is closed except for VNext family widening (6.3).
+- Phase 7 is now the active sanctioned home of exploration, confidence, and richer interpretive power. Its entry gate is satisfied.
+- The reasoning engine is the center of the system. New capabilities should be built as reasoning-engine features that delivery surfaces consume.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.
 - Closure means present truth, present evidence, and present structural safety.
 

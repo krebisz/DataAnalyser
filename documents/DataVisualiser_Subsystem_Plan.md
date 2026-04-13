@@ -16,15 +16,15 @@ It consolidates:
 - The active Phase 6 legibility-first consolidation cycle
 - The first live VNext vertical slice (Phase 6.3)
 
-The primary objective is to make `DataVisualiser`:
+The primary objectives are:
 
-- legible to its architect again
-- structurally coherent enough that similar work has one obvious home
-- explicit enough that true outliers stand out immediately
-- stable enough that future growth does not keep re-entering the system as "programming by exception"
-- progressively authoritative through the VNext reasoning engine where proven live
+**Phase 6 (closed except 6.3):** Make `DataVisualiser` legible, structurally coherent, and stable — achieved through hierarchy repair, irreducible-operation consolidation, VNext proof-of-architecture, and structural consolidation.
 
-The mandate is hierarchy repair and request/delivery standardization, not file-count reduction for its own sake.
+**Phase 7 (entry gate satisfied):** Expand the reasoning engine's capabilities — confidence-aware results, interpretive overlays, programmable composition — building each as a reasoning-engine feature that delivery surfaces consume, not as chart-specific additions.
+
+**Phase 6.3 (parallel):** Widen VNext coverage to all active chart families so the standardized request/delivery path becomes fully authoritative.
+
+The reasoning engine is the center of the system. Charts and future consumers are delivery targets of its output.
 
 ---
 
@@ -32,12 +32,19 @@ The mandate is hierarchy repair and request/delivery standardization, not file-c
 
 Use this section as the default handoff entry point in a new conversation.
 
+Current state:
+
+- Phase 6 is closed except 6.3 (VNext widening — Distribution, WeekdayTrend, Transform, Bar/Pie remain legacy-only)
+- Phase 7 entry gate is satisfied — exploratory and confidence capabilities may proceed
+- 448 source files, 609 tests, 48 architecture guardrails
+- known debt: `MainChartsView` host concentration (~1,401 lines), VNext family coverage, adapter pattern variation
+
 Current defaults:
 
 - scope is `DataVisualiser` only
 - posture is `Conservative-Pragmatic`
 - one iteration must have one primary objective
-- the default objective is now architectural legibility and VNext activation, not generic consolidation
+- the default objective is now Phase 7 exploratory capability expansion, with VNext family widening (6.3) as parallel work
 - safely coupled slices are allowed only when they already share a real contract / host / route / responsibility pattern
 - validation must happen on every significant refactor
 - if live behavior changes, halt after automated validation and request targeted manual smoke before continuing
@@ -72,13 +79,14 @@ Default smoke rule:
 
 ## 2. Architectural North Star
 
-`DataVisualiser` is part of a wider canonical data reasoning platform. Within that wider system, it should evolve toward a clean downstream role:
+`DataVisualiser` is part of a wider canonical data reasoning platform. Within that wider system, the reasoning engine is the architectural center — it produces analytical programs that delivery surfaces consume. The system should evolve toward:
 
 - canonical or downstream-safe data enters through explicit boundaries
-- derived results, transforms, comparisons, overlays, and chart-program-style requests remain explicit and reversible
+- the reasoning engine composes derived results, transforms, comparisons, and overlays as inspectable, replayable analytical programs
+- every result carries explicit provenance, confidence context, and reasoning path
 - orchestration coordinates execution without becoming a semantic authority
-- rendering infrastructure translates already-defined intent into backend-safe behavior
-- concrete clients become delivery surfaces rather than architectural authorities
+- rendering and delivery infrastructure translate already-defined program output into backend-safe or consumer-safe behavior
+- concrete clients (charts, reports, APIs, future consumers) become delivery surfaces rather than architectural authorities
 - the VNext reasoning engine (`ReasoningSessionCoordinator`) progressively replaces legacy host-authoritative orchestration with explicit request → snapshot → program → delivery semantics
 
 ---
@@ -128,7 +136,7 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `~388` C# files (after Phase 6.5 hierarchy cleanup, file merges, and Phase 6.7 structural consolidation)
+- `448` C# source files (Phase 6.6 audit baseline, after hierarchy cleanup, file merges, and Phase 6.7 structural consolidation)
 - `609` automated tests passing
 - first live VNext vertical slice active for the main chart family (`Main`, `Normalized`, `Diff/Ratio`)
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
@@ -347,20 +355,26 @@ These are accepted as known debt, not open work:
 
 ## 7. Primary Mandate
 
-The primary mandate of the next cycle is:
+Phase 6 established a trustworthy hierarchy. The primary mandate is now twofold:
 
-- make the hierarchy trustworthy enough that it exposes the real remaining entropy
-- widen VNext coverage where bounded slices prove the architecture
-- do so in a way that a single maintainer can actually sustain
+**Phase 7 — Exploratory capability expansion:**
+- add interpretive overlays, confidence-aware views, and programmable multi-result composition
+- build on the proven VNext request/delivery architecture rather than extending the legacy path
+- each new capability must respect canonical boundaries and not reintroduce exception-driven structure
+
+**Phase 6.3 continuation — VNext family widening (parallel):**
+- extend VNext coverage to Distribution, WeekdayTrend, Transform, and Bar/Pie one family at a time
+- each family requires its own program builder, projection logic, and per-family smoke verification
+- the architectural pattern is proven; this is application, not discovery
 
 In practice:
 
-1. Similar responsibilities should follow one recognizable structural pattern.
-2. Similar low-level operations should have one obvious home.
-3. Exceptions should look exceptional rather than normal.
-4. Large files should exist only where their size reflects genuine concentration, not accidental drift.
-5. VNext should progressively replace legacy orchestration where bounded slices prove equivalent behavior.
-6. Work should reduce future operator burden.
+1. New capabilities should compose over existing canonical and derived views, not redefine them.
+2. Each exploratory feature should have an explicit home in the module buckets below.
+3. VNext widening should proceed incrementally — one family per slice, with automatic legacy fallback preserved.
+4. Confidence and interpretive overlays are annotations, not mutations — they must be reversible and non-authoritative.
+5. Work should reduce future operator burden.
+6. The hierarchy established in Phase 6 should be preserved — new code should follow the existing structural patterns rather than introducing parallel ones.
 
 ---
 
@@ -371,7 +385,7 @@ These are the target responsibility buckets for evaluating any slice:
 1. **Data Access and Intake Facades** — retrieval contracts, repository facades
 2. **Canonical / Context Handoff** — context objects bringing canonical data into `DataVisualiser`
 3. **Derived and Transform Kernel** — shared algebraic operations, interval/bucket/range logic, smoothing/alignment
-4. **Presentation Planning / Chart Programs** — declared result composition, selected-series shaping, multi-result intent
+4. **Analytical Programs / Presentation Planning** — declared result composition, selected-series shaping, multi-result intent, confidence context; chart programs are the chart-oriented specialization of this broader model
 5. **Orchestration and Coordinators** — context building, execution routing (VNext/legacy), render invocation handoff, evidence initiation
 6. **Rendering Capability Families** — capability contracts, backend qualification, route/probe/host logic
 7. **UI-Agnostic Controllers and Hosts** — standardized controller behavior, host coordination
@@ -516,16 +530,19 @@ Already banked (do not reopen casually):
 
 ## 15. Success Criteria
 
-This cycle is successful when:
-
+**Phase 6 criteria (met):**
 - similar operations have one obvious home
 - the folder tree communicates responsibility more clearly than migration history
 - true outliers are easier to identify and harder to ignore
-- exceptions look exceptional rather than normal
 - VNext reasoning engine is proven live for the first chart family with full signature-chain diagnostics
-- downstream delivery layers are clearer and less authority-confused
-- no regression occurs in rendering, parity, export, theme, orchestration, or flexibility behavior
-- remaining intentional debt is explicit enough to define the next cycle cleanly
+- no regression in rendering, parity, export, theme, orchestration, or flexibility behavior
+
+**Phase 7 criteria (active):**
+- new exploratory capabilities are reasoning-engine features, not chart-specific additions
+- confidence and provenance are integral to new results, not optional decorations
+- the reasoning engine's generality increases with each capability — programs become more consumer-agnostic
+- no regression in existing chart delivery, evidence, or structural integrity
+- VNext family widening (6.3) proceeds in parallel without blocking capability expansion
 
 ---
 
@@ -585,7 +602,7 @@ The following deserve future design work but are not answered here:
 
 ### A.5 Current Recommendation
 
-Stage the actual capability under later gated phases after legibility work has earned it. Do not prematurely implement the whole programmable chart platform through new exception-driven structures.
+The legibility work has earned the right to proceed. Phase 7 is the sanctioned home for programmable composition, confidence-aware reasoning, and exploratory capabilities. Each capability should be built as a reasoning-engine feature first, then delivered to chart surfaces and future consumers through explicit downstream contracts. Do not implement the whole programmable platform in one pass — proceed through bounded slices that each strengthen the engine's generality.
 
 ---
 

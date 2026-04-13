@@ -268,8 +268,9 @@ Charts are consumers, not the definition of the platform.
 
 ## 4. Chart Programs and Programmable Composition
 
-The system may evolve toward standardized programmable chart composition, but that capability remains structurally downstream of truth assignment and canonicalization.
-Chart programs should be treated as the chart-oriented specialization of a broader downstream request model, not as a special semantic layer.
+The system's reasoning engine produces analytical programs — explicit, inspectable, composable descriptions of what to compute and how to deliver it. Chart programs are the chart-oriented specialization of this broader model; non-chart consumers (reports, APIs, alerts) may consume the same analytical programs through different delivery contracts.
+
+This capability remains structurally downstream of truth assignment and canonicalization. Programs do not define meaning; they compose and deliver it.
 
 ### 4.1 Chart Program Definition
 
@@ -442,14 +443,17 @@ Language is part of architecture.
 ## 9. Summary
 
 - truth layers are preserved and canonical meaning is stable
+- the reasoning engine is the composition center; it produces analytical programs that delivery surfaces consume
 - derivation is explicit and provenance-preserving
+- confidence and provenance are integral to every result, not optional annotations
 - interpretation is powerful but bounded
 - downstream requests may be rich and composable without becoming semantic authorities
 - orchestration coordinates execution but does not define meaning
 - rendering and delivery infrastructure are replaceable and qualification-bound
 - UI is expressive but non-authoritative
 - charts are one consumer family among several possible clients
-- programmable chart composition is allowed only as a downstream, reversible, provenance-visible capability
+- non-chart consumers may consume the same analytical programs through different delivery contracts
+- programmable composition is allowed only as a downstream, reversible, provenance-visible capability
 
 This map defines what the system is allowed to be.
 

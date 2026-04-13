@@ -1,5 +1,5 @@
 # Workspace Workflow
-**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Current
+**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Closed (except 6.3), Phase 7 Entry Gate Satisfied
 
 This document is part of the core documentation set.
 See `MASTER_OPERATING_PROTOCOL.md` for governing authority.
@@ -27,8 +27,8 @@ When reconstructing a workspace, documents are interpreted strictly in this orde
 
 1. `Project Bible.md` (architectural law)
 2. `SYSTEM_MAP.md` (structural boundaries)
-3. `MASTER_OPERATING_PROTOCOL.md` (execution governance)
-4. `Project Roadmap.md` (sequencing and phases)
+3. `Project Roadmap.md` (sequencing and phase discipline)
+4. `MASTER_OPERATING_PROTOCOL.md` (execution governance)
 5. `Project Overview.md` (descriptive)
 6. `DataVisualiser_Subsystem_Plan.md` (active execution)
 7. `codebase-index.md`

@@ -2,7 +2,7 @@
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `Project Roadmap.md`  
-**Active Subsystem Execution Reference:** `DataVisualiser_Subsystem_Plan.md` for the current delivery-side hierarchy reconciliation and VNext activation work
+**Active Subsystem Execution Reference:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion and Phase 6.3 VNext family widening
 
 ---
 
@@ -35,6 +35,9 @@ The project exists to provide a trustworthy canonical data reasoning environment
 The system favors clarity and auditability over automation or convenience.
 It should not be understood as a reporting tool that only exposes preselected outputs.
 It is intended to become a platform that can preserve data faithfully, standardize it, reason over it explicitly, and serve those results to multiple kinds of clients.
+
+**Strategic position:** The system's differentiator is that every derived result has explicit provenance, inspectable reasoning, and visible confidence. The architecture was designed for this from the ground up — canonical truth preservation, deterministic derivation, and evidence infrastructure that can prove its own correctness are foundational, not retrofitted. The reasoning engine is the center of the system; charts and other delivery surfaces are consumers of its output, not the definition of the platform.
+
 It is also a single-maintainer project, so the near-term execution style must favor bounded, high-payoff steps that improve reliability, legibility, and operational tolerance without demanding constant large-scale reorientation.
 
 ---
@@ -77,7 +80,7 @@ The system supports multiple computation strategies, including:
 - combined metrics
 - multi-metric comparisons
 - temporal distributions
-- transformations, currently including unary and binary flows with broader programmable composition intended across multiple datasets, operations, and result graphs
+- transformations, currently supporting unary and binary operations, with intended expansion to ternary and higher-order operations across multiple datasets, operations, and result graphs
 - explicit downstream result composition over selected metrics, submetrics, and contextual slices
 
 Strategies may exist in both legacy and CMS forms during migration, with parity validation enforcing correctness.
@@ -124,13 +127,15 @@ Beyond raw computation, the system increasingly supports interpretive exploratio
 - pivot-oriented inspection (event-relative views)
 - dynamic visual cues (colouring, emphasis)
 
-These capabilities are non-authoritative overlays applied on top of canonical truth.
+These capabilities are non-authoritative reasoning operations applied on top of canonical truth. They are expressed as analytical programs through the reasoning engine and delivered to consumers through explicit downstream contracts.
 
 They exist to aid understanding, not to redefine meaning.
 
 ---
 
-## 6. Confidence & Reliability (Explicit Direction)
+## 6. Confidence & Reliability (Foundational)
+
+Confidence is a core property of every result the system produces, not a decorative layer added after the fact. The architecture is designed so that no derived result exists without an explicit trust context — the provenance chain, the data quality, and the reasoning path are all visible.
 
 The system supports, or is explicitly staged to support, representation of data confidence and reliability, including:
 
@@ -265,8 +270,13 @@ The project is intentionally open-ended.
 
 Future directions may include:
 
-- cleaner separation between truth, derivation, orchestration, delivery, and client concerns
-- more legible hierarchy and naming so true outliers are obvious
+Reasoning-engine-first evolution:
+- generalize the reasoning engine beyond chart-program output toward composable analytical programs
+- make analytical programs inspectable, modifiable, and replayable
+- establish non-chart consumers as first-class delivery targets of reasoning-engine output
+- make confidence and provenance integral to every result, not optional annotations
+
+Capability expansion:
 - richer interpretive overlays
 - expanded transform capabilities
 - standardized programmable chart hosts across the current chart families
@@ -306,13 +316,13 @@ The system exists to support reasoning, not replace it.
 ## 11. Summary
 
 - Canonical truth is stable and immutable
+- The reasoning engine is the center of the system; delivery surfaces are consumers of its output
+- Confidence is foundational — every result carries explicit provenance, reasoning, and trust context
 - Interpretation is powerful but bounded
-- Confidence is explicit, not implicit
 - Exploration is supported without semantic erosion
-- Standardized programmable charting is intended, but still phase-gated behind hierarchy repair
 - Charts are the current dominant client, not the final definition of the platform
-- The broader direction is a downstream reasoning system that can serve multiple qualified consumers uniformly
-- The architecture rehaul is complete, but the next critical work is architectural legibility and concern reconciliation rather than feature expansion
+- The broader direction is a reasoning environment that can serve multiple qualified consumers uniformly
+- The architecture rehaul and legibility reconciliation are complete; the next critical work is exploratory capability expansion and VNext family widening
 - Evolution is intentional and evidence-bound
 
 This overview describes the system as it exists today and the direction it is deliberately moving toward.
