@@ -32,10 +32,10 @@ public sealed class VNextDistributionRuntimePreservationTests
             var ctx = CreateContext("Weight", "fat_free_mass", "muscle_mass");
             await adapter.RenderAsync(ctx);
 
-            Assert.NotNull(chartState.LastDistributionLoadRuntime);
-            Assert.Equal(EvidenceRuntimePath.VNextDistribution, chartState.LastDistributionLoadRuntime!.RuntimePath);
-            Assert.NotNull(chartState.LastDistributionLoadRuntime.SnapshotSignature);
-            Assert.Equal(ChartProgramKind.Distribution, chartState.LastDistributionLoadRuntime.ProgramKind);
+            Assert.NotNull(chartState.GetFamilyRuntime(ChartProgramKind.Distribution));
+            Assert.Equal(EvidenceRuntimePath.VNextDistribution, chartState.GetFamilyRuntime(ChartProgramKind.Distribution)!.RuntimePath);
+            Assert.NotNull(chartState.GetFamilyRuntime(ChartProgramKind.Distribution).SnapshotSignature);
+            Assert.Equal(ChartProgramKind.Distribution, chartState.GetFamilyRuntime(ChartProgramKind.Distribution).ProgramKind);
         });
     }
 
@@ -52,14 +52,14 @@ public sealed class VNextDistributionRuntimePreservationTests
             var ctx = CreateContext("Weight", "fat_free_mass", "muscle_mass");
             await adapter.RenderAsync(ctx);
 
-            Assert.NotNull(chartState.LastDistributionLoadRuntime);
-            var savedRuntime = chartState.LastDistributionLoadRuntime;
+            Assert.NotNull(chartState.GetFamilyRuntime(ChartProgramKind.Distribution));
+            var savedRuntime = chartState.GetFamilyRuntime(ChartProgramKind.Distribution);
 
             // Switch to primary series — reuse path
             chartState.SelectedDistributionSeries = new MetricSeriesSelection("Weight", "fat_free_mass", "Weight", "Fat Free");
             await adapter.RenderAsync(ctx);
 
-            Assert.Same(savedRuntime, chartState.LastDistributionLoadRuntime);
+            Assert.Same(savedRuntime, chartState.GetFamilyRuntime(ChartProgramKind.Distribution));
         });
     }
 
@@ -76,14 +76,14 @@ public sealed class VNextDistributionRuntimePreservationTests
             var ctx = CreateContext("Weight", "fat_free_mass", "muscle_mass");
             await adapter.RenderAsync(ctx);
 
-            Assert.NotNull(chartState.LastDistributionLoadRuntime);
-            var savedRuntime = chartState.LastDistributionLoadRuntime;
+            Assert.NotNull(chartState.GetFamilyRuntime(ChartProgramKind.Distribution));
+            var savedRuntime = chartState.GetFamilyRuntime(ChartProgramKind.Distribution);
 
             // Switch to secondary series — reuse path
             chartState.SelectedDistributionSeries = new MetricSeriesSelection("Weight", "muscle_mass", "Weight", "Muscle");
             await adapter.RenderAsync(ctx);
 
-            Assert.Same(savedRuntime, chartState.LastDistributionLoadRuntime);
+            Assert.Same(savedRuntime, chartState.GetFamilyRuntime(ChartProgramKind.Distribution));
         });
     }
 
@@ -100,13 +100,13 @@ public sealed class VNextDistributionRuntimePreservationTests
             var ctx = CreateContext("Weight", "fat_free_mass", "muscle_mass");
             await adapter.RenderAsync(ctx);
 
-            Assert.NotNull(chartState.LastDistributionLoadRuntime);
-            var savedRuntime = chartState.LastDistributionLoadRuntime;
+            Assert.NotNull(chartState.GetFamilyRuntime(ChartProgramKind.Distribution));
+            var savedRuntime = chartState.GetFamilyRuntime(ChartProgramKind.Distribution);
 
             // Render again with same non-primary/secondary series — cache hit
             await adapter.RenderAsync(ctx);
 
-            Assert.Same(savedRuntime, chartState.LastDistributionLoadRuntime);
+            Assert.Same(savedRuntime, chartState.GetFamilyRuntime(ChartProgramKind.Distribution));
         });
     }
 

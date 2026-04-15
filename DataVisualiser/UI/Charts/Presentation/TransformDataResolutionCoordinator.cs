@@ -1,3 +1,4 @@
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services;
@@ -62,52 +63,17 @@ internal sealed class TransformDataResolutionCoordinator
 
     private async Task<IReadOnlyList<MetricData>?> ResolveDataAsync(ChartDataContext context, MetricSeriesSelection? selectedSeries)
     {
-        if (context.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return context.Data1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, context.PrimaryMetricType ?? context.MetricType, context.PrimarySubtype))
-            return context.Data1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, context.SecondaryMetricType, context.SecondarySubtype))
-            return context.Data2 ?? context.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return context.Data1;
-
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, context.From, context.To, tableName);
-        if (_selectionCache.TryGetData(cacheKey, out var cached))
-            return cached;
-
-        return await LoadFreshTransformDataAsync(selectedSeries, context.From, context.To, tableName, cacheKey);
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> LoadFreshTransformDataAsync(
-        MetricSeriesSelection selectedSeries, DateTime from, DateTime to, string tableName, string cacheKey)
-    {
-        var vnextResult = await _vnextCoordinator.LoadAsync(selectedSeries, from, to, tableName, ChartProgramKind.Transform);
-        if (vnextResult.Success && vnextResult.Data != null)
-        {
-            _viewModel.ChartState.LastTransformLoadRuntime = LoadRuntimeState.FromVNextSuccess(
-                EvidenceRuntimePath.VNextTransform, vnextResult.RequestSignature,
-                vnextResult.SnapshotSignature, vnextResult.ProgramKind, vnextResult.ProgramSourceSignature);
-
-            var data = vnextResult.Data is List<MetricData> list ? list : vnextResult.Data.ToList();
-            _selectionCache.SetData(cacheKey, data);
-            return data;
-        }
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, from, to, tableName);
-        var legacyData = primaryData.ToList();
-        _selectionCache.SetData(cacheKey, legacyData);
-
-        _viewModel.ChartState.LastTransformLoadRuntime = LoadRuntimeState.LegacyFallback(
-            vnextResult.RequestSignature, vnextResult.FailureReason);
-
-        return legacyData;
+        var (data, _) = await VNextDataResolutionHelper.ResolveSeriesDataAsync(
+            context, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
+            ChartProgramKind.Transform, EvidenceRuntimePath.VNextTransform,
+            runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.Transform, runtime),
+            async (sel, from, to, table) =>
+            {
+                var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(sel.MetricType, sel.QuerySubtype, null, from, to, table);
+                return ((IReadOnlyList<MetricData>)primary.ToList(), (ICanonicalMetricSeries?)null);
+            });
+        return data;
     }
 
     private MetricSeriesSelection? ResolvePrimarySelection(ChartDataContext context, bool isSelectionPendingLoad)

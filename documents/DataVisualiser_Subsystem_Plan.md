@@ -36,7 +36,7 @@ Current state:
 
 - Phase 6.3 VNext widening is complete — all active chart families route through the VNext reasoning engine for fresh data loads
 - Phase 7 entry gate is satisfied — exploratory and confidence capabilities may proceed
-- 452 source files, 636 tests, 48 architecture guardrails
+- 451 source files, 640 tests, 48 architecture guardrails
 - known debt: `MainChartsView` host concentration (~1,401 lines), adapter pattern variation
 
 Current defaults:
@@ -136,8 +136,8 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `452` C# source files (Phase 6.6 audit baseline + VNext widening coordinators and milestone recorder)
-- `636` automated tests passing
+- `451` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, and cleanup consolidation)
+- `640` automated tests passing
 - first live VNext vertical slice active for the main chart family (`Main`, `Normalized`, `Diff/Ratio`)
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
@@ -290,8 +290,8 @@ Documents absorbed from Phase 5:
 - Smoke-verified with April 2026 exports: VNext signature chain aligned, legacy fallback correct, all 8 parity strategies pass
 
  - `VNext` workflow planning now supports explicit `ChartProgramRequest` / multi-derived-program shaping behind non-live tests
- - Distribution fresh data loads now route through the VNext reasoning engine (`VNextDistributionIntegrationCoordinator`), with identity program builder, signature-chain tracking, and automatic legacy fallback
- - Distribution runtime path tracked separately via `ChartState.LastDistributionLoadRuntime` with `EvidenceRuntimePath.VNextDistribution`
+ - Distribution fresh data loads now route through the VNext reasoning engine via shared `VNextDataResolutionHelper` and `VNextSeriesLoadCoordinator`, with identity program builder, signature-chain tracking, and automatic legacy fallback
+ - Per-family runtime tracking via `ChartState.SetFamilyRuntime(ChartProgramKind, LoadRuntimeState)` with dictionary-backed `FamilyLoadRuntimes`; evidence diagnostics iterate the dictionary automatically
  - WeekdayTrend, Transform, and BarPie fresh data loads now route through VNext via shared `VNextSeriesLoadCoordinator`; each family has its own `ChartProgramKind`, `EvidenceRuntimePath`, and `LastXxxLoadRuntime` tracking
  - BarPie VNext integration preserves CMS preference: if CMS is available via VNext snapshot, it is used for bucket aggregation
  - All four non-main chart families (Distribution, WeekdayTrend, Transform, BarPie) have automatic legacy fallback on VNext failure

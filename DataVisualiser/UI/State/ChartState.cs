@@ -10,6 +10,7 @@ namespace DataVisualiser.UI.State;
 public class ChartState
 {
     private readonly Dictionary<DistributionMode, DistributionModeSettings> _distributionSettings = new();
+    private readonly Dictionary<ChartProgramKind, LoadRuntimeState> _familyLoadRuntimes = new();
     private readonly List<SessionMilestoneSnapshot> _sessionMilestones = new();
     private const int MaxSessionMilestones = 50;
 
@@ -64,10 +65,14 @@ public class ChartState
     // Chart data from last load
     public ChartDataContext? LastContext { get; set; }
     public LoadRuntimeState? LastLoadRuntime { get; set; }
-    public LoadRuntimeState? LastDistributionLoadRuntime { get; set; }
-    public LoadRuntimeState? LastWeekdayTrendLoadRuntime { get; set; }
-    public LoadRuntimeState? LastTransformLoadRuntime { get; set; }
-    public LoadRuntimeState? LastBarPieLoadRuntime { get; set; }
+
+    public LoadRuntimeState? GetFamilyRuntime(ChartProgramKind kind) =>
+        _familyLoadRuntimes.TryGetValue(kind, out var runtime) ? runtime : null;
+
+    public void SetFamilyRuntime(ChartProgramKind kind, LoadRuntimeState runtime) =>
+        _familyLoadRuntimes[kind] = runtime;
+
+    public IReadOnlyDictionary<ChartProgramKind, LoadRuntimeState> FamilyLoadRuntimes => _familyLoadRuntimes;
     public IReadOnlyList<SessionMilestoneSnapshot> SessionMilestones => _sessionMilestones;
 
     // Current chart titles (left + right)

@@ -1,6 +1,7 @@
 using DataVisualiser.UI.Charts.Interfaces;
 using System.Windows;
 using System.Windows.Controls;
+using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
@@ -242,52 +243,17 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
     private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (ctx.Data1 == null)
-            return null;
-
-        if (selectedSeries == null)
-            return ctx.Data1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return ctx.Data1;
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return ctx.Data2 ?? ctx.Data1;
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return ctx.Data1;
-
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_selectionCache.TryGetData(cacheKey, out var cached))
-            return cached;
-
-        return await LoadFreshWeekdayTrendDataAsync(selectedSeries, ctx.From, ctx.To, tableName, cacheKey);
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> LoadFreshWeekdayTrendDataAsync(
-        MetricSeriesSelection selectedSeries, DateTime from, DateTime to, string tableName, string cacheKey)
-    {
-        var vnextResult = await _vnextCoordinator.LoadAsync(selectedSeries, from, to, tableName, ChartProgramKind.WeekdayTrend);
-        if (vnextResult.Success && vnextResult.Data != null)
-        {
-            _viewModel.ChartState.LastWeekdayTrendLoadRuntime = LoadRuntimeState.FromVNextSuccess(
-                EvidenceRuntimePath.VNextWeekdayTrend, vnextResult.RequestSignature,
-                vnextResult.SnapshotSignature, vnextResult.ProgramKind, vnextResult.ProgramSourceSignature);
-
-            var data = vnextResult.Data is List<MetricData> list ? list : vnextResult.Data.ToList();
-            _selectionCache.SetData(cacheKey, data);
-            return data;
-        }
-
-        var (primaryData, _) = await _metricSelectionService.LoadMetricDataAsync(selectedSeries.MetricType, selectedSeries.QuerySubtype, null, from, to, tableName);
-        var legacyData = primaryData.ToList();
-        _selectionCache.SetData(cacheKey, legacyData);
-
-        _viewModel.ChartState.LastWeekdayTrendLoadRuntime = LoadRuntimeState.LegacyFallback(
-            vnextResult.RequestSignature, vnextResult.FailureReason);
-
-        return legacyData;
+        var (data, _) = await VNextDataResolutionHelper.ResolveSeriesDataAsync(
+            ctx, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
+            ChartProgramKind.WeekdayTrend, EvidenceRuntimePath.VNextWeekdayTrend,
+            runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.WeekdayTrend, runtime),
+            async (sel, from, to, table) =>
+            {
+                var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(sel.MetricType, sel.QuerySubtype, null, from, to, table);
+                return ((IReadOnlyList<MetricData>)primary.ToList(), (ICanonicalMetricSeries?)null);
+            });
+        return data;
     }
 
     private MetricSeriesSelection? ResolveSelectedWeekdayTrendSeries(ChartDataContext ctx)

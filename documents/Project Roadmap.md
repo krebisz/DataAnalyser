@@ -396,7 +396,7 @@ The goal is to make the system legible enough that:
 
 **Current Progress (April 2026) — CLOSED**
 - First live VNext vertical slice: `MetricLoadCoordinator` routes the main chart family (`Main`, `Normalized`, `Diff/Ratio`) through `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `LegacyChartProgramProjector`
-- VNext widening complete: all remaining chart families (`Distribution`, `WeekdayTrend`, `Transform`, `BarPie`) now route fresh data loads through the VNext reasoning engine via `VNextDistributionIntegrationCoordinator` and shared `VNextSeriesLoadCoordinator`, with identity program builders, per-family signature-chain tracking (`EvidenceRuntimePath.VNextDistribution/VNextWeekdayTrend/VNextTransform/VNextBarPie`), and automatic legacy fallback on failure
+- VNext widening complete: all remaining chart families (`Distribution`, `WeekdayTrend`, `Transform`, `BarPie`) now route fresh data loads through unified `VNextDataResolutionHelper` → `VNextSeriesLoadCoordinator`, with identity program builders, dictionary-backed per-family runtime tracking (`ChartState.FamilyLoadRuntimes`), and automatic legacy fallback on failure
 - Fresh `ReasoningSessionCoordinator` per load attempt — no shared session state across loads
 - `MainChartDisplayMode` propagated through VNext path — Regular/Summed/Stacked behavior preserved
 - Evidence boundary decomposed: `MainChartsEvidenceExportService` split into `EvidenceExportModels` (21 standalone DTOs), `EvidenceDiagnosticsBuilder` (diagnostics assembly), and export orchestration
@@ -409,7 +409,7 @@ The goal is to make the system legible enough that:
 - `TransformDataPanelControllerAdapter` now delegates subtype-selection interaction, operation state, execution, milestone recording, data resolution, and render/grid handoff through dedicated coordinators
 - `BaseDistributionService` now delegates pure computation, simple-range assembly, series construction, axis shaping, and debug-summary formatting through dedicated helpers
 - Smoke-verified with April 2026 exports: VNext path produces aligned signatures across all chart families, legacy fallback produces correct state, all 8 parity strategies pass
-- 636 automated tests pass in the current default full-solution lane
+- 640 automated tests pass in the current default full-solution lane
 
 **Current evidence artifacts (April 2026):**
 - `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
@@ -464,7 +464,7 @@ The goal is to make the system legible enough that:
 - refresh current execution maps, success criteria, and architectural evidence
 
 **Audit Record (April 2026)**
-- 452 C# source files (~36,900 lines), 153 test files, 636 automated tests, 48 architecture guardrails
+- 451 C# source files (~36,900 lines), 153 test files, 640 automated tests, 48 architecture guardrails
 - All sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext widening — all active chart families route through the VNext reasoning engine with automatic legacy fallback
 - All 5 global closure conditions assessed and met (full record in `DataVisualiser_Subsystem_Plan.md` Phase 6.6 section)
 - Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,401 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~775 lines, parallel host), controller adapter pattern variation accepted as domain variation

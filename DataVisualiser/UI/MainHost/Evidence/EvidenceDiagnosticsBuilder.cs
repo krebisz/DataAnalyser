@@ -141,10 +141,7 @@ public sealed class EvidenceDiagnosticsBuilder
             },
             Transition = transition,
             VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime),
-            VNextDistribution = BuildVNextDiagnostics(chartState.LastDistributionLoadRuntime),
-            VNextWeekdayTrend = BuildVNextDiagnostics(chartState.LastWeekdayTrendLoadRuntime),
-            VNextTransform = BuildVNextDiagnostics(chartState.LastTransformLoadRuntime),
-            VNextBarPie = BuildVNextDiagnostics(chartState.LastBarPieLoadRuntime)
+            VNextFamilies = BuildVNextFamilyDiagnostics(chartState)
         };
     }
 
@@ -309,6 +306,19 @@ public sealed class EvidenceDiagnosticsBuilder
             SupportsOnlyMainChart = runtime.SupportsOnlyMainChart,
             FailureReason = runtime.FailureReason
         };
+    }
+
+    internal static Dictionary<string, VNextDiagnosticsSnapshot> BuildVNextFamilyDiagnostics(ChartState chartState)
+    {
+        var result = new Dictionary<string, VNextDiagnosticsSnapshot>();
+        foreach (var (kind, runtime) in chartState.FamilyLoadRuntimes)
+        {
+            var snapshot = BuildVNextDiagnostics(runtime);
+            if (snapshot != null)
+                result[kind.ToString()] = snapshot;
+        }
+
+        return result;
     }
 
     private static bool HasVisibleExtendedCharts(ChartState chartState)

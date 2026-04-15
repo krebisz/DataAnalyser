@@ -64,7 +64,7 @@ internal sealed class DistributionSessionMilestoneRecorder
             MetricType = _viewModel.MetricState.SelectedMetricType,
             SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
             SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = chartState.LastDistributionLoadRuntime?.RuntimePath ?? chartState.LastLoadRuntime?.RuntimePath,
+            RuntimePath = chartState.GetFamilyRuntime(VNext.Contracts.ChartProgramKind.Distribution)?.RuntimePath ?? chartState.LastLoadRuntime?.RuntimePath,
             LoadedSeriesCount = context?.ActualSeriesCount ?? 0,
             ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(context),
             Note = note

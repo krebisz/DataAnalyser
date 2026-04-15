@@ -86,10 +86,7 @@ public sealed class DiagnosticsSnapshot
     public SmokeHeuristicsSnapshot SmokeChecks { get; set; } = new();
     public TransitionDiagnosticsSnapshot Transition { get; set; } = new();
     public VNextDiagnosticsSnapshot? VNext { get; set; }
-    public VNextDiagnosticsSnapshot? VNextDistribution { get; set; }
-    public VNextDiagnosticsSnapshot? VNextWeekdayTrend { get; set; }
-    public VNextDiagnosticsSnapshot? VNextTransform { get; set; }
-    public VNextDiagnosticsSnapshot? VNextBarPie { get; set; }
+    public Dictionary<string, VNextDiagnosticsSnapshot> VNextFamilies { get; set; } = new();
 }
 
 public sealed class SessionMilestoneSnapshot

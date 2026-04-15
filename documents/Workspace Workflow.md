@@ -161,7 +161,7 @@ Workspace State:
 - Phase: Phase 6 closed, Phase 7 entry gate satisfied
 - VNext: all chart families routed through VNext reasoning engine with automatic legacy fallback
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 636 passing
+- Tests: 640 passing
 - Unknowns: none
 ```
 
@@ -237,7 +237,7 @@ The following files are actively relevant for VNext reasoning engine integration
 
 **Integration Bridge:**
 - `UI/MainHost/VNextMainChartIntegrationCoordinator.cs` (Main/Normalized/Diff/Ratio)
-- `UI/MainHost/VNextDistributionIntegrationCoordinator.cs` (Distribution)
+- `UI/Charts/Presentation/VNextDataResolutionHelper.cs` (shared resolve + fallback for all families)
 - `UI/MainHost/VNextSeriesLoadCoordinator.cs` (WeekdayTrend, Transform, BarPie — shared)
 - `UI/ViewModels/MetricLoadCoordinator.cs`
 - `UI/State/ChartState.cs` (`LoadRuntimeState`, per-family runtime tracking)

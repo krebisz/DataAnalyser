@@ -338,54 +338,18 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
         return new DistributionRenderInput(selectedSeries, data, cmsSeries, displayName);
     }
 
-    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    private Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        if (ctx.Data1 == null)
-            return (null, null);
-
-        if (selectedSeries == null)
-            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.PrimaryMetricType ?? ctx.MetricType, ctx.PrimarySubtype))
-            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
-
-        if (MetricSeriesSelectionCache.IsSameSelection(selectedSeries, ctx.SecondaryMetricType, ctx.SecondarySubtype))
-            return (ctx.Data2 ?? ctx.Data1, ctx.SecondaryCms as ICanonicalMetricSeries);
-
-        if (string.IsNullOrWhiteSpace(selectedSeries.MetricType))
-            return (ctx.Data1, ctx.PrimaryCms as ICanonicalMetricSeries);
-
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var cacheKey = MetricSeriesSelectionCache.BuildCacheKey(selectedSeries, ctx.From, ctx.To, tableName);
-        if (_selectionCache.TryGetDataWithCms(cacheKey, out var cached, out var cachedCms))
-            return (cached, cachedCms);
-
-        return await LoadFreshDistributionDataAsync(selectedSeries, ctx.From, ctx.To, tableName, cacheKey);
-    }
-
-    private async Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> LoadFreshDistributionDataAsync(
-        MetricSeriesSelection selectedSeries, DateTime from, DateTime to, string tableName, string cacheKey)
-    {
-        var vnextResult = await _vnextCoordinator.LoadAsync(selectedSeries, from, to, tableName, ChartProgramKind.Distribution);
-        if (vnextResult.Success && vnextResult.Data != null)
-        {
-            _viewModel.ChartState.LastDistributionLoadRuntime = LoadRuntimeState.FromVNextSuccess(
-                EvidenceRuntimePath.VNextDistribution, vnextResult.RequestSignature,
-                vnextResult.SnapshotSignature, vnextResult.ProgramKind, vnextResult.ProgramSourceSignature);
-
-            var data = vnextResult.Data is List<MetricData> list ? list : vnextResult.Data.ToList();
-            _selectionCache.SetDataWithCms(cacheKey, data, vnextResult.CmsSeries);
-            return (data, vnextResult.CmsSeries);
-        }
-
-        var (primaryCms, _, primaryData, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(selectedSeries, null, from, to, tableName);
-        var legacyData = primaryData.ToList();
-        _selectionCache.SetDataWithCms(cacheKey, legacyData, primaryCms);
-
-        _viewModel.ChartState.LastDistributionLoadRuntime = LoadRuntimeState.LegacyFallback(
-            vnextResult.RequestSignature, vnextResult.FailureReason);
-
-        return (legacyData, primaryCms);
+        return VNextDataResolutionHelper.ResolveSeriesDataAsync(
+            ctx, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
+            ChartProgramKind.Distribution, EvidenceRuntimePath.VNextDistribution,
+            runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.Distribution, runtime),
+            async (sel, from, to, table) =>
+            {
+                var (cms, _, data, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(sel, null, from, to, table);
+                return (data.ToList(), cms);
+            });
     }
 
     private MetricSeriesSelection? ResolveSelectedDistributionSeries(ChartDataContext ctx)

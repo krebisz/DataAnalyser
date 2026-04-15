@@ -243,7 +243,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - VNext active for all chart families: Main/Normalized/Diff/Ratio via `VNextMainChartIntegrationCoordinator`; Distribution/WeekdayTrend/Transform/BarPie via `VNextSeriesLoadCoordinator` with per-family identity programs
 - Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports for all chart families
 - Known debt carried to Phase 7: `MainChartsView` host concentration (~1,401 lines, genuinely host-level), adapter pattern variation (accepted as domain variation)
-- 452 source files, 636 automated tests, 48 architecture guardrails
+- 451 source files, 640 automated tests, 48 architecture guardrails
 
 ---
 

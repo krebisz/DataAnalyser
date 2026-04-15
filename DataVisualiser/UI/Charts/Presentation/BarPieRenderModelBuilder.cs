@@ -166,7 +166,9 @@ internal sealed class BarPieRenderModelBuilder
 
         var lastVNext = results.FirstOrDefault(r => r?.Runtime?.RuntimePath == EvidenceRuntimePath.VNextBarPie);
         var lastLegacy = results.FirstOrDefault(r => r?.Runtime?.RuntimePath == EvidenceRuntimePath.Legacy);
-        _viewModel.ChartState.LastBarPieLoadRuntime = lastVNext?.Runtime ?? lastLegacy?.Runtime;
+        var barPieRuntime = lastVNext?.Runtime ?? lastLegacy?.Runtime;
+        if (barPieRuntime != null)
+            _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.BarPie, barPieRuntime);
 
         return results.Where(result => result != null).Select(result => result!).ToList();
     }
