@@ -30,7 +30,7 @@ public partial class SyncfusionChartsView : UserControl
     private readonly ChartHostDateRangeCoordinator _dateRangeCoordinator = new();
     private readonly SyncfusionChartsViewLoadCoordinator _loadCoordinator = new();
     private readonly MainChartsViewStateSyncCoordinator _stateSyncCoordinator = new();
-    private SyncfusionEvidenceExportService _evidenceExportService = null!;
+    private MainChartsEvidenceExportService _evidenceExportService = null!;
     private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private ChartState _chartState = null!;
     private MetricState _metricState = null!;
@@ -47,9 +47,29 @@ public partial class SyncfusionChartsView : UserControl
     private int _uiBusyDepth;
     private MainWindowViewModel _viewModel = null!;
 
+    // Forwarding properties — bridge shared MetricSelectionPanel controls to existing code-behind references
+    private MetricSelectionPanel SelectionPanel => ChartTabHost.SelectionSurface;
+    private ComboBox TablesCombo => SelectionPanel.MetricTypeCombo;
+    private ComboBox SubtypeCombo => SelectionPanel.PrimarySubtypeCombo;
+    private DatePicker FromDate => SelectionPanel.FromDatePicker;
+    private DatePicker ToDate => SelectionPanel.ToDatePicker;
+    private ComboBox ResolutionCombo => SelectionPanel.ResolutionSelector;
+    private StackPanel TopControlMetricSubtypePanel => SelectionPanel.SubtypePanel;
+    private Button ThemeToggleButton => SelectionPanel.ThemeToggle;
+    private CheckBox CmsEnableCheckBox => SelectionPanel.CmsEnable;
+    private CheckBox CmsSingleCheckBox => SelectionPanel.CmsSingle;
+    private CheckBox CmsCombinedCheckBox => SelectionPanel.CmsCombined;
+    private CheckBox CmsMultiCheckBox => SelectionPanel.CmsMulti;
+    private CheckBox CmsNormalizedCheckBox => SelectionPanel.CmsNormalized;
+    private CheckBox CmsWeeklyCheckBox => SelectionPanel.CmsWeekly;
+    private CheckBox CmsWeekdayTrendCheckBox => SelectionPanel.CmsWeekdayTrend;
+    private CheckBox CmsHourlyCheckBox => SelectionPanel.CmsHourly;
+    private CheckBox CmsBarPieCheckBox => SelectionPanel.CmsBarPie;
+
     public SyncfusionChartsView()
     {
         InitializeComponent();
+        WireSelectionPanelEvents();
 
         InitializeInfrastructure();
         InitializeViewModel();
@@ -57,6 +77,22 @@ public partial class SyncfusionChartsView : UserControl
         ExecuteStartupSequence();
 
         IsVisibleChanged += OnViewVisibilityChanged;
+    }
+
+    private void WireSelectionPanelEvents()
+    {
+        SelectionPanel.LoadDataRequested += (_, _) => OnLoadData(this, new RoutedEventArgs());
+        SelectionPanel.ResetZoomRequested += (_, _) => OnResetZoom(this, new RoutedEventArgs());
+        SelectionPanel.ClearRequested += (_, _) => OnClear(this, new RoutedEventArgs());
+        SelectionPanel.ExportReachabilityRequested += (_, _) => OnExportReachability(this, new RoutedEventArgs());
+        SelectionPanel.ThemeToggleRequested += (_, _) => OnToggleTheme(this, new RoutedEventArgs());
+        SelectionPanel.AddSubtypeRequested += (_, _) => AddSubtypeComboBox(this, new RoutedEventArgs());
+        SelectionPanel.ResolutionSelectionChanged += (s, e) => OnResolutionSelectionChanged(s!, e);
+        SelectionPanel.MetricTypeSelectionChanged += (s, e) => OnMetricTypeSelectionChanged(s!, e);
+        SelectionPanel.FromDateChanged += (s, e) => OnFromDateChanged(s!, e);
+        SelectionPanel.ToDateChanged += (s, e) => OnToDateChanged(s!, e);
+        SelectionPanel.CmsToggleChanged += (s, e) => OnCmsToggleChanged(s!, e);
+        SelectionPanel.CmsStrategyToggled += (s, e) => OnCmsStrategyToggled(s!, e);
     }
 
     private IDisposable BeginUiBusyScope()
@@ -87,10 +123,14 @@ public partial class SyncfusionChartsView : UserControl
         _uiState = shared.UiState;
         _metricSelectionService = shared.MetricSelectionService;
         _viewModel = shared.ViewModel;
-        _evidenceExportService = new SyncfusionEvidenceExportService(
+        _evidenceExportService = new MainChartsEvidenceExportService(
             new ReachabilityExportWriter(),
             new ReachabilityExportPathResolver(),
-            new StrategyReachabilityEvidenceStore());
+            new StrategyReachabilityEvidenceStore(),
+            _metricSelectionService,
+            () => null,
+            () => "N/A",
+            () => "N/A");
     }
 
     private void InitializeViewModel()
@@ -526,16 +566,23 @@ public partial class SyncfusionChartsView : UserControl
         _dateRangeCoordinator.ApplyDefaultRange(DateTime.UtcNow, CreateDateRangeActions());
     }
 
-    private void OnExportReachability(object sender, RoutedEventArgs e)
+    private async void OnExportReachability(object sender, RoutedEventArgs e)
     {
         try
         {
-            var result = _evidenceExportService.Export(_viewModel.ChartState, _viewModel.MetricState, DateTime.UtcNow);
-            MessageBox.Show($"Syncfusion evidence snapshot exported to:\n{result.FilePath}\n\nNotes:\n- {string.Join("\n- ", result.Notes)}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+            var result = await _evidenceExportService.ExportAsync(_viewModel.ChartState, _viewModel.MetricState, DateTime.UtcNow, "Syncfusion");
+
+            if (!result.HadReachabilityRecords)
+                MessageBox.Show("No reachability records captured yet. Export will include parity data if available.", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (result.Warnings.Count > 0)
+                MessageBox.Show($"Export includes parity warnings:\n- {string.Join("\n- ", result.Warnings)}", "Parity Warnings", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+            MessageBox.Show($"Evidence snapshot exported to:\n{result.FilePath}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to export Syncfusion evidence snapshot:\n{ex.Message}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Failed to export evidence snapshot:\n{ex.Message}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

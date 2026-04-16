@@ -723,6 +723,34 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("do not generalize before", source, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void BothViews_ShouldUseSharedMetricSelectionPanel()
+    {
+        var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        Assert.Contains("ChartTabHost.SelectionSurface", mainSource, StringComparison.Ordinal);
+        Assert.Contains("SelectionPanel.MetricTypeCombo", mainSource, StringComparison.Ordinal);
+        Assert.Contains("WireSelectionPanelEvents", mainSource, StringComparison.Ordinal);
+
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        Assert.Contains("ChartTabHost.SelectionSurface", syncfusionSource, StringComparison.Ordinal);
+        Assert.Contains("SelectionPanel.MetricTypeCombo", syncfusionSource, StringComparison.Ordinal);
+        Assert.Contains("WireSelectionPanelEvents", syncfusionSource, StringComparison.Ordinal);
+
+        var mainXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml");
+        Assert.Contains("ChartTabHost", mainXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("MetricSelectionPanel", mainXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<DockPanel", mainXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<ScrollViewer", mainXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"TablesCombo\"", mainXaml, StringComparison.Ordinal);
+
+        var syncfusionXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml");
+        Assert.Contains("ChartTabHost", syncfusionXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("MetricSelectionPanel", syncfusionXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<DockPanel", syncfusionXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<ScrollViewer", syncfusionXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"TablesCombo\"", syncfusionXaml, StringComparison.Ordinal);
+    }
+
     private static void AssertNoMatches(IReadOnlyList<string> offenders)
     {
         if (offenders.Count == 0)

@@ -1,0 +1,432 @@
+{
+  "ExportedAtUtc": "2026-04-16T18:05:36.8325818Z",
+  "ExportScope": "Syncfusion",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2023-11-30T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "body_fat_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat (mass)",
+        "DisplayName": "Weight - Fat (mass)",
+        "DisplayKey": "Weight:body_fat_mass"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "fat_free_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat Free (mass)",
+        "DisplayName": "Weight - Fat Free (mass)",
+        "DisplayKey": "Weight:fat_free_mass"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": false,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": false,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 0,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 25
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "N/A"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [
+    {
+      "StrategyType": 1,
+      "UsedCms": true,
+      "CmsRequested": true,
+      "GlobalCmsEnabled": true,
+      "StrategyCmsEnabled": true,
+      "RealCmsSupported": true,
+      "DecisionReason": "Primary and secondary CMS data available",
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 143,
+      "SecondarySamples": 141,
+      "CmsSeriesCount": 2,
+      "ActualSeriesCount": 2,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2023-11-30T00:00:00",
+      "TimestampUtc": "2026-04-16T18:04:54.9918901Z"
+    },
+    {
+      "StrategyType": 1,
+      "UsedCms": true,
+      "CmsRequested": true,
+      "GlobalCmsEnabled": true,
+      "StrategyCmsEnabled": true,
+      "RealCmsSupported": true,
+      "DecisionReason": "Primary and secondary CMS data available",
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 143,
+      "SecondarySamples": 141,
+      "CmsSeriesCount": 2,
+      "ActualSeriesCount": 2,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2023-11-30T00:00:00",
+      "TimestampUtc": "2026-04-16T18:04:55.2547521Z"
+    },
+    {
+      "StrategyType": 1,
+      "UsedCms": true,
+      "CmsRequested": true,
+      "GlobalCmsEnabled": true,
+      "StrategyCmsEnabled": true,
+      "RealCmsSupported": true,
+      "DecisionReason": "Primary and secondary CMS data available",
+      "PrimaryCmsAvailable": true,
+      "SecondaryCmsAvailable": true,
+      "PrimarySamples": 143,
+      "SecondarySamples": 141,
+      "CmsSeriesCount": 2,
+      "ActualSeriesCount": 2,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2023-11-30T00:00:00",
+      "TimestampUtc": "2026-04-16T18:04:55.2551072Z"
+    }
+  ],
+  "DistributionParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Selection": {
+      "MetricType": "Weight",
+      "Subtype": "body_fat_mass",
+      "DisplayMetricType": "Weight",
+      "DisplaySubtype": "Fat (mass)",
+      "DisplayName": "Weight - Fat (mass)",
+      "DisplayKey": "Weight:body_fat_mass"
+    },
+    "DataSource": "ChartContext.Primary",
+    "LegacySamples": 143,
+    "CmsSamplesTotal": 143,
+    "CmsSamplesInRange": 143,
+    "Weekly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    },
+    "Hourly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "CombinedMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "SingleMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "MultiMetricParity": {
+    "Status": "Unavailable",
+    "Reason": "At least three series required",
+    "Result": null
+  },
+  "NormalizedParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "WeekdayTrendParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "TransformParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Operation": "N/A",
+    "IsUnary": false,
+    "ExpressionAvailable": false,
+    "LegacySamples": 141,
+    "NewSamples": 141,
+    "Result": {
+      "Passed": true,
+      "Message": "Transform parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "ParitySummary": {
+    "Status": "Completed",
+    "OverallPassed": true,
+    "WeeklyPassed": true,
+    "HourlyPassed": true,
+    "CombinedMetricPassed": true,
+    "SingleMetricPassed": true,
+    "MultiMetricPassed": null,
+    "NormalizedPassed": true,
+    "WeekdayTrendPassed": true,
+    "TransformPassed": true,
+    "StrategiesEvaluated": [
+      "WeeklyDistribution",
+      "HourlyDistribution",
+      "CombinedMetric",
+      "SingleMetric",
+      "MultiMetric",
+      "Normalized",
+      "WeekdayTrend",
+      "Transform"
+    ]
+  },
+  "ParityWarnings": [
+    "MultiMetric parity not completed: At least three series required"
+  ],
+  "SessionMilestones": [
+    {
+      "TimestampUtc": "2026-04-16T18:04:22.2381291Z",
+      "Kind": "TabSwitched",
+      "Outcome": "Info",
+      "MetricType": null,
+      "SelectedSeriesCount": 0,
+      "SelectedDisplayKeys": [],
+      "RuntimePath": null,
+      "LoadedSeriesCount": 0,
+      "ContextSignature": null,
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": "Switched to Charts tab."
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:04:56.2405835Z",
+      "Kind": "DataLoaded",
+      "Outcome": "Success",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 2,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:fat_free_mass"
+      ],
+      "RuntimePath": "VNextMain",
+      "LoadedSeriesCount": 2,
+      "ContextSignature": "Weight:body_fat_mass|Weight:fat_free_mass::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::series=2",
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": null
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:05:08.0630959Z",
+      "Kind": "TabSwitched",
+      "Outcome": "Info",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 2,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:fat_free_mass"
+      ],
+      "RuntimePath": null,
+      "LoadedSeriesCount": 0,
+      "ContextSignature": null,
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": "Switched to Syncfusion tab."
+    }
+  ],
+  "Diagnostics": {
+    "RuntimePath": "VNextMain",
+    "Selection": {
+      "SelectedMetricType": "Weight",
+      "SelectedSeriesCount": 2,
+      "DistinctDisplayKeyCount": 2,
+      "OrderedSeries": [
+        {
+          "Index": 0,
+          "MetricType": "Weight",
+          "Subtype": "body_fat_mass",
+          "DisplayName": "Weight - Fat (mass)",
+          "DisplayKey": "Weight:body_fat_mass",
+          "MatchesLoadedPrimary": true,
+          "MatchesLoadedSecondary": false,
+          "RequiresOnDemandResolution": false
+        },
+        {
+          "Index": 1,
+          "MetricType": "Weight",
+          "Subtype": "fat_free_mass",
+          "DisplayName": "Weight - Fat Free (mass)",
+          "DisplayKey": "Weight:fat_free_mass",
+          "MatchesLoadedPrimary": false,
+          "MatchesLoadedSecondary": true,
+          "RequiresOnDemandResolution": false
+        }
+      ]
+    },
+    "LoadedContext": {
+      "Present": true,
+      "ReusableForCurrentSelection": true,
+      "LoadRequestSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:fat_free_mass",
+      "MetricType": "Weight",
+      "PrimaryMetricType": "Weight",
+      "SecondaryMetricType": "Weight",
+      "PrimarySubtype": "body_fat_mass",
+      "SecondarySubtype": "fat_free_mass",
+      "DisplayName1": "Weight - Fat (mass)",
+      "DisplayName2": "Weight - Fat Free (mass)",
+      "ActualSeriesCount": 2,
+      "Data1Count": 143,
+      "Data2Count": 141,
+      "CmsSeriesCount": 2,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2023-11-30T00:00:00"
+    },
+    "MainChartPipeline": {
+      "ExpectedSeriesFromSelection": 2,
+      "ExpectedBaseSeriesLoad": 2,
+      "ExpectedAdditionalSeriesLoad": 0,
+      "ContextActualSeriesCount": 2,
+      "MultiMetricRequested": false,
+      "ContextLikelyStaleForSelection": false
+    },
+    "Reachability": {
+      "RecordCount": 3,
+      "MaxActualSeriesCount": 2,
+      "MaxCmsSeriesCount": 2,
+      "LatestStrategy": "CombinedMetric",
+      "LatestActualSeriesCount": 2,
+      "LatestCmsSeriesCount": 2,
+      "LatestDecisionReason": "Primary and secondary CMS data available",
+      "LatestTimestampUtc": "2026-04-16T18:04:55.2551072Z"
+    },
+    "UiSurface": {
+      "MetricType": {
+        "SelectedValue": null,
+        "SelectedDisplay": null,
+        "OptionCount": 0
+      },
+      "DateRange": {
+        "SelectedFromDate": null,
+        "SelectedToDate": null,
+        "ExpectedDefaultFromDateUtc": "0001-01-01T00:00:00",
+        "ExpectedDefaultToDateUtc": "0001-01-01T00:00:00",
+        "MatchesExpectedDefaultWindow": false
+      },
+      "Subtypes": {
+        "ActiveComboCount": 0,
+        "PrimarySelectionMaterialized": false,
+        "AllCombosBoundToSelectedMetricType": false,
+        "PrimaryOptionsMatchSelectedMetric": null,
+        "ExpectedPrimaryOptionValues": [],
+        "OrderedCombos": []
+      },
+      "Transform": {
+        "PanelVisible": false,
+        "SecondaryPanelVisible": false,
+        "ComputeEnabled": false,
+        "SelectedOperation": null,
+        "SelectedPrimarySubtype": null,
+        "SelectedSecondarySubtype": null,
+        "PrimaryOptionCount": 0,
+        "SecondaryOptionCount": 0
+      },
+      "RecentMessages": []
+    },
+    "SmokeChecks": {
+      "SelectedMetricMatchesUiMetric": null,
+      "SubtypeComboCountMatchesSelectedSeries": null,
+      "LoadedSeriesCountMatchesSelection": true,
+      "PrimarySubtypeOptionsMatchSelectedMetric": null,
+      "DateRangeMatchesExpectedDefaultWindow": false,
+      "RecentErrorCount": 0,
+      "RecentErrorsPresent": false
+    },
+    "Transition": {
+      "CurrentSelectionSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:fat_free_mass",
+      "LoadedRequestMatchesCurrentSelection": true,
+      "LoadedContextSignature": "Weight:body_fat_mass|Weight:fat_free_mass::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::series=2",
+      "LatestReachabilitySignature": "CombinedMetric::actual=2::cms=2::reason=Primary and secondary CMS data available",
+      "ExpectedSeriesCount": 2,
+      "LoadedContextSeriesCount": 2,
+      "LatestReachabilitySeriesCount": 2,
+      "RenderEvidenceExceedsStoredContext": false,
+      "ReloadLikelyRequired": false,
+      "State": "ContextAligned",
+      "Interpretation": "Stored chart context matches the current selection and expected series count."
+    },
+    "VNext": {
+      "RequestSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:fat_free_mass",
+      "SnapshotSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:fat_free_mass",
+      "ProgramKind": "Main",
+      "ProgramSourceSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:fat_free_mass",
+      "ProjectedContextSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:fat_free_mass",
+      "RequestMatchesSnapshot": true,
+      "SnapshotMatchesProgramSource": true,
+      "ProgramSourceMatchesProjectedContext": true,
+      "SupportsOnlyMainChart": true,
+      "FailureReason": null
+    },
+    "VNextFamilies": {}
+  }
+}

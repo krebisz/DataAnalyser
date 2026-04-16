@@ -145,7 +145,7 @@ Use these status labels literally:
 **Why closure is not currently accepted as final**
 - This concern has been satisfied by current March 2026 reachability/parity exports and current green default test lanes
 - Active closure scope excludes the retired live `Difference/Ratio` chart surface
-- `Syncfusion` remains outside CMS reachability closure because its export is still explicitly `NotApplicable`
+- `Syncfusion` no longer uses a stub reachability export; it emits through the shared evidence service with explicit `ExportScope = "Syncfusion"`, while backend qualification remains separately scoped
 
 **Historical evidence references**
 - January 2026 reachability artifacts have been retired from the repository. Current closure is based on April 2026 evidence and green default test lanes.
@@ -172,7 +172,7 @@ Use these status labels literally:
 1. CMS execution is observable for all active strategy families.
 2. Bypass paths are either eliminated or explicitly justified.
 3. Reachability evidence is current, reproducible, and generated through the approved evidence path.
-4. Closure scope explicitly excludes the retired live `Difference/Ratio` chart surface and the still-unwired Syncfusion reachability export.
+4. Closure scope explicitly excludes the retired live `Difference/Ratio` chart surface; Syncfusion evidence export is wired through the shared export path, but Syncfusion backend qualification remains explicit.
 
 ---
 
@@ -216,7 +216,7 @@ Use these status labels literally:
 1. Consumer-facing CMS paths are current, reachable, and parity-validated.
 2. Historical closure claims have been refreshed with present evidence.
 3. No active parity claim depends on missing or stale artifacts.
-4. Closure scope excludes retired live consumer surfaces and keeps the current Syncfusion export limitation explicit rather than pretending it is parity-complete.
+4. Closure scope excludes retired live consumer surfaces and keeps Syncfusion backend qualification explicit rather than treating exportability as rendering parity.
 
 ---
 
@@ -317,7 +317,7 @@ Phase 5 exists to make the system structurally safe for its intended future:
 **Post-Closure Maintenance Discipline**
 1. Preserve the qualified seams introduced by the rehaul unless a new bounded step deliberately replaces them.
 2. Treat remaining large concentration points as explicit intentional debt, not as hidden unfinished migration work.
-3. Keep the current Syncfusion export limitation honest until true Syncfusion reachability evidence is deliberately implemented.
+3. Keep Syncfusion evidence export and backend qualification claims separate: shared exportability is implemented, but rendering qualification remains capability-specific.
 4. Do not generalize further just to reduce file count; only generalize patterns proven in multiple real slices.
 5. Revalidate future closure claims with present evidence rather than relying on historical refactor intent alone.
 6. Keep `DataFileReader` active callers on capability facades and do not reintroduce direct `SQLHelper` usage in those caller layers.
@@ -400,16 +400,20 @@ The goal is to make the system legible enough that:
 - Fresh `ReasoningSessionCoordinator` per load attempt — no shared session state across loads
 - `MainChartDisplayMode` propagated through VNext path — Regular/Summed/Stacked behavior preserved
 - Evidence boundary decomposed: `MainChartsEvidenceExportService` split into `EvidenceExportModels` (21 standalone DTOs), `EvidenceDiagnosticsBuilder` (diagnostics assembly), and export orchestration
+- Evidence export now carries `ExportScope`; the Charts and Syncfusion tabs both emit through `MainChartsEvidenceExportService` with tab-specific scope values
+- Tab switches are recorded as `TabSwitched` session milestones through the shared view-model context
 - `LoadRuntimeState` on `ChartState` tracks runtime path per family, request/snapshot/program/projected-context signatures, and failure reason
 - `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports with signature-chain alignment flags for all chart families
 - Distribution interaction milestones recorded for frequency shading, interval count, mode, chart type, and subtype changes
 - `MainChartsView` now delegates session diagnostics, UI-surface diagnostics, subtype-selection bookkeeping, load/clear bookkeeping, resolution reset, zoom reset, startup, evidence export, data-loaded flow, chart update, and chart presentation through dedicated host seams
+- `MainChartsView` and `SyncfusionChartsView` now share the top metric-selection/date/CMS surface through `MetricSelectionPanel`, hosted by the shared `ChartTabHost` shell
 - metric-type list initialization, metric-type-change reset/reload, and subtype-loaded follow-up behavior are now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostMetricSelectionCoordinator`
 - `MainChartsView` host/controller-extras interaction, registry-wide controller resolution, and chart-surface startup/no-data presentation are now delegated through dedicated coordinators
 - `TransformDataPanelControllerAdapter` now delegates subtype-selection interaction, operation state, execution, milestone recording, data resolution, and render/grid handoff through dedicated coordinators
 - `BaseDistributionService` now delegates pure computation, simple-range assembly, series construction, axis shaping, and debug-summary formatting through dedicated helpers
 - Smoke-verified with April 2026 exports: VNext path produces aligned signatures across all chart families, legacy fallback produces correct state, all 8 parity strategies pass
-- 640 automated tests pass in the current default full-solution lane
+- 645 automated tests pass in the current default full-solution lane
+- Targeted smoke remains pending for the latest shared `ChartTabHost` layout hardening: open both tabs, confirm the shared top controls and chart areas render correctly, then run one basic load/export path per tab
 
 **Current evidence artifacts (April 2026):**
 - `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
@@ -464,10 +468,10 @@ The goal is to make the system legible enough that:
 - refresh current execution maps, success criteria, and architectural evidence
 
 **Audit Record (April 2026)**
-- 451 C# source files (~36,900 lines), 153 test files, 640 automated tests, 48 architecture guardrails
+- 452 C# source files (~36,900 lines), 162 test files, 645 automated tests, 49 architecture guardrails
 - All sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext widening — all active chart families route through the VNext reasoning engine with automatic legacy fallback
 - All 5 global closure conditions assessed and met (full record in `DataVisualiser_Subsystem_Plan.md` Phase 6.6 section)
-- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,401 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~775 lines, parallel host), controller adapter pattern variation accepted as domain variation
+- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,238 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~715 lines, parallel host), controller adapter pattern variation accepted as domain variation
 
 **Closure Condition**
 - the next cycle starts from an auditable baseline rather than from accumulated guesswork — **satisfied**
@@ -488,7 +492,7 @@ The goal is to make the system legible enough that:
 - Rendering helpers merged: `ChartLabelFormatter` → `ChartSeriesLabelFormatter`, `TransformChartAxisLayout` → `TransformChartAxisCalculator`
 - `EvidenceDataResolutionHelper` extracted: shared data-resolution and strategy cut-over resolution
 - `UI/MainHost/` decomposed into `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
-- Net -7 files; 609 tests pass; no behavior changes
+- Net -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening and tab-shell extraction bring the current lane to 645 tests
 
 **Closure Condition**
 - structural sprawl is materially reduced and the codebase is primed for Phase 7 capability expansion

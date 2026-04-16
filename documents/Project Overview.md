@@ -55,6 +55,7 @@ At present, the system:
 - validates behavior through parity testing
 - supports parallel legacy and CMS execution paths during migration
 - increasingly exposes downstream-safe derived and interpretive result shaping through explicit orchestration and rendering seams
+- emits tab-scoped reachability/evidence exports from both the Charts and Syncfusion surfaces through the shared evidence service
 
 Canonical semantics form the foundation for all trusted meaning and for all computation that claims canonical comparability.
 Charts are currently the dominant delivery surface, but they are not the intended limit of the platform.
@@ -98,6 +99,7 @@ Current delivery surfaces provide:
 - dynamic chart visibility and state management
 - backend-qualified multi-vendor rendering experiments in support of rendering-boundary isolation
 - exports and evidence paths that observe execution and result state
+- a shared metric-selection/date/CMS control surface and tab shell reused by both the Charts and Syncfusion tabs
 
 The broader intended model is:
 
@@ -238,12 +240,13 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 
 - All sub-phases (6.1–6.7) closed, including 6.3 VNext widening — all active chart families route through the VNext reasoning engine with automatic legacy fallback
 - All 5 global closure conditions met: similar responsibilities have obvious homes, irreducible operations are centralized, truth/derivation/orchestration/delivery seams are defended, outliers are explicit and bounded, all capabilities are preserved
-- Named outliers materially reduced: `MainChartsEvidenceExportService` (1,209→139), `TransformDataPanelControllerAdapter` (857→257), `BaseDistributionService` (612→296), `BarPieChartControllerAdapter` (503→197), `ChartRenderEngine` (452→333), `DataFetcher` decomposed into focused query groups
+- Named outliers materially reduced: `MainChartsEvidenceExportService` (1,209→131), `TransformDataPanelControllerAdapter` (857→257), `BaseDistributionService` (612→296), `BarPieChartControllerAdapter` (503→197), `ChartRenderEngine` (452→333), `DataFetcher` decomposed into focused query groups
 - Evidence/export boundary decomposed into `UI/MainHost/Evidence/`, `UI/MainHost/Export/`, and `UI/MainHost/Coordination/` sub-namespaces
 - VNext active for all chart families: Main/Normalized/Diff/Ratio via `VNextMainChartIntegrationCoordinator`; Distribution/WeekdayTrend/Transform/BarPie via `VNextSeriesLoadCoordinator` with per-family identity programs
 - Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports for all chart families
-- Known debt carried to Phase 7: `MainChartsView` host concentration (~1,401 lines, genuinely host-level), adapter pattern variation (accepted as domain variation)
-- 451 source files, 640 automated tests, 48 architecture guardrails
+- Evidence exports now include `ExportScope`; Charts and Syncfusion exports share the same export path, and tab switches are recorded as session milestones
+- Known debt carried to Phase 7: `MainChartsView` host concentration (~1,238 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~715 lines), adapter pattern variation (accepted as domain variation)
+- 452 source files, 645 automated tests, 49 architecture guardrails
 
 ---
 

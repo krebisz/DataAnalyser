@@ -22,7 +22,8 @@
     </Window.Style>
 
     <Grid>
-        <TabControl TabStripPlacement="Bottom" Margin="0">
+        <TabControl x:Name="MainTabControl" TabStripPlacement="Bottom" Margin="0"
+                    SelectionChanged="OnTabSelectionChanged">
             <TabItem Header="Charts">
                 <views:MainChartsView x:Name="MainChartsView" />
             </TabItem>

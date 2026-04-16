@@ -98,10 +98,30 @@ public partial class MainChartsView : UserControl
     private WeekdayTrendChartUpdateCoordinator _weekdayTrendChartUpdateCoordinator = null!;
     private IDistributionService _weeklyDistributionService = null!;
 
+    // Forwarding properties — bridge shared MetricSelectionPanel controls to existing code-behind references
+    private MetricSelectionPanel SelectionPanel => ChartTabHost.SelectionSurface;
+    private ComboBox TablesCombo => SelectionPanel.MetricTypeCombo;
+    private ComboBox SubtypeCombo => SelectionPanel.PrimarySubtypeCombo;
+    private DatePicker FromDate => SelectionPanel.FromDatePicker;
+    private DatePicker ToDate => SelectionPanel.ToDatePicker;
+    private ComboBox ResolutionCombo => SelectionPanel.ResolutionSelector;
+    private StackPanel TopControlMetricSubtypePanel => SelectionPanel.SubtypePanel;
+    private Button ThemeToggleButton => SelectionPanel.ThemeToggle;
+    private CheckBox CmsEnableCheckBox => SelectionPanel.CmsEnable;
+    private CheckBox CmsSingleCheckBox => SelectionPanel.CmsSingle;
+    private CheckBox CmsCombinedCheckBox => SelectionPanel.CmsCombined;
+    private CheckBox CmsMultiCheckBox => SelectionPanel.CmsMulti;
+    private CheckBox CmsNormalizedCheckBox => SelectionPanel.CmsNormalized;
+    private CheckBox CmsWeeklyCheckBox => SelectionPanel.CmsWeekly;
+    private CheckBox CmsWeekdayTrendCheckBox => SelectionPanel.CmsWeekdayTrend;
+    private CheckBox CmsHourlyCheckBox => SelectionPanel.CmsHourly;
+    private CheckBox CmsBarPieCheckBox => SelectionPanel.CmsBarPie;
+
     public MainChartsView()
     {
         _chartSurfaceFactory = new ChartSurfaceFactory(_chartRendererResolver);
         InitializeComponent();
+        WireSelectionPanelEvents();
         _themeCoordinator = new MainChartsViewThemeCoordinator(
             AppThemeService.Default,
             content =>
@@ -131,6 +151,22 @@ public partial class MainChartsView : UserControl
     }
 
     private DiffRatioChartController DiffRatioChartController { get; } = new();
+
+    private void WireSelectionPanelEvents()
+    {
+        SelectionPanel.LoadDataRequested += (_, _) => OnLoadData(this, new RoutedEventArgs());
+        SelectionPanel.ResetZoomRequested += (_, _) => OnResetZoom(this, new RoutedEventArgs());
+        SelectionPanel.ClearRequested += (_, _) => OnClear(this, new RoutedEventArgs());
+        SelectionPanel.ExportReachabilityRequested += (_, _) => OnExportReachability(this, new RoutedEventArgs());
+        SelectionPanel.ThemeToggleRequested += (_, _) => OnToggleTheme(this, new RoutedEventArgs());
+        SelectionPanel.AddSubtypeRequested += (_, _) => AddSubtypeComboBox(this, new RoutedEventArgs());
+        SelectionPanel.ResolutionSelectionChanged += (s, e) => OnResolutionSelectionChanged(s!, e);
+        SelectionPanel.MetricTypeSelectionChanged += (s, e) => OnMetricTypeSelectionChanged(s!, e);
+        SelectionPanel.FromDateChanged += (s, e) => OnFromDateChanged(s!, e);
+        SelectionPanel.ToDateChanged += (s, e) => OnToDateChanged(s!, e);
+        SelectionPanel.CmsToggleChanged += (s, e) => OnCmsToggleChanged(s!, e);
+        SelectionPanel.CmsStrategyToggled += (s, e) => OnCmsStrategyToggled(s!, e);
+    }
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
@@ -1163,7 +1199,7 @@ public partial class MainChartsView : UserControl
     private MainChartsViewEvidenceExportCoordinator.Actions CreateEvidenceExportActions()
     {
         return new MainChartsViewEvidenceExportCoordinator.Actions(
-            (chartState, metricState, utcNow) => _evidenceExportService.ExportAsync(chartState, metricState, utcNow),
+            (chartState, metricState, utcNow) => _evidenceExportService.ExportAsync(chartState, metricState, utcNow, "Charts"),
             () => _evidenceExportService.ClearEvidence(),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Information),
             (title, message) => ShowTrackedMessage(title, message, MessageBoxImage.Warning),

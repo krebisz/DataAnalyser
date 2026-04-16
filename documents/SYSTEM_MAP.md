@@ -208,6 +208,7 @@ The orchestration layer coordinates execution, not meaning.
 - migration coexistence handling
 - evidence/export initiation
 - runtime-path tracking via explicit state (`LoadRuntimeState`) so downstream diagnostics and evidence can observe which path was used
+- tab/session milestone recording for host-level evidence, including tab switches
 
 **Current execution paths**
 - **VNext main-chart path**: `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `ChartProgram` → `LegacyChartProgramProjector` → `ChartDataContext`. Activated when only the Main chart family is visible. Fresh coordinator per load. Produces signature-tracked runtime state.
@@ -374,6 +375,7 @@ It may observe:
 - request/snapshot/program/projected-context signature alignment
 - parity outcomes
 - backend qualification outcomes
+- export scope (`Charts` or `Syncfusion`) and session milestones, including tab switches
 
 Evidence infrastructure lives in `UI/MainHost/Evidence/` and is decomposed into:
 - `EvidenceExportModels` — standalone DTOs for parity snapshots, diagnostics, and VNext runtime state
@@ -381,7 +383,11 @@ Evidence infrastructure lives in `UI/MainHost/Evidence/` and is decomposed into:
 - `EvidenceDataResolutionHelper` — shared context-series resolution and strategy cut-over resolution
 - `MainChartsEvidenceExportService` — orchestrates parity evaluation and JSON export
 
+The same `MainChartsEvidenceExportService` is used for both Charts and Syncfusion tab scopes; `ExportScope` distinguishes the source surface in the JSON payload.
+
 Reachability export infrastructure lives in `UI/MainHost/Export/`. Host coordination lives in `UI/MainHost/Coordination/`.
+
+The Charts and Syncfusion tabs both use `ChartTabHost` for the shared tab shell and `MetricSelectionPanel` for the shared metric-selection/date/CMS control surface, while each host supplies its own chart content and event-forwarding code.
 
 It must not influence live semantic decisions.
 
@@ -508,6 +514,8 @@ All routing is independent of CMS configuration.
 - **Syncfusion host** — Own view and render path; still uses the same VM load + `LoadDataCommand` sequence where wired. Clears `LastLoadRuntime` on reset paths.
 - **Ad-hoc reloads** — Several adapters call `MetricSelectionService.LoadMetricDataAsync` directly for a subset of charts; spine remains "full context load" above.
 - **DataFileReader ingest** — Separate CLI pipeline (files → DB); meets the app at storage, not at `ChartState`.
+
+Syncfusion exports through the shared evidence service with `ExportScope = "Syncfusion"` rather than a tab-specific stub.
 
 ### A.5 Code Facade
 

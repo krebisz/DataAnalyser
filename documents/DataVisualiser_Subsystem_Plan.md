@@ -14,7 +14,7 @@ This document is the single active execution plan for `DataVisualiser` architect
 It consolidates:
 - The completed Phase 5 architecture rehaul (historical execution record)
 - The active Phase 6 legibility-first consolidation cycle
-- The first live VNext vertical slice (Phase 6.3)
+- The completed VNext routing activation across active chart families (Phase 6.3)
 
 The primary objectives are:
 
@@ -36,8 +36,8 @@ Current state:
 
 - Phase 6.3 VNext widening is complete — all active chart families route through the VNext reasoning engine for fresh data loads
 - Phase 7 entry gate is satisfied — exploratory and confidence capabilities may proceed
-- 451 source files, 640 tests, 48 architecture guardrails
-- known debt: `MainChartsView` host concentration (~1,401 lines), adapter pattern variation
+- 452 source files, 645 tests, 49 architecture guardrails
+- known debt: `MainChartsView` host concentration (~1,238 lines), adapter pattern variation
 
 Current defaults:
 
@@ -136,15 +136,19 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `451` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, and cleanup consolidation)
-- `640` automated tests passing
-- first live VNext vertical slice active for the main chart family (`Main`, `Normalized`, `Diff/Ratio`)
+- `452` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, and cleanup consolidation)
+- `645` automated tests passing
+- VNext routing active for all current chart families, with automatic legacy fallback
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
 
-- `UI/MainChartsView.xaml.cs` (~1,194 lines)
-- `UI/Syncfusion/SyncfusionChartsView.xaml.cs` (~650 lines)
+- `UI/MainChartsView.xaml.cs` (~1,238 lines)
+- `UI/Syncfusion/SyncfusionChartsView.xaml.cs` (~715 lines)
+- `UI/ChartTabHost.xaml` (~21 lines)
+- `UI/ChartTabHost.xaml.cs` (~33 lines)
+- `UI/MetricSelectionPanel.xaml` (~134 lines)
+- `UI/MetricSelectionPanel.xaml.cs` (~50 lines)
 - `UI/MainHost/Coordination/ChartHostDateRangeCoordinator.cs` (~19 lines)
 - `UI/MainHost/Coordination/ChartHostMetricSelectionCoordinator.cs` (~89 lines)
 - `UI/MainHost/Coordination/MainChartsViewControllerExtrasCoordinator.cs` (~73 lines)
@@ -159,7 +163,7 @@ Current major concentration points:
 - `UI/MainHost/Evidence/EvidenceTransformParityEvaluator.cs` (~59 lines)
 - `UI/MainHost/Evidence/EvidenceTransformParityDataResolver.cs` (~52 lines)
 - `UI/MainHost/Evidence/EvidenceTransformParityComputer.cs` (~76 lines)
-- `UI/MainHost/Evidence/MainChartsEvidenceExportService.cs` (~138 lines, reduced from 1,209)
+- `UI/MainHost/Evidence/MainChartsEvidenceExportService.cs` (~131 lines, reduced from 1,209)
 - `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~220 lines, reduced from ~857)
 - `UI/Charts/Presentation/TransformRenderCoordinator.cs` (~100 lines)
 - `UI/Charts/Presentation/TransformWorkflowCoordinator.cs` (~50 lines)
@@ -173,8 +177,11 @@ Current major concentration points:
 
 Current read:
 
-- the VNext reasoning engine is live for the main chart family, proving request -> snapshot -> program -> delivery
+- the VNext reasoning engine is live for all current chart families, proving request -> snapshot -> program -> delivery beyond scaffolding
 - the evidence boundary is clean: DTOs, diagnostics, and export orchestration are separate concerns
+- evidence export now carries an explicit `ExportScope`; the Charts tab exports as `Charts`, and the Syncfusion tab uses the same `MainChartsEvidenceExportService` as `Syncfusion` instead of a stub service
+- tab switches are recorded as `TabSwitched` session milestones through the shared view-model context
+- targeted manual smoke is still required for the latest shared tab-shell layout hardening: confirm both tab layouts still render and operate correctly
 - runtime-path tracking distinguishes VNext from legacy loads with full signature-chain diagnostics
 - the chart/rendering delivery seams are materially cleaner than before the Phase 5 rehaul
 - `DataFetcher` is now a facade over focused query groups for catalog, metric-data, date/count, and admin concerns
@@ -207,6 +214,7 @@ Current read:
 - primary/secondary chart toggle enablement and main-chart stacked-availability bookkeeping are now delegated out of `MainChartsView` into `MainChartsViewToggleStateCoordinator`
 - CMS checkbox state projection, enablement, and config-change handling are now delegated out of `MainChartsView` into `MainChartsViewCmsToggleCoordinator`
 - Syncfusion state projection now reuses the shared `MainChartsViewStateSyncCoordinator`
+- the top metric-selection/date/CMS control surface is now shared between the Charts and Syncfusion tabs through `MetricSelectionPanel`, hosted by the shared `ChartTabHost` shell
 - default date-range initialization/reset is now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostDateRangeCoordinator`
 - metric-type list initialization, metric-type-change reset/reload, and subtype-loaded follow-up behavior are now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostMetricSelectionCoordinator`
 - controller-extras interaction for Bar/Pie, Distribution, WeekdayTrend, Transform, Diff/Ratio, and Main is now delegated out of `MainChartsView` into `MainChartsViewControllerExtrasCoordinator`
@@ -281,10 +289,10 @@ Documents absorbed from Phase 5:
 **Phase 6.2 (Boundary reconciliation):** Closed.
 **Phase 6.4 (Outlier decomposition):** Closed.
 
-**Phase 6.3 (Request/delivery standardization — still open for VNext widening):**
-- Evidence boundary decomposed: `MainChartsEvidenceExportService` (1,209 → 700 lines) split into `EvidenceExportModels` (21 DTOs), `EvidenceDiagnosticsBuilder`, and export orchestration
+**Phase 6.3 (Request/delivery standardization):** Closed.
+- Evidence boundary decomposed: `MainChartsEvidenceExportService` (1,209 → 131 lines) split into `EvidenceExportModels` (21 DTOs), `EvidenceDiagnosticsBuilder`, and export orchestration
 - `VNextMainChartIntegrationCoordinator` built and tested as the VNext → legacy bridge
-- First live VNext main-chart-family slice activated in `MetricLoadCoordinator`
+- VNext routing activated for the main-chart family in `MetricLoadCoordinator`
 - `LoadRuntimeState` on `ChartState` tracks runtime path, signatures, and failure reason
 - `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports
 - Smoke-verified with April 2026 exports: VNext signature chain aligned, legacy fallback correct, all 8 parity strategies pass
@@ -305,30 +313,30 @@ Documents absorbed from Phase 5:
 - Shared `EvidenceDataResolutionHelper` extracted: unified data-resolution and strategy-resolution patterns duplicated across 3 evidence evaluators
 - `UI/MainHost/` (41 files flat) decomposed into 3 sub-namespaces: `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
 - Architecture guardrail paths and `ParityExportShapeTests` reflection strings updated
-- Net file reduction: -7 files; 609 tests pass; no behavior changes
+- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening and tab-shell extraction bring the current lane to 645 tests
 
 **Phase 6.6 (Architecture audit and baseline refresh):** Closed.
 
 Audit baseline (April 2026):
-- 448 C# source files, ~36,900 lines of code
-- 153 test files, 609 automated tests passing
-- 48 architecture guardrail tests enforcing structural contracts
+- 451 C# source files, ~36,900 lines of code
+- 162 test files, 645 automated tests passing
+- 49 architecture guardrail tests enforcing structural contracts
 
 **1. To what extent have the Phase 6 objectives been met?**
 
 Materially met. The hierarchy is trustworthy: similar responsibilities have one obvious home, repeated operations are centralized, and the remaining debt is explicit rather than hidden. Specifically:
 - Irreducible operations (frequency binning, transform computation, series preparation, smoothing, timeline alignment, bucket aggregation) are each owned by a single dedicated helper, locked by architecture guardrails (6.1)
 - Truth/derivation/orchestration/delivery boundaries are enforced through rendering contracts, orchestration pipelines, and explicit stage separation (6.2)
-- Request/delivery standardization has real proof through the live VNext main-chart-family slice with automatic legacy fallback, runtime-path tracking, and signature-chain diagnostics in evidence exports (6.3)
-- Named outliers have been materially reduced: `MainChartsEvidenceExportService` (1,209→139), `TransformDataPanelControllerAdapter` (857→257), `BaseDistributionService` (612→296), `BarPieChartControllerAdapter` (503→197), `ChartRenderEngine` (452→333), `DataFetcher` decomposed into focused query groups (6.4)
+- Request/delivery standardization has real proof through live VNext routing across all active chart families, automatic legacy fallback, runtime-path tracking, and signature-chain diagnostics in evidence exports (6.3)
+- Named outliers have been materially reduced: `MainChartsEvidenceExportService` (1,209→131), `TransformDataPanelControllerAdapter` (857→257), `BaseDistributionService` (612→296), `BarPieChartControllerAdapter` (503→197), `ChartRenderEngine` (452→333), `DataFetcher` decomposed into focused query groups (6.4)
 - Physical hierarchy is clean: namespace-folder alignment verified, micro-types consolidated, `UI/MainHost/` decomposed into `Evidence/`, `Export/`, `Coordination/` sub-namespaces (6.5, 6.7)
 
 **2. What gaps remain?**
 
 These are accepted as known debt, not open work:
-- `MainChartsView.xaml.cs` (~1,401 lines) remains the largest host concentration point. Its remaining responsibilities are genuinely host-level (wiring coordinators, forwarding events, managing host lifecycle). Further decomposition is possible but increasingly behavior-adjacent rather than structural.
-- `SyncfusionChartsView.xaml.cs` (~775 lines) is a parallel host with similar characteristics, lower priority.
-- VNext covers Main/Normalized/Diff/Ratio chart families; Distribution, WeekdayTrend, Transform, and Bar/Pie remain legacy-only. Widening is Phase 6.3 continuation work, not a Phase 6 blocker.
+- `MainChartsView.xaml.cs` (~1,238 lines) remains the largest host concentration point. Its remaining responsibilities are genuinely host-level (wiring coordinators, forwarding events, managing host lifecycle). Further decomposition is possible but increasingly behavior-adjacent rather than structural.
+- `SyncfusionChartsView.xaml.cs` (~715 lines) is a parallel host with similar characteristics, lower priority.
+- VNext covers all active chart families through either the main-family route or per-family fresh-load routes. Future VNext work is capability expansion, not Phase 6 closure work.
 - Controller adapters share structural patterns but their differences are genuine domain variation. A deeper base class was evaluated and rejected as overengineering (documented in the Phase 6.7 plan).
 - 20+ coordinators have thin shared patterns (guard → execute) that do not justify inheritance.
 
@@ -346,7 +354,7 @@ These are accepted as known debt, not open work:
 | 2. Repeated irreducible operations no longer sprawl | Yes | Frequency binning, transform computation, series preparation, smoothing, bucket aggregation each have one owner |
 | 3. Truth/derivation/orchestration/delivery seams are clearer | Yes | VNext reasoning engine live for main family; rendering contracts enforce backend qualification; evidence boundary decomposed |
 | 4. Remaining outliers are explicit, bounded, and visible | Yes | `MainChartsView` (host gravity), `SyncfusionChartsView` (parallel host), adapter pattern variation — all documented, all bounded |
-| 5. Current capabilities preserved or replaced | Yes | 609 tests pass; all chart families render; evidence exports include runtime-path tracking; no regressions |
+| 5. Current capabilities preserved or replaced | Yes | 645 tests pass; all chart families render; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
 
 **Phase 6 is closed.** All active chart families now route through the VNext reasoning engine for fresh data loads. Phase 7 entry gate is satisfied — new capabilities may proceed.
 
@@ -368,16 +376,16 @@ Phase 6 established a trustworthy hierarchy. The primary mandate is now twofold:
 - build on the proven VNext request/delivery architecture rather than extending the legacy path
 - each new capability must respect canonical boundaries and not reintroduce exception-driven structure
 
-**Phase 6.3 continuation — VNext family widening (parallel):**
-- extend VNext coverage to Distribution, WeekdayTrend, Transform, and Bar/Pie one family at a time
-- each family requires its own program builder, projection logic, and per-family smoke verification
-- the architectural pattern is proven; this is application, not discovery
+**Phase 6.3 continuation - VNext family widening (closed):**
+- VNext coverage has been extended to Distribution, WeekdayTrend, Transform, and Bar/Pie one family at a time
+- each widened family has its own program kind, projection/runtime tracking, and automatic legacy fallback
+- the architectural pattern is proven; future work is capability expansion, not Phase 6 discovery
 
 In practice:
 
 1. New capabilities should compose over existing canonical and derived views, not redefine them.
 2. Each exploratory feature should have an explicit home in the module buckets below.
-3. VNext widening should proceed incrementally — one family per slice, with automatic legacy fallback preserved.
+3. Future VNext changes should preserve the established per-family fallback pattern and proceed only as bounded capability slices.
 4. Confidence and interpretive overlays are annotations, not mutations — they must be reversible and non-authoritative.
 5. Work should reduce future operator burden.
 6. The hierarchy established in Phase 6 should be preserved — new code should follow the existing structural patterns rather than introducing parallel ones.
@@ -426,7 +434,7 @@ Multiple slices banked (export, data-loaded, selection stabilization, request-dr
 ### 10.3 Phase C — Outlier Service Decomposition (CLOSED)
 
 All named outliers materially reduced:
-- `MainChartsEvidenceExportService`: 1,209 → 139 lines
+- `MainChartsEvidenceExportService`: 1,209 → 131 lines
 - `TransformDataPanelControllerAdapter`: 857 → 257 lines (split across 6 coordinators)
 - `BaseDistributionService`: 612 → 296 lines
 - `BarPieChartControllerAdapter`: 503 → 197 lines
@@ -448,7 +456,7 @@ Current baseline snapshot (April 2026):
 - host responsibilities in `MainChartsView` are materially thinner, but it remains the largest composition concentration point
 - transform workflow is now split across selection, resolution, execution, operation-state, milestone, and render-handoff seams; the remaining debt is mostly workflow composition rather than mixed utility logic
 - `BaseDistributionService` is no longer a mixed computation/render monolith; the remaining debt is narrower strategy/render coordination
-- the live VNext main-chart-family route is stable enough to count as real architectural proof, not scaffolding
+- live VNext routing is stable enough across active chart families to count as real architectural proof, not scaffolding
 - the remaining major outliers are now explicit enough to define the next cycle without guesswork
 
 The audit must answer these three questions directly:
@@ -459,25 +467,25 @@ The audit must answer these three questions directly:
 
 Any next-cycle proposal must follow the governing iteration flow (Section 9) or justify the deviation. If something cannot reasonably be completed in one major cycle, that limitation must be stated explicitly.
 
-### 10.6 VNext Activation (ACTIVE — Parallel Track)
+### 10.6 VNext Activation (CLOSED — Parallel Track)
 
-First live VNext main-chart-family slice is proven and stable. Next VNext slices to consider:
+VNext activation is proven across active chart families. Preservation rules:
 - Preserve the current `Main + Normalized + Diff/Ratio` live slice with evidence and targeted smoke as the bounded family baseline
-- Widen the routing condition only to additional chart families that can consume the projected context safely
-- Each widening must be a bounded slice with automatic legacy fallback
+- Preserve the independent per-family VNext routes for Distribution, WeekdayTrend, Transform, and BarPie with automatic legacy fallback
+- Treat future VNext work as Phase 7 capability expansion unless it repairs a concrete regression
 
 #### VNext Widening Tracker
 
 | Chart Family | VNext Status | Routing Condition | Evidence | Notes |
 |---|---|---|---|---|
 | Main | Live | Main visible and no non-main-family chart visible | April 2026 exports + current smoke gate | First vertical slice, fresh coordinator per load |
-| Normalized | Live via main-family route | Main + Normalized, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Rendered from the projected two-series context |
-| Difference | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Unified Diff/Ratio surface consumes projected two-series context |
-| Ratio | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | Targeted smoke required after widening | Unified Diff/Ratio surface consumes projected two-series context |
-| Distribution | Live (independent route) | Distribution visible + fresh series load (series differs from main context) | Targeted smoke required after widening | Single-series VNext load with identity program; distribution computation stays in legacy services; automatic legacy fallback on failure; runtime path tracked as VNextDistribution |
-| WeekdayTrend | Live (independent route) | WeekdayTrend visible + fresh series load (series differs from main context) | Targeted smoke required after widening | Single-series VNext load via shared VNextSeriesLoadCoordinator; automatic legacy fallback; runtime path tracked as VNextWeekdayTrend |
-| Transform | Live (independent route) | Transform visible + fresh series load (primary or secondary differs from main context) | Targeted smoke required after widening | Per-series VNext load in TransformDataResolutionCoordinator; automatic legacy fallback; runtime path tracked as VNextTransform |
-| BarPie | Live (independent route) | BarPie visible (all series loaded per-selection) | Targeted smoke required after widening | Per-series VNext load in BarPieRenderModelBuilder; CMS preference preserved; automatic legacy fallback; runtime path tracked as VNextBarPie |
+| Normalized | Live via main-family route | Main + Normalized, with no distribution/weekday/transform/bar-pie visible | April 2026 smoke/export evidence | Rendered from the projected two-series context |
+| Difference | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | April 2026 smoke/export evidence | Unified Diff/Ratio surface consumes projected two-series context |
+| Ratio | Live via main-family route | Main + Diff/Ratio, with no distribution/weekday/transform/bar-pie visible | April 2026 smoke/export evidence | Unified Diff/Ratio surface consumes projected two-series context |
+| Distribution | Live (independent route) | Distribution visible + fresh series load (series differs from main context) | April 2026 smoke/export evidence | Single-series VNext load with identity program; distribution computation stays in legacy services; automatic legacy fallback on failure; runtime path tracked as VNextDistribution |
+| WeekdayTrend | Live (independent route) | WeekdayTrend visible + fresh series load (series differs from main context) | April 2026 smoke/export evidence | Single-series VNext load via shared VNextSeriesLoadCoordinator; automatic legacy fallback; runtime path tracked as VNextWeekdayTrend |
+| Transform | Live (independent route) | Transform visible + fresh series load (primary or secondary differs from main context) | April 2026 smoke/export evidence | Per-series VNext load in TransformDataResolutionCoordinator; automatic legacy fallback; runtime path tracked as VNextTransform |
+| BarPie | Live (independent route) | BarPie visible (all series loaded per-selection) | April 2026 smoke/export evidence | Per-series VNext load in BarPieRenderModelBuilder; CMS preference preserved; automatic legacy fallback; runtime path tracked as VNextBarPie |
 
 ---
 

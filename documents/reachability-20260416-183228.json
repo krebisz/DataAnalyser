@@ -1,0 +1,484 @@
+{
+  "ExportedAtUtc": "2026-04-16T18:32:28.8347504Z",
+  "ExportScope": "Syncfusion",
+  "MetricState": {
+    "SelectedMetricType": "Weight",
+    "FromDate": "2023-08-15T12:05:48.2933333",
+    "ToDate": "2023-11-30T00:00:00",
+    "ResolutionTableName": "HealthMetrics",
+    "SelectedSeries": [
+      {
+        "MetricType": "Weight",
+        "Subtype": "body_fat_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Fat (mass)",
+        "DisplayName": "Weight - Fat (mass)",
+        "DisplayKey": "Weight:body_fat_mass"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "skeletal_muscle_mass",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Skeletal Muscle (mass)",
+        "DisplayName": "Weight - Skeletal Muscle (mass)",
+        "DisplayKey": "Weight:skeletal_muscle_mass"
+      },
+      {
+        "MetricType": "Weight",
+        "Subtype": "total_body_water",
+        "DisplayMetricType": "Weight",
+        "DisplaySubtype": "Water",
+        "DisplayName": "Weight - Water",
+        "DisplayKey": "Weight:total_body_water"
+      }
+    ]
+  },
+  "ChartState": {
+    "IsMainVisible": true,
+    "IsNormalizedVisible": false,
+    "IsDiffRatioVisible": false,
+    "IsDistributionVisible": false,
+    "IsWeeklyTrendVisible": false,
+    "IsTransformPanelVisible": true,
+    "IsBarPieVisible": false,
+    "MainChartDisplayMode": 0,
+    "IsDiffRatioDifferenceMode": true,
+    "SelectedDistributionMode": 0,
+    "SelectedDistributionSettings": {
+      "UseFrequencyShading": true,
+      "IntervalCount": 25
+    },
+    "IsDistributionPolarMode": false,
+    "WeekdayTrendChartMode": 0,
+    "WeekdayTrendAverageWindow": 0,
+    "ShowMonday": true,
+    "ShowTuesday": true,
+    "ShowWednesday": true,
+    "ShowThursday": true,
+    "ShowFriday": true,
+    "ShowSaturday": true,
+    "ShowSunday": true,
+    "ShowAverage": true,
+    "BarPieBucketCount": 3,
+    "BarPieMode": "N/A"
+  },
+  "CmsConfiguration": {
+    "UseCmsData": true,
+    "UseCmsForSingleMetric": true,
+    "UseCmsForMultiMetric": true,
+    "UseCmsForCombinedMetric": true,
+    "UseCmsForDifference": true,
+    "UseCmsForRatio": true,
+    "UseCmsForNormalized": true,
+    "UseCmsForWeeklyDistribution": true,
+    "UseCmsForWeekdayTrend": true,
+    "UseCmsForHourlyDistribution": true,
+    "UseCmsForBarPie": true
+  },
+  "ReachabilityRecords": [],
+  "DistributionParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Selection": {
+      "MetricType": "Weight",
+      "Subtype": "body_fat_mass",
+      "DisplayMetricType": "Weight",
+      "DisplaySubtype": "Fat (mass)",
+      "DisplayName": "Weight - Fat (mass)",
+      "DisplayKey": "Weight:body_fat_mass"
+    },
+    "DataSource": "ChartContext.Primary",
+    "LegacySamples": 143,
+    "CmsSamplesTotal": 143,
+    "CmsSamplesInRange": 143,
+    "Weekly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    },
+    "Hourly": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "CombinedMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "SingleMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "MultiMetricParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "NormalizedParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "WeekdayTrendParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Result": {
+      "Passed": true,
+      "Message": "Parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "TransformParity": {
+    "Status": "Completed",
+    "Reason": null,
+    "Operation": "N/A",
+    "IsUnary": false,
+    "ExpressionAvailable": false,
+    "LegacySamples": 142,
+    "NewSamples": 142,
+    "Result": {
+      "Passed": true,
+      "Message": "Transform parity validation passed",
+      "Details": null,
+      "Error": null
+    }
+  },
+  "ParitySummary": {
+    "Status": "Completed",
+    "OverallPassed": true,
+    "WeeklyPassed": true,
+    "HourlyPassed": true,
+    "CombinedMetricPassed": true,
+    "SingleMetricPassed": true,
+    "MultiMetricPassed": true,
+    "NormalizedPassed": true,
+    "WeekdayTrendPassed": true,
+    "TransformPassed": true,
+    "StrategiesEvaluated": [
+      "WeeklyDistribution",
+      "HourlyDistribution",
+      "CombinedMetric",
+      "SingleMetric",
+      "MultiMetric",
+      "Normalized",
+      "WeekdayTrend",
+      "Transform"
+    ]
+  },
+  "ParityWarnings": [],
+  "SessionMilestones": [
+    {
+      "TimestampUtc": "2026-04-16T18:29:52.2710914Z",
+      "Kind": "TabSwitched",
+      "Outcome": "Info",
+      "MetricType": null,
+      "SelectedSeriesCount": 0,
+      "SelectedDisplayKeys": [],
+      "RuntimePath": null,
+      "LoadedSeriesCount": 0,
+      "ContextSignature": null,
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": "Switched to Charts tab."
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:30:12.9083225Z",
+      "Kind": "DataLoaded",
+      "Outcome": "Success",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 3,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:skeletal_muscle_mass",
+        "Weight:total_body_water"
+      ],
+      "RuntimePath": "VNextMain",
+      "LoadedSeriesCount": 3,
+      "ContextSignature": "Weight:body_fat_mass|Weight:skeletal_muscle_mass::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::series=3",
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": null
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:30:15.6011794Z",
+      "Kind": "TabSwitched",
+      "Outcome": "Info",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 3,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:skeletal_muscle_mass",
+        "Weight:total_body_water"
+      ],
+      "RuntimePath": null,
+      "LoadedSeriesCount": 0,
+      "ContextSignature": null,
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": "Switched to Syncfusion tab."
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:30:37.0501472Z",
+      "Kind": "TabSwitched",
+      "Outcome": "Info",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 3,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:skeletal_muscle_mass",
+        "Weight:total_body_water"
+      ],
+      "RuntimePath": null,
+      "LoadedSeriesCount": 0,
+      "ContextSignature": null,
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": "Switched to Charts tab."
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:30:55.3274608Z",
+      "Kind": "TransformToggleRequested",
+      "Outcome": "Info",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 3,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:skeletal_muscle_mass",
+        "Weight:total_body_water"
+      ],
+      "RuntimePath": "VNextMain",
+      "LoadedSeriesCount": 3,
+      "ContextSignature": "Weight:body_fat_mass|Weight:skeletal_muscle_mass::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::series=3",
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": "Transform panel visible."
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:31:04.6588841Z",
+      "Kind": "TransformOperationRendered",
+      "Outcome": "Success",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 3,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:skeletal_muscle_mass",
+        "Weight:total_body_water"
+      ],
+      "RuntimePath": "VNextMain",
+      "LoadedSeriesCount": 3,
+      "ContextSignature": "Weight:body_fat_mass|Weight:skeletal_muscle_mass::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::series=3",
+      "Operation": "Sqrt",
+      "OperationArity": 1,
+      "PrimarySeriesDisplayKey": "Weight:body_fat_mass",
+      "SecondarySeriesDisplayKey": "Weight:skeletal_muscle_mass",
+      "ResultPointCount": 143,
+      "Note": null
+    },
+    {
+      "TimestampUtc": "2026-04-16T18:31:16.9363655Z",
+      "Kind": "TabSwitched",
+      "Outcome": "Info",
+      "MetricType": "Weight",
+      "SelectedSeriesCount": 3,
+      "SelectedDisplayKeys": [
+        "Weight:body_fat_mass",
+        "Weight:skeletal_muscle_mass",
+        "Weight:total_body_water"
+      ],
+      "RuntimePath": null,
+      "LoadedSeriesCount": 0,
+      "ContextSignature": null,
+      "Operation": null,
+      "OperationArity": null,
+      "PrimarySeriesDisplayKey": null,
+      "SecondarySeriesDisplayKey": null,
+      "ResultPointCount": null,
+      "Note": "Switched to Syncfusion tab."
+    }
+  ],
+  "Diagnostics": {
+    "RuntimePath": "VNextMain",
+    "Selection": {
+      "SelectedMetricType": "Weight",
+      "SelectedSeriesCount": 3,
+      "DistinctDisplayKeyCount": 3,
+      "OrderedSeries": [
+        {
+          "Index": 0,
+          "MetricType": "Weight",
+          "Subtype": "body_fat_mass",
+          "DisplayName": "Weight - Fat (mass)",
+          "DisplayKey": "Weight:body_fat_mass",
+          "MatchesLoadedPrimary": true,
+          "MatchesLoadedSecondary": false,
+          "RequiresOnDemandResolution": false
+        },
+        {
+          "Index": 1,
+          "MetricType": "Weight",
+          "Subtype": "skeletal_muscle_mass",
+          "DisplayName": "Weight - Skeletal Muscle (mass)",
+          "DisplayKey": "Weight:skeletal_muscle_mass",
+          "MatchesLoadedPrimary": false,
+          "MatchesLoadedSecondary": true,
+          "RequiresOnDemandResolution": false
+        },
+        {
+          "Index": 2,
+          "MetricType": "Weight",
+          "Subtype": "total_body_water",
+          "DisplayName": "Weight - Water",
+          "DisplayKey": "Weight:total_body_water",
+          "MatchesLoadedPrimary": false,
+          "MatchesLoadedSecondary": false,
+          "RequiresOnDemandResolution": true
+        }
+      ]
+    },
+    "LoadedContext": {
+      "Present": true,
+      "ReusableForCurrentSelection": true,
+      "LoadRequestSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:skeletal_muscle_mass|Weight:total_body_water",
+      "MetricType": "Weight",
+      "PrimaryMetricType": "Weight",
+      "SecondaryMetricType": "Weight",
+      "PrimarySubtype": "body_fat_mass",
+      "SecondarySubtype": "skeletal_muscle_mass",
+      "DisplayName1": "Weight - Fat (mass)",
+      "DisplayName2": "Weight - Skeletal Muscle (mass)",
+      "ActualSeriesCount": 3,
+      "Data1Count": 143,
+      "Data2Count": 142,
+      "CmsSeriesCount": 3,
+      "From": "2023-08-15T12:05:48.2933333",
+      "To": "2023-11-30T00:00:00"
+    },
+    "MainChartPipeline": {
+      "ExpectedSeriesFromSelection": 3,
+      "ExpectedBaseSeriesLoad": 2,
+      "ExpectedAdditionalSeriesLoad": 1,
+      "ContextActualSeriesCount": 3,
+      "MultiMetricRequested": true,
+      "ContextLikelyStaleForSelection": false
+    },
+    "Reachability": {
+      "RecordCount": 0,
+      "MaxActualSeriesCount": 0,
+      "MaxCmsSeriesCount": 0,
+      "LatestStrategy": null,
+      "LatestActualSeriesCount": 0,
+      "LatestCmsSeriesCount": 0,
+      "LatestDecisionReason": null,
+      "LatestTimestampUtc": null
+    },
+    "UiSurface": {
+      "MetricType": {
+        "SelectedValue": null,
+        "SelectedDisplay": null,
+        "OptionCount": 0
+      },
+      "DateRange": {
+        "SelectedFromDate": null,
+        "SelectedToDate": null,
+        "ExpectedDefaultFromDateUtc": "0001-01-01T00:00:00",
+        "ExpectedDefaultToDateUtc": "0001-01-01T00:00:00",
+        "MatchesExpectedDefaultWindow": false
+      },
+      "Subtypes": {
+        "ActiveComboCount": 0,
+        "PrimarySelectionMaterialized": false,
+        "AllCombosBoundToSelectedMetricType": false,
+        "PrimaryOptionsMatchSelectedMetric": null,
+        "ExpectedPrimaryOptionValues": [],
+        "OrderedCombos": []
+      },
+      "Transform": {
+        "PanelVisible": false,
+        "SecondaryPanelVisible": false,
+        "ComputeEnabled": false,
+        "SelectedOperation": null,
+        "SelectedPrimarySubtype": null,
+        "SelectedSecondarySubtype": null,
+        "PrimaryOptionCount": 0,
+        "SecondaryOptionCount": 0
+      },
+      "RecentMessages": []
+    },
+    "SmokeChecks": {
+      "SelectedMetricMatchesUiMetric": null,
+      "SubtypeComboCountMatchesSelectedSeries": null,
+      "LoadedSeriesCountMatchesSelection": true,
+      "PrimarySubtypeOptionsMatchSelectedMetric": null,
+      "DateRangeMatchesExpectedDefaultWindow": false,
+      "RecentErrorCount": 0,
+      "RecentErrorsPresent": false
+    },
+    "Transition": {
+      "CurrentSelectionSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:skeletal_muscle_mass|Weight:total_body_water",
+      "LoadedRequestMatchesCurrentSelection": true,
+      "LoadedContextSignature": "Weight:body_fat_mass|Weight:skeletal_muscle_mass::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::series=3",
+      "LatestReachabilitySignature": null,
+      "ExpectedSeriesCount": 3,
+      "LoadedContextSeriesCount": 3,
+      "LatestReachabilitySeriesCount": 0,
+      "RenderEvidenceExceedsStoredContext": false,
+      "ReloadLikelyRequired": true,
+      "State": "ReloadRequiredForExtendedCharts",
+      "Interpretation": "The current load only supports the main chart. Reload is required before extended chart families can render."
+    },
+    "VNext": {
+      "RequestSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:skeletal_muscle_mass|Weight:total_body_water",
+      "SnapshotSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:skeletal_muscle_mass|Weight:total_body_water",
+      "ProgramKind": "Main",
+      "ProgramSourceSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:skeletal_muscle_mass|Weight:total_body_water",
+      "ProjectedContextSignature": "Weight::HealthMetrics::2023-08-15T12:05:48.2933333-\u003E2023-11-30T00:00:00.0000000::Weight:body_fat_mass|Weight:skeletal_muscle_mass|Weight:total_body_water",
+      "RequestMatchesSnapshot": true,
+      "SnapshotMatchesProgramSource": true,
+      "ProgramSourceMatchesProjectedContext": true,
+      "SupportsOnlyMainChart": true,
+      "FailureReason": null
+    },
+    "VNextFamilies": {}
+  }
+}

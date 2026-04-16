@@ -1,7 +1,8 @@
 <UserControl x:Class="DataVisualiser.UI.MainChartsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:DataVisualiser.UI.Charts.Controllers">
+             xmlns:controls="clr-namespace:DataVisualiser.UI.Charts.Controllers"
+             xmlns:ui="clr-namespace:DataVisualiser.UI">
     <UserControl.Resources>
         <Style TargetType="Label" BasedOn="{StaticResource ThemedLabelStyle}" />
         <Style TargetType="Button" BasedOn="{StaticResource ThemedButtonStyle}" />
@@ -12,150 +13,8 @@
         <Style TargetType="TextBlock" BasedOn="{StaticResource ThemedTextBlockStyle}" />
         <Style TargetType="Expander" BasedOn="{StaticResource ThemedExpanderStyle}" />
     </UserControl.Resources>
-    <DockPanel Background="{DynamicResource ThemeAppBackgroundBrush}">
-        <!-- ====== TOP CONTROL AREA (Two Rows) ====== -->
-        <Border DockPanel.Dock="Top"
-                Style="{StaticResource ThemedTopBarBorderStyle}"
-                Padding="{StaticResource TopControlBorderPadding}">
-            <StackPanel x:Name="TopControlAreaPanel" Orientation="Vertical">
-                <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
-                <StackPanel x:Name="TopControlBarPanel" Orientation="Horizontal"
-                            Margin="{StaticResource TopBarMargin}">
-                    <Label Content="Resolution:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                    <ComboBox x:Name="ResolutionCombo" Width="{StaticResource ResolutionComboWidth}"
-                              Margin="{StaticResource ControlMargin}"
-                              IsEditable="False"
-                              SelectionChanged="OnResolutionSelectionChanged" />
-
-                    <Label Content="Metric Type:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                    <ComboBox x:Name="TablesCombo" Width="{StaticResource MetricTypeComboWidth}"
-                              Margin="{StaticResource ControlMargin}"
-                              IsEditable="False"
-                              DisplayMemberPath="Display"
-                              SelectedValuePath="Value"
-                              SelectionChanged="OnMetricTypeSelectionChanged" />
-
-                    <Label Content="From:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                    <DatePicker x:Name="FromDate"
-                                SelectedDateChanged="OnFromDateChanged"
-                                Width="{StaticResource DatePickerWidth}"
-                                Margin="{StaticResource ControlMargin}" />
-
-                    <Label Content="To:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                    <DatePicker x:Name="ToDate"
-                                SelectedDateChanged="OnToDateChanged"
-                                Width="{StaticResource DatePickerWidth}"
-                                Margin="{StaticResource ControlMargin}" />
-
-                    <Button Content="Load Data"
-                            Click="OnLoadData"
-                            Margin="{StaticResource ControlMargin}"
-                            Padding="{StaticResource ButtonPadding}" />
-
-                    <Separator Margin="{StaticResource SeparatorMargin}" />
-
-                    <Button Content="Reset Zoom"
-                            Click="OnResetZoom"
-                            Margin="{StaticResource ControlMargin}"
-                            Padding="{StaticResource ButtonPadding}" />
-                    <Button Content="Clear"
-                            Click="OnClear"
-                            Margin="{StaticResource ControlMargin}"
-                            Padding="{StaticResource ButtonPadding}" />
-                    <Button Content="Export Reachability"
-                            Click="OnExportReachability"
-                            Margin="{StaticResource ControlMargin}"
-                            Padding="{StaticResource ButtonPadding}" />
-                    <Button x:Name="ThemeToggleButton"
-                            Click="OnToggleTheme"
-                            Margin="{StaticResource ControlMargin}"
-                            Padding="{StaticResource ButtonPadding}" />
-                </StackPanel>
-
-                <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
-                <StackPanel Orientation="Horizontal"
-                            Name="TopControlMetricSubtypePanel"
-                            Margin="{StaticResource SubtypePanelMargin}">
-
-                    <Label Content="Metric Subtype 1:"
-                           VerticalAlignment="Center"
-                           Margin="{StaticResource LabelMargin}" />
-
-                    <ComboBox x:Name="SubtypeCombo"
-                              Width="{StaticResource SubtypeComboWidth}"
-                              Margin="{StaticResource ControlMargin}"
-                              IsEditable="False"
-                              DisplayMemberPath="Display"
-                              SelectedValuePath="Value"
-                              IsEnabled="False" />
-
-                    <Button Content="Add Subtype"
-                            Click="AddSubtypeComboBox"
-                            Margin="{StaticResource ControlMargin}"
-                            Padding="{StaticResource ButtonPadding}" />
-                </StackPanel>
-
-                <!-- ====== CMS TOGGLES (Row 3) ====== -->
-                <Expander Header="CMS" Margin="{StaticResource ExpanderMargin}" IsExpanded="False">
-                    <WrapPanel x:Name="CmsTogglePanel" Margin="{StaticResource CmsTogglePanelMargin}">
-                        <CheckBox x:Name="CmsEnableCheckBox"
-                                  Content="Enable CMS"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsToggleChanged"
-                                  Unchecked="OnCmsToggleChanged" />
-                        <Separator Width="{StaticResource SeparatorWidth}" />
-                        <CheckBox x:Name="CmsSingleCheckBox"
-                                  Content="Single"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                        <CheckBox x:Name="CmsCombinedCheckBox"
-                                  Content="Combined"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                        <CheckBox x:Name="CmsMultiCheckBox"
-                                  Content="Multi"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                        <CheckBox x:Name="CmsNormalizedCheckBox"
-                                  Content="Normalized"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                        <CheckBox x:Name="CmsWeeklyCheckBox"
-                                  Content="Weekly"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                        <CheckBox x:Name="CmsWeekdayTrendCheckBox"
-                                  Content="Weekday Trend"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                        <CheckBox x:Name="CmsHourlyCheckBox"
-                                  Content="Hourly"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                        <CheckBox x:Name="CmsBarPieCheckBox"
-                                  Content="Bar/Pie"
-                                  Margin="{StaticResource LabelMargin}"
-                                  Checked="OnCmsStrategyToggled"
-                                  Unchecked="OnCmsStrategyToggled" />
-                    </WrapPanel>
-                </Expander>
-            </StackPanel>
-        </Border>
-
-        <!-- ====== SCROLL VIEWER ====== -->
-        <ScrollViewer Margin="5"
-                      Background="{DynamicResource ThemeAppBackgroundBrush}"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
-
-            <!-- ========= STACKPANEL MAIN ========= -->
+    <ui:ChartTabHost x:Name="ChartTabHost">
+        <ui:ChartTabHost.ChartContent>
             <StackPanel x:Name="MainContentPanel"
                         Orientation="Vertical">
 
@@ -181,6 +40,6 @@
                 <controls:TransformDataPanelControllerV2 x:Name="TransformDataPanelController" />
 
             </StackPanel>
-        </ScrollViewer>
-    </DockPanel>
+        </ui:ChartTabHost.ChartContent>
+    </ui:ChartTabHost>
 </UserControl>

@@ -15,6 +15,15 @@ public static class SharedMainWindowViewModelProvider
     private static readonly object SyncLock = new();
     private static SharedMainWindowViewModelContext? _context;
 
+    public static SharedMainWindowViewModelContext? Current
+    {
+        get
+        {
+            lock (SyncLock)
+                return _context;
+        }
+    }
+
     public static SharedMainWindowViewModelContext GetOrCreate(string connectionString)
     {
         lock (SyncLock)

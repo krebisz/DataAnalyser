@@ -39,7 +39,7 @@ public sealed class MainChartsEvidenceExportService
         _reachabilityStore.Clear();
     }
 
-    public async Task<ReachabilityEvidenceExportResult> ExportAsync(ChartState chartState, MetricState metricState, DateTime utcNow)
+    public async Task<ReachabilityEvidenceExportResult> ExportAsync(ChartState chartState, MetricState metricState, DateTime utcNow, string? exportScope = null)
     {
         ArgumentNullException.ThrowIfNull(chartState);
         ArgumentNullException.ThrowIfNull(metricState);
@@ -53,6 +53,7 @@ public sealed class MainChartsEvidenceExportService
         var payload = new
         {
             ExportedAtUtc = utcNow,
+            ExportScope = exportScope,
             MetricState = new
             {
                 metricState.SelectedMetricType,
