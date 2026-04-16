@@ -71,6 +71,10 @@
                             Click="OnExportReachability"
                             Margin="{StaticResource ControlMargin}"
                             Padding="{StaticResource ButtonPadding}" />
+                    <Button x:Name="ThemeToggleButton"
+                            Click="OnToggleTheme"
+                            Margin="{StaticResource ControlMargin}"
+                            Padding="{StaticResource ButtonPadding}" />
                 </StackPanel>
 
                 <!-- ====== SUBTYPE PANEL (Row 2) ====== -->

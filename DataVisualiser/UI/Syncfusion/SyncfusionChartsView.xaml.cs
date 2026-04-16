@@ -31,6 +31,7 @@ public partial class SyncfusionChartsView : UserControl
     private readonly SyncfusionChartsViewLoadCoordinator _loadCoordinator = new();
     private readonly MainChartsViewStateSyncCoordinator _stateSyncCoordinator = new();
     private SyncfusionEvidenceExportService _evidenceExportService = null!;
+    private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private ChartState _chartState = null!;
     private MetricState _metricState = null!;
     private UiState _uiState = null!;
@@ -104,8 +105,21 @@ public partial class SyncfusionChartsView : UserControl
         WireViewModelEvents();
         InitializeSubtypeSelector();
         InitializeChartRegistry();
+        InitializeThemeToggle();
         SunburstPanel.ToggleRequested += OnSunburstToggleRequested;
         SunburstPanel.BucketCountChanged += OnSunburstBucketCountChanged;
+    }
+
+    private void InitializeThemeToggle()
+    {
+        _themeCoordinator = new MainChartsViewThemeCoordinator(
+            Theming.AppThemeService.Default,
+            content =>
+            {
+                if (ThemeToggleButton != null)
+                    ThemeToggleButton.Content = content;
+            });
+        _themeCoordinator.Attach();
     }
 
     private void ExecuteStartupSequence()
@@ -479,6 +493,11 @@ public partial class SyncfusionChartsView : UserControl
     private void OnResetZoom(object sender, RoutedEventArgs e)
     {
         // Syncfusion Sunburst does not expose a zoom reset in this POC.
+    }
+
+    private void OnToggleTheme(object sender, RoutedEventArgs e)
+    {
+        _themeCoordinator.ToggleTheme();
     }
 
     private void OnClear(object sender, RoutedEventArgs e)
