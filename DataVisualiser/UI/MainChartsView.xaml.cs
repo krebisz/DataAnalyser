@@ -62,6 +62,7 @@ public partial class MainChartsView : UserControl
     private readonly MainChartsViewZoomResetCoordinator _zoomResetCoordinator = new();
     private readonly MainChartsViewSelectionCoordinator _selectionCoordinator = new();
     private readonly MainChartsViewToggleStateCoordinator _toggleStateCoordinator = new();
+    private readonly MetricSelectionPanelEventBinder _selectionPanelEventBinder = new();
     private MainChartsSessionDiagnosticsRecorder _sessionDiagnosticsRecorder = null!;
     private MainChartsUiSurfaceDiagnosticsReader _uiSurfaceDiagnosticsReader = null!;
     private MainChartsEvidenceExportService _evidenceExportService = null!;
@@ -154,18 +155,21 @@ public partial class MainChartsView : UserControl
 
     private void WireSelectionPanelEvents()
     {
-        SelectionPanel.LoadDataRequested += (_, _) => OnLoadData(this, new RoutedEventArgs());
-        SelectionPanel.ResetZoomRequested += (_, _) => OnResetZoom(this, new RoutedEventArgs());
-        SelectionPanel.ClearRequested += (_, _) => OnClear(this, new RoutedEventArgs());
-        SelectionPanel.ExportReachabilityRequested += (_, _) => OnExportReachability(this, new RoutedEventArgs());
-        SelectionPanel.ThemeToggleRequested += (_, _) => OnToggleTheme(this, new RoutedEventArgs());
-        SelectionPanel.AddSubtypeRequested += (_, _) => AddSubtypeComboBox(this, new RoutedEventArgs());
-        SelectionPanel.ResolutionSelectionChanged += (s, e) => OnResolutionSelectionChanged(s!, e);
-        SelectionPanel.MetricTypeSelectionChanged += (s, e) => OnMetricTypeSelectionChanged(s!, e);
-        SelectionPanel.FromDateChanged += (s, e) => OnFromDateChanged(s!, e);
-        SelectionPanel.ToDateChanged += (s, e) => OnToDateChanged(s!, e);
-        SelectionPanel.CmsToggleChanged += (s, e) => OnCmsToggleChanged(s!, e);
-        SelectionPanel.CmsStrategyToggled += (s, e) => OnCmsStrategyToggled(s!, e);
+        _selectionPanelEventBinder.Bind(
+            SelectionPanel,
+            new MetricSelectionPanelEventBinder.Actions(
+                () => OnLoadData(this, new RoutedEventArgs()),
+                () => OnResetZoom(this, new RoutedEventArgs()),
+                () => OnClear(this, new RoutedEventArgs()),
+                () => OnExportReachability(this, new RoutedEventArgs()),
+                () => OnToggleTheme(this, new RoutedEventArgs()),
+                () => AddSubtypeComboBox(this, new RoutedEventArgs()),
+                (s, e) => OnResolutionSelectionChanged(s!, e),
+                (s, e) => OnMetricTypeSelectionChanged(s!, e),
+                (s, e) => OnFromDateChanged(s!, e),
+                (s, e) => OnToDateChanged(s!, e),
+                (s, e) => OnCmsToggleChanged(s!, e),
+                (s, e) => OnCmsStrategyToggled(s!, e)));
     }
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
@@ -192,6 +196,10 @@ public partial class MainChartsView : UserControl
     private void OnToggleTheme(object sender, RoutedEventArgs e)
     {
         _themeCoordinator.ToggleTheme();
+        _sessionDiagnosticsRecorder.RecordSessionMilestone(
+            "ThemeToggled",
+            "Success",
+            $"Theme set to {AppThemeService.Default.CurrentTheme}.");
     }
 
     private IDisposable BeginUiBusyScope()
@@ -942,9 +950,14 @@ public partial class MainChartsView : UserControl
     {
         var controllers = _registryCoordinator.ResolveControllers(CreateRegistryActions());
 
-        _zoomResetCoordinator.ResetRegisteredCharts(
+        var result = _zoomResetCoordinator.ResetRegisteredCharts(
             controllers,
             new MainChartsViewZoomResetCoordinator.Actions(_sessionDiagnosticsRecorder.TrackHostMessage));
+
+        _sessionDiagnosticsRecorder.RecordSessionMilestone(
+            "ZoomResetRequested",
+            result.FailureCount == 0 ? "Success" : "Warning",
+            $"Reset zoom on {result.ResetCount} chart(s); skipped {result.SkippedCount}; failures {result.FailureCount}.");
     }
 
     #endregion

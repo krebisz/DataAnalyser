@@ -5,16 +5,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ui:ChartTabHost}">
-                    <DockPanel Background="{DynamicResource ThemeAppBackgroundBrush}">
-                        <ui:MetricSelectionPanel x:Name="PART_SelectionPanel" DockPanel.Dock="Top" />
-
-                        <ScrollViewer Margin="5"
-                                      Background="{DynamicResource ThemeAppBackgroundBrush}"
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
-                            <ContentPresenter Content="{TemplateBinding ChartContent}" />
-                        </ScrollViewer>
-                    </DockPanel>
+                    <ui:WorkspaceTabHost BodyContent="{TemplateBinding ChartContent}">
+                        <ui:WorkspaceTabHost.HeaderContent>
+                            <ui:MetricSelectionPanel x:Name="PART_SelectionPanel" />
+                        </ui:WorkspaceTabHost.HeaderContent>
+                    </ui:WorkspaceTabHost>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

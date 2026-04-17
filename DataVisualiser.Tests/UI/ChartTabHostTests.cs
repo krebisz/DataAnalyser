@@ -11,9 +11,11 @@ public sealed class ChartTabHostTests
 
         Assert.Contains("MetricSelectionPanel", xaml);
         Assert.Contains("x:Name=\"PART_SelectionPanel\"", xaml);
-        Assert.Contains("ScrollViewer", xaml);
-        Assert.Contains("ContentPresenter", xaml);
+        Assert.Contains("WorkspaceTabHost", xaml);
+        Assert.Contains("HeaderContent", xaml);
         Assert.Contains("ChartContent", xaml);
+        Assert.DoesNotContain("<DockPanel", xaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("<ScrollViewer", xaml, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,6 +1,6 @@
 # DATAVISUALISER SUBSYSTEM PLAN
 **Status:** Active Architectural Execution Plan  
-**Scope:** `DataVisualiser` hierarchy repair, boundary clarification, entropy reduction, subsystem consolidation, and VNext activation — **Phase 6 closed April 2026 except 6.3 (VNext widening open)**  
+**Scope:** `DataVisualiser` hierarchy repair, boundary clarification, entropy reduction, subsystem consolidation, and VNext activation — **Phase 6 closed April 2026**
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `Project Overview.md`  
 **Supersedes:** `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`  
 **Last Updated:** 2026-04-13
@@ -13,16 +13,16 @@ This document is the single active execution plan for `DataVisualiser` architect
 
 It consolidates:
 - The completed Phase 5 architecture rehaul (historical execution record)
-- The active Phase 6 legibility-first consolidation cycle
+- The completed Phase 6 legibility-first consolidation cycle
 - The completed VNext routing activation across active chart families (Phase 6.3)
 
 The primary objectives are:
 
-**Phase 6 (closed except 6.3):** Make `DataVisualiser` legible, structurally coherent, and stable — achieved through hierarchy repair, irreducible-operation consolidation, VNext proof-of-architecture, and structural consolidation.
+**Phase 6 (closed):** Make `DataVisualiser` legible, structurally coherent, and stable — achieved through hierarchy repair, irreducible-operation consolidation, VNext proof-of-architecture, and structural consolidation.
 
 **Phase 7 (entry gate satisfied):** Expand the reasoning engine's capabilities — confidence-aware results, interpretive overlays, programmable composition — building each as a reasoning-engine feature that delivery surfaces consume, not as chart-specific additions.
 
-**Phase 6.3 (parallel):** Widen VNext coverage to all active chart families so the standardized request/delivery path becomes fully authoritative.
+**Phase 6.3 (closed):** VNext coverage has been widened to all active chart families so the standardized request/delivery path is now authoritative for fresh chart-family loads.
 
 The reasoning engine is the center of the system. Charts and future consumers are delivery targets of its output.
 
@@ -36,7 +36,7 @@ Current state:
 
 - Phase 6.3 VNext widening is complete — all active chart families route through the VNext reasoning engine for fresh data loads
 - Phase 7 entry gate is satisfied — exploratory and confidence capabilities may proceed
-- 452 source files, 645 tests, 49 architecture guardrails
+- 455 source files, 657 tests, 53 architecture guardrails
 - known debt: `MainChartsView` host concentration (~1,238 lines), adapter pattern variation
 
 Current defaults:
@@ -136,19 +136,23 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `452` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, and cleanup consolidation)
-- `645` automated tests passing
+- `454` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, and shared tab-host extraction)
+- `657` automated tests passing
 - VNext routing active for all current chart families, with automatic legacy fallback
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
 
 - `UI/MainChartsView.xaml.cs` (~1,238 lines)
-- `UI/Syncfusion/SyncfusionChartsView.xaml.cs` (~715 lines)
-- `UI/ChartTabHost.xaml` (~21 lines)
+- `UI/Syncfusion/SyncfusionChartsView.xaml.cs` (~719 lines)
+- `UI/WorkspaceTabHost.xaml` (~22 lines)
+- `UI/WorkspaceTabHost.xaml.cs` (~30 lines)
+- `UI/Admin/AdminMetricsManagerView.xaml` (~114 lines)
+- `UI/ChartTabHost.xaml` (~17 lines)
 - `UI/ChartTabHost.xaml.cs` (~33 lines)
 - `UI/MetricSelectionPanel.xaml` (~134 lines)
 - `UI/MetricSelectionPanel.xaml.cs` (~50 lines)
+- `UI/MainHost/Coordination/MetricSelectionPanelEventBinder.cs` (~36 lines)
 - `UI/MainHost/Coordination/ChartHostDateRangeCoordinator.cs` (~19 lines)
 - `UI/MainHost/Coordination/ChartHostMetricSelectionCoordinator.cs` (~89 lines)
 - `UI/MainHost/Coordination/MainChartsViewControllerExtrasCoordinator.cs` (~73 lines)
@@ -181,7 +185,7 @@ Current read:
 - the evidence boundary is clean: DTOs, diagnostics, and export orchestration are separate concerns
 - evidence export now carries an explicit `ExportScope`; the Charts tab exports as `Charts`, and the Syncfusion tab uses the same `MainChartsEvidenceExportService` as `Syncfusion` instead of a stub service
 - tab switches are recorded as `TabSwitched` session milestones through the shared view-model context
-- targeted manual smoke is still required for the latest shared tab-shell layout hardening: confirm both tab layouts still render and operate correctly
+- targeted manual smoke is still required for the latest shared tab-shell layout hardening: confirm both chart-tab layouts still render and operate correctly, and confirm the Admin tab renders and behaves correctly inside the generic workspace shell
 - runtime-path tracking distinguishes VNext from legacy loads with full signature-chain diagnostics
 - the chart/rendering delivery seams are materially cleaner than before the Phase 5 rehaul
 - `DataFetcher` is now a facade over focused query groups for catalog, metric-data, date/count, and admin concerns
@@ -214,7 +218,13 @@ Current read:
 - primary/secondary chart toggle enablement and main-chart stacked-availability bookkeeping are now delegated out of `MainChartsView` into `MainChartsViewToggleStateCoordinator`
 - CMS checkbox state projection, enablement, and config-change handling are now delegated out of `MainChartsView` into `MainChartsViewCmsToggleCoordinator`
 - Syncfusion state projection now reuses the shared `MainChartsViewStateSyncCoordinator`
-- the top metric-selection/date/CMS control surface is now shared between the Charts and Syncfusion tabs through `MetricSelectionPanel`, hosted by the shared `ChartTabHost` shell
+- the top metric-selection/date/CMS control surface is now shared between the Charts and Syncfusion tabs through `MetricSelectionPanel`, hosted by the chart-specialized `ChartTabHost` shell
+- `ChartTabHost` is now a specialization over the generic `WorkspaceTabHost`, which exposes header/body slots without assuming metric controls
+- `AdminMetricsManagerView` now also uses `WorkspaceTabHost`, keeping its Admin-specific header controls while sharing the same workspace shell pattern as chart surfaces
+- Admin metric-type changes, hide-disabled toggles, reloads, first dirty-row edits, and save attempts now emit session milestones into the shared chart-state timeline for cross-tab smoke exportability
+- metric-selection event forwarding is now centralized through `MetricSelectionPanelEventBinder` instead of duplicated direct event wiring in each chart host
+- theme-toggle and reset-zoom actions now emit explicit session milestones, so manual smoke exports can prove those interactions instead of relying on visual confirmation only
+- Syncfusion load, data-loaded, render completion/failure, export request/completion/failure, and zoom-reset actions now emit explicit session milestones for tab-specific smoke exportability
 - default date-range initialization/reset is now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostDateRangeCoordinator`
 - metric-type list initialization, metric-type-change reset/reload, and subtype-loaded follow-up behavior are now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostMetricSelectionCoordinator`
 - controller-extras interaction for Bar/Pie, Distribution, WeekdayTrend, Transform, Diff/Ratio, and Main is now delegated out of `MainChartsView` into `MainChartsViewControllerExtrasCoordinator`
@@ -313,14 +323,14 @@ Documents absorbed from Phase 5:
 - Shared `EvidenceDataResolutionHelper` extracted: unified data-resolution and strategy-resolution patterns duplicated across 3 evidence evaluators
 - `UI/MainHost/` (41 files flat) decomposed into 3 sub-namespaces: `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
 - Architecture guardrail paths and `ParityExportShapeTests` reflection strings updated
-- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening and tab-shell extraction bring the current lane to 645 tests
+- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening and tab-shell extraction bring the current lane to 657 tests
 
 **Phase 6.6 (Architecture audit and baseline refresh):** Closed.
 
 Audit baseline (April 2026):
 - 451 C# source files, ~36,900 lines of code
-- 162 test files, 645 automated tests passing
-- 49 architecture guardrail tests enforcing structural contracts
+- 165 test files, 657 automated tests passing
+- 53 architecture guardrail tests enforcing structural contracts
 
 **1. To what extent have the Phase 6 objectives been met?**
 
@@ -335,7 +345,7 @@ Materially met. The hierarchy is trustworthy: similar responsibilities have one 
 
 These are accepted as known debt, not open work:
 - `MainChartsView.xaml.cs` (~1,238 lines) remains the largest host concentration point. Its remaining responsibilities are genuinely host-level (wiring coordinators, forwarding events, managing host lifecycle). Further decomposition is possible but increasingly behavior-adjacent rather than structural.
-- `SyncfusionChartsView.xaml.cs` (~715 lines) is a parallel host with similar characteristics, lower priority.
+- `SyncfusionChartsView.xaml.cs` (~719 lines) is a parallel host with similar characteristics, lower priority.
 - VNext covers all active chart families through either the main-family route or per-family fresh-load routes. Future VNext work is capability expansion, not Phase 6 closure work.
 - Controller adapters share structural patterns but their differences are genuine domain variation. A deeper base class was evaluated and rejected as overengineering (documented in the Phase 6.7 plan).
 - 20+ coordinators have thin shared patterns (guard → execute) that do not justify inheritance.
@@ -354,7 +364,7 @@ These are accepted as known debt, not open work:
 | 2. Repeated irreducible operations no longer sprawl | Yes | Frequency binning, transform computation, series preparation, smoothing, bucket aggregation each have one owner |
 | 3. Truth/derivation/orchestration/delivery seams are clearer | Yes | VNext reasoning engine live for main family; rendering contracts enforce backend qualification; evidence boundary decomposed |
 | 4. Remaining outliers are explicit, bounded, and visible | Yes | `MainChartsView` (host gravity), `SyncfusionChartsView` (parallel host), adapter pattern variation — all documented, all bounded |
-| 5. Current capabilities preserved or replaced | Yes | 645 tests pass; all chart families render; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
+| 5. Current capabilities preserved or replaced | Yes | 657 tests pass; all chart families render; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
 
 **Phase 6 is closed.** All active chart families now route through the VNext reasoning engine for fresh data loads. Phase 7 entry gate is satisfied — new capabilities may proceed.
 

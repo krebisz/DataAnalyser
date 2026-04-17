@@ -8,6 +8,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="UI/Theming/Theme.Styles.xaml" />
                 <ResourceDictionary Source="UI/Theming/Theme.Light.xaml" />
+                <ResourceDictionary Source="UI/WorkspaceHeaderPanel.xaml" />
+                <ResourceDictionary Source="UI/WorkspaceTabHost.xaml" />
                 <ResourceDictionary Source="UI/ChartTabHost.xaml" />
             </ResourceDictionary.MergedDictionaries>
 

@@ -161,7 +161,7 @@ Workspace State:
 - Phase: Phase 6 closed, Phase 7 entry gate satisfied
 - VNext: all chart families routed through VNext reasoning engine with automatic legacy fallback
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 645 passing
+- Tests: 657 passing
 - Unknowns: none
 ```
 

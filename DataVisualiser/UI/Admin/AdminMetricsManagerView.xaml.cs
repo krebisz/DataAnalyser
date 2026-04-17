@@ -15,6 +15,8 @@ public partial class AdminMetricsManagerView : UserControl
 {
     private const string AllMetricTypesToken = "(All)";
     private readonly DataFetcher _dataFetcher;
+    private readonly HashSet<string> _loggedDirtyRows = new(StringComparer.Ordinal);
+    private readonly AdminSessionMilestoneRecorder _milestoneRecorder = new();
     private readonly ObservableCollection<EditableHealthMetricsCountEntry> _rows = new();
     private bool _filterRefreshPending;
     private bool _hideDisabled;
@@ -45,6 +47,7 @@ public partial class AdminMetricsManagerView : UserControl
 
     private async void OnReloadClicked(object sender, RoutedEventArgs e)
     {
+        _milestoneRecorder.RecordReloadRequested(GetSelectedMetricTypeForLog());
         await ReloadMetricTypesAndDataAsync();
     }
 
@@ -53,22 +56,26 @@ public partial class AdminMetricsManagerView : UserControl
         if (_isLoading)
             return;
 
+        _milestoneRecorder.RecordMetricTypeChanged(GetSelectedMetricTypeForLog());
         await ReloadCountsAsync();
     }
 
     private void OnHideDisabledToggled(object sender, RoutedEventArgs e)
     {
         _hideDisabled = HideDisabledCheckBox.IsChecked == true;
+        _milestoneRecorder.RecordHideDisabledToggled(_hideDisabled);
         ScheduleRowFilterRefresh();
     }
 
     private async void OnSaveClicked(object sender, RoutedEventArgs e)
     {
         var dirty = _rows.Where(r => r.IsDirty).ToList();
+        _milestoneRecorder.RecordSaveRequested(dirty.Count);
         if (dirty.Count == 0)
         {
             StatusText.Text = "No changes to save.";
             SaveButton.IsEnabled = false;
+            _milestoneRecorder.RecordSaveSkipped();
             return;
         }
 
@@ -81,15 +88,20 @@ public partial class AdminMetricsManagerView : UserControl
             var affected = await _dataFetcher.UpdateHealthMetricsCountsForAdmin(updates);
 
             foreach (var row in dirty)
+            {
                 row.AcceptChanges();
+                _loggedDirtyRows.Remove(row.IdentityKey);
+            }
 
             StatusText.Text = $"Saved. Rows updated: {affected}.";
+            _milestoneRecorder.RecordSaveCompleted(dirty.Count, affected);
 
             ScheduleRowFilterRefresh();
         }
         catch (Exception ex)
         {
             StatusText.Text = $"Save failed: {ex.Message}";
+            _milestoneRecorder.RecordSaveFailed(dirty.Count, ex.Message);
         }
         finally
         {
@@ -130,13 +142,13 @@ public partial class AdminMetricsManagerView : UserControl
 
     private async Task ReloadCountsAsync()
     {
+        var selected = MetricTypeCombo.SelectedItem as string;
+        var metricType = string.Equals(selected, AllMetricTypesToken, StringComparison.OrdinalIgnoreCase) ? null : selected;
+
         try
         {
             SetBusy(true);
             SaveButton.IsEnabled = false;
-
-            var selected = MetricTypeCombo.SelectedItem as string;
-            var metricType = string.Equals(selected, AllMetricTypesToken, StringComparison.OrdinalIgnoreCase) ? null : selected;
 
             StatusText.Text = metricType == null ? "Loading all metric/submetric rows..." : $"Loading rows for {metricType}...";
 
@@ -146,6 +158,7 @@ public partial class AdminMetricsManagerView : UserControl
                 existing.PropertyChanged -= OnRowPropertyChanged;
 
             _rows.Clear();
+            _loggedDirtyRows.Clear();
             foreach (var row in rows)
             {
                 var editable = new EditableHealthMetricsCountEntry(row);
@@ -154,11 +167,13 @@ public partial class AdminMetricsManagerView : UserControl
             }
 
             StatusText.Text = $"Loaded {_rows.Count} row(s).";
+            _milestoneRecorder.RecordReloadCompleted(metricType, _rows.Count);
             ScheduleRowFilterRefresh();
         }
         catch (Exception ex)
         {
             StatusText.Text = $"Load failed: {ex.Message}";
+            _milestoneRecorder.RecordReloadFailed(metricType, ex.Message);
         }
         finally
         {
@@ -172,9 +187,18 @@ public partial class AdminMetricsManagerView : UserControl
         if (e.PropertyName is nameof(EditableHealthMetricsCountEntry.IsDirty) or nameof(EditableHealthMetricsCountEntry.MetricTypeName) or nameof(EditableHealthMetricsCountEntry.MetricSubtypeName) or nameof(EditableHealthMetricsCountEntry.Disabled))
         {
             UpdateSaveButtonState();
+            if (sender is EditableHealthMetricsCountEntry row && row.IsDirty && _loggedDirtyRows.Add(row.IdentityKey))
+                _milestoneRecorder.RecordGridEdited(row.MetricType, row.MetricSubtype, e.PropertyName);
+
             if (e.PropertyName == nameof(EditableHealthMetricsCountEntry.Disabled))
                 ScheduleRowFilterRefresh();
         }
+    }
+
+    private string? GetSelectedMetricTypeForLog()
+    {
+        var selected = MetricTypeCombo.SelectedItem as string;
+        return string.Equals(selected, AllMetricTypesToken, StringComparison.OrdinalIgnoreCase) ? null : selected;
     }
 
     private void ScheduleRowFilterRefresh()
@@ -252,6 +276,7 @@ public partial class AdminMetricsManagerView : UserControl
 
         public string MetricType { get; }
         public string MetricSubtype { get; }
+        public string IdentityKey => $"{MetricType}:{MetricSubtype}";
         public long RecordCount { get; }
         public DateTime? MostRecentDateTime { get; }
 

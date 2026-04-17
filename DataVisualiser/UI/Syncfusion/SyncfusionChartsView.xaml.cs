@@ -30,6 +30,7 @@ public partial class SyncfusionChartsView : UserControl
     private readonly ChartHostDateRangeCoordinator _dateRangeCoordinator = new();
     private readonly SyncfusionChartsViewLoadCoordinator _loadCoordinator = new();
     private readonly MainChartsViewStateSyncCoordinator _stateSyncCoordinator = new();
+    private readonly MetricSelectionPanelEventBinder _selectionPanelEventBinder = new();
     private MainChartsEvidenceExportService _evidenceExportService = null!;
     private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private ChartState _chartState = null!;
@@ -81,18 +82,21 @@ public partial class SyncfusionChartsView : UserControl
 
     private void WireSelectionPanelEvents()
     {
-        SelectionPanel.LoadDataRequested += (_, _) => OnLoadData(this, new RoutedEventArgs());
-        SelectionPanel.ResetZoomRequested += (_, _) => OnResetZoom(this, new RoutedEventArgs());
-        SelectionPanel.ClearRequested += (_, _) => OnClear(this, new RoutedEventArgs());
-        SelectionPanel.ExportReachabilityRequested += (_, _) => OnExportReachability(this, new RoutedEventArgs());
-        SelectionPanel.ThemeToggleRequested += (_, _) => OnToggleTheme(this, new RoutedEventArgs());
-        SelectionPanel.AddSubtypeRequested += (_, _) => AddSubtypeComboBox(this, new RoutedEventArgs());
-        SelectionPanel.ResolutionSelectionChanged += (s, e) => OnResolutionSelectionChanged(s!, e);
-        SelectionPanel.MetricTypeSelectionChanged += (s, e) => OnMetricTypeSelectionChanged(s!, e);
-        SelectionPanel.FromDateChanged += (s, e) => OnFromDateChanged(s!, e);
-        SelectionPanel.ToDateChanged += (s, e) => OnToDateChanged(s!, e);
-        SelectionPanel.CmsToggleChanged += (s, e) => OnCmsToggleChanged(s!, e);
-        SelectionPanel.CmsStrategyToggled += (s, e) => OnCmsStrategyToggled(s!, e);
+        _selectionPanelEventBinder.Bind(
+            SelectionPanel,
+            new MetricSelectionPanelEventBinder.Actions(
+                () => OnLoadData(this, new RoutedEventArgs()),
+                () => OnResetZoom(this, new RoutedEventArgs()),
+                () => OnClear(this, new RoutedEventArgs()),
+                () => OnExportReachability(this, new RoutedEventArgs()),
+                () => OnToggleTheme(this, new RoutedEventArgs()),
+                () => AddSubtypeComboBox(this, new RoutedEventArgs()),
+                (s, e) => OnResolutionSelectionChanged(s!, e),
+                (s, e) => OnMetricTypeSelectionChanged(s!, e),
+                (s, e) => OnFromDateChanged(s!, e),
+                (s, e) => OnToDateChanged(s!, e),
+                (s, e) => OnCmsToggleChanged(s!, e),
+                (s, e) => OnCmsStrategyToggled(s!, e)));
     }
 
     private IDisposable BeginUiBusyScope()
@@ -431,9 +435,14 @@ public partial class SyncfusionChartsView : UserControl
         if (_isInitializing)
             return;
 
+        RecordSessionMilestone("SyncfusionLoadRequested", "Info", "Syncfusion load requested.");
+
         var isValid = await LoadDataAndValidate();
         if (!isValid)
+        {
+            RecordSessionMilestone("SyncfusionLoadValidationFailed", "Warning", "Syncfusion load validation failed.");
             return;
+        }
 
         await LoadMetricData();
     }
@@ -476,6 +485,7 @@ public partial class SyncfusionChartsView : UserControl
         if (ctx == null)
             return;
 
+        RecordSessionMilestone("SyncfusionDataLoaded", "Success", "Syncfusion data-loaded event received.");
         await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx);
         UpdateSyncfusionToggleEnabled();
     }
@@ -533,11 +543,36 @@ public partial class SyncfusionChartsView : UserControl
     private void OnResetZoom(object sender, RoutedEventArgs e)
     {
         // Syncfusion Sunburst does not expose a zoom reset in this POC.
+        RecordSessionMilestone(
+            "SyncfusionZoomResetRequested",
+            "Info",
+            "Syncfusion Sunburst does not expose a zoom reset in this POC.");
     }
 
     private void OnToggleTheme(object sender, RoutedEventArgs e)
     {
         _themeCoordinator.ToggleTheme();
+        RecordSessionMilestone(
+            "ThemeToggled",
+            "Success",
+            $"Theme set to {Theming.AppThemeService.Default.CurrentTheme}.");
+    }
+
+    private void RecordSessionMilestone(string kind, string outcome, string? note = null)
+    {
+        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            Kind = kind,
+            Outcome = outcome,
+            MetricType = _viewModel.MetricState.SelectedMetricType,
+            SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
+            SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
+            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
+            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
+            Note = note
+        });
     }
 
     private void OnClear(object sender, RoutedEventArgs e)
@@ -568,9 +603,12 @@ public partial class SyncfusionChartsView : UserControl
 
     private async void OnExportReachability(object sender, RoutedEventArgs e)
     {
+        RecordSessionMilestone("SyncfusionExportRequested", "Info", "Syncfusion evidence export requested.");
+
         try
         {
             var result = await _evidenceExportService.ExportAsync(_viewModel.ChartState, _viewModel.MetricState, DateTime.UtcNow, "Syncfusion");
+            RecordSessionMilestone("SyncfusionExportCompleted", "Success", $"Syncfusion evidence exported to {result.FilePath}.");
 
             if (!result.HadReachabilityRecords)
                 MessageBox.Show("No reachability records captured yet. Export will include parity data if available.", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -582,6 +620,7 @@ public partial class SyncfusionChartsView : UserControl
         }
         catch (Exception ex)
         {
+            RecordSessionMilestone("SyncfusionExportFailed", "Error", ex.Message);
             MessageBox.Show($"Failed to export evidence snapshot:\n{ex.Message}", "Reachability Export", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -665,9 +704,18 @@ public partial class SyncfusionChartsView : UserControl
         return _chartControllerRegistry.Get(key);
     }
 
-    private Task RenderChartAsync(string key, ChartDataContext ctx)
+    private async Task RenderChartAsync(string key, ChartDataContext ctx)
     {
-        return ResolveController(key).RenderAsync(ctx);
+        try
+        {
+            await ResolveController(key).RenderAsync(ctx);
+            RecordSessionMilestone("SyncfusionRenderCompleted", "Success", $"Rendered {key}.");
+        }
+        catch (Exception ex)
+        {
+            RecordSessionMilestone("SyncfusionRenderFailed", "Error", $"Render failed for {key}: {ex.Message}");
+            throw;
+        }
     }
 
     private void ClearChart(string key)

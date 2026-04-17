@@ -99,7 +99,8 @@ Current delivery surfaces provide:
 - dynamic chart visibility and state management
 - backend-qualified multi-vendor rendering experiments in support of rendering-boundary isolation
 - exports and evidence paths that observe execution and result state
-- a shared metric-selection/date/CMS control surface and tab shell reused by both the Charts and Syncfusion tabs
+- a shared metric-selection/date/CMS control surface reused by both the Charts and Syncfusion tabs
+- a generic `WorkspaceTabHost` shell with header/body slots, specialized by `ChartTabHost` for chart tabs and reused directly by the Admin manager view with Admin-specific controls
 
 The broader intended model is:
 
@@ -245,8 +246,8 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - VNext active for all chart families: Main/Normalized/Diff/Ratio via `VNextMainChartIntegrationCoordinator`; Distribution/WeekdayTrend/Transform/BarPie via `VNextSeriesLoadCoordinator` with per-family identity programs
 - Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports for all chart families
 - Evidence exports now include `ExportScope`; Charts and Syncfusion exports share the same export path, and tab switches are recorded as session milestones
-- Known debt carried to Phase 7: `MainChartsView` host concentration (~1,238 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~715 lines), adapter pattern variation (accepted as domain variation)
-- 452 source files, 645 automated tests, 49 architecture guardrails
+- Known debt carried to Phase 7: `MainChartsView` host concentration (~1,242 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~719 lines), adapter pattern variation (accepted as domain variation)
+- 455 source files, 657 automated tests, 53 architecture guardrails
 
 ---
 

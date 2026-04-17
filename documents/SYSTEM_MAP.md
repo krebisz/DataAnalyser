@@ -387,7 +387,7 @@ The same `MainChartsEvidenceExportService` is used for both Charts and Syncfusio
 
 Reachability export infrastructure lives in `UI/MainHost/Export/`. Host coordination lives in `UI/MainHost/Coordination/`.
 
-The Charts and Syncfusion tabs both use `ChartTabHost` for the shared tab shell and `MetricSelectionPanel` for the shared metric-selection/date/CMS control surface, while each host supplies its own chart content and event-forwarding code.
+The Charts and Syncfusion tabs both use `ChartTabHost` for the chart-specific tab shell and `MetricSelectionPanel` for the shared metric-selection/date/CMS control surface, while each host supplies its own chart content. `ChartTabHost` composes the generic `WorkspaceTabHost`, which provides header/body slots without metric-specific assumptions. `AdminMetricsManagerView` also uses `WorkspaceTabHost` directly with Admin-specific header controls, so Admin aligns with the shared workspace shell without adopting chart-specific metric-selection controls. Metric-selection event forwarding is centralized through `MetricSelectionPanelEventBinder`. Theme-toggle, reset-zoom, Admin management actions, and Syncfusion load/render/export actions emit explicit session milestones for evidence exports.
 
 It must not influence live semantic decisions.
 

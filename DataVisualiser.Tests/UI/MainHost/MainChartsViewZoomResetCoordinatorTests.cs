@@ -20,12 +20,13 @@ public sealed class MainChartsViewZoomResetCoordinatorTests
             var unattached = new FakeWpfChartController("DiffRatio");
             var warnings = new List<string>();
 
-            coordinator.ResetRegisteredCharts(
+            var result = coordinator.ResetRegisteredCharts(
                 [unattached],
                 new MainChartsViewZoomResetCoordinator.Actions((title, message, _) => warnings.Add($"{title}:{message}")));
 
             Assert.Equal(0, unattached.ResetCalls);
             Assert.Empty(warnings);
+            Assert.Equal(new MainChartsViewZoomResetCoordinator.Result(0, 1, 0), result);
         });
     }
 
@@ -35,11 +36,12 @@ public sealed class MainChartsViewZoomResetCoordinatorTests
         var coordinator = new MainChartsViewZoomResetCoordinator();
         var controller = new FakeChartController("BarPie");
 
-        coordinator.ResetRegisteredCharts(
+        var result = coordinator.ResetRegisteredCharts(
             [controller],
             new MainChartsViewZoomResetCoordinator.Actions((_, _, _) => { }));
 
         Assert.Equal(1, controller.ResetCalls);
+        Assert.Equal(new MainChartsViewZoomResetCoordinator.Result(1, 0, 0), result);
     }
 
     [Fact]
@@ -49,13 +51,14 @@ public sealed class MainChartsViewZoomResetCoordinatorTests
         var controller = new FakeChartController("Transform", shouldThrow: true);
         var warnings = new List<string>();
 
-        coordinator.ResetRegisteredCharts(
+        var result = coordinator.ResetRegisteredCharts(
             [controller],
             new MainChartsViewZoomResetCoordinator.Actions((title, message, image) => warnings.Add($"{title}|{message}|{image}")));
 
         Assert.Single(warnings);
         Assert.Contains("Transform", warnings[0], StringComparison.Ordinal);
         Assert.Contains("boom", warnings[0], StringComparison.Ordinal);
+        Assert.Equal(new MainChartsViewZoomResetCoordinator.Result(0, 0, 1), result);
     }
 
     [Fact]

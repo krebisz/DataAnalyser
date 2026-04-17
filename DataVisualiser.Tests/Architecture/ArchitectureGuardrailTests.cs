@@ -585,8 +585,39 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("MainChartsViewZoomResetCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("_zoomResetCoordinator.ResetRegisteredCharts", methodBody, StringComparison.Ordinal);
+        Assert.Contains("ZoomResetRequested", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("controller.ResetZoom();", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("ResolveController(key).ResetZoom();", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartHosts_ShouldRecordThemeAndZoomSmokeMilestones()
+    {
+        var mainSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        Assert.Contains("ThemeToggled", ExtractMethodBody(mainSource, "private void OnToggleTheme"), StringComparison.Ordinal);
+        Assert.Contains("ZoomResetRequested", ExtractMethodBody(mainSource, "private void ResetRegisteredChartsZoom"), StringComparison.Ordinal);
+        Assert.Contains("ThemeToggled", ExtractMethodBody(syncfusionSource, "private void OnToggleTheme"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionZoomResetRequested", ExtractMethodBody(syncfusionSource, "private void OnResetZoom"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionHost_ShouldRecordLoadRenderAndExportSmokeMilestones()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        Assert.Contains("SyncfusionLoadRequested", ExtractMethodBody(source, "private async void OnLoadData"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionLoadValidationFailed", ExtractMethodBody(source, "private async void OnLoadData"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionDataLoaded", ExtractMethodBody(source, "private async void OnDataLoaded"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionRenderCompleted", ExtractMethodBody(source, "private async Task RenderChartAsync"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionRenderFailed", ExtractMethodBody(source, "private async Task RenderChartAsync"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionExportRequested", ExtractMethodBody(source, "private async void OnExportReachability"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionExportCompleted", ExtractMethodBody(source, "private async void OnExportReachability"), StringComparison.Ordinal);
+        Assert.Contains("SyncfusionExportFailed", ExtractMethodBody(source, "private async void OnExportReachability"), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -729,12 +760,14 @@ public sealed class ArchitectureGuardrailTests
         var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
         Assert.Contains("ChartTabHost.SelectionSurface", mainSource, StringComparison.Ordinal);
         Assert.Contains("SelectionPanel.MetricTypeCombo", mainSource, StringComparison.Ordinal);
-        Assert.Contains("WireSelectionPanelEvents", mainSource, StringComparison.Ordinal);
+        Assert.Contains("MetricSelectionPanelEventBinder", mainSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("SelectionPanel.LoadDataRequested +=", mainSource, StringComparison.Ordinal);
 
         var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
         Assert.Contains("ChartTabHost.SelectionSurface", syncfusionSource, StringComparison.Ordinal);
         Assert.Contains("SelectionPanel.MetricTypeCombo", syncfusionSource, StringComparison.Ordinal);
-        Assert.Contains("WireSelectionPanelEvents", syncfusionSource, StringComparison.Ordinal);
+        Assert.Contains("MetricSelectionPanelEventBinder", syncfusionSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("SelectionPanel.LoadDataRequested +=", syncfusionSource, StringComparison.Ordinal);
 
         var mainXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml");
         Assert.Contains("ChartTabHost", mainXaml, StringComparison.Ordinal);
@@ -749,6 +782,47 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("<DockPanel", syncfusionXaml, StringComparison.Ordinal);
         Assert.DoesNotContain("<ScrollViewer", syncfusionXaml, StringComparison.Ordinal);
         Assert.DoesNotContain("x:Name=\"TablesCombo\"", syncfusionXaml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WorkspaceTabHost_ShouldRemainGenericForFutureAdminAdoption()
+    {
+        var workspaceSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "WorkspaceTabHost.xaml");
+        var chartSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "ChartTabHost.xaml");
+
+        Assert.Contains("HeaderContent", workspaceSource, StringComparison.Ordinal);
+        Assert.Contains("BodyContent", workspaceSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("MetricSelectionPanel", workspaceSource, StringComparison.Ordinal);
+        Assert.Contains("MetricSelectionPanel", chartSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AdminTab_ShouldNotUseMetricChartHostSpecializationYet()
+    {
+        var mainWindowXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "MainWindow.xaml");
+        var adminXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Admin", "AdminMetricsManagerView.xaml");
+        var adminSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Admin", "AdminMetricsManagerView.xaml.cs");
+
+        Assert.Contains("admin:AdminMetricsManagerView", mainWindowXaml, StringComparison.Ordinal);
+        Assert.Contains("MetricTypeCombo", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("HideDisabledCheckBox", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("ReloadButton", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("SaveButton", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceTabHost", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceHeaderPanel", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceTabHost.HeaderContent", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("WorkspaceTabHost.BodyContent", adminXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("ThemeTopBarBackgroundBrush", adminXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartTabHost", adminXaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("MetricSelectionPanel", adminXaml, StringComparison.Ordinal);
+        Assert.Contains("AdminSessionMilestoneRecorder", adminSource, StringComparison.Ordinal);
+        Assert.Contains("RecordMetricTypeChanged", adminSource, StringComparison.Ordinal);
+        Assert.Contains("RecordHideDisabledToggled", adminSource, StringComparison.Ordinal);
+        Assert.Contains("RecordReloadRequested", adminSource, StringComparison.Ordinal);
+        Assert.Contains("RecordReloadCompleted", adminSource, StringComparison.Ordinal);
+        Assert.Contains("RecordGridEdited", adminSource, StringComparison.Ordinal);
+        Assert.Contains("RecordSaveRequested", adminSource, StringComparison.Ordinal);
+        Assert.Contains("RecordSaveCompleted", adminSource, StringComparison.Ordinal);
     }
 
     private static void AssertNoMatches(IReadOnlyList<string> offenders)

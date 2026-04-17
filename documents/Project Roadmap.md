@@ -406,14 +406,20 @@ The goal is to make the system legible enough that:
 - `EvidenceRuntimePath` and `VNextDiagnosticsSnapshot` emitted in evidence exports with signature-chain alignment flags for all chart families
 - Distribution interaction milestones recorded for frequency shading, interval count, mode, chart type, and subtype changes
 - `MainChartsView` now delegates session diagnostics, UI-surface diagnostics, subtype-selection bookkeeping, load/clear bookkeeping, resolution reset, zoom reset, startup, evidence export, data-loaded flow, chart update, and chart presentation through dedicated host seams
-- `MainChartsView` and `SyncfusionChartsView` now share the top metric-selection/date/CMS surface through `MetricSelectionPanel`, hosted by the shared `ChartTabHost` shell
+- `MainChartsView` and `SyncfusionChartsView` now share the top metric-selection/date/CMS surface through `MetricSelectionPanel`, hosted by the chart-specialized `ChartTabHost` shell
+- `ChartTabHost` now composes the generic `WorkspaceTabHost`, which exposes reusable header/body slots without metric-specific assumptions
+- `AdminMetricsManagerView` now also uses `WorkspaceTabHost`, preserving Admin-specific controls while aligning with the shared workspace shell pattern
+- Admin metric-type changes, hide-disabled toggles, reloads, first dirty-row edits, and save attempts now emit shared session milestones for cross-tab smoke exportability
+- metric-selection event forwarding is centralized through `MetricSelectionPanelEventBinder` instead of duplicated host-local event wiring
+- theme-toggle and reset-zoom actions now emit explicit session milestones for smoke-test exportability
+- Syncfusion load, data-loaded, render completion/failure, export request/completion/failure, and zoom-reset actions now emit explicit session milestones for tab-specific smoke exportability
 - metric-type list initialization, metric-type-change reset/reload, and subtype-loaded follow-up behavior are now shared between `MainChartsView` and `SyncfusionChartsView` through `ChartHostMetricSelectionCoordinator`
 - `MainChartsView` host/controller-extras interaction, registry-wide controller resolution, and chart-surface startup/no-data presentation are now delegated through dedicated coordinators
 - `TransformDataPanelControllerAdapter` now delegates subtype-selection interaction, operation state, execution, milestone recording, data resolution, and render/grid handoff through dedicated coordinators
 - `BaseDistributionService` now delegates pure computation, simple-range assembly, series construction, axis shaping, and debug-summary formatting through dedicated helpers
 - Smoke-verified with April 2026 exports: VNext path produces aligned signatures across all chart families, legacy fallback produces correct state, all 8 parity strategies pass
-- 645 automated tests pass in the current default full-solution lane
-- Targeted smoke remains pending for the latest shared `ChartTabHost` layout hardening: open both tabs, confirm the shared top controls and chart areas render correctly, then run one basic load/export path per tab
+- 657 automated tests pass in the current default full-solution lane
+- Targeted smoke remains pending for the latest shared `WorkspaceTabHost` / `ChartTabHost` layout hardening: open both chart tabs, confirm the shared top controls and chart areas render correctly, run one basic load/export path per tab, and confirm the Admin tab renders and behaves correctly inside the generic workspace shell
 
 **Current evidence artifacts (April 2026):**
 - `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
@@ -468,10 +474,10 @@ The goal is to make the system legible enough that:
 - refresh current execution maps, success criteria, and architectural evidence
 
 **Audit Record (April 2026)**
-- 452 C# source files (~36,900 lines), 162 test files, 645 automated tests, 49 architecture guardrails
+- 455 C# source files (~36,900 lines), 165 test files, 657 automated tests, 53 architecture guardrails
 - All sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext widening — all active chart families route through the VNext reasoning engine with automatic legacy fallback
 - All 5 global closure conditions assessed and met (full record in `DataVisualiser_Subsystem_Plan.md` Phase 6.6 section)
-- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,238 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~715 lines, parallel host), controller adapter pattern variation accepted as domain variation
+- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,242 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~719 lines, parallel host), controller adapter pattern variation accepted as domain variation
 
 **Closure Condition**
 - the next cycle starts from an auditable baseline rather than from accumulated guesswork — **satisfied**
@@ -492,7 +498,7 @@ The goal is to make the system legible enough that:
 - Rendering helpers merged: `ChartLabelFormatter` → `ChartSeriesLabelFormatter`, `TransformChartAxisLayout` → `TransformChartAxisCalculator`
 - `EvidenceDataResolutionHelper` extracted: shared data-resolution and strategy cut-over resolution
 - `UI/MainHost/` decomposed into `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
-- Net -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening and tab-shell extraction bring the current lane to 645 tests
+- Net -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening and tab-shell extraction bring the current lane to 657 tests
 
 **Closure Condition**
 - structural sprawl is materially reduced and the codebase is primed for Phase 7 capability expansion
