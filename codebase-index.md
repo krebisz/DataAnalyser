@@ -1,6 +1,6 @@
-# Codebase Index
+﻿# Codebase Index
 
-Generated: 2026-01-26 14:23:01  
+Generated: 2026-04-17 13:06:37  
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
@@ -9,367 +9,885 @@ This file is auto-generated.
 - Declared symbols only
 - No inference
 - No semantic interpretation
+- Private declarations included: False
 
 ------------------------------------------------------
 
-| Kind | Name | Visibility | Namespace | File |
-|------|------|------------|-----------|------|
-| class | AsyncRelayCommand | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\AsyncRelayCommand.cs |
-| class | AsyncRelayCommandTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\AsyncRelayCommandTests.cs |
-| class | BarPieChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\BarPieChartControllerAdapter.cs |
-| class | BarPieChartControllerAdapterTests | public | DataVisualiser.Tests.Controls | .\DataVisualiser.Tests\Controls\BarPieChartControllerAdapterTests.cs |
-| class | BaseDistributionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\BaseDistributionService.cs |
-| class | BaseDistributionServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\BaseDistributionServiceTests.cs |
-| class | BinaryOperatorRegistry | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\BinaryOperatorRegistry.cs |
-| class | BinaryOperators | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\BinaryOperators.cs |
-| class | BucketDistributionParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\BucketDistributionParityHarness.cs |
-| class | BucketDistributionResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\BucketDistributionResult.cs |
-| class | BucketDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\BucketDistributionStrategy.cs |
-| class | BucketDistributionTooltip | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\BucketDistributionTooltip.cs |
-| class | BucketIntervalRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\BucketIntervalRenderer.cs |
-| class | BusyStateTracker | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\BusyStateTracker.cs |
-| class | BusyStateTrackerTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\BusyStateTrackerTests.cs |
-| class | CanonicalMetricIdentityResolver | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricIdentityResolver.cs |
-| class | CanonicalMetricMapping | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricMapping.cs |
-| class | CanonicalMetricMappingStore | internal | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricMappingStore.cs |
-| class | CanonicalMetricSeries | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\CanonicalMetricSeries.cs |
-| class | ChartAxisModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartAxisModel.cs |
-| class | ChartComputationEngine | public | DataVisualiser.Core.Computation | .\DataVisualiser\Core\Computation\ChartComputationEngine.cs |
-| class | ChartComputationParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ChartComputationParityHarness.cs |
-| class | ChartComputationParityHarnessTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\ChartComputationParityHarnessTests.cs |
-| class | ChartComputationResult | public | DataVisualiser.Core.Computation.Results | .\DataVisualiser\Core\Computation\Results\ChartComputationResult.cs |
-| class | ChartControllerFactory | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerFactory.cs |
-| class | ChartControllerKeys | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerKeys.cs |
-| class | ChartControllerRegistry | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerRegistry.cs |
-| class | ChartControllerRegistryTests | public | DataVisualiser.Tests.Controls | .\DataVisualiser.Tests\Controls\ChartControllerRegistryTests.cs |
-| class | ChartDataContext | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartDataContext.cs |
-| class | ChartDataContextBuilder | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartDataContextBuilder.cs |
-| class | ChartDataContextBuilderTests | public | DataVisualiser.Tests.Orchestration | .\DataVisualiser.Tests\Orchestration\ChartDataContextBuilderTests.cs |
-| class | ChartFacetModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartFacetModel.cs |
-| class | ChartHelper | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartHelper.cs |
-| class | ChartInteractionModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartInteractionModel.cs |
-| class | ChartLegendItemModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartLegendItemModel.cs |
-| class | ChartLegendModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartLegendModel.cs |
-| class | ChartOverlayModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartOverlayModel.cs |
-| class | ChartPanelSurface | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartPanelSurface.cs |
-| class | ChartRenderDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\ChartRenderDefaults.cs |
-| class | ChartRenderEngine | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\ChartRenderEngine.cs |
-| class | ChartRenderGate | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartRenderGate.cs |
-| class | ChartRenderingContextAdapter | public | DataVisualiser.UI | .\DataVisualiser\UI\ChartRenderingContextAdapter.cs |
-| class | ChartRenderingOrchestrator | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartRenderingOrchestrator.cs |
-| class | ChartRenderingOrchestratorTests | public | DataVisualiser.Tests.Orchestration | .\DataVisualiser.Tests\Orchestration\ChartRenderingOrchestratorTests.cs |
-| class | ChartRenderModel | public | DataVisualiser.Core.Rendering | .\DataVisualiser\Core\Rendering\ChartRenderModel.cs |
-| class | ChartSeriesHelper | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartSeriesHelper.cs |
-| class | ChartSeriesModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartSeriesModel.cs |
-| class | ChartStackingTooltipState | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartStackingTooltipState.cs |
-| class | ChartState | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\ChartState.cs |
-| class | ChartTooltipManager | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ChartTooltipManager.cs |
-| class | ChartUiDefaults | public | DataVisualiser.UI.Defaults | .\DataVisualiser\UI\Defaults\ChartUiDefaults.cs |
-| class | ChartUiHelper | public | DataVisualiser.UI.Helpers | .\DataVisualiser\UI\Helpers\ChartUiHelper.cs |
-| class | ChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\ChartUpdateCoordinator.cs |
-| class | ChartUpdateRequestedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ChartUpdateRequestedEventArgs.cs |
-| class | ChartVisibilityChangedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\ChartVisibilityChangedEventArgs.cs |
-| class | ChartVisibilityController | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\ChartVisibilityController.cs |
-| class | ChartVisibilityControllerTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\ChartVisibilityControllerTests.cs |
-| class | ChartVisibilityHelper | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\ChartVisibilityHelper.cs |
-| class | ChartVisibilityHelperTests | public | DataVisualiser.Tests.Controls | .\DataVisualiser.Tests\Controls\ChartVisibilityHelperTests.cs |
-| class | CmsBucketDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\CmsBucketDistributionStrategy.cs |
-| class | CmsConfiguration | public | DataVisualiser.Core.Configuration | .\DataVisualiser\Core\Configuration\CmsConfiguration.cs |
-| class | CmsConversionHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\CmsConversionHelper.cs |
-| class | CmsConversionHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\CmsConversionHelperTests.cs |
-| class | CmsDataService | public | DataVisualiser.Core.Data.Repositories | .\DataVisualiser\Core\Data\Repositories\CmsDataService.cs |
-| class | CmsExecutionResult | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\CmsExecutionResult.cs |
-| class | CmsHourlyDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\CmsHourlyDistributionStrategy.cs |
-| class | CmsProductionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\CmsProductionStage.cs |
-| class | CmsTypeConverter | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CmsTypeConverter.cs |
-| class | CmsWeeklyDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\CmsWeeklyDistributionStrategy.cs |
-| class | CmsWeeklyDistributionStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\CmsWeeklyDistributionStrategyTests.cs |
-| class | ColourPalette | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\ColourPalette.cs |
-| class | CombinedMetricParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\CombinedMetricParityHarness.cs |
-| class | CombinedMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\CombinedMetricParityTests.cs |
-| class | CombinedMetricStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\CombinedMetricStrategy.cs |
-| class | CombinedMetricStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\CombinedMetricStrategyFactory.cs |
-| class | CombinedMetricStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\CombinedMetricStrategyTests.cs |
-| class | ComputationDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\ComputationDefaults.cs |
-| class | ConsoleHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\ConsoleHelper.cs |
-| class | DataAccessDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\DataAccessDefaults.cs |
-| class | DataFetcher | public | DataVisualiser.Core.Data.Repositories | .\DataVisualiser\Core\Data\Repositories\DataFetcher.cs |
-| class | DataHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper.cs |
-| class | DataHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper_Old.cs |
-| class | DataLoadedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\DataLoadedEventArgs.cs |
-| class | DataLoadValidator | public | DataVisualiser.Core.Helpers.Validation | .\DataVisualiser\Core\Helpers\Validation\DataLoadValidator.cs |
-| class | DataLoadValidatorTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\DataLoadValidatorTests.cs |
-| class | DataNormalization | public | DataFileReader.Helper | .\DataFileReader\Helper\DataNormalization.cs |
-| class | DataPreparationService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\DataPreparationService.cs |
-| class | DataPreparationServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\DataPreparationServiceTests.cs |
-| class | DateRangeLoadedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\DateRangeLoadedEventArgs.cs |
-| class | DateRangeResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DateRangeResult.cs |
-| class | DefaultNormalizationPipeline | public | DataFileReader.Normalization | .\DataFileReader\Normalization\DefaultNormalizationPipeline.cs |
-| class | DifferenceStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\DifferenceStrategy.cs |
-| class | DifferenceStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\DifferenceStrategyFactory.cs |
-| class | DifferenceStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\DifferenceStrategyTests.cs |
-| class | DiffRatioChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\DiffRatioChartControllerAdapter.cs |
-| class | DimensionSet | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\DimensionSet.cs |
-| class | DistributionChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\DistributionChartControllerAdapter.cs |
-| class | DistributionDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\DistributionDefaults.cs |
-| class | DistributionModeCatalog | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionModeCatalog.cs |
-| class | DistributionModeDefinition | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionModeDefinition.cs |
-| class | DistributionModeSettings | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionModeSettings.cs |
-| class | DistributionPolarRenderingService | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\DistributionPolarRenderingService.cs |
-| class | DistributionPolarTooltipState | internal | DataVisualiser.UI.State | .\DataVisualiser\UI\State\DistributionPolarTooltipState.cs |
-| class | DistributionRangeResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DistributionRangeResult.cs |
-| class | ErrorEventArgs | public | DataVisualiser.Shared | .\DataVisualiser\Shared\ErrorEventArgs.cs |
-| class | FileHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\FileHelper.cs |
-| class | FileProcessingService | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingService.cs |
-| class | FrequencyBasedShadingStrategy | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\FrequencyBasedShadingStrategy.cs |
-| class | FrequencyBinningHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\FrequencyBinningHelper.cs |
-| class | FrequencyRendererCore | internal | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\FrequencyRendererCore.cs |
-| class | FrequencyShadingCalculator | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\FrequencyShadingCalculator.cs |
-| class | FrequencyShadingCalculatorTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\FrequencyShadingCalculatorTests.cs |
-| class | FrequencyShadingDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\FrequencyShadingDefaults.cs |
-| class | FrequencyShadingRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\FrequencyShadingRenderer.cs |
-| class | HealthDataApp | public | DataFileReader.App | .\DataFileReader\App\HealthDataApp.cs |
-| class | HealthMetric | public | DataFileReader.Helper | .\DataFileReader\Helper\HealthMetric.cs |
-| class | HealthMetricDataBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\HealthMetricDataBuilder.cs |
-| class | HealthMetricsCountEntry | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\HealthMetricsCountEntry.cs |
-| class | HealthMetricToCmsMapper | public | DataFileReader.Canonical | .\DataFileReader\Canonical\HealthMetricToCmsMapper.cs |
-| class | HierarchyObject | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyObject.cs |
-| class | HierarchyObjectList | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyObjectList.cs |
-| class | HierarchyRefValCalculator | public | DataFileReader.Class | .\DataFileReader\Class\HierarchyRefValCalculator.cs |
-| class | HierarchyRefValTests | public | DataFileReader.Tests | .\DataFileReader.Tests\HierarchyRefValTests.cs |
-| class | HourlyDistributionConfiguration | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\HourlyDistributionConfiguration.cs |
-| class | HourlyDistributionParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\HourlyDistributionParityHarness.cs |
-| class | HourlyDistributionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\HourlyDistributionService.cs |
-| class | HourlyDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\HourlyDistributionStrategy.cs |
-| class | HourlyDistributionStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\HourlyDistributionStrategyFactory.cs |
-| class | HourlyDistributionTooltip | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\HourlyDistributionTooltip.cs |
-| class | HourlyFrequencyRenderer | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\HourlyFrequencyRenderer.cs |
-| class | HourlyIntervalRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\HourlyIntervalRenderer.cs |
-| class | IntervalShadingContext | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\IntervalShadingContext.cs |
-| class | JsonArray | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\JsonArray.cs |
-| class | JsonObject | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\JsonObject.cs |
-| class | JsonValue | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\JsonValue.cs |
-| class | JsoonHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\JsoonHelper.cs |
-| class | LegacyExecutionResult | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\LegacyExecutionResult.cs |
-| class | LegacyJsonParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\LegacyJsonParser.cs |
-| class | LegendItem | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\LegendToggleManager.cs |
-| class | LegendToggleManager | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\LegendToggleManager.cs |
-| class | LiveChartsChartRenderer | public | DataVisualiser.UI.Rendering.LiveCharts | .\DataVisualiser\UI\Rendering\LiveCharts\LiveChartsChartRenderer.cs |
-| class | MainChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\MainChartControllerAdapter.cs |
-| class | MainWindowViewModelBusyStateTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\MainWindowViewModelBusyStateTests.cs |
-| class | MathHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\MathHelper.cs |
-| class | MathHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\MathHelperTests.cs |
-| class | MetaData | public | DataFileReader.Class | .\DataFileReader\Class\MetaData.cs |
-| class | MetaDataComparer | public | DataFileReader.Class | .\DataFileReader\Class\MetaDataComparer.cs |
-| class | MetaDataList | public | DataFileReader.Class | .\DataFileReader\Class\MetaDataList.cs |
-| class | MetricAggregator | public | DataFileReader.Services | .\DataFileReader\Services\MetricAggregator.cs |
-| class | MetricCompatibilityHelper | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricCompatibilityHelper.cs |
-| class | MetricData | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\MetricData.cs |
-| class | MetricDataValidationHelper | public | DataVisualiser.Core.Helpers.Validation | .\DataVisualiser\Core\Helpers\Validation\MetricDataValidationHelper.cs |
-| class | MetricIdentity | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\MetricIdentity.cs |
-| class | MetricIdentityResolutionStage | public | DataFileReader.Normalization.Stages | .\DataFileReader\Normalization\Stages\MetricIdentityResolutionStage.cs |
-| class | MetricLoadCoordinator | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\MetricLoadCoordinator.cs |
-| class | MetricSelectionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\MetricSelectionService.cs |
-| class | MetricSelectionServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\MetricSelectionServiceTests.cs |
-| class | MetricSeriesSelectionCache | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\MetricSeriesSelectionCache.cs |
-| class | MetricState | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\MetricState.cs |
-| class | MetricTypeParser | public | DataFileReader.Helper | .\DataFileReader\Helper\MetricTypeParser.cs |
-| class | MetricTypesLoadedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\MetricTypesLoadedEventArgs.cs |
-| class | MockCanonicalMetricSeries | internal | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\MockCanonicalMetricSeries.cs |
-| class | MockCmsBuilder | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\MockCmsBuilder.cs |
-| class | MultiMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\MultiMetricParityTests.cs |
-| class | MultiMetricStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\MultiMetricStrategy.cs |
-| class | MultiMetricStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\MultiMetricStrategyFactory.cs |
-| class | MultiMetricStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\MultiMetricStrategyTests.cs |
-| class | MultiplyConverter | public | DataVisualiser.UI.Converters | .\DataVisualiser\UI\Converters\MultiplyConverter.cs |
-| class | NormalizationBootstrap | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationBootstrap.cs |
-| class | NormalizationContext | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationContext.cs |
-| class | NormalizationDiagnostics | public | DataFileReader.Normalization | .\DataFileReader\Normalization\NormalizationDiagnostics.cs |
-| class | NormalizationModeConverter | public | DataVisualiser.UI.Converters | .\DataVisualiser\UI\Converters\NormalizationModeConverter.cs |
-| class | NormalizedChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\NormalizedChartControllerAdapter.cs |
-| class | NormalizedStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\NormalizedStrategy.cs |
-| class | NormalizedStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\NormalizedStrategyFactory.cs |
-| class | NormalizedStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\NormalizedStrategyTests.cs |
-| class | NullStrategyReachabilityProbe | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\NullStrategyReachabilityProbe.cs |
-| class | ParityExportShapeTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\ParityExportShapeTests.cs |
-| class | ParityFailure | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityFailure.cs |
-| class | ParityPoint | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityPoint.cs |
-| class | ParityResult | public | DataVisualiser.Core.Validation | .\DataVisualiser\Core\Validation\ParityResult.cs |
-| class | ParityResult | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityResult.cs |
-| class | ParityResultAdapter | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityResultAdapter.cs |
-| class | ParitySeries | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParitySeries.cs |
-| class | ParityTolerance | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityTolerance.cs |
-| class | ParityValidationService | public | DataVisualiser.Core.Validation | .\DataVisualiser\Core\Validation\ParityValidationService.cs |
-| class | Program | internal | DataFileReader | .\DataFileReader\Program.cs |
-| class | RatioStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\RatioStrategy.cs |
-| class | RatioStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\RatioStrategyFactory.cs |
-| class | RatioStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\RatioStrategyTests.cs |
-| class | RawRecord | public | DataFileReader.Ingestion | .\DataFileReader\Ingestion\RawRecord.cs |
-| class | RawRecordFactory | public | DataFileReader.Ingestion | .\DataFileReader\Ingestion\RawRecordFactory.cs |
-| class | RelayCommand | public | DataVisualiser.UI.ViewModels | .\DataVisualiser\UI\ViewModels\RelayCommand.cs |
-| class | RenderingDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\RenderingDefaults.cs |
-| class | RowComparer | public | DataFileReader.Helper | .\DataFileReader\Helper\DataHelper.cs |
-| class | SamsungCsvParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\SamsungCsvParser.cs |
-| class | SamsungHealthCsvParser | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthCsvParser.cs |
-| class | SamsungHealthParser | public | DataFileReader.Helper | .\DataFileReader\Helper\SamsungHealthParser.cs |
-| class | SamsungJsonParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\SamsungJsonParser.cs |
-| class | SeriesAlignmentHelper | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\SeriesAlignmentHelper.cs |
-| class | SeriesResult | public | DataVisualiser.Core.Computation.Results | .\DataVisualiser\Core\Computation\Results\SeriesResult.cs |
-| class | ShadowValidate_SamsungHealthCsv | public | DataFileReader | .\DataFileReader\ShadowValidate_SamsungHealthCsv.cs |
-| class | SimpleChartTooltip | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\SimpleChartTooltip.cs |
-| class | SingleMetricParityTests | public | DataVisualiser.Tests.Parity | .\DataVisualiser.Tests\Parity\SingleMetricParityTests.cs |
-| class | SingleMetricStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\SingleMetricStrategy.cs |
-| class | SingleMetricStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\SingleMetricStrategyFactory.cs |
-| class | SingleMetricStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\SingleMetricStrategyTests.cs |
-| class | SmoothedDataPoint | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\SmoothedDataPoint.cs |
-| class | SmoothingService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\SmoothingService.cs |
-| class | SQLHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\SQLHelper.cs |
-| class | SqlQueryBuilder | public | DataVisualiser.Core.Data | .\DataVisualiser\Core\Data\SqlQueryBuilder.cs |
-| class | StaTestHelper | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\StaTestHelper.cs |
-| class | StrategyComputationHelper | public | DataVisualiser.Shared.Helpers | .\DataVisualiser\Shared\Helpers\StrategyComputationHelper.cs |
-| class | StrategyComputationHelperTests | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\StrategyComputationHelperTests.cs |
-| class | StrategyCreationParameters | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\StrategyCreationParameters.cs |
-| class | StrategyCutOverService | public | DataVisualiser.Core.Strategies | .\DataVisualiser\Core\Strategies\StrategyCutOverService.cs |
-| class | StrategyCutOverServiceTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\StrategyCutOverServiceTests.cs |
-| class | StrategyFactoryBase | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\StrategyFactoryBase.cs |
-| class | StrategyParityContext | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\StrategyParityContext.cs |
-| class | StrategyReachabilityStoreProbe | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\StrategyReachabilityStoreProbe.cs |
-| class | StrategySelectionService | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\StrategySelectionService.cs |
-| class | StrategySelectionServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\StrategySelectionServiceTests.cs |
-| class | StrategyTypeMetadata | public | DataVisualiser.Core.Strategies | .\DataVisualiser\Core\Strategies\StrategyTypeMetadata.cs |
-| class | SubtypeControlPair | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\SubtypeControlPair.cs |
-| class | SubtypeSelectorManager | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\SubtypeSelectorManager.cs |
-| class | SubtypesLoadedEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\SubtypesLoadedEventArgs.cs |
-| class | TestDataBuilders | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
-| class | TestHelpers | public | DataVisualiser.Tests.Helpers | .\DataVisualiser.Tests\Helpers\TestHelpers.cs |
-| class | TimeAxis | public | DataFileReader.Normalization.Canonical | .\DataFileReader\Normalization\Canonical\TimeAxis.cs |
-| class | TimelineResult | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\TimelineResult.cs |
-| class | TimelineService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\TimelineService.cs |
-| class | TimeNormalizationHelper | public | DataFileReader.Helper | .\DataFileReader\Helper\TimeNormalizationHelper.cs |
-| class | TransformComputationResult | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformComputationResult.cs |
-| class | TransformComputationService | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformComputationService.cs |
-| class | TransformComputationServiceTests | public | DataVisualiser.Tests.Services | .\DataVisualiser.Tests\Services\TransformComputationServiceTests.cs |
-| class | TransformDataHelperTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformDataHelperTests.cs |
-| class | TransformDataPanelControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\TransformDataPanelControllerAdapter.cs |
-| class | TransformExpression | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformExpression.cs |
-| class | TransformExpressionBuilder | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformExpressionBuilder.cs |
-| class | TransformExpressionBuilderTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformExpressionBuilderTests.cs |
-| class | TransformExpressionEvaluator | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformExpressionEvaluator.cs |
-| class | TransformExpressionEvaluatorTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformExpressionEvaluatorTests.cs |
-| class | TransformOperand | public | DataVisualiser.Core.Transforms.Expressions | .\DataVisualiser\Core\Transforms\Expressions\TransformOperand.cs |
-| class | TransformOperation | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\TransformOperation.cs |
-| class | TransformOperationRegistry | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\TransformOperationRegistry.cs |
-| class | TransformOperationRegistryTests | public | DataVisualiser.Tests.Transforms | .\DataVisualiser.Tests\Transforms\TransformOperationRegistryTests.cs |
-| class | TransformOperationResult | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformOperationResult.cs |
-| class | TransformOperationService | public | DataVisualiser.Core.Transforms | .\DataVisualiser\Core\Transforms\TransformOperationService.cs |
-| class | TransformResultStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\TransformResultStrategy.cs |
-| class | TransformResultStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\TransformResultStrategyTests.cs |
-| class | Types | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\Types.cs |
-| class | UiChartRenderModel | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\UiChartRenderModel.cs |
-| class | UiDefaults | public | DataVisualiser.UI.Defaults | .\DataVisualiser\UI\Defaults\UiDefaults.cs |
-| class | UiState | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\UiState.cs |
-| class | UiStateTests | public | DataVisualiser.Tests.ViewModels | .\DataVisualiser.Tests\ViewModels\UiStateTests.cs |
-| class | UnaryOperators | public | DataVisualiser.Core.Transforms.Operations | .\DataVisualiser\Core\Transforms\Operations\UnaryOperators.cs |
-| class | UnitResolutionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\UnitResolutionService.cs |
-| class | WeekdayTrendAverageToggleEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\WeekdayTrendAverageToggleEventArgs.cs |
-| class | WeekdayTrendChartControllerAdapter | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\WeekdayTrendChartControllerAdapter.cs |
-| class | WeekdayTrendChartUpdateCoordinator | public | DataVisualiser.Core.Orchestration | .\DataVisualiser\Core\Orchestration\WeekdayTrendChartUpdateCoordinator.cs |
-| class | WeekdayTrendComputationStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\WeekdayTrendComputationStrategy.cs |
-| class | WeekdayTrendComputationStrategyTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\WeekdayTrendComputationStrategyTests.cs |
-| class | WeekdayTrendDayToggleEventArgs | public | DataVisualiser.UI.Events | .\DataVisualiser\UI\Events\WeekdayTrendDayToggleEventArgs.cs |
-| class | WeekdayTrendDefaults | public | DataVisualiser.Core.Configuration.Defaults | .\DataVisualiser\Core\Configuration\Defaults\WeekdayTrendDefaults.cs |
-| class | WeekdayTrendPoint | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\WeekdayTrendPoint.cs |
-| class | WeekdayTrendRenderingService | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\WeekdayTrendRenderingService.cs |
-| class | WeekdayTrendResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\WeekdayTrendResult.cs |
-| class | WeekdayTrendSeries | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\WeekdayTrendSeries.cs |
-| class | WeekdayTrendStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\WeekdayTrendStrategy.cs |
-| class | WeekdayTrendStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\WeekdayTrendStrategyFactory.cs |
-| class | WeekdayTrendStrategyFactoryTests | public | DataVisualiser.Tests.Strategies | .\DataVisualiser.Tests\Strategies\WeekdayTrendStrategyFactoryTests.cs |
-| class | WeeklyDistributionConfiguration | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\WeeklyDistributionConfiguration.cs |
-| class | WeeklyDistributionParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\WeeklyDistributionParityHarness.cs |
-| class | WeeklyDistributionParityHarnessTests | public | DataVisualiser.Tests.Charts.Parity | .\DataVisualiser.Tests\Charts\Parity\WeeklyDistributionParityHarnessTests.cs |
-| class | WeeklyDistributionResult | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\WeeklyDistributionResult.cs |
-| class | WeeklyDistributionService | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\WeeklyDistributionService.cs |
-| class | WeeklyDistributionStrategy | public | DataVisualiser.Core.Strategies.Implementations | .\DataVisualiser\Core\Strategies\Implementations\WeeklyDistributionStrategy.cs |
-| class | WeeklyDistributionStrategyFactory | public | DataVisualiser.Core.Strategies.Factories | .\DataVisualiser\Core\Strategies\Factories\WeeklyDistributionStrategyFactory.cs |
-| class | WeeklyDistributionTooltip | public | DataVisualiser.Core.Rendering.Helpers | .\DataVisualiser\Core\Rendering\Helpers\WeeklyDistributionTooltip.cs |
-| class | WeeklyFrequencyRenderer | public | DataVisualiser.Core.Rendering.Engines | .\DataVisualiser\Core\Rendering\Engines\WeeklyFrequencyRenderer.cs |
-| class | WeeklyIntervalRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\WeeklyIntervalRenderer.cs |
-| enum | AggregationPeriod | public | DataFileReader.Class | .\DataFileReader\Class\AggregationPeriod.cs |
-| enum | ChartLegendPlacement | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartLegendPlacement.cs |
-| enum | ChartSeriesMode | public | DataVisualiser.Core.Rendering | .\DataVisualiser\Core\Rendering\ChartSeriesMode.cs |
-| enum | ChartSeriesType | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\ChartSeriesType.cs |
-| enum | DataCompleteness | public | DataFileReader.Canonical | .\DataFileReader\Canonical\DataCompleteness.cs |
-| enum | DistributionMode | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\DistributionMode.cs |
-| enum | IdentityResolutionFailureReason | public | DataFileReader.Canonical | .\DataFileReader\Canonical\IdentityResolutionFailureReason.cs |
-| enum | MainChartDisplayMode | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\MainChartDisplayMode.cs |
-| enum | MetricDimension | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricDimension.cs |
-| enum | NormalizationMode | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\NormalizationMode.cs |
-| enum | ParityLayer | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityLayer.cs |
-| enum | ParityMode | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\ParityMode.cs |
-| enum | RecordToDayRatio | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\RecordToDayRatio.cs |
-| enum | SamplingMode | public | DataVisualiser.Core.Data | .\DataVisualiser\Core\Data\SamplingMode.cs |
-| enum | StrategyType | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\StrategyType.cs |
-| enum | TickInterval | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\TickInterval.cs |
-| enum | TimeRepresentation | public | DataFileReader.Canonical | .\DataFileReader\Canonical\TimeRepresentation.cs |
-| enum | ValidationStatus | public | DataFileReader.Canonical | .\DataFileReader\Canonical\ValidationStatus.cs |
-| enum | WeekdayTrendAverageWindow | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\WeekdayTrendAverageWindow.cs |
-| enum | WeekdayTrendChartMode | public | DataVisualiser.UI.State | .\DataVisualiser\UI\State\WeekdayTrendChartMode.cs |
-| interface | IBarPieChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IBarPieChartControllerExtras.cs |
-| interface | ICanonicalMetricSeries | public | DataFileReader.Canonical | .\DataFileReader\Canonical\ICanonicalMetricSeries.cs |
-| interface | ICartesianChartSurface | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ICartesianChartSurface.cs |
-| interface | IChartComputationStrategy | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IChartComputationStrategy.cs |
-| interface | IChartController | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartController.cs |
-| interface | IChartControllerFactory | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartControllerFactory.cs |
-| interface | IChartControllerRegistry | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartControllerRegistry.cs |
-| interface | IChartPanelScaffold | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IChartPanelScaffold.cs |
-| interface | IChartRenderer | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\IChartRenderer.cs |
-| interface | IChartRenderingContext | public | DataVisualiser.UI | .\DataVisualiser\UI\IChartRenderingContext.cs |
-| interface | IChartSurface | public | DataVisualiser.UI.Rendering | .\DataVisualiser\UI\Rendering\IChartSurface.cs |
-| interface | IDataPreparationService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDataPreparationService.cs |
-| interface | IDiffRatioChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IDiffRatioChartControllerExtras.cs |
-| interface | IDistributionChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IDistributionChartControllerExtras.cs |
-| interface | IDistributionConfiguration | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDistributionConfiguration.cs |
-| interface | IDistributionResultExtractor | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDistributionResultExtractor.cs |
-| interface | IDistributionService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IDistributionService.cs |
-| interface | IFrequencyShadingRenderer | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\IFrequencyShadingRenderer.cs |
-| interface | IHealthFileParser | public | DataFileReader.Parsers | .\DataFileReader\Parsers\IHealthFileParser.cs |
-| interface | IIntervalRenderer | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\IIntervalRenderer.cs |
-| interface | IIntervalShadingStrategy | public | DataVisualiser.Core.Rendering.Shading | .\DataVisualiser\Core\Rendering\Shading\IIntervalShadingStrategy.cs |
-| interface | IJson | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\IJson.cs |
-| interface | IJsonComplex | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\IJsonComplex.cs |
-| interface | IJsonPrimitive | public | DataFileReader.Class.JSON | .\DataFileReader\Class\JSON\IJsonPrimitive.cs |
-| interface | IMainChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IMainChartControllerExtras.cs |
-| interface | INormalizationPipeline | public | DataFileReader.Normalization | .\DataFileReader\Normalization\INormalizationPipeline.cs |
-| interface | INormalizationStage | public | DataFileReader.Normalization | .\DataFileReader\Normalization\INormalizationStage.cs |
-| interface | IPolarChartSurface | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IPolarChartSurface.cs |
-| interface | ISmoothingService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\ISmoothingService.cs |
-| interface | IStrategyCutOverService | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IStrategyCutOverService.cs |
-| interface | IStrategyFactory | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IStrategyFactory.cs |
-| interface | IStrategyParityHarness | public | DataVisualiser.Core.Validation.Parity | .\DataVisualiser\Core\Validation\Parity\IStrategyParityHarness.cs |
-| interface | IStrategyReachabilityProbe | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\IStrategyReachabilityProbe.cs |
-| interface | ITimelineService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\ITimelineService.cs |
-| interface | ITransformPanelControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ITransformPanelControllerExtras.cs |
-| interface | IUnitResolutionService | public | DataVisualiser.Core.Services.Abstractions | .\DataVisualiser\Core\Services\Abstractions\IUnitResolutionService.cs |
-| interface | IWeekdayTrendChartControllerExtras | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\IWeekdayTrendChartControllerExtras.cs |
-| interface | IWeekdayTrendResultProvider | public | DataVisualiser.Core.Strategies.Abstractions | .\DataVisualiser\Core\Strategies\Abstractions\IWeekdayTrendResultProvider.cs |
-| record | CanonicalMetricId | public | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricId.cs |
-| record | CanonicalMetricSeries | internal | DataFileReader.Canonical | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
-| record | ChartControllerFactoryContext | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerFactoryContext.cs |
-| record | ChartControllerFactoryResult | public | DataVisualiser.UI.Controls | .\DataVisualiser\UI\Controls\ChartControllerFactoryResult.cs |
-| record | FileProcessingResult | public | DataFileReader.Services | .\DataFileReader\Services\FileProcessingResult.cs |
-| record | FrequencyShadingData | public | DataVisualiser.Core.Services | .\DataVisualiser\Core\Services\FrequencyShadingData.cs |
-| record | MetricIdentityResolutionResult | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricIdentityResolutionResult.cs |
-| record | MetricNameOption | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\MetricNameOption.cs |
-| record | MetricProvenance | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricProvenance.cs |
-| record | MetricQuality | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricQuality.cs |
-| record | MetricSample | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricSample.cs |
-| record | MetricSeriesSelection | public | DataVisualiser.Shared.Models | .\DataVisualiser\Shared\Models\MetricSeriesSelection.cs |
-| record | MetricUnit | public | DataFileReader.Canonical | .\DataFileReader\Canonical\MetricUnit.cs |
-| record | StrategyReachabilityRecord | public | DataVisualiser.Core.Strategies.Reachability | .\DataVisualiser\Core\Strategies\Reachability\StrategyReachabilityRecord.cs |
-| record | TimeSemantics | public | DataFileReader.Canonical | .\DataFileReader\Canonical\TimeSemantics.cs |
+## Summary
 
+- DataFileReader: 83 symbols
+- DataFileReader.Tests: 6 symbols
+- DataVisualiser: 599 symbols
+- DataVisualiser.Tests: 165 symbols
+
+- nested: 10 symbols
+- top-level: 843 symbols
 
 ------------------------------------------------------
+
+| Project | Kind | Name | Visibility | DeclarationScope | ParentType | Namespace | NamespaceKind | Line | File |
+|---------|------|------|------------|------------------|------------|-----------|---------------|------|------|
+| DataFileReader | class | Program | internal | top-level |  | DataFileReader | file-scoped | 6 | .\DataFileReader\Program.cs |
+| DataFileReader | class | ShadowValidate_SamsungHealthCsv | public | top-level |  | DataFileReader | file-scoped | 6 | .\DataFileReader\ShadowValidate_SamsungHealthCsv.cs |
+| DataFileReader | class | HealthDataApp | public | top-level |  | DataFileReader.App | file-scoped | 7 | .\DataFileReader\App\HealthDataApp.cs |
+| DataFileReader | class | CanonicalMetricIdentityResolver | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\CanonicalMetricIdentityResolver.cs |
+| DataFileReader | class | CanonicalMetricMapping | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\CanonicalMetricMapping.cs |
+| DataFileReader | class | CanonicalMetricMappingSqlDataSource | internal | top-level |  | DataFileReader.Canonical | file-scoped | 4 | .\DataFileReader\Canonical\CanonicalMetricMappingSqlDataSource.cs |
+| DataFileReader | class | CanonicalMetricMappingStore | internal | top-level |  | DataFileReader.Canonical | file-scoped | 5 | .\DataFileReader\Canonical\CanonicalMetricMappingStore.cs |
+| DataFileReader | class | CmsTypeConverter | public | top-level |  | DataFileReader.Canonical | file-scoped | 4 | .\DataFileReader\Canonical\CmsTypeConverter.cs |
+| DataFileReader | class | HealthMetricToCmsMapper | public | top-level |  | DataFileReader.Canonical | file-scoped | 5 | .\DataFileReader\Canonical\HealthMetricToCmsMapper.cs |
+| DataFileReader | class | MetricCompatibilityHelper | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\MetricCompatibilityHelper.cs |
+| DataFileReader | enum | DataCompleteness | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\DataCompleteness.cs |
+| DataFileReader | enum | IdentityResolutionFailureReason | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\IdentityResolutionFailureReason.cs |
+| DataFileReader | enum | MetricDimension | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\MetricDimension.cs |
+| DataFileReader | enum | TimeRepresentation | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\TimeRepresentation.cs |
+| DataFileReader | enum | ValidationStatus | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\ValidationStatus.cs |
+| DataFileReader | interface | ICanonicalMetricSeries | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\ICanonicalMetricSeries.cs |
+| DataFileReader | record | CanonicalMetricId | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\CanonicalMetricId.cs |
+| DataFileReader | record | CanonicalMetricMappingRecord | internal | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\CanonicalMetricMappingRecord.cs |
+| DataFileReader | record | CanonicalMetricSeries | internal | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\CanonicalMetricSeries.cs |
+| DataFileReader | record | MetricIdentityResolutionResult | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\MetricIdentityResolutionResult.cs |
+| DataFileReader | record | MetricProvenance | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\MetricProvenance.cs |
+| DataFileReader | record | MetricQuality | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\MetricQuality.cs |
+| DataFileReader | record | MetricSample | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\MetricSample.cs |
+| DataFileReader | record | MetricUnit | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\MetricUnit.cs |
+| DataFileReader | record | TimeSemantics | public | top-level |  | DataFileReader.Canonical | file-scoped | 2 | .\DataFileReader\Canonical\TimeSemantics.cs |
+| DataFileReader | class | RowComparer | public | nested | DataHelper | DataFileReader.Helper | file-scoped | 49 | .\DataFileReader\Helper\DataHelper.cs |
+| DataFileReader | class | ConsoleHelper | public | top-level |  | DataFileReader.Helper | file-scoped | 7 | .\DataFileReader\Helper\ConsoleHelper.cs |
+| DataFileReader | class | DataHelper | public | top-level |  | DataFileReader.Helper | file-scoped | 4 | .\DataFileReader\Helper\DataHelper.cs |
+| DataFileReader | class | DataHelper | public | top-level |  | DataFileReader.Helper | block-scoped | 11 | .\DataFileReader\Helper\DataHelper_Old.cs |
+| DataFileReader | class | DataNormalization | public | top-level |  | DataFileReader.Helper | file-scoped | 2 | .\DataFileReader\Helper\DataNormalization.cs |
+| DataFileReader | class | FileHelper | public | top-level |  | DataFileReader.Helper | file-scoped | 2 | .\DataFileReader\Helper\FileHelper.cs |
+| DataFileReader | class | HealthMetric | public | top-level |  | DataFileReader.Helper | file-scoped | 2 | .\DataFileReader\Helper\HealthMetric.cs |
+| DataFileReader | class | JsoonHelper | public | top-level |  | DataFileReader.Helper | file-scoped | 6 | .\DataFileReader\Helper\JsoonHelper.cs |
+| DataFileReader | class | MetricTypeParser | public | top-level |  | DataFileReader.Helper | file-scoped | 4 | .\DataFileReader\Helper\MetricTypeParser.cs |
+| DataFileReader | class | SamsungHealthCsvParser | public | top-level |  | DataFileReader.Helper | file-scoped | 6 | .\DataFileReader\Helper\SamsungHealthCsvParser.cs |
+| DataFileReader | class | SamsungHealthParser | public | top-level |  | DataFileReader.Helper | file-scoped | 4 | .\DataFileReader\Helper\SamsungHealthParser.cs |
+| DataFileReader | class | SQLHelper | public | top-level |  | DataFileReader.Helper | file-scoped | 14 | .\DataFileReader\Helper\SQLHelper.cs |
+| DataFileReader | class | TimeNormalizationHelper | public | top-level |  | DataFileReader.Helper | file-scoped | 4 | .\DataFileReader\Helper\TimeNormalizationHelper.cs |
+| DataFileReader | class | RawRecord | public | top-level |  | DataFileReader.Ingestion | file-scoped | 2 | .\DataFileReader\Ingestion\RawRecord.cs |
+| DataFileReader | class | RawRecordFactory | public | top-level |  | DataFileReader.Ingestion | file-scoped | 4 | .\DataFileReader\Ingestion\RawRecordFactory.cs |
+| DataFileReader | class | HierarchyObject | public | top-level |  | DataFileReader.Models | file-scoped | 4 | .\DataFileReader\Models\HierarchyObject.cs |
+| DataFileReader | class | HierarchyObjectList | public | top-level |  | DataFileReader.Models | file-scoped | 5 | .\DataFileReader\Models\HierarchyObjectList.cs |
+| DataFileReader | class | HierarchyRefValCalculator | public | top-level |  | DataFileReader.Models | file-scoped | 5 | .\DataFileReader\Models\HierarchyRefValCalculator.cs |
+| DataFileReader | class | MetaData | public | top-level |  | DataFileReader.Models | file-scoped | 2 | .\DataFileReader\Models\MetaData.cs |
+| DataFileReader | class | MetaDataComparer | public | top-level |  | DataFileReader.Models | file-scoped | 2 | .\DataFileReader\Models\MetaDataComparer.cs |
+| DataFileReader | class | MetaDataList | public | top-level |  | DataFileReader.Models | file-scoped | 5 | .\DataFileReader\Models\MetaDataList.cs |
+| DataFileReader | enum | AggregationPeriod | public | top-level |  | DataFileReader.Models | file-scoped | 2 | .\DataFileReader\Models\AggregationPeriod.cs |
+| DataFileReader | class | JsonArray | public | top-level |  | DataFileReader.Models.Json | file-scoped | 4 | .\DataFileReader\Models\Json\JsonArray.cs |
+| DataFileReader | class | JsonObject | public | top-level |  | DataFileReader.Models.Json | file-scoped | 6 | .\DataFileReader\Models\Json\JsonObject.cs |
+| DataFileReader | class | JsonValue | public | top-level |  | DataFileReader.Models.Json | file-scoped | 2 | .\DataFileReader\Models\Json\JsonValue.cs |
+| DataFileReader | class | Types | public | top-level |  | DataFileReader.Models.Json | file-scoped | 2 | .\DataFileReader\Models\Json\Types.cs |
+| DataFileReader | interface | IJson | public | top-level |  | DataFileReader.Models.Json | file-scoped | 2 | .\DataFileReader\Models\Json\IJson.cs |
+| DataFileReader | interface | IJsonComplex | public | top-level |  | DataFileReader.Models.Json | file-scoped | 4 | .\DataFileReader\Models\Json\IJsonComplex.cs |
+| DataFileReader | interface | IJsonPrimitive | public | top-level |  | DataFileReader.Models.Json | file-scoped | 2 | .\DataFileReader\Models\Json\IJsonPrimitive.cs |
+| DataFileReader | class | DefaultNormalizationPipeline | public | top-level |  | DataFileReader.Normalization | file-scoped | 6 | .\DataFileReader\Normalization\DefaultNormalizationPipeline.cs |
+| DataFileReader | class | NormalizationBootstrap | public | top-level |  | DataFileReader.Normalization | file-scoped | 2 | .\DataFileReader\Normalization\NormalizationBootstrap.cs |
+| DataFileReader | class | NormalizationContext | public | top-level |  | DataFileReader.Normalization | file-scoped | 2 | .\DataFileReader\Normalization\NormalizationContext.cs |
+| DataFileReader | class | NormalizationDiagnostics | public | top-level |  | DataFileReader.Normalization | file-scoped | 6 | .\DataFileReader\Normalization\NormalizationDiagnostics.cs |
+| DataFileReader | interface | INormalizationPipeline | public | top-level |  | DataFileReader.Normalization | file-scoped | 5 | .\DataFileReader\Normalization\INormalizationPipeline.cs |
+| DataFileReader | interface | INormalizationStage | public | top-level |  | DataFileReader.Normalization | file-scoped | 4 | .\DataFileReader\Normalization\INormalizationStage.cs |
+| DataFileReader | class | CanonicalMetricSeries | public | top-level |  | DataFileReader.Normalization.Canonical | file-scoped | 2 | .\DataFileReader\Normalization\Canonical\CanonicalMetricSeries.cs |
+| DataFileReader | class | DimensionSet | public | top-level |  | DataFileReader.Normalization.Canonical | file-scoped | 2 | .\DataFileReader\Normalization\Canonical\DimensionSet.cs |
+| DataFileReader | class | MetricIdentity | public | top-level |  | DataFileReader.Normalization.Canonical | file-scoped | 2 | .\DataFileReader\Normalization\Canonical\MetricIdentity.cs |
+| DataFileReader | class | TimeAxis | public | top-level |  | DataFileReader.Normalization.Canonical | file-scoped | 2 | .\DataFileReader\Normalization\Canonical\TimeAxis.cs |
+| DataFileReader | class | CmsProductionStage | public | top-level |  | DataFileReader.Normalization.Stages | file-scoped | 6 | .\DataFileReader\Normalization\Stages\CmsProductionStage.cs |
+| DataFileReader | class | MetricIdentityResolutionStage | public | top-level |  | DataFileReader.Normalization.Stages | file-scoped | 5 | .\DataFileReader\Normalization\Stages\MetricIdentityResolutionStage.cs |
+| DataFileReader | class | LegacyJsonParser | public | top-level |  | DataFileReader.Parsers | file-scoped | 8 | .\DataFileReader\Parsers\LegacyJsonParser.cs |
+| DataFileReader | class | SamsungCsvParser | public | top-level |  | DataFileReader.Parsers | file-scoped | 4 | .\DataFileReader\Parsers\SamsungCsvParser.cs |
+| DataFileReader | class | SamsungJsonParser | public | top-level |  | DataFileReader.Parsers | file-scoped | 4 | .\DataFileReader\Parsers\SamsungJsonParser.cs |
+| DataFileReader | interface | IHealthFileParser | public | top-level |  | DataFileReader.Parsers | file-scoped | 4 | .\DataFileReader\Parsers\IHealthFileParser.cs |
+| DataFileReader | class | FileProcessingService | public | top-level |  | DataFileReader.Services | file-scoped | 5 | .\DataFileReader\Services\FileProcessingService.cs |
+| DataFileReader | class | MetricAggregator | public | top-level |  | DataFileReader.Services | file-scoped | 4 | .\DataFileReader\Services\MetricAggregator.cs |
+| DataFileReader | class | SqlHealthMetricsMaintenanceService | public | top-level |  | DataFileReader.Services | file-scoped | 4 | .\DataFileReader\Services\SqlHealthMetricsMaintenanceService.cs |
+| DataFileReader | class | SqlHealthMetricWriter | public | top-level |  | DataFileReader.Services | file-scoped | 4 | .\DataFileReader\Services\SqlHealthMetricWriter.cs |
+| DataFileReader | class | SqlMetricAggregationWriter | public | top-level |  | DataFileReader.Services | file-scoped | 4 | .\DataFileReader\Services\SqlMetricAggregationWriter.cs |
+| DataFileReader | class | SqlMetricCatalogRepository | public | top-level |  | DataFileReader.Services | file-scoped | 5 | .\DataFileReader\Services\SqlMetricCatalogRepository.cs |
+| DataFileReader | class | SqlProcessedFileRegistry | public | top-level |  | DataFileReader.Services | file-scoped | 4 | .\DataFileReader\Services\SqlProcessedFileRegistry.cs |
+| DataFileReader | interface | IHealthMetricsMaintenanceService | public | top-level |  | DataFileReader.Services | file-scoped | 2 | .\DataFileReader\Services\IHealthMetricsMaintenanceService.cs |
+| DataFileReader | interface | IHealthMetricWriter | public | top-level |  | DataFileReader.Services | file-scoped | 4 | .\DataFileReader\Services\IHealthMetricWriter.cs |
+| DataFileReader | interface | IMetricAggregationWriter | public | top-level |  | DataFileReader.Services | file-scoped | 2 | .\DataFileReader\Services\IMetricAggregationWriter.cs |
+| DataFileReader | interface | IMetricCatalogRepository | public | top-level |  | DataFileReader.Services | file-scoped | 2 | .\DataFileReader\Services\IMetricCatalogRepository.cs |
+| DataFileReader | interface | IProcessedFileRegistry | public | top-level |  | DataFileReader.Services | file-scoped | 2 | .\DataFileReader\Services\IProcessedFileRegistry.cs |
+| DataFileReader | record | FileProcessingResult | public | top-level |  | DataFileReader.Services | file-scoped | 2 | .\DataFileReader\Services\FileProcessingResult.cs |
+| DataFileReader.Tests | class | ArchitectureGuardrailTests | public | top-level |  | DataFileReader.Tests | file-scoped | 4 | .\DataFileReader.Tests\ArchitectureGuardrailTests.cs |
+| DataFileReader.Tests | class | CanonicalMetricMappingTests | public | top-level |  | DataFileReader.Tests | file-scoped | 4 | .\DataFileReader.Tests\CanonicalMetricMappingTests.cs |
+| DataFileReader.Tests | class | FileProcessingServiceTests | public | top-level |  | DataFileReader.Tests | file-scoped | 6 | .\DataFileReader.Tests\FileProcessingServiceTests.cs |
+| DataFileReader.Tests | class | HierarchyRefValTests | public | top-level |  | DataFileReader.Tests | file-scoped | 6 | .\DataFileReader.Tests\HierarchyRefValTests.cs |
+| DataFileReader.Tests | class | MetricAggregatorTests | public | top-level |  | DataFileReader.Tests | file-scoped | 5 | .\DataFileReader.Tests\MetricAggregatorTests.cs |
+| DataFileReader.Tests | class | ShadowValidateSamsungHealthCsvTests | public | top-level |  | DataFileReader.Tests | file-scoped | 4 | .\DataFileReader.Tests\ShadowValidateSamsungHealthCsvTests.cs |
+| DataVisualiser | class | App | public | top-level |  | DataVisualiser | file-scoped | 10 | .\DataVisualiser\App.xaml.cs |
+| DataVisualiser | class | MainWindow | public | top-level |  | DataVisualiser | file-scoped | 7 | .\DataVisualiser\MainWindow.xaml.cs |
+| DataVisualiser | class | ChartComputationEngine | public | top-level |  | DataVisualiser.Core.Computation | file-scoped | 6 | .\DataVisualiser\Core\Computation\ChartComputationEngine.cs |
+| DataVisualiser | class | ChartComputationResult | public | top-level |  | DataVisualiser.Core.Computation.Results | file-scoped | 4 | .\DataVisualiser\Core\Computation\Results\ChartComputationResult.cs |
+| DataVisualiser | class | SeriesResult | public | top-level |  | DataVisualiser.Core.Computation.Results | file-scoped | 2 | .\DataVisualiser\Core\Computation\Results\SeriesResult.cs |
+| DataVisualiser | class | CmsConfiguration | public | top-level |  | DataVisualiser.Core.Configuration | file-scoped | 2 | .\DataVisualiser\Core\Configuration\CmsConfiguration.cs |
+| DataVisualiser | class | StaticCmsRuntimeConfiguration | public | top-level |  | DataVisualiser.Core.Configuration | file-scoped | 2 | .\DataVisualiser\Core\Configuration\StaticCmsRuntimeConfiguration.cs |
+| DataVisualiser | interface | ICmsRuntimeConfiguration | public | top-level |  | DataVisualiser.Core.Configuration | file-scoped | 2 | .\DataVisualiser\Core\Configuration\ICmsRuntimeConfiguration.cs |
+| DataVisualiser | class | ChartRenderDefaults | public | top-level |  | DataVisualiser.Core.Configuration.Defaults | file-scoped | 2 | .\DataVisualiser\Core\Configuration\Defaults\ChartRenderDefaults.cs |
+| DataVisualiser | class | ComputationDefaults | public | top-level |  | DataVisualiser.Core.Configuration.Defaults | file-scoped | 2 | .\DataVisualiser\Core\Configuration\Defaults\ComputationDefaults.cs |
+| DataVisualiser | class | DataAccessDefaults | public | top-level |  | DataVisualiser.Core.Configuration.Defaults | file-scoped | 2 | .\DataVisualiser\Core\Configuration\Defaults\DataAccessDefaults.cs |
+| DataVisualiser | class | DistributionDefaults | public | top-level |  | DataVisualiser.Core.Configuration.Defaults | file-scoped | 2 | .\DataVisualiser\Core\Configuration\Defaults\DistributionDefaults.cs |
+| DataVisualiser | class | FrequencyShadingDefaults | public | top-level |  | DataVisualiser.Core.Configuration.Defaults | file-scoped | 4 | .\DataVisualiser\Core\Configuration\Defaults\FrequencyShadingDefaults.cs |
+| DataVisualiser | class | RenderingDefaults | public | top-level |  | DataVisualiser.Core.Configuration.Defaults | file-scoped | 4 | .\DataVisualiser\Core\Configuration\Defaults\RenderingDefaults.cs |
+| DataVisualiser | class | WeekdayTrendDefaults | public | top-level |  | DataVisualiser.Core.Configuration.Defaults | file-scoped | 4 | .\DataVisualiser\Core\Configuration\Defaults\WeekdayTrendDefaults.cs |
+| DataVisualiser | class | SqlQueryBuilder | public | top-level |  | DataVisualiser.Core.Data | file-scoped | 6 | .\DataVisualiser\Core\Data\SqlQueryBuilder.cs |
+| DataVisualiser | enum | SamplingMode | public | top-level |  | DataVisualiser.Core.Data | file-scoped | 2 | .\DataVisualiser\Core\Data\SamplingMode.cs |
+| DataVisualiser | interface | IMetricSelectionDataQueries | public | top-level |  | DataVisualiser.Core.Data | file-scoped | 4 | .\DataVisualiser\Core\Data\IMetricSelectionDataQueries.cs |
+| DataVisualiser | class | CmsDataService | public | top-level |  | DataVisualiser.Core.Data.Repositories | file-scoped | 8 | .\DataVisualiser\Core\Data\Repositories\CmsDataService.cs |
+| DataVisualiser | class | DataFetcher | public | top-level |  | DataVisualiser.Core.Data.Repositories | file-scoped | 5 | .\DataVisualiser\Core\Data\Repositories\DataFetcher.cs |
+| DataVisualiser | class | DataFetcherAdminQueries | internal | top-level |  | DataVisualiser.Core.Data.Repositories | file-scoped | 6 | .\DataVisualiser\Core\Data\Repositories\DataFetcherAdminQueries.cs |
+| DataVisualiser | class | DataFetcherDateRangeQueries | internal | top-level |  | DataVisualiser.Core.Data.Repositories | file-scoped | 7 | .\DataVisualiser\Core\Data\Repositories\DataFetcherDateRangeQueries.cs |
+| DataVisualiser | class | DataFetcherMetricCatalogQueries | internal | top-level |  | DataVisualiser.Core.Data.Repositories | file-scoped | 6 | .\DataVisualiser\Core\Data\Repositories\DataFetcherMetricCatalogQueries.cs |
+| DataVisualiser | class | DataFetcherMetricDataQueries | internal | top-level |  | DataVisualiser.Core.Data.Repositories | file-scoped | 7 | .\DataVisualiser\Core\Data\Repositories\DataFetcherMetricDataQueries.cs |
+| DataVisualiser | class | DataFetcherQueryGroup | internal | top-level |  | DataVisualiser.Core.Data.Repositories | file-scoped | 4 | .\DataVisualiser\Core\Data\Repositories\DataFetcherQueryGroup.cs |
+| DataVisualiser | class | ChartCumulativeSeriesBuilder | internal | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\ChartCumulativeSeriesBuilder.cs |
+| DataVisualiser | class | ChartDataContext | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\ChartDataContext.cs |
+| DataVisualiser | class | ChartDataContextBuilder | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\ChartDataContextBuilder.cs |
+| DataVisualiser | class | ChartDataSeriesPreparationHelper | internal | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\ChartDataSeriesPreparationHelper.cs |
+| DataVisualiser | class | ChartRenderingOrchestrator | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 14 | .\DataVisualiser\Core\Orchestration\ChartRenderingOrchestrator.cs |
+| DataVisualiser | class | ChartUpdateCoordinator | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 19 | .\DataVisualiser\Core\Orchestration\ChartUpdateCoordinator.cs |
+| DataVisualiser | class | ChartYAxisDataBuilder | internal | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 7 | .\DataVisualiser\Core\Orchestration\ChartYAxisDataBuilder.cs |
+| DataVisualiser | class | StrategySelectionService | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\StrategySelectionService.cs |
+| DataVisualiser | class | WeekdayTrendChartUpdateCoordinator | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\WeekdayTrendChartUpdateCoordinator.cs |
+| DataVisualiser | record | MetricLoadRequest | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MetricLoadRequest.cs |
+| DataVisualiser | class | DistributionChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\DistributionCharts\DistributionChartOrchestrationPipeline.cs |
+| DataVisualiser | class | DistributionChartPreparationStage | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\DistributionCharts\DistributionChartPreparationStage.cs |
+| DataVisualiser | class | DistributionChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\DistributionCharts\DistributionChartRenderInvocationStage.cs |
+| DataVisualiser | interface | IDistributionChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\DistributionCharts\IDistributionChartOrchestrationPipeline.cs |
+| DataVisualiser | interface | IDistributionChartPreparationStage | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 9 | .\DataVisualiser\Core\Orchestration\DistributionCharts\IDistributionChartOrchestrationPipeline.cs |
+| DataVisualiser | interface | IDistributionChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 14 | .\DataVisualiser\Core\Orchestration\DistributionCharts\IDistributionChartOrchestrationPipeline.cs |
+| DataVisualiser | record | DistributionChartOrchestrationRequest | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 7 | .\DataVisualiser\Core\Orchestration\DistributionCharts\DistributionChartOrchestrationRequest.cs |
+| DataVisualiser | record | DistributionChartPreparedData | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 12 | .\DataVisualiser\Core\Orchestration\DistributionCharts\DistributionChartOrchestrationRequest.cs |
+| DataVisualiser | class | MainChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartOrchestrationPipeline.cs |
+| DataVisualiser | class | MainChartPreparationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartPreparationStage.cs |
+| DataVisualiser | class | MainChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartRenderInvocationStage.cs |
+| DataVisualiser | class | MainChartStrategySelectionStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartStrategySelectionStage.cs |
+| DataVisualiser | interface | IMainChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MainChart\IMainChartOrchestrationPipeline.cs |
+| DataVisualiser | interface | IMainChartPreparationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 9 | .\DataVisualiser\Core\Orchestration\MainChart\IMainChartOrchestrationPipeline.cs |
+| DataVisualiser | interface | IMainChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 19 | .\DataVisualiser\Core\Orchestration\MainChart\IMainChartOrchestrationPipeline.cs |
+| DataVisualiser | interface | IMainChartStrategySelectionStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 14 | .\DataVisualiser\Core\Orchestration\MainChart\IMainChartOrchestrationPipeline.cs |
+| DataVisualiser | record | MainChartPreparedData | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartPreparedData.cs |
+| DataVisualiser | record | MainChartRenderRequest | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 14 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartPreparedData.cs |
+| DataVisualiser | record | MainChartStrategyPlan | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 24 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartPreparedData.cs |
+| DataVisualiser | class | SecondaryMetricChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartOrchestrationPipeline.cs |
+| DataVisualiser | class | SecondaryMetricChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartRenderInvocationStage.cs |
+| DataVisualiser | class | SecondaryMetricChartStrategySelectionStage | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartStrategySelectionStage.cs |
+| DataVisualiser | enum | SecondaryMetricChartRoute | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartRenderRequest.cs |
+| DataVisualiser | interface | ISecondaryMetricChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\ISecondaryMetricChartOrchestrationPipeline.cs |
+| DataVisualiser | interface | ISecondaryMetricChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 14 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\ISecondaryMetricChartOrchestrationPipeline.cs |
+| DataVisualiser | interface | ISecondaryMetricChartStrategySelectionStage | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 9 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\ISecondaryMetricChartOrchestrationPipeline.cs |
+| DataVisualiser | record | SecondaryMetricChartRenderRequest | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 12 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartRenderRequest.cs |
+| DataVisualiser | record | SecondaryMetricChartStrategyPlan | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 17 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartRenderRequest.cs |
+| DataVisualiser | class | ChartRenderModel | public | top-level |  | DataVisualiser.Core.Rendering | file-scoped | 6 | .\DataVisualiser\Core\Rendering\ChartRenderModel.cs |
+| DataVisualiser | class | RenderingQualificationProbeSupport | internal | top-level |  | DataVisualiser.Core.Rendering | file-scoped | 5 | .\DataVisualiser\Core\Rendering\RenderingQualificationProbeSupport.cs |
+| DataVisualiser | enum | ChartSeriesMode | public | top-level |  | DataVisualiser.Core.Rendering | file-scoped | 2 | .\DataVisualiser\Core\Rendering\ChartSeriesMode.cs |
+| DataVisualiser | class | BarPieBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 4 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | class | BarPieRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 6 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingContract.cs |
+| DataVisualiser | class | BarPieRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingQualificationProbe.cs |
+| DataVisualiser | class | BarPieRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingRouteResolver.cs |
+| DataVisualiser | enum | BarPieRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 18 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | enum | BarPieRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 12 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | interface | IBarPieRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 4 | .\DataVisualiser\Core\Rendering\BarPie\IBarPieRenderingContract.cs |
+| DataVisualiser | record | BarPieBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 4 | .\DataVisualiser\Core\Rendering\BarPie\BarPieBackendQualification.cs |
+| DataVisualiser | record | BarPieChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 28 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | record | BarPieChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 24 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | record | BarPieRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingCapabilities.cs |
+| DataVisualiser | record | BarPieRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingQualificationProbeResult.cs |
+| DataVisualiser | class | CartesianMetricChartRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 9 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | class | CartesianMetricChartRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 4 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingQualificationProbe.cs |
+| DataVisualiser | class | CartesianMetricChartRenderInvoker | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 4 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderInvoker.cs |
+| DataVisualiser | enum | CartesianMetricBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 112 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | enum | CartesianMetricChartRoute | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 148 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | enum | CartesianMetricRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 141 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | interface | ICartesianMetricChartRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 2 | .\DataVisualiser\Core\Rendering\CartesianMetrics\ICartesianMetricChartRenderingContract.cs |
+| DataVisualiser | interface | ICartesianMetricChartRenderInvoker | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 2 | .\DataVisualiser\Core\Rendering\CartesianMetrics\ICartesianMetricChartRenderInvoker.cs |
+| DataVisualiser | record | CartesianMetricBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 119 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 155 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricChartRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 193 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingQualificationProbe.cs |
+| DataVisualiser | record | CartesianMetricChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 159 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 131 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | class | DistributionBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 217 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | class | DistributionRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 15 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | class | DistributionRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingQualificationProbe.cs |
+| DataVisualiser | class | DistributionRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 259 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | enum | DistributionRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 246 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | enum | DistributionRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 253 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | interface | IDistributionRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Distribution\IDistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 224 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 281 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 269 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 236 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 132 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingQualificationProbe.cs |
+| DataVisualiser | class | ChartRenderEngine | public | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 12 | .\DataVisualiser\Core\Rendering\Engines\ChartRenderEngine.cs |
+| DataVisualiser | class | DistributionPolarRenderingService | public | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 12 | .\DataVisualiser\Core\Rendering\Engines\DistributionPolarRenderingService.cs |
+| DataVisualiser | class | FrequencyRendererCore | internal | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 9 | .\DataVisualiser\Core\Rendering\Engines\FrequencyRendererCore.cs |
+| DataVisualiser | class | HourlyFrequencyRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Engines\HourlyFrequencyRenderer.cs |
+| DataVisualiser | class | WeekdayTrendRenderingService | public | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 15 | .\DataVisualiser\Core\Rendering\Engines\WeekdayTrendRenderingService.cs |
+| DataVisualiser | class | WeeklyFrequencyRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Engines\WeeklyFrequencyRenderer.cs |
+| DataVisualiser | class | ChartHelper | public | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 10 | .\DataVisualiser\Core\Rendering\Helpers\ChartHelper.cs |
+| DataVisualiser | class | ChartRenderGate | public | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Helpers\ChartRenderGate.cs |
+| DataVisualiser | class | ChartSeriesLabelFormatter | internal | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Helpers\ChartSeriesLabelFormatter.cs |
+| DataVisualiser | class | ChartSeriesMaterializer | internal | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 8 | .\DataVisualiser\Core\Rendering\Helpers\ChartSeriesMaterializer.cs |
+| DataVisualiser | class | ChartTooltipFormattingHelper | internal | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 8 | .\DataVisualiser\Core\Rendering\Helpers\ChartTooltipFormattingHelper.cs |
+| DataVisualiser | class | ColourPalette | public | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Helpers\ColourPalette.cs |
+| DataVisualiser | class | DistributionAxisCoordinator | internal | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Helpers\DistributionAxisCoordinator.cs |
+| DataVisualiser | class | DistributionDebugSummaryLogger | internal | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Helpers\DistributionDebugSummaryLogger.cs |
+| DataVisualiser | class | DistributionSeriesBuilder | internal | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 7 | .\DataVisualiser\Core\Rendering\Helpers\DistributionSeriesBuilder.cs |
+| DataVisualiser | class | SeriesAlignmentHelper | public | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Helpers\SeriesAlignmentHelper.cs |
+| DataVisualiser | class | TransformChartAxisCalculator | public | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 17 | .\DataVisualiser\Core\Rendering\Helpers\TransformChartAxisCalculator.cs |
+| DataVisualiser | class | TransformChartAxisLayout | public | top-level |  | DataVisualiser.Core.Rendering.Helpers | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Helpers\TransformChartAxisCalculator.cs |
+| DataVisualiser | class | BucketDistributionTooltip | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 14 | .\DataVisualiser\Core\Rendering\Interaction\BucketDistributionTooltip.cs |
+| DataVisualiser | class | ChartInteractionVisualHelper | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 9 | .\DataVisualiser\Core\Rendering\Interaction\ChartInteractionVisualHelper.cs |
+| DataVisualiser | class | ChartStackingTooltipState | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 7 | .\DataVisualiser\Core\Rendering\Interaction\ChartStackingTooltipState.cs |
+| DataVisualiser | class | ChartTooltipManager | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 10 | .\DataVisualiser\Core\Rendering\Interaction\ChartTooltipManager.cs |
+| DataVisualiser | class | ChartTooltipParticipationCalculator | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Interaction\ChartTooltipParticipationCalculator.cs |
+| DataVisualiser | class | DistributionPolarProjectionTooltip | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 15 | .\DataVisualiser\Core\Rendering\Interaction\DistributionPolarProjectionTooltip.cs |
+| DataVisualiser | class | HourlyDistributionTooltip | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Interaction\HourlyDistributionTooltip.cs |
+| DataVisualiser | class | SimpleChartTooltip | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 13 | .\DataVisualiser\Core\Rendering\Interaction\SimpleChartTooltip.cs |
+| DataVisualiser | class | WeeklyDistributionTooltip | public | top-level |  | DataVisualiser.Core.Rendering.Interaction | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Interaction\WeeklyDistributionTooltip.cs |
+| DataVisualiser | class | BucketIntervalRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 8 | .\DataVisualiser\Core\Rendering\Shading\BucketIntervalRenderer.cs |
+| DataVisualiser | class | FrequencyBasedShadingStrategy | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Shading\FrequencyBasedShadingStrategy.cs |
+| DataVisualiser | class | FrequencyShadingRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 7 | .\DataVisualiser\Core\Rendering\Shading\FrequencyShadingRenderer.cs |
+| DataVisualiser | class | HourlyIntervalRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Shading\HourlyIntervalRenderer.cs |
+| DataVisualiser | class | IntervalShadingContext | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Shading\IntervalShadingContext.cs |
+| DataVisualiser | class | WeeklyIntervalRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Shading\WeeklyIntervalRenderer.cs |
+| DataVisualiser | interface | IFrequencyShadingRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Shading\IFrequencyShadingRenderer.cs |
+| DataVisualiser | interface | IIntervalShadingStrategy | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Shading\IIntervalShadingStrategy.cs |
+| DataVisualiser | class | TransformChartRenderInvoker | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Transform\TransformChartRenderInvoker.cs |
+| DataVisualiser | class | TransformRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingContract.cs |
+| DataVisualiser | class | TransformRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingQualificationProbe.cs |
+| DataVisualiser | enum | TransformBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 7 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | enum | TransformRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 17 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | enum | TransformRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 12 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | interface | ITransformChartRenderInvoker | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\ITransformChartRenderInvoker.cs |
+| DataVisualiser | interface | ITransformRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\ITransformRenderingContract.cs |
+| DataVisualiser | record | TransformBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\TransformBackendQualification.cs |
+| DataVisualiser | record | TransformChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 33 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | record | TransformChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 24 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | record | TransformRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingCapabilities.cs |
+| DataVisualiser | record | TransformRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingQualificationProbeResult.cs |
+| DataVisualiser | class | WeekdayTrendBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 128 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | class | WeekdayTrendRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 8 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | class | WeekdayTrendRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 5 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingQualificationProbe.cs |
+| DataVisualiser | class | WeekdayTrendRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 167 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | enum | WeekdayTrendRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 155 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | enum | WeekdayTrendRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 160 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | interface | IWeekdayTrendRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 2 | .\DataVisualiser\Core\Rendering\WeekdayTrend\IWeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 135 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 185 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 180 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 146 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 128 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingQualificationProbe.cs |
+| DataVisualiser | class | BaseDistributionService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 17 | .\DataVisualiser\Core\Services\BaseDistributionService.cs |
+| DataVisualiser | class | DataPreparationService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 8 | .\DataVisualiser\Core\Services\DataPreparationService.cs |
+| DataVisualiser | class | DistributionComputationHelper | internal | top-level |  | DataVisualiser.Core.Services | file-scoped | 6 | .\DataVisualiser\Core\Services\DistributionComputationHelper.cs |
+| DataVisualiser | class | DistributionRangeResultBuilder | internal | top-level |  | DataVisualiser.Core.Services | file-scoped | 5 | .\DataVisualiser\Core\Services\DistributionRangeResultBuilder.cs |
+| DataVisualiser | class | FrequencyShadingCalculator | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 5 | .\DataVisualiser\Core\Services\FrequencyShadingCalculator.cs |
+| DataVisualiser | class | HourlyDistributionService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 11 | .\DataVisualiser\Core\Services\HourlyDistributionService.cs |
+| DataVisualiser | class | MessageBoxUserNotificationService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 5 | .\DataVisualiser\Core\Services\MessageBoxUserNotificationService.cs |
+| DataVisualiser | class | MetricSelectionService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 10 | .\DataVisualiser\Core\Services\MetricSelectionService.cs |
+| DataVisualiser | class | SmoothingService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 6 | .\DataVisualiser\Core\Services\SmoothingService.cs |
+| DataVisualiser | class | TimeBucketAggregationHelper | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 5 | .\DataVisualiser\Core\Services\TimeBucketAggregationHelper.cs |
+| DataVisualiser | class | TimelineService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 5 | .\DataVisualiser\Core\Services\TimelineService.cs |
+| DataVisualiser | class | UnitResolutionService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 6 | .\DataVisualiser\Core\Services\UnitResolutionService.cs |
+| DataVisualiser | class | WeeklyDistributionService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 11 | .\DataVisualiser\Core\Services\WeeklyDistributionService.cs |
+| DataVisualiser | interface | IIntervalRenderer | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 5 | .\DataVisualiser\Core\Services\IIntervalRenderer.cs |
+| DataVisualiser | record | FrequencyShadingData | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 4 | .\DataVisualiser\Core\Services\FrequencyShadingData.cs |
+| DataVisualiser | class | HourlyDistributionConfiguration | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Services\Abstractions\HourlyDistributionConfiguration.cs |
+| DataVisualiser | class | TimelineResult | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Services\Abstractions\TimelineResult.cs |
+| DataVisualiser | class | WeeklyDistributionConfiguration | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Services\Abstractions\WeeklyDistributionConfiguration.cs |
+| DataVisualiser | interface | IDataPreparationService | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 5 | .\DataVisualiser\Core\Services\Abstractions\IDataPreparationService.cs |
+| DataVisualiser | interface | IDistributionConfiguration | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Services\Abstractions\IDistributionConfiguration.cs |
+| DataVisualiser | interface | IDistributionService | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 7 | .\DataVisualiser\Core\Services\Abstractions\IDistributionService.cs |
+| DataVisualiser | interface | ISmoothingService | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Services\Abstractions\ISmoothingService.cs |
+| DataVisualiser | interface | ITimelineService | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 2 | .\DataVisualiser\Core\Services\Abstractions\ITimelineService.cs |
+| DataVisualiser | interface | IUnitResolutionService | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 5 | .\DataVisualiser\Core\Services\Abstractions\IUnitResolutionService.cs |
+| DataVisualiser | interface | IUserNotificationService | public | top-level |  | DataVisualiser.Core.Services.Abstractions | file-scoped | 2 | .\DataVisualiser\Core\Services\Abstractions\IUserNotificationService.cs |
+| DataVisualiser | class | StrategyCutOverService | public | top-level |  | DataVisualiser.Core.Strategies | file-scoped | 11 | .\DataVisualiser\Core\Strategies\StrategyCutOverService.cs |
+| DataVisualiser | class | StrategyParityValidationService | internal | top-level |  | DataVisualiser.Core.Strategies | file-scoped | 7 | .\DataVisualiser\Core\Strategies\StrategyParityValidationService.cs |
+| DataVisualiser | class | StrategyTypeMetadata | public | top-level |  | DataVisualiser.Core.Strategies | file-scoped | 5 | .\DataVisualiser\Core\Strategies\StrategyTypeMetadata.cs |
+| DataVisualiser | class | StrategyCreationParameters | public | top-level |  | DataVisualiser.Core.Strategies.Abstractions | file-scoped | 5 | .\DataVisualiser\Core\Strategies\Abstractions\StrategyCreationParameters.cs |
+| DataVisualiser | enum | StrategyType | public | top-level |  | DataVisualiser.Core.Strategies.Abstractions | file-scoped | 2 | .\DataVisualiser\Core\Strategies\Abstractions\StrategyType.cs |
+| DataVisualiser | interface | IChartComputationStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Strategies\Abstractions\IChartComputationStrategy.cs |
+| DataVisualiser | interface | IStrategyCutOverService | public | top-level |  | DataVisualiser.Core.Strategies.Abstractions | file-scoped | 5 | .\DataVisualiser\Core\Strategies\Abstractions\IStrategyCutOverService.cs |
+| DataVisualiser | interface | IStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Strategies\Abstractions\IStrategyFactory.cs |
+| DataVisualiser | interface | IWeekdayTrendResultProvider | public | top-level |  | DataVisualiser.Core.Strategies.Abstractions | file-scoped | 4 | .\DataVisualiser\Core\Strategies\Abstractions\IWeekdayTrendResultProvider.cs |
+| DataVisualiser | class | CombinedMetricStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Factories\CombinedMetricStrategyFactory.cs |
+| DataVisualiser | class | DifferenceStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 8 | .\DataVisualiser\Core\Strategies\Factories\DifferenceStrategyFactory.cs |
+| DataVisualiser | class | HourlyDistributionStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Factories\HourlyDistributionStrategyFactory.cs |
+| DataVisualiser | class | MultiMetricStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 7 | .\DataVisualiser\Core\Strategies\Factories\MultiMetricStrategyFactory.cs |
+| DataVisualiser | class | NormalizedStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 8 | .\DataVisualiser\Core\Strategies\Factories\NormalizedStrategyFactory.cs |
+| DataVisualiser | class | RatioStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 8 | .\DataVisualiser\Core\Strategies\Factories\RatioStrategyFactory.cs |
+| DataVisualiser | class | SingleMetricStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Factories\SingleMetricStrategyFactory.cs |
+| DataVisualiser | class | StrategyFactoryBase | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 5 | .\DataVisualiser\Core\Strategies\Factories\StrategyFactoryBase.cs |
+| DataVisualiser | class | WeekdayTrendStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 8 | .\DataVisualiser\Core\Strategies\Factories\WeekdayTrendStrategyFactory.cs |
+| DataVisualiser | class | WeeklyDistributionStrategyFactory | public | top-level |  | DataVisualiser.Core.Strategies.Factories | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Factories\WeeklyDistributionStrategyFactory.cs |
+| DataVisualiser | class | BucketDistributionStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 9 | .\DataVisualiser\Core\Strategies\Implementations\BucketDistributionStrategy.cs |
+| DataVisualiser | class | CmsBucketDistributionStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 9 | .\DataVisualiser\Core\Strategies\Implementations\CmsBucketDistributionStrategy.cs |
+| DataVisualiser | class | CmsHourlyDistributionStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Implementations\CmsHourlyDistributionStrategy.cs |
+| DataVisualiser | class | CmsWeeklyDistributionStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Implementations\CmsWeeklyDistributionStrategy.cs |
+| DataVisualiser | class | CombinedMetricStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 11 | .\DataVisualiser\Core\Strategies\Implementations\CombinedMetricStrategy.cs |
+| DataVisualiser | class | DifferenceStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 11 | .\DataVisualiser\Core\Strategies\Implementations\DifferenceStrategy.cs |
+| DataVisualiser | class | HourlyDistributionStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Implementations\HourlyDistributionStrategy.cs |
+| DataVisualiser | class | MultiMetricStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 11 | .\DataVisualiser\Core\Strategies\Implementations\MultiMetricStrategy.cs |
+| DataVisualiser | class | NormalizedStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 12 | .\DataVisualiser\Core\Strategies\Implementations\NormalizedStrategy.cs |
+| DataVisualiser | class | RatioStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 11 | .\DataVisualiser\Core\Strategies\Implementations\RatioStrategy.cs |
+| DataVisualiser | class | SingleMetricStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 12 | .\DataVisualiser\Core\Strategies\Implementations\SingleMetricStrategy.cs |
+| DataVisualiser | class | TransformResultStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 10 | .\DataVisualiser\Core\Strategies\Implementations\TransformResultStrategy.cs |
+| DataVisualiser | class | WeekdayTrendComputationStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 8 | .\DataVisualiser\Core\Strategies\Implementations\WeekdayTrendComputationStrategy.cs |
+| DataVisualiser | class | WeekdayTrendStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 7 | .\DataVisualiser\Core\Strategies\Implementations\WeekdayTrendStrategy.cs |
+| DataVisualiser | class | WeeklyDistributionStrategy | public | top-level |  | DataVisualiser.Core.Strategies.Implementations | file-scoped | 6 | .\DataVisualiser\Core\Strategies\Implementations\WeeklyDistributionStrategy.cs |
+| DataVisualiser | class | NullStrategyReachabilityProbe | public | top-level |  | DataVisualiser.Core.Strategies.Reachability | file-scoped | 2 | .\DataVisualiser\Core\Strategies\Reachability\NullStrategyReachabilityProbe.cs |
+| DataVisualiser | class | StrategyCmsDecisionEvaluator | public | top-level |  | DataVisualiser.Core.Strategies.Reachability | file-scoped | 7 | .\DataVisualiser\Core\Strategies\Reachability\StrategyCmsDecisionEvaluator.cs |
+| DataVisualiser | class | StrategyReachabilityStoreProbe | public | top-level |  | DataVisualiser.Core.Strategies.Reachability | file-scoped | 5 | .\DataVisualiser\Core\Strategies\Reachability\StrategyReachabilityStoreProbe.cs |
+| DataVisualiser | interface | IStrategyReachabilityProbe | public | top-level |  | DataVisualiser.Core.Strategies.Reachability | file-scoped | 2 | .\DataVisualiser\Core\Strategies\Reachability\IStrategyReachabilityProbe.cs |
+| DataVisualiser | record | StrategyCmsDecision | public | top-level |  | DataVisualiser.Core.Strategies.Reachability | file-scoped | 2 | .\DataVisualiser\Core\Strategies\Reachability\StrategyCmsDecision.cs |
+| DataVisualiser | record | StrategyReachabilityRecord | public | top-level |  | DataVisualiser.Core.Strategies.Reachability | file-scoped | 5 | .\DataVisualiser\Core\Strategies\Reachability\StrategyReachabilityRecord.cs |
+| DataVisualiser | class | TransformComputationResult | public | top-level |  | DataVisualiser.Core.Transforms | file-scoped | 4 | .\DataVisualiser\Core\Transforms\TransformComputationResult.cs |
+| DataVisualiser | class | TransformComputationService | public | top-level |  | DataVisualiser.Core.Transforms | file-scoped | 8 | .\DataVisualiser\Core\Transforms\TransformComputationService.cs |
+| DataVisualiser | class | TransformExpressionEvaluator | public | top-level |  | DataVisualiser.Core.Transforms | file-scoped | 7 | .\DataVisualiser\Core\Transforms\TransformExpressionEvaluator.cs |
+| DataVisualiser | class | TransformExpression | public | top-level |  | DataVisualiser.Core.Transforms.Expressions | file-scoped | 4 | .\DataVisualiser\Core\Transforms\Expressions\TransformExpression.cs |
+| DataVisualiser | class | TransformExpressionBuilder | public | top-level |  | DataVisualiser.Core.Transforms.Expressions | file-scoped | 4 | .\DataVisualiser\Core\Transforms\Expressions\TransformExpressionBuilder.cs |
+| DataVisualiser | class | TransformOperand | public | top-level |  | DataVisualiser.Core.Transforms.Expressions | file-scoped | 2 | .\DataVisualiser\Core\Transforms\Expressions\TransformOperand.cs |
+| DataVisualiser | class | BinaryOperatorRegistry | public | top-level |  | DataVisualiser.Core.Transforms.Operations | file-scoped | 2 | .\DataVisualiser\Core\Transforms\Operations\BinaryOperatorRegistry.cs |
+| DataVisualiser | class | BinaryOperators | public | top-level |  | DataVisualiser.Core.Transforms.Operations | file-scoped | 2 | .\DataVisualiser\Core\Transforms\Operations\BinaryOperators.cs |
+| DataVisualiser | class | TransformOperation | public | top-level |  | DataVisualiser.Core.Transforms.Operations | file-scoped | 2 | .\DataVisualiser\Core\Transforms\Operations\TransformOperation.cs |
+| DataVisualiser | class | TransformOperationRegistry | public | top-level |  | DataVisualiser.Core.Transforms.Operations | file-scoped | 2 | .\DataVisualiser\Core\Transforms\Operations\TransformOperationRegistry.cs |
+| DataVisualiser | class | UnaryOperators | public | top-level |  | DataVisualiser.Core.Transforms.Operations | file-scoped | 2 | .\DataVisualiser\Core\Transforms\Operations\UnaryOperators.cs |
+| DataVisualiser | class | ParityResult | public | top-level |  | DataVisualiser.Core.Validation | file-scoped | 2 | .\DataVisualiser\Core\Validation\ParityResult.cs |
+| DataVisualiser | class | ParityValidationService | public | top-level |  | DataVisualiser.Core.Validation | file-scoped | 6 | .\DataVisualiser\Core\Validation\ParityValidationService.cs |
+| DataVisualiser | class | DataLoadValidator | public | top-level |  | DataVisualiser.Core.Validation.DataLoad | file-scoped | 4 | .\DataVisualiser\Core\Validation\DataLoad\DataLoadValidator.cs |
+| DataVisualiser | class | MetricDataValidationHelper | public | top-level |  | DataVisualiser.Core.Validation.DataLoad | file-scoped | 5 | .\DataVisualiser\Core\Validation\DataLoad\MetricDataValidationHelper.cs |
+| DataVisualiser | class | BucketDistributionParityHarness | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 6 | .\DataVisualiser\Core\Validation\Parity\BucketDistributionParityHarness.cs |
+| DataVisualiser | class | ChartComputationParityHarness | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 2 | .\DataVisualiser\Core\Validation\Parity\ChartComputationParityHarness.cs |
+| DataVisualiser | class | CmsExecutionResult | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 2 | .\DataVisualiser\Core\Validation\Parity\CmsExecutionResult.cs |
+| DataVisualiser | class | CombinedMetricParityHarness | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 4 | .\DataVisualiser\Core\Validation\Parity\CombinedMetricParityHarness.cs |
+| DataVisualiser | class | HourlyDistributionParityHarness | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 4 | .\DataVisualiser\Core\Validation\Parity\HourlyDistributionParityHarness.cs |
+| DataVisualiser | class | LegacyExecutionResult | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 2 | .\DataVisualiser\Core\Validation\Parity\LegacyExecutionResult.cs |
+| DataVisualiser | class | ParityFailure | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 15 | .\DataVisualiser\Core\Validation\Parity\ParityTypes.cs |
+| DataVisualiser | class | ParityPoint | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 21 | .\DataVisualiser\Core\Validation\Parity\ParityTypes.cs |
+| DataVisualiser | class | ParityResult | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 2 | .\DataVisualiser\Core\Validation\Parity\ParityResult.cs |
+| DataVisualiser | class | ParityResultAdapter | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 4 | .\DataVisualiser\Core\Validation\Parity\ParityResultAdapter.cs |
+| DataVisualiser | class | ParitySeries | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 27 | .\DataVisualiser\Core\Validation\Parity\ParityTypes.cs |
+| DataVisualiser | class | ParityTolerance | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 33 | .\DataVisualiser\Core\Validation\Parity\ParityTypes.cs |
+| DataVisualiser | class | StrategyParityContext | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 2 | .\DataVisualiser\Core\Validation\Parity\StrategyParityContext.cs |
+| DataVisualiser | class | WeeklyDistributionParityHarness | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 4 | .\DataVisualiser\Core\Validation\Parity\WeeklyDistributionParityHarness.cs |
+| DataVisualiser | enum | ParityLayer | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 2 | .\DataVisualiser\Core\Validation\Parity\ParityTypes.cs |
+| DataVisualiser | enum | ParityMode | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 9 | .\DataVisualiser\Core\Validation\Parity\ParityTypes.cs |
+| DataVisualiser | interface | IStrategyParityHarness | public | top-level |  | DataVisualiser.Core.Validation.Parity | file-scoped | 4 | .\DataVisualiser\Core\Validation\Parity\IStrategyParityHarness.cs |
+| DataVisualiser | class | ErrorEventArgs | public | top-level |  | DataVisualiser.Shared | file-scoped | 2 | .\DataVisualiser\Shared\ErrorEventArgs.cs |
+| DataVisualiser | class | CmsConversionHelper | public | top-level |  | DataVisualiser.Shared.Helpers | file-scoped | 5 | .\DataVisualiser\Shared\Helpers\CmsConversionHelper.cs |
+| DataVisualiser | class | FrequencyBinningHelper | public | top-level |  | DataVisualiser.Shared.Helpers | file-scoped | 2 | .\DataVisualiser\Shared\Helpers\FrequencyBinningHelper.cs |
+| DataVisualiser | class | MathHelper | public | top-level |  | DataVisualiser.Shared.Helpers | file-scoped | 6 | .\DataVisualiser\Shared\Helpers\MathHelper.cs |
+| DataVisualiser | class | MetricDataSeriesHelper | internal | top-level |  | DataVisualiser.Shared.Helpers | file-scoped | 4 | .\DataVisualiser\Shared\Helpers\MetricDataSeriesHelper.cs |
+| DataVisualiser | class | StrategyComputationHelper | public | top-level |  | DataVisualiser.Shared.Helpers | file-scoped | 4 | .\DataVisualiser\Shared\Helpers\StrategyComputationHelper.cs |
+| DataVisualiser | class | TemporalIntervalHelper | internal | top-level |  | DataVisualiser.Shared.Helpers | file-scoped | 4 | .\DataVisualiser\Shared\Helpers\TemporalIntervalHelper.cs |
+| DataVisualiser | class | TimeSeriesSmoothingHelper | internal | top-level |  | DataVisualiser.Shared.Helpers | file-scoped | 4 | .\DataVisualiser\Shared\Helpers\TimeSeriesSmoothingHelper.cs |
+| DataVisualiser | class | BucketDistributionResult | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\BucketDistributionResult.cs |
+| DataVisualiser | class | DateRangeResult | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\DateRangeResult.cs |
+| DataVisualiser | class | DistributionRangeResult | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\DistributionRangeResult.cs |
+| DataVisualiser | class | HealthMetricsCountEntry | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\HealthMetricsCountEntry.cs |
+| DataVisualiser | class | MetricData | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\MetricData.cs |
+| DataVisualiser | class | SmoothedDataPoint | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\SmoothedDataPoint.cs |
+| DataVisualiser | class | WeekdayTrendPoint | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\WeekdayTrendPoint.cs |
+| DataVisualiser | class | WeekdayTrendResult | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\WeekdayTrendResult.cs |
+| DataVisualiser | class | WeekdayTrendSeries | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\WeekdayTrendSeries.cs |
+| DataVisualiser | class | WeeklyDistributionResult | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\WeeklyDistributionResult.cs |
+| DataVisualiser | enum | DistributionMode | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\DistributionMode.cs |
+| DataVisualiser | enum | NormalizationMode | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\NormalizationMode.cs |
+| DataVisualiser | enum | RecordToDayRatio | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\RecordToDayRatio.cs |
+| DataVisualiser | enum | TickInterval | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\TickInterval.cs |
+| DataVisualiser | record | MetricNameOption | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\MetricNameOption.cs |
+| DataVisualiser | record | MetricSeriesSelection | public | top-level |  | DataVisualiser.Shared.Models | file-scoped | 2 | .\DataVisualiser\Shared\Models\MetricSeriesSelection.cs |
+| DataVisualiser | class | ChartPresentationSpine | public | top-level |  | DataVisualiser.UI | file-scoped | 4 | .\DataVisualiser\UI\ChartPresentationSpine.cs |
+| DataVisualiser | class | ChartRenderingContextAdapter | public | top-level |  | DataVisualiser.UI | file-scoped | 5 | .\DataVisualiser\UI\ChartRenderingContextAdapter.cs |
+| DataVisualiser | class | ChartTabHost | public | top-level |  | DataVisualiser.UI | file-scoped | 8 | .\DataVisualiser\UI\ChartTabHost.xaml.cs |
+| DataVisualiser | class | MainChartsView | public | top-level |  | DataVisualiser.UI | file-scoped | 44 | .\DataVisualiser\UI\MainChartsView.xaml.cs |
+| DataVisualiser | class | MetricSelectionPanel | public | top-level |  | DataVisualiser.UI | file-scoped | 5 | .\DataVisualiser\UI\MetricSelectionPanel.xaml.cs |
+| DataVisualiser | class | WorkspaceHeaderPanel | public | top-level |  | DataVisualiser.UI | file-scoped | 4 | .\DataVisualiser\UI\WorkspaceHeaderPanel.xaml.cs |
+| DataVisualiser | class | WorkspaceTabHost | public | top-level |  | DataVisualiser.UI | file-scoped | 8 | .\DataVisualiser\UI\WorkspaceTabHost.xaml.cs |
+| DataVisualiser | interface | IChartRenderingContext | public | top-level |  | DataVisualiser.UI | file-scoped | 5 | .\DataVisualiser\UI\IChartRenderingContext.cs |
+| DataVisualiser | class | AdminEditableHealthMetricsCountEntry | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 6 | .\DataVisualiser\UI\Admin\AdminEditableHealthMetricsCountEntry.cs |
+| DataVisualiser | class | AdminMetricsManagerCoordinator | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 5 | .\DataVisualiser\UI\Admin\AdminMetricsManagerCoordinator.cs |
+| DataVisualiser | class | AdminMetricsManagerView | public | top-level |  | DataVisualiser.UI.Admin | file-scoped | 10 | .\DataVisualiser\UI\Admin\AdminMetricsManagerView.xaml.cs |
+| DataVisualiser | class | AdminSessionMilestoneRecorder | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 5 | .\DataVisualiser\UI\Admin\AdminSessionMilestoneRecorder.cs |
+| DataVisualiser | class | DataFetcherAdminMetricsRepository | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 5 | .\DataVisualiser\UI\Admin\DataFetcherAdminMetricsRepository.cs |
+| DataVisualiser | interface | IAdminMetricsRepository | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 4 | .\DataVisualiser\UI\Admin\IAdminMetricsRepository.cs |
+| DataVisualiser | record | AdminCountsLoadResult | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 161 | .\DataVisualiser\UI\Admin\AdminMetricsManagerCoordinator.cs |
+| DataVisualiser | record | AdminRowsChangedEventArgs | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 159 | .\DataVisualiser\UI\Admin\AdminMetricsManagerCoordinator.cs |
+| DataVisualiser | record | AdminSaveResult | internal | top-level |  | DataVisualiser.UI.Admin | file-scoped | 163 | .\DataVisualiser\UI\Admin\AdminMetricsManagerCoordinator.cs |
+| DataVisualiser | class | BarPieChartController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 8 | .\DataVisualiser\UI\Charts\Controllers\BarPieChartController.xaml.cs |
+| DataVisualiser | class | ChartPanelController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 11 | .\DataVisualiser\UI\Charts\Controllers\ChartPanelController.xaml.cs |
+| DataVisualiser | class | DiffRatioChartController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 11 | .\DataVisualiser\UI\Charts\Controllers\DiffRatioChartController.xaml.cs |
+| DataVisualiser | class | DistributionChartController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 9 | .\DataVisualiser\UI\Charts\Controllers\DistributionChartController.xaml.cs |
+| DataVisualiser | class | MainChartController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 13 | .\DataVisualiser\UI\Charts\Controllers\MainChartController.xaml.cs |
+| DataVisualiser | class | NormalizedChartController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 10 | .\DataVisualiser\UI\Charts\Controllers\NormalizedChartController.xaml.cs |
+| DataVisualiser | class | SyncfusionSunburstChartController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 18 | .\DataVisualiser\UI\Charts\Controllers\SyncfusionSunburstChartController.xaml.cs |
+| DataVisualiser | class | SyncfusionSunburstTooltipLine | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 42 | .\DataVisualiser\UI\Charts\Controllers\SyncfusionSunburstTooltipModel.cs |
+| DataVisualiser | class | SyncfusionSunburstTooltipModel | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 5 | .\DataVisualiser\UI\Charts\Controllers\SyncfusionSunburstTooltipModel.cs |
+| DataVisualiser | class | TransformDataPanelController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 10 | .\DataVisualiser\UI\Charts\Controllers\TransformDataPanelController.xaml.cs |
+| DataVisualiser | class | TransformDataPanelControllerV2 | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 13 | .\DataVisualiser\UI\Charts\Controllers\TransformDataPanelControllerV2.xaml.cs |
+| DataVisualiser | class | WeekdayTrendChartController | public | top-level |  | DataVisualiser.UI.Charts.Controllers | file-scoped | 14 | .\DataVisualiser\UI\Charts\Controllers\WeekdayTrendChartController.xaml.cs |
+| DataVisualiser | interface | IBarPieChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 5 | .\DataVisualiser\UI\Charts\Interfaces\IBarPieChartController.cs |
+| DataVisualiser | interface | IBarPieChartControllerExtras | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 2 | .\DataVisualiser\UI\Charts\Interfaces\IBarPieChartControllerExtras.cs |
+| DataVisualiser | interface | ICartesianChartControllerHost | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\ICartesianChartControllerHost.cs |
+| DataVisualiser | interface | ICartesianChartSurface | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\ICartesianChartSurface.cs |
+| DataVisualiser | interface | IChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 5 | .\DataVisualiser\UI\Charts\Interfaces\IChartController.cs |
+| DataVisualiser | interface | IChartControllerFactory | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\IChartControllerFactory.cs |
+| DataVisualiser | interface | IChartControllerRegistry | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 2 | .\DataVisualiser\UI\Charts\Interfaces\IChartControllerRegistry.cs |
+| DataVisualiser | interface | IChartPanelControllerHost | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 5 | .\DataVisualiser\UI\Charts\Interfaces\IChartPanelControllerHost.cs |
+| DataVisualiser | interface | IChartPanelScaffold | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 6 | .\DataVisualiser\UI\Charts\Interfaces\IChartPanelScaffold.cs |
+| DataVisualiser | interface | IDiffRatioChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 6 | .\DataVisualiser\UI\Charts\Interfaces\IDiffRatioChartController.cs |
+| DataVisualiser | interface | IDiffRatioChartControllerExtras | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 2 | .\DataVisualiser\UI\Charts\Interfaces\IDiffRatioChartControllerExtras.cs |
+| DataVisualiser | interface | IDistributionChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 7 | .\DataVisualiser\UI\Charts\Interfaces\IDistributionChartController.cs |
+| DataVisualiser | interface | IDistributionChartControllerExtras | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 2 | .\DataVisualiser\UI\Charts\Interfaces\IDistributionChartControllerExtras.cs |
+| DataVisualiser | interface | IMainChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 6 | .\DataVisualiser\UI\Charts\Interfaces\IMainChartController.cs |
+| DataVisualiser | interface | IMainChartControllerExtras | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 2 | .\DataVisualiser\UI\Charts\Interfaces\IMainChartControllerExtras.cs |
+| DataVisualiser | interface | INormalizedChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 6 | .\DataVisualiser\UI\Charts\Interfaces\INormalizedChartController.cs |
+| DataVisualiser | interface | IPolarChartSurface | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\IPolarChartSurface.cs |
+| DataVisualiser | interface | ISyncfusionSunburstChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\ISyncfusionSunburstChartController.cs |
+| DataVisualiser | interface | ITransformDataPanelController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 7 | .\DataVisualiser\UI\Charts\Interfaces\ITransformDataPanelController.cs |
+| DataVisualiser | interface | ITransformLayoutCapabilities | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\ITransformLayoutCapabilities.cs |
+| DataVisualiser | interface | ITransformPanelControllerExtras | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\ITransformPanelControllerExtras.cs |
+| DataVisualiser | interface | IWeekdayTrendChartController | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 7 | .\DataVisualiser\UI\Charts\Interfaces\IWeekdayTrendChartController.cs |
+| DataVisualiser | interface | IWeekdayTrendChartControllerExtras | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 2 | .\DataVisualiser\UI\Charts\Interfaces\IWeekdayTrendChartControllerExtras.cs |
+| DataVisualiser | interface | IWpfCartesianChartHost | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\IWpfCartesianChartHost.cs |
+| DataVisualiser | interface | IWpfChartPanelHost | public | top-level |  | DataVisualiser.UI.Charts.Interfaces | file-scoped | 4 | .\DataVisualiser\UI\Charts\Interfaces\IWpfChartPanelHost.cs |
+| DataVisualiser | class | BarPieChartControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 17 | .\DataVisualiser\UI\Charts\Presentation\BarPieChartControllerAdapter.cs |
+| DataVisualiser | class | BarPieRenderModelBuilder | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 17 | .\DataVisualiser\UI\Charts\Presentation\BarPieRenderModelBuilder.cs |
+| DataVisualiser | class | CartesianChartControllerAdapterBase | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 6 | .\DataVisualiser\UI\Charts\Presentation\CartesianChartControllerAdapterBase.cs |
+| DataVisualiser | class | ChartComboItemHelper | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 6 | .\DataVisualiser\UI\Charts\Presentation\ChartComboItemHelper.cs |
+| DataVisualiser | class | ChartContextSelectionGuard | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 5 | .\DataVisualiser\UI\Charts\Presentation\ChartContextSelectionGuard.cs |
+| DataVisualiser | class | ChartControllerAdapterBase | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 9 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerAdapterBase.cs |
+| DataVisualiser | class | ChartControllerFactory | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 18 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
+| DataVisualiser | class | ChartControllerKeys | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerKeys.cs |
+| DataVisualiser | class | ChartControllerRegistry | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 3 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerRegistry.cs |
+| DataVisualiser | class | ChartSubtypeComboHelper | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 8 | .\DataVisualiser\UI\Charts\Presentation\ChartSubtypeComboHelper.cs |
+| DataVisualiser | class | ChartSurfaceHelper | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 13 | .\DataVisualiser\UI\Charts\Presentation\ChartSurfaceHelper.cs |
+| DataVisualiser | class | ChartUiHelper | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 8 | .\DataVisualiser\UI\Charts\Presentation\ChartUiHelper.cs |
+| DataVisualiser | class | DefaultTransformOperationProvider | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\DefaultTransformOperationProvider.cs |
+| DataVisualiser | class | DiffRatioChartControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 16 | .\DataVisualiser\UI\Charts\Presentation\DiffRatioChartControllerAdapter.cs |
+| DataVisualiser | class | DistributionChartControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 25 | .\DataVisualiser\UI\Charts\Presentation\DistributionChartControllerAdapter.cs |
+| DataVisualiser | class | DistributionSessionMilestoneRecorder | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\DistributionSessionMilestoneRecorder.cs |
+| DataVisualiser | class | MainChartControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 16 | .\DataVisualiser\UI\Charts\Presentation\MainChartControllerAdapter.cs |
+| DataVisualiser | class | MetricSeriesSelectionAdapterHelper | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 10 | .\DataVisualiser\UI\Charts\Presentation\MetricSeriesSelectionAdapterHelper.cs |
+| DataVisualiser | class | MetricSeriesSelectionCache | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\MetricSeriesSelectionCache.cs |
+| DataVisualiser | class | NormalizedChartControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 15 | .\DataVisualiser\UI\Charts\Presentation\NormalizedChartControllerAdapter.cs |
+| DataVisualiser | class | RenderingHostLifecycleAdapterHelper | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\RenderingHostLifecycleAdapterHelper.cs |
+| DataVisualiser | class | SubtypeSelectorManager | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\SubtypeSelectorManager.cs |
+| DataVisualiser | class | SyncfusionSunburstChartControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 16 | .\DataVisualiser\UI\Charts\Presentation\SyncfusionSunburstChartControllerAdapter.cs |
+| DataVisualiser | class | TransformChartPresentationCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 12 | .\DataVisualiser\UI\Charts\Presentation\TransformChartPresentationCoordinator.cs |
+| DataVisualiser | class | TransformDataPanelControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 14 | .\DataVisualiser\UI\Charts\Presentation\TransformDataPanelControllerAdapter.cs |
+| DataVisualiser | class | TransformDataResolutionCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 14 | .\DataVisualiser\UI\Charts\Presentation\TransformDataResolutionCoordinator.cs |
+| DataVisualiser | class | TransformGridPresentationCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 8 | .\DataVisualiser\UI\Charts\Presentation\TransformGridPresentationCoordinator.cs |
+| DataVisualiser | class | TransformOperationExecutionCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\TransformOperationExecutionCoordinator.cs |
+| DataVisualiser | class | TransformOperationOptions | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 6 | .\DataVisualiser\UI\Charts\Presentation\TransformOperationOptions.cs |
+| DataVisualiser | class | TransformOperationStateCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 6 | .\DataVisualiser\UI\Charts\Presentation\TransformOperationStateCoordinator.cs |
+| DataVisualiser | class | TransformRenderCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\TransformRenderCoordinator.cs |
+| DataVisualiser | class | TransformSelectionInteractionCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 5 | .\DataVisualiser\UI\Charts\Presentation\TransformSelectionInteractionCoordinator.cs |
+| DataVisualiser | class | TransformSessionMilestoneRecorder | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\TransformSessionMilestoneRecorder.cs |
+| DataVisualiser | class | TransformSubtypeSelectionCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\TransformSubtypeSelectionCoordinator.cs |
+| DataVisualiser | class | TransformWorkflowCoordinator | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\TransformWorkflowCoordinator.cs |
+| DataVisualiser | class | VNextDataResolutionHelper | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 10 | .\DataVisualiser\UI\Charts\Presentation\VNextDataResolutionHelper.cs |
+| DataVisualiser | class | WeekdayTrendChartControllerAdapter | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 20 | .\DataVisualiser\UI\Charts\Presentation\WeekdayTrendChartControllerAdapter.cs |
+| DataVisualiser | interface | ITransformOperationProvider | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\ITransformOperationProvider.cs |
+| DataVisualiser | record | ChartControllerFactoryContext | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 171 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
+| DataVisualiser | record | ChartControllerFactoryResult | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 196 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
+| DataVisualiser | record | struct | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 48 | .\DataVisualiser\UI\Charts\Presentation\RenderingHostLifecycleAdapterHelper.cs |
+| DataVisualiser | record | SyncfusionChartControllerFactoryResult | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 206 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
+| DataVisualiser | record | TransformExecutionResult | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 16 | .\DataVisualiser\UI\Charts\Presentation\TransformExecutionModels.cs |
+| DataVisualiser | record | TransformResolutionResult | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 10 | .\DataVisualiser\UI\Charts\Presentation\TransformExecutionModels.cs |
+| DataVisualiser | record | TransformSelectionResolution | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 5 | .\DataVisualiser\UI\Charts\Presentation\TransformExecutionModels.cs |
+| DataVisualiser | class | LegendItem | public | nested | LegendToggleManager | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 297 | .\DataVisualiser\UI\Charts\Presentation\Rendering\LegendToggleManager.cs |
+| DataVisualiser | class | LegendItem | public | nested | PieFacetLegendToggleManager | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 71 | .\DataVisualiser\UI\Charts\Presentation\Rendering\PieFacetLegendToggleManager.cs |
+| DataVisualiser | class | ChartAxisModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartAxisModel.cs |
+| DataVisualiser | class | ChartFacetModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartFacetModel.cs |
+| DataVisualiser | class | ChartInteractionModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartInteractionModel.cs |
+| DataVisualiser | class | ChartLegendItemModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartLegendItemModel.cs |
+| DataVisualiser | class | ChartLegendModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartLegendModel.cs |
+| DataVisualiser | class | ChartOverlayModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartOverlayModel.cs |
+| DataVisualiser | class | ChartPanelSurface | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 5 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartPanelSurface.cs |
+| DataVisualiser | class | ChartRendererResolver | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartRendererResolver.cs |
+| DataVisualiser | class | ChartSeriesModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartSeriesModel.cs |
+| DataVisualiser | class | ChartSurfaceFactory | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 5 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartSurfaceFactory.cs |
+| DataVisualiser | class | LegendToggleManager | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 20 | .\DataVisualiser\UI\Charts\Presentation\Rendering\LegendToggleManager.cs |
+| DataVisualiser | class | PieFacetLegendToggleManager | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 9 | .\DataVisualiser\UI\Charts\Presentation\Rendering\PieFacetLegendToggleManager.cs |
+| DataVisualiser | class | UiChartRenderModel | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\UiChartRenderModel.cs |
+| DataVisualiser | enum | ChartLegendPlacement | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartLegendPlacement.cs |
+| DataVisualiser | enum | ChartRendererKind | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartRendererKind.cs |
+| DataVisualiser | enum | ChartSeriesType | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ChartSeriesType.cs |
+| DataVisualiser | interface | IChartPanelHost | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 5 | .\DataVisualiser\UI\Charts\Presentation\Rendering\IChartPanelHost.cs |
+| DataVisualiser | interface | IChartRenderer | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 5 | .\DataVisualiser\UI\Charts\Presentation\Rendering\IChartRenderer.cs |
+| DataVisualiser | interface | IChartRendererResolver | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\IChartRendererResolver.cs |
+| DataVisualiser | interface | IChartSurface | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\Rendering\IChartSurface.cs |
+| DataVisualiser | interface | IChartSurfaceFactory | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\IChartSurfaceFactory.cs |
+| DataVisualiser | interface | ITrackedCartesianChartSurface | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ITrackedCartesianChartSurface.cs |
+| DataVisualiser | interface | ITrackedChartContentSurface | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ITrackedChartContentSurface.cs |
+| DataVisualiser | class | EChartsChartRenderer | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering.ECharts | file-scoped | 9 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ECharts\EChartsChartRenderer.cs |
+| DataVisualiser | class | EChartsWebViewSurface | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering.ECharts | file-scoped | 7 | .\DataVisualiser\UI\Charts\Presentation\Rendering\ECharts\EChartsWebViewSurface.cs |
+| DataVisualiser | class | LiveChartsChartRenderer | public | top-level |  | DataVisualiser.UI.Charts.Presentation.Rendering.LiveCharts | file-scoped | 19 | .\DataVisualiser\UI\Charts\Presentation\Rendering\LiveCharts\LiveChartsChartRenderer.cs |
+| DataVisualiser | class | FirstNonEmptyTextConverter | public | top-level |  | DataVisualiser.UI.Converters | file-scoped | 7 | .\DataVisualiser\UI\Converters\FirstNonEmptyTextConverter.cs |
+| DataVisualiser | class | MultiplyConverter | public | top-level |  | DataVisualiser.UI.Converters | file-scoped | 5 | .\DataVisualiser\UI\Converters\MultiplyConverter.cs |
+| DataVisualiser | class | NormalizationModeConverter | public | top-level |  | DataVisualiser.UI.Converters | file-scoped | 8 | .\DataVisualiser\UI\Converters\NormalizationModeConverter.cs |
+| DataVisualiser | class | ChartUiDefaults | public | top-level |  | DataVisualiser.UI.Defaults | file-scoped | 18 | .\DataVisualiser\UI\Defaults\UiDefaults.cs |
+| DataVisualiser | class | UiDefaults | public | top-level |  | DataVisualiser.UI.Defaults | file-scoped | 7 | .\DataVisualiser\UI\Defaults\UiDefaults.cs |
+| DataVisualiser | class | ChartUpdateRequestedEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 2 | .\DataVisualiser\UI\Events\ChartUpdateRequestedEventArgs.cs |
+| DataVisualiser | class | ChartVisibilityChangedEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 2 | .\DataVisualiser\UI\Events\ChartVisibilityChangedEventArgs.cs |
+| DataVisualiser | class | DataLoadedEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 4 | .\DataVisualiser\UI\Events\DataLoadedEventArgs.cs |
+| DataVisualiser | class | DateRangeLoadedEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 2 | .\DataVisualiser\UI\Events\DateRangeLoadedEventArgs.cs |
+| DataVisualiser | class | MetricTypesLoadedEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 4 | .\DataVisualiser\UI\Events\MetricTypesLoadedEventArgs.cs |
+| DataVisualiser | class | SubtypesLoadedEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 4 | .\DataVisualiser\UI\Events\SubtypesLoadedEventArgs.cs |
+| DataVisualiser | class | WeekdayTrendAverageToggleEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 2 | .\DataVisualiser\UI\Events\WeekdayTrendAverageToggleEventArgs.cs |
+| DataVisualiser | class | WeekdayTrendDayToggleEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 2 | .\DataVisualiser\UI\Events\WeekdayTrendDayToggleEventArgs.cs |
+| DataVisualiser | class | VNextMainChartIntegrationCoordinator | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 19 | .\DataVisualiser\UI\MainHost\VNextMainChartIntegrationCoordinator.cs |
+| DataVisualiser | class | VNextSeriesLoadCoordinator | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 19 | .\DataVisualiser\UI\MainHost\VNextSeriesLoadCoordinator.cs |
+| DataVisualiser | record | VNextMainChartLoadResult | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 9 | .\DataVisualiser\UI\MainHost\VNextMainChartIntegrationCoordinator.cs |
+| DataVisualiser | record | VNextSeriesLoadResult | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 8 | .\DataVisualiser\UI\MainHost\VNextSeriesLoadCoordinator.cs |
+| DataVisualiser | enum | SubtypesFollowUp | public | nested | ChartHostMetricSelectionCoordinator | DataVisualiser.UI.MainHost.Coordination | file-scoped | 7 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostMetricSelectionCoordinator.cs |
+| DataVisualiser | class | Actions | public | nested | MainChartsViewChartPresentationCoordinator | DataVisualiser.UI.MainHost.Coordination | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewChartPresentationCoordinator.cs |
+| DataVisualiser | class | Actions | public | nested | MainChartsViewChartUpdateCoordinator | DataVisualiser.UI.MainHost.Coordination | file-scoped | 11 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewChartUpdateCoordinator.cs |
+| DataVisualiser | class | Actions | public | nested | MainChartsViewDataLoadedCoordinator | DataVisualiser.UI.MainHost.Coordination | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewDataLoadedCoordinator.cs |
+| DataVisualiser | class | Actions | public | nested | MainChartsViewZoomResetCoordinator | DataVisualiser.UI.MainHost.Coordination | file-scoped | 10 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewZoomResetCoordinator.cs |
+| DataVisualiser | class | ChartHostDateRangeCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 2 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostDateRangeCoordinator.cs |
+| DataVisualiser | class | ChartHostMetricSelectionCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 4 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostMetricSelectionCoordinator.cs |
+| DataVisualiser | class | MainChartsViewChartPipelineFactory | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 14 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewChartPipelineFactory.cs |
+| DataVisualiser | class | MainChartsViewChartPresentationCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewChartPresentationCoordinator.cs |
+| DataVisualiser | class | MainChartsViewChartUpdateCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewChartUpdateCoordinator.cs |
+| DataVisualiser | class | MainChartsViewCmsToggleCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewCmsToggleCoordinator.cs |
+| DataVisualiser | class | MainChartsViewControllerExtrasCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewControllerExtrasCoordinator.cs |
+| DataVisualiser | class | MainChartsViewDataLoadedCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewDataLoadedCoordinator.cs |
+| DataVisualiser | class | MainChartsViewEventBinder | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewEventBinder.cs |
+| DataVisualiser | class | MainChartsViewLoadCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewLoadCoordinator.cs |
+| DataVisualiser | class | MainChartsViewRegistryCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewRegistryCoordinator.cs |
+| DataVisualiser | class | MainChartsViewResolutionResetCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 4 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewResolutionResetCoordinator.cs |
+| DataVisualiser | class | MainChartsViewSelectionCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewSelectionCoordinator.cs |
+| DataVisualiser | class | MainChartsViewStartupCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 2 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewStartupCoordinator.cs |
+| DataVisualiser | class | MainChartsViewStateSyncCoordinator | internal | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 7 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewStateSyncCoordinator.cs |
+| DataVisualiser | class | MainChartsViewSurfaceCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewSurfaceCoordinator.cs |
+| DataVisualiser | class | MainChartsViewThemeCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 4 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewThemeCoordinator.cs |
+| DataVisualiser | class | MainChartsViewToggleStateCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewToggleStateCoordinator.cs |
+| DataVisualiser | class | MainChartsViewToggleStateEvaluator | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 4 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewToggleStateEvaluator.cs |
+| DataVisualiser | class | MainChartsViewZoomResetCoordinator | internal | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewZoomResetCoordinator.cs |
+| DataVisualiser | class | MetricSelectionPanelEventBinder | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Coordination\MetricSelectionPanelEventBinder.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostDateRangeCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewControllerExtrasCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewRegistryCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 7 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewResolutionResetCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewSelectionCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewStartupCoordinator.cs |
+| DataVisualiser | record | Actions | internal | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 10 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewStateSyncCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewSurfaceCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewToggleStateCoordinator.cs |
+| DataVisualiser | record | Actions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Coordination\MetricSelectionPanelEventBinder.cs |
+| DataVisualiser | record | ChangeActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 37 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewCmsToggleCoordinator.cs |
+| DataVisualiser | record | ClearActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 28 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewLoadCoordinator.cs |
+| DataVisualiser | record | Context | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 17 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewChartPipelineFactory.cs |
+| DataVisualiser | record | Handlers | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewEventBinder.cs |
+| DataVisualiser | record | LoadExecutionActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 19 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewLoadCoordinator.cs |
+| DataVisualiser | record | LoadValidationInput | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewLoadCoordinator.cs |
+| DataVisualiser | record | MetricTypeSelectionChangedActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 27 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostMetricSelectionCoordinator.cs |
+| DataVisualiser | record | MetricTypesLoadedActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 13 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostMetricSelectionCoordinator.cs |
+| DataVisualiser | record | Result | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 21 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewChartPipelineFactory.cs |
+| DataVisualiser | record | Result | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewZoomResetCoordinator.cs |
+| DataVisualiser | record | StrategyToggleInput | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 27 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewCmsToggleCoordinator.cs |
+| DataVisualiser | record | SubtypesLoadedActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 46 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostMetricSelectionCoordinator.cs |
+| DataVisualiser | record | SubtypesLoadedInput | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 37 | .\DataVisualiser\UI\MainHost\Coordination\ChartHostMetricSelectionCoordinator.cs |
+| DataVisualiser | record | SyncActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewCmsToggleCoordinator.cs |
+| DataVisualiser | record | ValidationActions | public | top-level |  | DataVisualiser.UI.MainHost.Coordination | file-scoped | 10 | .\DataVisualiser\UI\MainHost\Coordination\MainChartsViewLoadCoordinator.cs |
+| DataVisualiser | class | Actions | public | nested | MainChartsViewEvidenceExportCoordinator | DataVisualiser.UI.MainHost.Evidence | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Evidence\MainChartsViewEvidenceExportCoordinator.cs |
+| DataVisualiser | class | CombinedMetricParitySnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 51 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | DateRangeUiDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 126 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | DiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 77 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | DistributionParitySnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 15 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | EvidenceDataResolutionHelper | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 10 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceDataResolutionHelper.cs |
+| DataVisualiser | class | EvidenceDiagnosticsBuilder | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceDiagnosticsBuilder.cs |
+| DataVisualiser | class | EvidenceDistributionParityEvaluator | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 13 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceDistributionParityEvaluator.cs |
+| DataVisualiser | class | EvidenceMultiMetricParityEvaluator | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 13 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceMultiMetricParityEvaluator.cs |
+| DataVisualiser | class | EvidenceParityBuilder | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 11 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceParityBuilder.cs |
+| DataVisualiser | class | EvidenceParitySummaryBuilder | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 2 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceParitySummaryBuilder.cs |
+| DataVisualiser | class | EvidenceStrategyParityExecutor | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceStrategyParityExecutor.cs |
+| DataVisualiser | class | EvidenceTransformParityComputer | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceTransformParityComputer.cs |
+| DataVisualiser | class | EvidenceTransformParityDataResolver | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceTransformParityDataResolver.cs |
+| DataVisualiser | class | EvidenceTransformParityEvaluator | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 7 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceTransformParityEvaluator.cs |
+| DataVisualiser | class | HostMessageDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 167 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | LoadedContextDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 221 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | MainChartPipelineDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 241 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | MainChartsEvidenceExportService | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 9 | .\DataVisualiser\UI\MainHost\Evidence\MainChartsEvidenceExportService.cs |
+| DataVisualiser | class | MainChartsSessionDiagnosticsRecorder | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Evidence\MainChartsSessionDiagnosticsRecorder.cs |
+| DataVisualiser | class | MainChartsUiSurfaceDiagnosticsReader | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Evidence\MainChartsUiSurfaceDiagnosticsReader.cs |
+| DataVisualiser | class | MainChartsViewEvidenceExportCoordinator | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Evidence\MainChartsViewEvidenceExportCoordinator.cs |
+| DataVisualiser | class | MetricTypeUiDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 119 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | ParityResultSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 28 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | ParitySummarySnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 36 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | ReachabilityDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 251 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | SelectionDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 201 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | SeriesSelectionDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 209 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | SessionMilestoneSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 91 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | SimpleParitySnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 58 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | SmokeHeuristicsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 175 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | SubtypeComboDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 145 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | SubtypeUiDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 135 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | TransformParitySnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 65 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | TransformUiDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 155 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | TransitionDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 186 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | UiSurfaceDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 110 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | class | VNextDiagnosticsSnapshot | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 263 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | enum | EvidenceRuntimePath | public | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 6 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceExportModels.cs |
+| DataVisualiser | record | EvidenceParityBundle | internal | top-level |  | DataVisualiser.UI.MainHost.Evidence | file-scoped | 161 | .\DataVisualiser\UI\MainHost\Evidence\EvidenceParityBuilder.cs |
+| DataVisualiser | class | ReachabilityExportPathResolver | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 4 | .\DataVisualiser\UI\MainHost\Export\ReachabilityExportPathResolver.cs |
+| DataVisualiser | class | ReachabilityExportWriter | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 5 | .\DataVisualiser\UI\MainHost\Export\ReachabilityExportWriter.cs |
+| DataVisualiser | class | StrategyReachabilityEvidenceStore | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 4 | .\DataVisualiser\UI\MainHost\Export\StrategyReachabilityEvidenceStore.cs |
+| DataVisualiser | interface | IReachabilityEvidenceStore | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 4 | .\DataVisualiser\UI\MainHost\Export\IReachabilityEvidenceStore.cs |
+| DataVisualiser | interface | IReachabilityExportPathResolver | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 2 | .\DataVisualiser\UI\MainHost\Export\IReachabilityExportPathResolver.cs |
+| DataVisualiser | record | ReachabilityEvidenceExportResult | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 2 | .\DataVisualiser\UI\MainHost\Export\ReachabilityEvidenceExportResult.cs |
+| DataVisualiser | record | Result | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Export\ReachabilityExportWriter.cs |
+| DataVisualiser | class | ChartState | public | top-level |  | DataVisualiser.UI.State | file-scoped | 9 | .\DataVisualiser\UI\State\ChartState.cs |
+| DataVisualiser | class | ChartVisibilityHelper | public | top-level |  | DataVisualiser.UI.State | file-scoped | 4 | .\DataVisualiser\UI\State\ChartVisibilityHelper.cs |
+| DataVisualiser | class | DistributionModeCatalog | public | top-level |  | DataVisualiser.UI.State | file-scoped | 4 | .\DataVisualiser\UI\State\DistributionModeCatalog.cs |
+| DataVisualiser | class | DistributionModeDefinition | public | top-level |  | DataVisualiser.UI.State | file-scoped | 4 | .\DataVisualiser\UI\State\DistributionModeDefinition.cs |
+| DataVisualiser | class | DistributionModeSettings | public | top-level |  | DataVisualiser.UI.State | file-scoped | 2 | .\DataVisualiser\UI\State\DistributionModeSettings.cs |
+| DataVisualiser | class | MetricState | public | top-level |  | DataVisualiser.UI.State | file-scoped | 4 | .\DataVisualiser\UI\State\MetricState.cs |
+| DataVisualiser | class | UiState | public | top-level |  | DataVisualiser.UI.State | file-scoped | 5 | .\DataVisualiser\UI\State\UiState.cs |
+| DataVisualiser | enum | MainChartDisplayMode | public | top-level |  | DataVisualiser.UI.State | file-scoped | 2 | .\DataVisualiser\UI\State\MainChartDisplayMode.cs |
+| DataVisualiser | enum | WeekdayTrendAverageWindow | public | top-level |  | DataVisualiser.UI.State | file-scoped | 2 | .\DataVisualiser\UI\State\WeekdayTrendAverageWindow.cs |
+| DataVisualiser | enum | WeekdayTrendChartMode | public | top-level |  | DataVisualiser.UI.State | file-scoped | 2 | .\DataVisualiser\UI\State\WeekdayTrendChartMode.cs |
+| DataVisualiser | record | LoadRuntimeState | public | top-level |  | DataVisualiser.UI.State | file-scoped | 107 | .\DataVisualiser\UI\State\ChartState.cs |
+| DataVisualiser | class | SunburstItem | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 2 | .\DataVisualiser\UI\Syncfusion\SunburstItem.cs |
+| DataVisualiser | class | SyncfusionChartsView | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 25 | .\DataVisualiser\UI\Syncfusion\SyncfusionChartsView.xaml.cs |
+| DataVisualiser | class | SyncfusionChartsViewCoordinator | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 7 | .\DataVisualiser\UI\Syncfusion\SyncfusionChartsViewCoordinator.cs |
+| DataVisualiser | class | SyncfusionChartsViewLoadCoordinator | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 4 | .\DataVisualiser\UI\Syncfusion\SyncfusionChartsViewLoadCoordinator.cs |
+| DataVisualiser | class | SyncfusionTooltipReflectionHelper | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 5 | .\DataVisualiser\UI\Syncfusion\SyncfusionTooltipReflectionHelper.cs |
+| DataVisualiser | record | ClearActions | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 22 | .\DataVisualiser\UI\Syncfusion\SyncfusionChartsViewLoadCoordinator.cs |
+| DataVisualiser | record | LoadExecutionActions | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 16 | .\DataVisualiser\UI\Syncfusion\SyncfusionChartsViewLoadCoordinator.cs |
+| DataVisualiser | record | LoadValidationInput | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 7 | .\DataVisualiser\UI\Syncfusion\SyncfusionChartsViewLoadCoordinator.cs |
+| DataVisualiser | record | ValidationActions | public | top-level |  | DataVisualiser.UI.Syncfusion | file-scoped | 8 | .\DataVisualiser\UI\Syncfusion\SyncfusionChartsViewLoadCoordinator.cs |
+| DataVisualiser | class | AppThemeChangedEventArgs | public | top-level |  | DataVisualiser.UI.Theming | file-scoped | 2 | .\DataVisualiser\UI\Theming\AppThemeChangedEventArgs.cs |
+| DataVisualiser | class | AppThemeService | public | top-level |  | DataVisualiser.UI.Theming | file-scoped | 4 | .\DataVisualiser\UI\Theming\AppThemeService.cs |
+| DataVisualiser | enum | AppTheme | public | top-level |  | DataVisualiser.UI.Theming | file-scoped | 2 | .\DataVisualiser\UI\Theming\AppTheme.cs |
+| DataVisualiser | class | AsyncRelayCommand | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 4 | .\DataVisualiser\UI\ViewModels\AsyncRelayCommand.cs |
+| DataVisualiser | class | BusyStateTracker | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\BusyStateTracker.cs |
+| DataVisualiser | class | ChartVisibilityController | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\ChartVisibilityController.cs |
+| DataVisualiser | class | MainWindowViewModel | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 2 | .\DataVisualiser\UI\ViewModels\MainWindowViewModel.ChartVisibility.cs |
+| DataVisualiser | class | MainWindowViewModel | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 11 | .\DataVisualiser\UI\ViewModels\MainWindowViewModel.cs |
+| DataVisualiser | class | MainWindowViewModel | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\MainWindowViewModel.DataLoading.cs |
+| DataVisualiser | class | MainWindowViewModel | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\MainWindowViewModel.Errors.cs |
+| DataVisualiser | class | MainWindowViewModel | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\MainWindowViewModel.StateSetters.cs |
+| DataVisualiser | class | MainWindowViewModel | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 2 | .\DataVisualiser\UI\ViewModels\MainWindowViewModel.Validation.cs |
+| DataVisualiser | class | MetricLoadCoordinator | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 14 | .\DataVisualiser\UI\ViewModels\MetricLoadCoordinator.cs |
+| DataVisualiser | class | RelayCommand | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 4 | .\DataVisualiser\UI\ViewModels\RelayCommand.cs |
+| DataVisualiser | class | SharedMainWindowViewModelProvider | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 12 | .\DataVisualiser\UI\ViewModels\SharedMainWindowViewModelProvider.cs |
+| DataVisualiser | class | VNextChartRoutePolicy | internal | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 4 | .\DataVisualiser\UI\ViewModels\VNextChartRoutePolicy.cs |
+| DataVisualiser | interface | IMainChartsViewEventSource | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\IMainChartsViewEventSource.cs |
+| DataVisualiser | record | SharedMainWindowViewModelContext | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\SharedMainWindowViewModelProvider.cs |
+| DataVisualiser | class | ChartProgramPlanner | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\ChartProgramPlanner.cs |
+| DataVisualiser | class | LegacyChartProgramProjector | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 6 | .\DataVisualiser\VNext\Application\LegacyChartProgramProjector.cs |
+| DataVisualiser | class | LegacyMetricViewGateway | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\LegacyMetricViewGateway.cs |
+| DataVisualiser | class | MetricSelectionServiceSeriesLoader | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\MetricSelectionServiceSeriesLoader.cs |
+| DataVisualiser | class | ReasoningEngine | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\ReasoningEngine.cs |
+| DataVisualiser | class | ReasoningEngineFactory | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\ReasoningEngineFactory.cs |
+| DataVisualiser | class | ReasoningSessionCoordinator | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\ReasoningSessionCoordinator.cs |
+| DataVisualiser | interface | IMetricSeriesLoader | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 10 | .\DataVisualiser\VNext\Application\IMetricSeriesLoader.cs |
+| DataVisualiser | interface | IReasoningEngine | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\IReasoningEngine.cs |
+| DataVisualiser | record | LoadedMetricSeries | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 6 | .\DataVisualiser\VNext\Application\IMetricSeriesLoader.cs |
+| DataVisualiser | enum | ChartDisplayMode | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\ChartDisplayMode.cs |
+| DataVisualiser | enum | ChartProgramKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\ChartProgramKind.cs |
+| DataVisualiser | enum | DataViewKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\DataViewKind.cs |
+| DataVisualiser | enum | SeriesOperationKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\SeriesOperationRequest.cs |
+| DataVisualiser | record | ChartProgram | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 8 | .\DataVisualiser\VNext\Contracts\ChartProgram.cs |
+| DataVisualiser | record | ChartProgramRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\ChartProgramRequest.cs |
+| DataVisualiser | record | ChartSeriesProgram | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\ChartProgram.cs |
+| DataVisualiser | record | MetricLoadSnapshot | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\MetricLoadSnapshot.cs |
+| DataVisualiser | record | MetricSelectionRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\MetricSelectionRequest.cs |
+| DataVisualiser | record | MetricSeriesRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\MetricSeriesRequest.cs |
+| DataVisualiser | record | MetricSeriesSnapshot | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 5 | .\DataVisualiser\VNext\Contracts\MetricSeriesSnapshot.cs |
+| DataVisualiser | record | SeriesOperationRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 11 | .\DataVisualiser\VNext\Contracts\SeriesOperationRequest.cs |
+| DataVisualiser | record | WorkflowPlanRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\WorkflowPlanRequest.cs |
+| DataVisualiser | class | OperationKernel | public | top-level |  | DataVisualiser.VNext.Kernel | file-scoped | 4 | .\DataVisualiser\VNext\Kernel\OperationKernel.cs |
+| DataVisualiser | class | TimeSeriesAlignmentKernel | public | top-level |  | DataVisualiser.VNext.Kernel | file-scoped | 20 | .\DataVisualiser\VNext\Kernel\TimeSeriesAlignmentKernel.cs |
+| DataVisualiser | enum | AlignmentMode | public | top-level |  | DataVisualiser.VNext.Kernel | file-scoped | 5 | .\DataVisualiser\VNext\Kernel\TimeSeriesAlignmentKernel.cs |
+| DataVisualiser | record | AlignedMetricSeries | public | top-level |  | DataVisualiser.VNext.Kernel | file-scoped | 11 | .\DataVisualiser\VNext\Kernel\TimeSeriesAlignmentKernel.cs |
+| DataVisualiser | record | AlignedSeriesBundle | public | top-level |  | DataVisualiser.VNext.Kernel | file-scoped | 16 | .\DataVisualiser\VNext\Kernel\TimeSeriesAlignmentKernel.cs |
+| DataVisualiser | class | ReasoningSessionTransitions | public | top-level |  | DataVisualiser.VNext.State | file-scoped | 4 | .\DataVisualiser\VNext\State\ReasoningSessionTransitions.cs |
+| DataVisualiser | enum | LoadLifecycle | public | top-level |  | DataVisualiser.VNext.State | file-scoped | 4 | .\DataVisualiser\VNext\State\LoadState.cs |
+| DataVisualiser | record | LoadState | public | top-level |  | DataVisualiser.VNext.State | file-scoped | 12 | .\DataVisualiser\VNext\State\LoadState.cs |
+| DataVisualiser | record | PresentationState | public | top-level |  | DataVisualiser.VNext.State | file-scoped | 4 | .\DataVisualiser\VNext\State\PresentationState.cs |
+| DataVisualiser | record | ReasoningSessionState | public | top-level |  | DataVisualiser.VNext.State | file-scoped | 2 | .\DataVisualiser\VNext\State\ReasoningSessionState.cs |
+| DataVisualiser | record | SelectionState | public | top-level |  | DataVisualiser.VNext.State | file-scoped | 4 | .\DataVisualiser\VNext\State\SelectionState.cs |
+| DataVisualiser | record | WorkflowState | public | top-level |  | DataVisualiser.VNext.State | file-scoped | 4 | .\DataVisualiser\VNext\State\WorkflowState.cs |
+| DataVisualiser.Tests | class | ArchitectureGuardrailTests | public | top-level |  | DataVisualiser.Tests.Architecture | file-scoped | 6 | .\DataVisualiser.Tests\Architecture\ArchitectureGuardrailTests.cs |
+| DataVisualiser.Tests | class | BarPieChartControllerAdapterResetZoomTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 13 | .\DataVisualiser.Tests\Controls\BarPieChartControllerAdapterResetZoomTests.cs |
+| DataVisualiser.Tests | class | BarPieChartControllerAdapterTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 13 | .\DataVisualiser.Tests\Controls\BarPieChartControllerAdapterTests.cs |
+| DataVisualiser.Tests | class | BarPieRenderModelBuilderTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 10 | .\DataVisualiser.Tests\Controls\BarPieRenderModelBuilderTests.cs |
+| DataVisualiser.Tests | class | CartesianChartControllerAdapterBaseTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 12 | .\DataVisualiser.Tests\Controls\CartesianChartControllerAdapterBaseTests.cs |
+| DataVisualiser.Tests | class | CartesianMetricControllerAdapterLifecycleTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 12 | .\DataVisualiser.Tests\Controls\CartesianMetricControllerAdapterLifecycleTests.cs |
+| DataVisualiser.Tests | class | ChartContextSelectionGuardTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 6 | .\DataVisualiser.Tests\Controls\ChartContextSelectionGuardTests.cs |
+| DataVisualiser.Tests | class | ChartControllerFactoryTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 21 | .\DataVisualiser.Tests\Controls\ChartControllerFactoryTests.cs |
+| DataVisualiser.Tests | class | ChartControllerRegistryTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 7 | .\DataVisualiser.Tests\Controls\ChartControllerRegistryTests.cs |
+| DataVisualiser.Tests | class | ChartVisibilityHelperTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 5 | .\DataVisualiser.Tests\Controls\ChartVisibilityHelperTests.cs |
+| DataVisualiser.Tests | class | DiffRatioNormalizedSelectionAdapterTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 13 | .\DataVisualiser.Tests\Controls\DiffRatioNormalizedSelectionAdapterTests.cs |
+| DataVisualiser.Tests | class | DistributionChartControllerAdapterTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 18 | .\DataVisualiser.Tests\Controls\DistributionChartControllerAdapterTests.cs |
+| DataVisualiser.Tests | class | SubtypeSelectorManagerTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 7 | .\DataVisualiser.Tests\Controls\SubtypeSelectorManagerTests.cs |
+| DataVisualiser.Tests | class | SyncfusionSunburstChartControllerAdapterTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 13 | .\DataVisualiser.Tests\Controls\SyncfusionSunburstChartControllerAdapterTests.cs |
+| DataVisualiser.Tests | class | TransformCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 21 | .\DataVisualiser.Tests\Controls\TransformCoordinatorTests.cs |
+| DataVisualiser.Tests | class | TransformDataPanelControllerAdapterTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 26 | .\DataVisualiser.Tests\Controls\TransformDataPanelControllerAdapterTests.cs |
+| DataVisualiser.Tests | class | TransformRenderCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 16 | .\DataVisualiser.Tests\Controls\TransformRenderCoordinatorTests.cs |
+| DataVisualiser.Tests | class | TransformSelectionInteractionCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 7 | .\DataVisualiser.Tests\Controls\TransformSelectionInteractionCoordinatorTests.cs |
+| DataVisualiser.Tests | class | TransformSessionMilestoneRecorderTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 13 | .\DataVisualiser.Tests\Controls\TransformSessionMilestoneRecorderTests.cs |
+| DataVisualiser.Tests | class | TransformWorkflowCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 22 | .\DataVisualiser.Tests\Controls\TransformWorkflowCoordinatorTests.cs |
+| DataVisualiser.Tests | class | WeekdayTrendChartControllerAdapterTests | public | top-level |  | DataVisualiser.Tests.Controls | file-scoped | 15 | .\DataVisualiser.Tests\Controls\WeekdayTrendChartControllerAdapterTests.cs |
+| DataVisualiser.Tests | class | SunburstTooltipConvertersTests | public | top-level |  | DataVisualiser.Tests.Converters | file-scoped | 5 | .\DataVisualiser.Tests\Converters\SunburstTooltipConvertersTests.cs |
+| DataVisualiser.Tests | class | StubMetricSeriesLoader | public | nested | VNextTestStubs | DataVisualiser.Tests.Helpers | file-scoped | 18 | .\DataVisualiser.Tests\Helpers\VNextTestStubs.cs |
+| DataVisualiser.Tests | class | ChartHelperInteractionTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 7 | .\DataVisualiser.Tests\Helpers\ChartHelperInteractionTests.cs |
+| DataVisualiser.Tests | class | ChartLabelFormatterTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 5 | .\DataVisualiser.Tests\Helpers\ChartLabelFormatterTests.cs |
+| DataVisualiser.Tests | class | ChartTooltipParticipationCalculatorTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 9 | .\DataVisualiser.Tests\Helpers\ChartTooltipParticipationCalculatorTests.cs |
+| DataVisualiser.Tests | class | CmsConversionHelperTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 4 | .\DataVisualiser.Tests\Helpers\CmsConversionHelperTests.cs |
+| DataVisualiser.Tests | class | FrequencyBinningHelperTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 4 | .\DataVisualiser.Tests\Helpers\FrequencyBinningHelperTests.cs |
+| DataVisualiser.Tests | class | HealthMetricDataBuilder | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 4 | .\DataVisualiser.Tests\Helpers\HealthMetricDataBuilder.cs |
+| DataVisualiser.Tests | class | MathHelperTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 6 | .\DataVisualiser.Tests\Helpers\MathHelperTests.cs |
+| DataVisualiser.Tests | class | MockCanonicalMetricSeries | internal | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 4 | .\DataVisualiser.Tests\Helpers\MockCanonicalMetricSeries.cs |
+| DataVisualiser.Tests | class | MockCmsBuilder | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 4 | .\DataVisualiser.Tests\Helpers\MockCmsBuilder.cs |
+| DataVisualiser.Tests | class | SourceTreeTestHelper | internal | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 4 | .\DataVisualiser.Tests\Helpers\SourceTreeTestHelper.cs |
+| DataVisualiser.Tests | class | StaTestHelper | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 6 | .\DataVisualiser.Tests\Helpers\StaTestHelper.cs |
+| DataVisualiser.Tests | class | StrategyComputationHelperTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 5 | .\DataVisualiser.Tests\Helpers\StrategyComputationHelperTests.cs |
+| DataVisualiser.Tests | class | TestDataBuilders | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 2 | .\DataVisualiser.Tests\Helpers\TestDataBuilders.cs |
+| DataVisualiser.Tests | class | TestHelpers | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 5 | .\DataVisualiser.Tests\Helpers\TestHelpers.cs |
+| DataVisualiser.Tests | class | TransformChartAxisCalculatorTests | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 5 | .\DataVisualiser.Tests\Helpers\TransformChartAxisCalculatorTests.cs |
+| DataVisualiser.Tests | class | VNextTestStubs | public | top-level |  | DataVisualiser.Tests.Helpers | file-scoped | 7 | .\DataVisualiser.Tests\Helpers\VNextTestStubs.cs |
+| DataVisualiser.Tests | class | ChartCumulativeSeriesBuilderTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 6 | .\DataVisualiser.Tests\Orchestration\ChartCumulativeSeriesBuilderTests.cs |
+| DataVisualiser.Tests | class | ChartDataContextBuilderTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 6 | .\DataVisualiser.Tests\Orchestration\ChartDataContextBuilderTests.cs |
+| DataVisualiser.Tests | class | ChartRenderingOrchestratorTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 19 | .\DataVisualiser.Tests\Orchestration\ChartRenderingOrchestratorTests.cs |
+| DataVisualiser.Tests | class | ChartUpdateCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 15 | .\DataVisualiser.Tests\Orchestration\ChartUpdateCoordinatorTests.cs |
+| DataVisualiser.Tests | class | ChartYAxisDataBuilderTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 6 | .\DataVisualiser.Tests\Orchestration\ChartYAxisDataBuilderTests.cs |
+| DataVisualiser.Tests | class | DistributionChartOrchestrationPipelineTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 14 | .\DataVisualiser.Tests\Orchestration\DistributionChartOrchestrationPipelineTests.cs |
+| DataVisualiser.Tests | class | MainChartPreparationStageTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 8 | .\DataVisualiser.Tests\Orchestration\MainChartPreparationStageTests.cs |
+| DataVisualiser.Tests | class | SecondaryMetricChartOrchestrationPipelineTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 14 | .\DataVisualiser.Tests\Orchestration\SecondaryMetricChartOrchestrationPipelineTests.cs |
+| DataVisualiser.Tests | class | WeekdayTrendChartUpdateCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 10 | .\DataVisualiser.Tests\Orchestration\WeekdayTrendChartUpdateCoordinatorTests.cs |
+| DataVisualiser.Tests | class | ChartComputationParityHarnessTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 4 | .\DataVisualiser.Tests\Parity\ChartComputationParityHarnessTests.cs |
+| DataVisualiser.Tests | class | CombinedMetricParityTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 7 | .\DataVisualiser.Tests\Parity\CombinedMetricParityTests.cs |
+| DataVisualiser.Tests | class | DifferenceParityTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 6 | .\DataVisualiser.Tests\Parity\DifferenceParityTests.cs |
+| DataVisualiser.Tests | class | HourlyDistributionParityHarnessTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 7 | .\DataVisualiser.Tests\Parity\HourlyDistributionParityHarnessTests.cs |
+| DataVisualiser.Tests | class | MultiMetricParityTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 6 | .\DataVisualiser.Tests\Parity\MultiMetricParityTests.cs |
+| DataVisualiser.Tests | class | NormalizedParityTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 7 | .\DataVisualiser.Tests\Parity\NormalizedParityTests.cs |
+| DataVisualiser.Tests | class | ParityExportShapeTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 6 | .\DataVisualiser.Tests\Parity\ParityExportShapeTests.cs |
+| DataVisualiser.Tests | class | RatioParityTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 6 | .\DataVisualiser.Tests\Parity\RatioParityTests.cs |
+| DataVisualiser.Tests | class | SingleMetricParityTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 6 | .\DataVisualiser.Tests\Parity\SingleMetricParityTests.cs |
+| DataVisualiser.Tests | class | WeekdayTrendCmsLegacyConsistencyTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 6 | .\DataVisualiser.Tests\Parity\WeekdayTrendCmsLegacyConsistencyTests.cs |
+| DataVisualiser.Tests | class | WeeklyDistributionParityHarnessTests | public | top-level |  | DataVisualiser.Tests.Parity | file-scoped | 7 | .\DataVisualiser.Tests\Parity\WeeklyDistributionParityHarnessTests.cs |
+| DataVisualiser.Tests | class | BaseDistributionServiceTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 14 | .\DataVisualiser.Tests\Services\BaseDistributionServiceTests.cs |
+| DataVisualiser.Tests | class | DataPreparationServiceTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 5 | .\DataVisualiser.Tests\Services\DataPreparationServiceTests.cs |
+| DataVisualiser.Tests | class | DistributionRangeResultBuilderTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 6 | .\DataVisualiser.Tests\Services\DistributionRangeResultBuilderTests.cs |
+| DataVisualiser.Tests | class | FrequencyShadingCalculatorTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 7 | .\DataVisualiser.Tests\Services\FrequencyShadingCalculatorTests.cs |
+| DataVisualiser.Tests | class | MetricSelectionServiceTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 8 | .\DataVisualiser.Tests\Services\MetricSelectionServiceTests.cs |
+| DataVisualiser.Tests | class | StrategySelectionServiceTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 8 | .\DataVisualiser.Tests\Services\StrategySelectionServiceTests.cs |
+| DataVisualiser.Tests | class | TimeBucketAggregationHelperTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 5 | .\DataVisualiser.Tests\Services\TimeBucketAggregationHelperTests.cs |
+| DataVisualiser.Tests | class | TransformComputationServiceTests | public | top-level |  | DataVisualiser.Tests.Services | file-scoped | 6 | .\DataVisualiser.Tests\Services\TransformComputationServiceTests.cs |
+| DataVisualiser.Tests | class | CmsWeeklyDistributionStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 5 | .\DataVisualiser.Tests\Strategies\CmsWeeklyDistributionStrategyTests.cs |
+| DataVisualiser.Tests | class | CombinedMetricStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 6 | .\DataVisualiser.Tests\Strategies\CombinedMetricStrategyTests.cs |
+| DataVisualiser.Tests | class | DifferenceStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 6 | .\DataVisualiser.Tests\Strategies\DifferenceStrategyTests.cs |
+| DataVisualiser.Tests | class | MultiMetricStrategyFactoryTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 6 | .\DataVisualiser.Tests\Strategies\MultiMetricStrategyFactoryTests.cs |
+| DataVisualiser.Tests | class | MultiMetricStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 6 | .\DataVisualiser.Tests\Strategies\MultiMetricStrategyTests.cs |
+| DataVisualiser.Tests | class | NormalizedStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 6 | .\DataVisualiser.Tests\Strategies\NormalizedStrategyTests.cs |
+| DataVisualiser.Tests | class | RatioStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 6 | .\DataVisualiser.Tests\Strategies\RatioStrategyTests.cs |
+| DataVisualiser.Tests | class | SingleMetricStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 6 | .\DataVisualiser.Tests\Strategies\SingleMetricStrategyTests.cs |
+| DataVisualiser.Tests | class | StrategyCutOverServiceTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 13 | .\DataVisualiser.Tests\Strategies\StrategyCutOverServiceTests.cs |
+| DataVisualiser.Tests | class | StrategyReachabilityStoreProbeTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 7 | .\DataVisualiser.Tests\Strategies\StrategyReachabilityStoreProbeTests.cs |
+| DataVisualiser.Tests | class | TransformResultStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 5 | .\DataVisualiser.Tests\Strategies\TransformResultStrategyTests.cs |
+| DataVisualiser.Tests | class | WeekdayTrendComputationStrategyTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 7 | .\DataVisualiser.Tests\Strategies\WeekdayTrendComputationStrategyTests.cs |
+| DataVisualiser.Tests | class | WeekdayTrendStrategyFactoryTests | public | top-level |  | DataVisualiser.Tests.Strategies | file-scoped | 8 | .\DataVisualiser.Tests\Strategies\WeekdayTrendStrategyFactoryTests.cs |
+| DataVisualiser.Tests | class | TransformDataHelperTests | public | top-level |  | DataVisualiser.Tests.Transforms | file-scoped | 5 | .\DataVisualiser.Tests\Transforms\TransformDataHelperTests.cs |
+| DataVisualiser.Tests | class | TransformExpressionBuilderTests | public | top-level |  | DataVisualiser.Tests.Transforms | file-scoped | 4 | .\DataVisualiser.Tests\Transforms\TransformExpressionBuilderTests.cs |
+| DataVisualiser.Tests | class | TransformExpressionEvaluatorTests | public | top-level |  | DataVisualiser.Tests.Transforms | file-scoped | 7 | .\DataVisualiser.Tests\Transforms\TransformExpressionEvaluatorTests.cs |
+| DataVisualiser.Tests | class | TransformOperationRegistryTests | public | top-level |  | DataVisualiser.Tests.Transforms | file-scoped | 4 | .\DataVisualiser.Tests\Transforms\TransformOperationRegistryTests.cs |
+| DataVisualiser.Tests | class | ChartTabHostTests | public | top-level |  | DataVisualiser.Tests.UI | file-scoped | 4 | .\DataVisualiser.Tests\UI\ChartTabHostTests.cs |
+| DataVisualiser.Tests | class | MetricSelectionPanelTests | public | top-level |  | DataVisualiser.Tests.UI | file-scoped | 4 | .\DataVisualiser.Tests\UI\MetricSelectionPanelTests.cs |
+| DataVisualiser.Tests | class | WorkspaceHeaderPanelTests | public | top-level |  | DataVisualiser.Tests.UI | file-scoped | 4 | .\DataVisualiser.Tests\UI\WorkspaceHeaderPanelTests.cs |
+| DataVisualiser.Tests | class | WorkspaceTabHostTests | public | top-level |  | DataVisualiser.Tests.UI | file-scoped | 4 | .\DataVisualiser.Tests\UI\WorkspaceTabHostTests.cs |
+| DataVisualiser.Tests | class | AdminMetricsManagerCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.Admin | file-scoped | 5 | .\DataVisualiser.Tests\UI\Admin\AdminMetricsManagerCoordinatorTests.cs |
+| DataVisualiser.Tests | class | AdminSessionMilestoneRecorderTests | public | top-level |  | DataVisualiser.Tests.UI.Admin | file-scoped | 12 | .\DataVisualiser.Tests\UI\Admin\AdminSessionMilestoneRecorderTests.cs |
+| DataVisualiser.Tests | class | ChartHostDateRangeCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 5 | .\DataVisualiser.Tests\UI\MainHost\ChartHostDateRangeCoordinatorTests.cs |
+| DataVisualiser.Tests | class | ChartHostMetricSelectionCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 6 | .\DataVisualiser.Tests\UI\MainHost\ChartHostMetricSelectionCoordinatorTests.cs |
+| DataVisualiser.Tests | class | EvidenceDistributionParityEvaluatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\EvidenceDistributionParityEvaluatorTests.cs |
+| DataVisualiser.Tests | class | EvidenceMultiMetricParityEvaluatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\EvidenceMultiMetricParityEvaluatorTests.cs |
+| DataVisualiser.Tests | class | EvidenceParitySummaryBuilderTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 5 | .\DataVisualiser.Tests\UI\MainHost\EvidenceParitySummaryBuilderTests.cs |
+| DataVisualiser.Tests | class | EvidenceStrategyParityExecutorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\EvidenceStrategyParityExecutorTests.cs |
+| DataVisualiser.Tests | class | EvidenceTransformParityComputerTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 6 | .\DataVisualiser.Tests\UI\MainHost\EvidenceTransformParityComputerTests.cs |
+| DataVisualiser.Tests | class | MainChartsEvidenceExportServiceTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 17 | .\DataVisualiser.Tests\UI\MainHost\MainChartsEvidenceExportServiceTests.cs |
+| DataVisualiser.Tests | class | MainChartsSessionDiagnosticsRecorderTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 13 | .\DataVisualiser.Tests\UI\MainHost\MainChartsSessionDiagnosticsRecorderTests.cs |
+| DataVisualiser.Tests | class | MainChartsUiSurfaceDiagnosticsReaderTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 18 | .\DataVisualiser.Tests\UI\MainHost\MainChartsUiSurfaceDiagnosticsReaderTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewChartPipelineFactoryTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewChartPipelineFactoryTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewChartPresentationCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 8 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewChartPresentationCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewChartUpdateCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 11 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewChartUpdateCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewCmsToggleCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 8 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewCmsToggleCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewControllerExtrasCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewControllerExtrasCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewDataLoadedCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 8 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewDataLoadedCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewEventBinderTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 8 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewEventBinderTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewEvidenceExportCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 7 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewEvidenceExportCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewLoadCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 6 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewLoadCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewRegistryCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewRegistryCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewResolutionResetCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 6 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewResolutionResetCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewSelectionCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 7 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewSelectionCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewStartupCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 5 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewStartupCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewStateSyncCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewStateSyncCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewSurfaceCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 9 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewSurfaceCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewThemeCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 7 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewThemeCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewToggleStateCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 10 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewToggleStateCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewToggleStateEvaluatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 7 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewToggleStateEvaluatorTests.cs |
+| DataVisualiser.Tests | class | MainChartsViewZoomResetCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 11 | .\DataVisualiser.Tests\UI\MainHost\MainChartsViewZoomResetCoordinatorTests.cs |
+| DataVisualiser.Tests | class | MetricSelectionPanelEventBinderTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 4 | .\DataVisualiser.Tests\UI\MainHost\MetricSelectionPanelEventBinderTests.cs |
+| DataVisualiser.Tests | class | ReachabilityExportPathResolverTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 6 | .\DataVisualiser.Tests\UI\MainHost\ReachabilityExportPathResolverTests.cs |
+| DataVisualiser.Tests | class | ReachabilityExportWriterTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 5 | .\DataVisualiser.Tests\UI\MainHost\ReachabilityExportWriterTests.cs |
+| DataVisualiser.Tests | class | BarPieRenderingContractTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 7 | .\DataVisualiser.Tests\UI\Rendering\BarPieRenderingContractTests.cs |
+| DataVisualiser.Tests | class | BarPieRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 7 | .\DataVisualiser.Tests\UI\Rendering\BarPieRenderingQualificationProbeTests.cs |
+| DataVisualiser.Tests | class | CartesianMetricChartRenderingContractTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 8 | .\DataVisualiser.Tests\UI\Rendering\CartesianMetricChartRenderingContractTests.cs |
+| DataVisualiser.Tests | class | CartesianMetricChartRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 11 | .\DataVisualiser.Tests\UI\Rendering\CartesianMetricChartRenderingQualificationProbeTests.cs |
+| DataVisualiser.Tests | class | ChartRendererResolverTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 8 | .\DataVisualiser.Tests\UI\Rendering\ChartRendererResolverTests.cs |
+| DataVisualiser.Tests | class | ChartSeriesLabelFormatterTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 5 | .\DataVisualiser.Tests\UI\Rendering\ChartSeriesLabelFormatterTests.cs |
+| DataVisualiser.Tests | class | ChartSeriesMaterializerTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 5 | .\DataVisualiser.Tests\UI\Rendering\ChartSeriesMaterializerTests.cs |
+| DataVisualiser.Tests | class | DistributionAxisCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 6 | .\DataVisualiser.Tests\UI\Rendering\DistributionAxisCoordinatorTests.cs |
+| DataVisualiser.Tests | class | DistributionRenderingContractTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 9 | .\DataVisualiser.Tests\UI\Rendering\DistributionRenderingContractTests.cs |
+| DataVisualiser.Tests | class | DistributionRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 17 | .\DataVisualiser.Tests\UI\Rendering\DistributionRenderingQualificationProbeTests.cs |
+| DataVisualiser.Tests | class | DistributionSeriesBuilderTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 6 | .\DataVisualiser.Tests\UI\Rendering\DistributionSeriesBuilderTests.cs |
+| DataVisualiser.Tests | class | LegendToggleManagerTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 9 | .\DataVisualiser.Tests\UI\Rendering\LegendToggleManagerTests.cs |
+| DataVisualiser.Tests | class | LiveChartsChartRendererTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 13 | .\DataVisualiser.Tests\UI\Rendering\LiveChartsChartRendererTests.cs |
+| DataVisualiser.Tests | class | PieFacetLegendToggleManagerTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 9 | .\DataVisualiser.Tests\UI\Rendering\PieFacetLegendToggleManagerTests.cs |
+| DataVisualiser.Tests | class | TransformRenderingContractTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 8 | .\DataVisualiser.Tests\UI\Rendering\TransformRenderingContractTests.cs |
+| DataVisualiser.Tests | class | TransformRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 12 | .\DataVisualiser.Tests\UI\Rendering\TransformRenderingQualificationProbeTests.cs |
+| DataVisualiser.Tests | class | WeekdayTrendRenderingContractTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 10 | .\DataVisualiser.Tests\UI\Rendering\WeekdayTrendRenderingContractTests.cs |
+| DataVisualiser.Tests | class | WeekdayTrendRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.UI.Rendering | file-scoped | 11 | .\DataVisualiser.Tests\UI\Rendering\WeekdayTrendRenderingQualificationProbeTests.cs |
+| DataVisualiser.Tests | class | SyncfusionChartsViewCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.Syncfusion | file-scoped | 8 | .\DataVisualiser.Tests\UI\Syncfusion\SyncfusionChartsViewCoordinatorTests.cs |
+| DataVisualiser.Tests | class | SyncfusionChartsViewLoadCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.Syncfusion | file-scoped | 5 | .\DataVisualiser.Tests\UI\Syncfusion\SyncfusionChartsViewLoadCoordinatorTests.cs |
+| DataVisualiser.Tests | class | SyncfusionTooltipReflectionHelperTests | public | top-level |  | DataVisualiser.Tests.UI.Syncfusion | file-scoped | 4 | .\DataVisualiser.Tests\UI\Syncfusion\SyncfusionTooltipReflectionHelperTests.cs |
+| DataVisualiser.Tests | class | AppThemeServiceTests | public | top-level |  | DataVisualiser.Tests.UI.Theming | file-scoped | 6 | .\DataVisualiser.Tests\UI\Theming\AppThemeServiceTests.cs |
+| DataVisualiser.Tests | class | AsyncRelayCommandTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 5 | .\DataVisualiser.Tests\ViewModels\AsyncRelayCommandTests.cs |
+| DataVisualiser.Tests | class | BusyStateTrackerTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 5 | .\DataVisualiser.Tests\ViewModels\BusyStateTrackerTests.cs |
+| DataVisualiser.Tests | class | ChartVisibilityControllerTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 6 | .\DataVisualiser.Tests\ViewModels\ChartVisibilityControllerTests.cs |
+| DataVisualiser.Tests | class | DataLoadValidatorTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 5 | .\DataVisualiser.Tests\ViewModels\DataLoadValidatorTests.cs |
+| DataVisualiser.Tests | class | MainWindowViewModelBusyStateTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 6 | .\DataVisualiser.Tests\ViewModels\MainWindowViewModelBusyStateTests.cs |
+| DataVisualiser.Tests | class | MainWindowViewModelSelectionBatchTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 7 | .\DataVisualiser.Tests\ViewModels\MainWindowViewModelSelectionBatchTests.cs |
+| DataVisualiser.Tests | class | MetricLoadCoordinatorTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 16 | .\DataVisualiser.Tests\ViewModels\MetricLoadCoordinatorTests.cs |
+| DataVisualiser.Tests | class | UiStateTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 4 | .\DataVisualiser.Tests\ViewModels\UiStateTests.cs |
+| DataVisualiser.Tests | class | VNextChartRoutePolicyTests | public | top-level |  | DataVisualiser.Tests.ViewModels | file-scoped | 5 | .\DataVisualiser.Tests\ViewModels\VNextChartRoutePolicyTests.cs |
+| DataVisualiser.Tests | class | ChartProgramPlannerTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 7 | .\DataVisualiser.Tests\VNext\ChartProgramPlannerTests.cs |
+| DataVisualiser.Tests | class | DistributionSessionMilestoneRecorderTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 8 | .\DataVisualiser.Tests\VNext\DistributionSessionMilestoneRecorderTests.cs |
+| DataVisualiser.Tests | class | FamilyRuntimeDiagnosticsTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\FamilyRuntimeDiagnosticsTests.cs |
+| DataVisualiser.Tests | class | LegacyChartProgramProjectorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\LegacyChartProgramProjectorTests.cs |
+| DataVisualiser.Tests | class | LegacyMetricViewGatewayTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\LegacyMetricViewGatewayTests.cs |
+| DataVisualiser.Tests | class | OperationKernelTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\OperationKernelTests.cs |
+| DataVisualiser.Tests | class | ReasoningEngineTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 7 | .\DataVisualiser.Tests\VNext\ReasoningEngineTests.cs |
+| DataVisualiser.Tests | class | ReasoningSessionCoordinatorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 7 | .\DataVisualiser.Tests\VNext\ReasoningSessionCoordinatorTests.cs |
+| DataVisualiser.Tests | class | ReasoningSessionTransitionsTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\ReasoningSessionTransitionsTests.cs |
+| DataVisualiser.Tests | class | VNextDistributionRuntimePreservationTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 16 | .\DataVisualiser.Tests\VNext\VNextDistributionRuntimePreservationTests.cs |
+| DataVisualiser.Tests | class | VNextMainChartIntegrationCoordinatorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 10 | .\DataVisualiser.Tests\VNext\VNextMainChartIntegrationCoordinatorTests.cs |
+| DataVisualiser.Tests | class | VNextSeriesLoadCoordinatorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 8 | .\DataVisualiser.Tests\VNext\VNextSeriesLoadCoordinatorTests.cs |
+
+## Notes
+
+- `DeclarationScope = top-level` means the declaration was not detected inside another type declaration.
+- `DeclarationScope = nested` means the declaration was detected within the open body of another type.
+- `ParentType` is best-effort and only populated when nested scope could be inferred.
+- `NamespaceKind` distinguishes file-scoped, block-scoped, and global namespace forms.
+- This index preserves detail rather than suppressing helper or nested declarations.
+- It is still a declaration scraper, not a compiler-backed semantic index.
 
 End of codebase-index.md

@@ -30,8 +30,8 @@ internal sealed class MainChartsUiSurfaceDiagnosticsReader
         ArgumentNullException.ThrowIfNull(toDatePicker);
         ArgumentNullException.ThrowIfNull(transformController);
 
-        var selectedMetricValue = GetSelectedMetricValue(metricTypeCombo);
-        var selectedMetricOption = GetSelectedMetricOption(metricTypeCombo);
+        var selectedMetricValue = MetricSelectionComboReader.GetSelectedMetricValue(metricTypeCombo);
+        var selectedMetricOption = MetricSelectionComboReader.GetSelectedMetricOption(metricTypeCombo);
         var expectedDefaultFromDate = DateTime.UtcNow.Date.AddDays(-30);
         var expectedDefaultToDate = DateTime.UtcNow.Date;
         var orderedSubtypeCombos = _selectorManager.GetActiveCombos()
@@ -88,19 +88,6 @@ internal sealed class MainChartsUiSurfaceDiagnosticsReader
             Transform = transformSnapshot,
             RecentMessages = _sessionDiagnosticsRecorder.RecentHostMessages.ToList()
         };
-    }
-
-    internal static string? GetSelectedMetricValue(ComboBox combo)
-    {
-        if (combo.SelectedItem is MetricNameOption option)
-            return option.Value;
-
-        return combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
-    }
-
-    internal static MetricNameOption? GetSelectedMetricOption(ComboBox combo)
-    {
-        return combo.SelectedItem as MetricNameOption;
     }
 
     internal static string? GetSelectedComboValue(ComboBox combo)

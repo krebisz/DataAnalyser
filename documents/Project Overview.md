@@ -243,11 +243,15 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - All 5 global closure conditions met: similar responsibilities have obvious homes, irreducible operations are centralized, truth/derivation/orchestration/delivery seams are defended, outliers are explicit and bounded, all capabilities are preserved
 - Named outliers materially reduced: `MainChartsEvidenceExportService` (1,209→131), `TransformDataPanelControllerAdapter` (857→257), `BaseDistributionService` (612→296), `BarPieChartControllerAdapter` (503→197), `ChartRenderEngine` (452→333), `DataFetcher` decomposed into focused query groups
 - Evidence/export boundary decomposed into `UI/MainHost/Evidence/`, `UI/MainHost/Export/`, and `UI/MainHost/Coordination/` sub-namespaces
+- Strategy migration responsibilities are split between `StrategyCmsDecisionEvaluator` for CMS eligibility and `StrategyParityValidationService` for parity validation
+- Admin workspace behavior now routes row loading, dirty tracking, filtering, save state, and milestone recording through `AdminMetricsManagerCoordinator`
+- Tooltip formatting is split into focused helpers behind the stable `ChartTooltipFormattingHelper` facade
+- Main and Syncfusion hosts now share the disposable UI-busy lease helper
 - VNext active for all chart families: Main/Normalized/Diff/Ratio via `VNextMainChartIntegrationCoordinator`; Distribution/WeekdayTrend/Transform/BarPie via `VNextSeriesLoadCoordinator` with per-family identity programs
 - Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports for all chart families
 - Evidence exports now include `ExportScope`; Charts and Syncfusion exports share the same export path, and tab switches are recorded as session milestones
 - Known debt carried to Phase 7: `MainChartsView` host concentration (~1,242 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~719 lines), adapter pattern variation (accepted as domain variation)
-- 455 source files, 657 automated tests, 53 architecture guardrails
+- 471 source files, 688 automated tests, 56 architecture guardrails
 
 ---
 

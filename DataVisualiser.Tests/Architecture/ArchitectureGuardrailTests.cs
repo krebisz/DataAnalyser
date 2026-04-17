@@ -296,6 +296,11 @@ public sealed class ArchitectureGuardrailTests
     public void TransformAdapter_ShouldDelegateSelectionResolutionAndExecutionToDedicatedCoordinators()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
+        var presentationDirectory = SourceTreeTestHelper.GetRepositoryPath("DataVisualiser", "UI", "Charts", "Presentation");
+        var presentationSources = string.Join(
+            Environment.NewLine,
+            Directory.EnumerateFiles(presentationDirectory, "*.cs", SearchOption.AllDirectories)
+                .Select(File.ReadAllText));
 
         Assert.Contains("TransformDataResolutionCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("TransformOperationExecutionCoordinator", source, StringComparison.Ordinal);
@@ -332,6 +337,40 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("private void RecordTransformMilestone", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private void RecordTransformToggleMilestone", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private bool TryGetSelectedOperation", source, StringComparison.Ordinal);
+        Assert.Contains("ITransformLayoutCapabilities", presentationSources, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformDataPanelControllerV2", presentationSources, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StrategyCutOverService_ShouldDelegateCmsDecisionLogicToEvaluator()
+    {
+        var serviceSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Strategies", "StrategyCutOverService.cs");
+        var evaluatorSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Strategies", "Reachability", "StrategyCmsDecisionEvaluator.cs");
+
+        Assert.Contains("StrategyCmsDecisionEvaluator", serviceSource, StringComparison.Ordinal);
+        Assert.Contains("_cmsDecisionEvaluator.Evaluate", serviceSource, StringComparison.Ordinal);
+        Assert.Contains("CreateMultiMetricDecision", evaluatorSource, StringComparison.Ordinal);
+        Assert.Contains("SupportsRealCmsStrategy", evaluatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private StrategyCmsDecision EvaluateCmsDecision", serviceSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static bool HasSufficientCmsSamples", serviceSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static bool SupportsRealCmsStrategy", serviceSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void StrategyCutOverService_ShouldDelegateParityValidationToDedicatedService()
+    {
+        var serviceSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Strategies", "StrategyCutOverService.cs");
+        var validationSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Strategies", "StrategyParityValidationService.cs");
+
+        Assert.Contains("StrategyParityValidationService", serviceSource, StringComparison.Ordinal);
+        Assert.Contains("_parityValidationService.ValidateParity", serviceSource, StringComparison.Ordinal);
+        Assert.Contains("GetParityHarness", validationSource, StringComparison.Ordinal);
+        Assert.Contains("PerformBasicValidation", validationSource, StringComparison.Ordinal);
+        Assert.Contains("ConvertParityResult", validationSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private StrategyType? DetermineStrategyType", serviceSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private IStrategyParityHarness? GetParityHarness", serviceSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private ParityResult PerformBasicValidation", serviceSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private ParityResult ConvertParityResult", serviceSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -512,12 +551,32 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile(
             "DataVisualiser", "Core", "Rendering", "Helpers", "ChartHelper.cs");
+        var tooltipSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Helpers", "ChartTooltipFormattingHelper.cs");
 
         Assert.Contains("ChartTooltipFormattingHelper.GetChartValuesAtIndex", source, StringComparison.Ordinal);
         Assert.Contains("ChartTooltipFormattingHelper.GetChartValuesFormattedAtIndex", source, StringComparison.Ordinal);
         Assert.Contains("ChartTooltipFormattingHelper.ParseSeriesTitle", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private static string BuildStackedValuesFormattedString", source, StringComparison.Ordinal);
         Assert.DoesNotContain("private static string BuildCumulativeTooltipFromSeries", source, StringComparison.Ordinal);
+        Assert.Contains("ChartTooltipPairFormatter.Build", tooltipSource, StringComparison.Ordinal);
+        Assert.Contains("ChartTooltipStackedFormatter.Build", tooltipSource, StringComparison.Ordinal);
+        Assert.Contains("ChartTooltipCumulativeFormatter", tooltipSource, StringComparison.Ordinal);
+        Assert.Contains("ChartTooltipSeriesTitleParser.Parse", tooltipSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static string BuildStackedValuesFormattedString", tooltipSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static string BuildCumulativeTooltipFromSeries", tooltipSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainAndSyncfusionHosts_ShouldShareUiBusyScopeLease()
+    {
+        var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        Assert.Contains("new UiBusyScopeLease(EndUiBusyScope)", mainSource, StringComparison.Ordinal);
+        Assert.Contains("new UiBusyScopeLease(EndUiBusyScope)", syncfusionSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private sealed class UiBusyScope", mainSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private sealed class UiBusyScope", syncfusionSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -802,6 +861,7 @@ public sealed class ArchitectureGuardrailTests
         var mainWindowXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "MainWindow.xaml");
         var adminXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Admin", "AdminMetricsManagerView.xaml");
         var adminSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Admin", "AdminMetricsManagerView.xaml.cs");
+        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Admin", "AdminMetricsManagerCoordinator.cs");
 
         Assert.Contains("admin:AdminMetricsManagerView", mainWindowXaml, StringComparison.Ordinal);
         Assert.Contains("MetricTypeCombo", adminXaml, StringComparison.Ordinal);
@@ -815,14 +875,18 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("ThemeTopBarBackgroundBrush", adminXaml, StringComparison.Ordinal);
         Assert.DoesNotContain("ChartTabHost", adminXaml, StringComparison.Ordinal);
         Assert.DoesNotContain("MetricSelectionPanel", adminXaml, StringComparison.Ordinal);
-        Assert.Contains("AdminSessionMilestoneRecorder", adminSource, StringComparison.Ordinal);
-        Assert.Contains("RecordMetricTypeChanged", adminSource, StringComparison.Ordinal);
-        Assert.Contains("RecordHideDisabledToggled", adminSource, StringComparison.Ordinal);
-        Assert.Contains("RecordReloadRequested", adminSource, StringComparison.Ordinal);
-        Assert.Contains("RecordReloadCompleted", adminSource, StringComparison.Ordinal);
-        Assert.Contains("RecordGridEdited", adminSource, StringComparison.Ordinal);
-        Assert.Contains("RecordSaveRequested", adminSource, StringComparison.Ordinal);
-        Assert.Contains("RecordSaveCompleted", adminSource, StringComparison.Ordinal);
+        Assert.Contains("AdminMetricsManagerCoordinator", adminSource, StringComparison.Ordinal);
+        Assert.Contains("DataFetcherAdminMetricsRepository", adminSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetHealthMetricsCountsForAdmin", adminSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdateHealthMetricsCountsForAdmin", adminSource, StringComparison.Ordinal);
+        Assert.Contains("AdminSessionMilestoneRecorder", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("RecordMetricTypeChanged", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("RecordHideDisabledToggled", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("RecordReloadRequested", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("RecordReloadCompleted", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("RecordGridEdited", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("RecordSaveRequested", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("RecordSaveCompleted", coordinatorSource, StringComparison.Ordinal);
     }
 
     private static void AssertNoMatches(IReadOnlyList<string> offenders)

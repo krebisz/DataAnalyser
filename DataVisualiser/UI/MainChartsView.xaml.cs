@@ -208,7 +208,7 @@ public partial class MainChartsView : UserControl
         if (_uiBusyDepth == 1)
             _uiState.IsUiBusy = true;
 
-        return new UiBusyScope(this);
+        return new UiBusyScopeLease(EndUiBusyScope);
     }
 
     private void EndUiBusyScope()
@@ -261,15 +261,12 @@ public partial class MainChartsView : UserControl
 
     private static string? GetSelectedMetricValue(ComboBox combo)
     {
-        if (combo.SelectedItem is MetricNameOption option)
-            return option.Value;
-
-        return combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
+        return MetricSelectionComboReader.GetSelectedMetricValue(combo);
     }
 
     private static MetricNameOption? GetSelectedMetricOption(ComboBox combo)
     {
-        return combo.SelectedItem as MetricNameOption;
+        return MetricSelectionComboReader.GetSelectedMetricOption(combo);
     }
 
     private void ShowTrackedMessage(string title, string message, MessageBoxImage image)
@@ -592,26 +589,6 @@ public partial class MainChartsView : UserControl
     }
 
     #endregion
-
-    private sealed class UiBusyScope : IDisposable
-    {
-        private readonly MainChartsView _owner;
-        private bool _disposed;
-
-        public UiBusyScope(MainChartsView owner)
-        {
-            _owner = owner;
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-            _owner.EndUiBusyScope();
-        }
-    }
 
     #region Initialization Phases
 

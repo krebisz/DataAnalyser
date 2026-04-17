@@ -53,15 +53,12 @@ internal static class TransformGridPresentationCoordinator
         if (controller.TransformGrid3.Columns.Count < 2)
             return;
 
-        if (controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2)
-        {
-            controller.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells);
-            controller.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.SizeToCells);
-            return;
-        }
+        var width = controller is ITransformLayoutCapabilities capabilities
+            ? capabilities.ResultGridColumnWidth
+            : new DataGridLength(1, DataGridLengthUnitType.Auto);
 
-        controller.TransformGrid3.Columns[0].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
-        controller.TransformGrid3.Columns[1].Width = new DataGridLength(1, DataGridLengthUnitType.Auto);
+        controller.TransformGrid3.Columns[0].Width = width;
+        controller.TransformGrid3.Columns[1].Width = width;
     }
 
     public static void ShowResultPanels(ITransformDataPanelController controller)

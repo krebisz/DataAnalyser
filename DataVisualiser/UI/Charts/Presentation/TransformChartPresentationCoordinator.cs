@@ -58,7 +58,7 @@ internal static class TransformChartPresentationCoordinator
             if (controller.TransformChartContainer == null)
                 return;
 
-            if (controller is DataVisualiser.UI.Charts.Controllers.TransformDataPanelControllerV2)
+            if (controller is ITransformLayoutCapabilities { UsesAutomaticChartWidth: true })
             {
                 controller.TransformChartContainer.ClearValue(FrameworkElement.WidthProperty);
                 return;

@@ -111,6 +111,58 @@ public sealed class TransformRenderCoordinatorTests
         });
     }
 
+    [Fact]
+    public async Task RenderResultsAsync_ShouldUseTransformLayoutCapabilitiesWhenAvailable()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var controller = new CapableTransformController();
+            controller.TransformGrid3.Columns.Add(new DataGridTextColumn());
+            controller.TransformGrid3.Columns.Add(new DataGridTextColumn());
+            var contract = new FakeTransformRenderingContract();
+            var coordinator = new TransformRenderCoordinator(controller, new ChartState(), contract);
+            var timestamp = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var dataList = new List<MetricData>
+            {
+                new() { NormalizedTimestamp = timestamp, Value = 1m }
+            };
+
+            var execution = new TransformExecutionResult(dataList, [1d], "Identity", 1, [dataList], null);
+            var resolution = new TransformResolutionResult(
+                new TransformSelectionResolution(new MetricSeriesSelection("Weight", "body_mass"), null, false),
+                dataList,
+                null,
+                new ChartDataContext
+                {
+                    Data1 = dataList,
+                    DisplayName1 = "Weight:body_mass",
+                    From = timestamp,
+                    To = timestamp
+                });
+
+            await coordinator.RenderResultsAsync(execution, resolution);
+
+            Assert.True(controller.UpdateAuxiliaryVisualsCalled);
+            Assert.Equal(DataGridLengthUnitType.SizeToCells, controller.TransformGrid3.Columns[0].Width.UnitType);
+            Assert.Equal(DataGridLengthUnitType.SizeToCells, controller.TransformGrid3.Columns[1].Width.UnitType);
+        });
+    }
+
+    [Fact]
+    public void Clear_ShouldResetTransformLayoutCapabilitiesWhenAvailable()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var controller = new CapableTransformController();
+            var contract = new FakeTransformRenderingContract();
+            var coordinator = new TransformRenderCoordinator(controller, new ChartState(), contract);
+
+            coordinator.Clear();
+
+            Assert.True(controller.ResetAuxiliaryVisualsCalled);
+        });
+    }
+
     private sealed class FakeTransformRenderingContract : ITransformRenderingContract
     {
         public int ClearCalls { get; private set; }
@@ -145,6 +197,7 @@ public sealed class TransformRenderCoordinatorTests
         public void Clear(TransformRenderingRoute route, TransformChartRenderHost host)
         {
             ClearCalls++;
+            host.ResetAuxiliaryVisuals?.Invoke();
         }
 
         public void ResetView(TransformRenderingRoute route, TransformChartRenderHost host)
@@ -158,7 +211,7 @@ public sealed class TransformRenderCoordinatorTests
         }
     }
 
-    private sealed class FakeTransformController : ITransformDataPanelController
+    private class FakeTransformController : ITransformDataPanelController
     {
         public ChartPanelController Panel { get; } = new();
         public ComboBox TransformPrimarySubtypeCombo { get; } = new();
@@ -193,6 +246,24 @@ public sealed class TransformRenderCoordinatorTests
 
         public void SetTitle(string title)
         {
+        }
+    }
+
+    private sealed class CapableTransformController : FakeTransformController, ITransformLayoutCapabilities
+    {
+        public bool UpdateAuxiliaryVisualsCalled { get; private set; }
+        public bool ResetAuxiliaryVisualsCalled { get; private set; }
+        public DataGridLength ResultGridColumnWidth => new(1, DataGridLengthUnitType.SizeToCells);
+        public bool UsesAutomaticChartWidth => true;
+
+        public void UpdateAuxiliaryVisuals()
+        {
+            UpdateAuxiliaryVisualsCalled = true;
+        }
+
+        public void ResetAuxiliaryVisuals()
+        {
+            ResetAuxiliaryVisualsCalled = true;
         }
     }
 }

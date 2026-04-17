@@ -161,7 +161,7 @@ Workspace State:
 - Phase: Phase 6 closed, Phase 7 entry gate satisfied
 - VNext: all chart families routed through VNext reasoning engine with automatic legacy fallback
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 657 passing
+- Tests: 688 passing
 - Unknowns: none
 ```
 
@@ -237,6 +237,7 @@ The following files are actively relevant for VNext reasoning engine integration
 
 **Integration Bridge:**
 - `UI/MainHost/VNextMainChartIntegrationCoordinator.cs` (Main/Normalized/Diff/Ratio)
+- `UI/ViewModels/VNextChartRoutePolicy.cs` (Main-family VNext route eligibility)
 - `UI/Charts/Presentation/VNextDataResolutionHelper.cs` (shared resolve + fallback for all families)
 - `UI/MainHost/VNextSeriesLoadCoordinator.cs` (WeekdayTrend, Transform, BarPie — shared)
 - `UI/ViewModels/MetricLoadCoordinator.cs`
@@ -248,10 +249,27 @@ The following files are actively relevant for VNext reasoning engine integration
 - `UI/MainHost/Evidence/EvidenceDataResolutionHelper.cs`
 - `UI/MainHost/Evidence/MainChartsEvidenceExportService.cs`
 
+**Strategy Migration:**
+- `Core/Strategies/StrategyCutOverService.cs`
+- `Core/Strategies/Reachability/StrategyCmsDecisionEvaluator.cs`
+- `Core/Strategies/StrategyParityValidationService.cs`
+
+**Admin Workspace:**
+- `UI/Admin/AdminMetricsManagerCoordinator.cs`
+- `UI/Admin/IAdminMetricsRepository.cs`
+- `UI/Admin/DataFetcherAdminMetricsRepository.cs`
+
 **Orchestration:**
 - `Core/Orchestration/ChartRenderingOrchestrator.cs`
 - `Core/Orchestration/ChartDataContextBuilder.cs`
 - `UI/MainHost/Coordination/MainChartsViewChartUpdateCoordinator.cs`
+- `UI/MainHost/Coordination/UiBusyScopeLease.cs`
+
+**Tooltip Rendering Helpers:**
+- `Core/Rendering/Helpers/ChartTooltipFormattingHelper.cs`
+- `Core/Rendering/Helpers/ChartTooltipPairFormatter.cs`
+- `Core/Rendering/Helpers/ChartTooltipStackedFormatter.cs`
+- `Core/Rendering/Helpers/ChartTooltipCumulativeFormatter.cs`
 
 **Current Priority Outliers:**
 - `UI/MainChartsView.xaml.cs`

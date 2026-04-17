@@ -94,12 +94,12 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
     public override void ResetZoom()
     {
-        _barPieRenderingContract.ResetView(ResolveRenderingRoute(), CreateRenderHost());
+        RenderingHostLifecycleAdapterHelper.ResetView(ResolveRenderingRoute, CreateRenderHost, _barPieRenderingContract.ResetView);
     }
 
     public override bool HasSeries(ChartState state)
     {
-        return _barPieRenderingContract.HasRenderableContent(ResolveRenderingRoute(), CreateRenderHost());
+        return RenderingHostLifecycleAdapterHelper.HasRenderableContent(ResolveRenderingRoute, CreateRenderHost, _barPieRenderingContract.HasRenderableContent);
     }
 
     public override void UpdateSubtypeOptions()

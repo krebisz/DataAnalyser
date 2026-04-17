@@ -14,7 +14,7 @@ namespace DataVisualiser.UI.Charts.Controllers;
 /// <summary>
 ///     Controller for the data transform panel (V2 layout).
 /// </summary>
-public partial class TransformDataPanelControllerV2 : UserControl, ITransformDataPanelController
+public partial class TransformDataPanelControllerV2 : UserControl, ITransformDataPanelController, ITransformLayoutCapabilities
 {
     private const double CollapsedHandleWidth = 16;
     private const double DefaultExpandedRailWidth = 700;
@@ -100,6 +100,10 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
 
     public CartesianChart Chart => ChartTransformResultControl;
 
+    public DataGridLength ResultGridColumnWidth => new(1, DataGridLengthUnitType.SizeToCells);
+
+    public bool UsesAutomaticChartWidth => true;
+
     public event EventHandler? ToggleRequested;
 
     public event EventHandler? OperationChanged;
@@ -109,6 +113,16 @@ public partial class TransformDataPanelControllerV2 : UserControl, ITransformDat
     public event EventHandler? SecondarySubtypeChanged;
 
     public event EventHandler? ComputeRequested;
+
+    public void UpdateAuxiliaryVisuals()
+    {
+        UpdateMinMaxLines();
+    }
+
+    public void ResetAuxiliaryVisuals()
+    {
+        ResetMinMaxLines();
+    }
 
     private void CollapseLeftRail()
     {

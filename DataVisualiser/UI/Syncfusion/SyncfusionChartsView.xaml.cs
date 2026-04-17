@@ -105,7 +105,7 @@ public partial class SyncfusionChartsView : UserControl
         if (_uiBusyDepth == 1)
             _uiState.IsUiBusy = true;
 
-        return new UiBusyScope(this);
+        return new UiBusyScopeLease(EndUiBusyScope);
     }
 
     private void EndUiBusyScope()
@@ -295,15 +295,12 @@ public partial class SyncfusionChartsView : UserControl
 
     private static string? GetSelectedMetricValue(ComboBox combo)
     {
-        if (combo.SelectedItem is MetricNameOption option)
-            return option.Value;
-
-        return combo.SelectedValue?.ToString() ?? combo.SelectedItem?.ToString();
+        return MetricSelectionComboReader.GetSelectedMetricValue(combo);
     }
 
     private static MetricNameOption? GetSelectedMetricOption(ComboBox combo)
     {
-        return combo.SelectedItem as MetricNameOption;
+        return MetricSelectionComboReader.GetSelectedMetricOption(combo);
     }
 
     private void OnMetricTypesLoaded(object? sender, MetricTypesLoadedEventArgs e)
@@ -868,24 +865,4 @@ public partial class SyncfusionChartsView : UserControl
             () => _viewModel.MetricState.ToDate);
     }
 
-
-    private sealed class UiBusyScope : IDisposable
-    {
-        private readonly SyncfusionChartsView _owner;
-        private bool _disposed;
-
-        public UiBusyScope(SyncfusionChartsView owner)
-        {
-            _owner = owner;
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-            _owner.EndUiBusyScope();
-        }
-    }
 }

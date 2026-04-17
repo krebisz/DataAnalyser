@@ -1,6 +1,5 @@
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.State;
 
@@ -59,8 +58,8 @@ internal sealed class TransformRenderCoordinator
             transformContext,
             execution.OverrideLabel);
 
-        if (_controller is TransformDataPanelControllerV2 v2)
-            v2.UpdateMinMaxLines();
+        if (_controller is ITransformLayoutCapabilities capabilities)
+            capabilities.UpdateAuxiliaryVisuals();
     }
 
     public void Clear()
@@ -94,7 +93,7 @@ internal sealed class TransformRenderCoordinator
 
     private void ResetTransformAuxiliaryVisuals()
     {
-        if (_controller is TransformDataPanelControllerV2 v2)
-            v2.ResetMinMaxLines();
+        if (_controller is ITransformLayoutCapabilities capabilities)
+            capabilities.ResetAuxiliaryVisuals();
     }
 }

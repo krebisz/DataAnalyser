@@ -1,4 +1,3 @@
-using System.Reflection;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services.Abstractions;
@@ -723,9 +722,7 @@ public sealed class StrategyCutOverServiceTests
     [Fact]
     public void GetParityHarness_ShouldReturnChartComputationHarness_ForCoreStrategies()
     {
-        var service = CreateService();
-        var method = typeof(StrategyCutOverService).GetMethod("GetParityHarness", BindingFlags.NonPublic | BindingFlags.Instance);
-        Assert.NotNull(method);
+        var service = new StrategyParityValidationService();
 
         var types = new[]
         {
@@ -737,11 +734,7 @@ public sealed class StrategyCutOverServiceTests
 
         foreach (var strategyType in types)
         {
-            var harness = method!.Invoke(service,
-                    new object?[]
-                    {
-                            strategyType
-                    });
+            var harness = service.GetParityHarness(strategyType);
             Assert.IsType<ChartComputationParityHarness>(harness);
         }
     }
