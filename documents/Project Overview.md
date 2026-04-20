@@ -56,6 +56,7 @@ At present, the system:
 - supports parallel legacy and CMS execution paths during migration
 - increasingly exposes downstream-safe derived and interpretive result shaping through explicit orchestration and rendering seams
 - emits tab-scoped reachability/evidence exports from both the Charts and Syncfusion surfaces through the shared evidence service
+- now has a non-live VNext render-plan foundation for backend-neutral render intent, render buffers, density policy, and adapter dispatch
 
 Canonical semantics form the foundation for all trusted meaning and for all computation that claims canonical comparability.
 Charts are currently the dominant delivery surface, but they are not the intended limit of the platform.
@@ -98,6 +99,7 @@ Current delivery surfaces provide:
 - compositional and comparative charts
 - dynamic chart visibility and state management
 - backend-qualified multi-vendor rendering experiments in support of rendering-boundary isolation
+- non-live VNext render-plan contracts for future backend-neutral delivery to LiveCharts, Syncfusion, and plugin renderers
 - exports and evidence paths that observe execution and result state
 - a shared metric-selection/date/CMS control surface reused by both the Charts and Syncfusion tabs
 - a generic `WorkspaceTabHost` shell with header/body slots, specialized by `ChartTabHost` for chart tabs and reused directly by the Admin manager view with Admin-specific controls
@@ -109,6 +111,7 @@ The broader intended model is:
 - orchestration coordinates the declared work
 - derived and interpretive result sets are produced explicitly
 - qualified delivery clients render or transport those results in a uniform way
+- render density and backend adapter choice are expected to be planned before concrete chart-library binding
 
 UI components are controller-based, but full standardization is still an active architectural direction rather than finished reality.
 The intended direction is convergence toward standardized graph hosts, shared option/toggle affordances, and programmable derived-result composition on qualified chart surfaces, without making chart controllers the semantic center of the system.
@@ -251,8 +254,9 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports for all chart families
 - Evidence exports now include `ExportScope`; Charts and Syncfusion exports share the same export path, and tab switches are recorded as session milestones
 - Recent shared seams added before Phase 7: `ParitySeriesComparer`, `WorkspaceLoadCoordinator`, `WorkspaceSessionMilestoneRecorder`, and `BinaryMetricChartContextHelper`
+- Pre-Phase-7 enabling infrastructure has begun: `ChartRenderPlan`, neutral render buffers, `RenderDensityPolicy`, time-bucket render aggregation, backend capability descriptors, backend selection, and adapter dispatch exist under VNext but are not yet wired into live chart rendering
 - Known debt carried to Phase 7: `MainChartsView` host concentration (~1,440 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence, adapter pattern variation (accepted as domain variation)
-- 476 source files, 696 DataVisualiser tests, 15 DataFileReader tests, 56 architecture guardrails
+- 484 source files, 725 DataVisualiser tests, 15 DataFileReader tests
 
 ---
 
@@ -261,6 +265,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
 - Phase 6 closure satisfies the entry gate: the hierarchy is now legible enough that new power can be added without amplifying entropy
+- Current active work is a pre-Phase-7 rendering-delivery primer that should wire all chart families and tabs through `ChartProgram -> ChartRenderPlan -> backend adapter` before Phase 7 capability work, unless a specific family or tab is explicitly deferred
 - Known debt inherited from Phase 6 is documented and bounded
 
 ---
@@ -291,6 +296,7 @@ Capability expansion:
 - standardized programmable chart hosts across the current chart families
 - multi-result derived chart composition on qualified rendering surfaces
 - broader downstream consumer support beyond current chart clients
+- render-plan delivery with density-aware buffers for large ranges and backend-neutral adapters for LiveCharts, Syncfusion, and future plugins
 - more explicit request/result composition over selected canonical and derived views
 - compositional and relational analysis
 - confidence-aware visualizations
@@ -331,7 +337,7 @@ The system exists to support reasoning, not replace it.
 - Exploration is supported without semantic erosion
 - Charts are the current dominant client, not the final definition of the platform
 - The broader direction is a reasoning environment that can serve multiple qualified consumers uniformly
-- The architecture rehaul and legibility reconciliation are complete; the next critical work is exploratory capability expansion and VNext family widening
+- The architecture rehaul and legibility reconciliation are complete; the current critical work is the pre-Phase-7 render-plan delivery primer across all chart families/tabs, followed by Phase 7 exploratory capability expansion
 - Evolution is intentional and evidence-bound
 
 This overview describes the system as it exists today and the direction it is deliberately moving toward.

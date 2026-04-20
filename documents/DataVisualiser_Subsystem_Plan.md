@@ -34,9 +34,10 @@ Use this section as the default handoff entry point in a new conversation.
 
 Current state:
 
+- Pre-Phase-7 rendering primer is now in progress: VNext has non-live render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts intended for Main, all current chart families, Syncfusion, and future plugin renderers.
+- Current automated lane: 484 DataVisualiser source files, 174 DataVisualiser test files, 725 DataVisualiser tests, and 15 DataFileReader tests.
 - Phase 6.3 VNext widening is complete - all active chart families have VNext-compatible request/program support and live VNext routes for fresh family loads, with legacy retained as compatibility/fallback
-- Phase 7 entry gate is satisfied — exploratory and confidence capabilities may proceed
-- 476 source files, 696 DataVisualiser tests, 15 DataFileReader tests, 56 architecture guardrails
+- Phase 7 entry gate is satisfied — exploratory and confidence capabilities remain the Phase 7 objective, but the current render-plan primer should wire all chart families and tabs first unless a specific deferral is explicitly recorded
 - known debt: `MainChartsView` host concentration (~1,440 lines), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence
 
 Current defaults:
@@ -44,7 +45,7 @@ Current defaults:
 - scope is `DataVisualiser` only
 - posture is `Conservative-Pragmatic`
 - one iteration must have one primary objective
-- the default objective is now Phase 7 exploratory capability expansion, with VNext family widening (6.3) as parallel work
+- the default objective is now the pre-Phase-7 render-plan delivery primer; VNext family widening (6.3) is closed and Phase 7 capability expansion remains next
 - safely coupled slices are allowed only when they already share a real contract / host / route / responsibility pattern
 - validation must happen on every significant refactor
 - if live behavior changes, halt after automated validation and request targeted manual smoke before continuing
@@ -56,6 +57,7 @@ Current defaults:
 Supporting navigation aids:
 
 - `SYSTEM_MAP.md` Appendix A (presentation pipeline spine)
+- `SYSTEM_MAP.md` Appendix B (legacy/VNext rendering pipeline comparison and render-plan transition)
 
 Authority order:
 
@@ -136,9 +138,10 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `476` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparer, workspace load/milestone recorders, and binary metric context helper)
-- `696` DataVisualiser automated tests passing; `15` DataFileReader tests passing
+- `484` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparer, workspace load/milestone recorders, binary metric context helper, and pre-Phase-7 VNext render-plan foundation)
+- `725` DataVisualiser automated tests passing; `15` DataFileReader tests passing
 - VNext-compatible request/program support across all current chart families, with live VNext routes and automatic legacy fallback/compatibility projection where still needed
+- VNext render-plan foundation exists but is not yet live-wired: `ChartRenderPlan`, neutral render buffers, density policy, time-bucket aggregation, backend capabilities, backend selector, and adapter dispatcher are covered by automated tests
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
@@ -188,6 +191,8 @@ Current read:
 - tab switches are recorded as `TabSwitched` session milestones through the shared view-model context
 - shared tab-shell layout hardening has been smoke-verified: Charts, Syncfusion, and Admin render through the shared workspace shell, with tab/export milestones available in evidence exports
 - runtime-path tracking distinguishes VNext from legacy loads with full signature-chain diagnostics
+- VNext render plans are now a non-live delivery contract over chart programs: `ChartRenderPlanProjector` can project Cartesian and hierarchy-shaped plans, `RenderDensityPolicy` chooses full-fidelity/aggregated/viewport-refined intent, `TimeBucketRenderAggregationKernel` creates neutral bounded render buffers, and `ChartRenderPlanAdapterDispatcher` routes plans to backend-capability adapters
+- the current render-plan foundation explicitly covers current chart program families and includes a hierarchy shape for Syncfusion/Sunburst-style delivery, but live UI rendering still flows through existing adapters until each targeted wiring slice is validated
 - the chart/rendering delivery seams are materially cleaner than before the Phase 5 rehaul
 - `DataFetcher` is now a facade over focused query groups for catalog, metric-data, date/count, and admin concerns
 - transform subtype-combo lifecycle is now isolated in `TransformSubtypeSelectionCoordinator`
@@ -329,14 +334,14 @@ Documents absorbed from Phase 5:
 - Shared `EvidenceDataResolutionHelper` extracted: unified data-resolution and strategy-resolution patterns duplicated across 3 evidence evaluators
 - `UI/MainHost/` (41 files flat) decomposed into 3 sub-namespaces: `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
 - Architecture guardrail paths and `ParityExportShapeTests` reflection strings updated
-- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparison, workspace load/milestone recording, and binary metric context consolidation bring the current lane to 696 DataVisualiser tests
+- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparison, workspace load/milestone recording, binary metric context consolidation, and VNext render-plan foundation bring the current lane to 725 DataVisualiser tests
 
 **Phase 6.6 (Architecture audit and baseline refresh):** Closed.
 
 Audit baseline (April 2026):
-- 476 C# source files
-- 171 test files, 696 DataVisualiser automated tests passing; 15 DataFileReader tests passing
-- 56 architecture guardrail tests enforcing structural contracts
+- Phase 6 closure baseline: 476 C# source files
+- Current pre-Phase-7 render-plan foundation lane: 484 C# source files, 174 test files, 725 DataVisualiser automated tests passing; 15 DataFileReader tests passing
+- Architecture guardrails continue to enforce structural contracts, including backend-neutral VNext render-plan boundaries
 
 **1. To what extent have the Phase 6 objectives been met?**
 
@@ -359,7 +364,7 @@ These are accepted as known debt, not open work:
 **3. How would remaining objectives be reached in the next cycle?**
 
 - `MainChartsView` host reduction: extract one more coordinator per session when a clear host-level responsibility boundary is identified (behavior-adjacent, requires targeted smoke)
-- VNext widening: extend `VNextMainChartIntegrationCoordinator` to cover additional chart families one at a time, each with its own smoke verification
+- VNext render-plan delivery: wire the Main chart to consume `ChartRenderPlan` first, then sequentially wire all remaining chart families and tabs, including Syncfusion, unless explicitly deferred
 - Controller adapter convergence: defer to Phase 8 (UI consolidation) when Phase 7 has established what the standardized graph host surface looks like
 
 **Global Phase 6 Closure Assessment:**
@@ -370,9 +375,9 @@ These are accepted as known debt, not open work:
 | 2. Repeated irreducible operations no longer sprawl | Yes | Frequency binning, transform computation, series preparation, smoothing, bucket aggregation each have one owner |
 | 3. Truth/derivation/orchestration/delivery seams are clearer | Yes | VNext reasoning engine live for main family; rendering contracts enforce backend qualification; evidence boundary decomposed |
 | 4. Remaining outliers are explicit, bounded, and visible | Yes | `MainChartsView` (host gravity), `SyncfusionChartsView` (parallel host), adapter pattern variation — all documented, all bounded |
-| 5. Current capabilities preserved or replaced | Yes | 696 DataVisualiser tests and 15 DataFileReader tests pass; all chart families render; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
+| 5. Current capabilities preserved or replaced | Yes | 725 DataVisualiser tests and 15 DataFileReader tests pass; all chart families render through existing live adapters; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
 
-**Phase 6 is closed.** All active chart families now route through the VNext reasoning engine for fresh data loads. Phase 7 entry gate is satisfied — new capabilities may proceed.
+**Phase 6 is closed.** All active chart families now route through the VNext reasoning engine for fresh data loads. Phase 7 entry gate is satisfied; before substantive Phase 7 capability expansion begins, the active primer is render-plan delivery infrastructure followed by sequential live wiring across all chart families and tabs unless explicitly deferred.
 
 **Phase B host spine decomposition (banked slices):**
 - Export trigger extraction → `MainChartsViewEvidenceExportCoordinator`
@@ -396,6 +401,11 @@ Phase 6 established a trustworthy hierarchy. The primary mandate is now twofold:
 - VNext coverage has been extended to Distribution, WeekdayTrend, Transform, and Bar/Pie one family at a time
 - each widened family has its own program kind, projection/runtime tracking, and automatic legacy fallback
 - the architectural pattern is proven; future work is capability expansion, not Phase 6 discovery
+
+**Pre-Phase-7 rendering primer - active, non-live:**
+- move chart delivery toward VNext-owned `ChartProgram -> ChartRenderPlan -> backend adapter` flow
+- preserve full source identity while allowing density-aware render buffers for large ranges
+- keep LiveCharts, Syncfusion, and future plugin renderers behind one adapter contract while wiring all current chart families and tabs before Phase 7 capability work
 
 In practice:
 
@@ -423,6 +433,10 @@ These are the target responsibility buckets for evaluating any slice:
 9. **Evidence and Diagnostics** — parity exports, reachability/evidence generation, runtime-path diagnostics
 
 ---
+
+Pre-Phase-7 rendering-primer note:
+- VNext render plans, neutral render buffers, density policy, and backend-neutral adapter dispatch belong under Rendering Capability Families until a concrete UI surface consumes them.
+- LiveCharts, Syncfusion, and future plugin clients should converge on `IChartRenderPlanAdapter<TSurface>`-style seams rather than accepting chart-program or UI-specific data directly.
 
 ## 9. Governing Legibility Cycle
 
@@ -488,7 +502,7 @@ Any next-cycle proposal must follow the governing iteration flow (Section 9) or 
 VNext activation is proven across active chart families. Preservation rules:
 - Preserve the current `Main + Normalized + Diff/Ratio` live slice with evidence and targeted smoke as the bounded family baseline
 - Preserve the independent per-family VNext routes for Distribution, WeekdayTrend, Transform, and BarPie with automatic legacy fallback
-- Treat future VNext work as Phase 7 capability expansion unless it repairs a concrete regression
+- Treat future VNext work after the render-plan delivery primer as Phase 7 capability expansion unless it repairs a concrete regression
 
 #### VNext Widening Tracker
 
@@ -504,6 +518,28 @@ VNext activation is proven across active chart families. Preservation rules:
 | BarPie | Live (independent route) | BarPie visible (all series loaded per-selection) | April 2026 smoke/export evidence | Per-series VNext load in BarPieRenderModelBuilder; CMS preference preserved; automatic legacy fallback; runtime path tracked as VNextBarPie |
 
 ---
+
+### 10.7 Pre-Phase-7 Render-Plan Delivery Primer (OPEN - NON-LIVE)
+
+Current completed foundation:
+- `ChartRenderPlan` models backend-neutral Cartesian, faceted, and hierarchy delivery intent.
+- `RenderDataBuffer` and `RenderDataPoint` carry chart-library-agnostic render data.
+- `RenderDensityPolicy` chooses full-fidelity, aggregated-overview, or viewport-refined intent.
+- `TimeBucketRenderAggregationKernel` creates bounded overview buffers without discarding source identity.
+- `ChartBackendCapabilities` and `ChartBackendSelector` describe backend support without importing vendor types.
+- `IChartRenderPlanAdapter<TSurface>` and `ChartRenderPlanAdapterDispatcher<TSurface>` define the future adapter seam for LiveCharts, Syncfusion, and plugin renderers.
+
+Current status:
+- automated tests cover the non-live foundation across all current `ChartProgramKind` values and hierarchy-shaped Syncfusion/Sunburst-style plans
+- no live chart surface consumes `ChartRenderPlan` yet
+- no manual smoke is required for the current foundation
+
+Next live slices:
+1. Wire the Main chart to consume `ChartRenderPlan` through a LiveCharts adapter.
+2. Emit density/backend diagnostics in evidence export.
+3. Run targeted smoke for small range, large range, zoom/reset zoom, and export diagnostics.
+4. Sequentially wire Normalized, Diff/Ratio, Transform, Distribution, WeekdayTrend, Bar/Pie, and Syncfusion.
+5. Record any explicit deferral before starting Phase 7 capability work.
 
 ## 11. Current Priority Outliers
 
@@ -572,7 +608,7 @@ Already banked (do not reopen casually):
 - confidence and provenance are integral to new results, not optional decorations
 - the reasoning engine's generality increases with each capability — programs become more consumer-agnostic
 - no regression in existing chart delivery, evidence, or structural integrity
-- VNext family widening (6.3) proceeds in parallel without blocking capability expansion
+- render-plan delivery primer evolves through bounded slices before Phase 7 capability expansion: non-live foundation first, then Main, then all remaining chart families/tabs including Syncfusion unless explicitly deferred
 
 ---
 

@@ -235,6 +235,8 @@ This layer contains rendering contracts, backend adapters, backend probes, and q
 
 **Responsibilities**
 - define rendering capabilities by chart family and interaction contract
+- define backend-neutral render plans and render buffers before concrete chart-library binding
+- choose render density intent (`FullFidelity`, `AggregatedOverview`, `ViewportRefined`) without discarding source identity
 - isolate backend-specific lifecycle, hover, animation, disposal, and visibility behavior
 - host backend qualification artifacts and matrices
 - translate render intent into backend-specific control behavior
@@ -245,6 +247,15 @@ This layer contains rendering contracts, backend adapters, backend probes, and q
 - rendering infrastructure must not reach upward to decide computation
 - backend-specific quirks must be quarantined here, not spread into orchestration or UI state
 - unqualified backend slices must not be treated as production-safe
+- VNext render-plan contracts must remain free of `LiveCharts`, `Syncfusion`, WPF, or other concrete backend types
+
+**Current VNext render-plan foundation (pre-Phase-7 primer)**
+- `ChartRenderPlan` is the backend-neutral delivery contract over `ChartProgram`.
+- `RenderDataBuffer` / `RenderDataPoint` carry chart-library-agnostic series data.
+- `ChartHierarchyNodePlan` carries hierarchy-shaped delivery intent for Syncfusion/Sunburst-style and future hierarchy backends.
+- `RenderDensityPolicy` and `TimeBucketRenderAggregationKernel` prepare bounded overview buffers for large ranges while preserving source counts and signatures.
+- `ChartBackendCapabilities`, `ChartBackendSelector`, `IChartRenderPlanAdapter<TSurface>`, and `ChartRenderPlanAdapterDispatcher<TSurface>` define the backend negotiation and adapter seam.
+- This foundation is currently non-live: existing UI surfaces still render through their current adapters until targeted wiring slices are validated. The pre-Phase-7 primer should wire all current chart families and tabs before capability expansion unless a deferral is explicit.
 
 ---
 
@@ -501,6 +512,7 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 | Workspace load coordination | `WorkspaceLoadCoordinator` and its `LoadValidationInput`, `ValidationActions`, `LoadExecutionActions`, `ClearActions` records |
 | Factory | `MainChartsViewChartPipelineFactory`, `MainChartsViewChartPipelineFactoryResult` |
 | Render | `ChartRenderingOrchestrator`, `ChartUpdateCoordinator` |
+| VNext render-plan foundation (non-live) | `ChartRenderPlan`, `ChartRenderPlanProjector`, `RenderDensityPolicy`, `TimeBucketRenderAggregationKernel`, `ChartBackendCapabilities`, `ChartRenderPlanAdapterDispatcher<TSurface>` |
 | Evidence | `EvidenceExportModels`, `EvidenceDiagnosticsBuilder`, `EvidenceDataResolutionHelper`, `MainChartsEvidenceExportService` (all in `UI/MainHost/Evidence/`) |
 
 ### A.3 VNext Routing Decision
@@ -577,6 +589,9 @@ flowchart TD
         V_PLANNER["ChartProgramPlanner"]
         V_KERNEL["OperationKernel"]
         V_PROGRAM["ChartProgram"]
+        V_PLAN["ChartRenderPlan (non-live foundation)"]
+        V_DENSITY["RenderDensityPolicy / RenderDataBuffer"]
+        V_BACKEND["Backend Adapter Dispatcher"]
         V_PROJECTOR["LegacyChartProgramProjector"]
         V_CONTEXT["ChartDataContext Projection"]
         V_ADAPTER["Existing Chart Adapter"]
@@ -590,6 +605,9 @@ flowchart TD
         V_PROGRAM_REQUEST --> V_PLANNER
         V_PLANNER --> V_KERNEL
         V_KERNEL --> V_PROGRAM
+        V_PROGRAM -. "future live delivery" .-> V_PLAN
+        V_PLAN -.-> V_DENSITY
+        V_DENSITY -.-> V_BACKEND
         V_PROGRAM --> V_PROJECTOR
         V_PROJECTOR --> V_CONTEXT
         V_CONTEXT --> V_ADAPTER
@@ -626,6 +644,8 @@ flowchart LR
     VNext["VNext: program-first"] --> V1["MetricLoadSnapshot is authoritative"]
     V1 --> V2["ChartProgram declares intended chart behavior"]
     V2 --> V3["Current bridge projects to ChartDataContext"]
+    V2 -. "non-live foundation" .-> V4["ChartRenderPlan + density-aware buffers"]
+    V4 -. "future wiring" .-> V5["Backend adapter dispatch"]
 ```
 
 ---
