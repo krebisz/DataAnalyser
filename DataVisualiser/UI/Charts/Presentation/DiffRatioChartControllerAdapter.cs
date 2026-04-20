@@ -140,7 +140,7 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 
     private async Task RenderDiffRatioFromSelectionAsync()
     {
-        await MetricSeriesSelectionAdapterHelper.RerenderIfVisibleAsync(
+        await BinaryMetricChartContextHelper.RerenderIfVisibleAsync(
             _viewModel.ChartState.IsDiffRatioVisible,
             _viewModel.ChartState.LastContext,
             RenderDiffRatioAsync);
@@ -176,27 +176,16 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
         var displayName1 = ResolveDiffRatioDisplayName(ctx, primarySelection);
         var displayName2 = ResolveDiffRatioDisplayName(ctx, secondarySelection);
 
-        var diffRatioContext = new ChartDataContext
-        {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                PrimaryCms = primaryCms,
-                SecondaryCms = secondaryCms,
-                DisplayName1 = displayName1,
-                DisplayName2 = displayName2,
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                ActualSeriesCount = secondaryData == null ? 1 : 2,
-                From = ctx.From,
-                To = ctx.To
-        };
+        var diffRatioContext = BinaryMetricChartContextHelper.BuildContext(
+            ctx,
+            primarySelection,
+            secondarySelection,
+            primaryData,
+            secondaryData,
+            primaryCms,
+            secondaryCms,
+            displayName1,
+            displayName2);
 
         return (primaryData, secondaryData, diffRatioContext);
     }

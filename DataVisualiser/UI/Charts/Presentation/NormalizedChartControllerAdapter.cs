@@ -132,7 +132,7 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     private async Task RenderNormalizedFromSelectionAsync()
     {
-        await MetricSeriesSelectionAdapterHelper.RerenderIfVisibleAsync(
+        await BinaryMetricChartContextHelper.RerenderIfVisibleAsync(
             _viewModel.ChartState.IsNormalizedVisible,
             _viewModel.ChartState.LastContext,
             RenderNormalizedAsync);
@@ -239,27 +239,16 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     private static ChartDataContext BuildNormalizedContext(ChartDataContext ctx, MetricSeriesSelection? primarySelection, MetricSeriesSelection? secondarySelection, IReadOnlyList<MetricData>? primaryData, IReadOnlyList<MetricData>? secondaryData, ICanonicalMetricSeries? primaryCms, ICanonicalMetricSeries? secondaryCms)
     {
-        return new ChartDataContext
-        {
-                Data1 = primaryData,
-                Data2 = secondaryData,
-                PrimaryCms = primaryCms,
-                SecondaryCms = secondaryCms,
-                DisplayName1 = ResolveNormalizedDisplayName(ctx, primarySelection),
-                DisplayName2 = ResolveNormalizedDisplayName(ctx, secondarySelection),
-                MetricType = primarySelection?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = primarySelection?.MetricType ?? ctx.PrimaryMetricType,
-                PrimarySubtype = primarySelection?.Subtype,
-                SecondaryMetricType = secondarySelection?.MetricType ?? ctx.SecondaryMetricType,
-                SecondarySubtype = secondarySelection?.Subtype,
-                DisplayPrimaryMetricType = primarySelection?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplayPrimarySubtype = primarySelection?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                DisplaySecondaryMetricType = secondarySelection?.DisplayMetricType ?? ctx.DisplaySecondaryMetricType,
-                DisplaySecondarySubtype = secondarySelection?.DisplaySubtype ?? ctx.DisplaySecondarySubtype,
-                ActualSeriesCount = secondaryData == null ? 1 : 2,
-                From = ctx.From,
-                To = ctx.To
-        };
+        return BinaryMetricChartContextHelper.BuildContext(
+            ctx,
+            primarySelection,
+            secondarySelection,
+            primaryData,
+            secondaryData,
+            primaryCms,
+            secondaryCms,
+            ResolveNormalizedDisplayName(ctx, primarySelection),
+            ResolveNormalizedDisplayName(ctx, secondarySelection));
     }
 
     private void UpdateNormalizedPanelTitle(ChartDataContext ctx)

@@ -1,6 +1,7 @@
 using System.Windows;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.UI.Workspace.Diagnostics;
 
 namespace DataVisualiser.UI.MainHost.Evidence;
 
@@ -8,11 +9,11 @@ internal sealed class MainChartsSessionDiagnosticsRecorder
 {
     private const int MaxTrackedHostMessages = 20;
     private readonly List<HostMessageDiagnosticsSnapshot> _recentHostMessages = [];
-    private readonly MainWindowViewModel _viewModel;
+    private readonly WorkspaceSessionMilestoneRecorder _milestoneRecorder;
 
     public MainChartsSessionDiagnosticsRecorder(MainWindowViewModel viewModel)
     {
-        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _milestoneRecorder = new WorkspaceSessionMilestoneRecorder(viewModel);
     }
 
     public IReadOnlyList<HostMessageDiagnosticsSnapshot> RecentHostMessages => _recentHostMessages;
@@ -45,18 +46,6 @@ internal sealed class MainChartsSessionDiagnosticsRecorder
 
     public void RecordSessionMilestone(string kind, string outcome, string? note = null)
     {
-        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
-        {
-            TimestampUtc = DateTime.UtcNow,
-            Kind = kind,
-            Outcome = outcome,
-            MetricType = _viewModel.MetricState.SelectedMetricType,
-            SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
-            SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
-            Note = note
-        });
+        _milestoneRecorder.RecordSessionMilestone(kind, outcome, note);
     }
 }

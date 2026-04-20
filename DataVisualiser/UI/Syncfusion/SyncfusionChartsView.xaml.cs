@@ -20,6 +20,7 @@ using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.MainHost.Export;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.UI.Workspace.Diagnostics;
 
 namespace DataVisualiser.UI.Syncfusion;
 
@@ -32,6 +33,7 @@ public partial class SyncfusionChartsView : UserControl
     private readonly MainChartsViewStateSyncCoordinator _stateSyncCoordinator = new();
     private readonly MetricSelectionPanelEventBinder _selectionPanelEventBinder = new();
     private MainChartsEvidenceExportService _evidenceExportService = null!;
+    private WorkspaceSessionMilestoneRecorder _sessionMilestoneRecorder = null!;
     private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private ChartState _chartState = null!;
     private MetricState _metricState = null!;
@@ -127,6 +129,7 @@ public partial class SyncfusionChartsView : UserControl
         _uiState = shared.UiState;
         _metricSelectionService = shared.MetricSelectionService;
         _viewModel = shared.ViewModel;
+        _sessionMilestoneRecorder = new WorkspaceSessionMilestoneRecorder(_viewModel);
         _evidenceExportService = new MainChartsEvidenceExportService(
             new ReachabilityExportWriter(),
             new ReachabilityExportPathResolver(),
@@ -557,19 +560,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void RecordSessionMilestone(string kind, string outcome, string? note = null)
     {
-        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
-        {
-            TimestampUtc = DateTime.UtcNow,
-            Kind = kind,
-            Outcome = outcome,
-            MetricType = _viewModel.MetricState.SelectedMetricType,
-            SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
-            SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
-            Note = note
-        });
+        _sessionMilestoneRecorder.RecordSessionMilestone(kind, outcome, note);
     }
 
     private void OnClear(object sender, RoutedEventArgs e)

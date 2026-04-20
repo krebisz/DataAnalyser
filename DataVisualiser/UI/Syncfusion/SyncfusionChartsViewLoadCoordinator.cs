@@ -1,9 +1,12 @@
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Workspace.Coordination;
 
 namespace DataVisualiser.UI.Syncfusion;
 
 public sealed class SyncfusionChartsViewLoadCoordinator
 {
+    private readonly WorkspaceLoadCoordinator _workspaceLoadCoordinator = new();
+
     public sealed record LoadValidationInput(string? SelectedMetricType, DateTime FromDate, DateTime ToDate);
 
     public sealed record ValidationActions(
@@ -33,49 +36,29 @@ public sealed class SyncfusionChartsViewLoadCoordinator
     {
         ArgumentNullException.ThrowIfNull(actions);
 
-        if (input.SelectedMetricType == null)
-        {
-            actions.ShowWarning("No Selection", "Please select a Metric Type");
-            return false;
-        }
-
-        using (actions.BeginSelectionStateBatch())
-        {
-            actions.SetSelectedMetricType(input.SelectedMetricType);
-            actions.UpdateSelectedSubtypesInViewModel();
-            actions.SetDateRange(input.FromDate, input.ToDate);
-        }
-
-        var (isValid, errorMessage) = actions.ValidateDataLoadRequirements();
-        if (!isValid)
-        {
-            actions.ShowWarning("Invalid Selection", errorMessage ?? "The current selection is not valid.");
-            return false;
-        }
-
-        return true;
+        return _workspaceLoadCoordinator.ValidateAndPrepareLoad(
+            new WorkspaceLoadCoordinator.LoadValidationInput(input.SelectedMetricType, input.FromDate, input.ToDate),
+            new WorkspaceLoadCoordinator.ValidationActions(
+                actions.BeginSelectionStateBatch,
+                actions.SetSelectedMetricType,
+                actions.UpdateSelectedSubtypesInViewModel,
+                actions.SetDateRange,
+                null,
+                actions.ValidateDataLoadRequirements,
+                actions.ShowWarning));
     }
 
     public async Task ExecuteLoadAsync(LoadExecutionActions actions)
     {
         ArgumentNullException.ThrowIfNull(actions);
 
-        try
-        {
-            var dataLoaded = await actions.LoadMetricDataIntoLastContextAsync();
-            if (!dataLoaded)
-            {
-                actions.ResetLastContext();
-                return;
-            }
-
-            actions.PublishLastContextAndRequestChartUpdate();
-        }
-        catch (Exception ex)
-        {
-            actions.ShowError("Error", $"Error loading data: {ex.Message}");
-            actions.ResetLastContext();
-        }
+        await _workspaceLoadCoordinator.ExecuteLoadAsync(
+            new WorkspaceLoadCoordinator.LoadExecutionActions(
+                null,
+                actions.LoadMetricDataIntoLastContextAsync,
+                actions.ResetLastContext,
+                actions.PublishLastContextAndRequestChartUpdate,
+                actions.ShowError));
     }
 
     public void ClearSelection(string defaultResolution, bool isDefaultResolutionSelected, ClearActions actions)
@@ -83,18 +66,19 @@ public sealed class SyncfusionChartsViewLoadCoordinator
         ArgumentNullException.ThrowIfNull(defaultResolution);
         ArgumentNullException.ThrowIfNull(actions);
 
-        actions.ClearEvidence();
-        actions.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
-        actions.ResetLastContext();
-        actions.ClearManagedChart();
-        actions.UpdateToggleEnabled();
-
-        if (isDefaultResolutionSelected)
-        {
-            actions.ResetForResolutionChange(defaultResolution);
-            return;
-        }
-
-        actions.SelectResolution(defaultResolution);
+        _workspaceLoadCoordinator.ClearSelection(
+            defaultResolution,
+            isDefaultResolutionSelected,
+            new WorkspaceLoadCoordinator.ClearActions(
+                () =>
+                {
+                    actions.ClearEvidence();
+                    actions.SetSelectedSeries(Array.Empty<MetricSeriesSelection>());
+                    actions.ResetLastContext();
+                    actions.ClearManagedChart();
+                    actions.UpdateToggleEnabled();
+                },
+                actions.ResetForResolutionChange,
+                actions.SelectResolution));
     }
 }

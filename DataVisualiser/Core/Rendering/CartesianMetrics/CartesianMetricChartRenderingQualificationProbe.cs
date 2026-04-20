@@ -1,4 +1,5 @@
 using System.Windows;
+using DataVisualiser.Core.Rendering;
 
 namespace DataVisualiser.Core.Rendering.CartesianMetrics;
 
@@ -47,22 +48,11 @@ public sealed class CartesianMetricChartRenderingQualificationProbe
         ICollection<string> failures,
         string stage)
     {
-        try
-        {
-            await contract.RenderAsync(request, host);
-            if (!HasRenderedState(contract, route, host))
-            {
-                failures.Add($"{stage}: route rendered without content");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"{stage}: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return await RenderingQualificationProbeSupport.TryRenderAsync(
+            () => contract.RenderAsync(request, host),
+            () => HasRenderedState(contract, route, host),
+            failures,
+            stage);
     }
 
     private static bool TryVisibilityTransition(
@@ -71,26 +61,10 @@ public sealed class CartesianMetricChartRenderingQualificationProbe
         CartesianMetricChartRoute route,
         ICollection<string> failures)
     {
-        var visibility = host.Chart.Visibility;
-
-        try
-        {
-            host.Chart.Visibility = Visibility.Collapsed;
-            host.Chart.Visibility = visibility;
-
-            if (!HasRenderedState(contract, route, host))
-            {
-                failures.Add("visibility transition: content did not survive hide/show");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"visibility transition: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryVisibilityTransition(
+            [host.Chart],
+            () => HasRenderedState(contract, route, host),
+            failures);
     }
 
     private static bool TryOffscreenTransition(
@@ -99,41 +73,10 @@ public sealed class CartesianMetricChartRenderingQualificationProbe
         CartesianMetricChartRoute route,
         ICollection<string> failures)
     {
-        var width = host.Chart.Width;
-        var height = host.Chart.Height;
-        var actualWidth = host.Chart.ActualWidth;
-        var actualHeight = host.Chart.ActualHeight;
-
-        try
-        {
-            host.Chart.Width = 0;
-            host.Chart.Height = 0;
-            host.Chart.Measure(new Size(0, 0));
-            host.Chart.Arrange(new Rect(0, 0, 0, 0));
-            host.Chart.UpdateLayout();
-
-            host.Chart.Width = width;
-            host.Chart.Height = height;
-
-            var restoreWidth = width > 0 ? width : Math.Max(actualWidth, 1);
-            var restoreHeight = height > 0 ? height : Math.Max(actualHeight, 1);
-            host.Chart.Measure(new Size(restoreWidth, restoreHeight));
-            host.Chart.Arrange(new Rect(0, 0, restoreWidth, restoreHeight));
-            host.Chart.UpdateLayout();
-
-            if (!HasRenderedState(contract, route, host))
-            {
-                failures.Add("offscreen transition: content did not survive host collapse/restore");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"offscreen transition: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryOffscreenTransition(
+            host.Chart,
+            () => HasRenderedState(contract, route, host),
+            failures);
     }
 
     private static bool TryResetView(
@@ -142,16 +85,7 @@ public sealed class CartesianMetricChartRenderingQualificationProbe
         CartesianMetricChartRoute route,
         ICollection<string> failures)
     {
-        try
-        {
-            contract.ResetView(route, host);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"reset view: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryResetView(() => contract.ResetView(route, host), failures);
     }
 
     private static bool TryClear(
@@ -160,23 +94,11 @@ public sealed class CartesianMetricChartRenderingQualificationProbe
         CartesianMetricChartRoute route,
         ICollection<string> failures)
     {
-        try
-        {
-            contract.Clear(route, host);
-
-            if (contract.HasRenderableContent(route, host))
-            {
-                failures.Add("clear: content remained after clear");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            failures.Add($"clear: {ex.GetType().Name} - {ex.Message}");
-            return false;
-        }
+        return RenderingQualificationProbeSupport.TryClear(
+            () => contract.Clear(route, host),
+            () => contract.HasRenderableContent(route, host),
+            failures,
+            "clear");
     }
 
     private static bool HasRenderedState(
