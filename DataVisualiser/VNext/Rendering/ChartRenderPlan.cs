@@ -36,12 +36,28 @@ public sealed record ChartInteractionPlan(
     bool SupportsSelection,
     bool SupportsViewportRefinement);
 
+public sealed record RenderDataPoint(
+    DateTime X,
+    double? Y,
+    double? Minimum,
+    double? Maximum,
+    int SourcePointCount);
+
+public sealed record RenderDataBuffer(
+    string SeriesId,
+    string Label,
+    IReadOnlyList<RenderDataPoint> Points,
+    int SourcePointCount,
+    int RenderedPointCount,
+    IReadOnlyDictionary<string, string> Metadata);
+
 public sealed record ChartSeriesPlan(
     string Id,
     string Label,
     IReadOnlyList<DateTime> Timeline,
     IReadOnlyList<double> RawValues,
     IReadOnlyList<double> SmoothedValues,
+    RenderDataBuffer RenderBuffer,
     int SourcePointCount,
     int RenderedPointCount,
     IReadOnlyDictionary<string, string> Metadata);

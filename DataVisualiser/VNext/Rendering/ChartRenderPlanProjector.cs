@@ -4,6 +4,8 @@ namespace DataVisualiser.VNext.Rendering;
 
 public sealed class ChartRenderPlanProjector
 {
+    private readonly TimeBucketRenderAggregationKernel _aggregationKernel;
+
     private static readonly ChartInteractionPlan DefaultCartesianInteraction = new(
         SupportsZoom: true,
         SupportsPan: true,
@@ -18,27 +20,21 @@ public sealed class ChartRenderPlanProjector
         SupportsSelection: true,
         SupportsViewportRefinement: false);
 
+    public ChartRenderPlanProjector(TimeBucketRenderAggregationKernel? aggregationKernel = null)
+    {
+        _aggregationKernel = aggregationKernel ?? new TimeBucketRenderAggregationKernel();
+    }
+
     public ChartRenderPlan ProjectCartesian(ChartProgram program, RenderDensityPlan? density = null)
     {
         ArgumentNullException.ThrowIfNull(program);
 
+        var resolvedDensity = density ?? RenderDensityPlan.FullFidelity(
+            program.Series.Sum(item => Math.Min(program.Timeline.Count, item.RawValues.Count)));
         var series = program.Series
-            .Select(item => new ChartSeriesPlan(
-                item.Id,
-                item.Label,
-                program.Timeline,
-                item.RawValues,
-                item.SmoothedValues,
-                SourcePointCount: item.RawValues.Count,
-                RenderedPointCount: Math.Min(program.Timeline.Count, item.RawValues.Count),
-                Metadata: new Dictionary<string, string>
-                {
-                    ["ProgramKind"] = program.Kind.ToString(),
-                    ["DisplayMode"] = program.DisplayMode.ToString()
-                }))
+            .Select(item => BuildSeriesPlan(program, item, resolvedDensity))
             .ToArray();
 
-        var pointCount = series.Sum(item => item.RenderedPointCount);
         return new ChartRenderPlan(
             BuildPlanId(program),
             program.Kind,
@@ -50,7 +46,7 @@ public sealed class ChartRenderPlanProjector
             program.SourceSignature,
             series,
             Array.Empty<ChartHierarchyNodePlan>(),
-            density ?? RenderDensityPlan.FullFidelity(pointCount),
+            resolvedDensity with { RenderedPointCount = series.Sum(item => item.RenderedPointCount) },
             DefaultCartesianInteraction,
             new Dictionary<string, string>
             {
@@ -95,6 +91,28 @@ public sealed class ChartRenderPlanProjector
 
     private static string BuildPlanId(ChartProgram program) =>
         $"{program.Kind}:{program.SourceSignature}";
+
+    private ChartSeriesPlan BuildSeriesPlan(
+        ChartProgram program,
+        ChartSeriesProgram item,
+        RenderDensityPlan density)
+    {
+        var buffer = _aggregationKernel.BuildBuffer(item, program.Timeline, density);
+        return new ChartSeriesPlan(
+            item.Id,
+            item.Label,
+            program.Timeline,
+            item.RawValues,
+            item.SmoothedValues,
+            buffer,
+            SourcePointCount: buffer.SourcePointCount,
+            RenderedPointCount: buffer.RenderedPointCount,
+            Metadata: new Dictionary<string, string>
+            {
+                ["ProgramKind"] = program.Kind.ToString(),
+                ["DisplayMode"] = program.DisplayMode.ToString()
+            });
+    }
 
     private static int CountNodes(IReadOnlyList<ChartHierarchyNodePlan> nodes)
     {

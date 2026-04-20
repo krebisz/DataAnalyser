@@ -45,10 +45,80 @@ public sealed class ChartRenderPlanProjectorTests
 
         var plan = projector.ProjectCartesian(program, density);
 
-        Assert.Same(density, plan.Density);
         Assert.Equal(ChartRenderDensityMode.AggregatedOverview, plan.Density.Mode);
-        Assert.Equal(2_000, plan.Density.RenderedPointCount);
+        Assert.Equal(4, plan.Density.RenderedPointCount);
+        Assert.Equal(2_000, plan.Density.BucketCount);
         Assert.Equal(program.From, plan.Density.Viewport?.From);
+    }
+
+    [Fact]
+    public void ProjectCartesian_WithAggregatedDensity_ShouldEmitNeutralRenderBuffers()
+    {
+        var program = CreateLargeProgram(ChartProgramKind.Transform, pointCount: 10);
+        var density = new RenderDensityPlan(
+            ChartRenderDensityMode.AggregatedOverview,
+            SourcePointCount: 10,
+            RenderedPointCount: 3,
+            BucketCount: 3);
+        var projector = new ChartRenderPlanProjector();
+
+        var plan = projector.ProjectCartesian(program, density);
+
+        Assert.Single(plan.Series);
+        Assert.Equal(ChartRenderDensityMode.AggregatedOverview, plan.Density.Mode);
+        Assert.Equal(3, plan.Series[0].RenderBuffer.Points.Count);
+        Assert.Equal(10, plan.Series[0].RenderBuffer.SourcePointCount);
+        Assert.Equal(3, plan.Series[0].RenderBuffer.RenderedPointCount);
+        Assert.Equal(2d, plan.Series[0].RenderBuffer.Points[0].Y);
+        Assert.Equal(1d, plan.Series[0].RenderBuffer.Points[0].Minimum);
+        Assert.Equal(3d, plan.Series[0].RenderBuffer.Points[0].Maximum);
+    }
+
+    [Fact]
+    public void RenderDensityPolicy_ShouldKeepSmallProgramsFullFidelity()
+    {
+        var program = CreateLargeProgram(ChartProgramKind.Main, pointCount: 4);
+        var policy = new RenderDensityPolicy(new RenderDensityPolicyOptions(
+            FullFidelityPointThreshold: 5,
+            OverviewTargetPointCount: 2));
+
+        var density = policy.Resolve(program);
+
+        Assert.Equal(ChartRenderDensityMode.FullFidelity, density.Mode);
+        Assert.Equal(4, density.SourcePointCount);
+        Assert.Equal(4, density.RenderedPointCount);
+    }
+
+    [Fact]
+    public void RenderDensityPolicy_ShouldAggregateLargeProgramsBeforeBackendBinding()
+    {
+        var program = CreateLargeProgram(ChartProgramKind.Normalized, pointCount: 10);
+        var policy = new RenderDensityPolicy(new RenderDensityPolicyOptions(
+            FullFidelityPointThreshold: 5,
+            OverviewTargetPointCount: 3));
+
+        var density = policy.Resolve(program);
+
+        Assert.Equal(ChartRenderDensityMode.AggregatedOverview, density.Mode);
+        Assert.Equal(10, density.SourcePointCount);
+        Assert.Equal(3, density.RenderedPointCount);
+        Assert.Equal(3, density.BucketCount);
+    }
+
+    [Fact]
+    public void RenderDensityPolicy_ShouldEmitViewportRefinedIntentWhenBackendSupportsIt()
+    {
+        var program = CreateLargeProgram(ChartProgramKind.Main, pointCount: 10);
+        var policy = new RenderDensityPolicy(new RenderDensityPolicyOptions(
+            FullFidelityPointThreshold: 5,
+            OverviewTargetPointCount: 3));
+        var backend = ChartBackendCapabilities.LiveChartsWpf with { SupportsViewportRefinement = true };
+        var viewport = new ChartViewport(program.From.AddDays(2), program.From.AddDays(5));
+
+        var density = policy.Resolve(program, viewport, backend);
+
+        Assert.Equal(ChartRenderDensityMode.ViewportRefined, density.Mode);
+        Assert.Equal(viewport, density.Viewport);
     }
 
     [Fact]
@@ -144,6 +214,27 @@ public sealed class ChartRenderPlanProjectorTests
         Assert.Contains("Hierarchy", ex.Message);
     }
 
+    [Theory]
+    [InlineData(ChartProgramKind.Main)]
+    [InlineData(ChartProgramKind.Normalized)]
+    [InlineData(ChartProgramKind.Difference)]
+    [InlineData(ChartProgramKind.Ratio)]
+    [InlineData(ChartProgramKind.Transform)]
+    [InlineData(ChartProgramKind.Distribution)]
+    [InlineData(ChartProgramKind.WeekdayTrend)]
+    [InlineData(ChartProgramKind.BarPie)]
+    public void ProjectCartesian_ShouldAcceptEveryCurrentChartFamilyWithoutUiBackendTypes(ChartProgramKind kind)
+    {
+        var program = CreateProgram(kind);
+        var projector = new ChartRenderPlanProjector();
+
+        var plan = projector.ProjectCartesian(program);
+
+        Assert.Equal(kind, plan.ProgramKind);
+        Assert.Equal(ChartRenderPlanKind.Cartesian, plan.PlanKind);
+        Assert.All(plan.Series, series => Assert.NotNull(series.RenderBuffer));
+    }
+
     private static ChartProgram CreateProgram(ChartProgramKind kind)
     {
         return new ChartProgram(
@@ -158,5 +249,26 @@ public sealed class ChartRenderPlanProjectorTests
                 new ChartSeriesProgram("evening", "Evening", [3d, 4d], [3.1d, 3.9d])
             ],
             "sig-1");
+    }
+
+    private static ChartProgram CreateLargeProgram(ChartProgramKind kind, int pointCount)
+    {
+        var from = new DateTime(2026, 1, 1);
+        var timeline = Enumerable.Range(0, pointCount)
+            .Select(offset => from.AddDays(offset))
+            .ToArray();
+        var values = Enumerable.Range(1, pointCount)
+            .Select(value => (double)value)
+            .ToArray();
+
+        return new ChartProgram(
+            kind,
+            ChartDisplayMode.Regular,
+            "Weight",
+            from,
+            from.AddDays(pointCount - 1),
+            timeline,
+            [new ChartSeriesProgram("series", "Series", values, values)],
+            "sig-large");
     }
 }
