@@ -761,6 +761,16 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void VNextRenderPlans_ShouldRemainBackendNeutral()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [Path.Combine("DataVisualiser", "VNext", "Rendering")],
+            ["using LiveCharts", "using Syncfusion", "using System.Windows"]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
     public void CoreOrchestrationAndMainHost_ShouldNotReferenceSyncfusionOrLiveChartsCore()
     {
         var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
