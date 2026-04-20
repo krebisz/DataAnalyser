@@ -47,4 +47,5 @@ public sealed class ChartSeriesMaterializerTests
         Assert.Equal(2, stats.Valid);
         Assert.Equal(2, stats.NaN);
     }
+
 }

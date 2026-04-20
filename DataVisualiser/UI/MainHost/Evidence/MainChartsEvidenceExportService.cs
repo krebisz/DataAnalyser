@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
@@ -44,11 +45,36 @@ public sealed class MainChartsEvidenceExportService
         ArgumentNullException.ThrowIfNull(chartState);
         ArgumentNullException.ThrowIfNull(metricState);
 
+        var exportStopwatch = Stopwatch.StartNew();
         var reachabilityRecords = _reachabilityStore.Snapshot();
         var selectedSeries = metricState.SelectedSeries.ToList();
+
+        var parityStopwatch = Stopwatch.StartNew();
         var parity = await _parityBuilder.BuildAsync(chartState, metricState, chartState.LastContext);
+        parityStopwatch.Stop();
+        chartState.RecordPerformanceTiming(
+            "EvidenceExport",
+            "ParityBuild",
+            parityStopwatch.ElapsedMilliseconds,
+            chartState.LastLoadRuntime?.RuntimePath);
+
         var selectedDistributionSettings = chartState.GetDistributionSettings(chartState.SelectedDistributionMode);
+
+        var diagnosticsStopwatch = Stopwatch.StartNew();
         var diagnostics = await _diagnosticsBuilder.BuildDiagnosticsAsync(chartState, metricState, reachabilityRecords);
+        diagnosticsStopwatch.Stop();
+        chartState.RecordPerformanceTiming(
+            "EvidenceExport",
+            "DiagnosticsBuild",
+            diagnosticsStopwatch.ElapsedMilliseconds,
+            chartState.LastLoadRuntime?.RuntimePath);
+
+        exportStopwatch.Stop();
+        chartState.RecordPerformanceTiming(
+            "EvidenceExport",
+            "PayloadBuild",
+            exportStopwatch.ElapsedMilliseconds,
+            chartState.LastLoadRuntime?.RuntimePath);
 
         var payload = new
         {
@@ -126,6 +152,7 @@ public sealed class MainChartsEvidenceExportService
             ParitySummary = parity.ParitySummary,
             ParityWarnings = parity.ParityWarnings,
             SessionMilestones = chartState.SessionMilestones,
+            PerformanceTimings = chartState.PerformanceTimings,
             Diagnostics = diagnostics
         };
 

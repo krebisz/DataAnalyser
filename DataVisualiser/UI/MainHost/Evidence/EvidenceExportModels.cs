@@ -89,6 +89,16 @@ public sealed class DiagnosticsSnapshot
     public Dictionary<string, VNextDiagnosticsSnapshot> VNextFamilies { get; set; } = new();
 }
 
+public sealed class PerformanceTimingSnapshot
+{
+    public DateTime TimestampUtc { get; set; }
+    public string Scope { get; set; } = string.Empty;
+    public string Operation { get; set; } = string.Empty;
+    public long DurationMs { get; set; }
+    public EvidenceRuntimePath? RuntimePath { get; set; }
+    public string? Note { get; set; }
+}
+
 public sealed class SessionMilestoneSnapshot
 {
     public DateTime TimestampUtc { get; set; }

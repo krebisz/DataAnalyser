@@ -25,14 +25,13 @@ public sealed class MainChartsViewDataLoadedCoordinator
         public Func<Task> RenderChartsFromLastContextAsync { get; } = renderChartsFromLastContextAsync ?? throw new ArgumentNullException(nameof(renderChartsFromLastContextAsync));
     }
 
-    public async Task HandleAsync(ChartDataContext? context, int selectedSubtypeCount, Actions actions)
+    public async Task HandleAsync(ChartDataContext? context, int selectedSubtypeCount, bool isBarPieVisible, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(actions);
 
         if (!MainChartsViewChartUpdateCoordinator.ShouldRenderCharts(context))
             return;
 
-        var safeContext = context!;
         actions.CompleteTransformSelectionsPendingLoad();
         actions.UpdateSubtypeOptions(ChartControllerKeys.Normalized);
         actions.UpdateSubtypeOptions(ChartControllerKeys.DiffRatio);
@@ -42,7 +41,6 @@ public sealed class MainChartsViewDataLoadedCoordinator
         actions.UpdatePrimaryDataRequiredButtonStates(selectedSubtypeCount);
         actions.UpdateSecondaryDataRequiredButtonStates(selectedSubtypeCount);
 
-        await actions.RenderChartAsync(ChartControllerKeys.BarPie, safeContext);
-        await actions.RenderChartsFromLastContextAsync();
+        await Task.CompletedTask;
     }
 }

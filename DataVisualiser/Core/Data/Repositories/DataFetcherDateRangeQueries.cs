@@ -151,15 +151,15 @@ internal sealed class DataFetcherDateRangeQueries : DataFetcherQueryGroup
 
         var sql = $@"
                 -- DataFetcher.GetRecordCount
-                SELECT RecordCount
+                SELECT SUM(RecordCount)
                 FROM {DataAccessDefaults.HealthMetricsCountsTable}
-                WHERE MetricType = @MetricType
-                  AND MetricSubtype = @MetricSubtype";
+                WHERE (@MetricType = '(All)' OR MetricType = @MetricType)
+                  AND (@MetricSubtype IS NULL OR @MetricSubtype = '' OR MetricSubtype = @MetricSubtype)";
 
         var result = await conn.QuerySingleOrDefaultAsync<long?>(sql, new
         {
             MetricType = metricType,
-            MetricSubtype = metricSubtype ?? string.Empty
+            MetricSubtype = metricSubtype
         });
 
         return result ?? 0;

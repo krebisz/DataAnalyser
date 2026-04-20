@@ -1,9 +1,6 @@
-﻿using System.Configuration;
-using System.Diagnostics;
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Data.Repositories;
-using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Services;
@@ -38,7 +35,7 @@ public class MetricSelectionService
         await Task.WhenAll(primaryCountTask, secondaryCountTask);
 
         var primaryStrategy = ResolveDataLoadStrategy(from, to, primaryCountTask.Result);
-        var secondaryStrategy = secondarySelection != null ? ResolveDataLoadStrategy(from, to, secondaryCountTask.Result) : (Mode: SamplingMode.None, TargetSamples: null, MaxRecords: null);
+        var secondaryStrategy = secondarySelection != null ? ResolveDataLoadStrategy(from, to, secondaryCountTask.Result) : new MetricDataLoadStrategy(SamplingMode.None, null, null);
 
         var legacyTasks = StartLegacyLoadTasks(_dataQueries, primarySelection, secondarySelection, from, to, tableName, primaryStrategy, secondaryStrategy);
 
@@ -49,7 +46,7 @@ public class MetricSelectionService
         return (PrimaryCms: cmsTasks.Primary?.Result.FirstOrDefault(), SecondaryCms: cmsTasks.Secondary?.Result.FirstOrDefault(), PrimaryLegacy: legacyTasks.Primary.Result, SecondaryLegacy: legacyTasks.Secondary.Result);
     }
 
-    private static(Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(IMetricSelectionDataQueries dataQueries, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
+    private static(Task<IEnumerable<MetricData>> Primary, Task<IEnumerable<MetricData>> Secondary) StartLegacyLoadTasks(IMetricSelectionDataQueries dataQueries, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, MetricDataLoadStrategy primaryStrategy, MetricDataLoadStrategy secondaryStrategy)
     {
         var primaryTask = dataQueries.GetHealthMetricsDataByBaseType(primarySelection.MetricType, primarySelection.QuerySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);
 
@@ -58,7 +55,7 @@ public class MetricSelectionService
         return (primaryTask, secondaryTask);
     }
 
-    private static async Task<(Task<IReadOnlyList<ICanonicalMetricSeries>>? Primary, Task<IReadOnlyList<ICanonicalMetricSeries>>? Secondary)> StartCmsLoadTasksAsync(CmsDataService cmsService, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) primaryStrategy, (SamplingMode Mode, int? TargetSamples, int? MaxRecords) secondaryStrategy)
+    private static async Task<(Task<IReadOnlyList<ICanonicalMetricSeries>>? Primary, Task<IReadOnlyList<ICanonicalMetricSeries>>? Secondary)> StartCmsLoadTasksAsync(CmsDataService cmsService, MetricSeriesSelection primarySelection, MetricSeriesSelection? secondarySelection, DateTime from, DateTime to, string tableName, MetricDataLoadStrategy primaryStrategy, MetricDataLoadStrategy secondaryStrategy)
     {
         Task<IReadOnlyList<ICanonicalMetricSeries>>? primaryTask = null;
         Task<IReadOnlyList<ICanonicalMetricSeries>>? secondaryTask = null;
@@ -79,28 +76,9 @@ public class MetricSelectionService
         return (primaryTask, secondaryTask);
     }
 
-    private(SamplingMode Mode, int? TargetSamples, int? MaxRecords) ResolveDataLoadStrategy(DateTime from, DateTime to, long recordCount)
+    private MetricDataLoadStrategy ResolveDataLoadStrategy(DateTime from, DateTime to, long recordCount)
     {
-        var enableSampling = bool.TryParse(ConfigurationManager.AppSettings["DataVisualiser:EnableSqlSampling"], out var samplingEnabled) && samplingEnabled;
-
-        var samplingThreshold = int.TryParse(ConfigurationManager.AppSettings["DataVisualiser:SamplingThreshold"], out var threshold) ? threshold : 5000;
-
-        var targetSamples = int.TryParse(ConfigurationManager.AppSettings["DataVisualiser:TargetSamplePoints"], out var samples) ? samples : 2000;
-
-        var enableLimiting = bool.TryParse(ConfigurationManager.AppSettings["DataVisualiser:EnableSqlResultLimiting"], out var limitingEnabled) && limitingEnabled;
-
-        if (enableSampling && recordCount > samplingThreshold)
-        {
-            Debug.WriteLine($"[Sampling] Activated UniformOverTime | Records={recordCount}, Target={targetSamples}, Range={from:yyyy-MM-dd}→{to:yyyy-MM-dd}");
-
-            return (SamplingMode.UniformOverTime, targetSamples, null);
-        }
-
-
-        if (enableLimiting)
-            return (SamplingMode.None, null, MathHelper.CalculateOptimalMaxRecords(from, to));
-
-        return (SamplingMode.None, null, null);
+        return MetricDataLoadStrategyResolver.Resolve(from, to, recordCount);
     }
 
 
@@ -114,7 +92,7 @@ public class MetricSelectionService
         var primaryStrategy = ResolveDataLoadStrategy(from, to, primaryCount);
 
         // SECONDARY
-        var secondaryStrategy = secondarySubtype != null ? ResolveDataLoadStrategy(from, to, await _dataQueries.GetRecordCount(baseType, secondarySubtype)) : (SamplingMode.None, null, null);
+        var secondaryStrategy = secondarySubtype != null ? ResolveDataLoadStrategy(from, to, await _dataQueries.GetRecordCount(baseType, secondarySubtype)) : new MetricDataLoadStrategy(SamplingMode.None, null, null);
 
         // LOAD
         var primaryTask = _dataQueries.GetHealthMetricsDataByBaseType(baseType, primarySubtype, from, to, tableName, primaryStrategy.MaxRecords, primaryStrategy.Mode, primaryStrategy.TargetSamples);

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -47,6 +49,7 @@ public partial class SyncfusionChartsView : UserControl
     private MetricSelectionService _metricSelectionService = null!;
     private SubtypeSelectorManager _selectorManager = null!;
     private List<MetricNameOption>? _subtypeList;
+    private readonly SemaphoreSlim _chartRenderGate = new(1, 1);
     private int _uiBusyDepth;
     private MainWindowViewModel _viewModel = null!;
 
@@ -694,15 +697,44 @@ public partial class SyncfusionChartsView : UserControl
 
     private async Task RenderChartAsync(string key, ChartDataContext ctx)
     {
+        if (!await _chartRenderGate.WaitAsync(0))
+        {
+            _viewModel.ChartState.RecordPerformanceTiming(
+                "Syncfusion",
+                $"RenderChartSkipped:{key}",
+                0,
+                _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+                "Another Syncfusion render is already running.");
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             await ResolveController(key).RenderAsync(ctx);
+            stopwatch.Stop();
+            _viewModel.ChartState.RecordPerformanceTiming(
+                "Syncfusion",
+                $"RenderChart:{key}",
+                stopwatch.ElapsedMilliseconds,
+                _viewModel.ChartState.LastLoadRuntime?.RuntimePath);
             RecordSessionMilestone("SyncfusionRenderCompleted", "Success", $"Rendered {key}.");
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
+            _viewModel.ChartState.RecordPerformanceTiming(
+                "Syncfusion",
+                $"RenderChart:{key}",
+                stopwatch.ElapsedMilliseconds,
+                _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+                ex.GetType().Name);
             RecordSessionMilestone("SyncfusionRenderFailed", "Error", $"Render failed for {key}: {ex.Message}");
             throw;
+        }
+        finally
+        {
+            _chartRenderGate.Release();
         }
     }
 

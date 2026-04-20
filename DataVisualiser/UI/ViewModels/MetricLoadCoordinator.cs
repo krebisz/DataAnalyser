@@ -126,6 +126,7 @@ public sealed class MetricLoadCoordinator
     public async Task<bool> LoadMetricDataAsync(MetricLoadRequest request, Action<ErrorEventArgs> onError)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var totalStopwatch = Stopwatch.StartNew();
 
         if (!ValidateDataLoadPrerequisites(request, out var validationError, onError))
             return false;
@@ -150,7 +151,16 @@ public sealed class MetricLoadCoordinator
 
             if (VNextChartRoutePolicy.ShouldUseMainFamilyPath(_chartState))
             {
+                var vnextStopwatch = Stopwatch.StartNew();
                 var vnextResult = await _vnextMainChartIntegrationCoordinator.LoadMainChartAsync(request, _chartState.MainChartDisplayMode);
+                vnextStopwatch.Stop();
+                _chartState.RecordPerformanceTiming(
+                    "MetricLoad",
+                    "VNextMainLoad",
+                    vnextStopwatch.ElapsedMilliseconds,
+                    EvidenceRuntimePath.VNextMain,
+                    vnextResult.Success ? null : vnextResult.FailureReason);
+
                 if (vnextResult.Success && vnextResult.ProjectedContext != null)
                 {
                     var supportsOnlyMainChart = VNextChartRoutePolicy.SupportsOnlyMainChart(_chartState);
@@ -164,6 +174,13 @@ public sealed class MetricLoadCoordinator
                         vnextResult.ProjectedContextSignature,
                         null,
                         supportsOnlyMainChart);
+                    totalStopwatch.Stop();
+                    _chartState.RecordPerformanceTiming(
+                        "MetricLoad",
+                        "Total",
+                        totalStopwatch.ElapsedMilliseconds,
+                        EvidenceRuntimePath.VNextMain,
+                        "VNext success");
                     return true;
                 }
 
@@ -178,11 +195,25 @@ public sealed class MetricLoadCoordinator
                     false);
             }
 
+            var legacyStopwatch = Stopwatch.StartNew();
             var dataLoaded = await LoadAndValidateMetricDataAsync(request, primarySelection, secondarySelection, onError);
+            legacyStopwatch.Stop();
+            _chartState.RecordPerformanceTiming(
+                "MetricLoad",
+                "LegacyLoadAndContextBuild",
+                legacyStopwatch.ElapsedMilliseconds,
+                EvidenceRuntimePath.Legacy,
+                dataLoaded ? null : "Legacy load returned false");
 
             if (!dataLoaded)
                 return false;
 
+            totalStopwatch.Stop();
+            _chartState.RecordPerformanceTiming(
+                "MetricLoad",
+                "Total",
+                totalStopwatch.ElapsedMilliseconds,
+                _chartState.LastLoadRuntime?.RuntimePath ?? EvidenceRuntimePath.Legacy);
             return true;
         }
         catch (Exception ex)
@@ -194,6 +225,13 @@ public sealed class MetricLoadCoordinator
             _chartState.LastContext = null;
             if (_chartState.LastLoadRuntime?.RuntimePath != EvidenceRuntimePath.VNextMain)
                 _chartState.LastLoadRuntime = null;
+            totalStopwatch.Stop();
+            _chartState.RecordPerformanceTiming(
+                "MetricLoad",
+                "Total",
+                totalStopwatch.ElapsedMilliseconds,
+                _chartState.LastLoadRuntime?.RuntimePath,
+                ex.GetType().Name);
             return false;
         }
         finally

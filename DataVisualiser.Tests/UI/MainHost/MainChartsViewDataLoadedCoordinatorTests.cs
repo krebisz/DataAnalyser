@@ -17,13 +17,14 @@ public sealed class MainChartsViewDataLoadedCoordinatorTests
         await coordinator.HandleAsync(
             new ChartDataContext(),
             1,
+            isBarPieVisible: true,
             CreateActions(invoked));
 
         Assert.Empty(invoked);
     }
 
     [Fact]
-    public async Task HandleAsync_ShouldRefreshUiStateAndRenderInExpectedOrder()
+    public async Task HandleAsync_ShouldRefreshUiStateWithoutRenderingCharts()
     {
         var invoked = new List<string>();
         var coordinator = new MainChartsViewDataLoadedCoordinator();
@@ -31,6 +32,7 @@ public sealed class MainChartsViewDataLoadedCoordinatorTests
         await coordinator.HandleAsync(
             CreateContext(),
             2,
+            isBarPieVisible: true,
             CreateActions(invoked));
 
         Assert.Equal(
@@ -42,9 +44,7 @@ public sealed class MainChartsViewDataLoadedCoordinatorTests
                 "UpdateTransformSubtypeOptions",
                 "UpdateTransformComputeButtonState",
                 "UpdatePrimaryDataRequiredButtonStates:2",
-                "UpdateSecondaryDataRequiredButtonStates:2",
-                $"RenderChartAsync:{ChartControllerKeys.BarPie}",
-                "RenderChartsFromLastContextAsync"
+                "UpdateSecondaryDataRequiredButtonStates:2"
             ],
             invoked);
     }
@@ -58,6 +58,7 @@ public sealed class MainChartsViewDataLoadedCoordinatorTests
         await coordinator.HandleAsync(
             CreateContext(includeSecondary: false),
             1,
+            isBarPieVisible: true,
             CreateActions(invoked));
 
         Assert.Equal(
@@ -69,9 +70,7 @@ public sealed class MainChartsViewDataLoadedCoordinatorTests
                 "UpdateTransformSubtypeOptions",
                 "UpdateTransformComputeButtonState",
                 "UpdatePrimaryDataRequiredButtonStates:1",
-                "UpdateSecondaryDataRequiredButtonStates:1",
-                $"RenderChartAsync:{ChartControllerKeys.BarPie}",
-                "RenderChartsFromLastContextAsync"
+                "UpdateSecondaryDataRequiredButtonStates:1"
             ],
             invoked);
     }
@@ -85,6 +84,7 @@ public sealed class MainChartsViewDataLoadedCoordinatorTests
         await coordinator.HandleAsync(
             CreateContext(includeSecondary: true),
             2,
+            isBarPieVisible: true,
             CreateActions(invoked));
 
         Assert.Equal(
@@ -96,11 +96,36 @@ public sealed class MainChartsViewDataLoadedCoordinatorTests
                 "UpdateTransformSubtypeOptions",
                 "UpdateTransformComputeButtonState",
                 "UpdatePrimaryDataRequiredButtonStates:2",
-                "UpdateSecondaryDataRequiredButtonStates:2",
-                $"RenderChartAsync:{ChartControllerKeys.BarPie}",
-                "RenderChartsFromLastContextAsync"
+                "UpdateSecondaryDataRequiredButtonStates:2"
             ],
             invoked);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldNotRenderHiddenBarPieOnDataLoaded()
+    {
+        var invoked = new List<string>();
+        var coordinator = new MainChartsViewDataLoadedCoordinator();
+
+        await coordinator.HandleAsync(
+            CreateContext(),
+            2,
+            isBarPieVisible: false,
+            CreateActions(invoked));
+
+        Assert.Equal(
+            [
+                "CompleteTransformSelectionsPendingLoad",
+                $"UpdateSubtypeOptions:{ChartControllerKeys.Normalized}",
+                $"UpdateSubtypeOptions:{ChartControllerKeys.DiffRatio}",
+                $"UpdateSubtypeOptions:{ChartControllerKeys.Main}",
+                "UpdateTransformSubtypeOptions",
+                "UpdateTransformComputeButtonState",
+                "UpdatePrimaryDataRequiredButtonStates:2",
+                "UpdateSecondaryDataRequiredButtonStates:2"
+            ],
+            invoked);
+        Assert.DoesNotContain($"RenderChartAsync:{ChartControllerKeys.BarPie}", invoked);
     }
 
     private static ChartDataContext CreateContext(bool includeSecondary = false)

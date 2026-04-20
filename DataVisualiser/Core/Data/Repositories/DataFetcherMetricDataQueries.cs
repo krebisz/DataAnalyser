@@ -138,15 +138,19 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
 
     private static void BuildSamplingQuery(StringBuilder sql, DynamicParameters parameters, string tableName, string providerColumn, int targetSamples, string baseType, string? subtype, DateTime? from, DateTime? to)
     {
+        if (!from.HasValue || !to.HasValue)
+            throw new ArgumentException("Sampling requires both from and to dates.");
+
+        var bucketSeconds = CalculateSamplingBucketSeconds(from.Value, to.Value, targetSamples);
+
         sql.Append($@"
-        WITH OrderedData AS (
+        WITH BucketedData AS (
             SELECT
+                DATEDIFF_BIG(second, @SamplingFromDate, NormalizedTimestamp) / @BucketSeconds AS BucketIndex,
                 NormalizedTimestamp,
                 Value,
                 Unit,
-                {providerColumn},
-                ROW_NUMBER() OVER (ORDER BY NormalizedTimestamp) AS rn,
-                COUNT(*) OVER () AS total_count
+                {providerColumn}
             FROM [dbo].[{tableName}]
             WHERE 1=1");
 
@@ -158,17 +162,25 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
         sql.Append($@"
         )
         SELECT
-            NormalizedTimestamp,
-            Value,
-            Unit,
-            {providerColumn}
-        FROM OrderedData
-        WHERE rn = 1
-           OR rn = total_count
-           OR rn % CEILING(1.0 * total_count / @TargetSamples) = 1
-        ORDER BY NormalizedTimestamp");
+            MIN(NormalizedTimestamp) AS NormalizedTimestamp,
+            CAST(AVG(CAST(Value AS decimal(38,10))) AS decimal(18,6)) AS Value,
+            MAX(Unit) AS Unit,
+            MAX(Provider) AS Provider
+        FROM BucketedData
+        GROUP BY BucketIndex
+        ORDER BY MIN(NormalizedTimestamp)");
 
-        parameters.Add("@TargetSamples", targetSamples);
+        parameters.Add("@SamplingFromDate", from.Value);
+        parameters.Add("@BucketSeconds", bucketSeconds);
+    }
+
+    private static long CalculateSamplingBucketSeconds(DateTime from, DateTime to, int targetSamples)
+    {
+        if (targetSamples <= 0)
+            return 1;
+
+        var totalSeconds = Math.Max(1.0, (to - from).TotalSeconds);
+        return Math.Max(1L, (long)Math.Ceiling(totalSeconds / targetSamples));
     }
 
     private static void BuildLimitedQuery(StringBuilder sql, string tableName, string providerColumn, int maxRecords)

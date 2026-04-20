@@ -1,5 +1,4 @@
 ﻿using System.Configuration;
-using System.Reflection;
 using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
@@ -17,36 +16,17 @@ public sealed class MetricSelectionServiceTests
         SetAppSetting("DataVisualiser:TargetSamplePoints", "200");
         SetAppSetting("DataVisualiser:EnableSqlResultLimiting", "false");
 
-        var service = new MetricSelectionService("FakeConnectionString");
-
         var from = new DateTime(2024, 01, 01);
         var to = new DateTime(2024, 12, 31);
         var recordCount = 5000; // > threshold
 
         // Act
-        var result = InvokeResolveStrategy(service, from, to, recordCount);
+        var result = MetricDataLoadStrategyResolver.Resolve(from, to, recordCount);
 
         // Assert
         Assert.Equal(SamplingMode.UniformOverTime, result.Mode);
         Assert.Equal(200, result.TargetSamples);
         Assert.Null(result.MaxRecords);
-    }
-
-    // ---- Test helper ----
-    private static(SamplingMode Mode, int? TargetSamples, int? MaxRecords) InvokeResolveStrategy(MetricSelectionService service, DateTime from, DateTime to, long recordCount)
-    {
-        // ResolveDataLoadStrategy is private — invoke via reflection
-        var method = typeof(MetricSelectionService).GetMethod("ResolveDataLoadStrategy", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        Assert.NotNull(method);
-
-        return ((SamplingMode Mode, int? TargetSamples, int? MaxRecords))method!.Invoke(service,
-                new object[]
-                {
-                        from,
-                        to,
-                        recordCount
-                })!;
     }
 
     private static void SetAppSetting(string key, string value)
@@ -71,14 +51,12 @@ public sealed class MetricSelectionServiceTests
         SetAppSetting("DataVisualiser:TargetSamplePoints", "200");
         SetAppSetting("DataVisualiser:EnableSqlResultLimiting", "false");
 
-        var service = new MetricSelectionService("FakeConnectionString");
-
         var from = new DateTime(2024, 01, 01);
         var to = new DateTime(2024, 12, 31);
         var recordCount = 500; // < threshold
 
         // Act
-        var result = InvokeResolveStrategy(service, from, to, recordCount);
+        var result = MetricDataLoadStrategyResolver.Resolve(from, to, recordCount);
 
         // Assert
         Assert.Equal(SamplingMode.None, result.Mode);
@@ -108,10 +86,43 @@ public sealed class MetricSelectionServiceTests
         var primaryList = primary.ToList();
         Assert.Single(primaryList);
         Assert.Empty(secondary);
-        Assert.Equal(1, queries.RecordCountRequests.Count);
-        Assert.Equal(("MetricA", "SubA"), queries.RecordCountRequests[0]);
+        Assert.Equal(("MetricA", "SubA"), Assert.Single(queries.RecordCountRequests));
         Assert.Single(queries.SeriesRequests);
-        Assert.Equal(("MetricA", "SubA", "HealthMetrics"), queries.SeriesRequests[0]);
+        Assert.Equal("MetricA", queries.SeriesRequests[0].MetricType);
+        Assert.Equal("SubA", queries.SeriesRequests[0].MetricSubtype);
+        Assert.Equal("HealthMetrics", queries.SeriesRequests[0].TableName);
+    }
+
+    [Fact]
+    public async Task LoadMetricDataAsync_PassesSamplingStrategy_ToInjectedQueries_WhenRecordCountExceedsThreshold()
+    {
+        SetAppSetting("DataVisualiser:EnableSqlSampling", "true");
+        SetAppSetting("DataVisualiser:SamplingThreshold", "1000");
+        SetAppSetting("DataVisualiser:TargetSamplePoints", "200");
+        SetAppSetting("DataVisualiser:EnableSqlResultLimiting", "false");
+
+        var queries = new FakeMetricSelectionDataQueries
+        {
+            RecordCount = 5000,
+            Data = new List<MetricData>
+            {
+                new()
+                {
+                    NormalizedTimestamp = new DateTime(2024, 01, 01),
+                    Value = 1m
+                }
+            }
+        };
+        var service = new MetricSelectionService(queries, "FakeConnectionString");
+
+        await service.LoadMetricDataAsync("MetricA", null, null, new DateTime(2024, 01, 01), new DateTime(2024, 12, 31), "HealthMetrics");
+
+        var request = Assert.Single(queries.SeriesRequests);
+        Assert.Equal("MetricA", request.MetricType);
+        Assert.Null(request.MetricSubtype);
+        Assert.Equal(SamplingMode.UniformOverTime, request.SamplingMode);
+        Assert.Equal(200, request.TargetSamples);
+        Assert.Null(request.MaxRecords);
     }
 
     private sealed class FakeMetricSelectionDataQueries : IMetricSelectionDataQueries
@@ -119,7 +130,7 @@ public sealed class MetricSelectionServiceTests
         public long RecordCount { get; set; }
         public IReadOnlyList<MetricData> Data { get; set; } = Array.Empty<MetricData>();
         public List<(string MetricType, string? MetricSubtype)> RecordCountRequests { get; } = new();
-        public List<(string MetricType, string? MetricSubtype, string TableName)> SeriesRequests { get; } = new();
+        public List<(string MetricType, string? MetricSubtype, string TableName, int? MaxRecords, SamplingMode SamplingMode, int? TargetSamples)> SeriesRequests { get; } = new();
 
         public Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
         {
@@ -129,7 +140,7 @@ public sealed class MetricSelectionServiceTests
 
         public Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(string baseType, string? subtype, DateTime? from, DateTime? to, string tableName, int? maxRecords = null, SamplingMode samplingMode = SamplingMode.None, int? targetSamples = null)
         {
-            SeriesRequests.Add((baseType, subtype, tableName));
+            SeriesRequests.Add((baseType, subtype, tableName, maxRecords, samplingMode, targetSamples));
             return Task.FromResult<IEnumerable<MetricData>>(Data);
         }
 

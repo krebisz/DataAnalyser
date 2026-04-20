@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
@@ -214,5 +215,96 @@ public sealed class StrategySelectionServiceTests
         // Assert
         Assert.Empty(series);
         Assert.Empty(labels);
+    }
+
+    [Fact]
+    public async Task LoadAdditionalSubtypesAsync_ShouldApplySamplingStrategy_ToAdditionalSeriesLoads()
+    {
+        SetAppSetting("DataVisualiser:EnableSqlSampling", "true");
+        SetAppSetting("DataVisualiser:SamplingThreshold", "1000");
+        SetAppSetting("DataVisualiser:TargetSamplePoints", "200");
+        SetAppSetting("DataVisualiser:EnableSqlResultLimiting", "false");
+
+        var queries = new FakeMetricSelectionDataQueries
+        {
+            RecordCount = 5000,
+            Data =
+            [
+                new MetricData
+                {
+                    NormalizedTimestamp = new DateTime(2024, 01, 01),
+                    Value = 10m
+                }
+            ]
+        };
+        var service = new StrategySelectionService(_mockCutOverService.Object, queries);
+        var series = new List<IEnumerable<MetricData>>();
+        var labels = new List<string>();
+        var selectedSubtypes = new List<string?>
+        {
+            "primary",
+            "secondary",
+            "third"
+        };
+
+        await service.LoadAdditionalSubtypesAsync(series, labels, "Weight", "HealthMetrics", new DateTime(2024, 01, 01), new DateTime(2024, 12, 31), selectedSubtypes);
+
+        Assert.Single(series);
+        Assert.Equal("Weight:third", Assert.Single(labels));
+        var request = Assert.Single(queries.SeriesRequests);
+        Assert.Equal("Weight", request.MetricType);
+        Assert.Equal("third", request.MetricSubtype);
+        Assert.Equal(SamplingMode.UniformOverTime, request.SamplingMode);
+        Assert.Equal(200, request.TargetSamples);
+        Assert.Null(request.MaxRecords);
+    }
+
+    private static void SetAppSetting(string key, string value)
+    {
+        var config = System.Configuration.ConfigurationManager.OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.None);
+        var setting = config.AppSettings.Settings[key];
+        if (setting == null)
+            config.AppSettings.Settings.Add(key, value);
+        else
+            setting.Value = value;
+
+        config.Save(System.Configuration.ConfigurationSaveMode.Modified);
+        System.Configuration.ConfigurationManager.RefreshSection("appSettings");
+    }
+
+    private sealed class FakeMetricSelectionDataQueries : IMetricSelectionDataQueries
+    {
+        public long RecordCount { get; set; }
+        public IReadOnlyList<MetricData> Data { get; set; } = [];
+        public List<(string MetricType, string? MetricSubtype, string TableName, int? MaxRecords, SamplingMode SamplingMode, int? TargetSamples)> SeriesRequests { get; } = [];
+
+        public Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
+        {
+            return Task.FromResult(RecordCount);
+        }
+
+        public Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(
+            string baseType,
+            string? subtype,
+            DateTime? from,
+            DateTime? to,
+            string tableName,
+            int? maxRecords = null,
+            SamplingMode samplingMode = SamplingMode.None,
+            int? targetSamples = null)
+        {
+            SeriesRequests.Add((baseType, subtype, tableName, maxRecords, samplingMode, targetSamples));
+            return Task.FromResult<IEnumerable<MetricData>>(Data);
+        }
+
+        public Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName) => Task.FromResult<IEnumerable<MetricNameOption>>([]);
+
+        public Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName) => Task.FromResult<IEnumerable<MetricNameOption>>([]);
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName) => Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeFromCounts(string baseType, IReadOnlyCollection<string>? subtypes = null) => Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeForSubtypes(string baseType, IReadOnlyCollection<string>? subtypes, string tableName) => Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
     }
 }

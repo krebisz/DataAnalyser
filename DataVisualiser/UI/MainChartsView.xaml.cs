@@ -58,6 +58,7 @@ public partial class MainChartsView : UserControl
     private readonly MainChartsViewSurfaceCoordinator _surfaceCoordinator = new();
     private readonly MainChartsViewResolutionResetCoordinator _resolutionResetCoordinator = new();
     private readonly MainChartsViewStateSyncCoordinator _stateSyncCoordinator = new();
+    private readonly SemaphoreSlim _chartRenderGate = new(1, 1);
     private readonly MainChartsViewCmsToggleCoordinator _cmsToggleCoordinator = new();
     private readonly MainChartsViewZoomResetCoordinator _zoomResetCoordinator = new();
     private readonly MainChartsViewSelectionCoordinator _selectionCoordinator = new();
@@ -395,6 +396,7 @@ public partial class MainChartsView : UserControl
 
     private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
     {
+        var stopwatch = Stopwatch.StartNew();
         var ctx = e.DataContext ?? _viewModel.ChartState.LastContext;
 
         if (ctx == null || ctx.Data1 == null || !ctx.Data1.Any())
@@ -414,7 +416,17 @@ public partial class MainChartsView : UserControl
         }
 
         var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
-        await _dataLoadedCoordinator.HandleAsync(ctx, selectedSubtypeCount, CreateDataLoadedActions());
+        await _dataLoadedCoordinator.HandleAsync(
+            ctx,
+            selectedSubtypeCount,
+            _viewModel.ChartState.IsBarPieVisible,
+            CreateDataLoadedActions());
+        stopwatch.Stop();
+        _viewModel.ChartState.RecordPerformanceTiming(
+            "Charts",
+            "DataLoadedHandler",
+            stopwatch.ElapsedMilliseconds,
+            _viewModel.ChartState.LastLoadRuntime?.RuntimePath);
         _sessionDiagnosticsRecorder.RecordSessionMilestone("DataLoaded", "Success");
     }
 
@@ -524,26 +536,83 @@ public partial class MainChartsView : UserControl
 
     private async Task RenderChartsFromLastContext()
     {
-        using var busyScope = BeginUiBusyScope();
-        await _chartUpdateCoordinatorHost.RenderVisibleChartsAsync(
-            _viewModel.ChartState,
-            _viewModel.ChartState.LastContext,
-            CreateChartUpdateActions());
+        if (!await _chartRenderGate.WaitAsync(0))
+        {
+            _viewModel.ChartState.RecordPerformanceTiming(
+                "Charts",
+                "RenderVisibleChartsSkipped",
+                0,
+                _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+                "Another chart render is already running.");
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            using var busyScope = BeginUiBusyScope();
+            await _chartUpdateCoordinatorHost.RenderVisibleChartsAsync(
+                _viewModel.ChartState,
+                _viewModel.ChartState.LastContext,
+                CreateChartUpdateActions());
+        }
+        finally
+        {
+            stopwatch.Stop();
+            _viewModel.ChartState.RecordPerformanceTiming(
+                "Charts",
+                "RenderVisibleCharts",
+                stopwatch.ElapsedMilliseconds,
+                _viewModel.ChartState.LastLoadRuntime?.RuntimePath);
+            _chartRenderGate.Release();
+        }
     }
 
     private async Task RenderSingleChartAsync(string chartName, ChartDataContext ctx)
     {
-        using var busyScope = BeginUiBusyScope();
-        await _chartUpdateCoordinatorHost.RenderSingleChartAsync(
-            _viewModel.ChartState,
-            chartName,
-            ctx,
-            CreateChartUpdateActions());
+        if (!await _chartRenderGate.WaitAsync(0))
+        {
+            _viewModel.ChartState.RecordPerformanceTiming(
+                "Charts",
+                $"RenderSingleChartSkipped:{chartName}",
+                0,
+                _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+                "Another chart render is already running.");
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            using var busyScope = BeginUiBusyScope();
+            await _chartUpdateCoordinatorHost.RenderSingleChartAsync(
+                _viewModel.ChartState,
+                chartName,
+                ctx,
+                CreateChartUpdateActions());
+        }
+        finally
+        {
+            stopwatch.Stop();
+            _viewModel.ChartState.RecordPerformanceTiming(
+                "Charts",
+                $"RenderSingleChart:{chartName}",
+                stopwatch.ElapsedMilliseconds,
+                _viewModel.ChartState.LastLoadRuntime?.RuntimePath);
+            _chartRenderGate.Release();
+        }
     }
 
-    private Task RenderChartAsync(string key, ChartDataContext ctx)
+    private async Task RenderChartAsync(string key, ChartDataContext ctx)
     {
-        return ResolveController(key).RenderAsync(ctx);
+        var stopwatch = Stopwatch.StartNew();
+        await ResolveController(key).RenderAsync(ctx);
+        stopwatch.Stop();
+        _viewModel.ChartState.RecordPerformanceTiming(
+            "Charts",
+            $"RenderChart:{key}",
+            stopwatch.ElapsedMilliseconds,
+            _viewModel.ChartState.LastLoadRuntime?.RuntimePath);
     }
 
     private void ClearChart(string key)

@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Data.Repositories;
+using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 
@@ -13,12 +15,20 @@ namespace DataVisualiser.Core.Orchestration;
 public sealed class StrategySelectionService
 {
     private readonly string _connectionString;
+    private readonly IMetricSelectionDataQueries? _dataQueries;
     private readonly IStrategyCutOverService _strategyCutOverService;
 
     public StrategySelectionService(IStrategyCutOverService strategyCutOverService, string connectionString)
     {
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+    }
+
+    internal StrategySelectionService(IStrategyCutOverService strategyCutOverService, IMetricSelectionDataQueries dataQueries)
+    {
+        _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
+        _dataQueries = dataQueries ?? throw new ArgumentNullException(nameof(dataQueries));
+        _connectionString = string.Empty;
     }
 
     /// <summary>
@@ -64,7 +74,7 @@ public sealed class StrategySelectionService
         if (selectedSubtypes.Count <= 2 || string.IsNullOrEmpty(metricType))
             return;
 
-        var dataFetcher = new DataFetcher(_connectionString);
+        var dataQueries = _dataQueries ?? new DataFetcher(_connectionString);
         var tableName = resolutionTableName ?? DataAccessDefaults.DefaultTableName;
 
         // Load data for subtypes 3, 4, etc.
@@ -76,7 +86,9 @@ public sealed class StrategySelectionService
 
             try
             {
-                var additionalData = await dataFetcher.GetHealthMetricsDataByBaseType(metricType, subtype, from, to, tableName);
+                var recordCount = await dataQueries.GetRecordCount(metricType, subtype);
+                var strategy = MetricDataLoadStrategyResolver.Resolve(from, to, recordCount);
+                var additionalData = await dataQueries.GetHealthMetricsDataByBaseType(metricType, subtype, from, to, tableName, strategy.MaxRecords, strategy.Mode, strategy.TargetSamples);
 
                 if (additionalData != null && additionalData.Any())
                 {

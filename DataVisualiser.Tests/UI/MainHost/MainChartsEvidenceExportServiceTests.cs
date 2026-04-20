@@ -45,6 +45,36 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Contains("\"SmokeChecks\"", contents);
             Assert.Contains("\"Transition\"", contents);
             Assert.Contains("\"SessionMilestones\"", contents);
+            Assert.Contains("\"PerformanceTimings\"", contents);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task ExportAsync_ShouldIncludePerformanceTimings()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState();
+            chartState.RecordPerformanceTiming("MetricLoad", "Total", 123, EvidenceRuntimePath.VNextMain, "test");
+
+            var result = await service.ExportAsync(chartState, new MetricState(), new DateTime(2026, 4, 20, 10, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var timings = document.RootElement.GetProperty("PerformanceTimings");
+
+            Assert.True(timings.GetArrayLength() >= 1);
+            Assert.Contains(timings.EnumerateArray(), timing =>
+                timing.GetProperty("Scope").GetString() == "MetricLoad" &&
+                timing.GetProperty("Operation").GetString() == "Total" &&
+                timing.GetProperty("DurationMs").GetInt64() == 123 &&
+                timing.GetProperty("RuntimePath").GetString() == "VNextMain");
         }
         finally
         {

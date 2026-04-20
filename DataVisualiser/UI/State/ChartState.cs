@@ -11,8 +11,10 @@ public class ChartState
 {
     private readonly Dictionary<DistributionMode, DistributionModeSettings> _distributionSettings = new();
     private readonly Dictionary<ChartProgramKind, LoadRuntimeState> _familyLoadRuntimes = new();
+    private readonly List<PerformanceTimingSnapshot> _performanceTimings = new();
     private readonly List<SessionMilestoneSnapshot> _sessionMilestones = new();
     private const int MaxSessionMilestones = 50;
+    private const int MaxPerformanceTimings = 100;
 
     public ChartState()
     {
@@ -73,6 +75,7 @@ public class ChartState
         _familyLoadRuntimes[kind] = runtime;
 
     public IReadOnlyDictionary<ChartProgramKind, LoadRuntimeState> FamilyLoadRuntimes => _familyLoadRuntimes;
+    public IReadOnlyList<PerformanceTimingSnapshot> PerformanceTimings => _performanceTimings;
     public IReadOnlyList<SessionMilestoneSnapshot> SessionMilestones => _sessionMilestones;
 
     // Current chart titles (left + right)
@@ -102,6 +105,35 @@ public class ChartState
             return;
 
         _sessionMilestones.RemoveRange(0, _sessionMilestones.Count - MaxSessionMilestones);
+    }
+
+    public void RecordPerformanceTiming(
+        string scope,
+        string operation,
+        long durationMs,
+        EvidenceRuntimePath? runtimePath = null,
+        string? note = null)
+    {
+        if (string.IsNullOrWhiteSpace(scope))
+            throw new ArgumentException("Performance timing scope is required.", nameof(scope));
+
+        if (string.IsNullOrWhiteSpace(operation))
+            throw new ArgumentException("Performance timing operation is required.", nameof(operation));
+
+        _performanceTimings.Add(new PerformanceTimingSnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            Scope = scope,
+            Operation = operation,
+            DurationMs = durationMs,
+            RuntimePath = runtimePath,
+            Note = note
+        });
+
+        if (_performanceTimings.Count <= MaxPerformanceTimings)
+            return;
+
+        _performanceTimings.RemoveRange(0, _performanceTimings.Count - MaxPerformanceTimings);
     }
 }
 
