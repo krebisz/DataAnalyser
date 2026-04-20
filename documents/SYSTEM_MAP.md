@@ -209,12 +209,14 @@ The orchestration layer coordinates execution, not meaning.
 - evidence/export initiation
 - runtime-path tracking via explicit state (`LoadRuntimeState`) so downstream diagnostics and evidence can observe which path was used
 - tab/session milestone recording for host-level evidence, including tab switches
+- shared workspace load validation/clear/publish coordination for chart tabs
 
 **Current execution paths**
 - **VNext main-chart path**: `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `ChartProgram` → `LegacyChartProgramProjector` → `ChartDataContext`. Route eligibility is named by `VNextChartRoutePolicy`; fresh coordinator per load. Produces signature-tracked runtime state.
 - **VNext per-family path**: `VNextSeriesLoadCoordinator` → `ReasoningSessionCoordinator` → identity `ChartProgram` → `LegacyChartProgramProjector` → raw `MetricData`. Activated for Distribution, WeekdayTrend, Transform, and BarPie fresh data loads. Data resolution unified through `VNextDataResolutionHelper`. Per-family runtime tracking via `ChartState.SetFamilyRuntime(ChartProgramKind, LoadRuntimeState)`.
 - **Legacy path**: `MetricLoadCoordinator` → `MetricSelectionService` → `ChartDataContextBuilder` → `ChartDataContext`. Automatic fallback on any VNext failure.
 - Path selection is deterministic, visibility-based, and independent of CMS configuration.
+- Legacy remains a compatibility/fallback/projection path during migration; VNext is the forward request/program model, not yet a reason to delete legacy delivery adapters.
 
 **Constraints**
 - no semantic branching
@@ -386,10 +388,11 @@ Evidence infrastructure lives in `UI/MainHost/Evidence/` and is decomposed into:
 The same `MainChartsEvidenceExportService` is used for both Charts and Syncfusion tab scopes; `ExportScope` distinguishes the source surface in the JSON payload.
 
 Strategy migration decisions are separated from parity validation: `StrategyCmsDecisionEvaluator` owns CMS eligibility decisions, while `StrategyParityValidationService` owns strategy-type inference, parity harness selection, and fallback parity validation. `StrategyCutOverService` remains the creation/reachability facade.
+Parity series comparison is centralized through `ParitySeriesComparer`, so parity harnesses adapt source data and delegate tolerance, NaN, failure, and strict-mode behavior to one validation primitive.
 
 Reachability export infrastructure lives in `UI/MainHost/Export/`. Host coordination lives in `UI/MainHost/Coordination/`.
 
-The Charts and Syncfusion tabs both use `ChartTabHost` for the chart-specific tab shell and `MetricSelectionPanel` for the shared metric-selection/date/CMS control surface, while each host supplies its own chart content. `ChartTabHost` composes the generic `WorkspaceTabHost`, which provides header/body slots without metric-specific assumptions. `AdminMetricsManagerView` also uses `WorkspaceTabHost` directly with Admin-specific header controls, so Admin aligns with the shared workspace shell without adopting chart-specific metric-selection controls. Admin row loading, dirty tracking, save state, filtering, and milestone recording are coordinated by `AdminMetricsManagerCoordinator` behind `IAdminMetricsRepository`. Main and Syncfusion host busy lifetimes share `UiBusyScopeLease`. Metric-selection event forwarding is centralized through `MetricSelectionPanelEventBinder`. Theme-toggle, reset-zoom, Admin management actions, and Syncfusion load/render/export actions emit explicit session milestones for evidence exports.
+The Charts and Syncfusion tabs both use `ChartTabHost` for the chart-specific tab shell and `MetricSelectionPanel` for the shared metric-selection/date/CMS control surface, while each host supplies its own chart content. `ChartTabHost` composes the generic `WorkspaceTabHost`, which provides header/body slots without metric-specific assumptions. `AdminMetricsManagerView` also uses `WorkspaceTabHost` directly with Admin-specific header controls, so Admin aligns with the shared workspace shell without adopting chart-specific metric-selection controls. Admin row loading, dirty tracking, save state, filtering, and milestone recording are coordinated by `AdminMetricsManagerCoordinator` behind `IAdminMetricsRepository`. Main and Syncfusion host busy lifetimes share `UiBusyScopeLease`. Main and Syncfusion load validation, load/reset handling, failed-load clearing, successful publish, and clear behavior delegate through `WorkspaceLoadCoordinator`. Metric-selection event forwarding is centralized through `MetricSelectionPanelEventBinder`. Ordinary session milestone snapshot construction delegates through `WorkspaceSessionMilestoneRecorder`; host-specific wrappers remain free to add tab-specific semantics. Theme-toggle, reset-zoom, Admin management actions, and Syncfusion load/render/export actions emit explicit session milestones for evidence exports.
 
 Tooltip rendering text is exposed through `ChartTooltipFormattingHelper`, which is a facade over focused pair, stacked, cumulative, title-parsing, value-formatting, and overlay-filter helpers. Tooltip helpers remain rendering infrastructure and must not define metric semantics.
 
@@ -495,6 +498,7 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 | Load + context (Legacy) | `MetricLoadCoordinator`, `MetricSelectionService`, `ChartDataContextBuilder` |
 | Runtime state | `ChartState.LastLoadRuntime`, `ChartState.FamilyLoadRuntimes` (`Dictionary<ChartProgramKind, LoadRuntimeState>`), `EvidenceRuntimePath` |
 | VM seam | `MainWindowViewModel` (`LoadMetricDataAsync`, `LoadDataCommand`, `RequestChartUpdate`) |
+| Workspace load coordination | `WorkspaceLoadCoordinator` and its `LoadValidationInput`, `ValidationActions`, `LoadExecutionActions`, `ClearActions` records |
 | Factory | `MainChartsViewChartPipelineFactory`, `MainChartsViewChartPipelineFactoryResult` |
 | Render | `ChartRenderingOrchestrator`, `ChartUpdateCoordinator` |
 | Evidence | `EvidenceExportModels`, `EvidenceDiagnosticsBuilder`, `EvidenceDataResolutionHelper`, `MainChartsEvidenceExportService` (all in `UI/MainHost/Evidence/`) |
@@ -526,6 +530,103 @@ Syncfusion exports through the shared evidence service with `ExportScope = "Sync
 ### A.5 Code Facade
 
 `DataVisualiser.UI.ChartPresentationSpine` (`UI/ChartPresentationSpine.cs`) — thin forwards to the VM for stages 2–3 so the spine has a single type to open first.
+
+---
+
+## Appendix B. Legacy and VNext Rendering Pipeline Comparison
+
+This directed view describes the active migration shape. Legacy remains a compatibility and fallback path; VNext is the forward request/program model.
+
+```mermaid
+flowchart TD
+    subgraph Legacy["Legacy Pipeline"]
+        L_UI["UI Selection"]
+        L_REQ["MetricLoadRequest"]
+        L_COORD["MetricLoadCoordinator"]
+        L_SERVICE["MetricSelectionService"]
+        L_DATA["MetricData / CMS Data"]
+        L_CONTEXT_BUILDER["ChartDataContextBuilder"]
+        L_CONTEXT["ChartDataContext"]
+        L_STATE["ChartState.LastContext"]
+        L_EVENT["DataLoaded / ChartUpdateRequested"]
+        L_ADAPTER["Chart Adapter"]
+        L_STRATEGY["Legacy Strategy / Orchestrator"]
+        L_RENDER["Rendering Contract / Controller"]
+        L_OUTPUT["Rendered Chart"]
+
+        L_UI --> L_REQ
+        L_REQ --> L_COORD
+        L_COORD --> L_SERVICE
+        L_SERVICE --> L_DATA
+        L_DATA --> L_CONTEXT_BUILDER
+        L_CONTEXT_BUILDER --> L_CONTEXT
+        L_CONTEXT --> L_STATE
+        L_STATE --> L_EVENT
+        L_EVENT --> L_ADAPTER
+        L_ADAPTER --> L_STRATEGY
+        L_STRATEGY --> L_RENDER
+        L_RENDER --> L_OUTPUT
+    end
+
+    subgraph VNext["VNext Pipeline"]
+        V_UI["UI Selection"]
+        V_REQUEST["MetricSelectionRequest"]
+        V_SESSION["ReasoningSessionCoordinator"]
+        V_SNAPSHOT["MetricLoadSnapshot"]
+        V_PROGRAM_REQUEST["ChartProgramRequest"]
+        V_PLANNER["ChartProgramPlanner"]
+        V_KERNEL["OperationKernel"]
+        V_PROGRAM["ChartProgram"]
+        V_PROJECTOR["LegacyChartProgramProjector"]
+        V_CONTEXT["ChartDataContext Projection"]
+        V_ADAPTER["Existing Chart Adapter"]
+        V_RENDER["Rendering Contract / Controller"]
+        V_OUTPUT["Rendered Chart"]
+
+        V_UI --> V_REQUEST
+        V_REQUEST --> V_SESSION
+        V_SESSION --> V_SNAPSHOT
+        V_SNAPSHOT --> V_PROGRAM_REQUEST
+        V_PROGRAM_REQUEST --> V_PLANNER
+        V_PLANNER --> V_KERNEL
+        V_KERNEL --> V_PROGRAM
+        V_PROGRAM --> V_PROJECTOR
+        V_PROJECTOR --> V_CONTEXT
+        V_CONTEXT --> V_ADAPTER
+        V_ADAPTER --> V_RENDER
+        V_RENDER --> V_OUTPUT
+    end
+
+    subgraph Shared["Shared / Transitional"]
+        S_DATA["MetricSelectionService / Data Access"]
+        S_STATE["ChartState Runtime Tracking"]
+        S_EVIDENCE["Evidence Export / Diagnostics"]
+        S_FALLBACK["Legacy Fallback"]
+    end
+
+    L_SERVICE --> S_DATA
+    V_SESSION --> S_DATA
+
+    L_STATE --> S_STATE
+    V_CONTEXT --> S_STATE
+
+    L_CONTEXT --> S_EVIDENCE
+    V_SNAPSHOT --> S_EVIDENCE
+    V_PROGRAM --> S_EVIDENCE
+
+    V_SESSION -. "failure or unsupported route" .-> S_FALLBACK
+    S_FALLBACK --> L_COORD
+```
+
+```mermaid
+flowchart LR
+    Legacy["Legacy: context-first"] --> L1["ChartDataContext is built early"]
+    L1 --> L2["Adapters/strategies decide chart behavior later"]
+
+    VNext["VNext: program-first"] --> V1["MetricLoadSnapshot is authoritative"]
+    V1 --> V2["ChartProgram declares intended chart behavior"]
+    V2 --> V3["Current bridge projects to ChartDataContext"]
+```
 
 ---
 

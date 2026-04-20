@@ -3,7 +3,7 @@
 **Scope:** `DataVisualiser` hierarchy repair, boundary clarification, entropy reduction, subsystem consolidation, and VNext activation — **Phase 6 closed April 2026**
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `Project Roadmap.md`, and `Project Overview.md`  
 **Supersedes:** `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`  
-**Last Updated:** 2026-04-13
+**Last Updated:** 2026-04-20
 
 ---
 
@@ -22,7 +22,7 @@ The primary objectives are:
 
 **Phase 7 (entry gate satisfied):** Expand the reasoning engine's capabilities — confidence-aware results, interpretive overlays, programmable composition — building each as a reasoning-engine feature that delivery surfaces consume, not as chart-specific additions.
 
-**Phase 6.3 (closed):** VNext coverage has been widened to all active chart families so the standardized request/delivery path is now authoritative for fresh chart-family loads.
+**Phase 6.3 (closed):** VNext-compatible request/program support has been widened to all active chart families, with live VNext routes for fresh family loads and legacy retained as compatibility/fallback where still needed.
 
 The reasoning engine is the center of the system. Charts and future consumers are delivery targets of its output.
 
@@ -34,10 +34,10 @@ Use this section as the default handoff entry point in a new conversation.
 
 Current state:
 
-- Phase 6.3 VNext widening is complete — all active chart families route through the VNext reasoning engine for fresh data loads
+- Phase 6.3 VNext widening is complete - all active chart families have VNext-compatible request/program support and live VNext routes for fresh family loads, with legacy retained as compatibility/fallback
 - Phase 7 entry gate is satisfied — exploratory and confidence capabilities may proceed
-- 471 source files, 688 tests, 56 architecture guardrails
-- known debt: `MainChartsView` host concentration (~1,238 lines), adapter pattern variation
+- 476 source files, 696 DataVisualiser tests, 15 DataFileReader tests, 56 architecture guardrails
+- known debt: `MainChartsView` host concentration (~1,440 lines), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence
 
 Current defaults:
 
@@ -136,15 +136,15 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `471` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, and shared UI-busy lease)
-- `688` automated tests passing
-- VNext routing active for all current chart families, with automatic legacy fallback
+- `476` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparer, workspace load/milestone recorders, and binary metric context helper)
+- `696` DataVisualiser automated tests passing; `15` DataFileReader tests passing
+- VNext-compatible request/program support across all current chart families, with live VNext routes and automatic legacy fallback/compatibility projection where still needed
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
 
 Current major concentration points:
 
-- `UI/MainChartsView.xaml.cs` (~1,238 lines)
-- `UI/Syncfusion/SyncfusionChartsView.xaml.cs` (~719 lines)
+- `UI/MainChartsView.xaml.cs` (~1,440 lines)
+- `UI/Syncfusion/SyncfusionChartsView.xaml.cs` (~859 lines)
 - `UI/WorkspaceTabHost.xaml` (~22 lines)
 - `UI/WorkspaceTabHost.xaml.cs` (~30 lines)
 - `UI/Admin/AdminMetricsManagerView.xaml` (~114 lines)
@@ -167,17 +167,17 @@ Current major concentration points:
 - `UI/MainHost/Evidence/EvidenceTransformParityEvaluator.cs` (~59 lines)
 - `UI/MainHost/Evidence/EvidenceTransformParityDataResolver.cs` (~52 lines)
 - `UI/MainHost/Evidence/EvidenceTransformParityComputer.cs` (~76 lines)
-- `UI/MainHost/Evidence/MainChartsEvidenceExportService.cs` (~131 lines, reduced from 1,209)
-- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~220 lines, reduced from ~857)
+- `UI/MainHost/Evidence/MainChartsEvidenceExportService.cs` (~141 lines, reduced from 1,209)
+- `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` (~257 lines, reduced from ~857)
 - `UI/Charts/Presentation/TransformRenderCoordinator.cs` (~100 lines)
 - `UI/Charts/Presentation/TransformWorkflowCoordinator.cs` (~50 lines)
 - `UI/Charts/Presentation/TransformDataResolutionCoordinator.cs` (~171 lines)
 - `UI/Charts/Presentation/TransformOperationExecutionCoordinator.cs` (~106 lines)
 - `Core/Rendering/Helpers/ChartTooltipFormattingHelper.cs` (~42 lines, reduced from ~464)
 - `Core/Services/BaseDistributionService.cs` (~296 lines)
-- `Core/Rendering/Engines/ChartRenderEngine.cs` (~452 lines)
-- `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` (~197 lines)
-- `UI/Charts/Presentation/BarPieRenderModelBuilder.cs` (~259 lines)
+- `Core/Rendering/Engines/ChartRenderEngine.cs` (~333 lines)
+- `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` (~199 lines)
+- `UI/Charts/Presentation/BarPieRenderModelBuilder.cs` (~292 lines)
 
 Current read:
 
@@ -186,7 +186,7 @@ Current read:
 - the evidence boundary is clean: DTOs, diagnostics, and export orchestration are separate concerns
 - evidence export now carries an explicit `ExportScope`; the Charts tab exports as `Charts`, and the Syncfusion tab uses the same `MainChartsEvidenceExportService` as `Syncfusion` instead of a stub service
 - tab switches are recorded as `TabSwitched` session milestones through the shared view-model context
-- targeted manual smoke is still required for the latest shared tab-shell layout hardening: confirm both chart-tab layouts still render and operate correctly, and confirm the Admin tab renders and behaves correctly inside the generic workspace shell
+- shared tab-shell layout hardening has been smoke-verified: Charts, Syncfusion, and Admin render through the shared workspace shell, with tab/export milestones available in evidence exports
 - runtime-path tracking distinguishes VNext from legacy loads with full signature-chain diagnostics
 - the chart/rendering delivery seams are materially cleaner than before the Phase 5 rehaul
 - `DataFetcher` is now a facade over focused query groups for catalog, metric-data, date/count, and admin concerns
@@ -306,7 +306,7 @@ Documents absorbed from Phase 5:
 **Phase 6.4 (Outlier decomposition):** Closed.
 
 **Phase 6.3 (Request/delivery standardization):** Closed.
-- Evidence boundary decomposed: `MainChartsEvidenceExportService` (1,209 → 131 lines) split into `EvidenceExportModels` (21 DTOs), `EvidenceDiagnosticsBuilder`, and export orchestration
+- Evidence boundary decomposed: `MainChartsEvidenceExportService` (1,209 -> 141 lines) split into `EvidenceExportModels` (21 DTOs), `EvidenceDiagnosticsBuilder`, and export orchestration
 - `VNextMainChartIntegrationCoordinator` built and tested as the VNext → legacy bridge
 - VNext routing activated for the main-chart family in `MetricLoadCoordinator`
 - `LoadRuntimeState` on `ChartState` tracks runtime path, signatures, and failure reason
@@ -329,13 +329,13 @@ Documents absorbed from Phase 5:
 - Shared `EvidenceDataResolutionHelper` extracted: unified data-resolution and strategy-resolution patterns duplicated across 3 evidence evaluators
 - `UI/MainHost/` (41 files flat) decomposed into 3 sub-namespaces: `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
 - Architecture guardrail paths and `ParityExportShapeTests` reflection strings updated
-- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, and shared UI-busy lease bring the current lane to 688 tests
+- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparison, workspace load/milestone recording, and binary metric context consolidation bring the current lane to 696 DataVisualiser tests
 
 **Phase 6.6 (Architecture audit and baseline refresh):** Closed.
 
 Audit baseline (April 2026):
-- 451 C# source files, ~36,900 lines of code
-- 170 test files, 688 automated tests passing
+- 476 C# source files
+- 171 test files, 696 DataVisualiser automated tests passing; 15 DataFileReader tests passing
 - 56 architecture guardrail tests enforcing structural contracts
 
 **1. To what extent have the Phase 6 objectives been met?**
@@ -343,16 +343,16 @@ Audit baseline (April 2026):
 Materially met. The hierarchy is trustworthy: similar responsibilities have one obvious home, repeated operations are centralized, and the remaining debt is explicit rather than hidden. Specifically:
 - Irreducible operations (frequency binning, transform computation, series preparation, smoothing, timeline alignment, bucket aggregation) are each owned by a single dedicated helper, locked by architecture guardrails (6.1)
 - Truth/derivation/orchestration/delivery boundaries are enforced through rendering contracts, orchestration pipelines, and explicit stage separation (6.2)
-- Request/delivery standardization has real proof through live VNext routing across all active chart families, automatic legacy fallback, runtime-path tracking, and signature-chain diagnostics in evidence exports (6.3)
-- Named outliers have been materially reduced: `MainChartsEvidenceExportService` (1,209→131), `TransformDataPanelControllerAdapter` (857→257), `BaseDistributionService` (612→296), `BarPieChartControllerAdapter` (503→197), `ChartRenderEngine` (452→333), `DataFetcher` decomposed into focused query groups (6.4)
+- Request/delivery standardization has real proof through VNext-compatible request/program support across all active chart families, live VNext routes where appropriate, automatic legacy fallback, runtime-path tracking, and signature-chain diagnostics in evidence exports (6.3)
+- Named outliers have been materially reduced: `MainChartsEvidenceExportService` (1,209->141), `TransformDataPanelControllerAdapter` (857->257), `BaseDistributionService` (612->296), `BarPieChartControllerAdapter` (503->199), `ChartRenderEngine` (452->333), `DataFetcher` decomposed into focused query groups (6.4)
 - Physical hierarchy is clean: namespace-folder alignment verified, micro-types consolidated, `UI/MainHost/` decomposed into `Evidence/`, `Export/`, `Coordination/` sub-namespaces (6.5, 6.7)
 
 **2. What gaps remain?**
 
 These are accepted as known debt, not open work:
-- `MainChartsView.xaml.cs` (~1,238 lines) remains the largest host concentration point. Its remaining responsibilities are genuinely host-level (wiring coordinators, forwarding events, managing host lifecycle). Further decomposition is possible but increasingly behavior-adjacent rather than structural.
-- `SyncfusionChartsView.xaml.cs` (~719 lines) is a parallel host with similar characteristics, lower priority.
-- VNext covers all active chart families through either the main-family route or per-family fresh-load routes. Future VNext work is capability expansion, not Phase 6 closure work.
+- `MainChartsView.xaml.cs` (~1,440 lines) remains the largest host concentration point. Its remaining responsibilities are genuinely host-level (wiring coordinators, forwarding events, managing host lifecycle). Further decomposition is possible but increasingly behavior-adjacent rather than structural.
+- `SyncfusionChartsView.xaml.cs` (~859 lines) is a parallel host with similar characteristics, lower priority.
+- VNext-compatible request/program support covers all active chart families through either the main-family route or per-family fresh-load routes. Legacy remains as compatibility, fallback, and delivery projection while Phase 7 progressively makes VNext authoritative per family.
 - Controller adapters share structural patterns but their differences are genuine domain variation. A deeper base class was evaluated and rejected as overengineering (documented in the Phase 6.7 plan).
 - 20+ coordinators have thin shared patterns (guard → execute) that do not justify inheritance.
 
@@ -370,7 +370,7 @@ These are accepted as known debt, not open work:
 | 2. Repeated irreducible operations no longer sprawl | Yes | Frequency binning, transform computation, series preparation, smoothing, bucket aggregation each have one owner |
 | 3. Truth/derivation/orchestration/delivery seams are clearer | Yes | VNext reasoning engine live for main family; rendering contracts enforce backend qualification; evidence boundary decomposed |
 | 4. Remaining outliers are explicit, bounded, and visible | Yes | `MainChartsView` (host gravity), `SyncfusionChartsView` (parallel host), adapter pattern variation — all documented, all bounded |
-| 5. Current capabilities preserved or replaced | Yes | 688 tests pass; all chart families render; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
+| 5. Current capabilities preserved or replaced | Yes | 696 DataVisualiser tests and 15 DataFileReader tests pass; all chart families render; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
 
 **Phase 6 is closed.** All active chart families now route through the VNext reasoning engine for fresh data loads. Phase 7 entry gate is satisfied — new capabilities may proceed.
 
@@ -450,11 +450,11 @@ Multiple slices banked (export, data-loaded, selection stabilization, request-dr
 ### 10.3 Phase C — Outlier Service Decomposition (CLOSED)
 
 All named outliers materially reduced:
-- `MainChartsEvidenceExportService`: 1,209 → 131 lines
-- `TransformDataPanelControllerAdapter`: 857 → 257 lines (split across 6 coordinators)
+- `MainChartsEvidenceExportService`: 1,209 -> 141 lines
+- `TransformDataPanelControllerAdapter`: 857 -> 257 lines (split across 6 coordinators)
 - `BaseDistributionService`: 612 → 296 lines
-- `BarPieChartControllerAdapter`: 503 → 197 lines
-- `ChartRenderEngine`: 452 → 333 lines (dead-delegation residue cleaned)
+- `BarPieChartControllerAdapter`: 503 -> 199 lines
+- `ChartRenderEngine`: 452 -> 333 lines (dead-delegation residue cleaned)
 - `DataFetcher`: decomposed into focused query groups (46-line facade)
 
 The tooltip formatting helper outlier has been split: `ChartTooltipFormattingHelper` is now a 42-line facade over focused pair, stacked, cumulative, title parsing, value formatting, and overlay filtering helpers.

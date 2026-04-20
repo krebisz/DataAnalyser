@@ -3,8 +3,8 @@
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
-**Last Updated:** 2026-04-13  
-**Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening (all active chart families now route through the VNext reasoning engine). Phase 7 entry gate is satisfied — new capabilities may proceed.
+**Last Updated:** 2026-04-20
+**Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. Phase 7 entry gate is satisfied — new capabilities may proceed.
 
 ---
 
@@ -423,8 +423,8 @@ The goal is to make the system legible enough that:
 - `MainChartsView` and `SyncfusionChartsView` share `UiBusyScopeLease` for disposable UI-busy lifetime handling
 - `BaseDistributionService` now delegates pure computation, simple-range assembly, series construction, axis shaping, and debug-summary formatting through dedicated helpers
 - Smoke-verified with April 2026 exports: VNext path produces aligned signatures across all chart families, legacy fallback produces correct state, all 8 parity strategies pass
-- 688 automated tests pass in the current default full-solution lane
-- Targeted smoke remains pending for the latest shared `WorkspaceTabHost` / `ChartTabHost` layout hardening: open both chart tabs, confirm the shared top controls and chart areas render correctly, run one basic load/export path per tab, and confirm the Admin tab renders and behaves correctly inside the generic workspace shell
+- 696 DataVisualiser tests and 15 DataFileReader tests pass in the current default full-solution lane
+- Shared `WorkspaceTabHost` / `ChartTabHost` layout hardening has been smoke-verified: Charts, Syncfusion, and Admin render through the shared workspace shell, with tab/export milestones available in evidence exports
 
 **Current evidence artifacts (April 2026):**
 - `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
@@ -479,10 +479,10 @@ The goal is to make the system legible enough that:
 - refresh current execution maps, success criteria, and architectural evidence
 
 **Audit Record (April 2026)**
-- 471 C# source files, 170 test files, 688 automated tests, 56 architecture guardrails
-- All sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext widening — all active chart families route through the VNext reasoning engine with automatic legacy fallback
+- 476 C# source files, 171 test files, 696 DataVisualiser automated tests, 15 DataFileReader tests, 56 architecture guardrails
+- All sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext widening — all active chart families have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection
 - All 5 global closure conditions assessed and met (full record in `DataVisualiser_Subsystem_Plan.md` Phase 6.6 section)
-- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,242 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~719 lines, parallel host), controller adapter pattern variation accepted as domain variation
+- Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,440 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~859 lines, parallel host), managed legacy/VNext coexistence, controller adapter pattern variation accepted as domain variation
 
 **Closure Condition**
 - the next cycle starts from an auditable baseline rather than from accumulated guesswork — **satisfied**
@@ -503,7 +503,7 @@ The goal is to make the system legible enough that:
 - Rendering helpers merged: `ChartLabelFormatter` → `ChartSeriesLabelFormatter`, `TransformChartAxisLayout` → `TransformChartAxisCalculator`
 - `EvidenceDataResolutionHelper` extracted: shared data-resolution and strategy cut-over resolution
 - `UI/MainHost/` decomposed into `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
-- Net -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, and shared UI-busy lease bring the current lane to 688 tests
+- Net -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparison, workspace load/milestone recording, workspace load coordination, and binary metric context consolidation bring the current lane to 696 DataVisualiser tests
 
 **Closure Condition**
 - structural sprawl is materially reduced and the codebase is primed for Phase 7 capability expansion
@@ -712,13 +712,13 @@ Remaining open phases:
 Phase 6 sub-phase status:
 - `Phase 6.1` - irreducible operation consolidation: **CLOSED**
 - `Phase 6.2` - truth / derivation / delivery boundary reconciliation: **CLOSED**
-- `Phase 6.3` - request, consumer, and delivery standardization: **CLOSED** (all active chart families route through VNext)
+- `Phase 6.3` - request, consumer, and delivery standardization: **CLOSED** (all active chart families have VNext-compatible request/program support and live VNext routes, with legacy compatibility/fallback retained)
 - `Phase 6.4` - outlier decomposition: **CLOSED**
 - `Phase 6.5` - physical hierarchy and naming realignment: **CLOSED**
 - `Phase 6.6` - architecture audit and baseline refresh: **CLOSED**
 - `Phase 6.7` - pre-Phase 7 structural consolidation: **CLOSED**
 
-**Phase 6 is fully closed.** All 5 global closure conditions met. All sub-phases closed including 6.3 — all active chart families now route through the VNext reasoning engine with automatic legacy fallback.
+**Phase 6 is fully closed.** All 5 global closure conditions met. All sub-phases closed including 6.3 — all active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection.
 
 Major next steps in sequence:
 1. `Phase 7` - exploratory and confidence capability expansion (entry gate satisfied)
@@ -731,7 +731,7 @@ Major next steps in sequence:
 - Early phases built truthful foundations.
 - Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
 - Phase 5 is the completed bridge between what the system already does and what it is intended to become.
-- Phase 6 established a trustworthy hierarchy; it is fully closed. All active chart families route through the VNext reasoning engine.
+- Phase 6 established a trustworthy hierarchy; it is fully closed. All active chart families have VNext-compatible request/program support and managed legacy fallback/compatibility.
 - Phase 7 is now the active sanctioned home of exploration, confidence, and richer interpretive power. Its entry gate is satisfied.
 - The reasoning engine is the center of the system. New capabilities should be built as reasoning-engine features that delivery surfaces consume.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.
@@ -742,4 +742,3 @@ This roadmap defines how the project grows without lying to itself, and without 
 ---
 
 **End of Project Roadmap**
-

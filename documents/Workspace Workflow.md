@@ -159,9 +159,9 @@ Workspace State:
 - Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Roadmap, Execution Plan
 - Code snapshot: live codebase access
 - Phase: Phase 6 closed, Phase 7 entry gate satisfied
-- VNext: all chart families routed through VNext reasoning engine with automatic legacy fallback
+- VNext: all chart families have VNext-compatible request/program support and live VNext routes where appropriate; legacy remains compatibility/fallback/projection
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 688 passing
+- Tests: 696 DataVisualiser + 15 DataFileReader passing
 - Unknowns: none
 ```
 
@@ -336,7 +336,7 @@ WORKSPACE CONTEXT DECLARATION
 
    Testing Enabled: Yes / Deferred / Parity-only
    Test Project(s) in Scope:
-   Current Test Count: (e.g. 471 passing)
+   Current Test Count: (e.g. 696 DataVisualiser + 15 DataFileReader passing)
    Manual Smoke Required: Yes / No / Conditional on live behavior change
 
 7. Termination Semantics
