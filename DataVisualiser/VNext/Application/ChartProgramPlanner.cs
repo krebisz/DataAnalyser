@@ -30,6 +30,7 @@ public sealed class ChartProgramPlanner
             ChartProgramKind.Distribution => BuildIdentityProgram(snapshot, ChartProgramKind.Distribution),
             ChartProgramKind.WeekdayTrend => BuildIdentityProgram(snapshot, ChartProgramKind.WeekdayTrend),
             ChartProgramKind.BarPie => BuildIdentityProgram(snapshot, ChartProgramKind.BarPie),
+            ChartProgramKind.SyncfusionSunburst => BuildIdentityProgram(snapshot, ChartProgramKind.SyncfusionSunburst),
             _ => throw new InvalidOperationException($"Unsupported program kind '{request.Kind}'.")
         };
     }

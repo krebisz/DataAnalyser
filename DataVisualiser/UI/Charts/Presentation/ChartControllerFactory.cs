@@ -3,6 +3,7 @@ using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.Core.Rendering.BarPie;
+using DataVisualiser.Core.Rendering.Syncfusion;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.UI.Charts.Interfaces;
@@ -30,7 +31,11 @@ public sealed class ChartControllerFactory : IChartControllerFactory
         if (metricSelectionService == null)
             throw new ArgumentNullException(nameof(metricSelectionService));
 
-        var adapter = new SyncfusionSunburstChartControllerAdapter(controller, viewModel, metricSelectionService);
+        var adapter = new SyncfusionSunburstChartControllerAdapter(
+            controller,
+            viewModel,
+            metricSelectionService,
+            new SyncfusionSunburstRenderingContract());
         var registry = new ChartControllerRegistry();
         registry.Register(adapter);
 
@@ -102,7 +107,8 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             var syncfusionAdapter = new SyncfusionSunburstChartControllerAdapter(
                 context.SyncfusionSunburstChartController,
                 context.ViewModel,
-                context.MetricSelectionService);
+                context.MetricSelectionService,
+                new SyncfusionSunburstRenderingContract());
             registry.Register(syncfusionAdapter);
         }
 

@@ -7,12 +7,12 @@ namespace DataVisualiser.UI.Syncfusion;
 
 public sealed class SyncfusionChartsViewCoordinator
 {
-    public const string ReachabilityExportNotWiredMessage = "Reachability export is not wired for the Syncfusion tab yet.";
+    public const string ReachabilityExportWiredMessage = "Reachability export is wired for the Syncfusion tab.";
     public const string ManagedChartKey = ChartControllerKeys.SyncfusionSunburst;
 
     public string GetReachabilityExportMessage()
     {
-        return ReachabilityExportNotWiredMessage;
+        return ReachabilityExportWiredMessage;
     }
 
     public bool ShouldRenderAfterSubtypeSelectionChange(bool isApplyingSelectionSync, bool hasLoadedData, ChartDataContext? context)

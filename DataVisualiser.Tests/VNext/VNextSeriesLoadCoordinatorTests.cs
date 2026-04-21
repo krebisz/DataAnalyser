@@ -16,6 +16,7 @@ public sealed class VNextSeriesLoadCoordinatorTests
     [InlineData(ChartProgramKind.BarPie)]
     [InlineData(ChartProgramKind.Distribution)]
     [InlineData(ChartProgramKind.Transform)]
+    [InlineData(ChartProgramKind.SyncfusionSunburst)]
     public async Task LoadAsync_ShouldReturnDataWithCorrectProgramKind(ChartProgramKind kind)
     {
         var coordinator = CreateCoordinator();

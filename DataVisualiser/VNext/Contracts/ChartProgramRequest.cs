@@ -29,4 +29,5 @@ public sealed record ChartProgramRequest
     public static ChartProgramRequest Distribution() => new(ChartProgramKind.Distribution);
     public static ChartProgramRequest WeekdayTrend() => new(ChartProgramKind.WeekdayTrend);
     public static ChartProgramRequest BarPie() => new(ChartProgramKind.BarPie);
+    public static ChartProgramRequest SyncfusionSunburst() => new(ChartProgramKind.SyncfusionSunburst);
 }

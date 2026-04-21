@@ -65,7 +65,7 @@ public sealed class SyncfusionChartsViewCoordinatorTests
     {
         var coordinator = new SyncfusionChartsViewCoordinator();
 
-        Assert.Equal(SyncfusionChartsViewCoordinator.ReachabilityExportNotWiredMessage, coordinator.GetReachabilityExportMessage());
+        Assert.Equal(SyncfusionChartsViewCoordinator.ReachabilityExportWiredMessage, coordinator.GetReachabilityExportMessage());
     }
 
     [Theory]

@@ -124,7 +124,7 @@ public sealed class ChartRenderPlanProjectorTests
     [Fact]
     public void ProjectHierarchy_ShouldRepresentSunburstStyleDataWithoutSyncfusionTypes()
     {
-        var program = CreateProgram(ChartProgramKind.BarPie);
+        var program = CreateProgram(ChartProgramKind.SyncfusionSunburst);
         var roots = new[]
         {
             new ChartHierarchyNodePlan(
@@ -223,6 +223,7 @@ public sealed class ChartRenderPlanProjectorTests
     [InlineData(ChartProgramKind.Distribution)]
     [InlineData(ChartProgramKind.WeekdayTrend)]
     [InlineData(ChartProgramKind.BarPie)]
+    [InlineData(ChartProgramKind.SyncfusionSunburst)]
     public void ProjectCartesian_ShouldAcceptEveryCurrentChartFamilyWithoutUiBackendTypes(ChartProgramKind kind)
     {
         var program = CreateProgram(kind);

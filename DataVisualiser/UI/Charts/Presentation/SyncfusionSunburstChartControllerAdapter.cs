@@ -5,30 +5,36 @@ using System.Threading.Tasks;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.Syncfusion;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.Syncfusion;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
 public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAdapterBase
 {
     private readonly ISyncfusionSunburstChartController _controller;
+    private readonly ISyncfusionSunburstRenderingContract _renderingContract;
     private readonly MetricSelectionService _metricSelectionService;
     private readonly MainWindowViewModel _viewModel;
 
     public SyncfusionSunburstChartControllerAdapter(
         ISyncfusionSunburstChartController controller,
         MainWindowViewModel viewModel,
-        MetricSelectionService metricSelectionService)
+        MetricSelectionService metricSelectionService,
+        ISyncfusionSunburstRenderingContract? renderingContract = null)
         : base(controller)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
+        _renderingContract = renderingContract ?? new SyncfusionSunburstRenderingContract();
     }
 
     public override string Key => ChartControllerKeys.SyncfusionSunburst;
@@ -39,13 +45,13 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
     {
         if (!_viewModel.ChartState.IsSyncfusionSunburstVisible)
         {
-            _controller.ItemsSource = Array.Empty<SunburstItem>();
+            _renderingContract.Clear(CreateRenderHost());
             return Task.CompletedTask;
         }
 
         if (context == null)
         {
-            _controller.ItemsSource = Array.Empty<SunburstItem>();
+            _renderingContract.Clear(CreateRenderHost());
             return Task.CompletedTask;
         }
 
@@ -54,20 +60,17 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
 
     public override void Clear(ChartState state)
     {
-        _controller.ItemsSource = Array.Empty<SunburstItem>();
+        _renderingContract.Clear(CreateRenderHost());
     }
 
     public override void ResetZoom()
     {
-        // Syncfusion Sunburst does not expose zoom reset in this POC.
+        _renderingContract.ResetView(ResolveRenderingRoute(), CreateRenderHost());
     }
 
     public override bool HasSeries(ChartState state)
     {
-        if (_controller.ItemsSource is IEnumerable<SunburstItem> items)
-            return items.Any();
-
-        return false;
+        return _renderingContract.HasRenderableContent(ResolveRenderingRoute(), CreateRenderHost());
     }
 
     public override void UpdateSubtypeOptions()
@@ -76,25 +79,37 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
 
     private async Task RenderSunburstAsync()
     {
-        var items = await BuildItemsFromSelectionsAsync();
-        _controller.ItemsSource = items;
+        var model = await BuildRenderModelFromSelectionsAsync();
+        var route = ResolveRenderingRoute();
+        var request = new SyncfusionSunburstChartRenderRequest(
+            route,
+            model.Items,
+            model.BucketCount,
+            model.SelectionCount,
+            model.From,
+            model.To);
+
+        await _renderingContract.RenderAsync(request, CreateRenderHost());
+        _viewModel.ChartState.SetRenderPlanDiagnostics(
+            ChartProgramKind.SyncfusionSunburst,
+            BuildRenderPlanDiagnostics(request));
     }
 
-    private async Task<IReadOnlyList<SunburstItem>> BuildItemsFromSelectionsAsync()
+    private async Task<SyncfusionSunburstRenderModel> BuildRenderModelFromSelectionsAsync()
     {
         var selections = GetDistinctSelectedSeries();
         if (selections.Count == 0)
-            return Array.Empty<SunburstItem>();
+            return new SyncfusionSunburstRenderModel(Array.Empty<SunburstItem>(), 0, 0, null, null);
 
         if (!TryResolveDateRange(out var from, out var to))
-            return Array.Empty<SunburstItem>();
+            return new SyncfusionSunburstRenderModel(Array.Empty<SunburstItem>(), 0, selections.Count, null, null);
 
         var bucketCount = ResolveBucketCount(from, to);
         var bucketPlan = BuildBucketPlan(from, to, bucketCount);
         var seriesTotals = await LoadSeriesTotalsAsync(selections, from, to, bucketPlan);
 
         if (seriesTotals.Count == 0)
-            return Array.Empty<SunburstItem>();
+            return new SyncfusionSunburstRenderModel(Array.Empty<SunburstItem>(), bucketCount, selections.Count, from, to);
 
         var items = new List<SunburstItem>();
         foreach (var bucket in bucketPlan.Buckets)
@@ -113,7 +128,47 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
             }
         }
 
-        return items;
+        return new SyncfusionSunburstRenderModel(items, bucketCount, selections.Count, from, to);
+    }
+
+    private SyncfusionSunburstRenderingRoute ResolveRenderingRoute()
+    {
+        return SyncfusionSunburstRenderingRoute.Hierarchy;
+    }
+
+    private SyncfusionSunburstChartRenderHost CreateRenderHost()
+    {
+        return new SyncfusionSunburstChartRenderHost(_controller, _viewModel.ChartState.IsSyncfusionSunburstVisible);
+    }
+
+    private static ChartRenderAdapterResult BuildRenderPlanDiagnostics(SyncfusionSunburstChartRenderRequest request)
+    {
+        var bucketCount = request.Items
+            .Select(item => item.Bucket)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+        var submetricCount = request.Items
+            .Select(item => item.Submetric)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+        var renderedNodeCount = bucketCount + request.Items.Count;
+
+        return new ChartRenderAdapterResult(
+            SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy,
+            $"{SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy}:{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}",
+            ChartRenderPlanKind.Hierarchy,
+            ChartRenderDensityMode.FullFidelity,
+            submetricCount,
+            renderedNodeCount,
+            request.Items.Count,
+            new Dictionary<string, string>
+            {
+                ["Adapter"] = nameof(SyncfusionSunburstChartControllerAdapter),
+                ["ProgramKind"] = ChartProgramKind.SyncfusionSunburst.ToString(),
+                ["Route"] = request.Route.ToString(),
+                ["BucketCount"] = request.BucketCount.ToString(),
+                ["SelectionCount"] = request.SelectionCount.ToString()
+            });
     }
 
     private List<MetricSeriesSelection> GetDistinctSelectedSeries()
@@ -230,4 +285,11 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
     private sealed record Bucket(int Index, DateTime Start, DateTime End, string Label);
 
     private sealed record BucketPlan(DateTime From, DateTime To, double BucketTicks, IReadOnlyList<Bucket> Buckets);
+
+    private sealed record SyncfusionSunburstRenderModel(
+        IReadOnlyList<SunburstItem> Items,
+        int BucketCount,
+        int SelectionCount,
+        DateTime? From,
+        DateTime? To);
 }
