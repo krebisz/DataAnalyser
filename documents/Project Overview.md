@@ -1,4 +1,4 @@
-# PROJECT OVERVIEW
+﻿# PROJECT OVERVIEW
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `Project Roadmap.md`  
@@ -36,7 +36,7 @@ The system favors clarity and auditability over automation or convenience.
 It should not be understood as a reporting tool that only exposes preselected outputs.
 It is intended to become a platform that can preserve data faithfully, standardize it, reason over it explicitly, and serve those results to multiple kinds of clients.
 
-**Strategic position:** The system's differentiator is that every derived result has explicit provenance, inspectable reasoning, and visible confidence. The architecture was designed for this from the ground up — canonical truth preservation, deterministic derivation, and evidence infrastructure that can prove its own correctness are foundational, not retrofitted. The reasoning engine is the center of the system; charts and other delivery surfaces are consumers of its output, not the definition of the platform.
+**Strategic position:** The system's differentiator is that every derived result has explicit provenance, inspectable reasoning, and visible confidence. The architecture was designed for this from the ground up â€” canonical truth preservation, deterministic derivation, and evidence infrastructure that can prove its own correctness are foundational, not retrofitted. The reasoning engine is the center of the system; charts and other delivery surfaces are consumers of its output, not the definition of the platform.
 
 It is also a single-maintainer project, so the near-term execution style must favor bounded, high-payoff steps that improve reliability, legibility, and operational tolerance without demanding constant large-scale reorientation.
 
@@ -56,7 +56,7 @@ At present, the system:
 - supports parallel legacy and CMS execution paths during migration
 - increasingly exposes downstream-safe derived and interpretive result shaping through explicit orchestration and rendering seams
 - emits tab-scoped reachability/evidence exports from both the Charts and Syncfusion surfaces through the shared evidence service
-- now has a non-live VNext render-plan foundation for backend-neutral render intent, render buffers, density policy, and adapter dispatch
+- now has a live VNext render-plan foundation for backend-neutral render intent, render buffers, density policy, and adapter dispatch across the active chart families/tabs
 
 Canonical semantics form the foundation for all trusted meaning and for all computation that claims canonical comparability.
 Charts are currently the dominant delivery surface, but they are not the intended limit of the platform.
@@ -99,7 +99,7 @@ Current delivery surfaces provide:
 - compositional and comparative charts
 - dynamic chart visibility and state management
 - backend-qualified multi-vendor rendering experiments in support of rendering-boundary isolation
-- non-live VNext render-plan contracts for future backend-neutral delivery to LiveCharts, Syncfusion, and plugin renderers
+- VNext render-plan contracts now provide backend-neutral delivery to LiveCharts, Syncfusion, and plugin renderers through adapter-backed live routes where those surfaces are wired
 - exports and evidence paths that observe execution and result state
 - a shared metric-selection/date/CMS control surface reused by both the Charts and Syncfusion tabs
 - a generic `WorkspaceTabHost` shell with header/body slots, specialized by `ChartTabHost` for chart tabs and reused directly by the Admin manager view with Admin-specific controls
@@ -141,7 +141,7 @@ They exist to aid understanding, not to redefine meaning.
 
 ## 6. Confidence & Reliability (Foundational)
 
-Confidence is a core property of every result the system produces, not a decorative layer added after the fact. The architecture is designed so that no derived result exists without an explicit trust context — the provenance chain, the data quality, and the reasoning path are all visible.
+Confidence is a core property of every result the system produces, not a decorative layer added after the fact. The architecture is designed so that no derived result exists without an explicit trust context â€” the provenance chain, the data quality, and the reasoning path are all visible.
 
 The system supports, or is explicitly staged to support, representation of data confidence and reliability, including:
 
@@ -254,9 +254,9 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports for all chart families
 - Evidence exports now include `ExportScope`; Charts and Syncfusion exports share the same export path, and tab switches are recorded as session milestones
 - Recent shared seams added before Phase 7: `ParitySeriesComparer`, `WorkspaceLoadCoordinator`, `WorkspaceSessionMilestoneRecorder`, and `BinaryMetricChartContextHelper`
-- Pre-Phase-7 enabling infrastructure has begun: `ChartRenderPlan`, neutral render buffers, `RenderDensityPolicy`, time-bucket render aggregation, backend capability descriptors, backend selection, and adapter dispatch exist under VNext but are not yet wired into live chart rendering
+- Pre-Phase-7 enabling infrastructure has been completed: `ChartRenderPlan`, neutral render buffers, `RenderDensityPolicy`, time-bucket render aggregation, backend capability descriptors, backend selection, and adapter dispatch now exist under VNext and are wired into live chart rendering across the active chart families/tabs
 - Known debt carried to Phase 7: `MainChartsView` host concentration (~1,440 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence, adapter pattern variation (accepted as domain variation)
-- 484 source files, 725 DataVisualiser tests, 15 DataFileReader tests
+- 493 source files, 737 DataVisualiser tests, 15 DataFileReader tests
 
 ---
 
@@ -265,7 +265,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
 - Phase 6 closure satisfies the entry gate: the hierarchy is now legible enough that new power can be added without amplifying entropy
-- Current active work is a pre-Phase-7 rendering-delivery primer that should wire all chart families and tabs through `ChartProgram -> ChartRenderPlan -> backend adapter` before Phase 7 capability work, unless a specific family or tab is explicitly deferred
+- Current active work is Phase 7 exploratory capability expansion on the stabilized `ChartProgram -> ChartRenderPlan -> backend adapter` delivery baseline, with any later family or tab exceptions explicitly deferred
 - Known debt inherited from Phase 6 is documented and bounded
 
 ---
@@ -332,12 +332,12 @@ The system exists to support reasoning, not replace it.
 
 - Canonical truth is stable and immutable
 - The reasoning engine is the center of the system; delivery surfaces are consumers of its output
-- Confidence is foundational — every result carries explicit provenance, reasoning, and trust context
+- Confidence is foundational â€” every result carries explicit provenance, reasoning, and trust context
 - Interpretation is powerful but bounded
 - Exploration is supported without semantic erosion
 - Charts are the current dominant client, not the final definition of the platform
 - The broader direction is a reasoning environment that can serve multiple qualified consumers uniformly
-- The architecture rehaul and legibility reconciliation are complete; the current critical work is the pre-Phase-7 render-plan delivery primer across all chart families/tabs, followed by Phase 7 exploratory capability expansion
+- The architecture rehaul and legibility reconciliation are complete; the pre-Phase-7 render-plan delivery primer is complete across all chart families/tabs, and the current critical work is Phase 7 exploratory capability expansion
 - Evolution is intentional and evidence-bound
 
 This overview describes the system as it exists today and the direction it is deliberately moving toward.

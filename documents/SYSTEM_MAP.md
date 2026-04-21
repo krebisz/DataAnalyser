@@ -1,4 +1,4 @@
-# SYSTEM MAP
+﻿# SYSTEM MAP
 **Status:** Canonical (Structural)  
 **Scope:** Conceptual architecture, execution boundaries, rendering boundaries, and data-flow constraints  
 **Authority:** Subordinate only to `Project Bible.md`
@@ -212,9 +212,9 @@ The orchestration layer coordinates execution, not meaning.
 - shared workspace load validation/clear/publish coordination for chart tabs
 
 **Current execution paths**
-- **VNext main-chart path**: `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `ChartProgram` → `LegacyChartProgramProjector` → `ChartDataContext`. Route eligibility is named by `VNextChartRoutePolicy`; fresh coordinator per load. Produces signature-tracked runtime state.
-- **VNext per-family path**: `VNextSeriesLoadCoordinator` → `ReasoningSessionCoordinator` → identity `ChartProgram` → `LegacyChartProgramProjector` → raw `MetricData`. Activated for Distribution, WeekdayTrend, Transform, and BarPie fresh data loads. Data resolution unified through `VNextDataResolutionHelper`. Per-family runtime tracking via `ChartState.SetFamilyRuntime(ChartProgramKind, LoadRuntimeState)`.
-- **Legacy path**: `MetricLoadCoordinator` → `MetricSelectionService` → `ChartDataContextBuilder` → `ChartDataContext`. Automatic fallback on any VNext failure.
+- **VNext main-chart path**: `VNextMainChartIntegrationCoordinator` â†’ `ReasoningSessionCoordinator` â†’ `ChartProgram` â†’ `LegacyChartProgramProjector` â†’ `ChartDataContext`. Route eligibility is named by `VNextChartRoutePolicy`; fresh coordinator per load. Produces signature-tracked runtime state.
+- **VNext per-family path**: `VNextSeriesLoadCoordinator` â†’ `ReasoningSessionCoordinator` â†’ identity `ChartProgram` â†’ `LegacyChartProgramProjector` â†’ raw `MetricData`. Activated for Distribution, WeekdayTrend, Transform, and BarPie fresh data loads. Data resolution unified through `VNextDataResolutionHelper`. Per-family runtime tracking via `ChartState.SetFamilyRuntime(ChartProgramKind, LoadRuntimeState)`.
+- **Legacy path**: `MetricLoadCoordinator` â†’ `MetricSelectionService` â†’ `ChartDataContextBuilder` â†’ `ChartDataContext`. Automatic fallback on any VNext failure.
 - Path selection is deterministic, visibility-based, and independent of CMS configuration.
 - Legacy remains a compatibility/fallback/projection path during migration; VNext is the forward request/program model, not yet a reason to delete legacy delivery adapters.
 
@@ -223,7 +223,7 @@ The orchestration layer coordinates execution, not meaning.
 - no heuristic overrides
 - no hidden controller-specific execution shortcuts
 - no silent bypass paths
-- VNext path must not change the semantic content of the projected context relative to legacy — it is an execution-path alternative, not a semantic one
+- VNext path must not change the semantic content of the projected context relative to legacy â€” it is an execution-path alternative, not a semantic one
 
 Execution reachability must be observable.
 
@@ -249,13 +249,13 @@ This layer contains rendering contracts, backend adapters, backend probes, and q
 - unqualified backend slices must not be treated as production-safe
 - VNext render-plan contracts must remain free of `LiveCharts`, `Syncfusion`, WPF, or other concrete backend types
 
-**Current VNext render-plan foundation (pre-Phase-7 primer)**
+**Current VNext render-plan foundation (live-wired baseline)**
 - `ChartRenderPlan` is the backend-neutral delivery contract over `ChartProgram`.
 - `RenderDataBuffer` / `RenderDataPoint` carry chart-library-agnostic series data.
 - `ChartHierarchyNodePlan` carries hierarchy-shaped delivery intent for Syncfusion/Sunburst-style and future hierarchy backends.
 - `RenderDensityPolicy` and `TimeBucketRenderAggregationKernel` prepare bounded overview buffers for large ranges while preserving source counts and signatures.
 - `ChartBackendCapabilities`, `ChartBackendSelector`, `IChartRenderPlanAdapter<TSurface>`, and `ChartRenderPlanAdapterDispatcher<TSurface>` define the backend negotiation and adapter seam.
-- This foundation is currently non-live: existing UI surfaces still render through their current adapters until targeted wiring slices are validated. The pre-Phase-7 primer should wire all current chart families and tabs before capability expansion unless a deferral is explicit.
+- This foundation is now live: the active UI surfaces render through adapter-backed `ChartRenderPlan` delivery, while remaining legacy paths continue to exist where compatibility or projection is still required.
 
 ---
 
@@ -283,7 +283,7 @@ Charts are consumers, not the definition of the platform.
 
 ## 4. Chart Programs and Programmable Composition
 
-The system's reasoning engine produces analytical programs — explicit, inspectable, composable descriptions of what to compute and how to deliver it. Chart programs are the chart-oriented specialization of this broader model; non-chart consumers (reports, APIs, alerts) may consume the same analytical programs through different delivery contracts.
+The system's reasoning engine produces analytical programs â€” explicit, inspectable, composable descriptions of what to compute and how to deliver it. Chart programs are the chart-oriented specialization of this broader model; non-chart consumers (reports, APIs, alerts) may consume the same analytical programs through different delivery contracts.
 
 This capability remains structurally downstream of truth assignment and canonicalization. Programs do not define meaning; they compose and deliver it.
 
@@ -391,10 +391,10 @@ It may observe:
 - export scope (`Charts` or `Syncfusion`) and session milestones, including tab switches
 
 Evidence infrastructure lives in `UI/MainHost/Evidence/` and is decomposed into:
-- `EvidenceExportModels` — standalone DTOs for parity snapshots, diagnostics, and VNext runtime state
-- `EvidenceDiagnosticsBuilder` — assembles diagnostic state from chart state, metric state, and runtime path
-- `EvidenceDataResolutionHelper` — shared context-series resolution and strategy cut-over resolution
-- `MainChartsEvidenceExportService` — orchestrates parity evaluation and JSON export
+- `EvidenceExportModels` â€” standalone DTOs for parity snapshots, diagnostics, and VNext runtime state
+- `EvidenceDiagnosticsBuilder` â€” assembles diagnostic state from chart state, metric state, and runtime path
+- `EvidenceDataResolutionHelper` â€” shared context-series resolution and strategy cut-over resolution
+- `MainChartsEvidenceExportService` â€” orchestrates parity evaluation and JSON export
 
 The same `MainChartsEvidenceExportService` is used for both Charts and Syncfusion tab scopes; `ExportScope` distinguishes the source surface in the JSON payload.
 
@@ -486,18 +486,18 @@ This map defines what the system is allowed to be.
 
 ## Appendix A. DataVisualiser Presentation Pipeline Spine (Descriptive)
 
-This appendix describes the primary path from "user loads metrics" to "charts refresh" in the DataVisualiser subsystem, without claiming all code fits this model. It is descriptive, not authoritative — the layer definitions and boundary rules above govern.
+This appendix describes the primary path from "user loads metrics" to "charts refresh" in the DataVisualiser subsystem, without claiming all code fits this model. It is descriptive, not authoritative â€” the layer definitions and boundary rules above govern.
 
 ### A.1 Ordered Stages (Happy Path)
 
-1. **UI validation** — Selection + date range; `MainWindowViewModel.ValidateDataLoadRequirements` / view guards.
-2. **Load metrics into context** — `MainWindowViewModel.LoadMetricDataAsync` → `MetricLoadCoordinator.LoadMetricDataAsync`:
-   - **VNext main-chart path** (when only Main chart visible): `VNextMainChartIntegrationCoordinator` → fresh `ReasoningSessionCoordinator` → `LoadAsync` → `BuildMainProgram` → `LegacyChartProgramProjector.ProjectToChartContext` → `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.VNextMain`).
-   - **VNext per-family path** (for Distribution, WeekdayTrend, Transform, BarPie fresh data loads): `VNextDataResolutionHelper` → `VNextSeriesLoadCoordinator` → fresh `ReasoningSessionCoordinator` → identity `ChartProgram` → projected `MetricData`. Runtime tracked via `ChartState.SetFamilyRuntime(ChartProgramKind, ...)`.
-   - **Legacy path** (automatic fallback on VNext failure): `MetricSelectionService.LoadMetricDataWithCmsAsync` → `ChartDataContextBuilder.Build` → `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.Legacy`).
-3. **Publish + schedule chart work** — `LoadDataCommand` → `LoadData()` raises `DataLoaded` and calls `RequestChartUpdate()`. Facade: `ChartPresentationSpine.PublishLastContextAndRequestChartUpdate`.
-4. **Composition of engines** — `MainChartsViewChartPipelineFactory` builds `ChartUpdateCoordinator`, `ChartRenderingOrchestrator`, distribution services, etc.
-5. **Per-chart orchestration** — `ChartRenderingOrchestrator` / `*OrchestrationPipeline` / `ChartUpdateCoordinator` drive prep and render for each chart family.
+1. **UI validation** â€” Selection + date range; `MainWindowViewModel.ValidateDataLoadRequirements` / view guards.
+2. **Load metrics into context** â€” `MainWindowViewModel.LoadMetricDataAsync` â†’ `MetricLoadCoordinator.LoadMetricDataAsync`:
+   - **VNext main-chart path** (when only Main chart visible): `VNextMainChartIntegrationCoordinator` â†’ fresh `ReasoningSessionCoordinator` â†’ `LoadAsync` â†’ `BuildMainProgram` â†’ `LegacyChartProgramProjector.ProjectToChartContext` â†’ `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.VNextMain`).
+   - **VNext per-family path** (for Distribution, WeekdayTrend, Transform, BarPie fresh data loads): `VNextDataResolutionHelper` â†’ `VNextSeriesLoadCoordinator` â†’ fresh `ReasoningSessionCoordinator` â†’ identity `ChartProgram` â†’ projected `MetricData`. Runtime tracked via `ChartState.SetFamilyRuntime(ChartProgramKind, ...)`.
+   - **Legacy path** (automatic fallback on VNext failure): `MetricSelectionService.LoadMetricDataWithCmsAsync` â†’ `ChartDataContextBuilder.Build` â†’ `ChartState.LastContext`. Runtime tracked via `ChartState.LastLoadRuntime` (`EvidenceRuntimePath.Legacy`).
+3. **Publish + schedule chart work** â€” `LoadDataCommand` â†’ `LoadData()` raises `DataLoaded` and calls `RequestChartUpdate()`. Facade: `ChartPresentationSpine.PublishLastContextAndRequestChartUpdate`.
+4. **Composition of engines** â€” `MainChartsViewChartPipelineFactory` builds `ChartUpdateCoordinator`, `ChartRenderingOrchestrator`, distribution services, etc.
+5. **Per-chart orchestration** â€” `ChartRenderingOrchestrator` / `*OrchestrationPipeline` / `ChartUpdateCoordinator` drive prep and render for each chart family.
 
 ### A.2 Key Types (Navigation)
 
@@ -512,7 +512,7 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 | Workspace load coordination | `WorkspaceLoadCoordinator` and its `LoadValidationInput`, `ValidationActions`, `LoadExecutionActions`, `ClearActions` records |
 | Factory | `MainChartsViewChartPipelineFactory`, `MainChartsViewChartPipelineFactoryResult` |
 | Render | `ChartRenderingOrchestrator`, `ChartUpdateCoordinator` |
-| VNext render-plan foundation (non-live) | `ChartRenderPlan`, `ChartRenderPlanProjector`, `RenderDensityPolicy`, `TimeBucketRenderAggregationKernel`, `ChartBackendCapabilities`, `ChartRenderPlanAdapterDispatcher<TSurface>` |
+| VNext render-plan foundation (live-wired) | `ChartRenderPlan`, `ChartRenderPlanProjector`, `RenderDensityPolicy`, `TimeBucketRenderAggregationKernel`, `ChartBackendCapabilities`, `ChartRenderPlanAdapterDispatcher<TSurface>` |
 | Evidence | `EvidenceExportModels`, `EvidenceDiagnosticsBuilder`, `EvidenceDataResolutionHelper`, `MainChartsEvidenceExportService` (all in `UI/MainHost/Evidence/`) |
 
 ### A.3 VNext Routing Decision
@@ -523,25 +523,25 @@ This appendix describes the primary path from "user loads metrics" to "charts re
 - Legacy activates otherwise, or as automatic fallback on VNext failure.
 
 **Per-family routing** is embedded in each adapter's data resolution path:
-- Distribution: `DistributionChartControllerAdapter` → `VNextDataResolutionHelper` → `VNextSeriesLoadCoordinator`
-- WeekdayTrend: `WeekdayTrendChartControllerAdapter.LoadFreshWeekdayTrendDataAsync` → `VNextSeriesLoadCoordinator`
-- Transform: `TransformDataResolutionCoordinator.LoadFreshTransformDataAsync` → `VNextSeriesLoadCoordinator`
-- BarPie: `BarPieRenderModelBuilder.LoadSeriesTotalsAsync` → `VNextSeriesLoadCoordinator` (per-series, parallel)
+- Distribution: `DistributionChartControllerAdapter` â†’ `VNextDataResolutionHelper` â†’ `VNextSeriesLoadCoordinator`
+- WeekdayTrend: `WeekdayTrendChartControllerAdapter.LoadFreshWeekdayTrendDataAsync` â†’ `VNextSeriesLoadCoordinator`
+- Transform: `TransformDataResolutionCoordinator.LoadFreshTransformDataAsync` â†’ `VNextSeriesLoadCoordinator`
+- BarPie: `BarPieRenderModelBuilder.LoadSeriesTotalsAsync` â†’ `VNextSeriesLoadCoordinator` (per-series, parallel)
 - Each fires when a fresh load is needed (selected series differs from main context primary/secondary) and falls back to legacy on failure.
 
 All routing is independent of CMS configuration.
 
 ### A.4 Legacy / Parallel Paths (Not the Spine)
 
-- **Syncfusion host** — Own view and render path; still uses the same VM load + `LoadDataCommand` sequence where wired. Clears `LastLoadRuntime` on reset paths.
-- **Ad-hoc reloads** — Several adapters call `MetricSelectionService.LoadMetricDataAsync` directly for a subset of charts; spine remains "full context load" above.
-- **DataFileReader ingest** — Separate CLI pipeline (files → DB); meets the app at storage, not at `ChartState`.
+- **Syncfusion host** â€” Own view and render path; still uses the same VM load + `LoadDataCommand` sequence where wired. Clears `LastLoadRuntime` on reset paths.
+- **Ad-hoc reloads** â€” Several adapters call `MetricSelectionService.LoadMetricDataAsync` directly for a subset of charts; spine remains "full context load" above.
+- **DataFileReader ingest** â€” Separate CLI pipeline (files â†’ DB); meets the app at storage, not at `ChartState`.
 
 Syncfusion exports through the shared evidence service with `ExportScope = "Syncfusion"` rather than a tab-specific stub.
 
 ### A.5 Code Facade
 
-`DataVisualiser.UI.ChartPresentationSpine` (`UI/ChartPresentationSpine.cs`) — thin forwards to the VM for stages 2–3 so the spine has a single type to open first.
+`DataVisualiser.UI.ChartPresentationSpine` (`UI/ChartPresentationSpine.cs`) â€” thin forwards to the VM for stages 2â€“3 so the spine has a single type to open first.
 
 ---
 
@@ -589,7 +589,7 @@ flowchart TD
         V_PLANNER["ChartProgramPlanner"]
         V_KERNEL["OperationKernel"]
         V_PROGRAM["ChartProgram"]
-        V_PLAN["ChartRenderPlan (non-live foundation)"]
+        V_PLAN["ChartRenderPlan (live-wired foundation)"]
         V_DENSITY["RenderDensityPolicy / RenderDataBuffer"]
         V_BACKEND["Backend Adapter Dispatcher"]
         V_PROJECTOR["LegacyChartProgramProjector"]
@@ -644,8 +644,8 @@ flowchart LR
     VNext["VNext: program-first"] --> V1["MetricLoadSnapshot is authoritative"]
     V1 --> V2["ChartProgram declares intended chart behavior"]
     V2 --> V3["Current bridge projects to ChartDataContext"]
-    V2 -. "non-live foundation" .-> V4["ChartRenderPlan + density-aware buffers"]
-    V4 -. "future wiring" .-> V5["Backend adapter dispatch"]
+    V2 -. "live-wired foundation" .-> V4["ChartRenderPlan + density-aware buffers"]
+    V4 -. "live delivery" .-> V5["Backend adapter dispatch"]
 ```
 
 ---
