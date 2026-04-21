@@ -34,8 +34,8 @@ Use this section as the default handoff entry point in a new conversation.
 
 Current state:
 
-- Pre-Phase-7 rendering primer is now in progress: VNext has non-live render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts intended for Main, all current chart families, Syncfusion, and future plugin renderers.
-- Current automated lane: 484 DataVisualiser source files, 174 DataVisualiser test files, 725 DataVisualiser tests, and 15 DataFileReader tests.
+- Pre-Phase-7 rendering primer is now in progress: VNext has render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts intended for Main, all current chart families, Syncfusion, and future plugin renderers; Main chart now consumes `ChartRenderPlan` through a LiveCharts adapter.
+- Current automated lane: 485 DataVisualiser source files, 174 DataVisualiser test files, 726 DataVisualiser tests, and 15 DataFileReader tests.
 - Phase 6.3 VNext widening is complete - all active chart families have VNext-compatible request/program support and live VNext routes for fresh family loads, with legacy retained as compatibility/fallback
 - Phase 7 entry gate is satisfied — exploratory and confidence capabilities remain the Phase 7 objective, but the current render-plan primer should wire all chart families and tabs first unless a specific deferral is explicitly recorded
 - known debt: `MainChartsView` host concentration (~1,440 lines), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence
@@ -334,13 +334,13 @@ Documents absorbed from Phase 5:
 - Shared `EvidenceDataResolutionHelper` extracted: unified data-resolution and strategy-resolution patterns duplicated across 3 evidence evaluators
 - `UI/MainHost/` (41 files flat) decomposed into 3 sub-namespaces: `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
 - Architecture guardrail paths and `ParityExportShapeTests` reflection strings updated
-- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparison, workspace load/milestone recording, binary metric context consolidation, and VNext render-plan foundation bring the current lane to 725 DataVisualiser tests
+- Net file reduction: -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparison, workspace load/milestone recording, binary metric context consolidation, VNext render-plan foundation, and Main chart render-plan adapter wiring bring the current lane to 726 DataVisualiser tests
 
 **Phase 6.6 (Architecture audit and baseline refresh):** Closed.
 
 Audit baseline (April 2026):
 - Phase 6 closure baseline: 476 C# source files
-- Current pre-Phase-7 render-plan foundation lane: 484 C# source files, 174 test files, 725 DataVisualiser automated tests passing; 15 DataFileReader tests passing
+- Current pre-Phase-7 render-plan foundation lane: 485 C# source files, 174 test files, 726 DataVisualiser automated tests passing; 15 DataFileReader tests passing
 - Architecture guardrails continue to enforce structural contracts, including backend-neutral VNext render-plan boundaries
 
 **1. To what extent have the Phase 6 objectives been met?**
@@ -375,7 +375,7 @@ These are accepted as known debt, not open work:
 | 2. Repeated irreducible operations no longer sprawl | Yes | Frequency binning, transform computation, series preparation, smoothing, bucket aggregation each have one owner |
 | 3. Truth/derivation/orchestration/delivery seams are clearer | Yes | VNext reasoning engine live for main family; rendering contracts enforce backend qualification; evidence boundary decomposed |
 | 4. Remaining outliers are explicit, bounded, and visible | Yes | `MainChartsView` (host gravity), `SyncfusionChartsView` (parallel host), adapter pattern variation — all documented, all bounded |
-| 5. Current capabilities preserved or replaced | Yes | 725 DataVisualiser tests and 15 DataFileReader tests pass; all chart families render through existing live adapters; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
+| 5. Current capabilities preserved or replaced | Yes | 726 DataVisualiser tests and 15 DataFileReader tests pass; Main chart renders through the LiveCharts render-plan adapter while remaining chart families render through existing live adapters; evidence exports include runtime-path tracking and tab-scoped export metadata; no regressions |
 
 **Phase 6 is closed.** All active chart families now route through the VNext reasoning engine for fresh data loads. Phase 7 entry gate is satisfied; before substantive Phase 7 capability expansion begins, the active primer is render-plan delivery infrastructure followed by sequential live wiring across all chart families and tabs unless explicitly deferred.
 
@@ -531,15 +531,14 @@ Current completed foundation:
 
 Current status:
 - automated tests cover the non-live foundation across all current `ChartProgramKind` values and hierarchy-shaped Syncfusion/Sunburst-style plans
-- no live chart surface consumes `ChartRenderPlan` yet
-- no manual smoke is required for the current foundation
+- Main chart now consumes `ChartRenderPlan` through a LiveCharts adapter while preserving the existing computation/render-engine behavior
+- manual smoke is now required for the Main chart live slice before proceeding deeper into live render-plan wiring
 
 Next live slices:
-1. Wire the Main chart to consume `ChartRenderPlan` through a LiveCharts adapter.
+1. Run targeted Main chart smoke for small range, large range, summed/stacked modes, zoom/reset zoom, and export diagnostics.
 2. Emit density/backend diagnostics in evidence export.
-3. Run targeted smoke for small range, large range, zoom/reset zoom, and export diagnostics.
-4. Sequentially wire Normalized, Diff/Ratio, Transform, Distribution, WeekdayTrend, Bar/Pie, and Syncfusion.
-5. Record any explicit deferral before starting Phase 7 capability work.
+3. Sequentially wire Normalized, Diff/Ratio, Transform, Distribution, WeekdayTrend, Bar/Pie, and Syncfusion.
+4. Record any explicit deferral before starting Phase 7 capability work.
 
 ## 11. Current Priority Outliers
 

@@ -3,6 +3,7 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.State;
@@ -11,6 +12,7 @@ public class ChartState
 {
     private readonly Dictionary<DistributionMode, DistributionModeSettings> _distributionSettings = new();
     private readonly Dictionary<ChartProgramKind, LoadRuntimeState> _familyLoadRuntimes = new();
+    private readonly Dictionary<ChartProgramKind, RenderPlanDiagnosticsSnapshot> _renderPlanDiagnostics = new();
     private readonly List<PerformanceTimingSnapshot> _performanceTimings = new();
     private readonly List<SessionMilestoneSnapshot> _sessionMilestones = new();
     private const int MaxSessionMilestones = 50;
@@ -75,6 +77,7 @@ public class ChartState
         _familyLoadRuntimes[kind] = runtime;
 
     public IReadOnlyDictionary<ChartProgramKind, LoadRuntimeState> FamilyLoadRuntimes => _familyLoadRuntimes;
+    public IReadOnlyDictionary<ChartProgramKind, RenderPlanDiagnosticsSnapshot> RenderPlanDiagnostics => _renderPlanDiagnostics;
     public IReadOnlyList<PerformanceTimingSnapshot> PerformanceTimings => _performanceTimings;
     public IReadOnlyList<SessionMilestoneSnapshot> SessionMilestones => _sessionMilestones;
 
@@ -105,6 +108,28 @@ public class ChartState
             return;
 
         _sessionMilestones.RemoveRange(0, _sessionMilestones.Count - MaxSessionMilestones);
+    }
+
+    public void SetRenderPlanDiagnostics(ChartProgramKind kind, ChartRenderAdapterResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        _renderPlanDiagnostics[kind] = new RenderPlanDiagnosticsSnapshot
+        {
+            BackendKey = result.BackendKey,
+            PlanId = result.PlanId,
+            PlanKind = result.PlanKind.ToString(),
+            DensityMode = result.DensityMode.ToString(),
+            RenderedSeriesCount = result.RenderedSeriesCount,
+            RenderedHierarchyNodeCount = result.RenderedHierarchyNodeCount,
+            RenderedPointCount = result.RenderedPointCount,
+            Metadata = result.Metadata
+        };
+    }
+
+    public void ClearRenderPlanDiagnostics()
+    {
+        _renderPlanDiagnostics.Clear();
     }
 
     public void RecordPerformanceTiming(

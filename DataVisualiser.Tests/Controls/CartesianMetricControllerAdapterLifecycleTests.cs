@@ -2,11 +2,13 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using System.Windows;
 
 namespace DataVisualiser.Tests.Controls;
 
@@ -47,6 +49,48 @@ public sealed class CartesianMetricControllerAdapterLifecycleTests
             Assert.Equal(CartesianMetricChartRoute.Main, renderingContract.LastHasRenderableRoute);
             Assert.Same(controller.Chart, renderingContract.LastClearHost!.Chart);
             Assert.Same(chartState, renderingContract.LastClearHost.ChartState);
+        });
+    }
+
+    [Fact]
+    public void MainDisplayModeChanged_ToStacked_ShouldPopulateAndShowOverlaySubtypeCombo()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var chartState = new ChartState
+            {
+                    IsMainVisible = true,
+                    MainChartDisplayMode = MainChartDisplayMode.Regular
+            };
+            var metricState = new MetricState();
+            metricState.SetSeriesSelections(
+            [
+                    new MetricSeriesSelection("Weight", "A"),
+                    new MetricSeriesSelection("Weight", "B")
+            ]);
+            var uiState = new UiState();
+            var metricService = new MetricSelectionService("TestConnection");
+            var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
+            var controller = new MainChartController();
+            var adapter = new MainChartControllerAdapter(
+                    controller,
+                    viewModel,
+                    () => false,
+                    metricService,
+                    new FakeCartesianMetricRenderingContract());
+
+            controller.DisplayStackedRadio.IsChecked = true;
+            adapter.OnDisplayModeChanged(null, EventArgs.Empty);
+
+            Assert.Equal(MainChartDisplayMode.Stacked, chartState.MainChartDisplayMode);
+            Assert.Equal(Visibility.Visible, controller.OverlaySubtypePanel.Visibility);
+            Assert.True(controller.OverlaySubtypeCombo.IsEnabled);
+            Assert.Equal(2, controller.OverlaySubtypeCombo.Items.Count);
+            Assert.NotNull(chartState.SelectedStackedOverlaySeries);
+            Assert.Contains(
+                    chartState.SessionMilestones,
+                    milestone => milestone.Kind == "MainChartDisplayModeChanged" &&
+                                 milestone.Operation == MainChartDisplayMode.Stacked.ToString());
         });
     }
 

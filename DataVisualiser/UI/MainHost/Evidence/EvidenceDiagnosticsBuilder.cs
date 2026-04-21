@@ -51,7 +51,8 @@ public sealed class EvidenceDiagnosticsBuilder
             expectedSeriesCount,
             recentErrorCount,
             chartState.LastLoadRuntime,
-            HasVisibleExtendedCharts(chartState));
+            HasVisibleExtendedCharts(chartState),
+            HasExtendedChartRenderEvidence(chartState));
 
         return new DiagnosticsSnapshot
         {
@@ -141,7 +142,8 @@ public sealed class EvidenceDiagnosticsBuilder
             },
             Transition = transition,
             VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime),
-            VNextFamilies = BuildVNextFamilyDiagnostics(chartState)
+            VNextFamilies = BuildVNextFamilyDiagnostics(chartState),
+            RenderPlans = BuildRenderPlanDiagnostics(chartState)
         };
     }
 
@@ -154,7 +156,8 @@ public sealed class EvidenceDiagnosticsBuilder
         int expectedSeriesCount,
         int recentErrorCount,
         LoadRuntimeState? runtime,
-        bool visibleChartsRequireExtendedContext)
+        bool visibleChartsRequireExtendedContext,
+        bool hasExtendedChartRenderEvidence)
     {
         var loadedSeriesCount = context?.ActualSeriesCount ?? 0;
         var latestReachabilitySeriesCount = latestRecord?.ActualSeriesCount ?? 0;
@@ -179,7 +182,7 @@ public sealed class EvidenceDiagnosticsBuilder
             state = "SelectionIncomplete";
             interpretation = "The selection exists, but one or more subtype values are still missing.";
         }
-        else if (runtime?.SupportsOnlyMainChart == true && visibleChartsRequireExtendedContext)
+        else if (runtime?.SupportsOnlyMainChart == true && visibleChartsRequireExtendedContext && !hasExtendedChartRenderEvidence)
         {
             state = "ReloadRequiredForExtendedCharts";
             interpretation = "The current load only supports the main chart. Reload is required before extended chart families can render.";
@@ -321,6 +324,13 @@ public sealed class EvidenceDiagnosticsBuilder
         return result;
     }
 
+    internal static Dictionary<string, RenderPlanDiagnosticsSnapshot> BuildRenderPlanDiagnostics(ChartState chartState)
+    {
+        return chartState.RenderPlanDiagnostics.ToDictionary(
+            pair => pair.Key.ToString(),
+            pair => pair.Value);
+    }
+
     private static bool HasVisibleExtendedCharts(ChartState chartState)
     {
         return chartState.IsNormalizedVisible ||
@@ -329,6 +339,12 @@ public sealed class EvidenceDiagnosticsBuilder
                chartState.IsWeeklyTrendVisible ||
                chartState.IsTransformPanelVisible ||
                chartState.IsBarPieVisible;
+    }
+
+    private static bool HasExtendedChartRenderEvidence(ChartState chartState)
+    {
+        return chartState.RenderPlanDiagnostics.Keys.Any(kind =>
+            kind != DataVisualiser.VNext.Contracts.ChartProgramKind.Main);
     }
 
     private async Task<bool?> DeterminePrimaryOptionsMatchSelectedMetricAsync(

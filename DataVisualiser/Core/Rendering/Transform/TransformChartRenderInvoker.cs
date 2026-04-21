@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.Core.Rendering.Transform;
 
@@ -19,7 +20,15 @@ public sealed class TransformChartRenderInvoker : ITransformChartRenderInvoker
             throw new ArgumentNullException(nameof(host));
 
         var context = request.Context;
-        return _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
+        return RenderAndCaptureDiagnosticsAsync(request, host, context);
+    }
+
+    private async Task RenderAndCaptureDiagnosticsAsync(
+        TransformChartRenderRequest request,
+        TransformChartRenderHost host,
+        ChartDataContext context)
+    {
+        await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
             host.Chart,
             request.Strategy,
             request.PrimaryLabel,
@@ -34,6 +43,13 @@ public sealed class TransformChartRenderInvoker : ITransformChartRenderInvoker
             context.DisplayPrimaryMetricType,
             context.DisplaySecondaryMetricType,
             context.DisplayPrimarySubtype,
-            context.DisplaySecondarySubtype);
+            context.DisplaySecondarySubtype,
+            useRenderPlanAdapter: true,
+            renderProgramKind: ChartProgramKind.Transform);
+
+        if (_chartUpdateCoordinator.LastRenderPlanAdapterResult != null)
+            host.ChartState.SetRenderPlanDiagnostics(
+                ChartProgramKind.Transform,
+                _chartUpdateCoordinator.LastRenderPlanAdapterResult);
     }
 }

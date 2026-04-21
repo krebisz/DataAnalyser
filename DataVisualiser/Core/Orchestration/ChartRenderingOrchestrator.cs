@@ -8,6 +8,8 @@ using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration;
@@ -129,9 +131,10 @@ public sealed class ChartRenderingOrchestrator
 
     public Task RenderNormalizedChartAsync(ChartDataContext ctx, CartesianChart chartNorm, ChartState chartState)
     {
-        return _secondaryMetricChartOrchestrationPipeline.RenderAsync(
+        return RenderSecondaryMetricChartAndCaptureDiagnosticsAsync(
             new SecondaryMetricChartRenderRequest(ctx, chartState, SecondaryMetricChartRoute.Normalized),
-            chartNorm);
+            chartNorm,
+            ChartProgramKind.Normalized);
     }
 
     public Task RenderDiffRatioChartAsync(ChartDataContext ctx, CartesianChart chartDiffRatio, ChartState chartState)
@@ -139,12 +142,26 @@ public sealed class ChartRenderingOrchestrator
         if (!chartState.IsDiffRatioVisible)
             return Task.CompletedTask;
 
-        return _secondaryMetricChartOrchestrationPipeline.RenderAsync(
-            new SecondaryMetricChartRenderRequest(
-                ctx,
-                chartState,
-                chartState.IsDiffRatioDifferenceMode ? SecondaryMetricChartRoute.Difference : SecondaryMetricChartRoute.Ratio),
-            chartDiffRatio);
+        var request = new SecondaryMetricChartRenderRequest(
+            ctx,
+            chartState,
+            chartState.IsDiffRatioDifferenceMode ? SecondaryMetricChartRoute.Difference : SecondaryMetricChartRoute.Ratio);
+        var kind = chartState.IsDiffRatioDifferenceMode ? ChartProgramKind.Difference : ChartProgramKind.Ratio;
+
+        return RenderSecondaryMetricChartAndCaptureDiagnosticsAsync(
+            request,
+            chartDiffRatio,
+            kind);
+    }
+
+    private async Task RenderSecondaryMetricChartAndCaptureDiagnosticsAsync(
+        SecondaryMetricChartRenderRequest request,
+        CartesianChart chart,
+        ChartProgramKind kind)
+    {
+        await _secondaryMetricChartOrchestrationPipeline.RenderAsync(request, chart);
+        if (_chartUpdateCoordinator.LastRenderPlanAdapterResult != null)
+            request.ChartState.SetRenderPlanDiagnostics(kind, _chartUpdateCoordinator.LastRenderPlanAdapterResult);
     }
 
     public Task RenderWeeklyDistributionChartAsync(ChartDataContext ctx, CartesianChart chartWeekly, ChartState chartState)
@@ -184,6 +201,8 @@ public sealed class ChartRenderingOrchestrator
             chartMain);
         return preparedData.WorkingContext;
     }
+
+    public ChartRenderAdapterResult? LastRenderPlanAdapterResult => _chartUpdateCoordinator.LastRenderPlanAdapterResult;
 
     public async Task<ChartDataContext?> RenderPrimaryChartAsync(
         ChartDataContext ctx,
@@ -225,6 +244,8 @@ public sealed class ChartRenderingOrchestrator
 
         var (isStacked, isCumulative) = ResolveMainChartDisplayMode(chartState.MainChartDisplayMode);
         await RenderPrimaryChart(ctx, chartMain, isStacked: isStacked, isCumulative: isCumulative);
+        if (_chartUpdateCoordinator.LastRenderPlanAdapterResult != null)
+            chartState.SetRenderPlanDiagnostics(ChartProgramKind.Main, _chartUpdateCoordinator.LastRenderPlanAdapterResult);
     }
 
     private async Task RenderSecondaryChartsIfVisible(ChartDataContext ctx, ChartState chartState, CartesianChart chartNorm, CartesianChart? chartDiffRatio)

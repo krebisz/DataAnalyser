@@ -87,6 +87,7 @@ public sealed class DiagnosticsSnapshot
     public TransitionDiagnosticsSnapshot Transition { get; set; } = new();
     public VNextDiagnosticsSnapshot? VNext { get; set; }
     public Dictionary<string, VNextDiagnosticsSnapshot> VNextFamilies { get; set; } = new();
+    public Dictionary<string, RenderPlanDiagnosticsSnapshot> RenderPlans { get; set; } = new();
 }
 
 public sealed class PerformanceTimingSnapshot
@@ -283,4 +284,16 @@ public sealed class VNextDiagnosticsSnapshot
     public bool ProgramSourceMatchesProjectedContext { get; set; }
     public bool SupportsOnlyMainChart { get; set; }
     public string? FailureReason { get; set; }
+}
+
+public sealed class RenderPlanDiagnosticsSnapshot
+{
+    public string BackendKey { get; set; } = string.Empty;
+    public string PlanId { get; set; } = string.Empty;
+    public string PlanKind { get; set; } = string.Empty;
+    public string DensityMode { get; set; } = string.Empty;
+    public int RenderedSeriesCount { get; set; }
+    public int RenderedHierarchyNodeCount { get; set; }
+    public int RenderedPointCount { get; set; }
+    public IReadOnlyDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
 }

@@ -13,6 +13,7 @@ using Moq;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.Orchestration;
@@ -202,6 +203,8 @@ public sealed class ChartRenderingOrchestratorTests
                     Times.Once);
                 Assert.NotEmpty(chart.Series);
                 Assert.True(chartTimestamps.ContainsKey(chart));
+                Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Normalized));
+                Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Normalized].BackendKey);
             }
             finally
             {
@@ -250,6 +253,58 @@ public sealed class ChartRenderingOrchestratorTests
                     Times.Once);
                 Assert.NotEmpty(chart.Series);
                 Assert.True(chartTimestamps.ContainsKey(chart));
+                Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Ratio));
+                Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].BackendKey);
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public async Task RenderDiffRatioChartAsync_ShouldUseDifferenceCutOver_AndCaptureRenderPlan_WhenDifferenceModeSelected()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var cutOverService = new Mock<IStrategyCutOverService>(MockBehavior.Strict);
+                cutOverService
+                    .Setup(service => service.CreateStrategy(
+                        StrategyType.Difference,
+                        It.IsAny<ChartDataContext>(),
+                        It.IsAny<StrategyCreationParameters>()))
+                    .Returns(new StubStrategy(CreateSingleSeriesResult()));
+
+                var orchestrator = CreateOrchestrator(chartTimestamps, tooltipManager, cutOverService, out _);
+                var chartState = new ChartState
+                {
+                    IsDiffRatioVisible = true,
+                    IsDiffRatioDifferenceMode = true
+                };
+                var context = CreateSecondaryContext();
+
+                await orchestrator.RenderDiffRatioChartAsync(context, chart, chartState);
+                await FlushChartAsync(chart);
+
+                cutOverService.Verify(service => service.CreateStrategy(
+                        StrategyType.Difference,
+                        context,
+                        It.Is<StrategyCreationParameters>(parameters =>
+                            parameters.LegacyData1 == context.Data1 &&
+                            parameters.LegacyData2 == context.Data2)),
+                    Times.Once);
+                Assert.NotEmpty(chart.Series);
+                Assert.True(chartTimestamps.ContainsKey(chart));
+                Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Difference));
+                Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Difference].BackendKey);
             }
             finally
             {

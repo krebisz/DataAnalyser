@@ -12,6 +12,7 @@ using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.MainHost.Export;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Tests.UI.MainHost;
 
@@ -44,6 +45,7 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Contains("\"UiSurface\"", contents);
             Assert.Contains("\"SmokeChecks\"", contents);
             Assert.Contains("\"Transition\"", contents);
+            Assert.Contains("\"RenderPlans\"", contents);
             Assert.Contains("\"SessionMilestones\"", contents);
             Assert.Contains("\"PerformanceTimings\"", contents);
         }
@@ -75,6 +77,53 @@ public sealed class MainChartsEvidenceExportServiceTests
                 timing.GetProperty("Operation").GetString() == "Total" &&
                 timing.GetProperty("DurationMs").GetInt64() == 123 &&
                 timing.GetProperty("RuntimePath").GetString() == "VNextMain");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public async Task ExportAsync_ShouldIncludeRenderPlanBackendAndDensityDiagnostics()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState();
+            chartState.SetRenderPlanDiagnostics(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.Main,
+                new ChartRenderAdapterResult(
+                    "LiveChartsWpf",
+                    "Main:sig-1",
+                    ChartRenderPlanKind.Cartesian,
+                    ChartRenderDensityMode.FullFidelity,
+                    RenderedSeriesCount: 2,
+                    RenderedHierarchyNodeCount: 0,
+                    RenderedPointCount: 4,
+                    new Dictionary<string, string>
+                    {
+                        ["Adapter"] = "LiveChartsRenderPlanAdapter",
+                        ["ProgramKind"] = "Main"
+                    }));
+
+            var result = await service.ExportAsync(chartState, new MetricState(), new DateTime(2026, 4, 21, 10, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var renderPlan = document.RootElement
+                .GetProperty("Diagnostics")
+                .GetProperty("RenderPlans")
+                .GetProperty("Main");
+
+            Assert.Equal("LiveChartsWpf", renderPlan.GetProperty("BackendKey").GetString());
+            Assert.Equal("Main:sig-1", renderPlan.GetProperty("PlanId").GetString());
+            Assert.Equal("Cartesian", renderPlan.GetProperty("PlanKind").GetString());
+            Assert.Equal("FullFidelity", renderPlan.GetProperty("DensityMode").GetString());
+            Assert.Equal(2, renderPlan.GetProperty("RenderedSeriesCount").GetInt32());
+            Assert.Equal(4, renderPlan.GetProperty("RenderedPointCount").GetInt32());
+            Assert.Equal("LiveChartsRenderPlanAdapter", renderPlan.GetProperty("Metadata").GetProperty("Adapter").GetString());
         }
         finally
         {
@@ -479,6 +528,49 @@ public sealed class MainChartsEvidenceExportServiceTests
         {
             Directory.Delete(tempDir, true);
         }
+    }
+
+    [Fact]
+    public void BuildTransitionDiagnostics_ShouldNotRequireReloadForExtendedChartsWhenRenderEvidenceExists()
+    {
+        var selectedSeries = new List<MetricSeriesSelection>
+        {
+            new("Weight", "body_fat_mass")
+        };
+
+        var runtime = new LoadRuntimeState(
+            EvidenceRuntimePath.VNextMain,
+            "Weight::HealthMetrics::2023-08-15T12:05:48.2933333->2023-11-23T00:00:00.0000000::Weight:body_fat_mass",
+            "Weight::HealthMetrics::2023-08-15T12:05:48.2933333->2023-11-23T00:00:00.0000000::Weight:body_fat_mass",
+            DataVisualiser.VNext.Contracts.ChartProgramKind.Main,
+            "Weight::HealthMetrics::2023-08-15T12:05:48.2933333->2023-11-23T00:00:00.0000000::Weight:body_fat_mass",
+            "Weight::HealthMetrics::2023-08-15T12:05:48.2933333->2023-11-23T00:00:00.0000000::Weight:body_fat_mass",
+            null,
+            true);
+
+        var context = new ChartDataContext
+        {
+            Data1 = [new MetricData { NormalizedTimestamp = DateTime.UtcNow, Value = 1m }],
+            ActualSeriesCount = 1,
+            PrimaryMetricType = "Weight",
+            PrimarySubtype = "body_fat_mass",
+            LoadRequestSignature = runtime.RequestSignature
+        };
+
+        var transition = EvidenceDiagnosticsBuilder.BuildTransitionDiagnostics(
+            new MetricState { SelectedMetricType = "Weight" },
+            selectedSeries,
+            context,
+            reusableContext: true,
+            latestRecord: null,
+            expectedSeriesCount: 1,
+            recentErrorCount: 0,
+            runtime,
+            visibleChartsRequireExtendedContext: true,
+            hasExtendedChartRenderEvidence: true);
+
+        Assert.Equal("ContextAligned", transition.State);
+        Assert.False(transition.ReloadLikelyRequired);
     }
 
     [Fact]

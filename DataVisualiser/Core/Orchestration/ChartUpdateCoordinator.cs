@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Rendering.Adapters;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Helpers;
@@ -13,6 +14,8 @@ using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration;
@@ -27,16 +30,28 @@ public class ChartUpdateCoordinator
 
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
     private readonly ChartRenderGate _renderGate = new();
+    private readonly ChartRenderPlanAdapterDispatcher<LiveChartsRenderSurface> _renderPlanAdapterDispatcher;
+    private readonly ChartRenderPlanProjector _renderPlanProjector;
     private readonly IUserNotificationService _notificationService;
     private readonly ChartTooltipManager _tooltipManager;
 
-    public ChartUpdateCoordinator(ChartComputationEngine computationEngine, ChartRenderEngine renderEngine, ChartTooltipManager tooltipManager, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
+    public ChartUpdateCoordinator(
+        ChartComputationEngine computationEngine,
+        ChartRenderEngine renderEngine,
+        ChartTooltipManager tooltipManager,
+        Dictionary<CartesianChart, List<DateTime>> chartTimestamps,
+        IUserNotificationService notificationService,
+        ChartRenderPlanProjector? renderPlanProjector = null,
+        ChartRenderPlanAdapterDispatcher<LiveChartsRenderSurface>? renderPlanAdapterDispatcher = null)
     {
         _chartComputationEngine = computationEngine ?? throw new ArgumentNullException(nameof(computationEngine));
         _chartRenderEngine = renderEngine ?? throw new ArgumentNullException(nameof(renderEngine));
         _tooltipManager = tooltipManager ?? throw new ArgumentNullException(nameof(tooltipManager));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
         _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+        _renderPlanProjector = renderPlanProjector ?? new ChartRenderPlanProjector();
+        _renderPlanAdapterDispatcher = renderPlanAdapterDispatcher
+            ?? new ChartRenderPlanAdapterDispatcher<LiveChartsRenderSurface>([new LiveChartsRenderPlanAdapter()]);
     }
 
     /// <summary>
@@ -45,11 +60,13 @@ public class ChartUpdateCoordinator
     /// </summary>
     public ChartSeriesMode SeriesMode { get; set; } = ChartSeriesMode.RawAndSmoothed;
 
+    public ChartRenderAdapterResult? LastRenderPlanAdapterResult { get; private set; }
+
     /// <summary>
     ///     Runs the supplied strategy, then renders the result into the target chart.
     ///     If the strategy returns null, the chart is cleared.
     /// </summary>
-    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null)
+    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null, bool useRenderPlanAdapter = false, ChartProgramKind renderProgramKind = ChartProgramKind.Main)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -88,8 +105,20 @@ public class ChartUpdateCoordinator
                 {
                     try
                     {
-                        // Render series (sync render engine)
-                        _chartRenderEngine.Render(targetChart, model, minHeight);
+                        LastRenderPlanAdapterResult = null;
+
+                        if (useRenderPlanAdapter)
+                        {
+                            var renderPlan = BuildChartRenderPlan(model, metricType, isCumulative, renderProgramKind);
+                            LastRenderPlanAdapterResult = _renderPlanAdapterDispatcher.ApplyAsync(
+                                new LiveChartsRenderSurface(targetChart, _chartRenderEngine, minHeight),
+                                renderPlan).AsTask().GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            // Render series (sync render engine)
+                            _chartRenderEngine.Render(targetChart, model, minHeight);
+                        }
 
                         // Track timestamps for tooltips / hover sync
                         _chartTimestamps[targetChart] = model.Timestamps;
@@ -159,6 +188,150 @@ public class ChartUpdateCoordinator
                 Series = overrideSeries ?? result.Series,
                 OverlaySeries = overlaySeries?.ToList()
         };
+    }
+
+    private ChartRenderPlan BuildChartRenderPlan(ChartRenderModel model, string? title, bool isCumulative, ChartProgramKind programKind)
+    {
+        var timeline = ResolveRenderPlanTimeline(model);
+        var program = new ChartProgram(
+            programKind,
+            ResolveDisplayMode(model, isCumulative),
+            title ?? model.MetricType ?? model.PrimarySeriesName,
+            timeline.Count > 0 ? timeline[0] : DateTime.MinValue,
+            timeline.Count > 0 ? timeline[^1] : DateTime.MinValue,
+            timeline,
+            BuildChartSeriesPrograms(model),
+            BuildRenderPlanSignature(model, timeline));
+
+        var plan = _renderPlanProjector.ProjectCartesian(program);
+        return plan with
+        {
+            Metadata = BuildRenderPlanMetadata(model, programKind),
+            OverlaySeries = BuildOverlayRenderPlanSeries(model, timeline, programKind)
+        };
+    }
+
+    private static ChartDisplayMode ResolveDisplayMode(ChartRenderModel model, bool isCumulative)
+    {
+        if (model.IsStacked)
+            return ChartDisplayMode.Stacked;
+
+        return isCumulative ? ChartDisplayMode.Summed : ChartDisplayMode.Regular;
+    }
+
+    private static IReadOnlyList<ChartSeriesProgram> BuildChartSeriesPrograms(ChartRenderModel model)
+    {
+        if (model.Series != null && model.Series.Count > 0)
+        {
+            return model.Series
+                .Select(series => new ChartSeriesProgram(
+                    series.SeriesId,
+                    series.DisplayName,
+                    series.RawValues,
+                    series.Smoothed ?? series.RawValues))
+                .ToArray();
+        }
+
+        var programs = new List<ChartSeriesProgram>
+        {
+            new(
+                "primary",
+                model.PrimarySeriesName,
+                model.PrimaryRaw.ToList(),
+                model.PrimarySmoothed.ToList())
+        };
+
+        if (model.SecondaryRaw != null && model.SecondaryRaw.Count > 0)
+        {
+            programs.Add(new ChartSeriesProgram(
+                "secondary",
+                model.SecondarySeriesName,
+                model.SecondaryRaw.ToList(),
+                (model.SecondarySmoothed ?? model.SecondaryRaw).ToList()));
+        }
+
+        return programs;
+    }
+
+    private IReadOnlyList<ChartSeriesPlan> BuildOverlayRenderPlanSeries(ChartRenderModel model, IReadOnlyList<DateTime> timeline, ChartProgramKind programKind)
+    {
+        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
+            return Array.Empty<ChartSeriesPlan>();
+
+        var overlayPrograms = model.OverlaySeries
+            .Select((series, index) => new ChartSeriesProgram(
+                string.IsNullOrWhiteSpace(series.SeriesId) ? $"overlay_{index}" : series.SeriesId,
+                series.DisplayName,
+                series.RawValues,
+                series.Smoothed ?? series.RawValues))
+            .ToArray();
+
+        var overlayProgram = new ChartProgram(
+            programKind,
+            ChartDisplayMode.Regular,
+            model.MetricType ?? model.PrimarySeriesName,
+            timeline.Count > 0 ? timeline[0] : DateTime.MinValue,
+            timeline.Count > 0 ? timeline[^1] : DateTime.MinValue,
+            timeline,
+            overlayPrograms,
+            $"{BuildRenderPlanSignature(model, timeline)}:overlay");
+
+        return _renderPlanProjector.ProjectCartesian(overlayProgram).Series;
+    }
+
+    private static List<DateTime> ResolveRenderPlanTimeline(ChartRenderModel model)
+    {
+        if (model.Timestamps.Count > 0)
+            return model.Timestamps.ToList();
+
+        if (model.Series == null || model.Series.Count == 0)
+            return [];
+
+        return model.Series
+            .SelectMany(series => series.Timestamps)
+            .Distinct()
+            .OrderBy(timestamp => timestamp)
+            .ToList();
+    }
+
+    private static string BuildRenderPlanSignature(ChartRenderModel model, IReadOnlyList<DateTime> timeline)
+    {
+        var from = timeline.Count > 0 ? timeline[0].ToString("O") : string.Empty;
+        var to = timeline.Count > 0 ? timeline[^1].ToString("O") : string.Empty;
+        return $"legacy-render:{model.MetricType}:{model.PrimarySeriesName}:{model.SecondarySeriesName}:{from}:{to}:{timeline.Count}";
+    }
+
+    private static IReadOnlyDictionary<string, string> BuildRenderPlanMetadata(ChartRenderModel model, ChartProgramKind programKind)
+    {
+        var metadata = new Dictionary<string, string>
+        {
+            ["Projection"] = "ChartRenderModel",
+            ["ProgramKind"] = programKind.ToString(),
+            [LiveChartsRenderPlanAdapter.TickIntervalMetadataKey] = model.TickInterval.ToString(),
+            [LiveChartsRenderPlanAdapter.SeriesModeMetadataKey] = model.SeriesMode.ToString(),
+            [LiveChartsRenderPlanAdapter.IsStackedMetadataKey] = model.IsStacked.ToString(),
+            [LiveChartsRenderPlanAdapter.IsOperationChartMetadataKey] = model.IsOperationChart.ToString()
+        };
+
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.UnitMetadataKey, model.Unit);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.MetricTypeMetadataKey, model.MetricType);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.PrimaryMetricTypeMetadataKey, model.PrimaryMetricType);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.SecondaryMetricTypeMetadataKey, model.SecondaryMetricType);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.PrimarySubtypeMetadataKey, model.PrimarySubtype);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.SecondarySubtypeMetadataKey, model.SecondarySubtype);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplayPrimaryMetricTypeMetadataKey, model.DisplayPrimaryMetricType);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplaySecondaryMetricTypeMetadataKey, model.DisplaySecondaryMetricType);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplayPrimarySubtypeMetadataKey, model.DisplayPrimarySubtype);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplaySecondarySubtypeMetadataKey, model.DisplaySecondarySubtype);
+        AddMetadata(metadata, LiveChartsRenderPlanAdapter.OperationTypeMetadataKey, model.OperationType);
+
+        return metadata;
+    }
+
+    private static void AddMetadata(IDictionary<string, string> metadata, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            metadata[key] = value;
     }
 
     private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeries(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)

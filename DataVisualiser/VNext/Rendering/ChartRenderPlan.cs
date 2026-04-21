@@ -82,4 +82,7 @@ public sealed record ChartRenderPlan(
     IReadOnlyList<ChartHierarchyNodePlan> HierarchyRoots,
     RenderDensityPlan Density,
     ChartInteractionPlan Interaction,
-    IReadOnlyDictionary<string, string> Metadata);
+    IReadOnlyDictionary<string, string> Metadata)
+{
+    public IReadOnlyList<ChartSeriesPlan> OverlaySeries { get; init; } = Array.Empty<ChartSeriesPlan>();
+}

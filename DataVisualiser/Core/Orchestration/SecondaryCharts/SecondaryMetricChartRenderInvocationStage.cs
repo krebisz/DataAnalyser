@@ -21,6 +21,14 @@ public sealed class SecondaryMetricChartRenderInvocationStage : ISecondaryMetric
             throw new ArgumentNullException(nameof(chart));
 
         var context = request.Context;
+        var programKind = request.Route switch
+        {
+            SecondaryMetricChartRoute.Normalized => DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized,
+            SecondaryMetricChartRoute.Difference => DataVisualiser.VNext.Contracts.ChartProgramKind.Difference,
+            SecondaryMetricChartRoute.Ratio => DataVisualiser.VNext.Contracts.ChartProgramKind.Ratio,
+            _ => throw new ArgumentOutOfRangeException(nameof(request.Route), request.Route, "Unknown secondary metric chart route.")
+        };
+
         return _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
             chart,
             plan.Strategy,
@@ -36,6 +44,8 @@ public sealed class SecondaryMetricChartRenderInvocationStage : ISecondaryMetric
             displayPrimaryMetricType: context.DisplayPrimaryMetricType,
             displaySecondaryMetricType: context.DisplaySecondaryMetricType,
             displayPrimarySubtype: context.DisplayPrimarySubtype,
-            displaySecondarySubtype: context.DisplaySecondarySubtype);
+            displaySecondarySubtype: context.DisplaySecondarySubtype,
+            useRenderPlanAdapter: true,
+            renderProgramKind: programKind);
     }
 }

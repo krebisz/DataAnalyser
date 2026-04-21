@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Rendering.CartesianMetrics;
 
@@ -37,25 +38,28 @@ public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRen
         CartesianMetricChartRenderHost host)
     {
         var context = request.Context;
-        if (context.Data1 == null)
+        var data1 = context.Data1;
+        if (data1 == null)
             return Task.CompletedTask;
 
         return RenderMainAndCaptureContextAsync(
             orchestrator,
             request,
-            host);
+            host,
+            data1);
     }
 
     private static async Task RenderMainAndCaptureContextAsync(
         ChartRenderingOrchestrator orchestrator,
         CartesianMetricChartRenderRequest request,
-        CartesianMetricChartRenderHost host)
+        CartesianMetricChartRenderHost host,
+        IEnumerable<MetricData> data1)
     {
         var context = request.Context;
         var renderedContext = await orchestrator.RenderPrimaryChartAsync(
             context,
             host.Chart,
-            context.Data1,
+            data1,
             context.Data2,
             context.DisplayName1 ?? string.Empty,
             context.DisplayName2 ?? string.Empty,
@@ -70,5 +74,10 @@ public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRen
 
         if (renderedContext != null)
             host.ChartState.LastContext = renderedContext;
+
+        if (orchestrator.LastRenderPlanAdapterResult != null)
+            host.ChartState.SetRenderPlanDiagnostics(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.Main,
+                orchestrator.LastRenderPlanAdapterResult);
     }
 }

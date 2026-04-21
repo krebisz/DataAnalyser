@@ -8,6 +8,7 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;
@@ -116,6 +117,8 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
             _controller.DisplayRegularRadio.IsChecked = true;
             _viewModel.SetMainChartDisplayMode(MainChartDisplayMode.Regular);
         }
+
+        UpdateOverlayControlsVisibility(GetStackedSelections());
     }
 
 
@@ -129,9 +132,18 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
         if (_isInitializing())
             return;
 
+        var previousMode = _viewModel.ChartState.MainChartDisplayMode;
         var mode = _controller.DisplayStackedRadio.IsChecked == true ? MainChartDisplayMode.Stacked : _controller.DisplaySummedRadio.IsChecked == true ? MainChartDisplayMode.Summed : MainChartDisplayMode.Regular;
 
         _viewModel.SetMainChartDisplayMode(mode);
+        if (previousMode != mode)
+            RecordSessionMilestone(
+                "MainChartDisplayModeChanged",
+                "Success",
+                mode.ToString(),
+                $"Main chart display mode changed from {previousMode} to {mode}.");
+
+        UpdateSubtypeOptions();
         UpdateOverlayControlsVisibility(GetStackedSelections());
     }
 
@@ -142,6 +154,13 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
 
         var selection = MetricSeriesSelectionCache.GetSeriesSelectionFromCombo(_controller.OverlaySubtypeCombo);
         _viewModel.SetStackedOverlaySeries(selection);
+        RecordSessionMilestone(
+            "MainChartOverlaySelectionChanged",
+            selection == null ? "Warning" : "Success",
+            selection?.DisplayKey,
+            selection == null
+                ? "Main chart stacked overlay selection cleared."
+                : $"Main chart stacked overlay selection changed to {selection.DisplayName}.");
     }
 
     private async Task RenderMainChartAsync(ChartDataContext ctx)
@@ -265,5 +284,23 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
     private CartesianMetricChartRenderHost CreateRenderHost()
     {
         return new CartesianMetricChartRenderHost(_controller.Chart, _viewModel.ChartState);
+    }
+
+    private void RecordSessionMilestone(string kind, string outcome, string? operation, string note)
+    {
+        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            Kind = kind,
+            Outcome = outcome,
+            MetricType = _viewModel.MetricState.SelectedMetricType,
+            SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
+            SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
+            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
+            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
+            Operation = operation,
+            Note = note
+        });
     }
 }

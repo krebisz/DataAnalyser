@@ -36,6 +36,7 @@ public sealed class MainChartRenderInvocationStage : IMainChartRenderInvocationS
             displaySecondarySubtype: context.DisplaySecondarySubtype,
             isStacked: plan.IsStacked,
             isCumulative: plan.IsCumulative,
-            overlaySeries: plan.OverlaySeries);
+            overlaySeries: plan.OverlaySeries,
+            useRenderPlanAdapter: true);
     }
 }
