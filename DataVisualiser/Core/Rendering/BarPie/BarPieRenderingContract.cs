@@ -1,11 +1,15 @@
+using DataVisualiser.Core.Rendering.Adapters;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.Defaults;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.BarPie;
 
 public sealed class BarPieRenderingContract : IBarPieRenderingContract
 {
+    private readonly ChartRenderPlanAdapterDispatcher<UiChartRenderSurface> _dispatcher;
+
     private static readonly IReadOnlyList<BarPieBackendQualification> QualificationMatrix =
     [
         new BarPieBackendQualification(
@@ -54,6 +58,12 @@ public sealed class BarPieRenderingContract : IBarPieRenderingContract
             SupportsLifecycleSafety: false)
     ];
 
+    public BarPieRenderingContract(ChartRenderPlanAdapterDispatcher<UiChartRenderSurface>? dispatcher = null)
+    {
+        _dispatcher = dispatcher
+            ?? new ChartRenderPlanAdapterDispatcher<UiChartRenderSurface>([new UiChartRenderPlanAdapter()]);
+    }
+
     public IReadOnlyList<BarPieBackendQualification> GetBackendQualificationMatrix()
     {
         return QualificationMatrix;
@@ -75,14 +85,17 @@ public sealed class BarPieRenderingContract : IBarPieRenderingContract
             qualification.SupportsLifecycleSafety);
     }
 
-    public Task RenderAsync(BarPieChartRenderRequest request, BarPieChartRenderHost host)
+    public async Task<ChartRenderAdapterResult> RenderAsync(BarPieChartRenderRequest request, BarPieChartRenderHost host)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
         if (host == null)
             throw new ArgumentNullException(nameof(host));
 
-        return host.Renderer.ApplyAsync(host.Surface, request.Model);
+        var plan = BarPieRenderPlanBuilder.Build(request, host.RendererKind);
+        return await _dispatcher.ApplyAsync(
+            new UiChartRenderSurface(host.Surface, host.Renderer, host.RendererKind, request.Model),
+            plan);
     }
 
     public Task ClearAsync(BarPieChartRenderHost host)

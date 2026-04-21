@@ -89,10 +89,10 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
             model.From,
             model.To);
 
-        await _renderingContract.RenderAsync(request, CreateRenderHost());
+        var renderResult = await _renderingContract.RenderAsync(request, CreateRenderHost());
         _viewModel.ChartState.SetRenderPlanDiagnostics(
             ChartProgramKind.SyncfusionSunburst,
-            BuildRenderPlanDiagnostics(request));
+            renderResult);
     }
 
     private async Task<SyncfusionSunburstRenderModel> BuildRenderModelFromSelectionsAsync()
@@ -139,36 +139,6 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
     private SyncfusionSunburstChartRenderHost CreateRenderHost()
     {
         return new SyncfusionSunburstChartRenderHost(_controller, _viewModel.ChartState.IsSyncfusionSunburstVisible);
-    }
-
-    private static ChartRenderAdapterResult BuildRenderPlanDiagnostics(SyncfusionSunburstChartRenderRequest request)
-    {
-        var bucketCount = request.Items
-            .Select(item => item.Bucket)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
-        var submetricCount = request.Items
-            .Select(item => item.Submetric)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
-        var renderedNodeCount = bucketCount + request.Items.Count;
-
-        return new ChartRenderAdapterResult(
-            SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy,
-            $"{SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy}:{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}",
-            ChartRenderPlanKind.Hierarchy,
-            ChartRenderDensityMode.FullFidelity,
-            submetricCount,
-            renderedNodeCount,
-            request.Items.Count,
-            new Dictionary<string, string>
-            {
-                ["Adapter"] = nameof(SyncfusionSunburstChartControllerAdapter),
-                ["ProgramKind"] = ChartProgramKind.SyncfusionSunburst.ToString(),
-                ["Route"] = request.Route.ToString(),
-                ["BucketCount"] = request.BucketCount.ToString(),
-                ["SelectionCount"] = request.SelectionCount.ToString()
-            });
     }
 
     private List<MetricSeriesSelection> GetDistinctSelectedSeries()

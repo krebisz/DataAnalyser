@@ -1,19 +1,28 @@
 using DataVisualiser.UI.Syncfusion;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.Syncfusion;
 
 public sealed class SyncfusionSunburstRenderingContract : ISyncfusionSunburstRenderingContract
 {
-    public Task RenderAsync(SyncfusionSunburstChartRenderRequest request, SyncfusionSunburstChartRenderHost host)
+    private readonly ChartRenderPlanAdapterDispatcher<SyncfusionSunburstRenderSurface> _dispatcher;
+
+    public SyncfusionSunburstRenderingContract(
+        ChartRenderPlanAdapterDispatcher<SyncfusionSunburstRenderSurface>? dispatcher = null)
+    {
+        _dispatcher = dispatcher
+            ?? new ChartRenderPlanAdapterDispatcher<SyncfusionSunburstRenderSurface>([new SyncfusionSunburstRenderPlanAdapter()]);
+    }
+
+    public async Task<ChartRenderAdapterResult> RenderAsync(SyncfusionSunburstChartRenderRequest request, SyncfusionSunburstChartRenderHost host)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(host);
 
-        host.Controller.ItemsSource = host.IsVisible
-            ? request.Items
-            : Array.Empty<SunburstItem>();
-
-        return Task.CompletedTask;
+        var plan = SyncfusionSunburstRenderPlanBuilder.Build(request);
+        return await _dispatcher.ApplyAsync(
+            new SyncfusionSunburstRenderSurface(host.Controller, host.IsVisible),
+            plan);
     }
 
     public void Clear(SyncfusionSunburstChartRenderHost host)

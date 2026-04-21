@@ -1,4 +1,5 @@
 using DataVisualiser.UI.Charts.Presentation.Rendering;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.BarPie;
 
@@ -8,7 +9,7 @@ public interface IBarPieRenderingContract
 
     BarPieRenderingCapabilities GetCapabilities(ChartRendererKind rendererKind, BarPieRenderingRoute route);
 
-    Task RenderAsync(BarPieChartRenderRequest request, BarPieChartRenderHost host);
+    Task<ChartRenderAdapterResult> RenderAsync(BarPieChartRenderRequest request, BarPieChartRenderHost host);
 
     Task ClearAsync(BarPieChartRenderHost host);
 

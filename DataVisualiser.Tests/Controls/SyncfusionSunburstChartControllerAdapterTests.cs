@@ -10,6 +10,7 @@ using DataVisualiser.UI.ViewModels;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.Syncfusion;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Tests.Controls;
 
@@ -113,10 +114,22 @@ public sealed class SyncfusionSunburstChartControllerAdapterTests
         public SyncfusionSunburstRenderingRoute? LastResetRoute { get; private set; }
         public SyncfusionSunburstRenderingRoute? LastHasRenderableRoute { get; private set; }
 
-        public Task RenderAsync(SyncfusionSunburstChartRenderRequest request, SyncfusionSunburstChartRenderHost host)
+        public Task<ChartRenderAdapterResult> RenderAsync(SyncfusionSunburstChartRenderRequest request, SyncfusionSunburstChartRenderHost host)
         {
             host.Controller.ItemsSource = request.Items;
-            return Task.CompletedTask;
+            return Task.FromResult(new ChartRenderAdapterResult(
+                SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy,
+                "test-syncfusion-plan",
+                ChartRenderPlanKind.Hierarchy,
+                ChartRenderDensityMode.FullFidelity,
+                0,
+                0,
+                request.Items.Count,
+                new Dictionary<string, string>
+                {
+                    ["ProgramKind"] = ChartProgramKind.SyncfusionSunburst.ToString(),
+                    ["Route"] = request.Route.ToString()
+                }));
         }
 
         public void Clear(SyncfusionSunburstChartRenderHost host)

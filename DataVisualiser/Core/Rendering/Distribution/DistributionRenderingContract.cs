@@ -8,6 +8,8 @@ using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveChartsCore.SkiaSharpView.WPF;
 using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
@@ -15,6 +17,7 @@ namespace DataVisualiser.Core.Rendering.Distribution;
 
 public sealed class DistributionRenderingContract : IDistributionRenderingContract
 {
+    private readonly ChartRenderPlanAdapterDispatcher<DistributionRenderSurface> _dispatcher;
     private static readonly IReadOnlyList<DistributionBackendQualification> QualificationMatrix =
     [
         new DistributionBackendQualification(
@@ -61,12 +64,15 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
         Func<ChartRenderingOrchestrator?> getChartRenderingOrchestrator,
         IDistributionService weeklyDistributionService,
         IDistributionService hourlyDistributionService,
-        DistributionPolarRenderingService polarRenderingService)
+        DistributionPolarRenderingService polarRenderingService,
+        ChartRenderPlanAdapterDispatcher<DistributionRenderSurface>? dispatcher = null)
     {
         _getChartRenderingOrchestrator = getChartRenderingOrchestrator ?? throw new ArgumentNullException(nameof(getChartRenderingOrchestrator));
         _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));
         _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));
         _polarRenderingService = polarRenderingService ?? throw new ArgumentNullException(nameof(polarRenderingService));
+        _dispatcher = dispatcher
+            ?? new ChartRenderPlanAdapterDispatcher<DistributionRenderSurface>([new DistributionRenderPlanAdapter(RenderCoreAsync)]);
     }
 
     public IReadOnlyList<DistributionBackendQualification> GetBackendQualificationMatrix()
@@ -91,7 +97,7 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
             qualification.SupportsLifecycleSafety);
     }
 
-    public async Task RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
+    public async Task<ChartRenderAdapterResult> RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
@@ -99,7 +105,12 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
             throw new ArgumentNullException(nameof(host));
 
         DisposeDistributionInteractions(host);
+        var plan = DistributionRenderPlanBuilder.Build(request);
+        return await _dispatcher.ApplyAsync(new DistributionRenderSurface(request, host), plan);
+    }
 
+    private async Task RenderCoreAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
+    {
         switch (request.Route)
         {
             case DistributionRenderingRoute.PolarFallback:
@@ -277,10 +288,119 @@ public sealed record DistributionChartRenderRequest(
     DateTime To,
     ICanonicalMetricSeries? CmsSeries,
     ChartDataContext RenderingContext,
-    ChartState ChartState);
+    ChartState ChartState,
+    string SelectionDisplayKey = "<none>");
 
 public sealed record DistributionChartRenderHost(
     CartesianChart CartesianChart,
     PolarChart PolarChart,
     ChartState ChartState,
     Func<ToolTip?> GetPolarTooltip);
+
+public sealed record DistributionRenderSurface(
+    DistributionChartRenderRequest Request,
+    DistributionChartRenderHost Host);
+
+public static class DistributionRenderPlanBuilder
+{
+    public static ChartRenderPlan Build(DistributionChartRenderRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var backendKey = ResolveBackendKey(request.Route);
+        return new ChartRenderPlan(
+            $"{backendKey}:{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}",
+            ChartProgramKind.Distribution,
+            ChartRenderPlanKind.Cartesian,
+            ChartDisplayMode.Regular,
+            request.DisplayName,
+            request.From,
+            request.To,
+            $"{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}:{request.Data.Count}",
+            Array.Empty<ChartSeriesPlan>(),
+            Array.Empty<ChartHierarchyNodePlan>(),
+            new RenderDensityPlan(
+                ChartRenderDensityMode.FullFidelity,
+                request.Data.Count,
+                request.Data.Count,
+                request.Settings.IntervalCount),
+            new ChartInteractionPlan(
+                SupportsZoom: true,
+                SupportsPan: true,
+                SupportsTooltips: true,
+                SupportsSelection: true,
+                SupportsViewportRefinement: false),
+            new Dictionary<string, string>
+            {
+                ["Adapter"] = nameof(DistributionRenderPlanAdapter),
+                ["BackendKey"] = backendKey,
+                ["ProgramKind"] = ChartProgramKind.Distribution.ToString(),
+                ["Route"] = request.Route.ToString(),
+                ["Mode"] = request.Mode.ToString(),
+                ["Selection"] = request.SelectionDisplayKey
+            });
+    }
+
+    private static string ResolveBackendKey(DistributionRenderingRoute route)
+    {
+        return route == DistributionRenderingRoute.PolarFallback
+            ? DistributionBackendKey.LiveChartsWpfPolarFallbackProjection
+            : DistributionBackendKey.LiveChartsWpfCartesian;
+    }
+}
+
+public sealed class DistributionRenderPlanAdapter : IChartRenderPlanAdapter<DistributionRenderSurface>
+{
+    private const string BackendKeyMetadataKey = "BackendKey";
+    private readonly Func<DistributionChartRenderRequest, DistributionChartRenderHost, Task> _renderAsync;
+
+    public DistributionRenderPlanAdapter(Func<DistributionChartRenderRequest, DistributionChartRenderHost, Task> renderAsync)
+    {
+        _renderAsync = renderAsync ?? throw new ArgumentNullException(nameof(renderAsync));
+    }
+
+    public ChartBackendCapabilities Capabilities => ChartBackendCapabilities.LiveChartsWpf;
+
+    public bool CanRender(ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        return Capabilities.Supports(plan.PlanKind);
+    }
+
+    public async ValueTask<ChartRenderAdapterResult> ApplyAsync(
+        DistributionRenderSurface surface,
+        ChartRenderPlan plan,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(surface);
+        ArgumentNullException.ThrowIfNull(plan);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await _renderAsync(surface.Request, surface.Host);
+
+        var activeChart = surface.Host.CartesianChart;
+        var seriesCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Count();
+        var pointCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Sum(series => series.Values?.Count ?? 0);
+
+        return new ChartRenderAdapterResult(
+            ResolveBackendKey(plan),
+            plan.Id,
+            plan.PlanKind,
+            plan.Density.Mode,
+            seriesCount,
+            0,
+            pointCount,
+            plan.Metadata);
+    }
+
+    private static string ResolveBackendKey(ChartRenderPlan plan)
+    {
+        if (plan.Metadata.TryGetValue(BackendKeyMetadataKey, out var backendKey) &&
+            !string.IsNullOrWhiteSpace(backendKey))
+        {
+            return backendKey;
+        }
+
+        return ChartBackendCapabilities.LiveChartsWpf.BackendKey;
+    }
+}

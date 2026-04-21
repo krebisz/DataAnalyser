@@ -206,10 +206,10 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
             if (result != null)
             {
                 var route = ResolveRenderingRoute();
-                RenderWeekdayTrendChart(result);
+                var renderResult = RenderWeekdayTrendChart(result);
                 _viewModel.ChartState.SetRenderPlanDiagnostics(
                     ChartProgramKind.WeekdayTrend,
-                    BuildRenderPlanDiagnostics(route));
+                    renderResult);
             }
         }
     }
@@ -247,10 +247,10 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         if (result != null)
         {
             var route = ResolveRenderingRoute();
-            RenderWeekdayTrendChart(result);
+            var renderResult = RenderWeekdayTrendChart(result);
             _viewModel.ChartState.SetRenderPlanDiagnostics(
                 ChartProgramKind.WeekdayTrend,
-                BuildRenderPlanDiagnostics(route));
+                renderResult);
         }
     }
 
@@ -299,11 +299,15 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         return strategy is IWeekdayTrendResultProvider provider ? provider.ExtendedResult : null;
     }
 
-    private void RenderWeekdayTrendChart(WeekdayTrendResult result)
+    private ChartRenderAdapterResult RenderWeekdayTrendChart(WeekdayTrendResult result)
     {
         var renderTarget = RenderingHostLifecycleAdapterHelper.CreateTarget(ResolveRenderingRoute, CreateRenderHost);
-        _weekdayTrendRenderingContract.Render(
-            new WeekdayTrendChartRenderRequest(renderTarget.Route, result, _viewModel.ChartState),
+        return _weekdayTrendRenderingContract.Render(
+            new WeekdayTrendChartRenderRequest(
+                renderTarget.Route,
+                result,
+                _viewModel.ChartState,
+                _viewModel.ChartState.SelectedWeekdayTrendSeries?.DisplayKey ?? "<none>"),
             renderTarget.Host);
     }
 
@@ -317,33 +321,4 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         return new WeekdayTrendChartRenderHost(_controller.Chart, _controller.PolarChart, _viewModel.ChartState);
     }
 
-    private ChartRenderAdapterResult BuildRenderPlanDiagnostics(WeekdayTrendRenderingRoute route)
-    {
-        var activeChart = route == WeekdayTrendRenderingRoute.Polar ? _controller.PolarChart : _controller.Chart;
-        var seriesCount = activeChart.Series.OfType<Series>().Count();
-        var pointCount = activeChart.Series.OfType<Series>().Sum(series => series.Values?.Count ?? 0);
-        var backendKey = route switch
-        {
-            WeekdayTrendRenderingRoute.Polar => WeekdayTrendBackendKey.LiveChartsWpfPolar,
-            WeekdayTrendRenderingRoute.Scatter => WeekdayTrendBackendKey.LiveChartsWpfScatter,
-            _ => WeekdayTrendBackendKey.LiveChartsWpfCartesian
-        };
-
-        return new ChartRenderAdapterResult(
-            backendKey,
-            $"{backendKey}:{_viewModel.ChartState.SelectedWeekdayTrendSeries?.DisplayKey ?? "<none>"}:{_viewModel.ChartState.WeekdayTrendChartMode}",
-            ChartRenderPlanKind.Cartesian,
-            ChartRenderDensityMode.FullFidelity,
-            seriesCount,
-            0,
-            pointCount,
-            new Dictionary<string, string>
-            {
-                ["Adapter"] = nameof(WeekdayTrendChartControllerAdapter),
-                ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
-                ["Route"] = route.ToString(),
-                ["Mode"] = _viewModel.ChartState.WeekdayTrendChartMode.ToString(),
-                ["Selection"] = _viewModel.ChartState.SelectedWeekdayTrendSeries?.DisplayKey ?? "<none>"
-            });
-    }
 }

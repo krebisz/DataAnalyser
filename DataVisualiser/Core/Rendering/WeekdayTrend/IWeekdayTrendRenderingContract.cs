@@ -1,3 +1,5 @@
+using DataVisualiser.VNext.Rendering;
+
 namespace DataVisualiser.Core.Rendering.WeekdayTrend;
 
 public interface IWeekdayTrendRenderingContract
@@ -6,7 +8,7 @@ public interface IWeekdayTrendRenderingContract
 
     WeekdayTrendRenderingCapabilities GetCapabilities(WeekdayTrendRenderingRoute route);
 
-    void Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host);
+    ChartRenderAdapterResult Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host);
 
     void Clear(WeekdayTrendChartRenderHost host);
 

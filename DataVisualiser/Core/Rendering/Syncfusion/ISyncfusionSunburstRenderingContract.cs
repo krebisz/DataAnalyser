@@ -1,8 +1,10 @@
+using DataVisualiser.VNext.Rendering;
+
 namespace DataVisualiser.Core.Rendering.Syncfusion;
 
 public interface ISyncfusionSunburstRenderingContract
 {
-    Task RenderAsync(SyncfusionSunburstChartRenderRequest request, SyncfusionSunburstChartRenderHost host);
+    Task<ChartRenderAdapterResult> RenderAsync(SyncfusionSunburstChartRenderRequest request, SyncfusionSunburstChartRenderHost host);
 
     void Clear(SyncfusionSunburstChartRenderHost host);
 

@@ -2,12 +2,15 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
 namespace DataVisualiser.Core.Rendering.WeekdayTrend;
 
 public sealed class WeekdayTrendRenderingContract : IWeekdayTrendRenderingContract
 {
+    private readonly ChartRenderPlanAdapterDispatcher<WeekdayTrendRenderSurface> _dispatcher;
     private static readonly IReadOnlyList<WeekdayTrendBackendQualification> QualificationMatrix =
     [
         new WeekdayTrendBackendQualification(
@@ -47,6 +50,8 @@ public sealed class WeekdayTrendRenderingContract : IWeekdayTrendRenderingContra
     public WeekdayTrendRenderingContract(WeekdayTrendChartUpdateCoordinator updateCoordinator)
     {
         _updateCoordinator = updateCoordinator ?? throw new ArgumentNullException(nameof(updateCoordinator));
+        _dispatcher = new ChartRenderPlanAdapterDispatcher<WeekdayTrendRenderSurface>(
+            [new WeekdayTrendRenderPlanAdapter(RenderCore)]);
     }
 
     public IReadOnlyList<WeekdayTrendBackendQualification> GetBackendQualificationMatrix()
@@ -70,13 +75,19 @@ public sealed class WeekdayTrendRenderingContract : IWeekdayTrendRenderingContra
             qualification.SupportsLifecycleSafety);
     }
 
-    public void Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
+    public ChartRenderAdapterResult Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
         if (host == null)
             throw new ArgumentNullException(nameof(host));
 
+        var plan = WeekdayTrendRenderPlanBuilder.Build(request);
+        return _dispatcher.ApplyAsync(new WeekdayTrendRenderSurface(request, host), plan).AsTask().GetAwaiter().GetResult();
+    }
+
+    private void RenderCore(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
+    {
         _updateCoordinator.UpdateChart(request.Result, request.ChartState, host.CartesianChart, host.PolarChart);
     }
 
@@ -181,9 +192,124 @@ public static class WeekdayTrendRenderingRouteResolver
 public sealed record WeekdayTrendChartRenderRequest(
     WeekdayTrendRenderingRoute Route,
     WeekdayTrendResult Result,
-    ChartState ChartState);
+    ChartState ChartState,
+    string SelectionDisplayKey = "<none>");
 
 public sealed record WeekdayTrendChartRenderHost(
     CartesianChart CartesianChart,
     CartesianChart PolarChart,
     ChartState ChartState);
+
+public sealed record WeekdayTrendRenderSurface(
+    WeekdayTrendChartRenderRequest Request,
+    WeekdayTrendChartRenderHost Host);
+
+public static class WeekdayTrendRenderPlanBuilder
+{
+    public static ChartRenderPlan Build(WeekdayTrendChartRenderRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var backendKey = ResolveBackendKey(request.Route);
+        var sourcePointCount = request.Result.SeriesByDay.Values.Sum(series => series.Points.Count);
+        return new ChartRenderPlan(
+            $"{backendKey}:{request.SelectionDisplayKey}:{request.Route}:{request.Result.From:O}:{request.Result.To:O}",
+            ChartProgramKind.WeekdayTrend,
+            ChartRenderPlanKind.Cartesian,
+            ChartDisplayMode.Regular,
+            "Weekday Trend",
+            request.Result.From,
+            request.Result.To,
+            $"{request.SelectionDisplayKey}:{request.Route}:{sourcePointCount}:{request.Result.Unit}",
+            Array.Empty<ChartSeriesPlan>(),
+            Array.Empty<ChartHierarchyNodePlan>(),
+            new RenderDensityPlan(
+                ChartRenderDensityMode.FullFidelity,
+                sourcePointCount,
+                sourcePointCount,
+                request.Result.SeriesByDay.Count),
+            new ChartInteractionPlan(
+                SupportsZoom: true,
+                SupportsPan: true,
+                SupportsTooltips: true,
+                SupportsSelection: true,
+                SupportsViewportRefinement: false),
+            new Dictionary<string, string>
+            {
+                ["Adapter"] = nameof(WeekdayTrendRenderPlanAdapter),
+                ["BackendKey"] = backendKey,
+                ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
+                ["Route"] = request.Route.ToString(),
+                ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString(),
+                ["Selection"] = request.SelectionDisplayKey
+            });
+    }
+
+    private static string ResolveBackendKey(WeekdayTrendRenderingRoute route)
+    {
+        return route switch
+        {
+            WeekdayTrendRenderingRoute.Polar => WeekdayTrendBackendKey.LiveChartsWpfPolar,
+            WeekdayTrendRenderingRoute.Scatter => WeekdayTrendBackendKey.LiveChartsWpfScatter,
+            _ => WeekdayTrendBackendKey.LiveChartsWpfCartesian
+        };
+    }
+}
+
+public sealed class WeekdayTrendRenderPlanAdapter : IChartRenderPlanAdapter<WeekdayTrendRenderSurface>
+{
+    private const string BackendKeyMetadataKey = "BackendKey";
+    private readonly Action<WeekdayTrendChartRenderRequest, WeekdayTrendChartRenderHost> _render;
+
+    public WeekdayTrendRenderPlanAdapter(Action<WeekdayTrendChartRenderRequest, WeekdayTrendChartRenderHost> render)
+    {
+        _render = render ?? throw new ArgumentNullException(nameof(render));
+    }
+
+    public ChartBackendCapabilities Capabilities => ChartBackendCapabilities.LiveChartsWpf;
+
+    public bool CanRender(ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        return Capabilities.Supports(plan.PlanKind);
+    }
+
+    public ValueTask<ChartRenderAdapterResult> ApplyAsync(
+        WeekdayTrendRenderSurface surface,
+        ChartRenderPlan plan,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(surface);
+        ArgumentNullException.ThrowIfNull(plan);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        _render(surface.Request, surface.Host);
+
+        var activeChart = surface.Request.Route == WeekdayTrendRenderingRoute.Polar
+            ? surface.Host.PolarChart
+            : surface.Host.CartesianChart;
+        var seriesCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Count();
+        var pointCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Sum(series => series.Values?.Count ?? 0);
+
+        return ValueTask.FromResult(new ChartRenderAdapterResult(
+            ResolveBackendKey(plan),
+            plan.Id,
+            plan.PlanKind,
+            plan.Density.Mode,
+            seriesCount,
+            0,
+            pointCount,
+            plan.Metadata));
+    }
+
+    private static string ResolveBackendKey(ChartRenderPlan plan)
+    {
+        if (plan.Metadata.TryGetValue(BackendKeyMetadataKey, out var backendKey) &&
+            !string.IsNullOrWhiteSpace(backendKey))
+        {
+            return backendKey;
+        }
+
+        return ChartBackendCapabilities.LiveChartsWpf.BackendKey;
+    }
+}

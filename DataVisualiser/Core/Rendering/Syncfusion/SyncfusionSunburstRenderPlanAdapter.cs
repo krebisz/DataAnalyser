@@ -1,0 +1,61 @@
+using DataVisualiser.UI.Syncfusion;
+using DataVisualiser.VNext.Rendering;
+
+namespace DataVisualiser.Core.Rendering.Syncfusion;
+
+public sealed class SyncfusionSunburstRenderPlanAdapter : IChartRenderPlanAdapter<SyncfusionSunburstRenderSurface>
+{
+    public ChartBackendCapabilities Capabilities => ChartBackendCapabilities.SyncfusionSunburst;
+
+    public bool CanRender(ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        return Capabilities.Supports(plan.PlanKind);
+    }
+
+    public ValueTask<ChartRenderAdapterResult> ApplyAsync(
+        SyncfusionSunburstRenderSurface surface,
+        ChartRenderPlan plan,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(surface);
+        ArgumentNullException.ThrowIfNull(plan);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var items = surface.IsVisible
+            ? FlattenHierarchy(plan.HierarchyRoots)
+            : Array.Empty<SunburstItem>();
+
+        surface.Controller.ItemsSource = items;
+
+        return ValueTask.FromResult(new ChartRenderAdapterResult(
+            SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy,
+            plan.Id,
+            plan.PlanKind,
+            plan.Density.Mode,
+            RenderedSeriesCount: CountDistinctSubmetrics(items),
+            RenderedHierarchyNodeCount: plan.Density.RenderedPointCount,
+            RenderedPointCount: items.Count,
+            plan.Metadata));
+    }
+
+    private static IReadOnlyList<SunburstItem> FlattenHierarchy(IReadOnlyList<ChartHierarchyNodePlan> roots)
+    {
+        var items = new List<SunburstItem>();
+        foreach (var root in roots)
+        {
+            foreach (var child in root.Children)
+                items.Add(new SunburstItem(root.Label, child.Label, child.Value));
+        }
+
+        return items;
+    }
+
+    private static int CountDistinctSubmetrics(IReadOnlyList<SunburstItem> items)
+    {
+        return items
+            .Select(item => item.Submetric)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+    }
+}

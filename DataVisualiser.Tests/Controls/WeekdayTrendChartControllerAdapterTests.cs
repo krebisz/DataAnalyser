@@ -11,6 +11,7 @@ using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Tests.Controls;
 
@@ -229,9 +230,23 @@ public sealed class WeekdayTrendChartControllerAdapterTests
             return new WeekdayTrendRenderingCapabilities("test", WeekdayTrendRenderingQualification.Qualified, true, true, true, true, true);
         }
 
-        public void Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
+        public ChartRenderAdapterResult Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
         {
             LastRenderRequest = request;
+            return new ChartRenderAdapterResult(
+                WeekdayTrendBackendKey.LiveChartsWpfCartesian,
+                "test-weekday-trend-plan",
+                ChartRenderPlanKind.Cartesian,
+                ChartRenderDensityMode.FullFidelity,
+                0,
+                0,
+                0,
+                new Dictionary<string, string>
+                {
+                    ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
+                    ["Route"] = request.Route.ToString(),
+                    ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString()
+                });
         }
 
         public void Clear(WeekdayTrendChartRenderHost host)

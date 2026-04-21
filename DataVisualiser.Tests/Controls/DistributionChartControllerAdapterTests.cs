@@ -12,6 +12,8 @@ using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.Controls;
@@ -310,9 +312,21 @@ public sealed class DistributionChartControllerAdapterTests
             return new DistributionRenderingCapabilities("test", DistributionRenderingQualification.Qualified, true, true, true, true, true, true);
         }
 
-        public Task RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
+        public Task<ChartRenderAdapterResult> RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(new ChartRenderAdapterResult(
+                DistributionBackendKey.LiveChartsWpfCartesian,
+                "test-distribution-plan",
+                ChartRenderPlanKind.Cartesian,
+                ChartRenderDensityMode.FullFidelity,
+                0,
+                0,
+                0,
+                new Dictionary<string, string>
+                {
+                    ["ProgramKind"] = ChartProgramKind.Distribution.ToString(),
+                    ["Route"] = request.Route.ToString()
+                }));
         }
 
         public void Clear(DistributionChartRenderHost host)

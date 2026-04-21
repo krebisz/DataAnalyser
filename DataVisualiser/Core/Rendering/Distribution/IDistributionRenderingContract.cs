@@ -1,3 +1,5 @@
+using DataVisualiser.VNext.Rendering;
+
 namespace DataVisualiser.Core.Rendering.Distribution;
 
 public interface IDistributionRenderingContract
@@ -6,7 +8,7 @@ public interface IDistributionRenderingContract
 
     DistributionRenderingCapabilities GetCapabilities(DistributionRenderingRoute route);
 
-    Task RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host);
+    Task<ChartRenderAdapterResult> RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host);
 
     void Clear(DistributionChartRenderHost host);
 
