@@ -70,7 +70,7 @@ public static class BarPieRenderPlanBuilder
             new Dictionary<string, string>
             {
                 ["Adapter"] = "UiChartRenderPlanAdapter",
-                ["BackendKey"] = ResolveBackendKey(rendererKind, request.Route),
+                [ChartRenderPlanMetadataKeys.BackendKey] = ResolveBackendKey(rendererKind, request.Route),
                 ["ProgramKind"] = ChartProgramKind.BarPie.ToString(),
                 ["RendererKind"] = rendererKind.ToString(),
                 ["Route"] = request.Route.ToString()

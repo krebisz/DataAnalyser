@@ -237,7 +237,7 @@ public static class WeekdayTrendRenderPlanBuilder
             new Dictionary<string, string>
             {
                 ["Adapter"] = nameof(WeekdayTrendRenderPlanAdapter),
-                ["BackendKey"] = backendKey,
+                [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
                 ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
                 ["Route"] = request.Route.ToString(),
                 ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString(),
@@ -253,63 +253,5 @@ public static class WeekdayTrendRenderPlanBuilder
             WeekdayTrendRenderingRoute.Scatter => WeekdayTrendBackendKey.LiveChartsWpfScatter,
             _ => WeekdayTrendBackendKey.LiveChartsWpfCartesian
         };
-    }
-}
-
-public sealed class WeekdayTrendRenderPlanAdapter : IChartRenderPlanAdapter<WeekdayTrendRenderSurface>
-{
-    private const string BackendKeyMetadataKey = "BackendKey";
-    private readonly Action<WeekdayTrendChartRenderRequest, WeekdayTrendChartRenderHost> _render;
-
-    public WeekdayTrendRenderPlanAdapter(Action<WeekdayTrendChartRenderRequest, WeekdayTrendChartRenderHost> render)
-    {
-        _render = render ?? throw new ArgumentNullException(nameof(render));
-    }
-
-    public ChartBackendCapabilities Capabilities => ChartBackendCapabilities.LiveChartsWpf;
-
-    public bool CanRender(ChartRenderPlan plan)
-    {
-        ArgumentNullException.ThrowIfNull(plan);
-        return Capabilities.Supports(plan.PlanKind);
-    }
-
-    public ValueTask<ChartRenderAdapterResult> ApplyAsync(
-        WeekdayTrendRenderSurface surface,
-        ChartRenderPlan plan,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(surface);
-        ArgumentNullException.ThrowIfNull(plan);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        _render(surface.Request, surface.Host);
-
-        var activeChart = surface.Request.Route == WeekdayTrendRenderingRoute.Polar
-            ? surface.Host.PolarChart
-            : surface.Host.CartesianChart;
-        var seriesCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Count();
-        var pointCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Sum(series => series.Values?.Count ?? 0);
-
-        return ValueTask.FromResult(new ChartRenderAdapterResult(
-            ResolveBackendKey(plan),
-            plan.Id,
-            plan.PlanKind,
-            plan.Density.Mode,
-            seriesCount,
-            0,
-            pointCount,
-            plan.Metadata));
-    }
-
-    private static string ResolveBackendKey(ChartRenderPlan plan)
-    {
-        if (plan.Metadata.TryGetValue(BackendKeyMetadataKey, out var backendKey) &&
-            !string.IsNullOrWhiteSpace(backendKey))
-        {
-            return backendKey;
-        }
-
-        return ChartBackendCapabilities.LiveChartsWpf.BackendKey;
     }
 }

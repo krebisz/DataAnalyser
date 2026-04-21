@@ -11,8 +11,6 @@ public sealed record UiChartRenderSurface(
 
 public sealed class UiChartRenderPlanAdapter : IChartRenderPlanAdapter<UiChartRenderSurface>
 {
-    public const string BackendKeyMetadataKey = "BackendKey";
-
     public ChartBackendCapabilities Capabilities => ChartBackendCapabilities.LiveChartsWpf;
 
     public bool CanRender(ChartRenderPlan plan)
@@ -46,7 +44,7 @@ public sealed class UiChartRenderPlanAdapter : IChartRenderPlanAdapter<UiChartRe
 
     private static string ResolveBackendKey(ChartRendererKind rendererKind, ChartRenderPlan plan)
     {
-        if (plan.Metadata.TryGetValue(BackendKeyMetadataKey, out var backendKey) &&
+        if (plan.Metadata.TryGetValue(ChartRenderPlanMetadataKeys.BackendKey, out var backendKey) &&
             !string.IsNullOrWhiteSpace(backendKey))
         {
             return backendKey;
