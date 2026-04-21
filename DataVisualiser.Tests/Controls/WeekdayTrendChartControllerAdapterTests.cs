@@ -10,6 +10,7 @@ using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.Tests.Controls;
 
@@ -90,6 +91,18 @@ public sealed class WeekdayTrendChartControllerAdapterTests
             Assert.Equal("Scatter", setup.Controller.ChartTypeToggleButton.Content);
             Assert.Equal(1, setup.CutOverService.CreateStrategyCallCount);
             Assert.Equal(1, setup.CutOverService.Strategy.ComputeCallCount);
+            Assert.Equal("Polar", setup.ChartState.RenderPlanDiagnostics[ChartProgramKind.WeekdayTrend].Metadata["Route"]);
+
+            setup.Adapter.OnChartTypeToggleRequested(null, EventArgs.Empty);
+
+            Assert.Equal(WeekdayTrendChartMode.Scatter, setup.ChartState.WeekdayTrendChartMode);
+            Assert.Equal(WeekdayTrendRenderingRoute.Scatter, setup.RenderingContract.LastRenderRequest!.Route);
+            Assert.Contains(setup.ChartState.RenderPlanHistory, entry =>
+                entry.ProgramKind == ChartProgramKind.WeekdayTrend.ToString() &&
+                entry.Metadata["Route"] == WeekdayTrendRenderingRoute.Polar.ToString());
+            Assert.Contains(setup.ChartState.RenderPlanHistory, entry =>
+                entry.ProgramKind == ChartProgramKind.WeekdayTrend.ToString() &&
+                entry.Metadata["Route"] == WeekdayTrendRenderingRoute.Scatter.ToString());
         });
     }
 

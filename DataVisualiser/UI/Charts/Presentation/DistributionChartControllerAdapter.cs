@@ -15,6 +15,7 @@ using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.WPF;
@@ -314,6 +315,9 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
             _viewModel.ChartState);
 
         await _distributionRenderingContract.RenderAsync(request, renderTarget.Host);
+        _viewModel.ChartState.SetRenderPlanDiagnostics(
+            ChartProgramKind.Distribution,
+            BuildRenderPlanDiagnostics(request, renderTarget.Host, renderInput));
     }
 
     private async Task RerenderDistributionIfVisibleAsync(DistributionMode mode)
@@ -387,6 +391,38 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
     private DistributionChartRenderHost CreateRenderHost()
     {
         return new DistributionChartRenderHost(_controller.Chart, _controller.PolarChart, _viewModel.ChartState, _getPolarTooltip);
+    }
+
+    private static ChartRenderAdapterResult BuildRenderPlanDiagnostics(
+        DistributionChartRenderRequest request,
+        DistributionChartRenderHost host,
+        DistributionRenderInput renderInput)
+    {
+        var activeChart = request.Route == DistributionRenderingRoute.PolarFallback
+            ? host.CartesianChart
+            : host.CartesianChart;
+        var seriesCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Count();
+        var pointCount = activeChart.Series.OfType<LiveCharts.Wpf.Series>().Sum(series => series.Values?.Count ?? 0);
+        var backendKey = request.Route == DistributionRenderingRoute.PolarFallback
+            ? DistributionBackendKey.LiveChartsWpfPolarFallbackProjection
+            : DistributionBackendKey.LiveChartsWpfCartesian;
+
+        return new ChartRenderAdapterResult(
+            backendKey,
+            $"{backendKey}:{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}",
+            ChartRenderPlanKind.Cartesian,
+            ChartRenderDensityMode.FullFidelity,
+            seriesCount,
+            0,
+            pointCount,
+            new Dictionary<string, string>
+            {
+                ["Adapter"] = nameof(DistributionChartControllerAdapter),
+                ["ProgramKind"] = ChartProgramKind.Distribution.ToString(),
+                ["Route"] = request.Route.ToString(),
+                ["Mode"] = request.Mode.ToString(),
+                ["Selection"] = renderInput.SelectedSeries?.DisplayKey ?? "<none>"
+            });
     }
 
     private sealed record DistributionRenderInput(

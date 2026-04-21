@@ -143,7 +143,8 @@ public sealed class EvidenceDiagnosticsBuilder
             Transition = transition,
             VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime),
             VNextFamilies = BuildVNextFamilyDiagnostics(chartState),
-            RenderPlans = BuildRenderPlanDiagnostics(chartState)
+            RenderPlans = BuildRenderPlanDiagnostics(chartState),
+            RenderPlanHistory = chartState.RenderPlanHistory
         };
     }
 

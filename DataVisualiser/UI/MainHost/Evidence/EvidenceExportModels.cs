@@ -88,6 +88,7 @@ public sealed class DiagnosticsSnapshot
     public VNextDiagnosticsSnapshot? VNext { get; set; }
     public Dictionary<string, VNextDiagnosticsSnapshot> VNextFamilies { get; set; } = new();
     public Dictionary<string, RenderPlanDiagnosticsSnapshot> RenderPlans { get; set; } = new();
+    public IReadOnlyList<RenderPlanHistorySnapshot> RenderPlanHistory { get; set; } = Array.Empty<RenderPlanHistorySnapshot>();
 }
 
 public sealed class PerformanceTimingSnapshot
@@ -286,7 +287,7 @@ public sealed class VNextDiagnosticsSnapshot
     public string? FailureReason { get; set; }
 }
 
-public sealed class RenderPlanDiagnosticsSnapshot
+public class RenderPlanDiagnosticsSnapshot
 {
     public string BackendKey { get; set; } = string.Empty;
     public string PlanId { get; set; } = string.Empty;
@@ -296,4 +297,10 @@ public sealed class RenderPlanDiagnosticsSnapshot
     public int RenderedHierarchyNodeCount { get; set; }
     public int RenderedPointCount { get; set; }
     public IReadOnlyDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
+}
+
+public sealed class RenderPlanHistorySnapshot : RenderPlanDiagnosticsSnapshot
+{
+    public DateTime TimestampUtc { get; set; }
+    public string ProgramKind { get; set; } = string.Empty;
 }

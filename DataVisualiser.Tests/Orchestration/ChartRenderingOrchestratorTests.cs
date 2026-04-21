@@ -315,6 +315,55 @@ public sealed class ChartRenderingOrchestratorTests
     }
 
     [Fact]
+    public async Task RenderDiffRatioChartAsync_ShouldCaptureDifferenceAndRatioRenderPlans_WhenModeChanges()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var cutOverService = new Mock<IStrategyCutOverService>(MockBehavior.Strict);
+                cutOverService
+                    .Setup(service => service.CreateStrategy(
+                        It.Is<StrategyType>(type => type == StrategyType.Difference || type == StrategyType.Ratio),
+                        It.IsAny<ChartDataContext>(),
+                        It.IsAny<StrategyCreationParameters>()))
+                    .Returns(new StubStrategy(CreateSingleSeriesResult()));
+
+                var orchestrator = CreateOrchestrator(chartTimestamps, tooltipManager, cutOverService, out _);
+                var chartState = new ChartState
+                {
+                    IsDiffRatioVisible = true,
+                    IsDiffRatioDifferenceMode = true
+                };
+                var context = CreateSecondaryContext();
+
+                await orchestrator.RenderDiffRatioChartAsync(context, chart, chartState);
+                await FlushChartAsync(chart);
+
+                chartState.IsDiffRatioDifferenceMode = false;
+                await orchestrator.RenderDiffRatioChartAsync(context, chart, chartState);
+                await FlushChartAsync(chart);
+
+                Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Difference));
+                Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Ratio));
+                Assert.Equal("Difference", chartState.RenderPlanDiagnostics[ChartProgramKind.Difference].Metadata["ProgramKind"]);
+                Assert.Equal("Ratio", chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].Metadata["ProgramKind"]);
+                Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Difference].BackendKey);
+                Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].BackendKey);
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public async Task RenderDistributionChartAsync_ShouldUseHourlyDistributionService_ForHourlyMode()
     {
         await StaTestHelper.RunAsync(async () =>

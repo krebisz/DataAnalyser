@@ -14,6 +14,7 @@ using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Presentation;
@@ -203,7 +204,13 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         {
             var result = ComputeWeekdayTrend(_viewModel.ChartState.LastContext);
             if (result != null)
+            {
+                var route = ResolveRenderingRoute();
                 RenderWeekdayTrendChart(result);
+                _viewModel.ChartState.SetRenderPlanDiagnostics(
+                    ChartProgramKind.WeekdayTrend,
+                    BuildRenderPlanDiagnostics(route));
+            }
         }
     }
 
@@ -238,7 +245,13 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
         var result = ComputeWeekdayTrend(trendContext);
         if (result != null)
+        {
+            var route = ResolveRenderingRoute();
             RenderWeekdayTrendChart(result);
+            _viewModel.ChartState.SetRenderPlanDiagnostics(
+                ChartProgramKind.WeekdayTrend,
+                BuildRenderPlanDiagnostics(route));
+        }
     }
 
     private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
@@ -302,5 +315,35 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
     private WeekdayTrendChartRenderHost CreateRenderHost()
     {
         return new WeekdayTrendChartRenderHost(_controller.Chart, _controller.PolarChart, _viewModel.ChartState);
+    }
+
+    private ChartRenderAdapterResult BuildRenderPlanDiagnostics(WeekdayTrendRenderingRoute route)
+    {
+        var activeChart = route == WeekdayTrendRenderingRoute.Polar ? _controller.PolarChart : _controller.Chart;
+        var seriesCount = activeChart.Series.OfType<Series>().Count();
+        var pointCount = activeChart.Series.OfType<Series>().Sum(series => series.Values?.Count ?? 0);
+        var backendKey = route switch
+        {
+            WeekdayTrendRenderingRoute.Polar => WeekdayTrendBackendKey.LiveChartsWpfPolar,
+            WeekdayTrendRenderingRoute.Scatter => WeekdayTrendBackendKey.LiveChartsWpfScatter,
+            _ => WeekdayTrendBackendKey.LiveChartsWpfCartesian
+        };
+
+        return new ChartRenderAdapterResult(
+            backendKey,
+            $"{backendKey}:{_viewModel.ChartState.SelectedWeekdayTrendSeries?.DisplayKey ?? "<none>"}:{_viewModel.ChartState.WeekdayTrendChartMode}",
+            ChartRenderPlanKind.Cartesian,
+            ChartRenderDensityMode.FullFidelity,
+            seriesCount,
+            0,
+            pointCount,
+            new Dictionary<string, string>
+            {
+                ["Adapter"] = nameof(WeekdayTrendChartControllerAdapter),
+                ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
+                ["Route"] = route.ToString(),
+                ["Mode"] = _viewModel.ChartState.WeekdayTrendChartMode.ToString(),
+                ["Selection"] = _viewModel.ChartState.SelectedWeekdayTrendSeries?.DisplayKey ?? "<none>"
+            });
     }
 }

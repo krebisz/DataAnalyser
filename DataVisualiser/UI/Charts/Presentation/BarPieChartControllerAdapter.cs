@@ -10,6 +10,8 @@ using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using UiChartRenderModel = DataVisualiser.UI.Charts.Presentation.Rendering.UiChartRenderModel;
 using LiveCharts.Wpf;
 
@@ -150,9 +152,13 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
 
         var isPieMode = _controller.PieModeRadio.IsChecked == true;
         var model = await _renderModelBuilder.BuildAsync(isPieMode);
+        var route = ResolveRenderingRoute();
         await _barPieRenderingContract.RenderAsync(
-            new BarPieChartRenderRequest(ResolveRenderingRoute(), model),
+            new BarPieChartRenderRequest(route, model),
             CreateRenderHost());
+        _viewModel.ChartState.SetRenderPlanDiagnostics(
+            ChartProgramKind.BarPie,
+            BuildRenderPlanDiagnostics(route, model));
     }
 
     private Task RerenderBarPieIfVisibleAsync()
@@ -169,6 +175,39 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
     {
         EnsureSurfaceAndRenderer();
         return new BarPieChartRenderHost(_surface!, _renderer!, _rendererResolver.ResolveKind(Key), _viewModel.ChartState.IsBarPieVisible);
+    }
+
+    private ChartRenderAdapterResult BuildRenderPlanDiagnostics(BarPieRenderingRoute route, UiChartRenderModel model)
+    {
+        var rendererKind = _rendererResolver.ResolveKind(Key);
+        var backendKey = rendererKind switch
+        {
+            ChartRendererKind.LiveCharts when route == BarPieRenderingRoute.PieFacet => BarPieBackendKey.LiveChartsWpfPieFacet,
+            ChartRendererKind.LiveCharts => BarPieBackendKey.LiveChartsWpfColumn,
+            ChartRendererKind.ECharts when route == BarPieRenderingRoute.PieFacet => BarPieBackendKey.EChartsPlaceholderPieFacet,
+            _ => BarPieBackendKey.EChartsPlaceholderColumn
+        };
+
+        var renderedSeriesCount = model.Series.Count;
+        var renderedHierarchyNodeCount = model.Facets.Count;
+        var renderedPointCount = model.Series.Sum(series => series.Values.Count) +
+                                 model.Facets.Sum(facet => facet.Series.Sum(series => series.Values.Count));
+
+        return new ChartRenderAdapterResult(
+            backendKey,
+            $"{backendKey}:{model.ChartName}:{route}:{model.Title}:{renderedSeriesCount}:{renderedHierarchyNodeCount}",
+            route == BarPieRenderingRoute.PieFacet ? ChartRenderPlanKind.Faceted : ChartRenderPlanKind.Cartesian,
+            ChartRenderDensityMode.FullFidelity,
+            renderedSeriesCount,
+            renderedHierarchyNodeCount,
+            renderedPointCount,
+            new Dictionary<string, string>
+            {
+                ["Adapter"] = nameof(BarPieChartControllerAdapter),
+                ["ProgramKind"] = ChartProgramKind.BarPie.ToString(),
+                ["RendererKind"] = rendererKind.ToString(),
+                ["Route"] = route.ToString()
+            });
     }
 
     private void SelectBarPieBucketCount(int bucketCount)

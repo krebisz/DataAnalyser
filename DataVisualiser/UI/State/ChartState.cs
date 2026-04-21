@@ -13,8 +13,10 @@ public class ChartState
     private readonly Dictionary<DistributionMode, DistributionModeSettings> _distributionSettings = new();
     private readonly Dictionary<ChartProgramKind, LoadRuntimeState> _familyLoadRuntimes = new();
     private readonly Dictionary<ChartProgramKind, RenderPlanDiagnosticsSnapshot> _renderPlanDiagnostics = new();
+    private readonly List<RenderPlanHistorySnapshot> _renderPlanHistory = new();
     private readonly List<PerformanceTimingSnapshot> _performanceTimings = new();
     private readonly List<SessionMilestoneSnapshot> _sessionMilestones = new();
+    private const int MaxRenderPlanHistory = 100;
     private const int MaxSessionMilestones = 50;
     private const int MaxPerformanceTimings = 100;
 
@@ -78,6 +80,7 @@ public class ChartState
 
     public IReadOnlyDictionary<ChartProgramKind, LoadRuntimeState> FamilyLoadRuntimes => _familyLoadRuntimes;
     public IReadOnlyDictionary<ChartProgramKind, RenderPlanDiagnosticsSnapshot> RenderPlanDiagnostics => _renderPlanDiagnostics;
+    public IReadOnlyList<RenderPlanHistorySnapshot> RenderPlanHistory => _renderPlanHistory;
     public IReadOnlyList<PerformanceTimingSnapshot> PerformanceTimings => _performanceTimings;
     public IReadOnlyList<SessionMilestoneSnapshot> SessionMilestones => _sessionMilestones;
 
@@ -114,7 +117,7 @@ public class ChartState
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        _renderPlanDiagnostics[kind] = new RenderPlanDiagnosticsSnapshot
+        var snapshot = new RenderPlanDiagnosticsSnapshot
         {
             BackendKey = result.BackendKey,
             PlanId = result.PlanId,
@@ -125,11 +128,29 @@ public class ChartState
             RenderedPointCount = result.RenderedPointCount,
             Metadata = result.Metadata
         };
+        _renderPlanDiagnostics[kind] = snapshot;
+        _renderPlanHistory.Add(new RenderPlanHistorySnapshot
+        {
+            TimestampUtc = DateTime.UtcNow,
+            ProgramKind = kind.ToString(),
+            BackendKey = snapshot.BackendKey,
+            PlanId = snapshot.PlanId,
+            PlanKind = snapshot.PlanKind,
+            DensityMode = snapshot.DensityMode,
+            RenderedSeriesCount = snapshot.RenderedSeriesCount,
+            RenderedHierarchyNodeCount = snapshot.RenderedHierarchyNodeCount,
+            RenderedPointCount = snapshot.RenderedPointCount,
+            Metadata = snapshot.Metadata
+        });
+
+        if (_renderPlanHistory.Count > MaxRenderPlanHistory)
+            _renderPlanHistory.RemoveRange(0, _renderPlanHistory.Count - MaxRenderPlanHistory);
     }
 
     public void ClearRenderPlanDiagnostics()
     {
         _renderPlanDiagnostics.Clear();
+        _renderPlanHistory.Clear();
     }
 
     public void RecordPerformanceTiming(

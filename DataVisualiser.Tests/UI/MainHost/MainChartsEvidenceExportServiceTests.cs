@@ -132,6 +132,68 @@ public sealed class MainChartsEvidenceExportServiceTests
     }
 
     [Fact]
+    public async Task ExportAsync_ShouldIncludeRenderPlanHistoryForRepeatedChartFamilyRoutes()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState();
+            chartState.SetRenderPlanDiagnostics(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.BarPie,
+                new ChartRenderAdapterResult(
+                    "LiveChartsWpf.Column",
+                    "BarPie:bar",
+                    ChartRenderPlanKind.Cartesian,
+                    ChartRenderDensityMode.FullFidelity,
+                    RenderedSeriesCount: 3,
+                    RenderedHierarchyNodeCount: 0,
+                    RenderedPointCount: 9,
+                    new Dictionary<string, string>
+                    {
+                        ["ProgramKind"] = "BarPie",
+                        ["Route"] = "Column"
+                    }));
+            chartState.SetRenderPlanDiagnostics(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.BarPie,
+                new ChartRenderAdapterResult(
+                    "LiveChartsWpf.PieFacet",
+                    "BarPie:pie",
+                    ChartRenderPlanKind.Faceted,
+                    ChartRenderDensityMode.FullFidelity,
+                    RenderedSeriesCount: 0,
+                    RenderedHierarchyNodeCount: 2,
+                    RenderedPointCount: 6,
+                    new Dictionary<string, string>
+                    {
+                        ["ProgramKind"] = "BarPie",
+                        ["Route"] = "PieFacet"
+                    }));
+
+            var result = await service.ExportAsync(chartState, new MetricState(), new DateTime(2026, 4, 21, 10, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var diagnostics = document.RootElement.GetProperty("Diagnostics");
+            var latest = diagnostics.GetProperty("RenderPlans").GetProperty("BarPie");
+            var history = diagnostics.GetProperty("RenderPlanHistory").EnumerateArray().ToList();
+
+            Assert.Equal("PieFacet", latest.GetProperty("Metadata").GetProperty("Route").GetString());
+            Assert.Equal(2, history.Count);
+            Assert.Contains(history, entry =>
+                entry.GetProperty("ProgramKind").GetString() == "BarPie" &&
+                entry.GetProperty("Metadata").GetProperty("Route").GetString() == "Column");
+            Assert.Contains(history, entry =>
+                entry.GetProperty("ProgramKind").GetString() == "BarPie" &&
+                entry.GetProperty("Metadata").GetProperty("Route").GetString() == "PieFacet");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
     public async Task ExportAsync_ShouldIncludeSelectionAndContextDiagnostics()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
