@@ -226,4 +226,40 @@ It is a system that:
 
 ---
 
+## 14. Presentation Is Disposable, Reasoning Is Central
+
+Charts and graphing matter because they are powerful consumers, not because they are architectural authorities.
+
+The system should evolve so that reasoning, composition, provenance, confidence handling, and downstream-safe output shaping live upstream of any specific presentation technology.
+
+Presentation should become increasingly thin:
+
+- engines define
+- contracts carry
+- consumers adapt
+- surfaces display
+
+A healthy end-state is one where a presentation layer can be replaced without changing:
+
+- truth discipline
+- reasoning structure
+- output identity
+- provenance visibility
+- confidence interpretation rules
+
+Generalization should therefore favor:
+
+- engine-owned capability
+- consumer-agnostic contracts
+- replaceable terminal surfaces
+
+This does not diminish the importance of charts.
+
+It clarifies their role.
+
+Charts are important delivery instruments, but they remain subordinate to the reasoning platform that produces the outputs they consume.
+
+
+---
+
 **End of Project Philosophy**

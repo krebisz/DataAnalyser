@@ -22,6 +22,8 @@ Project Bible.md — architectural law
 
 SYSTEM_MAP.md — conceptual structure and boundaries
 
+DataVisualiser-Architectural-Vocabulary.md — canonical architectural grammar, promoted concepts, ownership containers, and do-not-confuse distinctions
+
 Project Roadmap.md — sequencing, closure, and phase discipline
 
 MASTER_OPERATING_PROTOCOL.md — execution governance and interaction rules
@@ -32,7 +34,7 @@ DataVisualiser_Subsystem_Plan.md — active subsystem execution authority
 
 Collaboration Protocol.md — collaboration quick-reference
 
-In the event of conflict, higher-authority documents prevail. The Roadmap governs what work proceeds and when; this protocol governs how that work is conducted.
+In the event of conflict, higher-authority documents prevail. The Roadmap governs what work proceeds and when; the architectural vocabulary governs concept-language and ownership-container interpretation; this protocol governs how that work is conducted.
 
 3. Scope of This Protocol
 
@@ -45,6 +47,8 @@ how changes are proposed
 how documents evolve
 
 how ambiguity is resolved
+
+how ownership-container and concept-language grounding is enforced
 
 how collaboration is enforced
 
@@ -59,6 +63,8 @@ override architectural constraints
 All significant decisions, assumptions, or changes must be explicit.
 
 Implicit behavior, silent assumptions, inferred intent, or “obvious” steps are not acceptable.
+
+When promoted architectural concepts are used — including authority, provenance, capability, composition, consumer, interaction, boundary, or overlay — the intended meaning must match the canonical architectural vocabulary unless an explicit higher-authority exception is declared.
 
 5. Failure & Recovery Protocol (Additive)
 
@@ -79,6 +85,8 @@ Protocol Drift — deviation from declared workflow or phase rules
 Parity Integrity Failure — mismatch between legacy and CMS behavior
 
 Context Saturation Failure — operator burden exceeds protocol safeguards
+
+Vocabulary / Ownership Drift Failure — promoted concepts, ownership containers, or do-not-confuse distinctions are misapplied or collapsed into older terminology
 
 Unclassified failure is itself a protocol violation.
 
@@ -154,7 +162,7 @@ Failure without retrospective is incomplete work.
 
 6. Drift Prevention
 
-When conceptual, architectural, or procedural drift is detected:
+When conceptual, vocabulary, architectural, or procedural drift is detected:
 
 forward progress must pause
 
@@ -178,7 +186,7 @@ Silence does not imply consent.
 
 8. Use of Foundational Documents
 
-Foundational documents encode long-term intent and constraints.
+Foundational documents encode long-term intent, constraints, and canonical project language.
 
 They must be treated with:
 
@@ -262,6 +270,10 @@ symbols verified
 
 frozen vs evolvable boundaries
 
+ownership-container classification, if the task crosses architectural boundaries
+
+promoted concepts in play, if vocabulary precision affects the task
+
 10B.2 Assumption Prohibition
 
 If information is not present, it is UNKNOWN.
@@ -273,6 +285,8 @@ infer intent
 assume structure
 
 extrapolate architecture
+
+invent or redefine promoted vocabulary
 
 rely on pattern expectation
 
@@ -295,9 +309,11 @@ documents loaded
 
 code snapshot or commit reference
 
-active phase
+active phase / forward-stage posture
 
-VNext activation status (active slice scope and legacy fallback posture)
+architectural vocabulary status, if ownership-container reasoning is involved
+
+VNext status (closed preservation baseline, active slice scope if any, and legacy fallback posture)
 
 parity status
 
@@ -316,6 +332,8 @@ list files inspected
 list symbols verified
 
 list unknowns
+
+list ownership-container classification if boundary placement matters
 
 Absent files or symbols → stop and request upload.
 
@@ -377,6 +395,8 @@ why this document
 
 additive vs structural
 
+whether canonical architectural vocabulary or ownership-container meaning is affected
+
 All updates must be output in full, never fragmented.
 
 10C.7 Velocity Protection (“Proceed Mode”)
@@ -405,6 +425,9 @@ migration intent
 
 Silent boundary erosion is prohibited.
 
+Boundary-crossing work must classify the affected ownership containers:
+authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, or governance/evidence.
+
 10C.9 Phase Transition Guardrails
 
 Before phase transition or workspace reset:
@@ -416,6 +439,8 @@ parity obligations closed
 reset explicitly justified
 
 Workspace reset is a controlled phase step, not an escape hatch.
+
+Closed Phase 5, Phase 6, Phase 6.3, and the pre-Phase-7 render-plan primer remain preservation baselines unless the user explicitly requests historical review.
 
 10C.10 Interaction Mode Declaration
 
@@ -430,6 +455,10 @@ Debug
 Documentation
 
 Execution
+
+Audit-safe alignment
+
+Vocabulary / ownership classification
 
 Response shape must conform to mode.
 
@@ -481,7 +510,37 @@ Evidence exports must include runtime path, signature chain, and alignment flags
 
 VNext failure must fall back to legacy automatically without new logging infrastructure
 
-Each VNext widening must be a bounded slice with automatic legacy fallback
+Each future VNext-affecting slice must be bounded, preserve automatic legacy fallback where still required, and must not reopen closed Phase 6.3 or pre-Phase-7 primer work unless explicitly authorized
+
+10C.14 Architectural Vocabulary and Ownership Discipline (Additive)
+
+When a task involves architectural interpretation, boundary placement, naming, ownership, or future container alignment:
+
+DataVisualiser-Architectural-Vocabulary.md must be treated as the canonical concept source
+
+The assistant must identify any promoted concepts in play
+
+The assistant must classify the relevant ownership container(s)
+
+The assistant must preserve the do-not-confuse distinctions, including:
+
+capability is not feature
+
+consumer is not presentation
+
+interaction is not event wiring
+
+composition is not builder plumbing
+
+boundary is not layer
+
+overlay is not rendering
+
+provenance is not diagnostics
+
+authority is not orchestration
+
+Vocabulary precision is not cosmetic. Misusing these concepts can cause architectural drift even if the code compiles.
 
 10D. Execution Feasibility & Observability Invariants (Additive)
 10D.1 Execution Locus Requirement
@@ -503,6 +562,7 @@ Valid observability mechanisms include:
 - parity harness invocation
 - evidence export artifact with RuntimePath and signature chain
 - breakpoint or diagnostic log confirmation
+- contract-boundary or consumer-delivery path confirmation through test, evidence, or targeted smoke
 
 Heuristic verification is prohibited unless explicitly sanctioned.
 
@@ -540,7 +600,7 @@ These rules apply to any review of work — self-review, cross-agent review, or 
 
 Any review must:
 
-evaluate against the governing iteration cycle (establish regression protection, select slice, inventory, constrain, consolidate, generalize only if proven, retire, validate, record)
+evaluate against the governing iteration cycle (establish regression protection, select slice, inventory, classify ownership container, constrain, consolidate, generalize only if proven, retire, validate, record)
 
 distinguish between completed work, remaining intentional debt, and true regressions
 
@@ -574,6 +634,8 @@ integrity
 
 alignment with the execution plan
 
+alignment with architectural vocabulary and ownership-container discipline
+
 correctness of technical reasoning
 
 willingness to state limits instead of over-claiming
@@ -585,6 +647,8 @@ Any proposed next cycle must:
 identify the primary objective of each proposed iteration
 
 identify the bounded slice for each proposed iteration
+
+identify the ownership container(s) and promoted concepts involved
 
 state what regression protection should exist first
 
@@ -602,11 +666,35 @@ pretend all remaining debt can be removed safely in one sweep if that is not cre
 
 reopen stabilized seams without a concrete structural reason
 
+collapse promoted concepts into older terminology for convenience
+
 optimize for file-count alone
 
 force abstractions across honest outliers without proving convergence
 
 replace the bounded iteration model with vague architectural preference
+
+10F. Dormant Protocol Activation Guidance (Additive)
+
+This protocol may be dormant during low-friction collaboration, but it remains valid as an escalation mode.
+
+It should be explicitly activated when:
+
+an agent will modify code without continuous user supervision
+
+multiple agents or tools operate on the same codebase
+
+a task touches architecture, phase legality, ownership containers, or boundary placement
+
+a previous response caused drift, incorrect assumptions, or document/code mismatch
+
+a task spans implementation plus documentation alignment
+
+the user requests proceed-mode, execution-mode, recovery-mode, or audit-safe alignment
+
+When activated, the assistant must state the active interaction mode and the minimum governing documents required for the task.
+
+Dormant status does not make the protocol obsolete. It means the user may choose when the stricter enforcement burden is worth the cost.
 
 11. Enforcement
 

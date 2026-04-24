@@ -1,6 +1,6 @@
 # COLLABORATION PROTOCOL (Quick Reference)
 
-(Non-Authoritative · Behavioral Guide · Pointer Document)
+(Non-Authoritative · Behavioral Guide · Pointer Document · Dormant-but-Valid Collaboration Mode)
 
 ---
 
@@ -13,8 +13,9 @@ It exists to:
 - minimize drift
 - optimize execution velocity
 - provide quick behavioral alignment
+- help future agents understand the preferred interaction posture without loading the full governance stack
 
-It does **not** define architecture, governance, or enforcement.
+It does **not** define architecture, governance, sequencing, vocabulary, or enforcement.
 
 ---
 
@@ -23,10 +24,12 @@ It does **not** define architecture, governance, or enforcement.
 This document is **subordinate** to all of the following:
 
 1. Project Bible.md (architecture)
-2. SYSTEM_MAP.md (boundaries & intent)
-3. MASTER_OPERATING_PROTOCOL.md (execution & governance)
+2. SYSTEM_MAP.md (boundaries & structural intent)
+3. DataVisualiser-Architectural-Vocabulary.md (architectural grammar & ownership language)
 4. Project Roadmap.md (sequencing & phases)
-5. DataVisualiser_Subsystem_Plan.md (active execution authority)
+5. MASTER_OPERATING_PROTOCOL.md (execution & governance)
+6. Project Overview.md (descriptive orientation)
+7. DataVisualiser_Subsystem_Plan.md (active execution authority)
 
 In any conflict, this document **yields immediately**.
 
@@ -39,6 +42,7 @@ Use this document when you are unsure:
 - how strict an interaction should be
 - why the assistant pauses or asks for files
 - which mode the collaboration is currently in
+- whether a lightweight behavioral reminder is enough before escalating to stricter protocol
 
 This document is **reference-only**, not something to memorize.
 
@@ -53,11 +57,13 @@ The collaboration operates in one of the following modes:
 - **Debug** – error-driven, minimal speculation
 - **Documentation** – document alignment or updates
 - **Execution** – drop-in code only, no narrative
+- **Vocabulary / Ownership** – concept-language, naming, or container-placement discussion
+- **Audit-Safe Alignment** – checking that closed phases, baselines, or documents are not being accidentally reopened
 
 If unclear, the assistant should ask.  
 If declared, the mode **governs response shape**.
 
-When multiple AI assistants are used in parallel (e.g., Claude Code + Codex), each should operate under the same mode unless explicitly differentiated. Cross-review between agents is encouraged for architectural or live-behavior changes.
+When multiple AI assistants are used in parallel (e.g., Claude Code + Codex), each should operate under the same mode unless explicitly differentiated. Cross-review between agents is encouraged for architectural, vocabulary/ownership, or live-behavior changes.
 
 ---
 
@@ -69,6 +75,32 @@ When multiple AI assistants are used in parallel (e.g., Claude Code + Codex), ea
 - Exact filenames and scopes matter
 
 This rule exists to **prevent imagined code paths**.
+
+For architecture or ownership questions, the same principle applies to documents: do not guess the governing concept, phase status, or boundary rule if the relevant document has not been loaded.
+
+---
+
+## 5.5 Vocabulary and Ownership Awareness
+
+When the work involves architecture, naming, responsibility placement, boundary movement, or future capability shape:
+
+- use the project vocabulary deliberately
+- do not collapse promoted concepts into convenient older terms
+- classify responsibility before proposing movement
+- distinguish concept work from execution work
+
+Common distinctions:
+
+- capability is not feature
+- consumer is not presentation
+- interaction is not event wiring
+- composition is not builder plumbing
+- overlay is not rendering
+- provenance is not diagnostics
+- authority is not orchestration
+
+This section is a pointer only. The architectural vocabulary document remains the source of truth.
+
 
 ---
 
@@ -97,6 +129,8 @@ Unless requested otherwise, responses should be:
 
 No recap, summary, or justification unless explicitly requested.
 
+Exception: brief grounding updates are acceptable when work spans multiple files, tools, or documents and the user would otherwise lose visibility.
+
 ---
 
 ## 8. Decision Lock Awareness
@@ -106,6 +140,8 @@ Once something is:
 - anchored in code or a document
 
 It is considered **locked** until explicitly reopened.
+
+Closed phases and closed preservation baselines should be treated as locked historical state unless the user explicitly asks for historical review.
 
 This prevents conversational backtracking.
 
@@ -117,6 +153,9 @@ Either party may pause progress to:
 - request clarification
 - surface drift
 - challenge assumptions
+- prevent vocabulary or ownership drift
+- avoid reopening closed phase work accidentally
+- switch from lightweight collaboration to stricter operating protocol
 
 Escalation is **cooperative**, not adversarial.
 
@@ -128,6 +167,7 @@ This document is not:
 - a checklist
 - a governance mechanism
 - a substitute for MASTER_OPERATING_PROTOCOL.md
+- a substitute for the architectural vocabulary document
 - a place to encode architectural rules
 
 It is intentionally lightweight.
@@ -139,10 +179,29 @@ It is intentionally lightweight.
 When the project uses multiple AI assistants simultaneously:
 
 - Each agent should declare its scope before starting work
+- Each agent should declare whether it is operating in design, migration, debug, documentation, execution, vocabulary/ownership, or audit-safe alignment mode
 - Agents may cross-review each other's output at the user's direction
 - Disagreements between agents are resolved by the user, not by the agents
 - Plan alignment between agents should be achieved before execution begins
 - One agent's implementation may be refined by another if the user directs it
+- No agent should assume another agent's architectural classification is correct without checking the relevant source document
+
+---
+
+## 12. When This Protocol Is Still Useful
+
+This document may be dormant during ordinary IDE-integrated or agentic work.
+
+It becomes useful when:
+
+- a future agent needs quick behavioral alignment
+- the user wants low-friction collaboration without invoking the full operating protocol
+- multiple assistants are coordinating work
+- a task is conceptual but not yet execution-heavy
+- the interaction needs to stay concise while still respecting project-specific discipline
+
+If the task becomes high-risk, implementation-heavy, recovery-oriented, or phase-sensitive, escalate to the stricter governing documents.
+
 
 ---
 

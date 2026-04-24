@@ -1,5 +1,5 @@
 # Workspace Workflow
-**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Fully Closed, Phase 7 Entry Gate Satisfied
+**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Fully Closed, Phase 7 Entry Gate Satisfied, Pre-Phase-7 Baseline Closed, Architectural Vocabulary Added
 
 This document is part of the core documentation set.
 See `MASTER_OPERATING_PROTOCOL.md` for governing authority.
@@ -16,6 +16,8 @@ It exists to:
 - ensure deterministic rehydration
 - protect execution velocity during long-running collaborations
 - declare per-workspace execution context, observability, and termination semantics
+- prevent closed historical phases from being accidentally re-tracked as active workstreams
+- preserve a shared architectural vocabulary for ownership-container and boundary reasoning
 
 It applies to any AI assistant used for this project (Claude Code, Codex, or other agents).
 
@@ -27,14 +29,15 @@ When reconstructing a workspace, documents are interpreted strictly in this orde
 
 1. `Project Bible.md` (architectural law)
 2. `SYSTEM_MAP.md` (structural boundaries)
-3. `Project Roadmap.md` (sequencing and phase discipline)
-4. `MASTER_OPERATING_PROTOCOL.md` (execution governance)
-5. `Project Overview.md` (descriptive)
-6. `DataVisualiser_Subsystem_Plan.md` (active execution)
-7. `codebase-index.md`
-8. `dependency-summary.md`
-9. `project-tree.txt`
-10. Solution ZIP (reference only)
+3. `DataVisualiser-Architectural-Vocabulary.md` (canonical architectural grammar and target ownership language)
+4. `Project Roadmap.md` (sequencing and phase discipline)
+5. `MASTER_OPERATING_PROTOCOL.md` (execution governance)
+6. `Project Overview.md` (descriptive)
+7. `DataVisualiser_Subsystem_Plan.md` (active execution)
+8. `codebase-index.md`
+9. `dependency-summary.md`
+10. `project-tree.txt`
+11. Solution ZIP (reference only)
 
 ### Document Purpose Reference
 
@@ -42,6 +45,7 @@ When reconstructing a workspace, documents are interpreted strictly in this orde
 |---|---|---|
 | `Project Bible.md` | Architectural law | Immutable authority. Must not carry operational or descriptive weight. |
 | `SYSTEM_MAP.md` | Structural boundaries | Defines allowed reality. Includes pipeline spine as appendix. |
+| `DataVisualiser-Architectural-Vocabulary.md` | Canonical architectural grammar | Defines promoted concepts, ownership containers, do-not-confuse distinctions, target hierarchy, and migration-risk language. |
 | `MASTER_OPERATING_PROTOCOL.md` | Execution governance | Binding behavioral rules for how work proceeds. Distinct from architecture or planning. |
 | `Project Roadmap.md` | Sequencing authority | Phase gates, closure criteria, and evolutionary gating. |
 | `Project Overview.md` | Descriptive snapshot | What the system is today. Audience: someone orienting, not executing. |
@@ -62,10 +66,13 @@ When reconstructing a workspace, documents are interpreted strictly in this orde
 - `Project Overview.md`
 - `Project Roadmap.md`
 - `SYSTEM_MAP.md`
+- `DataVisualiser-Architectural-Vocabulary.md`
 - `DataVisualiser_Subsystem_Plan.md`
 - `project-tree.txt` (if generated)
 - `codebase-index.md` (if generated)
 - `dependency-summary.md` (if generated)
+
+The architectural vocabulary document is mandatory because it preserves the shared language for ownership-container, boundary, capability, composition, consumer, interaction, overlay, and provenance reasoning.
 
 ### Optional but Recommended
 
@@ -104,7 +111,8 @@ When reconstructing a workspace, documents are interpreted strictly in this orde
    - `Project Overview.md` -> capabilities change
    - `Project Roadmap.md` -> phase or trajectory change
    - `SYSTEM_MAP.md` -> structural intent change
-   - `DataVisualiser_Subsystem_Plan.md` -> execution plan or VNext state change
+   - `DataVisualiser-Architectural-Vocabulary.md` -> promoted concepts, ownership containers, target hierarchy, or do-not-confuse distinctions change
+   - `DataVisualiser_Subsystem_Plan.md` -> execution plan, Phase 7 forward-stage state, ownership-container alignment, or VNext preservation-baseline state change
 
 3. Provide the refresh bundle.
 
@@ -118,6 +126,7 @@ Creating a new workspace is a controlled phase sub-step, not an escape hatch. Be
 - Documentation alignment must be complete
 - Parity obligations must be explicitly closed or deferred
 - Reset justification must be stated
+- Closed Phase 5, Phase 6, Phase 6.3, and pre-Phase-7 primer work must remain historical baselines unless the task is explicitly historical review
 
 ### 3.4 Systemic Failure Re-Entry
 
@@ -135,6 +144,8 @@ If a task triggers systemic failure (per `MASTER_OPERATING_PROTOCOL`):
 - Generated files must never be edited by hand.
 - These workflows MUST NOT be altered without explicit agreement.
 - These workflows override all other procedural descriptions.
+- Closed historical phases are not reopened by workspace initialization, refresh, or reset.
+- Architectural vocabulary is a conceptual grammar source, not an execution plan or phase authority.
 
 ---
 
@@ -146,22 +157,26 @@ The declaration MUST include:
 
 - Documents loaded (explicit list)
 - Code snapshot status (ZIP present or live codebase access)
-- Active project phase
-- VNext activation status (active slice scope, legacy fallback posture)
+- Active project phase / forward-stage posture
+- VNext status (closed preservation baseline, active slice scope if any, legacy fallback posture)
 - Parity status
 - Test count
+- Architectural vocabulary status, if boundary/ownership reasoning is involved
+- Ownership-container focus, if the task crosses architectural or structural boundaries
 - Any missing or unknown artifacts
 
 Example:
 
 ```
 Workspace State:
-- Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Roadmap, Execution Plan
+- Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Architectural Vocabulary, Roadmap, Execution Plan
 - Code snapshot: live codebase access
 - Phase: Phase 6 closed, Phase 7 entry gate satisfied
+- Forward posture: Phase 7 capability expansion; closed Phase 5/6/6.3 and pre-Phase-7 primer remain preservation baselines
 - VNext: all chart families have VNext-compatible request/program support and live VNext routes where appropriate; legacy remains compatibility/fallback/projection
+- Ownership-container focus: authority/provenance, reasoning/capability, process/execution, contract/boundary, consumer/interaction, terminal delivery, governance/evidence as applicable
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 696 DataVisualiser + 15 DataFileReader passing
+- Tests: 737 DataVisualiser + 15 DataFileReader passing
 - Unknowns: none
 ```
 
@@ -181,6 +196,10 @@ Before proposing any code change, the assistant MUST pass a grounding gate:
 
 If a required file or symbol is missing, execution MUST stop and the file must be requested explicitly. Conceptual, assumed, or "simplified" substitutions are prohibited.
 
+If a task touches a closed phase or closed primer baseline, the assistant MUST distinguish historical preservation from active work before proposing changes.
+
+If a task crosses ownership containers or uses promoted concepts such as authority, capability, composition, consumer, interaction, boundary, overlay, or provenance, the architectural vocabulary must be treated as active context.
+
 ### 6.2 Cut-Over Locus Declaration
 
 Before beginning any migration or refactor task, the following MUST be explicitly declared:
@@ -189,6 +208,8 @@ Before beginning any migration or refactor task, the following MUST be explicitl
 - Class name
 - Method name
 - Call site (who invokes it)
+- Ownership-container classification if the change crosses a structural boundary
+- Whether the change depends on promoted vocabulary concepts or do-not-confuse distinctions
 
 No implementation may proceed without this declaration being acknowledged.
 
@@ -216,14 +237,15 @@ Examples:
 - Parity harness invocation
 - Evidence export artifact with `RuntimePath` and signature chain
 - Service-layer call confirmed via breakpoint
+- Contract-boundary or consumer-delivery path confirmed by test, evidence, or targeted smoke
 
 A task without reachability proof is considered non-executable.
 
 ---
 
-## 7. Active Phase Artifacts (Phase 7 / VNext Infrastructure)
+## 7. Active / Preservation-Baseline Artifacts (Phase 7 / VNext Infrastructure)
 
-The following files are actively relevant for VNext reasoning engine integration:
+The following files are relevant for Phase 7 capability expansion and the closed VNext/render-plan preservation baseline:
 
 **VNext:**
 - `VNext/Application/ReasoningSessionCoordinator.cs`
@@ -234,6 +256,20 @@ The following files are actively relevant for VNext reasoning engine integration
 - `VNext/Contracts/ChartProgramKind.cs`
 - `VNext/Contracts/MetricSelectionRequest.cs`
 - `VNext/State/ReasoningSessionTransitions.cs`
+
+**Render-Plan / Terminal Delivery Baseline:**
+- `VNext/Contracts/ChartRenderPlan.cs`
+- `VNext/Contracts/ChartSeriesPlan.cs`
+- `VNext/Contracts/ChartHierarchyNodePlan.cs`
+- `VNext/Contracts/RenderDataBuffer.cs`
+- `VNext/Contracts/RenderDensityPlan.cs`
+- `VNext/Contracts/ChartInteractionPlan.cs`
+- `VNext/Rendering/RenderDensityPolicy.cs`
+- `VNext/Rendering/TimeBucketRenderAggregationKernel.cs`
+- `VNext/Rendering/ChartBackendCapabilities.cs`
+- `VNext/Rendering/ChartBackendSelector.cs`
+- `VNext/Rendering/IChartRenderPlanAdapter.cs`
+- `VNext/Rendering/ChartRenderPlanAdapterDispatcher.cs`
 
 **Integration Bridge:**
 - `UI/MainHost/VNextMainChartIntegrationCoordinator.cs` (Main/Normalized/Diff/Ratio)
@@ -271,8 +307,10 @@ The following files are actively relevant for VNext reasoning engine integration
 - `Core/Rendering/Helpers/ChartTooltipStackedFormatter.cs`
 - `Core/Rendering/Helpers/ChartTooltipCumulativeFormatter.cs`
 
-**Current Priority Outliers:**
+**Current Priority Outliers / Debt Concentrations:**
 - `UI/MainChartsView.xaml.cs`
+- `UI/Syncfusion/SyncfusionChartsView.xaml.cs`
+- managed legacy / VNext coexistence
 - `Core/Data/Repositories/DataFetcher.cs`
 - `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs`
 
@@ -290,7 +328,8 @@ WORKSPACE CONTEXT DECLARATION
    Workspace Name:
    Date / Time Initialized:
    Primary Objective:
-   Active Phase: (e.g. Phase 6.3 — VNext Widening, Phase C — DataFetcher Decomposition)
+   Active Phase / Forward Stage: (e.g. Phase 7 capability expansion, Forward Stage 7A — Authority and Intent Clarification, Phase 8 consumer/UI consolidation)
+   Architectural Vocabulary Loaded: Yes / No / Not required
    AI Assistant(s): (e.g. Claude Code, Codex, or both in parallel)
 
 2. Execution Context
@@ -302,10 +341,25 @@ WORKSPACE CONTEXT DECLARATION
          Method / Runner / Host:
        Non-Executable Components: (explicit list or "None")
 
-   2.2 VNext Routing State
-       VNext Active Slice: (e.g. Main chart only / Main + Normalized / None)
-       Legacy Fallback: (e.g. Automatic for extended charts / Full legacy)
+   2.2 VNext / Preservation Baseline State
+       VNext Active Slice: (e.g. Phase 7 capability slice / None)
+       Closed Baseline: (e.g. all active chart families have VNext-compatible request/program support and render-plan delivery)
+       Legacy Fallback: (e.g. automatic compatibility/fallback/projection where still needed)
        Runtime Path Tracking: (e.g. LoadRuntimeState on ChartState)
+
+   2.3 Ownership Container Focus
+       Primary Container:
+         - authority/provenance
+         - reasoning/capability
+         - process/execution
+         - contract/boundary
+         - projection/translation
+         - consumer/interaction
+         - terminal delivery
+         - governance/evidence
+       Secondary Container(s):
+       Promoted Concept(s) in Play:
+       Do-Not-Confuse Distinction(s) Relevant:
 
 3. Observability Strategy
 
@@ -336,7 +390,7 @@ WORKSPACE CONTEXT DECLARATION
 
    Testing Enabled: Yes / Deferred / Parity-only
    Test Project(s) in Scope:
-   Current Test Count: (e.g. 696 DataVisualiser + 15 DataFileReader passing)
+   Current Test Count: (e.g. 737 DataVisualiser + 15 DataFileReader passing)
    Manual Smoke Required: Yes / No / Conditional on live behavior change
 
 7. Termination Semantics
@@ -353,6 +407,7 @@ WORKSPACE CONTEXT DECLARATION
      - Procedural
      - Minimal / execute-mode
      - Exploratory
+     - Audit-safe alignment
    Verbosity Attenuation Expected: Yes / No
    Multi-Agent Coordination: (e.g. Claude Code + Codex in parallel with cross-review)
 

@@ -1,8 +1,9 @@
 ﻿# PROJECT OVERVIEW
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
-**Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `Project Roadmap.md`  
-**Active Subsystem Execution Reference:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion
+**Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `DataVisualiser-Architectural-Vocabulary.md`, and `Project Roadmap.md`  
+**Active Subsystem Execution Reference:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion and forward-stage enhanced architecture migration
+**Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions
 
 ---
 
@@ -12,12 +13,13 @@ This document provides a descriptive overview of the project:
 
 - what the system currently does
 - how it is structured conceptually
+- what vocabulary should be used to understand its architectural direction
 - what direction it is evolving toward
 - what constraints govern that evolution
 
-It does not define architectural law or sequencing authority.
+It does not define architectural law, canonical vocabulary, or sequencing authority.
 
-If a conflict exists, higher-authority documents prevail.
+If a conflict exists, higher-authority and governing reference documents prevail.
 
 ---
 
@@ -36,7 +38,18 @@ The system favors clarity and auditability over automation or convenience.
 It should not be understood as a reporting tool that only exposes preselected outputs.
 It is intended to become a platform that can preserve data faithfully, standardize it, reason over it explicitly, and serve those results to multiple kinds of clients.
 
-**Strategic position:** The system's differentiator is that every derived result has explicit provenance, inspectable reasoning, and visible confidence. The architecture was designed for this from the ground up â€” canonical truth preservation, deterministic derivation, and evidence infrastructure that can prove its own correctness are foundational, not retrofitted. The reasoning engine is the center of the system; charts and other delivery surfaces are consumers of its output, not the definition of the platform.
+**Strategic position:** The system's differentiator is that every derived result has explicit provenance, inspectable reasoning, and visible confidence. The architecture was designed for this from the ground up — canonical truth preservation, deterministic derivation, and evidence infrastructure that can prove its own correctness are foundational, not retrofitted. The reasoning engine is the center of the system; charts and other delivery surfaces are consumers of its output, not the definition of the platform.
+
+The current target direction is best understood through the architectural vocabulary and enhanced ownership containers: authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence.
+
+This vocabulary matters because it prevents recurring drift:
+- capability is not merely feature delivery
+- composition is not builder plumbing
+- consumer is not the same as presentation
+- interaction is not event wiring
+- overlay is not rendering
+- provenance is not diagnostics
+- authority is not orchestration
 
 It is also a single-maintainer project, so the near-term execution style must favor bounded, high-payoff steps that improve reliability, legibility, and operational tolerance without demanding constant large-scale reorientation.
 
@@ -56,7 +69,8 @@ At present, the system:
 - supports parallel legacy and CMS execution paths during migration
 - increasingly exposes downstream-safe derived and interpretive result shaping through explicit orchestration and rendering seams
 - emits tab-scoped reachability/evidence exports from both the Charts and Syncfusion surfaces through the shared evidence service
-- now has a live VNext render-plan foundation for backend-neutral render intent, render buffers, density policy, and adapter dispatch across the active chart families/tabs
+- has a closed pre-Phase-7 VNext render-plan preservation baseline for backend-neutral render intent, render buffers, density policy, and adapter dispatch across the active chart families/tabs
+- now has a formal architectural vocabulary for describing ownership, capability, composition, consumers, interaction, overlays, boundaries, and evidence without relying on ad hoc interpretation
 
 Canonical semantics form the foundation for all trusted meaning and for all computation that claims canonical comparability.
 Charts are currently the dominant delivery surface, but they are not the intended limit of the platform.
@@ -106,12 +120,16 @@ Current delivery surfaces provide:
 
 The broader intended model is:
 
+- authority and provenance remain upstream
 - consumers express what they want to inspect or compare
-- request and presentation planning shape those needs into explicit downstream instructions
-- orchestration coordinates the declared work
-- derived and interpretive result sets are produced explicitly
-- qualified delivery clients render or transport those results in a uniform way
-- render density and backend adapter choice are expected to be planned before concrete chart-library binding
+- a canonical intent / request shape captures that need before delivery concerns dominate
+- reasoning/capability logic composes derived, confidence-aware, and interpretive outputs
+- process/execution coordinates the declared work without becoming semantic authority
+- contract/boundary seams convert engine-owned output into downstream-safe instructions
+- projection/translation components translate across explicit seams without creating semantic meaning
+- consumer/interaction layers adapt those contracts without redefining meaning
+- terminal delivery infrastructure renders or transports those results through qualified backends
+- render density and backend adapter choice are planned before concrete chart-library binding
 
 UI components are controller-based, but full standardization is still an active architectural direction rather than finished reality.
 The intended direction is convergence toward standardized graph hosts, shared option/toggle affordances, and programmable derived-result composition on qualified chart surfaces, without making chart controllers the semantic center of the system.
@@ -128,12 +146,15 @@ Beyond raw computation, the system increasingly supports interpretive exploratio
 - trend identification and comparison
 - compositional analysis (part vs whole)
 - transform-based derived views
+- system-supported conclusions that recommend explicit follow-up computation or view changes based on declared results and confidence context
 - future programmable chart composition over selected metric and submetric inputs
 - contextual subset selection, filtering, and comparison over declared views
 - pivot-oriented inspection (event-relative views)
 - dynamic visual cues (colouring, emphasis)
 
-These capabilities are non-authoritative reasoning operations applied on top of canonical truth. They are expressed as analytical programs through the reasoning engine and delivered to consumers through explicit downstream contracts.
+These capabilities are non-authoritative reasoning operations applied on top of canonical truth. They should be expressed as reasoning-engine capabilities, carried through explicit contracts, adapted by consumers, and delivered by terminal infrastructure.
+
+Overlay definition belongs with reasoning/capability or contract intent; overlay delivery belongs in terminal infrastructure.
 
 They exist to aid understanding, not to redefine meaning.
 
@@ -141,7 +162,7 @@ They exist to aid understanding, not to redefine meaning.
 
 ## 6. Confidence & Reliability (Foundational)
 
-Confidence is a core property of every result the system produces, not a decorative layer added after the fact. The architecture is designed so that no derived result exists without an explicit trust context â€” the provenance chain, the data quality, and the reasoning path are all visible.
+Confidence is a core property of every result the system produces, not a decorative layer added after the fact. The architecture is designed so that no derived result exists without an explicit trust context — the provenance chain, the data quality, and the reasoning path are all visible.
 
 The system supports, or is explicitly staged to support, representation of data confidence and reliability, including:
 
@@ -163,7 +184,9 @@ This allows uncertainty to be visible without compromising trust.
 
 ## 7. Derived & Dynamic Results
 
-Derived metrics and result sets are created through explicit composition or transformation of canonical metrics or other declared downstream-safe inputs.
+Derived metrics and result sets are created through explicit reasoning-engine composition or transformation of canonical metrics or other declared downstream-safe inputs.
+
+Composition here means lawful analytical assembly of inputs, operations, overlays, and results; it is not merely object construction or UI shaping.
 
 Characteristics:
 
@@ -207,7 +230,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 
 - CMS strategies are implemented across the active strategy families
 - Parallel legacy execution remains as bounded compatibility rather than open migration uncertainty
-- Closure is now supported by current March 2026 reachability/parity evidence under the approved export path
+- Closure is now supported by current April 2026 reachability/parity evidence under the approved export path
 
 ---
 
@@ -224,7 +247,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 **Closed**
 
 - CMS is materially adopted by the active consumer-facing visualization paths
-- Current March 2026 exports and green default test lanes provide the present evidence required for closure
+- Current April 2026 exports and green default test lanes provide the present evidence required for closure
 - Parity is now treated as a currently satisfied obligation for the active live surfaces rather than a historical claim
 
 ---
@@ -254,7 +277,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Runtime-path tracking (`LoadRuntimeState`) and VNext signature-chain diagnostics emitted in evidence exports for all chart families
 - Evidence exports now include `ExportScope`; Charts and Syncfusion exports share the same export path, and tab switches are recorded as session milestones
 - Recent shared seams added before Phase 7: `ParitySeriesComparer`, `WorkspaceLoadCoordinator`, `WorkspaceSessionMilestoneRecorder`, and `BinaryMetricChartContextHelper`
-- Pre-Phase-7 enabling infrastructure has been completed: `ChartRenderPlan`, neutral render buffers, `RenderDensityPolicy`, time-bucket render aggregation, backend capability descriptors, backend selection, and adapter dispatch now exist under VNext and are wired into live chart rendering across the active chart families/tabs
+- Pre-Phase-7 enabling infrastructure is complete and closed as a preservation baseline: `ChartRenderPlan`, neutral render buffers, `RenderDensityPolicy`, time-bucket render aggregation, backend capability descriptors, backend selection, and adapter dispatch now exist under VNext and are wired into live chart rendering across the active chart families/tabs
 - Known debt carried to Phase 7: `MainChartsView` host concentration (~1,440 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence, adapter pattern variation (accepted as domain variation)
 - 493 source files, 737 DataVisualiser tests, 15 DataFileReader tests
 
@@ -265,16 +288,41 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
 - Phase 6 closure satisfies the entry gate: the hierarchy is now legible enough that new power can be added without amplifying entropy
-- Current active work is Phase 7 exploratory capability expansion on the stabilized `ChartProgram -> ChartRenderPlan -> backend adapter` delivery baseline, with any later family or tab exceptions explicitly deferred
+- Current active work is Phase 7 exploratory capability expansion on the closed `ChartProgram -> ChartRenderPlan -> backend adapter` preservation baseline
+- Phase 7 should advance through forward stages aligned to the enhanced containers: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence
+- the architectural vocabulary document provides the canonical grammar for interpreting these containers and promoted concepts
 - Known debt inherited from Phase 6 is documented and bounded
+- New progress should be tracked against Phase 7 or later forward stages, not against closed Phase 5/6/6.3 or the closed pre-Phase-7 primer
 
 ---
 
-### Phase 8 - UI, State, & Integration Consolidation  
+### Phase 8 - Consumer, Interaction, UI, State, & Integration Consolidation  
 **Planned / Blocked**
 
-- Standardized graph hosts, shared option/toggle surfaces, and predictable integration behavior are intended here
-- This phase exists to consolidate the UI after Phase 7 has advanced enough to support that convergence safely
+- Standardized graph hosts, shared option/toggle surfaces, consumer families, and predictable integration behavior are intended here
+- This phase exists to consolidate consumer/UI/interaction concerns after Phase 7 has advanced enough to support that convergence safely
+- At least one non-chart consumer should eventually prove that reasoning-engine output is genuinely consumer-agnostic rather than implicitly chart-shaped
+
+---
+
+## 8.5 Forward Architecture Direction (Descriptive)
+
+The enhanced architecture direction is forward-only. It does not reopen closed Phase 5, Phase 6, Phase 6.3, or the closed pre-Phase-7 render-plan primer.
+
+Future work should broadly progress through:
+
+1. **Authority and Intent Clarification** — make authority, provenance, and canonical intent explicit.
+2. **Reasoning and Capability Expansion** — express confidence, overlays, transforms, comparisons, and programmable composition as reasoning-engine capabilities.
+3. **Process and Execution Separation** — keep workflow and routing separate from semantic meaning and result composition.
+4. **Contract and Boundary Hardening** — make program, delivery, interaction, view, and multi-result contracts the downstream fan-out seam.
+5. **Projection and Translation Discipline** — ensure builders, adapters, resolvers, selectors, and projectors translate across boundaries without becoming semantic authorities.
+6. **Consumer and Interaction Separation** — treat charts, exports, APIs, and future clients as consumer families.
+7. **Terminal Delivery Demotion** — keep rendering, backend adapters, route/host binding, and vendor lifecycle terminal and replaceable.
+8. **Governance and Evidence Sidecar Isolation** — keep diagnostics, parity, reachability, qualification, and evidence observational.
+9. **Later Broad Family Pattern Consolidation** — collapse repeated request/route/qualification/adapter patterns only after the upstream spine and contract seams are stable.
+
+The architectural vocabulary provides the shared language for this direction; the overview only summarizes it descriptively.
+
 
 ---
 
@@ -287,7 +335,9 @@ Future directions may include:
 Reasoning-engine-first evolution:
 - generalize the reasoning engine beyond chart-program output toward composable analytical programs
 - make analytical programs inspectable, modifiable, and replayable
+- express new user-visible power as reusable capabilities where possible
 - establish non-chart consumers as first-class delivery targets of reasoning-engine output
+- keep interaction semantics contract-mediated rather than hidden in event/controller convenience
 - make confidence and provenance integral to every result, not optional annotations
 
 Capability expansion:
@@ -305,10 +355,10 @@ Capability expansion:
 
 These directions represent intent, not immediate commitment.
 
-All future work must respect canonical boundaries and phase discipline.
+All future work must respect canonical boundaries, architectural vocabulary, enhanced container ownership, and phase discipline.
 
 Exploratory and confidence-related capabilities are no longer treated as informal future ideas.
-They remain explicitly staged and gated, but they now sit behind the current legibility-first reconciliation phase so that future power is added onto a coherent structure rather than a muddled one.
+They remain explicitly staged and gated, but they now sit behind the closed legibility-first reconciliation phase so that future power is added onto a coherent structure rather than a muddled one.
 
 ---
 
@@ -321,6 +371,7 @@ To avoid ambiguity, the system is not:
 - a self-correcting data authority
 - a recommendation engine
 - an AI-driven reinterpretation layer
+- a chart-first system where UI or rendering vocabulary defines the architecture
 
 Human judgement remains central.
 
@@ -332,15 +383,17 @@ The system exists to support reasoning, not replace it.
 
 - Canonical truth is stable and immutable
 - The reasoning engine is the center of the system; delivery surfaces are consumers of its output
-- Confidence is foundational â€” every result carries explicit provenance, reasoning, and trust context
+- The architectural vocabulary document now supplies the canonical grammar for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions
+- Enhanced architecture containers now describe the forward shape: authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence
+- Confidence is foundational — every result carries explicit provenance, reasoning, and trust context
 - Interpretation is powerful but bounded
 - Exploration is supported without semantic erosion
 - Charts are the current dominant client, not the final definition of the platform
 - The broader direction is a reasoning environment that can serve multiple qualified consumers uniformly
-- The architecture rehaul and legibility reconciliation are complete; the pre-Phase-7 render-plan delivery primer is complete across all chart families/tabs, and the current critical work is Phase 7 exploratory capability expansion
+- The architecture rehaul and legibility reconciliation are complete; the pre-Phase-7 render-plan delivery primer is complete and closed as a preservation baseline, and the current critical work is Phase 7 exploratory capability expansion
 - Evolution is intentional and evidence-bound
 
-This overview describes the system as it exists today and the direction it is deliberately moving toward.
+This overview describes the system as it exists today and the direction it is deliberately moving toward. It should not be used to reopen or re-track progress against closed historical phases, nor should it replace the architectural vocabulary source for precise concept ownership.
 
 ---
 

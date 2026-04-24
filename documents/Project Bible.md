@@ -425,4 +425,56 @@ Once anchored, contracts are authoritative and prevent semantic drift.
 
 ---
 
+## 15. Consumer & Presentation Boundary Law (Additive - Binding)
+
+Additive Section - Clarifies downstream consumer authority and reinforces replaceable terminal delivery.
+
+### 15.1 Downstream Consumer Status
+
+The reasoning / execution core is authoritative for downstream analytical output.
+
+Downstream consumers MAY include:
+
+- visual surfaces
+- interactive clients
+- export paths
+- API consumers
+- future machine-assisted or AI-assisted consumers
+
+All such consumers remain downstream of semantic and analytical authority.
+
+### 15.2 Terminal Presentation Rule
+
+Presentation and rendering layers are terminal consumption layers.
+
+They MAY:
+
+- consume explicit downstream-safe contracts
+- bind and display already-defined outputs
+- relay interaction upward through explicit contracts
+- manage local lifecycle, surface, and vendor-specific behavior
+
+They MUST remain replaceable without requiring semantic, analytical, or orchestration redesign.
+
+### 15.3 Prohibited Consumer Authority
+
+Presentation and rendering layers MUST NOT:
+
+- define analytical meaning
+- alter canonical or derived identity
+- become the primary home of result composition
+- become the primary home of reasoning or execution routing
+- force upstream semantic or process logic to conform to vendor-specific behavior
+
+### 15.4 Consumer-Agnostic Contract Requirement
+
+Backend or client specialization MUST remain subordinate to consumer-agnostic contracts.
+
+The authoritative shape of downstream analytical output belongs upstream of any particular presentation or rendering technology.
+
+No consumer may become an architectural center merely because it is interactive, visual, or operationally convenient.
+
+
+---
+
 **End of Project Bible**

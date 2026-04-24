@@ -1,11 +1,12 @@
 ﻿# PROJECT ROADMAP
 **Status:** Sequencing and Execution Authority  
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
-**Authority:** Subordinate to `Project Bible.md` and `SYSTEM_MAP.md`  
+**Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `DataVisualiser-Architectural-Vocabulary.md`  
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
-**Last Updated:** 2026-04-21
-**Current Update:** Phase 7 entry gate is satisfied. The pre-Phase-7 rendering primer is complete: VNext render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts now live-wire the active chart families and tabs through `ChartRenderPlan` delivery. Phase 7 capability expansion now proceeds from that stabilized baseline.
-**Change Note:** Phase 6 is fully closed â€” all sub-phases (`6.1`â€“`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. The pre-Phase-7 render-plan primer is complete â€” new capabilities may proceed on the stabilized delivery baseline.
+**Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions  
+**Last Updated:** 2026-04-24
+**Current Update:** Phase 7 entry gate is satisfied. The pre-Phase-7 rendering primer is complete and is now a closed preservation baseline: VNext render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts live-wire the active chart families and tabs through `ChartRenderPlan` delivery. Phase 7 capability expansion now proceeds from that stabilized baseline and should be sequenced through the enhanced architecture containers: authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence.
+**Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. New work must not be tracked against Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 rendering primer.
 
 ---
 
@@ -22,14 +23,15 @@ It answers:
 - what may proceed next
 - what must not proceed yet
 
-It does not define semantic law.  
+It does not define semantic law or canonical architectural vocabulary.  
 It defines order, discipline, gating, and closure.
 
 If a conflict exists:
 1. `Project Bible.md` wins on architectural law.
 2. `SYSTEM_MAP.md` wins on structural direction.
-3. This roadmap wins on sequencing and closure discipline.
-4. `DataVisualiser_Subsystem_Plan.md` operationalizes Phase 7 exploratory capability expansion permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
+3. `DataVisualiser-Architectural-Vocabulary.md` wins on canonical architectural grammar, promoted concepts, ownership containers, and do-not-confuse distinctions.
+4. This roadmap wins on sequencing and closure discipline.
+5. `DataVisualiser_Subsystem_Plan.md` operationalizes Phase 7 exploratory capability expansion and forward-stage migration permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
 
 ---
 
@@ -50,6 +52,17 @@ This roadmap is governed by the following rules:
 11. Future enhancement ideas are welcome, but they do not enter active work unless intentionally assigned to a phase and layer.
 12. For a single-maintainer project, bounded slices with immediate maintenance payoff take priority over broad theoretical cleanup.
 13. The roadmap may be executed through small opportunistic slices as long as each slice preserves truth, evidence discipline, and structural direction.
+
+14. Consumer-agnostic contracts outrank terminal presentation convenience: rendering or UI work counts as structural progress only when it strengthens replaceable downstream consumption rather than promoting presentation into an architectural center.
+15. Authority and provenance must remain explicit as capability grows; new interpretive power may not blur truth ownership.
+16. Capability is not feature delivery: user-visible work should strengthen reusable reasoning capability where possible.
+17. Composition belongs upstream of terminal delivery unless explicitly proven otherwise.
+18. Interaction is a downstream contract concern, not merely event wiring or controller convenience.
+19. Overlays are interpretive outputs, not rendering conveniences; they must remain reversible and non-authoritative.
+20. Boundaries are enforcement seams; crossing them must preserve authority direction.
+21. Broad family-pattern consolidation should wait until authority, intent, contract, and consumer seams are sufficiently stable.
+22. Architectural vocabulary must remain stable during phase work: capability must not collapse into feature, consumer into presentation, interaction into event wiring, composition into builder plumbing, overlay into rendering, provenance into diagnostics, or authority into orchestration.
+23. Projection and translation components may translate across explicit boundaries, but must not become semantic authorities or hidden policy centers.
 
 ---
 
@@ -84,6 +97,10 @@ The architecture rehaul established that the project is not yet structurally rea
 5. Standardized programmable chart hosts are intended future product behavior, but that future is unsafe unless controller convergence, rendering contracts, and orchestration seams are made explicit first.
 6. Transform is the first real programmable-chart prototype; Phase 6 work must preserve a path to multi-dataset, multi-operation, multi-graph result delivery instead of hardening unary/binary special cases.
 
+7. Rendering and chart surfaces are important delivery instruments, but they are still terminal infrastructure. Future architectural cleanup should continue moving composition, shaping, and delivery contracts upward so that presentation becomes increasingly replaceable without semantic or orchestration redesign.
+8. The enhanced architecture should be treated as a forward-only migration direction for active and future work: authority and intent first, then reasoning capability, then contract/boundary hardening, then projection/translation discipline, then consumer/interaction separation, then terminal delivery demotion, then governance/evidence isolation and broader consolidation.
+9. The architectural vocabulary document provides the canonical grammar for interpreting those containers; this roadmap only sequences work against that grammar.
+
 Therefore, architecture rehaul was not a side quest, and hierarchy legibility (Phase 6) was not cosmetic cleanup.  
 That bridge is now crossed: the hierarchy is trustworthy, true outliers are obvious, and future capability can land without creating new exception-driven structure. The reasoning engine is the composition center going forward.
 
@@ -106,6 +123,19 @@ Use these status labels literally:
 - `OPEN / CURRENT CRITICAL PATH`: active phase that governs what may proceed next
 - `PLANNED / BLOCKED`: defined future work that must not proceed until its gates are satisfied
 - `DEFERRED`: intentionally not on the critical path
+
+
+### Audit-Safe Progression Rule
+
+Closed phases are historical baselines, not active workstreams.
+
+Do not track new progress against:
+- Phase 5
+- Phase 6
+- Phase 6.3
+- the pre-Phase-7 rendering primer
+
+Forward work should be tracked against Phase 7, Phase 8, later consolidation phases, or the forward sequencing model below.
 
 ---
 
@@ -141,10 +171,10 @@ Use these status labels literally:
 
 **What is believed true**
 - CMS-capable strategies exist across the active strategy families
-- Major migration work has been implemented and revalidated with current March 2026 evidence
+- Major migration work has been implemented and revalidated with current April 2026 evidence
 
 **Why closure is not currently accepted as final**
-- This concern has been satisfied by current March 2026 reachability/parity exports and current green default test lanes
+- This concern has been satisfied by current April 2026 reachability/parity exports and current green default test lanes
 - Active closure scope excludes the retired live `Difference/Ratio` chart surface
 - `Syncfusion` no longer uses a stub reachability export; it emits through the shared evidence service with explicit `ExportScope = "Syncfusion"`, while backend qualification remains separately scoped
 
@@ -156,7 +186,7 @@ Use these status labels literally:
 2. All active strategies are reachable through live orchestration.
 3. Path used is observable and test/assertion backed.
 4. Current evidence artifacts exist in the repository-visible evidence path.
-5. Closure is based on current March 2026 evidence artifacts in `documents/`, not historical January 2026 artifacts.
+5. Closure is based on current April 2026 evidence artifacts in `documents/`, not historical January 2026 artifacts.
 
 ---
 
@@ -395,12 +425,12 @@ The goal is to make the system legible enough that:
 - keep consumer-specific behavior explicit where it is genuinely different
 - preserve qualified rendering and evidence boundaries
 
-**Current Progress (April 2026) â€” CLOSED**
-- First live VNext vertical slice: `MetricLoadCoordinator` routes the main chart family (`Main`, `Normalized`, `Diff/Ratio`) through `VNextMainChartIntegrationCoordinator` â†’ `ReasoningSessionCoordinator` â†’ `LegacyChartProgramProjector`
+**Current Progress (April 2026) — CLOSED**
+- First live VNext vertical slice: `MetricLoadCoordinator` routes the main chart family (`Main`, `Normalized`, `Diff/Ratio`) through `VNextMainChartIntegrationCoordinator` → `ReasoningSessionCoordinator` → `LegacyChartProgramProjector`
 - VNext main-family route eligibility is centralized in `VNextChartRoutePolicy`, keeping route activation and the `SupportsOnlyMainChart` diagnostics flag explicit
-- VNext widening complete: all remaining chart families (`Distribution`, `WeekdayTrend`, `Transform`, `BarPie`) now route fresh data loads through unified `VNextDataResolutionHelper` â†’ `VNextSeriesLoadCoordinator`, with identity program builders, dictionary-backed per-family runtime tracking (`ChartState.FamilyLoadRuntimes`), and automatic legacy fallback on failure
-- Fresh `ReasoningSessionCoordinator` per load attempt â€” no shared session state across loads
-- `MainChartDisplayMode` propagated through VNext path â€” Regular/Summed/Stacked behavior preserved
+- VNext widening complete: all remaining chart families (`Distribution`, `WeekdayTrend`, `Transform`, `BarPie`) now route fresh data loads through unified `VNextDataResolutionHelper` → `VNextSeriesLoadCoordinator`, with identity program builders, dictionary-backed per-family runtime tracking (`ChartState.FamilyLoadRuntimes`), and automatic legacy fallback on failure
+- Fresh `ReasoningSessionCoordinator` per load attempt — no shared session state across loads
+- `MainChartDisplayMode` propagated through VNext path — Regular/Summed/Stacked behavior preserved
 - Evidence boundary decomposed: `MainChartsEvidenceExportService` split into `EvidenceExportModels` (21 standalone DTOs), `EvidenceDiagnosticsBuilder` (diagnostics assembly), and export orchestration
 - Evidence export now carries `ExportScope`; the Charts and Syncfusion tabs both emit through `MainChartsEvidenceExportService` with tab-specific scope values
 - Tab switches are recorded as `TabSwitched` session milestones through the shared view-model context
@@ -428,9 +458,9 @@ The goal is to make the system legible enough that:
 - Shared `WorkspaceTabHost` / `ChartTabHost` layout hardening has been smoke-verified: Charts, Syncfusion, and Admin render through the shared workspace shell, with tab/export milestones available in evidence exports
 
 **Current evidence artifacts (April 2026):**
-- `documents/reachability-20260411-093257.json` â€” legacy path, 3-series multi-metric, all 8 parity strategies passing
-- `documents/reachability-20260411-093604.json` â€” VNext path, 2-series, CMS enabled, signature chain aligned
-- `documents/reachability-20260411-093813.json` â€” VNext path, 2-series, CMS disabled, signature chain aligned
+- `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
+- `documents/reachability-20260411-093604.json` — VNext path, 2-series, CMS enabled, signature chain aligned
+- `documents/reachability-20260411-093813.json` — VNext path, 2-series, CMS disabled, signature chain aligned
 
 **Closure Condition**
 - consumers ask for explicit result shapes through consistent seams rather than through special-case controller logic
@@ -481,12 +511,12 @@ The goal is to make the system legible enough that:
 
 **Audit Record (April 2026)**
 - Phase 6 audit baseline was 476 C# source files, 171 test files, 696 DataVisualiser automated tests, 15 DataFileReader tests, and 56 architecture guardrails; the current pre-Phase-7 render-plan foundation lane is 493 C# source files, 174 test files, 737 DataVisualiser tests, and 15 DataFileReader tests
-- All sub-phases (`6.1`â€“`6.7`) closed, including `6.3` VNext widening â€” all active chart families have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection
+- All sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext widening — all active chart families have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection
 - All 5 global closure conditions assessed and met (full record in `DataVisualiser_Subsystem_Plan.md` Phase 6.6 section)
 - Known debt carried to Phase 7: `MainChartsView.xaml.cs` (~1,440 lines, genuinely host-level), `SyncfusionChartsView.xaml.cs` (~859 lines, parallel host), managed legacy/VNext coexistence, controller adapter pattern variation accepted as domain variation
 
 **Closure Condition**
-- the next cycle starts from an auditable baseline rather than from accumulated guesswork â€” **satisfied**
+- the next cycle starts from an auditable baseline rather than from accumulated guesswork — **satisfied**
 
 #### Phase 6.7 - Pre-Phase 7 Structural Consolidation
 
@@ -499,9 +529,9 @@ The goal is to make the system legible enough that:
 
 **Completed Work**
 - `IDistributionResultExtractor` deleted (0 implementations, 0 references)
-- Syncfusion namespace corrected: `SyncfusionViews` â†’ `Syncfusion` across 9 files
+- Syncfusion namespace corrected: `SyncfusionViews` → `Syncfusion` across 9 files
 - 6 parity type files consolidated into `ParityTypes.cs`
-- Rendering helpers merged: `ChartLabelFormatter` â†’ `ChartSeriesLabelFormatter`, `TransformChartAxisLayout` â†’ `TransformChartAxisCalculator`
+- Rendering helpers merged: `ChartLabelFormatter` → `ChartSeriesLabelFormatter`, `TransformChartAxisLayout` → `TransformChartAxisCalculator`
 - `EvidenceDataResolutionHelper` extracted: shared data-resolution and strategy cut-over resolution
 - `UI/MainHost/` decomposed into `Evidence/` (15 files), `Export/` (6 files), `Coordination/` (20 files)
 - Net -7 files; 609 tests passed at closure; later shared-panel/evidence-scope hardening, tab-shell extraction, route-policy extraction, transform layout capability isolation, CMS decision extraction, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparison, workspace load/milestone recording, workspace load coordination, binary metric context consolidation, VNext render-plan foundation, Main chart render-plan adapter wiring, and the later BarPie, Distribution, WeekdayTrend, Syncfusion, and cleanup passes bring the current lane to 737 DataVisualiser tests
@@ -520,7 +550,7 @@ The goal is to make the system legible enough that:
 
 ### Phase 7 - Exploratory and Confidence Capability Expansion (Intentional)  
 **Status:** PLANNED / ENTRY GATE SATISFIED  
-**Entry Gate:** Phase 6 must restore enough hierarchy legibility that new power can be added without amplifying entropy â€” **satisfied** (Phase 6 closed April 2026)
+**Entry Gate:** Phase 6 must restore enough hierarchy legibility that new power can be added without amplifying entropy — **satisfied** (Phase 6 closed April 2026)
 
 **Purpose**
 Phase 7 increases interpretive power without eroding truth or reintroducing exception-driven structure.
@@ -530,13 +560,75 @@ It is also the sanctioned home for standardized programmable chart composition o
 
 **Architectural orientation:** Exploratory capabilities should be built as reasoning-engine features that delivery surfaces consume, not as chart-specific features. The VNext reasoning engine is the composition surface; charts, reports, APIs, and future consumers are delivery targets. Each Phase 7 capability should strengthen the reasoning engine's generality rather than binding new power to a specific rendering backend.
 
-**Pre-Phase-7 enabling work (April 2026):**
+Phase 7 should advance through forward stages aligned to the enhanced containers:
+1. authority/intent clarification
+2. reasoning/capability expansion
+3. process/execution separation
+4. contract/boundary hardening
+5. projection/translation discipline
+6. consumer/interaction separation
+7. terminal delivery demotion
+8. governance/evidence sidecar isolation
+
+These are forward stages inside active/future work, not reopened Phase 6 or pre-Phase-7 tracks.
+
+---
+
+### Phase 7 Forward Sequencing Model
+
+This section does not reopen any closed phase.
+
+It defines the forward-looking sequencing model for Phase 7, Phase 8, and later consolidation work.
+The architectural vocabulary document defines the concepts used here; this section defines only their sequencing.
+
+The enhanced architecture migration should proceed in this order:
+
+1. **Authority and Intent Clarification**  
+   Make authority, provenance, and canonical intent explicit before adding more downstream power.
+
+2. **Reasoning and Capability Expansion**  
+   Express confidence, overlays, transforms, comparisons, and programmable composition as reasoning-engine capabilities.
+
+3. **Process and Execution Separation**  
+   Keep workflow, routing, fallback, and sequencing separate from semantic meaning and result composition.
+
+4. **Contract and Boundary Hardening**  
+   Make program, delivery, interaction, view, and multi-result contracts the real downstream fan-out seam.
+
+5. **Projection and Translation Discipline**  
+   Ensure builders, adapters, resolvers, selectors, and projectors translate across explicit boundaries without becoming semantic authorities or hidden policy centers.
+
+6. **Consumer and Interaction Separation**  
+   Treat charts, exports, APIs, and future clients as consumer families; keep interaction non-authoritative and contract-mediated.
+
+7. **Terminal Delivery Demotion**  
+   Keep rendering, backend adapters, route/host binding, and vendor lifecycle terminal, replaceable, and subordinate.
+
+8. **Governance and Evidence Sidecar Isolation**  
+   Keep diagnostics, parity, reachability, qualification, and evidence observational rather than governing live behavior.
+
+9. **Broad Family Pattern Consolidation**  
+   Collapse repeated request/route/qualification/adapter patterns only after the upstream spine and contract seam are stable.
+
+**Closed pre-Phase-7 preservation baseline (April 2026):**
 - VNext now contains backend-neutral render-plan contracts: `ChartRenderPlan`, `ChartSeriesPlan`, `ChartHierarchyNodePlan`, `RenderDataBuffer`, `RenderDensityPlan`, and `ChartInteractionPlan`, with live delivery now wired across the active chart families and tabs
 - `RenderDensityPolicy` and `TimeBucketRenderAggregationKernel` establish the planned large-range rendering direction: preserve full source identity while producing bounded render buffers for overview or viewport-refined delivery.
 - `ChartBackendCapabilities`, `ChartBackendSelector`, `IChartRenderPlanAdapter<TSurface>`, and `ChartRenderPlanAdapterDispatcher<TSurface>` define the adapter seam for LiveCharts, Syncfusion, and plugin renderers.
-- Main, Distribution, WeekdayTrend, BarPie, and Syncfusion now consume `ChartRenderPlan` through adapters while preserving existing behavior. This work was the pre-Phase-7 primer; Phase 7 capability expansion may now proceed against the stabilized delivery baseline.
+- Main, Distribution, WeekdayTrend, BarPie, and Syncfusion now consume `ChartRenderPlan` through adapters while preserving existing behavior. This work was the pre-Phase-7 primer and remains closed; Phase 7 capability expansion may now proceed against the stabilized delivery baseline.
 
-#### Phase 7.1 - Interpretive Visual Overlays (Render-Only)
+
+The following Phase 7 capability areas are active/future work only; they do not reopen completed Phase 6 or primer tracks.
+
+#### Forward Stage 7A - Authority, Intent, and Provenance Clarification
+
+**Scope**
+- define or converge toward a canonical intent model
+- make provenance, truth-aware request/result shape, and authority boundaries explicit enough that downstream consumers do not re-decide meaning
+
+**Closure Condition**
+- new capability slices can state their intent, provenance, truth status, and downstream contract shape before rendering or UI work begins
+
+#### Phase 7.1 - Interpretive Visual Overlays (Reasoning-Declared / Delivery-Rendered)
 
 **Scope**
 - dynamic line colouring
@@ -545,12 +637,13 @@ It is also the sanctioned home for standardized programmable chart composition o
 - legend-driven visibility toggles
 
 **Constraints**
-- render-only
-- no effect on computation or CMS
-- backend used for these overlays must already be qualified for the relevant chart capability slice
+- overlay definition belongs in reasoning/capability or contract space
+- overlay delivery belongs in terminal rendering
+- no effect on computation, CMS, canonical identity, or truth authority
+- backend used for overlay delivery must already be qualified for the relevant chart capability slice
 
 **Closure Condition**
-- overlays are visually correct, reversible, provenance-neutral, and backend-safe for the capability slice in which they are used
+- overlays are declared, visually correct, reversible, provenance-visible, non-authoritative, and backend-safe for the capability slice in which they are used
 
 #### Phase 7.2 - Confidence Annotation (Non-Destructive)
 
@@ -582,7 +675,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - confidence-aware views are opt-in, transparent, reversible, and semantically non-invasive
 
-#### Phase 7.4 - Programmable Chart Composition and Multi-Result Derived Views
+#### Phase 7.4 - Programmable Composition and Multi-Result Derived Views
 
 **Scope**
 - standardize graph parent controllers and shared option/toggle surfaces where capability semantics align
@@ -597,9 +690,10 @@ It is also the sanctioned home for standardized programmable chart composition o
 - backend qualification must already cover the interactions and rendering behavior used by the programmable chart surface
 
 **Closure Condition**
-- standardized programmable chart hosts can express the current chart examples they are intended to subsume without semantic erosion
-- multi-result derived rendering works on qualified chart families with visible provenance
+- standardized programmable consumer hosts can express the current chart examples they are intended to subsume without semantic erosion
+- multi-result derived delivery works on qualified consumer/rendering families with visible provenance
 - transform-style programmability is no longer isolated to a single special-case controller
+- composition is expressed through reasoning/program/contract structures rather than terminal rendering or UI-only logic
 
 #### Phase 7.5 - Structural and Relational Exploration
 
@@ -617,7 +711,7 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - structural views are powerful, bounded, explicitly interpretive, and semantically non-promotable by default
 
-#### Phase 7.6 - Rules-Based Option Gating
+#### Phase 7.6 - Rules-Based Option and Interaction Gating
 
 **Scope**
 - declarative rules controlling UI option availability
@@ -632,22 +726,41 @@ It is also the sanctioned home for standardized programmable chart composition o
 **Closure Condition**
 - rule effects are transparent, reversible, and clearly separate from semantics
 
+
+#### Phase 7.7 - Contract and Consumer Boundary Hardening
+
+**Scope**
+- formalize program, delivery, interaction, view, and multi-result contracts
+- classify charts, exports, APIs, and future clients as consumer families
+- prevent consumer-specific delivery shapes from leaking back into reasoning or process layers
+
+**Constraints**
+- contracts constrain and carry; they do not create semantic meaning
+- consumers adapt and interact; they do not define truth, composition, or execution policy
+- terminal delivery remains replaceable
+
+**Closure Condition**
+- at least two consumer families can consume reasoning-engine output through explicit contracts without changing semantic or execution logic
+
 **Global Closure Condition for Phase 7**
 1. All exploratory features are explicitly layered above truth.
 2. Confidence handling is visible and non-destructive.
 3. Interpretive power increases without semantic erosion.
 4. Programmable chart composition remains explicit, reversible, and provenance-preserving.
 5. New exploratory features do not breach rendering-boundary or backend qualification rules.
+6. New capabilities strengthen the enhanced containers rather than creating parallel feature-specific architecture.
+7. Contract and consumer boundaries become clearer with each capability slice.
 
 ---
 
-### Phase 8 - UI, State, and Integration Consolidation  
+### Phase 8 - Consumer, Interaction, UI, State, and Integration Consolidation  
 **Status:** PLANNED / BLOCKED
-**Entry Gate:** Phase 7 must advance far enough to justify broad UI/state consolidation without reopening structural uncertainty
+**Entry Gate:** Phase 7 must advance far enough to justify broad consumer/UI/state consolidation without reopening authority, intent, contract, or interaction uncertainty
 
 **Objective**
-- ensure the UI accurately reflects truth, interpretation, uncertainty, qualified rendering behavior, and standardized programmable chart capabilities without compensating for architectural weakness
+- ensure consumers and UI accurately reflect truth, interpretation, uncertainty, qualified rendering behavior, and standardized programmable capability without compensating for architectural weakness
 - establish the first non-chart consumer of reasoning-engine output, proving that the engine's analytical programs are genuinely consumer-agnostic and not implicitly chart-shaped
+- separate interaction semantics from controller/event plumbing wherever repeated patterns prove the shape
 
 **Closure Condition**
 1. Qualified chart families share standardized parent controller/host behavior wherever capability semantics genuinely align.
@@ -655,6 +768,12 @@ It is also the sanctioned home for standardized programmable chart composition o
 3. Integration behavior is predictable across supported chart families and qualified backends.
 4. The UI no longer acts as a repair layer for missing architectural boundaries.
 5. At least one non-chart consumer successfully consumes reasoning-engine output through the same downstream contracts as chart consumers.
+
+6. Where practical, Phase 8 should continue demoting chart/UI surfaces from major subsystem status toward thin, replaceable consumer layers over reasoning-engine and consumer-agnostic delivery contracts.
+7. Interaction semantics are explicit, contract-mediated, and not hidden inside event wiring or controller convenience.
+
+
+---
 
 ## 6. Rendering Backend Introduction Policy (Explicit)
 
@@ -676,6 +795,8 @@ This policy exists because backend plurality is a deliberate architectural learn
 
 ---
 
+---
+
 ## 7. Handling Evolving Requirements (Explicit Policy)
 
 Enhancement ideas are:
@@ -688,7 +809,7 @@ However, they do not auto-enter active work.
 
 Every new idea must declare:
 1. intended phase
-2. intended layer (`truth`, `derived`, `interpretive`, `UI`, `rendering infrastructure`, or `governance/evidence`)
+2. intended container (`authority/provenance`, `reasoning/capability`, `process/execution`, `contract/boundary`, `projection/translation`, `consumer/interaction`, `terminal delivery`, or `governance/evidence`)
 3. reversibility expectation
 4. whether a rendering backend qualification step is required
 
@@ -696,13 +817,16 @@ This policy protects both long-term trust and long-term extensibility.
 
 ---
 
+---
+
 ## 8. Current Critical Path (Authoritative)
 
 1. Preserve the qualified seams produced by the completed Phase 5 rehaul and Phase 6 reconciliation.
 2. Begin Phase 7 exploratory capability expansion as reasoning-engine features that delivery surfaces consume, not as chart-specific additions.
-3. Keep residual debt explicit and bounded rather than allowing silent structural drift.
-4. Revalidate future closure claims with present evidence and repository-visible artifacts.
-5. Introduce further generalization only when the codebase has earned it through repeated real slices.
+3. Sequence active and future work through the Phase 7 forward sequencing model: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence concerns.
+4. Keep residual debt explicit and bounded rather than allowing silent structural drift.
+5. Revalidate future closure claims with present evidence and repository-visible artifacts.
+6. Introduce further generalization only when the codebase has earned it through repeated real slices.
 
 Phase 7 is now structurally ready to proceed.
 The reasoning engine is the composition surface; new capabilities should strengthen its generality rather than binding power to specific delivery surfaces.
@@ -714,7 +838,7 @@ The reasoning engine is the composition surface; new capabilities should strengt
 Remaining open phases:
 1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `CLOSED`
 2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `PLANNED / ENTRY GATE SATISFIED` (pre-Phase-7 rendering primer complete)
-3. `Phase 8 - UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
+3. `Phase 8 - Consumer, Interaction, UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
 
 Phase 6 sub-phase status:
 - `Phase 6.1` - irreducible operation consolidation: **CLOSED**
@@ -725,12 +849,13 @@ Phase 6 sub-phase status:
 - `Phase 6.6` - architecture audit and baseline refresh: **CLOSED**
 - `Phase 6.7` - pre-Phase 7 structural consolidation: **CLOSED**
 
-**Phase 6 is fully closed.** All 5 global closure conditions met. All sub-phases closed including 6.3 â€” all active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection.
+**Phase 6 is fully closed.** All 5 global closure conditions met. All sub-phases closed including 6.3 — all active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection.
 
 Major next steps in sequence:
-1. `Phase 7` - exploratory and confidence capability expansion on the stabilized render-plan delivery baseline
+1. `Phase 7` - exploratory and confidence capability expansion on the closed render-plan preservation baseline
 2. Preserve the live render-plan delivery baseline with targeted smoke only if a future change touches the delivery path or introduces a regression
-3. `Phase 8` - UI, state, and integration consolidation after Phase 7 is sufficiently advanced
+3. `Phase 8` - consumer, interaction, UI, state, and integration consolidation after Phase 7 is sufficiently advanced
+4. Later broad family-pattern consolidation only after authority, intent, contract, projection/translation, and consumer seams are stable
 
 ---
 
@@ -741,6 +866,8 @@ Major next steps in sequence:
 - Phase 5 is the completed bridge between what the system already does and what it is intended to become.
 - Phase 6 established a trustworthy hierarchy; it is fully closed. All active chart families have VNext-compatible request/program support and managed legacy fallback/compatibility.
 - Phase 7 remains the sanctioned home of exploration, confidence, and richer interpretive power. Its entry gate is satisfied; the render-plan primer is complete and now serves as the stabilized baseline for capability expansion.
+- Phase 7 should advance according to the forward sequencing model, without reopening any closed historical phase.
+- The architectural vocabulary document supplies the concept grammar; this roadmap supplies the sequencing and closure discipline.
 - The reasoning engine is the center of the system. New capabilities should be built as reasoning-engine features that delivery surfaces consume.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.
 - Closure means present truth, present evidence, and present structural safety.
