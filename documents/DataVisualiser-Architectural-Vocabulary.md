@@ -13,6 +13,19 @@ It does four things:
 
 ---
 
+
+## Formal Interpretation Note
+
+This document translates the project's higher-order axioms into architectural vocabulary and target ownership language.
+
+The vocabulary is intentionally stable, but not mathematically absolute. It represents the current best abstraction of discovered project concepts, including authority, provenance, capability, composition, consumer, interaction, boundary, overlay, evidence, and the related ownership containers.
+
+These concepts should guide implementation, architectural classification, and responsibility placement, but they should not be treated as closed formal theory. As the architecture converges, especially through reasoning-engine unification, programmable composition, confidence handling, consumer-general contracts, and future analytical capability, the vocabulary may be refined without violating its current purpose.
+
+The goal is lawful adaptability: future flexibility must preserve truth, provenance, reversibility, and user authority without collapsing back into ad hoc feature growth or presentation-driven semantics.
+
+---
+
 ---
 
 ## 1. Vocabulary Reduction
