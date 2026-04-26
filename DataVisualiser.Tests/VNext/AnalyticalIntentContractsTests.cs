@@ -171,6 +171,10 @@ public sealed class AnalyticalIntentContractsTests
         Assert.Equal(expectedComposition, metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
         Assert.Equal("Legacy:Projected:source-signature", metadata[ChartRenderPlanMetadataKeys.ProvenanceSignature]);
         Assert.Contains("source-signature", metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+        Assert.Equal(
+            kind == ChartProgramKind.SyncfusionSunburst ? "SyncfusionSunburst" : "LiveChartsWpf",
+            metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderSignature));
     }
 
     [Theory]

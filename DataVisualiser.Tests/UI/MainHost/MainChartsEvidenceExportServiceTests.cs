@@ -160,7 +160,8 @@ public sealed class MainChartsEvidenceExportServiceTests
                         [ChartRenderPlanMetadataKeys.CapabilityKind] = "Identity",
                         [ChartRenderPlanMetadataKeys.CompositionKind] = "MultiSeries",
                         [ChartRenderPlanMetadataKeys.OverlayCount] = "1",
-                        [ChartRenderPlanMetadataKeys.InteractionCount] = "2"
+                        [ChartRenderPlanMetadataKeys.InteractionCount] = "2",
+                        [ChartRenderPlanMetadataKeys.ProviderKey] = "LiveChartsWpf"
                     }));
             chartState.SetRenderPlanDiagnostics(
                 DataVisualiser.VNext.Contracts.ChartProgramKind.Distribution,
@@ -186,13 +187,16 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Equal(2, vocabulary.GetProperty("RenderPlanCount").GetInt32());
             Assert.Equal(1, vocabulary.GetProperty("PlansWithIntentSignature").GetInt32());
             Assert.Equal(1, vocabulary.GetProperty("PlansWithProvenanceSignature").GetInt32());
+            Assert.Equal(1, vocabulary.GetProperty("PlansWithProviderKey").GetInt32());
             Assert.Contains(vocabulary.GetProperty("ConsumerKinds").EnumerateArray(), item => item.GetString() == "Chart");
             Assert.Contains(vocabulary.GetProperty("DeliveryTargets").EnumerateArray(), item => item.GetString() == "MainChart");
             Assert.Contains(vocabulary.GetProperty("CapabilityKinds").EnumerateArray(), item => item.GetString() == "Identity");
             Assert.Contains(vocabulary.GetProperty("CompositionKinds").EnumerateArray(), item => item.GetString() == "MultiSeries");
+            Assert.Contains(vocabulary.GetProperty("ProviderKeys").EnumerateArray(), item => item.GetString() == "LiveChartsWpf");
             Assert.Equal(1, vocabulary.GetProperty("OverlayCountTotal").GetInt32());
             Assert.Equal(2, vocabulary.GetProperty("InteractionCountTotal").GetInt32());
             Assert.Contains(vocabulary.GetProperty("MissingVocabularyPlanKinds").EnumerateArray(), item => item.GetString() == "Distribution");
+            Assert.Contains(vocabulary.GetProperty("MissingProviderPlanKinds").EnumerateArray(), item => item.GetString() == "Distribution");
         }
         finally
         {
@@ -250,7 +254,11 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Equal(7, vocabulary.GetProperty("RenderPlanCount").GetInt32());
             Assert.Equal(7, vocabulary.GetProperty("PlansWithIntentSignature").GetInt32());
             Assert.Equal(7, vocabulary.GetProperty("PlansWithProvenanceSignature").GetInt32());
+            Assert.Equal(7, vocabulary.GetProperty("PlansWithProviderKey").GetInt32());
+            Assert.Contains(vocabulary.GetProperty("ProviderKeys").EnumerateArray(), item => item.GetString() == "LiveChartsWpf");
+            Assert.Contains(vocabulary.GetProperty("ProviderKeys").EnumerateArray(), item => item.GetString() == "SyncfusionSunburst");
             Assert.Empty(vocabulary.GetProperty("MissingVocabularyPlanKinds").EnumerateArray());
+            Assert.Empty(vocabulary.GetProperty("MissingProviderPlanKinds").EnumerateArray());
         }
         finally
         {

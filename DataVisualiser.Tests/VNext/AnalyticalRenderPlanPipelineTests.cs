@@ -26,6 +26,9 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.Equal(intent.Signature, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature]);
         Assert.Equal("DiffRatioChart", result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
         Assert.Equal(AnalyticalCapabilityKind.Comparison.ToString(), result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.DisplayName, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderDisplayName]);
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.Signature, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderSignature]);
     }
 
     [Fact]
@@ -61,6 +64,7 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.Equal(ChartRenderPlanKind.Hierarchy, result.RenderPlan.PlanKind);
         Assert.Equal(ConsumerKind.HierarchyChart.ToString(), result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
         Assert.Equal("Sunburst", result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(ConsumerProviderContracts.SyncfusionSunburst.ProviderKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
     }
 
     [Fact]
@@ -82,6 +86,24 @@ public sealed class AnalyticalRenderPlanPipelineTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ShouldRejectNonRenderingConsumerWithoutProvider()
+    {
+        var registry = new ConsumerProviderRegistry([ConsumerProviderContracts.LiveChartsWpf]);
+        var pipeline = CreatePipeline(providerRegistry: registry);
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram(),
+            ConsumerDeliveryContract.Export(ChartProgramKind.Main));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            pipeline.ExecuteAsync(intent));
+
+        Assert.Contains("No consumer provider supports", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("Export", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task BuildCartesianAsync_ShouldRejectConsumersThatDoNotRequireRenderPlans()
     {
         var pipeline = CreatePipeline();
@@ -96,6 +118,25 @@ public sealed class AnalyticalRenderPlanPipelineTests
 
         Assert.Contains("does not require a render plan", ex.Message, StringComparison.Ordinal);
         Assert.Contains("ExecuteAsync", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task BuildCartesianAsync_ShouldRejectDeliveryWithoutProvider()
+    {
+        var registry = new ConsumerProviderRegistry([ConsumerProviderContracts.SyncfusionSunburst]);
+        var pipeline = CreatePipeline(providerRegistry: registry);
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram(),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            pipeline.BuildCartesianAsync(intent));
+
+        Assert.Contains("No consumer provider supports", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("Main", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("Cartesian", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -122,6 +163,8 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.Equal(2, result.RenderPlans.Count);
         Assert.Equal("MainChart", result.RenderPlans[0].Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
         Assert.Equal("NormalizedChart", result.RenderPlans[1].Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.All(result.RenderPlans, plan =>
+            Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, plan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]));
     }
 
     [Fact]
@@ -145,13 +188,15 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.Contains("share the intent-set selection", ex.Message, StringComparison.Ordinal);
     }
 
-    private static AnalyticalRenderPlanPipeline CreatePipeline(RenderDensityPolicy? densityPolicy = null)
+    private static AnalyticalRenderPlanPipeline CreatePipeline(
+        RenderDensityPolicy? densityPolicy = null,
+        ConsumerProviderRegistry? providerRegistry = null)
     {
         var engine = new ReasoningEngine(
             new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
 
-        return new AnalyticalRenderPlanPipeline(engine, densityPolicy);
+        return new AnalyticalRenderPlanPipeline(engine, densityPolicy, providerRegistry: providerRegistry);
     }
 
     private static MetricSelectionRequest CreateSelection(int seriesCount)

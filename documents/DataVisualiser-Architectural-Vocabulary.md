@@ -1881,56 +1881,57 @@ This section records the current implementation state of the sequence above so f
 
 ### 13.1 Current status by sequence step
 
-1. **Authority spine + canonical intent model — substantially implemented / still maturing**  
-   The system now has explicit VNext request, snapshot, analytical intent, capability, composition, consumer-delivery, render-plan, and runtime provenance vocabulary. The remaining work is to keep reducing legacy `ChartDataContext` authority and make canonical intent the default live entry point for every chart family.
+1. **Authority spine + canonical intent model - substantially implemented / still maturing**  
+   The system now has explicit VNext request, snapshot, analytical intent, capability, composition, consumer-delivery, provider, render-plan, runtime provenance, and evidence vocabulary. The remaining work is to keep reducing legacy `ChartDataContext` authority and make canonical intent the normal live entry point instead of a projected compatibility path.
 
-2. **One primary execution model — in progress**  
-   The reasoning/program path is now the preferred architectural direction and is live for the Main-family path, including Main, Normalized, and Diff/Ratio where frontend support exists. Other chart families have VNext-compatible contracts, runtime diagnostics, and render-plan vocabulary, but not all are fully routed through one shared VNext execution path yet.
+2. **One primary execution model - substantially implemented for current chart families**  
+   The VNext reasoning/program path is live across the available chart-family routes, including Main, Normalized, Distribution, WeekdayTrend, Bar/Pie, and Transform operations; Diff/Ratio has VNext strategy support but lacks a current frontend controller surface. Legacy execution remains as fallback/compatibility rather than the preferred architectural model.
 
-3. **Reasoning vs process separation — mostly implemented**  
-   Reasoning concerns now live primarily in VNext contracts, kernel, analytical intent, program planning, and render-plan projection. Process concerns remain in coordinators and route policies, with recent extraction of VNext chart-program request planning out of `MetricLoadCoordinator` to reduce orchestration leakage.
+3. **Reasoning vs process separation - mostly implemented**  
+   Reasoning concerns now live primarily in VNext contracts, kernel, analytical intent, operation execution, program planning, provider contracts, and render-plan projection. Process concerns remain in coordinators, route policies, runtime-state recording, and tab/controller adapters.
 
-4. **Contract / boundary seam — substantially implemented**  
-   `AnalyticalIntent`, `CapabilityRequest`, `ConsumerDeliveryContract`, `ChartProgram`, `ChartRenderPlan`, and vocabulary metadata now form the main contract seam between upstream meaning and downstream rendering. The remaining work is to make every live chart-family path consume this seam consistently rather than preserving family-specific bypasses.
+4. **Contract / boundary seam - substantially implemented**  
+   `AnalyticalIntent`, `CapabilityRequest`, `ConsumerDeliveryContract`, `ConsumerProviderContract`, `ChartProgram`, `ChartRenderPlan`, provider metadata, and vocabulary diagnostics now form the main seam between upstream meaning and downstream consumers. The remaining work is to keep moving live consumers onto this seam and remove family-specific bypasses where they no longer provide value.
 
-5. **Consumer / interaction branching — partially implemented**  
-   Main, Syncfusion, Admin, evidence export, and chart-controller paths now behave more like consumers rather than authorities. The next improvement is to ensure chart, export, and future plugin consumers all receive output through the same contract boundary rather than through tab- or vendor-specific wiring.
+5. **Consumer / interaction branching - actively maturing**  
+   Main, Syncfusion, Admin, evidence export, API response, chart-controller paths, and future plugin providers are now modeled more clearly as consumers/providers rather than semantic authorities. The newest non-live work adds a provider registry for built-in and third-party consumers so future chart libraries can be selected by contract rather than hard-coded tab/vendor assumptions.
 
-6. **Terminal rendering demotion — in progress**  
-   Rendering has been pushed toward disposable backend adaptation through render plans, backend adapters, render-plan diagnostics, and vocabulary metadata. Remaining work is to finish wiring all chart families through render-plan-first delivery and prevent renderer-specific models from re-owning analytical meaning.
+6. **Terminal rendering demotion - in progress, with stronger provider boundary**  
+   Rendering has been pushed toward disposable backend adaptation through render plans, backend capabilities, adapter dispatchers, provider contracts, provider metadata, render-plan diagnostics, and vocabulary coverage. Remaining work is to continue moving live render delivery through render-plan/provider seams without letting renderer-specific models re-own analytical meaning.
 
-7. **Diagnostics / migration sidecar isolation — substantially implemented**  
-   Evidence export, reachability diagnostics, runtime-path state, family runtime state, render-plan diagnostics, vocabulary coverage, and session milestones now observe the system rather than define live behavior. Continue to keep evidence, parity, and migration helpers out of execution authority.
+7. **Diagnostics / migration sidecar isolation - substantially implemented**  
+   Evidence export, reachability diagnostics, runtime-path state, family runtime state, render-plan diagnostics, provider metadata coverage, vocabulary coverage, and session milestones now observe the system rather than define live behavior. Evidence now reports missing vocabulary/provider coverage so migration gaps are provable instead of inferred manually.
 
-8. **Collapse repeated family micro-frameworks — not yet the primary focus**  
-   Some safe consolidation has already happened around parity comparison, workspace milestones, load coordination, binary chart context mechanics, qualification probe support, and VNext request planning. Broader family-framework collapse should wait until all chart families are routed through the contract seam, otherwise it risks cosmetic consolidation.
+8. **Collapse repeated family micro-frameworks - partially implemented / lower priority now**  
+   Safe consolidation has happened around parity comparison, workspace milestones, load coordination, binary chart context mechanics, qualification probe support, VNext request planning, and provider metadata stamping. Broader family-framework collapse should be guided by the contract/provider seam, not by cosmetic file-count reduction.
 
 ### 13.2 Completed material changes
 
-- VNext contracts now include explicit analytical intent, capability, composition, consumer delivery, interaction, and render-plan vocabulary.
-- Render-plan vocabulary metadata is attached across chart families and preserved by LiveCharts, Syncfusion, and orchestration adapters.
-- Evidence export reports runtime path, family runtime state, render-plan diagnostics, vocabulary coverage, and missing vocabulary gaps.
-- Main-family live loading uses VNext for Main, Normalized, and Diff/Ratio scope where supported, with legacy fallback preserved.
+- VNext contracts now include explicit analytical intent, capability, composition, consumer delivery, interaction, provider, and render-plan vocabulary.
+- Consumer/provider contracts and a provider registry now describe built-in LiveCharts, Syncfusion, evidence export, API response, and custom third-party provider seams.
+- Provider metadata is stamped into render-plan projection and vocabulary metadata through a shared helper.
+- Render-plan vocabulary metadata is attached across chart families and preserved by LiveCharts, Syncfusion, orchestration adapters, and evidence diagnostics.
+- Evidence export reports runtime path, family runtime state, render-plan diagnostics, vocabulary coverage, provider coverage, and missing vocabulary/provider gaps.
+- Live loading uses VNext across the available chart-family routes, including Main, Normalized, Distribution, WeekdayTrend, Bar/Pie, and Transform operations, with legacy fallback preserved.
 - Main, Syncfusion, and Admin tabs now share more workspace-host and evidence/session behavior.
 - Large-data rendering preparation introduced render-budget planning and vocabulary for viewport/detail strategies, but full adaptive zoom/detail behavior remains future work.
 
 ### 13.3 Current next practical work
 
-- Finish routing remaining chart families through the VNext contract seam before Phase 7 capability expansion unless explicitly deferred.
+- Finish removing remaining bypasses around live consumer/provider delivery before Phase 7 capability expansion unless explicitly deferred.
 - Keep `MetricLoadCoordinator` and chart-family adapters as process/consumer coordinators, not semantic authorities.
-- Continue extracting chart-family request planning and runtime mapping into shared VNext planning seams.
+- Continue extracting chart-family request planning, provider selection, and runtime mapping into shared VNext planning seams.
 - Preserve legacy execution as a compatibility/fallback adapter until VNext parity and smoke evidence are strong enough to retire each path safely.
-- Avoid broad folder or family-framework consolidation until the live contract seam is complete.
+- Avoid broad folder or family-framework consolidation unless it directly strengthens the contract/provider seam.
 
 ### 13.4 Manual validation state
 
-Recent automated validation has covered the current structural and contract work, including full solution test runs. Manual smoke is only required after live behavior changes, especially when routing additional chart families through VNext, changing render delivery, or altering chart-controller interaction behavior.
+Recent automated validation has covered the current structural, contract, provider, metadata, and evidence work, including full solution test runs. Manual smoke is only required after live behavior changes, especially when changing runtime routing, render delivery, provider selection, chart-controller interaction behavior, or adaptive viewport/detail behavior.
 
 
 ---
 
 ---
-
 ## 14. Mini Ownership Rule Table
 
 This is not a full ownership matrix. It is a compact rule table for the enhanced architecture.

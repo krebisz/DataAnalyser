@@ -41,7 +41,14 @@ public sealed class ChartRenderPlanAdapterDispatcher<TSurface>
 
         var adapter = _adapters.FirstOrDefault(candidate => candidate.CanRender(plan));
         if (adapter == null)
-            throw new InvalidOperationException($"No chart render adapter supports render plan kind '{plan.PlanKind}'.");
+        {
+            var providerDescription = plan.Metadata.TryGetValue(ChartRenderPlanMetadataKeys.ProviderKey, out var providerKey) &&
+                                      !string.IsNullOrWhiteSpace(providerKey)
+                ? $" for provider '{providerKey}'"
+                : string.Empty;
+            throw new InvalidOperationException(
+                $"No chart render adapter supports render plan kind '{plan.PlanKind}'{providerDescription}.");
+        }
 
         return await adapter.ApplyAsync(surface, plan, cancellationToken);
     }

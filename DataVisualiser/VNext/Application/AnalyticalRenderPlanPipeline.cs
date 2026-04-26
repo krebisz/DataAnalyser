@@ -16,15 +16,18 @@ public sealed class AnalyticalRenderPlanPipeline
     private readonly IReasoningEngine _engine;
     private readonly RenderDensityPolicy _densityPolicy;
     private readonly ChartRenderPlanProjector _projector;
+    private readonly ConsumerProviderRegistry _providerRegistry;
 
     public AnalyticalRenderPlanPipeline(
         IReasoningEngine engine,
         RenderDensityPolicy? densityPolicy = null,
-        ChartRenderPlanProjector? projector = null)
+        ChartRenderPlanProjector? projector = null,
+        ConsumerProviderRegistry? providerRegistry = null)
     {
         _engine = engine ?? throw new ArgumentNullException(nameof(engine));
         _densityPolicy = densityPolicy ?? new RenderDensityPolicy();
         _projector = projector ?? new ChartRenderPlanProjector();
+        _providerRegistry = providerRegistry ?? ConsumerProviderRegistry.BuiltIn;
     }
 
     public async Task<AnalyticalExecutionResult> ExecuteAsync(
@@ -32,6 +35,8 @@ public sealed class AnalyticalRenderPlanPipeline
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(intent);
+
+        ValidateNonRenderingProvider(intent);
 
         return await _engine.ExecuteAsync(intent, cancellationToken);
     }
@@ -53,10 +58,11 @@ public sealed class AnalyticalRenderPlanPipeline
     {
         ArgumentNullException.ThrowIfNull(intent);
         EnsureRenderPlanRequested(intent);
+        var provider = _providerRegistry.Resolve(intent.Delivery, ChartRenderPlanKind.Cartesian);
 
         var execution = await _engine.ExecuteAsync(intent, cancellationToken);
         var density = _densityPolicy.Resolve(execution.Program, viewport, backendCapabilities);
-        var renderPlan = _projector.ProjectCartesian(execution, density);
+        var renderPlan = AttachProviderMetadata(_projector.ProjectCartesian(execution, density), provider);
         return new AnalyticalRenderPlanResult(execution, renderPlan);
     }
 
@@ -68,9 +74,10 @@ public sealed class AnalyticalRenderPlanPipeline
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(roots);
         EnsureRenderPlanRequested(intent);
+        var provider = _providerRegistry.Resolve(intent.Delivery, ChartRenderPlanKind.Hierarchy);
 
         var execution = await _engine.ExecuteAsync(intent, cancellationToken);
-        var renderPlan = _projector.ProjectHierarchy(execution, roots);
+        var renderPlan = AttachProviderMetadata(_projector.ProjectHierarchy(execution, roots), provider);
         return new AnalyticalRenderPlanResult(execution, renderPlan);
     }
 
@@ -100,12 +107,16 @@ public sealed class AnalyticalRenderPlanPipeline
         foreach (var intent in intentSet.Intents)
             EnsureRenderPlanRequested(intent);
 
+        var providers = intentSet.Intents
+            .Select(intent => _providerRegistry.Resolve(intent.Delivery, ChartRenderPlanKind.Cartesian))
+            .ToArray();
+
         var executionSet = await _engine.ExecuteAsync(intentSet, cancellationToken);
         var renderPlans = executionSet.Results
-            .Select(execution =>
+            .Select((execution, index) =>
             {
                 var density = _densityPolicy.Resolve(execution.Program, viewport, backendCapabilities);
-                return _projector.ProjectCartesian(execution, density);
+                return AttachProviderMetadata(_projector.ProjectCartesian(execution, density), providers[index]);
             })
             .ToArray();
 
@@ -121,5 +132,21 @@ public sealed class AnalyticalRenderPlanPipeline
             throw new InvalidOperationException(
                 $"Consumer '{intent.Delivery.ConsumerKind}' does not require a render plan. Use ExecuteAsync for non-rendering consumers.");
         }
+    }
+
+    private void ValidateNonRenderingProvider(AnalyticalIntent intent)
+    {
+        if (!intent.Delivery.RequiresRenderPlan)
+            _providerRegistry.Resolve(intent.Delivery);
+    }
+
+    private static ChartRenderPlan AttachProviderMetadata(
+        ChartRenderPlan renderPlan,
+        ConsumerProviderContract provider)
+    {
+        var metadata = new Dictionary<string, string>(renderPlan.Metadata);
+        ChartRenderPlanProviderMetadata.AddProvider(metadata, provider);
+
+        return renderPlan with { Metadata = metadata };
     }
 }

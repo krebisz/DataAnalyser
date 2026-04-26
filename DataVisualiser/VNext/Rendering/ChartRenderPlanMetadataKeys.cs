@@ -11,4 +11,7 @@ public static class ChartRenderPlanMetadataKeys
     public const string CompositionKind = "CompositionKind";
     public const string OverlayCount = "OverlayCount";
     public const string InteractionCount = "InteractionCount";
+    public const string ProviderKey = "ProviderKey";
+    public const string ProviderDisplayName = "ProviderDisplayName";
+    public const string ProviderSignature = "ProviderSignature";
 }

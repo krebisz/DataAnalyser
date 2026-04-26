@@ -16,7 +16,7 @@ public sealed class DistributionRenderPlanAdapter : IChartRenderPlanAdapter<Dist
     public bool CanRender(ChartRenderPlan plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
-        return Capabilities.Supports(plan.PlanKind);
+        return ChartRenderPlanAdapterQualificationRules.CanRender(Capabilities, plan);
     }
 
     public async ValueTask<ChartRenderAdapterResult> ApplyAsync(

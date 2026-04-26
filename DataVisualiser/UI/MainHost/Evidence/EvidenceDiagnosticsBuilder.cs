@@ -377,6 +377,11 @@ public sealed class EvidenceDiagnosticsBuilder
             .Select(pair => pair.Key.ToString())
             .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
             .ToList();
+        var missingProvider = renderPlans
+            .Where(pair => !pair.Value.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderKey))
+            .Select(pair => pair.Key.ToString())
+            .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
         return new RenderPlanVocabularyDiagnosticsSnapshot
         {
@@ -385,13 +390,17 @@ public sealed class EvidenceDiagnosticsBuilder
                 snapshot.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature)),
             PlansWithProvenanceSignature = snapshots.Count(snapshot =>
                 snapshot.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature)),
+            PlansWithProviderKey = snapshots.Count(snapshot =>
+                snapshot.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderKey)),
             ConsumerKinds = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.ConsumerKind),
             DeliveryTargets = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.DeliveryTarget),
             CapabilityKinds = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.CapabilityKind),
             CompositionKinds = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.CompositionKind),
+            ProviderKeys = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.ProviderKey),
             OverlayCountTotal = SumMetadataInt(snapshots, ChartRenderPlanMetadataKeys.OverlayCount),
             InteractionCountTotal = SumMetadataInt(snapshots, ChartRenderPlanMetadataKeys.InteractionCount),
-            MissingVocabularyPlanKinds = missingVocabulary
+            MissingVocabularyPlanKinds = missingVocabulary,
+            MissingProviderPlanKinds = missingProvider
         };
     }
 

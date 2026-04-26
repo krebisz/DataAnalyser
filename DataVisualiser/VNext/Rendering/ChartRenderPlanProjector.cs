@@ -119,6 +119,7 @@ public sealed class ChartRenderPlanProjector
         metadata[ChartRenderPlanMetadataKeys.CompositionKind] = intent.Capability.CompositionKind.ToString();
         metadata[ChartRenderPlanMetadataKeys.OverlayCount] = intent.Overlays.Count.ToString();
         metadata[ChartRenderPlanMetadataKeys.InteractionCount] = intent.Interactions.Count.ToString();
+        ChartRenderPlanProviderMetadata.TryAddBuiltInProvider(metadata, intent.Delivery, program.Kind);
         return metadata;
     }
 

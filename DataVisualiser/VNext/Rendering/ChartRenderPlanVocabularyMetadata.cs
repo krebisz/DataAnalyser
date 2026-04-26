@@ -26,7 +26,7 @@ public static class ChartRenderPlanVocabularyMetadata
             delivery.Signature,
             provenance.Signature);
 
-        return new Dictionary<string, string>
+        var metadata = new Dictionary<string, string>
         {
             [ChartRenderPlanMetadataKeys.IntentSignature] = intentSignature,
             [ChartRenderPlanMetadataKeys.ProvenanceSignature] = provenance.Signature,
@@ -37,6 +37,9 @@ public static class ChartRenderPlanVocabularyMetadata
             [ChartRenderPlanMetadataKeys.OverlayCount] = overlayCount.ToString(),
             [ChartRenderPlanMetadataKeys.InteractionCount] = interactionCount.ToString()
         };
+
+        ChartRenderPlanProviderMetadata.TryAddBuiltInProvider(metadata, delivery, programKind);
+        return metadata;
     }
 
     public static void AddTo(

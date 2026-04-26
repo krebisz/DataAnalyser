@@ -70,10 +70,71 @@ public sealed class ChartRenderPlanAdapterTests
         Assert.False(hierarchy.CanRender(CreateCartesianPlan()));
     }
 
+    [Fact]
+    public void AdapterQualification_ShouldAllowPlansWithoutProviderMetadata()
+    {
+        var plan = CreateCartesianPlan();
+        var qualification = ChartRenderPlanAdapterQualificationRules.Evaluate(
+            ChartBackendCapabilities.LiveChartsWpf,
+            plan);
+
+        Assert.True(qualification.SupportsPlanKind);
+        Assert.Null(qualification.RequiredProviderKey);
+        Assert.True(qualification.ProviderMatchesAdapter);
+        Assert.True(qualification.IsQualified);
+    }
+
+    [Fact]
+    public void AdapterQualification_ShouldRequireMatchingProviderWhenMetadataIsPresent()
+    {
+        var plan = CreateCartesianPlanWithProvider("SyncfusionSunburst");
+        var liveChartsQualification = ChartRenderPlanAdapterQualificationRules.Evaluate(
+            ChartBackendCapabilities.LiveChartsWpf,
+            plan);
+        var syncfusionQualification = ChartRenderPlanAdapterQualificationRules.Evaluate(
+            ChartBackendCapabilities.SyncfusionSunburst,
+            plan);
+
+        Assert.Equal("SyncfusionSunburst", liveChartsQualification.RequiredProviderKey);
+        Assert.False(liveChartsQualification.ProviderMatchesAdapter);
+        Assert.False(liveChartsQualification.IsQualified);
+        Assert.True(syncfusionQualification.ProviderMatchesAdapter);
+        Assert.False(syncfusionQualification.IsQualified);
+    }
+
+    [Fact]
+    public async Task Dispatcher_ShouldFailWhenProviderMetadataSelectsDifferentAdapter()
+    {
+        var surface = new FakeRenderSurface();
+        var plan = CreateCartesianPlanWithProvider("SyncfusionSunburst");
+        var dispatcher = new ChartRenderPlanAdapterDispatcher<FakeRenderSurface>(
+            [
+                new FakeCartesianAdapter(),
+                new FakeHierarchyAdapter()
+            ]);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await dispatcher.ApplyAsync(surface, plan));
+
+        Assert.Contains("Cartesian", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("SyncfusionSunburst", ex.Message, StringComparison.Ordinal);
+    }
+
     private static ChartRenderPlan CreateCartesianPlan()
     {
         var program = CreateProgram(ChartProgramKind.Main);
         return new ChartRenderPlanProjector().ProjectCartesian(program);
+    }
+
+    private static ChartRenderPlan CreateCartesianPlanWithProvider(string providerKey)
+    {
+        var plan = CreateCartesianPlan();
+        var metadata = new Dictionary<string, string>(plan.Metadata)
+        {
+            [ChartRenderPlanMetadataKeys.ProviderKey] = providerKey
+        };
+
+        return plan with { Metadata = metadata };
     }
 
     private static ChartRenderPlan CreateHierarchyPlan()
@@ -123,7 +184,8 @@ public sealed class ChartRenderPlanAdapterTests
     {
         public ChartBackendCapabilities Capabilities => ChartBackendCapabilities.LiveChartsWpf;
 
-        public bool CanRender(ChartRenderPlan plan) => Capabilities.Supports(plan.PlanKind);
+        public bool CanRender(ChartRenderPlan plan) =>
+            ChartRenderPlanAdapterQualificationRules.CanRender(Capabilities, plan);
 
         public ValueTask<ChartRenderAdapterResult> ApplyAsync(
             FakeRenderSurface surface,
@@ -147,7 +209,8 @@ public sealed class ChartRenderPlanAdapterTests
     {
         public ChartBackendCapabilities Capabilities => ChartBackendCapabilities.SyncfusionSunburst;
 
-        public bool CanRender(ChartRenderPlan plan) => Capabilities.Supports(plan.PlanKind);
+        public bool CanRender(ChartRenderPlan plan) =>
+            ChartRenderPlanAdapterQualificationRules.CanRender(Capabilities, plan);
 
         public ValueTask<ChartRenderAdapterResult> ApplyAsync(
             FakeRenderSurface surface,

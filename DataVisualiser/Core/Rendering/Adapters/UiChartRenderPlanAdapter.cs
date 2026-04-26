@@ -16,7 +16,7 @@ public sealed class UiChartRenderPlanAdapter : IChartRenderPlanAdapter<UiChartRe
     public bool CanRender(ChartRenderPlan plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
-        return plan.PlanKind is ChartRenderPlanKind.Cartesian or ChartRenderPlanKind.Faceted;
+        return ChartRenderPlanAdapterQualificationRules.CanRender(Capabilities, plan);
     }
 
     public async ValueTask<ChartRenderAdapterResult> ApplyAsync(

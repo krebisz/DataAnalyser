@@ -295,13 +295,16 @@ public sealed class RenderPlanVocabularyDiagnosticsSnapshot
     public int RenderPlanCount { get; set; }
     public int PlansWithIntentSignature { get; set; }
     public int PlansWithProvenanceSignature { get; set; }
+    public int PlansWithProviderKey { get; set; }
     public IReadOnlyList<string> ConsumerKinds { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> DeliveryTargets { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> CapabilityKinds { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> CompositionKinds { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> ProviderKeys { get; set; } = Array.Empty<string>();
     public int OverlayCountTotal { get; set; }
     public int InteractionCountTotal { get; set; }
     public IReadOnlyList<string> MissingVocabularyPlanKinds { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingProviderPlanKinds { get; set; } = Array.Empty<string>();
 }
 
 public class RenderPlanDiagnosticsSnapshot

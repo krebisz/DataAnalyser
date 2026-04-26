@@ -10,7 +10,7 @@ public sealed class SyncfusionSunburstRenderPlanAdapter : IChartRenderPlanAdapte
     public bool CanRender(ChartRenderPlan plan)
     {
         ArgumentNullException.ThrowIfNull(plan);
-        return Capabilities.Supports(plan.PlanKind);
+        return ChartRenderPlanAdapterQualificationRules.CanRender(Capabilities, plan);
     }
 
     public ValueTask<ChartRenderAdapterResult> ApplyAsync(
