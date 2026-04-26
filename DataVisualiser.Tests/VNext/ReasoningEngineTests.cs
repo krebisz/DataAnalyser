@@ -80,6 +80,32 @@ public sealed class ReasoningEngineTests
         Assert.Equal(2, program.Series.Count);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ShouldLoadAndBuildProgramFromAnalyticalIntent()
+    {
+        var engine = new ReasoningEngine(
+            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
+        var request = new MetricSelectionRequest(
+            "Weight",
+            [new MetricSeriesRequest("Weight", "morning"), new MetricSeriesRequest("Weight", "evening")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics");
+        var intent = AnalyticalIntent.FromRequests(
+            request,
+            ChartProgramRequest.Normalized(),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Normalized, "NormalizedChart"));
+
+        var result = await engine.ExecuteAsync(intent);
+
+        Assert.Same(intent, result.Intent);
+        Assert.Equal(request.Signature, result.Snapshot.Signature);
+        Assert.Equal(ChartProgramKind.Normalized, result.Program.Kind);
+        Assert.Equal(request.Signature, result.Program.SourceSignature);
+        Assert.Contains(intent.Signature, result.Signature, StringComparison.Ordinal);
+    }
+
     private sealed class StubMetricSeriesLoader : IMetricSeriesLoader
     {
         public Task<LoadedMetricSeries> LoadAsync(

@@ -744,8 +744,9 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("LoadProgramAsync(", source, StringComparison.Ordinal);
         Assert.Contains("ChartProgramRequest", source, StringComparison.Ordinal);
-        Assert.Contains("WorkflowPlanRequest", source, StringComparison.Ordinal);
-        Assert.Contains("coordinator.BuildProgram(programRequest)", source, StringComparison.Ordinal);
+        Assert.Contains("AnalyticalIntentFactory", source, StringComparison.Ordinal);
+        Assert.Contains("_intentFactory.Create", source, StringComparison.Ordinal);
+        Assert.Contains("coordinator.ExecuteAsync(intent", source, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -766,6 +767,16 @@ public sealed class ArchitectureGuardrailTests
         var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
             [Path.Combine("DataVisualiser", "VNext", "Rendering")],
             ["using LiveCharts", "using Syncfusion", "using System.Windows"]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void VNextContracts_ShouldRemainUiAndBackendNeutral()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [Path.Combine("DataVisualiser", "VNext", "Contracts")],
+            ["using LiveCharts", "using Syncfusion", "using System.Windows", "DataVisualiser.UI"]);
 
         AssertNoMatches(offenders);
     }

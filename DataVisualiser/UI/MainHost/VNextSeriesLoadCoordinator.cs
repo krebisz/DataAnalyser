@@ -20,6 +20,7 @@ public sealed record VNextSeriesLoadResult(
 public sealed class VNextSeriesLoadCoordinator
 {
     private readonly Func<ReasoningSessionCoordinator> _coordinatorFactory;
+    private readonly AnalyticalIntentFactory _intentFactory = new();
     private readonly LegacyChartProgramProjector _projector = new();
 
     public VNextSeriesLoadCoordinator(MetricSelectionService metricSelectionService)
@@ -49,15 +50,20 @@ public sealed class VNextSeriesLoadCoordinator
         try
         {
             var coordinator = _coordinatorFactory();
-
-            coordinator.ApplyMetricType(series.MetricType);
-            coordinator.ApplySeries([MetricSeriesRequest.FromLegacy(series)]);
-            coordinator.ApplyDateRange(from, to);
-            coordinator.ApplyResolution(resolutionTableName);
-
-            var snapshot = await coordinator.LoadAsync(cancellationToken);
             var request = new ChartProgramRequest(programKind);
-            var program = coordinator.BuildProgram(request);
+            var selectionRequest = new MetricSelectionRequest(
+                series.MetricType,
+                [MetricSeriesRequest.FromLegacy(series)],
+                from,
+                to,
+                resolutionTableName);
+            var intent = _intentFactory.Create(
+                selectionRequest,
+                request,
+                ResolveDeliveryTarget(programKind));
+            var execution = await coordinator.ExecuteAsync(intent, cancellationToken);
+            var snapshot = execution.Snapshot;
+            var program = execution.Program;
             var projectedContext = _projector.ProjectToChartContext(program);
 
             var seriesSnapshot = snapshot.Series.Count > 0 ? snapshot.Series[0] : null;
@@ -92,5 +98,20 @@ public sealed class VNextSeriesLoadCoordinator
             ProgramKind: programKind,
             ProgramSourceSignature: null,
             FailureReason: failureReason);
+    }
+
+    private static string? ResolveDeliveryTarget(ChartProgramKind kind)
+    {
+        return kind switch
+        {
+            ChartProgramKind.Distribution => "DistributionChart",
+            ChartProgramKind.WeekdayTrend => "WeekdayTrendChart",
+            ChartProgramKind.Transform => "TransformChart",
+            ChartProgramKind.BarPie => "BarPieChart",
+            ChartProgramKind.Main => "MainChart",
+            ChartProgramKind.Normalized => "NormalizedChart",
+            ChartProgramKind.Difference or ChartProgramKind.Ratio => "DiffRatioChart",
+            _ => null
+        };
     }
 }

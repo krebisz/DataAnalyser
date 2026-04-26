@@ -106,6 +106,12 @@ public sealed class ReasoningSessionCoordinator
         }
     }
 
+    public Task<AnalyticalExecutionResult> ExecuteAsync(AnalyticalIntent intent, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+        return _engine.ExecuteAsync(intent, cancellationToken);
+    }
+
     public ChartProgram BuildMainProgram()
     {
         var (_, presentation) = GetLoadedSnapshotAndPresentation();
@@ -145,6 +151,12 @@ public sealed class ReasoningSessionCoordinator
     {
         var (snapshot, _) = GetLoadedSnapshotAndPresentation();
         return _engine.BuildProgram(snapshot, request);
+    }
+
+    public ChartProgram BuildProgram(AnalyticalIntent intent)
+    {
+        var (snapshot, _) = GetLoadedSnapshotAndPresentation();
+        return _engine.BuildProgram(snapshot, intent);
     }
 
     private (MetricLoadSnapshot Snapshot, PresentationState Presentation) GetLoadedSnapshotAndPresentation()

@@ -20,6 +20,7 @@ public sealed record VNextMainChartLoadResult(
 public sealed class VNextMainChartIntegrationCoordinator
 {
     private readonly Func<ReasoningSessionCoordinator> _coordinatorFactory;
+    private readonly AnalyticalIntentFactory _intentFactory = new();
     private readonly LegacyChartProgramProjector _projector = new();
 
     public VNextMainChartIntegrationCoordinator(MetricSelectionService metricSelectionService)
@@ -55,23 +56,14 @@ public sealed class VNextMainChartIntegrationCoordinator
         try
         {
             var coordinator = _coordinatorFactory();
-
-            coordinator.ApplyMetricType(request.MetricType);
-            coordinator.ApplySeries(TranslateSelections(request.SelectedSeries));
-            coordinator.ApplyDateRange(request.From, request.To);
-            coordinator.ApplyResolution(request.ResolutionTableName);
-
-            if (programRequest.Kind == ChartProgramKind.Main)
-                coordinator.ApplyMainDisplayMode(programRequest.DisplayMode);
-
-            if (programRequest.SeriesOperations.Count > 0)
-                coordinator.ApplyWorkflowPlan(new WorkflowPlanRequest(
-                    programRequest.SeriesOperations,
-                    programRequest.Kind.ToString(),
-                    programRequest.TitleOverride));
-
-            var snapshot = await coordinator.LoadAsync(cancellationToken);
-            var program = coordinator.BuildProgram(programRequest);
+            var selectionRequest = BuildSelectionRequest(request);
+            var intent = _intentFactory.Create(
+                selectionRequest,
+                programRequest,
+                ResolveDeliveryTarget(programRequest.Kind));
+            var execution = await coordinator.ExecuteAsync(intent, cancellationToken);
+            var snapshot = execution.Snapshot;
+            var program = execution.Program;
             var projectedContext = _projector.ProjectToChartContext(program);
 
             return new VNextMainChartLoadResult(
@@ -101,6 +93,31 @@ public sealed class VNextMainChartIntegrationCoordinator
     internal static IReadOnlyList<MetricSeriesRequest> TranslateSelections(IReadOnlyList<MetricSeriesSelection> selections)
     {
         return selections.Select(MetricSeriesRequest.FromLegacy).ToList();
+    }
+
+    private static MetricSelectionRequest BuildSelectionRequest(MetricLoadRequest request)
+    {
+        return new MetricSelectionRequest(
+            request.MetricType,
+            TranslateSelections(request.SelectedSeries),
+            request.From,
+            request.To,
+            request.ResolutionTableName);
+    }
+
+    private static string? ResolveDeliveryTarget(ChartProgramKind kind)
+    {
+        return kind switch
+        {
+            ChartProgramKind.Main => "MainChart",
+            ChartProgramKind.Normalized => "NormalizedChart",
+            ChartProgramKind.Difference or ChartProgramKind.Ratio => "DiffRatioChart",
+            ChartProgramKind.Transform => "TransformChart",
+            ChartProgramKind.Distribution => "DistributionChart",
+            ChartProgramKind.WeekdayTrend => "WeekdayTrendChart",
+            ChartProgramKind.BarPie => "BarPieChart",
+            _ => null
+        };
     }
 
     internal static ChartDisplayMode TranslateDisplayMode(MainChartDisplayMode mode)

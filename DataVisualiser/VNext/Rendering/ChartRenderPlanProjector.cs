@@ -25,7 +25,7 @@ public sealed class ChartRenderPlanProjector
         _aggregationKernel = aggregationKernel ?? new TimeBucketRenderAggregationKernel();
     }
 
-    public ChartRenderPlan ProjectCartesian(ChartProgram program, RenderDensityPlan? density = null)
+    public ChartRenderPlan ProjectCartesian(ChartProgram program, RenderDensityPlan? density = null, AnalyticalIntent? intent = null)
     {
         ArgumentNullException.ThrowIfNull(program);
 
@@ -48,17 +48,20 @@ public sealed class ChartRenderPlanProjector
             Array.Empty<ChartHierarchyNodePlan>(),
             resolvedDensity with { RenderedPointCount = series.Sum(item => item.RenderedPointCount) },
             DefaultCartesianInteraction,
-            new Dictionary<string, string>
-            {
-                ["Projection"] = "ChartProgram",
-                ["ProgramKind"] = program.Kind.ToString()
-            });
+            BuildMetadata("ChartProgram", program, intent));
+    }
+
+    public ChartRenderPlan ProjectCartesian(AnalyticalExecutionResult result, RenderDensityPlan? density = null)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        return ProjectCartesian(result.Program, density, result.Intent);
     }
 
     public ChartRenderPlan ProjectHierarchy(
         ChartProgram program,
         IReadOnlyList<ChartHierarchyNodePlan> roots,
-        RenderDensityPlan? density = null)
+        RenderDensityPlan? density = null,
+        AnalyticalIntent? intent = null)
     {
         ArgumentNullException.ThrowIfNull(program);
         ArgumentNullException.ThrowIfNull(roots);
@@ -82,15 +85,42 @@ public sealed class ChartRenderPlanProjector
                 sourcePointCount,
                 renderedNodeCount),
             DefaultHierarchyInteraction,
-            new Dictionary<string, string>
-            {
-                ["Projection"] = "Hierarchy",
-                ["ProgramKind"] = program.Kind.ToString()
-            });
+            BuildMetadata("Hierarchy", program, intent));
+    }
+
+    public ChartRenderPlan ProjectHierarchy(
+        AnalyticalExecutionResult result,
+        IReadOnlyList<ChartHierarchyNodePlan> roots,
+        RenderDensityPlan? density = null)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        return ProjectHierarchy(result.Program, roots, density, result.Intent);
     }
 
     private static string BuildPlanId(ChartProgram program) =>
         $"{program.Kind}:{program.SourceSignature}";
+
+    private static Dictionary<string, string> BuildMetadata(string projection, ChartProgram program, AnalyticalIntent? intent)
+    {
+        var metadata = new Dictionary<string, string>
+        {
+            ["Projection"] = projection,
+            ["ProgramKind"] = program.Kind.ToString()
+        };
+
+        if (intent == null)
+            return metadata;
+
+        metadata[ChartRenderPlanMetadataKeys.IntentSignature] = intent.Signature;
+        metadata[ChartRenderPlanMetadataKeys.ProvenanceSignature] = intent.Provenance.Signature;
+        metadata[ChartRenderPlanMetadataKeys.ConsumerKind] = intent.Delivery.ConsumerKind.ToString();
+        metadata[ChartRenderPlanMetadataKeys.DeliveryTarget] = intent.Delivery.DeliveryTarget;
+        metadata[ChartRenderPlanMetadataKeys.CapabilityKind] = intent.Capability.CapabilityKind.ToString();
+        metadata[ChartRenderPlanMetadataKeys.CompositionKind] = intent.Capability.CompositionKind.ToString();
+        metadata[ChartRenderPlanMetadataKeys.OverlayCount] = intent.Overlays.Count.ToString();
+        metadata[ChartRenderPlanMetadataKeys.InteractionCount] = intent.Interactions.Count.ToString();
+        return metadata;
+    }
 
     private ChartSeriesPlan BuildSeriesPlan(
         ChartProgram program,

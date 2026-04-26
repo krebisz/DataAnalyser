@@ -18,9 +18,23 @@ public sealed class ReasoningEngine : IReasoningEngine
         return _gateway.LoadAsync(request, cancellationToken);
     }
 
+    public async Task<AnalyticalExecutionResult> ExecuteAsync(AnalyticalIntent intent, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+
+        var snapshot = await LoadAsync(intent.Selection, cancellationToken);
+        var program = BuildProgram(snapshot, intent);
+        return new AnalyticalExecutionResult(intent, snapshot, program);
+    }
+
     public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
     {
         return _planner.BuildProgram(snapshot, request);
+    }
+
+    public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, AnalyticalIntent intent)
+    {
+        return _planner.BuildProgram(snapshot, intent);
     }
 
     public ChartProgram BuildMainProgram(MetricLoadSnapshot snapshot, ChartDisplayMode displayMode = ChartDisplayMode.Regular)

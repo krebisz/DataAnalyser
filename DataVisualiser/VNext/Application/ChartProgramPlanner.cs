@@ -35,6 +35,17 @@ public sealed class ChartProgramPlanner
         };
     }
 
+    public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, AnalyticalIntent intent)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentNullException.ThrowIfNull(intent);
+
+        if (!string.Equals(snapshot.Signature, intent.Selection.Signature, StringComparison.Ordinal))
+            throw new InvalidOperationException("Analytical intent selection does not match the loaded snapshot.");
+
+        return BuildProgram(snapshot, intent.ProgramRequest);
+    }
+
     public ChartProgram BuildMainProgram(MetricLoadSnapshot snapshot, ChartDisplayMode displayMode = ChartDisplayMode.Regular)
     {
         ArgumentNullException.ThrowIfNull(snapshot);

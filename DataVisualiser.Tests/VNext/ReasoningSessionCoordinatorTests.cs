@@ -121,6 +121,13 @@ public sealed class ReasoningSessionCoordinatorTests
                 DateTime.UtcNow));
         }
 
+        public async Task<AnalyticalExecutionResult> ExecuteAsync(AnalyticalIntent intent, CancellationToken cancellationToken = default)
+        {
+            var snapshot = await LoadAsync(intent.Selection, cancellationToken);
+            var program = BuildProgram(snapshot, intent);
+            return new AnalyticalExecutionResult(intent, snapshot, program);
+        }
+
         public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
         {
             return request.Kind switch
@@ -144,6 +151,11 @@ public sealed class ReasoningSessionCoordinatorTests
                     snapshot.Signature),
                 _ => throw new InvalidOperationException()
             };
+        }
+
+        public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, AnalyticalIntent intent)
+        {
+            return BuildProgram(snapshot, intent.ProgramRequest);
         }
 
         public ChartProgram BuildMainProgram(MetricLoadSnapshot snapshot, ChartDisplayMode displayMode = ChartDisplayMode.Regular)
