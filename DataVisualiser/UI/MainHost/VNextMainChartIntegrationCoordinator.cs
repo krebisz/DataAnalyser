@@ -90,6 +90,62 @@ public sealed class VNextMainChartIntegrationCoordinator
         }
     }
 
+    public async Task<IReadOnlyList<VNextMainChartLoadResult>> LoadProgramsAsync(
+        MetricLoadRequest request,
+        IReadOnlyList<ChartProgramRequest> programRequests,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(programRequests);
+
+        if (programRequests.Count == 0)
+            throw new ArgumentException("At least one program request is required.", nameof(programRequests));
+
+        try
+        {
+            var coordinator = _coordinatorFactory();
+            var selectionRequest = BuildSelectionRequest(request);
+            var intentSet = AnalyticalIntentSet.FromIntents(
+                programRequests
+                    .Select(programRequest => _intentFactory.Create(
+                        selectionRequest,
+                        programRequest,
+                        ResolveDeliveryTarget(programRequest.Kind)))
+                    .ToArray());
+            var resultSet = await coordinator.ExecuteAsync(intentSet, cancellationToken);
+
+            return resultSet.Results
+                .Select(execution =>
+                {
+                    var projectedContext = _projector.ProjectToChartContext(execution.Program);
+                    return new VNextMainChartLoadResult(
+                        Success: true,
+                        ProjectedContext: projectedContext,
+                        RequestSignature: execution.Snapshot.Request.Signature,
+                        SnapshotSignature: execution.Snapshot.Signature,
+                        ProgramKind: execution.Program.Kind,
+                        ProgramSourceSignature: execution.Program.SourceSignature,
+                        ProjectedContextSignature: projectedContext.LoadRequestSignature,
+                        FailureReason: null);
+                })
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            return programRequests
+                .Select(programRequest => new VNextMainChartLoadResult(
+                    Success: false,
+                    ProjectedContext: null,
+                    RequestSignature: request.Signature,
+                    SnapshotSignature: null,
+                    ProgramKind: programRequest.Kind,
+                    ProgramSourceSignature: null,
+                    ProjectedContextSignature: null,
+                    FailureReason: ex.Message))
+                .ToList();
+        }
+    }
+
     internal static IReadOnlyList<MetricSeriesRequest> TranslateSelections(IReadOnlyList<MetricSeriesSelection> selections)
     {
         return selections.Select(MetricSeriesRequest.FromLegacy).ToList();

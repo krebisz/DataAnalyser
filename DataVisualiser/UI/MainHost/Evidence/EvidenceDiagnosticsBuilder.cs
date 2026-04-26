@@ -142,7 +142,7 @@ public sealed class EvidenceDiagnosticsBuilder
                 RecentErrorsPresent = recentErrorCount > 0
             },
             Transition = transition,
-            VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime),
+            VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime, HasExtendedChartRenderEvidence(chartState)),
             VNextFamilies = BuildVNextFamilyDiagnostics(chartState),
             RenderPlans = BuildRenderPlanDiagnostics(chartState),
             RenderPlanVocabulary = BuildRenderPlanVocabularyDiagnostics(chartState),
@@ -293,6 +293,13 @@ public sealed class EvidenceDiagnosticsBuilder
 
     internal static VNextDiagnosticsSnapshot? BuildVNextDiagnostics(LoadRuntimeState? runtime)
     {
+        return BuildVNextDiagnostics(runtime, hasExtendedChartRenderEvidence: false);
+    }
+
+    internal static VNextDiagnosticsSnapshot? BuildVNextDiagnostics(
+        LoadRuntimeState? runtime,
+        bool hasExtendedChartRenderEvidence)
+    {
         if (runtime == null || runtime.RuntimePath == EvidenceRuntimePath.Legacy)
             return null;
 
@@ -309,7 +316,7 @@ public sealed class EvidenceDiagnosticsBuilder
                                           string.Equals(runtime.SnapshotSignature, runtime.ProgramSourceSignature, StringComparison.Ordinal),
             ProgramSourceMatchesProjectedContext = !string.IsNullOrWhiteSpace(runtime.ProgramSourceSignature) &&
                                                   string.Equals(runtime.ProgramSourceSignature, runtime.ProjectedContextSignature, StringComparison.Ordinal),
-            SupportsOnlyMainChart = runtime.SupportsOnlyMainChart,
+            SupportsOnlyMainChart = runtime.SupportsOnlyMainChart && !hasExtendedChartRenderEvidence,
             FailureReason = runtime.FailureReason
         };
     }

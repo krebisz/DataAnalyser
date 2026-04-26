@@ -1,6 +1,9 @@
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Charts.Presentation;
 
 namespace DataVisualiser.Tests.VNext;
 
@@ -128,5 +131,68 @@ public sealed class FamilyRuntimeDiagnosticsTests
         var result = EvidenceDiagnosticsBuilder.BuildVNextFamilyDiagnostics(state);
 
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public void RecordRenderedVNextFamilyRuntime_PopulatesFamilyRuntime_WhenSourceLoadWasVNextMain()
+    {
+        var state = new ChartState
+        {
+            LastLoadRuntime = new LoadRuntimeState(
+                EvidenceRuntimePath.VNextMain,
+                "request",
+                "snapshot",
+                ChartProgramKind.Main,
+                "program-source",
+                "main-context",
+                null,
+                true)
+        };
+        var context = new ChartDataContext
+        {
+            Data1 = [new MetricData { NormalizedTimestamp = new DateTime(2026, 1, 1), Value = 1m }],
+            Data2 = [new MetricData { NormalizedTimestamp = new DateTime(2026, 1, 1), Value = 2m }],
+            PrimaryMetricType = "Weight",
+            PrimarySubtype = "body_fat_mass",
+            SecondaryMetricType = "Weight",
+            SecondarySubtype = "skeletal_muscle_mass",
+            From = new DateTime(2026, 1, 1),
+            To = new DateTime(2026, 1, 2),
+            ActualSeriesCount = 2
+        };
+
+        BinaryMetricChartContextHelper.RecordRenderedVNextFamilyRuntime(
+            state,
+            ChartProgramKind.Normalized,
+            EvidenceRuntimePath.VNextNormalized,
+            context);
+
+        var runtime = state.GetFamilyRuntime(ChartProgramKind.Normalized);
+        Assert.NotNull(runtime);
+        Assert.Equal(EvidenceRuntimePath.VNextNormalized, runtime!.RuntimePath);
+        Assert.Equal("request", runtime.RequestSignature);
+        Assert.Equal("snapshot", runtime.SnapshotSignature);
+        Assert.Equal(ChartProgramKind.Normalized, runtime.ProgramKind);
+        Assert.False(runtime.SupportsOnlyMainChart);
+        Assert.Equal(
+            "Weight:body_fat_mass|Weight:skeletal_muscle_mass::2026-01-01T00:00:00.0000000->2026-01-02T00:00:00.0000000::series=2",
+            runtime.ProjectedContextSignature);
+    }
+
+    [Fact]
+    public void RecordRenderedVNextFamilyRuntime_DoesNothing_WhenSourceLoadWasLegacy()
+    {
+        var state = new ChartState
+        {
+            LastLoadRuntime = LoadRuntimeState.LegacyFallback("request", null)
+        };
+
+        BinaryMetricChartContextHelper.RecordRenderedVNextFamilyRuntime(
+            state,
+            ChartProgramKind.Normalized,
+            EvidenceRuntimePath.VNextNormalized,
+            new ChartDataContext());
+
+        Assert.Null(state.GetFamilyRuntime(ChartProgramKind.Normalized));
     }
 }

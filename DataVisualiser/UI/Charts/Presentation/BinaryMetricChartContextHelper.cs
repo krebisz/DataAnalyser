@@ -1,6 +1,9 @@
 using DataFileReader.Canonical;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.MainHost.Evidence;
+using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
@@ -46,5 +49,31 @@ internal static class BinaryMetricChartContextHelper
             From = source.From,
             To = source.To
         };
+    }
+
+    public static void RecordRenderedVNextFamilyRuntime(
+        ChartState chartState,
+        ChartProgramKind programKind,
+        EvidenceRuntimePath runtimePath,
+        ChartDataContext familyContext)
+    {
+        ArgumentNullException.ThrowIfNull(chartState);
+        ArgumentNullException.ThrowIfNull(familyContext);
+
+        var loadRuntime = chartState.LastLoadRuntime;
+        if (loadRuntime?.RuntimePath != EvidenceRuntimePath.VNextMain)
+            return;
+
+        chartState.SetFamilyRuntime(
+            programKind,
+            new LoadRuntimeState(
+                runtimePath,
+                loadRuntime.RequestSignature,
+                loadRuntime.SnapshotSignature,
+                programKind,
+                loadRuntime.ProgramSourceSignature,
+                EvidenceDiagnosticsBuilder.BuildContextSignature(familyContext),
+                null,
+                false));
     }
 }

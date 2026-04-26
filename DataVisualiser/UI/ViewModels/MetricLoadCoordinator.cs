@@ -9,6 +9,7 @@ using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.UI.ViewModels;
 
@@ -152,17 +153,22 @@ public sealed class MetricLoadCoordinator
             if (VNextChartRoutePolicy.ShouldUseMainFamilyPath(_chartState))
             {
                 var vnextStopwatch = Stopwatch.StartNew();
-                var vnextResult = await _vnextMainChartIntegrationCoordinator.LoadMainChartAsync(request, _chartState.MainChartDisplayMode);
+                var vnextResults = await _vnextMainChartIntegrationCoordinator.LoadProgramsAsync(
+                    request,
+                    BuildMainFamilyProgramRequests());
                 vnextStopwatch.Stop();
+                var vnextResult = vnextResults.FirstOrDefault(result => result.ProgramKind == ChartProgramKind.Main) ??
+                                  vnextResults.First();
                 _chartState.RecordPerformanceTiming(
                     "MetricLoad",
-                    "VNextMainLoad",
+                    "VNextMainFamilyLoad",
                     vnextStopwatch.ElapsedMilliseconds,
                     EvidenceRuntimePath.VNextMain,
                     vnextResult.Success ? null : vnextResult.FailureReason);
 
                 if (vnextResult.Success && vnextResult.ProjectedContext != null)
                 {
+                    RecordVNextFamilyRuntimes(vnextResults, request.Signature);
                     var supportsOnlyMainChart = VNextChartRoutePolicy.SupportsOnlyMainChart(_chartState);
                     _chartState.LastContext = vnextResult.ProjectedContext;
                     _chartState.LastLoadRuntime = new LoadRuntimeState(
@@ -358,6 +364,58 @@ public sealed class MetricLoadCoordinator
         var secondary = request.SelectedSeries.Count > 1 ? request.SelectedSeries[1] : null;
 
         return (primary, secondary);
+    }
+
+    private IReadOnlyList<ChartProgramRequest> BuildMainFamilyProgramRequests()
+    {
+        var requests = new List<ChartProgramRequest>
+        {
+            ChartProgramRequest.MainProgram(
+                VNextMainChartIntegrationCoordinator.TranslateDisplayMode(_chartState.MainChartDisplayMode))
+        };
+
+        if (_chartState.IsNormalizedVisible)
+            requests.Add(ChartProgramRequest.Normalized());
+
+        if (_chartState.IsDiffRatioVisible)
+        {
+            requests.Add(_chartState.IsDiffRatioDifferenceMode
+                ? ChartProgramRequest.Difference()
+                : ChartProgramRequest.Ratio());
+        }
+
+        return requests;
+    }
+
+    private void RecordVNextFamilyRuntimes(
+        IReadOnlyList<VNextMainChartLoadResult> results,
+        string fallbackRequestSignature)
+    {
+        foreach (var result in results.Where(result => result.Success && result.ProgramKind.HasValue))
+        {
+            var programKind = result.ProgramKind!.Value;
+            if (programKind == ChartProgramKind.Main)
+                continue;
+
+            var runtimePath = programKind switch
+            {
+                ChartProgramKind.Normalized => EvidenceRuntimePath.VNextNormalized,
+                ChartProgramKind.Difference or ChartProgramKind.Ratio => EvidenceRuntimePath.VNextDiffRatio,
+                _ => EvidenceRuntimePath.VNextMain
+            };
+
+            _chartState.SetFamilyRuntime(
+                programKind,
+                new LoadRuntimeState(
+                    runtimePath,
+                    result.RequestSignature ?? fallbackRequestSignature,
+                    result.SnapshotSignature,
+                    result.ProgramKind,
+                    result.ProgramSourceSignature,
+                    result.ProjectedContextSignature,
+                    null,
+                    false));
+        }
     }
 
     /// <summary>

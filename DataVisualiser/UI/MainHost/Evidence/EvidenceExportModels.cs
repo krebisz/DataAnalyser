@@ -7,6 +7,8 @@ public enum EvidenceRuntimePath
 {
     Legacy,
     VNextMain,
+    VNextNormalized,
+    VNextDiffRatio,
     VNextDistribution,
     VNextWeekdayTrend,
     VNextTransform,

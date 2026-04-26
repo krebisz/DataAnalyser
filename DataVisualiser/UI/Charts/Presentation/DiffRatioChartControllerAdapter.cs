@@ -156,6 +156,13 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
         await _renderingContract.RenderAsync(
             new CartesianMetricChartRenderRequest(RenderingRoute, diffRatioContext),
             CreateRenderHost());
+        BinaryMetricChartContextHelper.RecordRenderedVNextFamilyRuntime(
+            _viewModel.ChartState,
+            _viewModel.ChartState.IsDiffRatioDifferenceMode
+                ? DataVisualiser.VNext.Contracts.ChartProgramKind.Difference
+                : DataVisualiser.VNext.Contracts.ChartProgramKind.Ratio,
+            DataVisualiser.UI.MainHost.Evidence.EvidenceRuntimePath.VNextDiffRatio,
+            diffRatioContext);
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveDiffRatioDataAsync(ChartDataContext ctx)

@@ -782,6 +782,34 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void VNextAnalyticalContracts_ShouldStaySplitByConcept()
+    {
+        var requiredFiles = new[]
+        {
+            "AnalyticalIntent.cs",
+            "AnalyticalIntentSet.cs",
+            "AnalyticalExecutionResult.cs",
+            "AnalyticalResultSet.cs",
+            "ConsumerDeliveryContract.cs",
+            "CapabilityRequest.cs",
+            "ProvenanceDescriptor.cs"
+        };
+
+        foreach (var file in requiredFiles)
+        {
+            var path = SourceTreeTestHelper.GetRepositoryPath("DataVisualiser", "VNext", "Contracts", file);
+            Assert.True(File.Exists(path), $"Expected split contract file '{file}' to exist.");
+        }
+
+        var analyticalIntentSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "Contracts", "AnalyticalIntent.cs");
+        Assert.DoesNotContain("public sealed record AnalyticalIntentSet", analyticalIntentSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("public sealed record CapabilityRequest", analyticalIntentSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("public sealed record ConsumerDeliveryContract", analyticalIntentSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("public sealed record ProvenanceDescriptor", analyticalIntentSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void VNextApplication_ShouldRemainUiAndBackendNeutral()
     {
         var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(

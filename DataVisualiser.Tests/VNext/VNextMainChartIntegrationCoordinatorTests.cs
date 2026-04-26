@@ -89,6 +89,56 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
     }
 
     [Fact]
+    public async Task LoadProgramsAsync_ShouldLoadSelectionOnceAndProjectMultiplePrograms()
+    {
+        var loader = new CountingMetricSeriesLoader();
+        var coordinator = new VNextMainChartIntegrationCoordinator(() => CreateStubSessionCoordinator(loader));
+        var request = CreateLoadRequest("Weight", "morning", "evening");
+
+        var results = await coordinator.LoadProgramsAsync(
+            request,
+            [
+                ChartProgramRequest.MainProgram(),
+                ChartProgramRequest.Normalized()
+            ]);
+
+        Assert.Equal(2, results.Count);
+        Assert.All(results, result =>
+        {
+            Assert.True(result.Success);
+            Assert.NotNull(result.ProjectedContext);
+            Assert.Equal(result.RequestSignature, result.SnapshotSignature);
+            Assert.Equal(result.ProgramSourceSignature, result.ProjectedContextSignature);
+        });
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Normalized], results.Select(result => result.ProgramKind).ToArray());
+        Assert.Equal(2, loader.LoadCallCount);
+    }
+
+    [Fact]
+    public async Task LoadProgramsAsync_ShouldReturnFailurePerRequestedProgramOnException()
+    {
+        var coordinator = new VNextMainChartIntegrationCoordinator(() => throw new InvalidOperationException("Factory failure"));
+        var request = CreateLoadRequest("Weight", "morning");
+
+        var results = await coordinator.LoadProgramsAsync(
+            request,
+            [
+                ChartProgramRequest.MainProgram(),
+                ChartProgramRequest.Normalized()
+            ]);
+
+        Assert.Equal(2, results.Count);
+        Assert.All(results, result =>
+        {
+            Assert.False(result.Success);
+            Assert.Null(result.ProjectedContext);
+            Assert.Equal(request.Signature, result.RequestSignature);
+            Assert.Contains("Factory failure", result.FailureReason);
+        });
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Normalized], results.Select(result => result.ProgramKind).ToArray());
+    }
+
+    [Fact]
     public async Task LoadMainChartAsync_WithSummedMode_ShouldBuildSummedProgram()
     {
         var coordinator = CreateCoordinator();
@@ -185,7 +235,11 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
 
     private static ReasoningSessionCoordinator CreateStubSessionCoordinator()
     {
-        var loader = new StubMetricSeriesLoader();
+        return CreateStubSessionCoordinator(new StubMetricSeriesLoader());
+    }
+
+    private static ReasoningSessionCoordinator CreateStubSessionCoordinator(IMetricSeriesLoader loader)
+    {
         var gateway = new LegacyMetricViewGateway(loader);
         var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
         var engine = new ReasoningEngine(gateway, planner);
@@ -210,6 +264,25 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
             string resolutionTableName,
             CancellationToken cancellationToken = default)
         {
+            var value = string.Equals(request.QuerySubtype, "evening", StringComparison.OrdinalIgnoreCase) ? 2m : 1m;
+            return Task.FromResult(new LoadedMetricSeries(
+                [new MetricData { NormalizedTimestamp = from, Value = value }],
+                null));
+        }
+    }
+
+    private sealed class CountingMetricSeriesLoader : IMetricSeriesLoader
+    {
+        public int LoadCallCount { get; private set; }
+
+        public Task<LoadedMetricSeries> LoadAsync(
+            MetricSeriesRequest request,
+            DateTime from,
+            DateTime to,
+            string resolutionTableName,
+            CancellationToken cancellationToken = default)
+        {
+            LoadCallCount++;
             var value = string.Equals(request.QuerySubtype, "evening", StringComparison.OrdinalIgnoreCase) ? 2m : 1m;
             return Task.FromResult(new LoadedMetricSeries(
                 [new MetricData { NormalizedTimestamp = from, Value = value }],

@@ -148,6 +148,11 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
         await _renderingContract.RenderAsync(
             new CartesianMetricChartRenderRequest(RenderingRoute, normalizedContext),
             CreateRenderHost());
+        BinaryMetricChartContextHelper.RecordRenderedVNextFamilyRuntime(
+            _viewModel.ChartState,
+            DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized,
+            DataVisualiser.UI.MainHost.Evidence.EvidenceRuntimePath.VNextNormalized,
+            normalizedContext);
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveNormalizedDataAsync(ChartDataContext ctx)

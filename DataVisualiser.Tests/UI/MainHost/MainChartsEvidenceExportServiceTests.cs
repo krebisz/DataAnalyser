@@ -662,6 +662,100 @@ public sealed class MainChartsEvidenceExportServiceTests
     }
 
     [Fact]
+    public async Task ExportAsync_ShouldEmitRenderedNormalizedFamilyRuntimeAfterVNextMainLoad()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            const string requestSignature = "Weight::HealthMetrics::2024-01-01T00:00:00.0000000->2024-01-02T00:00:00.0000000::Weight:morning|Weight:evening";
+            var chartState = new ChartState
+            {
+                IsMainVisible = true,
+                IsNormalizedVisible = true,
+                LastContext = new ChartDataContext
+                {
+                    Data1 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 1m }],
+                    Data2 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 2m }],
+                    MetricType = "Weight",
+                    PrimaryMetricType = "Weight",
+                    SecondaryMetricType = "Weight",
+                    PrimarySubtype = "morning",
+                    SecondarySubtype = "evening",
+                    LoadRequestSignature = requestSignature,
+                    ActualSeriesCount = 2,
+                    From = new DateTime(2024, 1, 1),
+                    To = new DateTime(2024, 1, 2)
+                },
+                LastLoadRuntime = new LoadRuntimeState(
+                    EvidenceRuntimePath.VNextMain,
+                    requestSignature,
+                    requestSignature,
+                    DataVisualiser.VNext.Contracts.ChartProgramKind.Main,
+                    requestSignature,
+                    requestSignature,
+                    null,
+                    true)
+            };
+            chartState.SetFamilyRuntime(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized,
+                new LoadRuntimeState(
+                    EvidenceRuntimePath.VNextNormalized,
+                    requestSignature,
+                    requestSignature,
+                    DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized,
+                    requestSignature,
+                    "normalized-context",
+                    null,
+                    false));
+            chartState.SetRenderPlanDiagnostics(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized,
+                new ChartRenderAdapterResult(
+                    "LiveChartsWpf",
+                    "Normalized:sig-1",
+                    ChartRenderPlanKind.Cartesian,
+                    ChartRenderDensityMode.FullFidelity,
+                    RenderedSeriesCount: 2,
+                    RenderedHierarchyNodeCount: 0,
+                    RenderedPointCount: 4,
+                    new Dictionary<string, string>
+                    {
+                        ["Adapter"] = "LiveChartsRenderPlanAdapter",
+                        ["ProgramKind"] = "Normalized"
+                    }));
+            var metricState = new MetricState
+            {
+                SelectedMetricType = "Weight",
+                FromDate = new DateTime(2024, 1, 1),
+                ToDate = new DateTime(2024, 1, 2),
+                ResolutionTableName = "HealthMetrics"
+            };
+            metricState.SetSeriesSelections(
+            [
+                new MetricSeriesSelection("Weight", "morning"),
+                new MetricSeriesSelection("Weight", "evening")
+            ]);
+
+            var result = await service.ExportAsync(chartState, metricState, new DateTime(2026, 4, 26, 12, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var diagnostics = document.RootElement.GetProperty("Diagnostics");
+            var vnext = diagnostics.GetProperty("VNext");
+            var normalized = diagnostics.GetProperty("VNextFamilies").GetProperty("Normalized");
+
+            Assert.False(vnext.GetProperty("SupportsOnlyMainChart").GetBoolean());
+            Assert.Equal("Normalized", normalized.GetProperty("ProgramKind").GetString());
+            Assert.Equal("normalized-context", normalized.GetProperty("ProjectedContextSignature").GetString());
+            Assert.False(normalized.GetProperty("SupportsOnlyMainChart").GetBoolean());
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
     public void BuildTransitionDiagnostics_ShouldNotRequireReloadForExtendedChartsWhenRenderEvidenceExists()
     {
         var selectedSeries = new List<MetricSeriesSelection>

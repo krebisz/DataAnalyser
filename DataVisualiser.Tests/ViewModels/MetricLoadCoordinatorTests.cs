@@ -121,7 +121,8 @@ public sealed class MetricLoadCoordinatorTests
         var uiState = new UiState();
         var validator = new DataLoadValidator(metricState);
         var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
-        var vnext = new VNextMainChartIntegrationCoordinator(CreateStubSessionCoordinator);
+        var loader = new CountingMetricSeriesLoader();
+        var vnext = new VNextMainChartIntegrationCoordinator(() => CreateStubSessionCoordinator(loader));
         var coordinator = MetricLoadCoordinator.CreateInstance(
             chartState,
             metricState,
@@ -167,7 +168,8 @@ public sealed class MetricLoadCoordinatorTests
         var uiState = new UiState();
         var validator = new DataLoadValidator(metricState);
         var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
-        var vnext = new VNextMainChartIntegrationCoordinator(CreateStubSessionCoordinator);
+        var loader = new CountingMetricSeriesLoader();
+        var vnext = new VNextMainChartIntegrationCoordinator(() => CreateStubSessionCoordinator(loader));
         var coordinator = MetricLoadCoordinator.CreateInstance(
             chartState,
             metricState,
@@ -187,6 +189,11 @@ public sealed class MetricLoadCoordinatorTests
         Assert.False(chartState.LastLoadRuntime.SupportsOnlyMainChart);
         Assert.Equal(request.Signature, chartState.LastLoadRuntime.RequestSignature);
         Assert.Equal(request.Signature, chartState.LastContext!.LoadRequestSignature);
+        Assert.Equal(2, loader.LoadCallCount);
+        var normalizedRuntime = chartState.GetFamilyRuntime(ChartProgramKind.Normalized);
+        Assert.NotNull(normalizedRuntime);
+        Assert.Equal(EvidenceRuntimePath.VNextNormalized, normalizedRuntime!.RuntimePath);
+        Assert.Equal(ChartProgramKind.Normalized, normalizedRuntime.ProgramKind);
     }
 
     [Fact]
@@ -213,7 +220,8 @@ public sealed class MetricLoadCoordinatorTests
         var uiState = new UiState();
         var validator = new DataLoadValidator(metricState);
         var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
-        var vnext = new VNextMainChartIntegrationCoordinator(CreateStubSessionCoordinator);
+        var loader = new CountingMetricSeriesLoader();
+        var vnext = new VNextMainChartIntegrationCoordinator(() => CreateStubSessionCoordinator(loader));
         var coordinator = MetricLoadCoordinator.CreateInstance(
             chartState,
             metricState,
@@ -233,6 +241,11 @@ public sealed class MetricLoadCoordinatorTests
         Assert.False(chartState.LastLoadRuntime.SupportsOnlyMainChart);
         Assert.Equal(request.Signature, chartState.LastLoadRuntime.RequestSignature);
         Assert.Equal(request.Signature, chartState.LastContext!.LoadRequestSignature);
+        Assert.Equal(2, loader.LoadCallCount);
+        var diffRuntime = chartState.GetFamilyRuntime(ChartProgramKind.Difference);
+        Assert.NotNull(diffRuntime);
+        Assert.Equal(EvidenceRuntimePath.VNextDiffRatio, diffRuntime!.RuntimePath);
+        Assert.Equal(ChartProgramKind.Difference, diffRuntime.ProgramKind);
     }
 
     [Fact]
@@ -448,7 +461,11 @@ public sealed class MetricLoadCoordinatorTests
 
     private static ReasoningSessionCoordinator CreateStubSessionCoordinator()
     {
-        var loader = new StubMetricSeriesLoader();
+        return CreateStubSessionCoordinator(new StubMetricSeriesLoader());
+    }
+
+    private static ReasoningSessionCoordinator CreateStubSessionCoordinator(IMetricSeriesLoader loader)
+    {
         var gateway = new LegacyMetricViewGateway(loader);
         var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
         var engine = new ReasoningEngine(gateway, planner);
@@ -526,6 +543,25 @@ public sealed class MetricLoadCoordinatorTests
             string resolutionTableName,
             CancellationToken cancellationToken = default)
         {
+            var value = string.Equals(request.QuerySubtype, "evening", StringComparison.OrdinalIgnoreCase) ? 2m : 1m;
+            return Task.FromResult(new LoadedMetricSeries(
+                [new MetricData { NormalizedTimestamp = from, Value = value }],
+                null));
+        }
+    }
+
+    private sealed class CountingMetricSeriesLoader : IMetricSeriesLoader
+    {
+        public int LoadCallCount { get; private set; }
+
+        public Task<LoadedMetricSeries> LoadAsync(
+            MetricSeriesRequest request,
+            DateTime from,
+            DateTime to,
+            string resolutionTableName,
+            CancellationToken cancellationToken = default)
+        {
+            LoadCallCount++;
             var value = string.Equals(request.QuerySubtype, "evening", StringComparison.OrdinalIgnoreCase) ? 2m : 1m;
             return Task.FromResult(new LoadedMetricSeries(
                 [new MetricData { NormalizedTimestamp = from, Value = value }],
