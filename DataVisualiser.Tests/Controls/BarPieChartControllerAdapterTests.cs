@@ -4,7 +4,6 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
-using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;

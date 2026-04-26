@@ -948,6 +948,44 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("RecordSaveCompleted", coordinatorSource, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void RenderPlanAdapters_ShouldPreservePlanVocabularyMetadata()
+    {
+        var adapterFiles = new[]
+        {
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Adapters", "LiveChartsRenderPlanAdapter.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Adapters", "UiChartRenderPlanAdapter.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Distribution", "DistributionRenderPlanAdapter.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "WeekdayTrend", "WeekdayTrendRenderPlanAdapter.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Syncfusion", "SyncfusionSunburstRenderPlanAdapter.cs")
+        };
+
+        foreach (var file in adapterFiles)
+        {
+            var source = SourceTreeTestHelper.ReadRepositoryFile(file);
+            Assert.Contains("plan.Metadata", source, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void RenderPlanBuilders_ShouldAttachVocabularyMetadata()
+    {
+        var builderFiles = new[]
+        {
+            Path.Combine("DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "BarPie", "BarPieRenderingTypes.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Distribution", "DistributionRenderingContract.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Syncfusion", "SyncfusionSunburstRenderingTypes.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "WeekdayTrend", "WeekdayTrendRenderingContract.cs")
+        };
+
+        foreach (var file in builderFiles)
+        {
+            var source = SourceTreeTestHelper.ReadRepositoryFile(file);
+            Assert.Contains("ChartRenderPlanVocabularyMetadata.AddTo", source, StringComparison.Ordinal);
+        }
+    }
+
     private static void AssertNoMatches(IReadOnlyList<string> offenders)
     {
         if (offenders.Count == 0)

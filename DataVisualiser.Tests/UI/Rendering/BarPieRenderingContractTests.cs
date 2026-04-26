@@ -1,6 +1,7 @@
 using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.Charts.Presentation.Rendering;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.UI.Rendering;
@@ -75,6 +76,36 @@ public sealed class BarPieRenderingContractTests
         surface.SetHasRenderedContent(false);
 
         Assert.False(contract.HasRenderableContent(BarPieRenderingRoute.PieFacet, host));
+    }
+
+    [Fact]
+    public async Task RenderAsync_ShouldPreserveVocabularyMetadata()
+    {
+        var contract = new BarPieRenderingContract();
+        var model = new UiChartRenderModel
+        {
+            ChartName = "BarPie",
+            Title = "Buckets",
+            IsVisible = true,
+            Series =
+            [
+                new ChartSeriesModel
+                {
+                    Name = "Weight",
+                    Values = [1, 2]
+                }
+            ]
+        };
+        var host = new BarPieChartRenderHost(new StubTrackedSurface(), new StubRenderer(), ChartRendererKind.LiveCharts, true);
+
+        var result = await contract.RenderAsync(new BarPieChartRenderRequest(BarPieRenderingRoute.Column, model), host);
+
+        Assert.Equal("Chart", result.Metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+        Assert.Equal("BarPieChart", result.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal("Identity", result.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal("MultiSeries", result.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.True(result.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
+        Assert.True(result.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
     }
 
     private sealed class StubTrackedSurface : IChartSurface, ITrackedChartContentSurface, ITrackedCartesianChartSurface

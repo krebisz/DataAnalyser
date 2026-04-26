@@ -224,7 +224,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
 
             var title = series.Title ?? string.Empty;
             var baseName = ChartStackingTooltipState.NormalizeOverlayName(title);
-            if (state.OverlaySeriesNames.Contains(baseName, StringComparer.OrdinalIgnoreCase))
+            if (state.OverlaySeriesNames?.Contains(baseName, StringComparer.OrdinalIgnoreCase) == true)
                 continue;
 
             if (!TryGetSeriesValueAtIndex(series, index, out var value))
@@ -248,7 +248,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
 
             var title = series.Title ?? string.Empty;
             var baseName = ChartStackingTooltipState.NormalizeOverlayName(title);
-            if (!state.OverlaySeriesNames.Contains(baseName, StringComparer.OrdinalIgnoreCase))
+            if (state.OverlaySeriesNames?.Contains(baseName, StringComparer.OrdinalIgnoreCase) != true)
                 continue;
 
             if (!TryGetSeriesValueAtIndex(series, index, out var seriesValue))
@@ -312,7 +312,7 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
         return ChartTooltipParticipationCalculator.BuildColumnSeriesParticipationLookup(chart, index.Value);
     }
 
-    internal static bool TryExtractNumeric(object value, out double numeric)
+    internal static bool TryExtractNumeric(object? value, out double numeric)
     {
         switch (value)
         {

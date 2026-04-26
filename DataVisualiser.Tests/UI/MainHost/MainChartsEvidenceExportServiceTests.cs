@@ -201,6 +201,64 @@ public sealed class MainChartsEvidenceExportServiceTests
     }
 
     [Fact]
+    public async Task ExportAsync_ShouldReportNoMissingVocabulary_WhenAllRenderPlansCarryVocabularyMetadata()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState();
+            foreach (var kind in new[]
+                     {
+                         DataVisualiser.VNext.Contracts.ChartProgramKind.Main,
+                         DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized,
+                         DataVisualiser.VNext.Contracts.ChartProgramKind.Transform,
+                         DataVisualiser.VNext.Contracts.ChartProgramKind.Distribution,
+                         DataVisualiser.VNext.Contracts.ChartProgramKind.WeekdayTrend,
+                         DataVisualiser.VNext.Contracts.ChartProgramKind.BarPie,
+                         DataVisualiser.VNext.Contracts.ChartProgramKind.SyncfusionSunburst
+                     })
+            {
+                var metadata = new Dictionary<string, string>
+                {
+                    ["ProgramKind"] = kind.ToString()
+                };
+                ChartRenderPlanVocabularyMetadata.AddTo(metadata, kind, $"source:{kind}");
+                chartState.SetRenderPlanDiagnostics(
+                    kind,
+                    new ChartRenderAdapterResult(
+                        "TestBackend",
+                        $"{kind}:plan",
+                        kind == DataVisualiser.VNext.Contracts.ChartProgramKind.SyncfusionSunburst
+                            ? ChartRenderPlanKind.Hierarchy
+                            : ChartRenderPlanKind.Cartesian,
+                        ChartRenderDensityMode.FullFidelity,
+                        RenderedSeriesCount: 1,
+                        RenderedHierarchyNodeCount: 0,
+                        RenderedPointCount: 1,
+                        metadata));
+            }
+
+            var result = await service.ExportAsync(chartState, new MetricState(), new DateTime(2026, 4, 26, 13, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var vocabulary = document.RootElement
+                .GetProperty("Diagnostics")
+                .GetProperty("RenderPlanVocabulary");
+
+            Assert.Equal(7, vocabulary.GetProperty("RenderPlanCount").GetInt32());
+            Assert.Equal(7, vocabulary.GetProperty("PlansWithIntentSignature").GetInt32());
+            Assert.Equal(7, vocabulary.GetProperty("PlansWithProvenanceSignature").GetInt32());
+            Assert.Empty(vocabulary.GetProperty("MissingVocabularyPlanKinds").EnumerateArray());
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
     public async Task ExportAsync_ShouldIncludeRenderPlanHistoryForRepeatedChartFamilyRoutes()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));

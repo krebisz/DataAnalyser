@@ -169,6 +169,11 @@ public sealed class DistributionChartControllerAdapterTests
             Assert.Contains(controller.Chart.Series, series => string.Equals(series.Title, "Avg", StringComparison.OrdinalIgnoreCase));
             Assert.IsType<DistributionPolarProjectionTooltip>(controller.Chart.Tag);
             Assert.True(adapter.HasSeries(chartState));
+            var metadata = chartState.RenderPlanDiagnostics[ChartProgramKind.Distribution].Metadata;
+            Assert.Equal("Chart", metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+            Assert.Equal("DistributionChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+            Assert.Equal("Distribution", metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+            Assert.Equal("SingleSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
         });
     }
 

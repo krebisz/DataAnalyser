@@ -63,6 +63,21 @@ public static class SyncfusionSunburstRenderPlanBuilder
             .ToArray();
 
         var renderedNodeCount = CountNodes(roots);
+        var sourceSignature = $"{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}";
+        var metadata = new Dictionary<string, string>
+        {
+            ["Adapter"] = nameof(SyncfusionSunburstRenderPlanAdapter),
+            ["ProgramKind"] = ChartProgramKind.SyncfusionSunburst.ToString(),
+            ["Route"] = request.Route.ToString(),
+            ["BucketCount"] = request.BucketCount.ToString(),
+            ["SelectionCount"] = request.SelectionCount.ToString()
+        };
+        ChartRenderPlanVocabularyMetadata.AddTo(
+            metadata,
+            ChartProgramKind.SyncfusionSunburst,
+            sourceSignature,
+            deliveryTarget: "SyncfusionSunburst");
+
         return new ChartRenderPlan(
             $"{SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy}:{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}",
             ChartProgramKind.SyncfusionSunburst,
@@ -71,7 +86,7 @@ public static class SyncfusionSunburstRenderPlanBuilder
             "Syncfusion Sunburst",
             request.From ?? DateTime.MinValue,
             request.To ?? DateTime.MinValue,
-            $"{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}",
+            sourceSignature,
             Array.Empty<ChartSeriesPlan>(),
             roots,
             new RenderDensityPlan(
@@ -85,14 +100,7 @@ public static class SyncfusionSunburstRenderPlanBuilder
                 SupportsTooltips: true,
                 SupportsSelection: true,
                 SupportsViewportRefinement: false),
-            new Dictionary<string, string>
-            {
-                ["Adapter"] = nameof(SyncfusionSunburstRenderPlanAdapter),
-                ["ProgramKind"] = ChartProgramKind.SyncfusionSunburst.ToString(),
-                ["Route"] = request.Route.ToString(),
-                ["BucketCount"] = request.BucketCount.ToString(),
-                ["SelectionCount"] = request.SelectionCount.ToString()
-            });
+            metadata);
     }
 
     private static int CountNodes(IEnumerable<ChartHierarchyNodePlan> nodes)

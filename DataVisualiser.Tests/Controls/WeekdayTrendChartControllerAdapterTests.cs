@@ -92,7 +92,12 @@ public sealed class WeekdayTrendChartControllerAdapterTests
             Assert.Equal("Scatter", setup.Controller.ChartTypeToggleButton.Content);
             Assert.Equal(1, setup.CutOverService.CreateStrategyCallCount);
             Assert.Equal(1, setup.CutOverService.Strategy.ComputeCallCount);
-            Assert.Equal("Polar", setup.ChartState.RenderPlanDiagnostics[ChartProgramKind.WeekdayTrend].Metadata["Route"]);
+            var metadata = setup.ChartState.RenderPlanDiagnostics[ChartProgramKind.WeekdayTrend].Metadata;
+            Assert.Equal("Polar", metadata["Route"]);
+            Assert.Equal("Chart", metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+            Assert.Equal("WeekdayTrendChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+            Assert.Equal("TemporalTrend", metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+            Assert.Equal("SingleSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
 
             setup.Adapter.OnChartTypeToggleRequested(null, EventArgs.Empty);
 
@@ -233,6 +238,18 @@ public sealed class WeekdayTrendChartControllerAdapterTests
         public ChartRenderAdapterResult Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
         {
             LastRenderRequest = request;
+            var metadata = new Dictionary<string, string>
+            {
+                ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
+                ["Route"] = request.Route.ToString(),
+                ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString()
+            };
+            ChartRenderPlanVocabularyMetadata.AddTo(
+                metadata,
+                ChartProgramKind.WeekdayTrend,
+                $"{request.SelectionDisplayKey}:{request.Route}",
+                deliveryTarget: "WeekdayTrendChart");
+
             return new ChartRenderAdapterResult(
                 WeekdayTrendBackendKey.LiveChartsWpfCartesian,
                 "test-weekday-trend-plan",
@@ -241,12 +258,7 @@ public sealed class WeekdayTrendChartControllerAdapterTests
                 0,
                 0,
                 0,
-                new Dictionary<string, string>
-                {
-                    ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
-                    ["Route"] = request.Route.ToString(),
-                    ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString()
-                });
+                metadata);
         }
 
         public void Clear(WeekdayTrendChartRenderHost host)

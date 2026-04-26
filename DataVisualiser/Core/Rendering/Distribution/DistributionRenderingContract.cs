@@ -308,6 +308,22 @@ public static class DistributionRenderPlanBuilder
         ArgumentNullException.ThrowIfNull(request);
 
         var backendKey = ResolveBackendKey(request.Route);
+        var sourceSignature = $"{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}:{request.Data.Count}";
+        var metadata = new Dictionary<string, string>
+        {
+            ["Adapter"] = nameof(DistributionRenderPlanAdapter),
+            [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
+            ["ProgramKind"] = ChartProgramKind.Distribution.ToString(),
+            ["Route"] = request.Route.ToString(),
+            ["Mode"] = request.Mode.ToString(),
+            ["Selection"] = request.SelectionDisplayKey
+        };
+        ChartRenderPlanVocabularyMetadata.AddTo(
+            metadata,
+            ChartProgramKind.Distribution,
+            sourceSignature,
+            deliveryTarget: "DistributionChart");
+
         return new ChartRenderPlan(
             $"{backendKey}:{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}",
             ChartProgramKind.Distribution,
@@ -316,7 +332,7 @@ public static class DistributionRenderPlanBuilder
             request.DisplayName,
             request.From,
             request.To,
-            $"{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}:{request.Data.Count}",
+            sourceSignature,
             Array.Empty<ChartSeriesPlan>(),
             Array.Empty<ChartHierarchyNodePlan>(),
             new RenderDensityPlan(
@@ -330,15 +346,7 @@ public static class DistributionRenderPlanBuilder
                 SupportsTooltips: true,
                 SupportsSelection: true,
                 SupportsViewportRefinement: false),
-            new Dictionary<string, string>
-            {
-                ["Adapter"] = nameof(DistributionRenderPlanAdapter),
-                [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
-                ["ProgramKind"] = ChartProgramKind.Distribution.ToString(),
-                ["Route"] = request.Route.ToString(),
-                ["Mode"] = request.Mode.ToString(),
-                ["Selection"] = request.SelectionDisplayKey
-            });
+            metadata);
     }
 
     private static string ResolveBackendKey(DistributionRenderingRoute route)

@@ -147,6 +147,33 @@ public sealed class AnalyticalIntentContractsTests
     }
 
     [Theory]
+    [InlineData(ChartProgramKind.Main, "Chart", "MainChart", "Identity", "MultiSeries")]
+    [InlineData(ChartProgramKind.Normalized, "Chart", "NormalizedChart", "Normalization", "MultiSeries")]
+    [InlineData(ChartProgramKind.Difference, "Chart", "DiffRatioChart", "Comparison", "DerivedSeries")]
+    [InlineData(ChartProgramKind.Ratio, "Chart", "DiffRatioChart", "Comparison", "DerivedSeries")]
+    [InlineData(ChartProgramKind.Transform, "Chart", "TransformChart", "Transform", "MultiSeries")]
+    [InlineData(ChartProgramKind.Distribution, "Chart", "DistributionChart", "Distribution", "SingleSeries")]
+    [InlineData(ChartProgramKind.WeekdayTrend, "Chart", "WeekdayTrendChart", "TemporalTrend", "SingleSeries")]
+    [InlineData(ChartProgramKind.BarPie, "Chart", "BarPieChart", "Identity", "MultiSeries")]
+    [InlineData(ChartProgramKind.SyncfusionSunburst, "HierarchyChart", "SyncfusionSunburst", "Hierarchy", "Hierarchy")]
+    public void ChartRenderPlanVocabularyMetadata_ShouldInferContractMetadata(
+        ChartProgramKind kind,
+        string expectedConsumer,
+        string expectedDeliveryTarget,
+        string expectedCapability,
+        string expectedComposition)
+    {
+        var metadata = ChartRenderPlanVocabularyMetadata.Build(kind, "source-signature");
+
+        Assert.Equal(expectedConsumer, metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+        Assert.Equal(expectedDeliveryTarget, metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(expectedCapability, metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal(expectedComposition, metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.Equal("Legacy:Projected:source-signature", metadata[ChartRenderPlanMetadataKeys.ProvenanceSignature]);
+        Assert.Contains("source-signature", metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData(ChartProgramKind.Main, AnalyticalCapabilityKind.Identity, CompositionKind.MultiSeries)]
     [InlineData(ChartProgramKind.Normalized, AnalyticalCapabilityKind.Normalization, CompositionKind.MultiSeries)]
     [InlineData(ChartProgramKind.Difference, AnalyticalCapabilityKind.Comparison, CompositionKind.DerivedSeries)]

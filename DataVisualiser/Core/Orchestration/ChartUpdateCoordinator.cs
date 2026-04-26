@@ -193,6 +193,7 @@ public class ChartUpdateCoordinator
     private ChartRenderPlan BuildChartRenderPlan(ChartRenderModel model, string? title, bool isCumulative, ChartProgramKind programKind)
     {
         var timeline = ResolveRenderPlanTimeline(model);
+        var sourceSignature = BuildRenderPlanSignature(model, timeline);
         var program = new ChartProgram(
             programKind,
             ResolveDisplayMode(model, isCumulative),
@@ -201,12 +202,12 @@ public class ChartUpdateCoordinator
             timeline.Count > 0 ? timeline[^1] : DateTime.MinValue,
             timeline,
             BuildChartSeriesPrograms(model),
-            BuildRenderPlanSignature(model, timeline));
+            sourceSignature);
 
         var plan = _renderPlanProjector.ProjectCartesian(program);
         return plan with
         {
-            Metadata = BuildRenderPlanMetadata(model, programKind),
+            Metadata = BuildRenderPlanMetadata(model, programKind, sourceSignature, program.DisplayMode),
             OverlaySeries = BuildOverlayRenderPlanSeries(model, timeline, programKind)
         };
     }
@@ -301,7 +302,11 @@ public class ChartUpdateCoordinator
         return $"legacy-render:{model.MetricType}:{model.PrimarySeriesName}:{model.SecondarySeriesName}:{from}:{to}:{timeline.Count}";
     }
 
-    private static IReadOnlyDictionary<string, string> BuildRenderPlanMetadata(ChartRenderModel model, ChartProgramKind programKind)
+    private static IReadOnlyDictionary<string, string> BuildRenderPlanMetadata(
+        ChartRenderModel model,
+        ChartProgramKind programKind,
+        string sourceSignature,
+        ChartDisplayMode displayMode)
     {
         var metadata = new Dictionary<string, string>
         {
@@ -324,6 +329,12 @@ public class ChartUpdateCoordinator
         AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplayPrimarySubtypeMetadataKey, model.DisplayPrimarySubtype);
         AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplaySecondarySubtypeMetadataKey, model.DisplaySecondarySubtype);
         AddMetadata(metadata, LiveChartsRenderPlanAdapter.OperationTypeMetadataKey, model.OperationType);
+        ChartRenderPlanVocabularyMetadata.AddTo(
+            metadata,
+            programKind,
+            sourceSignature,
+            displayMode,
+            overlayCount: model.OverlaySeries?.Count ?? 0);
 
         return metadata;
     }

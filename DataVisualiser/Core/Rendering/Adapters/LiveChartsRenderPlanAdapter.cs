@@ -52,6 +52,12 @@ public sealed class LiveChartsRenderPlanAdapter : IChartRenderPlanAdapter<LiveCh
         var model = BuildRenderModel(plan, surface.Chart);
         surface.RenderEngine.Render(surface.Chart, model, surface.MinHeight);
 
+        var metadata = new Dictionary<string, string>(plan.Metadata)
+        {
+            ["Adapter"] = nameof(LiveChartsRenderPlanAdapter),
+            ["ProgramKind"] = plan.ProgramKind.ToString()
+        };
+
         return ValueTask.FromResult(new ChartRenderAdapterResult(
             Capabilities.BackendKey,
             plan.Id,
@@ -61,11 +67,7 @@ public sealed class LiveChartsRenderPlanAdapter : IChartRenderPlanAdapter<LiveCh
             0,
             plan.Series.Sum(series => series.RenderBuffer.RenderedPointCount) +
             plan.OverlaySeries.Sum(series => series.RenderBuffer.RenderedPointCount),
-            new Dictionary<string, string>
-            {
-                ["Adapter"] = nameof(LiveChartsRenderPlanAdapter),
-                ["ProgramKind"] = plan.ProgramKind.ToString()
-            }));
+            metadata));
     }
 
     private static ChartRenderModel BuildRenderModel(ChartRenderPlan plan, CartesianChart chart)

@@ -33,6 +33,13 @@ public sealed class SyncfusionSunburstChartControllerAdapterTests
             Assert.Equal(
                 "SyncfusionSunburst",
                 viewModel.ChartState.RenderPlanDiagnostics[ChartProgramKind.SyncfusionSunburst].Metadata["ProgramKind"]);
+            var metadata = viewModel.ChartState.RenderPlanDiagnostics[ChartProgramKind.SyncfusionSunburst].Metadata;
+            Assert.Equal("HierarchyChart", metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+            Assert.Equal("SyncfusionSunburst", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+            Assert.Equal("Hierarchy", metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+            Assert.Equal("Hierarchy", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+            Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
+            Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
             Assert.Contains(viewModel.ChartState.RenderPlanHistory, entry =>
                 entry.ProgramKind == ChartProgramKind.SyncfusionSunburst.ToString() &&
                 entry.Metadata["Route"] == SyncfusionSunburstRenderingRoute.Hierarchy.ToString());

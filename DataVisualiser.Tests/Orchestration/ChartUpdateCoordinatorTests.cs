@@ -11,6 +11,7 @@ using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -84,6 +85,15 @@ public sealed class ChartUpdateCoordinatorTests
                 Assert.True(chartTimestamps.TryGetValue(chart, out var timestamps));
                 Assert.Equal(2, timestamps!.Count);
                 Assert.Equal(2, chart.Series.Count);
+                Assert.NotNull(coordinator.LastRenderPlanAdapterResult);
+                var metadata = coordinator.LastRenderPlanAdapterResult!.Metadata;
+                Assert.Equal("Main", metadata["ProgramKind"]);
+                Assert.Equal("Chart", metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+                Assert.Equal("MainChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+                Assert.Equal("Identity", metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+                Assert.Equal("MultiSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+                Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
+                Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
             }
             finally
             {
@@ -223,6 +233,13 @@ public sealed class ChartUpdateCoordinatorTests
                 Assert.True(chartTimestamps.ContainsKey(chart));
                 Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Transform));
                 Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Transform].BackendKey);
+                var metadata = chartState.RenderPlanDiagnostics[ChartProgramKind.Transform].Metadata;
+                Assert.Equal("Chart", metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+                Assert.Equal("TransformChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+                Assert.Equal("Transform", metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+                Assert.Equal("MultiSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+                Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
+                Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
             }
             finally
             {

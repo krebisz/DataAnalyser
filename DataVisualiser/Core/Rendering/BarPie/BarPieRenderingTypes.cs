@@ -45,15 +45,31 @@ public static class BarPieRenderPlanBuilder
             ? ChartRenderPlanKind.Faceted
             : ChartRenderPlanKind.Cartesian;
 
+        var backendKey = ResolveBackendKey(rendererKind, request.Route);
+        var sourceSignature = $"{model.ChartName}:{request.Route}:{model.Title}:{model.Series.Count}:{model.Facets.Count}";
+        var metadata = new Dictionary<string, string>
+        {
+            ["Adapter"] = "UiChartRenderPlanAdapter",
+            [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
+            ["ProgramKind"] = ChartProgramKind.BarPie.ToString(),
+            ["RendererKind"] = rendererKind.ToString(),
+            ["Route"] = request.Route.ToString()
+        };
+        ChartRenderPlanVocabularyMetadata.AddTo(
+            metadata,
+            ChartProgramKind.BarPie,
+            sourceSignature,
+            deliveryTarget: "BarPieChart");
+
         return new ChartRenderPlan(
-            $"{ResolveBackendKey(rendererKind, request.Route)}:{model.ChartName}:{request.Route}:{model.Title}:{model.Series.Count}:{model.Facets.Count}",
+            $"{backendKey}:{model.ChartName}:{request.Route}:{model.Title}:{model.Series.Count}:{model.Facets.Count}",
             ChartProgramKind.BarPie,
             planKind,
             ChartDisplayMode.Regular,
             model.Title ?? "Bar/Pie",
             DateTime.MinValue,
             DateTime.MinValue,
-            $"{model.ChartName}:{request.Route}:{model.Title}:{model.Series.Count}:{model.Facets.Count}",
+            sourceSignature,
             Array.Empty<ChartSeriesPlan>(),
             Array.Empty<ChartHierarchyNodePlan>(),
             new RenderDensityPlan(
@@ -67,14 +83,7 @@ public static class BarPieRenderPlanBuilder
                 SupportsTooltips: true,
                 SupportsSelection: true,
                 SupportsViewportRefinement: false),
-            new Dictionary<string, string>
-            {
-                ["Adapter"] = "UiChartRenderPlanAdapter",
-                [ChartRenderPlanMetadataKeys.BackendKey] = ResolveBackendKey(rendererKind, request.Route),
-                ["ProgramKind"] = ChartProgramKind.BarPie.ToString(),
-                ["RendererKind"] = rendererKind.ToString(),
-                ["Route"] = request.Route.ToString()
-            });
+            metadata);
     }
 
     private static string ResolveBackendKey(ChartRendererKind rendererKind, BarPieRenderingRoute route)

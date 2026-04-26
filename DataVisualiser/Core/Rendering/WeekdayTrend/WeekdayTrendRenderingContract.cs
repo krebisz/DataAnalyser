@@ -212,6 +212,22 @@ public static class WeekdayTrendRenderPlanBuilder
 
         var backendKey = ResolveBackendKey(request.Route);
         var sourcePointCount = request.Result.SeriesByDay.Values.Sum(series => series.Points.Count);
+        var sourceSignature = $"{request.SelectionDisplayKey}:{request.Route}:{sourcePointCount}:{request.Result.Unit}";
+        var metadata = new Dictionary<string, string>
+        {
+            ["Adapter"] = nameof(WeekdayTrendRenderPlanAdapter),
+            [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
+            ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
+            ["Route"] = request.Route.ToString(),
+            ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString(),
+            ["Selection"] = request.SelectionDisplayKey
+        };
+        ChartRenderPlanVocabularyMetadata.AddTo(
+            metadata,
+            ChartProgramKind.WeekdayTrend,
+            sourceSignature,
+            deliveryTarget: "WeekdayTrendChart");
+
         return new ChartRenderPlan(
             $"{backendKey}:{request.SelectionDisplayKey}:{request.Route}:{request.Result.From:O}:{request.Result.To:O}",
             ChartProgramKind.WeekdayTrend,
@@ -220,7 +236,7 @@ public static class WeekdayTrendRenderPlanBuilder
             "Weekday Trend",
             request.Result.From,
             request.Result.To,
-            $"{request.SelectionDisplayKey}:{request.Route}:{sourcePointCount}:{request.Result.Unit}",
+            sourceSignature,
             Array.Empty<ChartSeriesPlan>(),
             Array.Empty<ChartHierarchyNodePlan>(),
             new RenderDensityPlan(
@@ -234,15 +250,7 @@ public static class WeekdayTrendRenderPlanBuilder
                 SupportsTooltips: true,
                 SupportsSelection: true,
                 SupportsViewportRefinement: false),
-            new Dictionary<string, string>
-            {
-                ["Adapter"] = nameof(WeekdayTrendRenderPlanAdapter),
-                [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
-                ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
-                ["Route"] = request.Route.ToString(),
-                ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString(),
-                ["Selection"] = request.SelectionDisplayKey
-            });
+            metadata);
     }
 
     private static string ResolveBackendKey(WeekdayTrendRenderingRoute route)
