@@ -9,10 +9,7 @@ internal static class VNextChartRoutePolicy
         ArgumentNullException.ThrowIfNull(chartState);
 
         return chartState.IsMainVisible &&
-               !chartState.IsDistributionVisible &&
-               !chartState.IsWeeklyTrendVisible &&
-               !chartState.IsTransformPanelVisible &&
-               !chartState.IsBarPieVisible;
+               !chartState.IsTransformPanelVisible;
     }
 
     public static bool SupportsOnlyMainChart(ChartState chartState)

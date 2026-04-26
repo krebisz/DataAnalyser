@@ -155,7 +155,7 @@ public sealed class MetricLoadCoordinator
                 var vnextStopwatch = Stopwatch.StartNew();
                 var vnextResults = await _vnextMainChartIntegrationCoordinator.LoadProgramsAsync(
                     request,
-                    VNextChartProgramRequestPlanner.BuildMainFamilyRequests(_chartState));
+                    VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(_chartState));
                 vnextStopwatch.Stop();
                 var vnextResult = vnextResults.FirstOrDefault(result => result.ProgramKind == ChartProgramKind.Main) ??
                                   vnextResults.First();

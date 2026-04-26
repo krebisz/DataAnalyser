@@ -102,7 +102,7 @@ public sealed class VNextChartProgramRequestPlannerTests
     }
 
     [Fact]
-    public void BuildVisibleChartFamilyRequests_ShouldAllowTransformWithoutOperationsAsIdentityPreparation()
+    public void BuildVisibleChartFamilyRequests_ShouldSkipTransformWhenNoOperationsAreAvailable()
     {
         var state = new ChartState
         {
@@ -112,9 +112,7 @@ public sealed class VNextChartProgramRequestPlannerTests
 
         var requests = VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(state);
 
-        var transform = requests.Single(request => request.Kind == ChartProgramKind.Transform);
-        Assert.Empty(transform.SeriesOperations);
-        Assert.Equal("Transform", transform.TitleOverride);
+        Assert.DoesNotContain(requests, request => request.Kind == ChartProgramKind.Transform);
     }
 
     [Theory]

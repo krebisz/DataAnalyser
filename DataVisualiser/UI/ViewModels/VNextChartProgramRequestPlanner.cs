@@ -46,7 +46,11 @@ internal static class VNextChartProgramRequestPlanner
             requests.Add(ChartProgramRequest.WeekdayTrend());
 
         if (chartState.IsTransformPanelVisible)
-            requests.Add(ChartProgramRequest.Transform(transformTitle, transformOperations ?? []));
+        {
+            var operations = transformOperations ?? [];
+            if (operations.Count > 0)
+                requests.Add(ChartProgramRequest.Transform(transformTitle, operations));
+        }
 
         if (chartState.IsBarPieVisible)
             requests.Add(ChartProgramRequest.BarPie());

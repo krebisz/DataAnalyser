@@ -50,6 +50,30 @@ public sealed class OperationKernelTests
     }
 
     [Fact]
+    public void BuildSeries_Logarithm_ShouldMatchLegacyUnarySemantics()
+    {
+        var kernel = new OperationKernel();
+        var bundle = CreateBundle(CreateAlignedSeries("Weight", "a", [1d, Math.E, 0d, -1d, double.NaN], [1d, Math.E * Math.E, 0d, -4d, double.NaN]));
+
+        var program = kernel.BuildSeries(bundle, SeriesOperationRequest.Logarithm(0, "log", "Log"));
+
+        Assert.Equal([0d, 1d, double.NaN, double.NaN, double.NaN], program.RawValues);
+        Assert.Equal([0d, 2d, double.NaN, double.NaN, double.NaN], program.SmoothedValues);
+    }
+
+    [Fact]
+    public void BuildSeries_SquareRoot_ShouldMatchLegacyUnarySemantics()
+    {
+        var kernel = new OperationKernel();
+        var bundle = CreateBundle(CreateAlignedSeries("Weight", "a", [0d, 4d, -1d, double.NaN], [9d, 16d, -4d, double.NaN]));
+
+        var program = kernel.BuildSeries(bundle, SeriesOperationRequest.SquareRoot(0, "sqrt", "Sqrt"));
+
+        Assert.Equal([0d, 2d, double.NaN, double.NaN], program.RawValues);
+        Assert.Equal([3d, 4d, double.NaN, double.NaN], program.SmoothedValues);
+    }
+
+    [Fact]
     public void BuildSeries_ShouldThrow_WhenOperationReferencesOutOfRangeSeriesIndex()
     {
         var kernel = new OperationKernel();

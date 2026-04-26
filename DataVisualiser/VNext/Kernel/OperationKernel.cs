@@ -15,6 +15,8 @@ public sealed class OperationKernel
         {
             SeriesOperationKind.Identity => CreateSeriesProgram(request, indexes[0].RawValues, indexes[0].SmoothedValues),
             SeriesOperationKind.Normalize => CreateSeriesProgram(request, Normalize(indexes[0].RawValues), Normalize(indexes[0].SmoothedValues)),
+            SeriesOperationKind.Logarithm => CreateSeriesProgram(request, ApplyUnary(indexes[0].RawValues, value => value <= 0d ? double.NaN : Math.Log(value)), ApplyUnary(indexes[0].SmoothedValues, value => value <= 0d ? double.NaN : Math.Log(value))),
+            SeriesOperationKind.SquareRoot => CreateSeriesProgram(request, ApplyUnary(indexes[0].RawValues, value => value < 0d ? double.NaN : Math.Sqrt(value)), ApplyUnary(indexes[0].SmoothedValues, value => value < 0d ? double.NaN : Math.Sqrt(value))),
             SeriesOperationKind.Sum => CreateSeriesProgram(request, Sum(indexes.Select(series => series.RawValues), bundle.Timeline.Count), Sum(indexes.Select(series => series.SmoothedValues), bundle.Timeline.Count)),
             SeriesOperationKind.Difference => CreateSeriesProgram(request, ApplyBinary(indexes[0].RawValues, indexes[1].RawValues, (left, right) => left - right), ApplyBinary(indexes[0].SmoothedValues, indexes[1].SmoothedValues, (left, right) => left - right)),
             SeriesOperationKind.Ratio => CreateSeriesProgram(request, ApplyBinary(indexes[0].RawValues, indexes[1].RawValues, (left, right) => right == 0d ? double.NaN : left / right), ApplyBinary(indexes[0].SmoothedValues, indexes[1].SmoothedValues, (left, right) => right == 0d ? double.NaN : left / right)),
@@ -89,6 +91,20 @@ public sealed class OperationKernel
             var left = leftValues[index];
             var right = rightValues[index];
             result[index] = double.IsNaN(left) || double.IsNaN(right) ? double.NaN : operation(left, right);
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<double> ApplyUnary(
+        IReadOnlyList<double> values,
+        Func<double, double> operation)
+    {
+        var result = new double[values.Count];
+        for (var index = 0; index < values.Count; index++)
+        {
+            var value = values[index];
+            result[index] = double.IsNaN(value) ? double.NaN : operation(value);
         }
 
         return result;

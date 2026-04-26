@@ -6,7 +6,9 @@ public enum SeriesOperationKind
     Normalize = 1,
     Sum = 2,
     Difference = 3,
-    Ratio = 4
+    Ratio = 4,
+    Logarithm = 5,
+    SquareRoot = 6
 }
 
 public sealed record SeriesOperationRequest
@@ -40,6 +42,12 @@ public sealed record SeriesOperationRequest
 
     public static SeriesOperationRequest Normalize(int index, string id, string label) =>
         new(SeriesOperationKind.Normalize, [index], id, label);
+
+    public static SeriesOperationRequest Logarithm(int index, string id, string label) =>
+        new(SeriesOperationKind.Logarithm, [index], id, label);
+
+    public static SeriesOperationRequest SquareRoot(int index, string id, string label) =>
+        new(SeriesOperationKind.SquareRoot, [index], id, label);
 
     public static SeriesOperationRequest Sum(IReadOnlyList<int> indexes, string label = "Sum") =>
         new(SeriesOperationKind.Sum, indexes, "sum", label);

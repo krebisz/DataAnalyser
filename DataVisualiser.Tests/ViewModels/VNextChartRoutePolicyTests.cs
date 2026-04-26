@@ -29,12 +29,23 @@ public sealed class VNextChartRoutePolicyTests
     [Theory]
     [InlineData(nameof(ChartState.IsDistributionVisible))]
     [InlineData(nameof(ChartState.IsWeeklyTrendVisible))]
-    [InlineData(nameof(ChartState.IsTransformPanelVisible))]
     [InlineData(nameof(ChartState.IsBarPieVisible))]
-    public void ShouldUseMainFamilyPath_ShouldRejectNonSlicedChartFamilies(string visibleProperty)
+    public void ShouldUseMainFamilyPath_ShouldAllowIdentityStyleChartFamilies(string visibleProperty)
     {
         var state = new ChartState { IsMainVisible = true };
         typeof(ChartState).GetProperty(visibleProperty)!.SetValue(state, true);
+
+        Assert.True(VNextChartRoutePolicy.ShouldUseMainFamilyPath(state));
+    }
+
+    [Fact]
+    public void ShouldUseMainFamilyPath_ShouldRejectTransformUntilOperationsCanBePassed()
+    {
+        var state = new ChartState
+        {
+            IsMainVisible = true,
+            IsTransformPanelVisible = true
+        };
 
         Assert.False(VNextChartRoutePolicy.ShouldUseMainFamilyPath(state));
     }

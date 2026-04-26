@@ -95,6 +95,64 @@ public sealed class TransformCoordinatorTests
         Assert.Equal([1d, 2d], result.Results);
     }
 
+    [Theory]
+    [InlineData("Log", 0d, 0.6931471805599453d)]
+    [InlineData("Sqrt", 1d, 1.4142135623730951d)]
+    public void OperationExecutionCoordinator_ExecuteUnarySupportedByVNext_ReturnsExpectedResults(string operation, double first, double second)
+    {
+        var coordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+        var primary = CreatePrimaryData();
+        var context = CreatePrimaryOnlyContext();
+        var resolution = new TransformResolutionResult(
+            new TransformSelectionResolution(new MetricSeriesSelection("MetricA", "SubA"), null, false),
+            primary,
+            null,
+            context);
+
+        var result = coordinator.Execute(resolution, operation);
+
+        Assert.NotNull(result);
+        Assert.Equal(operation, result!.OperationTag);
+        Assert.Equal(1, result.OperationArity);
+        Assert.Equal([first, second], result.Results);
+    }
+
+    [Theory]
+    [InlineData("Add", 4d, 6d)]
+    [InlineData("Subtract", -2d, -2d)]
+    [InlineData("Divide", 0.3333333333333333d, 0.5d)]
+    public void OperationExecutionCoordinator_ExecuteBinarySupportedByVNext_ReturnsExpectedResults(string operation, double first, double second)
+    {
+        var coordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+        var primary = CreatePrimaryData();
+        var secondary = new List<MetricData>
+        {
+            new()
+            {
+                NormalizedTimestamp = primary[0].NormalizedTimestamp,
+                Value = 3m
+            },
+            new()
+            {
+                NormalizedTimestamp = primary[1].NormalizedTimestamp,
+                Value = 4m
+            }
+        };
+        var context = CreateBinaryContext(secondary);
+        var resolution = new TransformResolutionResult(
+            new TransformSelectionResolution(new MetricSeriesSelection("MetricA", "SubA"), new MetricSeriesSelection("MetricB", "SubB"), true),
+            primary,
+            secondary,
+            context);
+
+        var result = coordinator.Execute(resolution, operation);
+
+        Assert.NotNull(result);
+        Assert.Equal(operation, result!.OperationTag);
+        Assert.Equal(2, result.OperationArity);
+        Assert.Equal([first, second], result.Results);
+    }
+
     [Fact]
     public void DataResolutionCoordinator_ResolveSelections_UsesExplicitSecondarySelectionOutsideLoadedContext()
     {
@@ -182,6 +240,29 @@ public sealed class TransformCoordinatorTests
             DisplayPrimaryMetricType = "MetricA",
             DisplayPrimarySubtype = "SubA",
             DisplayName1 = "MetricA:SubA",
+            From = primary[0].NormalizedTimestamp,
+            To = primary[^1].NormalizedTimestamp
+        };
+    }
+
+    private static ChartDataContext CreateBinaryContext(IReadOnlyList<MetricData> secondary)
+    {
+        var primary = CreatePrimaryData();
+        return new ChartDataContext
+        {
+            Data1 = primary,
+            Data2 = secondary,
+            MetricType = "MetricA",
+            PrimaryMetricType = "MetricA",
+            SecondaryMetricType = "MetricB",
+            PrimarySubtype = "SubA",
+            SecondarySubtype = "SubB",
+            DisplayPrimaryMetricType = "MetricA",
+            DisplaySecondaryMetricType = "MetricB",
+            DisplayPrimarySubtype = "SubA",
+            DisplaySecondarySubtype = "SubB",
+            DisplayName1 = "MetricA:SubA",
+            DisplayName2 = "MetricB:SubB",
             From = primary[0].NormalizedTimestamp,
             To = primary[^1].NormalizedTimestamp
         };

@@ -249,12 +249,12 @@ public sealed class MetricLoadCoordinatorTests
     }
 
     [Fact]
-    public async Task LoadMetricDataAsync_ShouldFallbackToLegacyWhenNonSlicedChartsVisible()
+    public async Task LoadMetricDataAsync_ShouldFallbackToLegacyWhenTransformIsVisible()
     {
         var chartState = new ChartState
         {
             IsMainVisible = true,
-            IsDistributionVisible = true
+            IsTransformPanelVisible = true
         };
         var metricState = new MetricState
         {
@@ -291,6 +291,56 @@ public sealed class MetricLoadCoordinatorTests
         Assert.NotNull(chartState.LastLoadRuntime);
         Assert.Equal(EvidenceRuntimePath.Legacy, chartState.LastLoadRuntime!.RuntimePath);
         Assert.False(chartState.LastLoadRuntime.SupportsOnlyMainChart);
+    }
+
+    [Fact]
+    public async Task LoadMetricDataAsync_ShouldUseVNextForVisibleIdentityStyleFamilies()
+    {
+        var chartState = new ChartState
+        {
+            IsMainVisible = true,
+            IsDistributionVisible = true,
+            IsWeeklyTrendVisible = true,
+            IsBarPieVisible = true
+        };
+        var metricState = new MetricState
+        {
+            SelectedMetricType = "Weight",
+            ResolutionTableName = "HealthMetrics",
+            FromDate = new DateTime(2024, 01, 01),
+            ToDate = new DateTime(2024, 01, 02)
+        };
+        metricState.SetSeriesSelections(
+        [
+            new MetricSeriesSelection("Weight", "morning"),
+            new MetricSeriesSelection("Weight", "evening")
+        ]);
+
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
+        var loader = new CountingMetricSeriesLoader();
+        var vnext = new VNextMainChartIntegrationCoordinator(() => CreateStubSessionCoordinator(loader));
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message,
+            vnext);
+
+        var request = new MetricLoadRequest("Weight", metricState.SelectedSeries.ToList(), metricState.FromDate!.Value, metricState.ToDate!.Value, metricState.ResolutionTableName!);
+        var loaded = await coordinator.LoadMetricDataAsync(request, args => throw new Xunit.Sdk.XunitException(args.Message));
+
+        Assert.True(loaded);
+        Assert.Equal(EvidenceRuntimePath.VNextMain, chartState.LastLoadRuntime!.RuntimePath);
+        Assert.Equal(EvidenceRuntimePath.VNextDistribution, chartState.GetFamilyRuntime(ChartProgramKind.Distribution)!.RuntimePath);
+        Assert.Equal(EvidenceRuntimePath.VNextWeekdayTrend, chartState.GetFamilyRuntime(ChartProgramKind.WeekdayTrend)!.RuntimePath);
+        Assert.Equal(EvidenceRuntimePath.VNextBarPie, chartState.GetFamilyRuntime(ChartProgramKind.BarPie)!.RuntimePath);
+        Assert.Equal(ChartProgramKind.Distribution, chartState.GetFamilyRuntime(ChartProgramKind.Distribution)!.ProgramKind);
+        Assert.Equal(ChartProgramKind.WeekdayTrend, chartState.GetFamilyRuntime(ChartProgramKind.WeekdayTrend)!.ProgramKind);
+        Assert.Equal(ChartProgramKind.BarPie, chartState.GetFamilyRuntime(ChartProgramKind.BarPie)!.ProgramKind);
     }
 
     [Fact]
@@ -387,8 +437,8 @@ public sealed class MetricLoadCoordinatorTests
         await coordinator.LoadMetricDataAsync(request, _ => { });
         Assert.Equal(EvidenceRuntimePath.VNextMain, chartState.LastLoadRuntime!.RuntimePath);
 
-        // User enables Distribution
-        chartState.IsDistributionVisible = true;
+        // User enables Transform, which still requires explicit operation requests.
+        chartState.IsTransformPanelVisible = true;
 
         // Second load: should fall back to legacy
         await coordinator.LoadMetricDataAsync(request, _ => { });
