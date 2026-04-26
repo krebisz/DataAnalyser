@@ -60,7 +60,7 @@ public sealed class VNextMainChartIntegrationCoordinator
             var intent = _intentFactory.Create(
                 selectionRequest,
                 programRequest,
-                ResolveDeliveryTarget(programRequest.Kind));
+                ChartProgramDeliveryTargetResolver.ResolveDefaultTarget(programRequest.Kind));
             var execution = await coordinator.ExecuteAsync(intent, cancellationToken);
             var snapshot = execution.Snapshot;
             var program = execution.Program;
@@ -110,7 +110,7 @@ public sealed class VNextMainChartIntegrationCoordinator
                     .Select(programRequest => _intentFactory.Create(
                         selectionRequest,
                         programRequest,
-                        ResolveDeliveryTarget(programRequest.Kind)))
+                        ChartProgramDeliveryTargetResolver.ResolveDefaultTarget(programRequest.Kind)))
                     .ToArray());
             var resultSet = await coordinator.ExecuteAsync(intentSet, cancellationToken);
 
@@ -159,21 +159,6 @@ public sealed class VNextMainChartIntegrationCoordinator
             request.From,
             request.To,
             request.ResolutionTableName);
-    }
-
-    private static string? ResolveDeliveryTarget(ChartProgramKind kind)
-    {
-        return kind switch
-        {
-            ChartProgramKind.Main => "MainChart",
-            ChartProgramKind.Normalized => "NormalizedChart",
-            ChartProgramKind.Difference or ChartProgramKind.Ratio => "DiffRatioChart",
-            ChartProgramKind.Transform => "TransformChart",
-            ChartProgramKind.Distribution => "DistributionChart",
-            ChartProgramKind.WeekdayTrend => "WeekdayTrendChart",
-            ChartProgramKind.BarPie => "BarPieChart",
-            _ => null
-        };
     }
 
     internal static ChartDisplayMode TranslateDisplayMode(MainChartDisplayMode mode)

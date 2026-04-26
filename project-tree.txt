@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-04-24 16:12:28
+Generated: 2026-04-26 14:14:10
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -656,6 +656,7 @@ DataAnalyser/
         MetricLoadCoordinator.cs
         RelayCommand.cs
         SharedMainWindowViewModelProvider.cs
+        VNextChartProgramRequestPlanner.cs
         VNextChartRoutePolicy.cs
       Workspace/
         Coordination/
@@ -678,6 +679,8 @@ DataAnalyser/
       WorkspaceTabHost.xaml.cs
     VNext/
       Application/
+        AnalyticalIntentFactory.cs
+        AnalyticalRenderPlanPipeline.cs
         ChartProgramPlanner.cs
         IMetricSeriesLoader.cs
         IReasoningEngine.cs
@@ -688,15 +691,25 @@ DataAnalyser/
         ReasoningEngineFactory.cs
         ReasoningSessionCoordinator.cs
       Contracts/
+        AnalyticalExecutionResult.cs
+        AnalyticalIntent.cs
+        AnalyticalIntentSet.cs
+        AnalyticalResultSet.cs
+        AnalyticalVocabulary.cs
+        CapabilityRequest.cs
         ChartDisplayMode.cs
         ChartProgram.cs
         ChartProgramKind.cs
         ChartProgramRequest.cs
+        ConsumerDeliveryContract.cs
         DataViewKind.cs
+        InteractionRequest.cs
         MetricLoadSnapshot.cs
         MetricSelectionRequest.cs
         MetricSeriesRequest.cs
         MetricSeriesSnapshot.cs
+        OverlayPlan.cs
+        ProvenanceDescriptor.cs
         SeriesOperationRequest.cs
         WorkflowPlanRequest.cs
       Kernel/
@@ -709,6 +722,7 @@ DataAnalyser/
         ChartRenderPlanAdapter.cs
         ChartRenderPlanMetadataKeys.cs
         ChartRenderPlanProjector.cs
+        ChartRenderPlanVocabularyMetadata.cs
         RenderDensityPolicy.cs
         TimeBucketRenderAggregationKernel.cs
       State/
@@ -905,8 +919,12 @@ DataAnalyser/
       MainWindowViewModelSelectionBatchTests.cs
       MetricLoadCoordinatorTests.cs
       UiStateTests.cs
+      VNextChartProgramRequestPlannerTests.cs
       VNextChartRoutePolicyTests.cs
     VNext/
+      AnalyticalIntentContractsTests.cs
+      AnalyticalIntentFactoryTests.cs
+      AnalyticalRenderPlanPipelineTests.cs
       ChartProgramPlannerTests.cs
       ChartRenderPlanAdapterTests.cs
       ChartRenderPlanProjectorTests.cs
@@ -935,9 +953,11 @@ DataAnalyser/
     Project Overview.md
     Project Philosophy.md
     Project Roadmap.md
+    Project Roadmap_UPDATED.md
     SYSTEM_MAP.md
     TODO Enhancements.md
     Workspace Workflow.md
+    Workspace Workflow_UPDATED.md
   images/
     Logo.png
   scripts/

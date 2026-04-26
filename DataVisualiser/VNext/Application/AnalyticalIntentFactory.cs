@@ -127,8 +127,6 @@ public sealed class AnalyticalIntentFactory
 
     private static ConsumerDeliveryContract CreateDelivery(ChartProgramKind kind, string? deliveryTarget)
     {
-        return kind == ChartProgramKind.SyncfusionSunburst
-            ? ConsumerDeliveryContract.HierarchyChart(kind, deliveryTarget ?? "HierarchySurface")
-            : ConsumerDeliveryContract.Chart(kind, deliveryTarget ?? "ChartSurface");
+        return ChartProgramDeliveryTargetResolver.CreateDelivery(kind, deliveryTarget);
     }
 }

@@ -60,7 +60,7 @@ public sealed class VNextSeriesLoadCoordinator
             var intent = _intentFactory.Create(
                 selectionRequest,
                 request,
-                ResolveDeliveryTarget(programKind));
+                ChartProgramDeliveryTargetResolver.ResolveDefaultTarget(programKind));
             var execution = await coordinator.ExecuteAsync(intent, cancellationToken);
             var snapshot = execution.Snapshot;
             var program = execution.Program;
@@ -100,18 +100,4 @@ public sealed class VNextSeriesLoadCoordinator
             FailureReason: failureReason);
     }
 
-    private static string? ResolveDeliveryTarget(ChartProgramKind kind)
-    {
-        return kind switch
-        {
-            ChartProgramKind.Distribution => "DistributionChart",
-            ChartProgramKind.WeekdayTrend => "WeekdayTrendChart",
-            ChartProgramKind.Transform => "TransformChart",
-            ChartProgramKind.BarPie => "BarPieChart",
-            ChartProgramKind.Main => "MainChart",
-            ChartProgramKind.Normalized => "NormalizedChart",
-            ChartProgramKind.Difference or ChartProgramKind.Ratio => "DiffRatioChart",
-            _ => null
-        };
-    }
 }

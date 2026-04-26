@@ -17,7 +17,7 @@ public static class ChartRenderPlanVocabularyMetadata
 
         var programRequest = CreateProgramRequest(programKind, displayMode);
         var capability = CapabilityRequest.FromProgramRequest(programRequest);
-        var delivery = CreateDelivery(programKind, deliveryTarget);
+        var delivery = ChartProgramDeliveryTargetResolver.CreateDelivery(programKind, deliveryTarget);
         var provenance = ProvenanceDescriptor.Projected(sourceSignature, AnalyticalAuthority.Legacy);
         var intentSignature = string.Join("::",
             sourceSignature,
@@ -71,25 +71,4 @@ public static class ChartRenderPlanVocabularyMetadata
         };
     }
 
-    private static ConsumerDeliveryContract CreateDelivery(ChartProgramKind kind, string? deliveryTarget)
-    {
-        return kind == ChartProgramKind.SyncfusionSunburst
-            ? ConsumerDeliveryContract.HierarchyChart(kind, deliveryTarget ?? "SyncfusionSunburst")
-            : ConsumerDeliveryContract.Chart(kind, deliveryTarget ?? DefaultChartDeliveryTarget(kind));
-    }
-
-    private static string DefaultChartDeliveryTarget(ChartProgramKind kind)
-    {
-        return kind switch
-        {
-            ChartProgramKind.Main => "MainChart",
-            ChartProgramKind.Normalized => "NormalizedChart",
-            ChartProgramKind.Difference or ChartProgramKind.Ratio => "DiffRatioChart",
-            ChartProgramKind.Transform => "TransformChart",
-            ChartProgramKind.Distribution => "DistributionChart",
-            ChartProgramKind.WeekdayTrend => "WeekdayTrendChart",
-            ChartProgramKind.BarPie => "BarPieChart",
-            _ => "ChartSurface"
-        };
-    }
 }

@@ -155,7 +155,7 @@ public sealed class MetricLoadCoordinator
                 var vnextStopwatch = Stopwatch.StartNew();
                 var vnextResults = await _vnextMainChartIntegrationCoordinator.LoadProgramsAsync(
                     request,
-                    BuildMainFamilyProgramRequests());
+                    VNextChartProgramRequestPlanner.BuildMainFamilyRequests(_chartState));
                 vnextStopwatch.Stop();
                 var vnextResult = vnextResults.FirstOrDefault(result => result.ProgramKind == ChartProgramKind.Main) ??
                                   vnextResults.First();
@@ -366,27 +366,6 @@ public sealed class MetricLoadCoordinator
         return (primary, secondary);
     }
 
-    private IReadOnlyList<ChartProgramRequest> BuildMainFamilyProgramRequests()
-    {
-        var requests = new List<ChartProgramRequest>
-        {
-            ChartProgramRequest.MainProgram(
-                VNextMainChartIntegrationCoordinator.TranslateDisplayMode(_chartState.MainChartDisplayMode))
-        };
-
-        if (_chartState.IsNormalizedVisible)
-            requests.Add(ChartProgramRequest.Normalized());
-
-        if (_chartState.IsDiffRatioVisible)
-        {
-            requests.Add(_chartState.IsDiffRatioDifferenceMode
-                ? ChartProgramRequest.Difference()
-                : ChartProgramRequest.Ratio());
-        }
-
-        return requests;
-    }
-
     private void RecordVNextFamilyRuntimes(
         IReadOnlyList<VNextMainChartLoadResult> results,
         string fallbackRequestSignature)
@@ -397,17 +376,10 @@ public sealed class MetricLoadCoordinator
             if (programKind == ChartProgramKind.Main)
                 continue;
 
-            var runtimePath = programKind switch
-            {
-                ChartProgramKind.Normalized => EvidenceRuntimePath.VNextNormalized,
-                ChartProgramKind.Difference or ChartProgramKind.Ratio => EvidenceRuntimePath.VNextDiffRatio,
-                _ => EvidenceRuntimePath.VNextMain
-            };
-
             _chartState.SetFamilyRuntime(
                 programKind,
                 new LoadRuntimeState(
-                    runtimePath,
+                    VNextChartProgramRequestPlanner.ResolveRuntimePath(programKind),
                     result.RequestSignature ?? fallbackRequestSignature,
                     result.SnapshotSignature,
                     result.ProgramKind,
