@@ -106,8 +106,37 @@ public sealed class ReasoningEngineTests
         Assert.Contains(intent.Signature, result.Signature, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithIntentSet_ShouldLoadOnceAndBuildMultiplePrograms()
+    {
+        var loader = new StubMetricSeriesLoader();
+        var engine = new ReasoningEngine(
+            new LegacyMetricViewGateway(loader),
+            new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
+        var request = new MetricSelectionRequest(
+            "Weight",
+            [new MetricSeriesRequest("Weight", "morning"), new MetricSeriesRequest("Weight", "evening")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics");
+        var intentSet = AnalyticalIntentSet.FromIntents(
+        [
+            AnalyticalIntent.FromRequests(request, ChartProgramRequest.MainProgram()),
+            AnalyticalIntent.FromRequests(request, ChartProgramRequest.Normalized())
+        ]);
+
+        var resultSet = await engine.ExecuteAsync(intentSet);
+
+        Assert.Equal(request.Signature, resultSet.Selection.Signature);
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Normalized], resultSet.ProgramKinds);
+        Assert.All(resultSet.Results, result => Assert.Equal(request.Signature, result.Snapshot.Signature));
+        Assert.Equal(2, loader.LoadCallCount);
+    }
+
     private sealed class StubMetricSeriesLoader : IMetricSeriesLoader
     {
+        public int LoadCallCount { get; private set; }
+
         public Task<LoadedMetricSeries> LoadAsync(
             MetricSeriesRequest request,
             DateTime from,
@@ -115,6 +144,7 @@ public sealed class ReasoningEngineTests
             string resolutionTableName,
             CancellationToken cancellationToken = default)
         {
+            LoadCallCount++;
             var value = string.Equals(request.QuerySubtype, "evening", StringComparison.OrdinalIgnoreCase) ? 2m : 1m;
             return Task.FromResult(new LoadedMetricSeries(
                 [new MetricData { NormalizedTimestamp = from, Value = value }],

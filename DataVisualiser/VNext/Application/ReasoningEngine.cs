@@ -27,6 +27,18 @@ public sealed class ReasoningEngine : IReasoningEngine
         return new AnalyticalExecutionResult(intent, snapshot, program);
     }
 
+    public async Task<AnalyticalResultSet> ExecuteAsync(AnalyticalIntentSet intentSet, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intentSet);
+
+        var snapshot = await LoadAsync(intentSet.Selection, cancellationToken);
+        var results = intentSet.Intents
+            .Select(intent => new AnalyticalExecutionResult(intent, snapshot, BuildProgram(snapshot, intent)))
+            .ToArray();
+
+        return new AnalyticalResultSet(intentSet.Selection, results);
+    }
+
     public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
     {
         return _planner.BuildProgram(snapshot, request);

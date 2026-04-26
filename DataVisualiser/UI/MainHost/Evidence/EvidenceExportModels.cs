@@ -88,6 +88,7 @@ public sealed class DiagnosticsSnapshot
     public VNextDiagnosticsSnapshot? VNext { get; set; }
     public Dictionary<string, VNextDiagnosticsSnapshot> VNextFamilies { get; set; } = new();
     public Dictionary<string, RenderPlanDiagnosticsSnapshot> RenderPlans { get; set; } = new();
+    public RenderPlanVocabularyDiagnosticsSnapshot RenderPlanVocabulary { get; set; } = new();
     public IReadOnlyList<RenderPlanHistorySnapshot> RenderPlanHistory { get; set; } = Array.Empty<RenderPlanHistorySnapshot>();
 }
 
@@ -285,6 +286,20 @@ public sealed class VNextDiagnosticsSnapshot
     public bool ProgramSourceMatchesProjectedContext { get; set; }
     public bool SupportsOnlyMainChart { get; set; }
     public string? FailureReason { get; set; }
+}
+
+public sealed class RenderPlanVocabularyDiagnosticsSnapshot
+{
+    public int RenderPlanCount { get; set; }
+    public int PlansWithIntentSignature { get; set; }
+    public int PlansWithProvenanceSignature { get; set; }
+    public IReadOnlyList<string> ConsumerKinds { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> DeliveryTargets { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> CapabilityKinds { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> CompositionKinds { get; set; } = Array.Empty<string>();
+    public int OverlayCountTotal { get; set; }
+    public int InteractionCountTotal { get; set; }
+    public IReadOnlyList<string> MissingVocabularyPlanKinds { get; set; } = Array.Empty<string>();
 }
 
 public class RenderPlanDiagnosticsSnapshot

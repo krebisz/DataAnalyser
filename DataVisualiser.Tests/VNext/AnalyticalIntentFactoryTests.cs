@@ -36,6 +36,8 @@ public sealed class AnalyticalIntentFactoryTests
         Assert.Equal(ConsumerKind.Chart, intent.Delivery.ConsumerKind);
         Assert.Equal(expectedDeliveryTarget, intent.Delivery.DeliveryTarget);
         Assert.Equal(selection.Signature, intent.Provenance.SourceSignature);
+        Assert.Equal("VNext", intent.Provenance.Authority);
+        Assert.Equal("Requested", intent.Provenance.TrustClass);
         Assert.Equal(kind, intent.ProgramRequest.Kind);
     }
 

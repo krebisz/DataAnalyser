@@ -36,6 +36,33 @@ public sealed class AnalyticalIntentContractsTests
     }
 
     [Fact]
+    public void ProvenanceDescriptor_ShouldExposeExplicitAuthorityAndTrustVocabulary()
+    {
+        var raw = ProvenanceDescriptor.Raw("db:healthmetrics");
+        var projected = ProvenanceDescriptor.Projected("program:main");
+        var delivered = ProvenanceDescriptor.Delivered("render:main", AnalyticalAuthority.External);
+
+        Assert.Equal("Legacy", raw.Authority);
+        Assert.Equal("Raw", raw.TrustClass);
+        Assert.Equal("VNext", projected.Authority);
+        Assert.Equal("Projected", projected.TrustClass);
+        Assert.Equal("External:Delivered:render:main", delivered.Signature);
+    }
+
+    [Fact]
+    public void ProvenanceDescriptor_FromSelection_ShouldMarkSelectionAsRequestedAuthority()
+    {
+        var selection = CreateSelection();
+
+        var provenance = ProvenanceDescriptor.FromSelection(selection);
+
+        Assert.Equal(selection.Signature, provenance.SourceSignature);
+        Assert.Equal("VNext", provenance.Authority);
+        Assert.Equal("Requested", provenance.TrustClass);
+        Assert.Equal($"VNext:Requested:{selection.Signature}", provenance.Signature);
+    }
+
+    [Fact]
     public void BuildProgram_WithAnalyticalIntent_ShouldDelegateToExistingProgramPlanner()
     {
         var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
@@ -173,6 +200,95 @@ public sealed class AnalyticalIntentContractsTests
         Assert.Contains("Delivery program kind", ex.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ConsumerDeliveryContract_ShouldRepresentExportAndApiConsumersWithoutRenderPlanRequirement()
+    {
+        var export = ConsumerDeliveryContract.Export(ChartProgramKind.Main);
+        var api = ConsumerDeliveryContract.Api(ChartProgramKind.Normalized, "MetricSeriesEndpoint");
+
+        Assert.Equal(ConsumerKind.Export, export.ConsumerKind);
+        Assert.Equal("EvidenceExport", export.DeliveryTarget);
+        Assert.False(export.RequiresRenderPlan);
+        Assert.Equal(ConsumerKind.Api, api.ConsumerKind);
+        Assert.Equal("MetricSeriesEndpoint", api.DeliveryTarget);
+        Assert.False(api.RequiresRenderPlan);
+    }
+
+    [Fact]
+    public void AnalyticalResultSet_ShouldGroupMultipleProgramResultsForOneSelection()
+    {
+        var snapshot = CreateSnapshot();
+        var main = CreateExecutionResult(snapshot, ChartProgramRequest.MainProgram());
+        var difference = CreateExecutionResult(snapshot, ChartProgramRequest.Difference());
+
+        var resultSet = new AnalyticalResultSet(snapshot.Request, [main, difference]);
+
+        Assert.Equal(snapshot.Request.Signature, resultSet.Selection.Signature);
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Difference], resultSet.ProgramKinds);
+        Assert.Contains("Main", resultSet.Signature, StringComparison.Ordinal);
+        Assert.Contains("Difference", resultSet.Signature, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnalyticalIntentSet_ShouldGroupMultipleProgramRequestsForOneSelection()
+    {
+        var selection = CreateSelection();
+        var main = AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram());
+        var normalized = AnalyticalIntent.FromRequests(selection, ChartProgramRequest.Normalized());
+
+        var intentSet = AnalyticalIntentSet.FromIntents([main, normalized]);
+
+        Assert.Equal(selection.Signature, intentSet.Selection.Signature);
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Normalized], intentSet.ProgramKinds);
+        Assert.Contains("Main", intentSet.Signature, StringComparison.Ordinal);
+        Assert.Contains("Normalized", intentSet.Signature, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnalyticalIntentSet_ShouldRejectMixedSelections()
+    {
+        var selection = CreateSelection();
+        var otherSelection = new MetricSelectionRequest(
+            "Sleep",
+            [new MetricSeriesRequest("Sleep", "total")],
+            selection.From,
+            selection.To,
+            selection.ResolutionTableName);
+        var main = AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram());
+        var other = AnalyticalIntent.FromRequests(otherSelection, ChartProgramRequest.MainProgram());
+
+        var ex = Assert.Throws<ArgumentException>(() => AnalyticalIntentSet.FromIntents([main, other]));
+
+        Assert.Contains("share the intent-set selection", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnalyticalResultSet_ShouldRejectMixedSelectionResults()
+    {
+        var snapshot = CreateSnapshot();
+        var otherSelection = new MetricSelectionRequest(
+            "Sleep",
+            [new MetricSeriesRequest("Sleep", "total")],
+            snapshot.Request.From,
+            snapshot.Request.To,
+            snapshot.Request.ResolutionTableName);
+        var otherSnapshot = new MetricLoadSnapshot(
+            otherSelection,
+            [
+                new MetricSeriesSnapshot(
+                    otherSelection.Series[0],
+                    [new MetricData { NormalizedTimestamp = snapshot.Request.From, Value = 8m }],
+                    null)
+            ],
+            DateTime.UtcNow);
+        var main = CreateExecutionResult(snapshot, ChartProgramRequest.MainProgram());
+        var other = CreateExecutionResult(otherSnapshot, ChartProgramRequest.MainProgram());
+
+        var ex = Assert.Throws<ArgumentException>(() => new AnalyticalResultSet(snapshot.Request, [main, other]));
+
+        Assert.Contains("share the result-set selection", ex.Message, StringComparison.Ordinal);
+    }
+
     private static MetricSelectionRequest CreateSelection()
     {
         return new MetricSelectionRequest(
@@ -206,5 +322,16 @@ public sealed class AnalyticalIntentContractsTests
                     null)
             ],
             DateTime.UtcNow);
+    }
+
+    private static AnalyticalExecutionResult CreateExecutionResult(
+        MetricLoadSnapshot snapshot,
+        ChartProgramRequest request)
+    {
+        var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
+        var intent = AnalyticalIntent.FromRequests(snapshot.Request, request);
+        var program = planner.BuildProgram(snapshot, intent);
+
+        return new AnalyticalExecutionResult(intent, snapshot, program);
     }
 }

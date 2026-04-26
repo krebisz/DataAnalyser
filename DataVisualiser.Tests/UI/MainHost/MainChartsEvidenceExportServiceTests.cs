@@ -132,6 +132,75 @@ public sealed class MainChartsEvidenceExportServiceTests
     }
 
     [Fact]
+    public async Task ExportAsync_ShouldSummarizeRenderPlanVocabularyMetadata()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState();
+            chartState.SetRenderPlanDiagnostics(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.Main,
+                new ChartRenderAdapterResult(
+                    "LiveChartsWpf",
+                    "Main:sig-1",
+                    ChartRenderPlanKind.Cartesian,
+                    ChartRenderDensityMode.FullFidelity,
+                    RenderedSeriesCount: 2,
+                    RenderedHierarchyNodeCount: 0,
+                    RenderedPointCount: 4,
+                    new Dictionary<string, string>
+                    {
+                        [ChartRenderPlanMetadataKeys.IntentSignature] = "intent-main",
+                        [ChartRenderPlanMetadataKeys.ProvenanceSignature] = "VNext:Requested:req-main",
+                        [ChartRenderPlanMetadataKeys.ConsumerKind] = "Chart",
+                        [ChartRenderPlanMetadataKeys.DeliveryTarget] = "MainChart",
+                        [ChartRenderPlanMetadataKeys.CapabilityKind] = "Identity",
+                        [ChartRenderPlanMetadataKeys.CompositionKind] = "MultiSeries",
+                        [ChartRenderPlanMetadataKeys.OverlayCount] = "1",
+                        [ChartRenderPlanMetadataKeys.InteractionCount] = "2"
+                    }));
+            chartState.SetRenderPlanDiagnostics(
+                DataVisualiser.VNext.Contracts.ChartProgramKind.Distribution,
+                new ChartRenderAdapterResult(
+                    "LiveChartsWpf",
+                    "Distribution:sig-1",
+                    ChartRenderPlanKind.Cartesian,
+                    ChartRenderDensityMode.FullFidelity,
+                    RenderedSeriesCount: 1,
+                    RenderedHierarchyNodeCount: 0,
+                    RenderedPointCount: 3,
+                    new Dictionary<string, string>
+                    {
+                        ["ProgramKind"] = "Distribution"
+                    }));
+
+            var result = await service.ExportAsync(chartState, new MetricState(), new DateTime(2026, 4, 26, 10, 0, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var vocabulary = document.RootElement
+                .GetProperty("Diagnostics")
+                .GetProperty("RenderPlanVocabulary");
+
+            Assert.Equal(2, vocabulary.GetProperty("RenderPlanCount").GetInt32());
+            Assert.Equal(1, vocabulary.GetProperty("PlansWithIntentSignature").GetInt32());
+            Assert.Equal(1, vocabulary.GetProperty("PlansWithProvenanceSignature").GetInt32());
+            Assert.Contains(vocabulary.GetProperty("ConsumerKinds").EnumerateArray(), item => item.GetString() == "Chart");
+            Assert.Contains(vocabulary.GetProperty("DeliveryTargets").EnumerateArray(), item => item.GetString() == "MainChart");
+            Assert.Contains(vocabulary.GetProperty("CapabilityKinds").EnumerateArray(), item => item.GetString() == "Identity");
+            Assert.Contains(vocabulary.GetProperty("CompositionKinds").EnumerateArray(), item => item.GetString() == "MultiSeries");
+            Assert.Equal(1, vocabulary.GetProperty("OverlayCountTotal").GetInt32());
+            Assert.Equal(2, vocabulary.GetProperty("InteractionCountTotal").GetInt32());
+            Assert.Contains(vocabulary.GetProperty("MissingVocabularyPlanKinds").EnumerateArray(), item => item.GetString() == "Distribution");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
     public async Task ExportAsync_ShouldIncludeRenderPlanHistoryForRepeatedChartFamilyRoutes()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));

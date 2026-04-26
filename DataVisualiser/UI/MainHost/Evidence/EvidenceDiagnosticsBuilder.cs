@@ -4,6 +4,7 @@ using DataVisualiser.Core.Strategies.Reachability;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.UI.MainHost.Evidence;
 
@@ -144,6 +145,7 @@ public sealed class EvidenceDiagnosticsBuilder
             VNext = BuildVNextDiagnostics(chartState.LastLoadRuntime),
             VNextFamilies = BuildVNextFamilyDiagnostics(chartState),
             RenderPlans = BuildRenderPlanDiagnostics(chartState),
+            RenderPlanVocabulary = BuildRenderPlanVocabularyDiagnostics(chartState),
             RenderPlanHistory = chartState.RenderPlanHistory
         };
     }
@@ -330,6 +332,60 @@ public sealed class EvidenceDiagnosticsBuilder
         return chartState.RenderPlanDiagnostics.ToDictionary(
             pair => pair.Key.ToString(),
             pair => pair.Value);
+    }
+
+    internal static RenderPlanVocabularyDiagnosticsSnapshot BuildRenderPlanVocabularyDiagnostics(ChartState chartState)
+    {
+        static IReadOnlyList<string> DistinctValues(
+            IEnumerable<RenderPlanDiagnosticsSnapshot> snapshots,
+            string key)
+        {
+            return snapshots
+                .Select(snapshot => snapshot.Metadata.TryGetValue(key, out var value) ? value : null)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .Select(value => value!)
+                .ToList();
+        }
+
+        static int SumMetadataInt(IEnumerable<RenderPlanDiagnosticsSnapshot> snapshots, string key)
+        {
+            return snapshots.Sum(snapshot =>
+                snapshot.Metadata.TryGetValue(key, out var value) &&
+                int.TryParse(value, out var count)
+                    ? count
+                    : 0);
+        }
+
+        var renderPlans = chartState.RenderPlanDiagnostics.ToList();
+        var snapshots = renderPlans.Select(pair => pair.Value).ToList();
+        var missingVocabulary = renderPlans
+            .Where(pair =>
+                !pair.Value.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature) ||
+                !pair.Value.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature) ||
+                !pair.Value.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ConsumerKind) ||
+                !pair.Value.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.CapabilityKind) ||
+                !pair.Value.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.CompositionKind))
+            .Select(pair => pair.Key.ToString())
+            .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new RenderPlanVocabularyDiagnosticsSnapshot
+        {
+            RenderPlanCount = renderPlans.Count,
+            PlansWithIntentSignature = snapshots.Count(snapshot =>
+                snapshot.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature)),
+            PlansWithProvenanceSignature = snapshots.Count(snapshot =>
+                snapshot.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature)),
+            ConsumerKinds = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.ConsumerKind),
+            DeliveryTargets = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.DeliveryTarget),
+            CapabilityKinds = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.CapabilityKind),
+            CompositionKinds = DistinctValues(snapshots, ChartRenderPlanMetadataKeys.CompositionKind),
+            OverlayCountTotal = SumMetadataInt(snapshots, ChartRenderPlanMetadataKeys.OverlayCount),
+            InteractionCountTotal = SumMetadataInt(snapshots, ChartRenderPlanMetadataKeys.InteractionCount),
+            MissingVocabularyPlanKinds = missingVocabulary
+        };
     }
 
     private static bool HasVisibleExtendedCharts(ChartState chartState)

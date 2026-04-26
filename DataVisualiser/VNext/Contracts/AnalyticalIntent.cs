@@ -46,6 +46,25 @@ public enum CompositionKind
     Hierarchy
 }
 
+public enum AnalyticalAuthority
+{
+    Legacy,
+    VNext,
+    User,
+    External
+}
+
+public enum ProvenanceTrustClass
+{
+    Raw,
+    Requested,
+    Normalized,
+    Canonical,
+    Derived,
+    Projected,
+    Delivered
+}
+
 public sealed record CapabilityRequest(
     AnalyticalCapabilityKind CapabilityKind,
     CompositionKind CompositionKind,
@@ -123,6 +142,15 @@ public sealed record ProvenanceDescriptor
             : new Dictionary<string, string>(metadata);
     }
 
+    public ProvenanceDescriptor(
+        string sourceSignature,
+        AnalyticalAuthority authority,
+        ProvenanceTrustClass trustClass,
+        IReadOnlyDictionary<string, string>? metadata = null)
+        : this(sourceSignature, authority.ToString(), trustClass.ToString(), metadata)
+    {
+    }
+
     public string SourceSignature { get; }
     public string Authority { get; }
     public string TrustClass { get; }
@@ -133,8 +161,20 @@ public sealed record ProvenanceDescriptor
     public static ProvenanceDescriptor FromSelection(MetricSelectionRequest selection)
     {
         ArgumentNullException.ThrowIfNull(selection);
-        return new ProvenanceDescriptor(selection.Signature, trustClass: "Requested");
+        return new ProvenanceDescriptor(selection.Signature, AnalyticalAuthority.VNext, ProvenanceTrustClass.Requested);
     }
+
+    public static ProvenanceDescriptor Raw(string sourceSignature, AnalyticalAuthority authority = AnalyticalAuthority.Legacy) =>
+        new(sourceSignature, authority, ProvenanceTrustClass.Raw);
+
+    public static ProvenanceDescriptor Derived(string sourceSignature, AnalyticalAuthority authority = AnalyticalAuthority.VNext) =>
+        new(sourceSignature, authority, ProvenanceTrustClass.Derived);
+
+    public static ProvenanceDescriptor Projected(string sourceSignature, AnalyticalAuthority authority = AnalyticalAuthority.VNext) =>
+        new(sourceSignature, authority, ProvenanceTrustClass.Projected);
+
+    public static ProvenanceDescriptor Delivered(string sourceSignature, AnalyticalAuthority authority = AnalyticalAuthority.VNext) =>
+        new(sourceSignature, authority, ProvenanceTrustClass.Delivered);
 }
 
 public sealed record ConsumerDeliveryContract
@@ -171,6 +211,12 @@ public sealed record ConsumerDeliveryContract
 
     public static ConsumerDeliveryContract HierarchyChart(ChartProgramKind programKind, string deliveryTarget = "HierarchySurface") =>
         new(ConsumerKind.HierarchyChart, programKind, deliveryTarget);
+
+    public static ConsumerDeliveryContract Export(ChartProgramKind programKind, string deliveryTarget = "EvidenceExport") =>
+        new(ConsumerKind.Export, programKind, deliveryTarget, requiresRenderPlan: false);
+
+    public static ConsumerDeliveryContract Api(ChartProgramKind programKind, string deliveryTarget = "ApiResponse") =>
+        new(ConsumerKind.Api, programKind, deliveryTarget, requiresRenderPlan: false);
 }
 
 public sealed record OverlayPlan(
@@ -265,5 +311,44 @@ public sealed record AnalyticalIntent
             capability,
             overlays,
             interactions);
+    }
+}
+
+public sealed record AnalyticalIntentSet
+{
+    public AnalyticalIntentSet(
+        MetricSelectionRequest selection,
+        IReadOnlyList<AnalyticalIntent> intents)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+        ArgumentNullException.ThrowIfNull(intents);
+
+        if (intents.Count == 0)
+            throw new ArgumentException("At least one analytical intent is required.", nameof(intents));
+
+        foreach (var intent in intents)
+        {
+            if (!string.Equals(selection.Signature, intent.Selection.Signature, StringComparison.Ordinal))
+                throw new ArgumentException("All analytical intents must share the intent-set selection.", nameof(intents));
+        }
+
+        Selection = selection;
+        Intents = intents.ToArray();
+    }
+
+    public MetricSelectionRequest Selection { get; }
+    public IReadOnlyList<AnalyticalIntent> Intents { get; }
+    public IReadOnlyList<ChartProgramKind> ProgramKinds => Intents.Select(intent => intent.ProgramRequest.Kind).ToArray();
+
+    public string Signature =>
+        $"{Selection.Signature}::{string.Join("|", Intents.Select(intent => $"{intent.ProgramRequest.Kind}:{intent.Signature}"))}";
+
+    public static AnalyticalIntentSet FromIntents(IReadOnlyList<AnalyticalIntent> intents)
+    {
+        ArgumentNullException.ThrowIfNull(intents);
+        if (intents.Count == 0)
+            throw new ArgumentException("At least one analytical intent is required.", nameof(intents));
+
+        return new AnalyticalIntentSet(intents[0].Selection, intents);
     }
 }

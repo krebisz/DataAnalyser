@@ -112,6 +112,12 @@ public sealed class ReasoningSessionCoordinator
         return _engine.ExecuteAsync(intent, cancellationToken);
     }
 
+    public Task<AnalyticalResultSet> ExecuteAsync(AnalyticalIntentSet intentSet, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intentSet);
+        return _engine.ExecuteAsync(intentSet, cancellationToken);
+    }
+
     public ChartProgram BuildMainProgram()
     {
         var (_, presentation) = GetLoadedSnapshotAndPresentation();

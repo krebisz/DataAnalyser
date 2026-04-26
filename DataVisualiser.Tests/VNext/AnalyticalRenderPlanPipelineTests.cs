@@ -63,6 +63,88 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.Equal("Sunburst", result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ShouldSupportExportConsumerWithoutRenderPlan()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram(),
+            ConsumerDeliveryContract.Export(ChartProgramKind.Main));
+
+        var result = await pipeline.ExecuteAsync(intent);
+
+        Assert.Equal(ConsumerKind.Export, result.Intent.Delivery.ConsumerKind);
+        Assert.False(result.Intent.Delivery.RequiresRenderPlan);
+        Assert.Equal(ChartProgramKind.Main, result.Program.Kind);
+        Assert.Equal(selection.Signature, result.Snapshot.Signature);
+    }
+
+    [Fact]
+    public async Task BuildCartesianAsync_ShouldRejectConsumersThatDoNotRequireRenderPlans()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram(),
+            ConsumerDeliveryContract.Api(ChartProgramKind.Main));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            pipeline.BuildCartesianAsync(intent));
+
+        Assert.Contains("does not require a render plan", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("ExecuteAsync", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task BuildCartesianSetAsync_ShouldExecuteAndProjectMultipleProgramsForOneSelection()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 2);
+        var intents = new[]
+        {
+            AnalyticalIntent.FromRequests(
+                selection,
+                ChartProgramRequest.MainProgram(),
+                ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart")),
+            AnalyticalIntent.FromRequests(
+                selection,
+                ChartProgramRequest.Normalized(),
+                ConsumerDeliveryContract.Chart(ChartProgramKind.Normalized, "NormalizedChart"))
+        };
+
+        var result = await pipeline.BuildCartesianSetAsync(AnalyticalIntentSet.FromIntents(intents));
+
+        Assert.Equal(selection.Signature, result.ExecutionSet.Selection.Signature);
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Normalized], result.ExecutionSet.ProgramKinds);
+        Assert.Equal(2, result.RenderPlans.Count);
+        Assert.Equal("MainChart", result.RenderPlans[0].Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal("NormalizedChart", result.RenderPlans[1].Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+    }
+
+    [Fact]
+    public void BuildCartesianSetAsync_ShouldRejectMixedSelections()
+    {
+        var firstSelection = CreateSelection(seriesCount: 1);
+        var secondSelection = new MetricSelectionRequest(
+            "Sleep",
+            [new MetricSeriesRequest("Sleep", "total")],
+            firstSelection.From,
+            firstSelection.To,
+            firstSelection.ResolutionTableName);
+        var intents = new[]
+        {
+            AnalyticalIntent.FromRequests(firstSelection, ChartProgramRequest.MainProgram()),
+            AnalyticalIntent.FromRequests(secondSelection, ChartProgramRequest.MainProgram())
+        };
+
+        var ex = Assert.Throws<ArgumentException>(() => AnalyticalIntentSet.FromIntents(intents));
+
+        Assert.Contains("share the intent-set selection", ex.Message, StringComparison.Ordinal);
+    }
+
     private static AnalyticalRenderPlanPipeline CreatePipeline(RenderDensityPolicy? densityPolicy = null)
     {
         var engine = new ReasoningEngine(

@@ -108,6 +108,28 @@ public sealed class ReasoningSessionCoordinatorTests
         Assert.False(coordinator.State.Selection.IsComplete);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithIntentSet_ShouldDelegateToReasoningEngine()
+    {
+        var coordinator = new ReasoningSessionCoordinator(new StubReasoningEngine());
+        var request = new MetricSelectionRequest(
+            "Weight",
+            [new MetricSeriesRequest("Weight", "morning"), new MetricSeriesRequest("Weight", "evening")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics");
+        var intentSet = AnalyticalIntentSet.FromIntents(
+        [
+            AnalyticalIntent.FromRequests(request, ChartProgramRequest.MainProgram()),
+            AnalyticalIntent.FromRequests(request, ChartProgramRequest.Difference())
+        ]);
+
+        var resultSet = await coordinator.ExecuteAsync(intentSet);
+
+        Assert.Equal(request.Signature, resultSet.Selection.Signature);
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Difference], resultSet.ProgramKinds);
+    }
+
     private sealed class StubReasoningEngine : IReasoningEngine
     {
         public Task<MetricLoadSnapshot> LoadAsync(MetricSelectionRequest request, CancellationToken cancellationToken = default)
@@ -126,6 +148,16 @@ public sealed class ReasoningSessionCoordinatorTests
             var snapshot = await LoadAsync(intent.Selection, cancellationToken);
             var program = BuildProgram(snapshot, intent);
             return new AnalyticalExecutionResult(intent, snapshot, program);
+        }
+
+        public async Task<AnalyticalResultSet> ExecuteAsync(AnalyticalIntentSet intentSet, CancellationToken cancellationToken = default)
+        {
+            var snapshot = await LoadAsync(intentSet.Selection, cancellationToken);
+            var results = intentSet.Intents
+                .Select(intent => new AnalyticalExecutionResult(intent, snapshot, BuildProgram(snapshot, intent)))
+                .ToArray();
+
+            return new AnalyticalResultSet(intentSet.Selection, results);
         }
 
         public ChartProgram BuildProgram(MetricLoadSnapshot snapshot, ChartProgramRequest request)
