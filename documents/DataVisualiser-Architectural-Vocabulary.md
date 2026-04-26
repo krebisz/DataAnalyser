@@ -1894,10 +1894,10 @@ This section records the current implementation state of the sequence above so f
    `AnalyticalIntent`, `CapabilityRequest`, `ConsumerDeliveryContract`, `ConsumerProviderContract`, `ChartProgram`, `ChartRenderPlan`, provider metadata, and vocabulary diagnostics now form the main seam between upstream meaning and downstream consumers. The remaining work is to keep moving live consumers onto this seam and remove family-specific bypasses where they no longer provide value.
 
 5. **Consumer / interaction branching - actively maturing**  
-   Main, Syncfusion, Admin, evidence export, API response, chart-controller paths, and future plugin providers are now modeled more clearly as consumers/providers rather than semantic authorities. The newest non-live work adds a provider registry for built-in and third-party consumers so future chart libraries can be selected by contract rather than hard-coded tab/vendor assumptions.
+   Main, Syncfusion, Admin, evidence export, API response, chart-controller paths, and future plugin providers are now modeled more clearly as consumers/providers rather than semantic authorities. Provider registry and adapter qualification now allow chart libraries to be selected by contract metadata rather than hard-coded tab/vendor assumptions.
 
-6. **Terminal rendering demotion - in progress, with stronger provider boundary**  
-   Rendering has been pushed toward disposable backend adaptation through render plans, backend capabilities, adapter dispatchers, provider contracts, provider metadata, render-plan diagnostics, and vocabulary coverage. Remaining work is to continue moving live render delivery through render-plan/provider seams without letting renderer-specific models re-own analytical meaning.
+6. **Terminal rendering demotion - in progress, with validated provider boundary**  
+   Rendering has been pushed toward disposable backend adaptation through render plans, backend capabilities, provider-aware adapter dispatchers, provider contracts, provider metadata, render-plan diagnostics, and vocabulary coverage. Recent manual smoke verified provider-aware rendering for LiveCharts and Syncfusion without missing provider/vocabulary coverage.
 
 7. **Diagnostics / migration sidecar isolation - substantially implemented**  
    Evidence export, reachability diagnostics, runtime-path state, family runtime state, render-plan diagnostics, provider metadata coverage, vocabulary coverage, and session milestones now observe the system rather than define live behavior. Evidence now reports missing vocabulary/provider coverage so migration gaps are provable instead of inferred manually.
@@ -1910,6 +1910,7 @@ This section records the current implementation state of the sequence above so f
 - VNext contracts now include explicit analytical intent, capability, composition, consumer delivery, interaction, provider, and render-plan vocabulary.
 - Consumer/provider contracts and a provider registry now describe built-in LiveCharts, Syncfusion, evidence export, API response, and custom third-party provider seams.
 - Provider metadata is stamped into render-plan projection and vocabulary metadata through a shared helper.
+- Live render adapters now qualify render plans by both render-plan kind and provider metadata where provider metadata is present.
 - Render-plan vocabulary metadata is attached across chart families and preserved by LiveCharts, Syncfusion, orchestration adapters, and evidence diagnostics.
 - Evidence export reports runtime path, family runtime state, render-plan diagnostics, vocabulary coverage, provider coverage, and missing vocabulary/provider gaps.
 - Live loading uses VNext across the available chart-family routes, including Main, Normalized, Distribution, WeekdayTrend, Bar/Pie, and Transform operations, with legacy fallback preserved.
@@ -1920,13 +1921,13 @@ This section records the current implementation state of the sequence above so f
 
 - Finish removing remaining bypasses around live consumer/provider delivery before Phase 7 capability expansion unless explicitly deferred.
 - Keep `MetricLoadCoordinator` and chart-family adapters as process/consumer coordinators, not semantic authorities.
-- Continue extracting chart-family request planning, provider selection, and runtime mapping into shared VNext planning seams.
+- Continue extracting chart-family request planning and runtime mapping into shared VNext planning seams; provider selection now has an initial shared contract/qualification surface.
 - Preserve legacy execution as a compatibility/fallback adapter until VNext parity and smoke evidence are strong enough to retire each path safely.
 - Avoid broad folder or family-framework consolidation unless it directly strengthens the contract/provider seam.
 
 ### 13.4 Manual validation state
 
-Recent automated validation has covered the current structural, contract, provider, metadata, and evidence work, including full solution test runs. Manual smoke is only required after live behavior changes, especially when changing runtime routing, render delivery, provider selection, chart-controller interaction behavior, or adaptive viewport/detail behavior.
+Recent automated validation has covered the current structural, contract, provider, metadata, and evidence work, including full solution test runs. Manual smoke has verified Main, Distribution, WeekdayTrend, Bar/Pie, Syncfusion render/export, and complete provider/vocabulary coverage after provider-aware adapter qualification. New manual smoke is only required after further live behavior changes, especially when changing runtime routing, render delivery, provider selection, chart-controller interaction behavior, or adaptive viewport/detail behavior.
 
 
 ---
@@ -1983,3 +1984,82 @@ That is the clean conceptual destination.
 
 
 ---
+
+
+---
+
+## Architectural Migration Progress Snapshot
+
+This section is an approximate, non-binding progress assessment based on the latest project structure, codebase index, dependency summary, and the target architecture described in this document.
+
+### Current estimated completion
+
+```text
+Architectural migration: approximately 65–70% complete
+Working estimate: ~68%
+```
+
+### Breakdown
+
+| Area | Approx. completion | Reason |
+|---|---:|---|
+| Vocabulary / conceptual model | 90% | Stable promoted concepts and target hierarchy exist. |
+| VNext reasoning spine | 75% | `ReasoningEngine`, analytical intent, program planning, and session coordination exist. |
+| Contract / boundary model | 65% | Consumer/provider contracts are emerging, but boundary enforcement is not fully proven. |
+| Rendering demotion | 60% | Render-plan delivery exists, but `Core.Rendering` remains structurally large. |
+| Consumer / interaction separation | 55% | Better contracts exist, but UI/presentation remains heavy. |
+| Governance / evidence | 75% | Evidence, parity, and diagnostics infrastructure are strong, but must remain observational. |
+| Legacy coexistence cleanup | 50–60% | Older mesh structures still coexist with VNext and family-specific delivery patterns. |
+
+### Interpretation
+
+The migration is now materially underway rather than merely documentary.
+
+The hardest conceptual shift has happened:
+
+```text
+from:
+presentation / rendering-heavy architecture
+
+toward:
+reasoning-engine + contract/provider/consumer boundary + terminal delivery
+```
+
+The remaining work is mostly consolidation, enforcement, and selective relocation rather than another broad decomposition campaign.
+
+### Why the estimate is not higher
+
+The old architectural mesh still carries significant weight, especially around:
+
+- `UI.MainHost.Coordination`
+- `UI.Charts.Presentation`
+- `Core.Rendering`
+- family-specific rendering contracts, builders, resolvers, and qualification structures
+
+These areas may still contain responsibilities that belong higher in the target hierarchy.
+
+### Why the estimate is not lower
+
+The core migration shape now exists in code:
+
+- reasoning-engine structures exist
+- analytical intent and program planning exist
+- render-plan delivery exists
+- consumer/provider contracts are emerging
+- evidence and parity infrastructure are well established
+
+That means the project has crossed from conceptual planning into structural implementation.
+
+### Best next assessment move
+
+The next useful review is a narrow ownership audit of the provider/consumer boundary and nearby delivery types.
+
+Primary question:
+
+```text
+Do these types enforce the intended boundary,
+or do they merely rename delivery routing?
+```
+
+This should be answered before starting another broad refactor.
+

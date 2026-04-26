@@ -1,4 +1,4 @@
-﻿# PROJECT OVERVIEW
+# PROJECT OVERVIEW
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `DataVisualiser-Architectural-Vocabulary.md`, and `Project Roadmap.md`  
@@ -289,6 +289,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
 - Phase 6 closure satisfies the entry gate: the hierarchy is now legible enough that new power can be added without amplifying entropy
 - Current active work is Phase 7 exploratory capability expansion on the closed `ChartProgram -> ChartRenderPlan -> backend adapter` preservation baseline
+- Later family or tab exceptions must be handled explicitly and must not silently reopen closed Phase 5/6/6.3 or pre-Phase-7 primer work
 - Phase 7 should advance through forward stages aligned to the enhanced containers: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence
 - the architectural vocabulary document provides the canonical grammar for interpreting these containers and promoted concepts
 - Known debt inherited from Phase 6 is documented and bounded
@@ -323,6 +324,38 @@ Future work should broadly progress through:
 
 The architectural vocabulary provides the shared language for this direction; the overview only summarizes it descriptively.
 
+
+---
+
+## 8.6 Architectural Migration Progress Snapshot
+
+The accepted high-level architectural migration estimate is:
+
+```text
+Architectural migration: approximately 65–70% complete
+Working estimate: ~68%
+```
+
+This estimate is descriptive, not a phase gate.
+
+| Area | Approx. completion | Descriptive meaning |
+|---|---:|---|
+| Vocabulary / conceptual model | 90% | The project now has stable architectural language for future work. |
+| VNext reasoning spine | 75% | The reasoning-engine-centered direction is materially present in code. |
+| Contract / boundary model | 65% | Consumer/provider and render-plan seams exist, but enforcement still needs further proof. |
+| Rendering demotion | 60% | Rendering is moving toward terminal delivery, though rendering infrastructure remains large. |
+| Consumer / interaction separation | 55% | Consumers are becoming clearer, but UI/presentation remains structurally heavy. |
+| Governance / evidence | 75% | Evidence and parity infrastructure are strong, but must remain observational. |
+| Legacy coexistence cleanup | 50–60% | Legacy remains managed compatibility/fallback/projection while VNext matures. |
+
+In plain terms:
+
+- the migration is real and visible in code
+- the reasoning engine, contracts, render-plan delivery, and evidence structures now exist as working architectural pieces
+- the remaining work is mostly consolidation, enforcement, and selective relocation
+- the main risk is not direction, but whether new boundary/provider/consumer constructs enforce real seams rather than simply renaming delivery routing
+
+This progress estimate should not be used to reopen closed Phase 5, Phase 6, Phase 6.3, or pre-Phase-7 primer work.
 
 ---
 
@@ -390,6 +423,7 @@ The system exists to support reasoning, not replace it.
 - Exploration is supported without semantic erosion
 - Charts are the current dominant client, not the final definition of the platform
 - The broader direction is a reasoning environment that can serve multiple qualified consumers uniformly
+- The architectural migration is currently estimated at approximately 65–70% complete, with a working estimate of ~68%
 - The architecture rehaul and legibility reconciliation are complete; the pre-Phase-7 render-plan delivery primer is complete and closed as a preservation baseline, and the current critical work is Phase 7 exploratory capability expansion
 - Evolution is intentional and evidence-bound
 

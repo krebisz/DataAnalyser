@@ -1,11 +1,11 @@
-﻿# PROJECT ROADMAP
+# PROJECT ROADMAP
 **Status:** Sequencing and Execution Authority  
 **Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `DataVisualiser-Architectural-Vocabulary.md`  
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions  
-**Last Updated:** 2026-04-24
-**Current Update:** Phase 7 entry gate is satisfied. The pre-Phase-7 rendering primer is complete and is now a closed preservation baseline: VNext render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts live-wire the active chart families and tabs through `ChartRenderPlan` delivery. Phase 7 capability expansion now proceeds from that stabilized baseline and should be sequenced through the enhanced architecture containers: authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence.
+**Last Updated:** 2026-04-26
+**Current Update:** Phase 7 entry gate is satisfied. The pre-Phase-7 rendering primer is complete and is now a closed preservation baseline: VNext render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts live-wire the active chart families and tabs through `ChartRenderPlan` delivery. The accepted architectural migration progress estimate is approximately 65–70% complete, with a working estimate of ~68%. Phase 7 capability expansion now proceeds from the stabilized baseline and should be sequenced through the enhanced architecture containers: authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence.
 **Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. New work must not be tracked against Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 rendering primer.
 
 ---
@@ -136,6 +136,39 @@ Do not track new progress against:
 - the pre-Phase-7 rendering primer
 
 Forward work should be tracked against Phase 7, Phase 8, later consolidation phases, or the forward sequencing model below.
+
+---
+
+## 4.5 Architectural Migration Progress Status
+
+This section records the accepted high-level progress estimate for sequencing purposes only. The architectural vocabulary document remains the canonical grammar source, and the subsystem plan applies the estimate to active execution.
+
+Current estimate:
+
+```text
+Architectural migration: approximately 65–70% complete
+Working estimate: ~68%
+```
+
+Sequencing interpretation:
+
+| Area | Approx. completion | Roadmap implication |
+|---|---:|---|
+| Vocabulary / conceptual model | 90% | Concept language is stable enough to govern Phase 7 work. |
+| VNext reasoning spine | 75% | Phase 7 may build on the reasoning-engine spine rather than restart it. |
+| Contract / boundary model | 65% | Boundary hardening remains a current Phase 7 sequencing priority. |
+| Rendering demotion | 60% | Render-plan delivery is real, but rendering must continue moving toward terminal infrastructure. |
+| Consumer / interaction separation | 55% | Consumer/interaction work remains a later Phase 7/Phase 8 transition concern. |
+| Governance / evidence | 75% | Evidence is strong enough to support migration, but must remain observational. |
+| Legacy coexistence cleanup | 50–60% | Legacy remains managed compatibility/fallback/projection until VNext-native capability slices mature. |
+
+Roadmap consequence:
+
+- do not reopen Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 render-plan primer
+- do not start another broad decomposition campaign by default
+- prioritize Phase 7 slices that prove contract/boundary enforcement, provider/consumer separation, and reasoning-engine capability growth
+- treat provider/consumer boundary verification as an early Phase 7 audit concern
+
 
 ---
 
@@ -457,10 +490,13 @@ The goal is to make the system legible enough that:
 - 737 DataVisualiser tests and 15 DataFileReader tests pass in the current default full-solution lane
 - Shared `WorkspaceTabHost` / `ChartTabHost` layout hardening has been smoke-verified: Charts, Syncfusion, and Admin render through the shared workspace shell, with tab/export milestones available in evidence exports
 
-**Current evidence artifacts (April 2026):**
-- `documents/reachability-20260411-093257.json` — legacy path, 3-series multi-metric, all 8 parity strategies passing
-- `documents/reachability-20260411-093604.json` — VNext path, 2-series, CMS enabled, signature chain aligned
-- `documents/reachability-20260411-093813.json` — VNext path, 2-series, CMS disabled, signature chain aligned
+**Current evidence basis (April 2026):**
+- current repository-visible reachability/parity exports generated through the approved evidence path
+- legacy-path export proving active strategy parity
+- VNext-path exports proving CMS-enabled and CMS-disabled signature-chain alignment
+- current green default test lanes
+
+Generated evidence artifacts are closure proof, not foundational doctrine. Specific export filenames may change as evidence generation improves or snapshots are regenerated.
 
 **Closure Condition**
 - consumers ask for explicit result shapes through consistent seams rather than through special-case controller logic
@@ -593,7 +629,7 @@ The enhanced architecture migration should proceed in this order:
    Keep workflow, routing, fallback, and sequencing separate from semantic meaning and result composition.
 
 4. **Contract and Boundary Hardening**  
-   Make program, delivery, interaction, view, and multi-result contracts the real downstream fan-out seam.
+   Make program, delivery, interaction, view, provider, consumer, and multi-result contracts the real downstream fan-out seam. Early Phase 7 work should verify that provider/consumer boundary types enforce real seams rather than merely renaming delivery routing.
 
 5. **Projection and Translation Discipline**  
    Ensure builders, adapters, resolvers, selectors, and projectors translate across explicit boundaries without becoming semantic authorities or hidden policy centers.
@@ -730,8 +766,9 @@ The following Phase 7 capability areas are active/future work only; they do not 
 #### Phase 7.7 - Contract and Consumer Boundary Hardening
 
 **Scope**
-- formalize program, delivery, interaction, view, and multi-result contracts
+- formalize program, delivery, interaction, view, provider, consumer, and multi-result contracts
 - classify charts, exports, APIs, and future clients as consumer families
+- verify that provider/consumer contracts enforce boundary behavior rather than merely routing delivery
 - prevent consumer-specific delivery shapes from leaking back into reasoning or process layers
 
 **Constraints**
@@ -741,6 +778,7 @@ The following Phase 7 capability areas are active/future work only; they do not 
 
 **Closure Condition**
 - at least two consumer families can consume reasoning-engine output through explicit contracts without changing semantic or execution logic
+- provider/consumer boundary contracts are proven as enforceable seams, not just delivery-routing names
 
 **Global Closure Condition for Phase 7**
 1. All exploratory features are explicitly layered above truth.
@@ -824,9 +862,10 @@ This policy protects both long-term trust and long-term extensibility.
 1. Preserve the qualified seams produced by the completed Phase 5 rehaul and Phase 6 reconciliation.
 2. Begin Phase 7 exploratory capability expansion as reasoning-engine features that delivery surfaces consume, not as chart-specific additions.
 3. Sequence active and future work through the Phase 7 forward sequencing model: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence concerns.
-4. Keep residual debt explicit and bounded rather than allowing silent structural drift.
-5. Revalidate future closure claims with present evidence and repository-visible artifacts.
-6. Introduce further generalization only when the codebase has earned it through repeated real slices.
+4. Verify the provider/consumer boundary early enough to prove that the new contract layer is enforceable architecture, not renamed delivery routing.
+5. Keep residual debt explicit and bounded rather than allowing silent structural drift.
+6. Revalidate future closure claims with present evidence and repository-visible artifacts.
+7. Introduce further generalization only when the codebase has earned it through repeated real slices.
 
 Phase 7 is now structurally ready to proceed.
 The reasoning engine is the composition surface; new capabilities should strengthen its generality rather than binding power to specific delivery surfaces.
@@ -867,6 +906,7 @@ Major next steps in sequence:
 - Phase 6 established a trustworthy hierarchy; it is fully closed. All active chart families have VNext-compatible request/program support and managed legacy fallback/compatibility.
 - Phase 7 remains the sanctioned home of exploration, confidence, and richer interpretive power. Its entry gate is satisfied; the render-plan primer is complete and now serves as the stabilized baseline for capability expansion.
 - Phase 7 should advance according to the forward sequencing model, without reopening any closed historical phase.
+- The accepted architectural migration estimate is approximately 65–70% complete, with a working estimate of ~68%.
 - The architectural vocabulary document supplies the concept grammar; this roadmap supplies the sequencing and closure discipline.
 - The reasoning engine is the center of the system. New capabilities should be built as reasoning-engine features that delivery surfaces consume.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.

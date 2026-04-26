@@ -4,7 +4,7 @@
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `DataVisualiser-Architectural-Vocabulary.md`, `Project Roadmap.md`, and `Project Overview.md`  
 **Supersedes:** `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`  
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, do-not-confuse distinctions, and migration-risk language  
-**Last Updated:** 2026-04-24
+**Last Updated:** 2026-04-26
 
 ---
 
@@ -41,6 +41,7 @@ Current state:
 
 - Pre-Phase-7 rendering primer is complete: VNext has render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts, and the active chart families now consume `ChartRenderPlan` through adapters.
 - Current automated lane: 493 DataVisualiser source files, 174 DataVisualiser test files, 737 DataVisualiser tests, and 15 DataFileReader tests.
+- Current architectural migration estimate: approximately 65–70% complete, working estimate ~68%, per the accepted architectural vocabulary progress snapshot.
 - Phase 6.3 VNext widening is complete - all active chart families have VNext-compatible request/program support and live VNext routes for fresh family loads, with legacy retained as compatibility/fallback
 - Phase 7 entry gate is satisfied — exploratory and confidence capabilities remain the Phase 7 objective, and the render-plan delivery primer is now complete across the active chart families and tabs.
 - known debt: `MainChartsView` host concentration (~1,440 lines), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence
@@ -275,6 +276,55 @@ Current read:
 - VNext workflow state now carries explicit `WorkflowPlanRequest` plans, and the bridge accepts explicit `ChartProgramRequest` input for non-live program projection
 - the remaining architectural noise is concentrated in the outliers listed above
 - low-level helper duplication is no longer the dominant problem; mixed host/orchestration/evidence/data-access responsibilities are
+
+---
+
+## 5.5 Architectural Migration Progress Snapshot
+
+This is a concise execution-plan view of the accepted architectural vocabulary progress snapshot.
+
+Current estimate:
+
+```text
+Architectural migration: approximately 65–70% complete
+Working estimate: ~68%
+```
+
+| Area | Approx. completion | Execution-plan interpretation |
+|---|---:|---|
+| Vocabulary / conceptual model | 90% | Stable promoted concepts and target hierarchy are in place and should be treated as current grammar. |
+| VNext reasoning spine | 75% | `ReasoningEngine`, analytical intent, program planning, and session coordination exist and are materially usable. |
+| Contract / boundary model | 65% | Consumer/provider contracts and render-plan seams are emerging; enforcement still needs proof through bounded slices. |
+| Rendering demotion | 60% | Render-plan delivery exists, but `Core.Rendering` remains structurally large and must stay terminal. |
+| Consumer / interaction separation | 55% | Better contracts exist, but UI/presentation remains a major remaining front. |
+| Governance / evidence | 75% | Evidence, parity, and diagnostics infrastructure are strong but must remain observational. |
+| Legacy coexistence cleanup | 50–60% | Legacy/VNext coexistence remains managed debt while VNext becomes progressively more authoritative. |
+
+Execution meaning:
+
+- the migration is materially underway, not merely documentary
+- the project has crossed from presentation/rendering-heavy shape toward reasoning-engine + contract/provider/consumer boundary + terminal delivery
+- the remaining work is consolidation, enforcement, and selective relocation
+- broad decomposition is not the next default move
+
+Best next assessment move:
+
+```text
+Audit whether the provider/consumer boundary enforces the intended architectural seam,
+or merely renames delivery routing.
+```
+
+Priority audit targets:
+
+- `ConsumerProviderContract`
+- `ConsumerProviderContracts`
+- `ConsumerProviderRegistry`
+- `ChartProgramDeliveryTargetResolver`
+- `ChartRenderPlanProviderMetadata`
+- `ChartRenderPlanVocabularyMetadata`
+- `ChartRenderPlanAdapterQualification`
+
+This section does not redefine the architectural vocabulary. It applies the accepted vocabulary progress snapshot to active subsystem execution.
 
 ---
 
@@ -671,6 +721,8 @@ Completed live slices:
 
 Read these through the enhanced ownership lens: each outlier should be classified by whether it violates authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, or governance/evidence ownership.
 
+Also audit the new provider/consumer boundary types to verify whether they enforce real boundary behavior rather than merely renaming delivery routing.
+
 - `UI/MainChartsView.xaml.cs` — largest host concentration point
 - `Core/Data/Repositories/DataFetcher.cs` — query shaping, normalization, subtype resolution
 - `UI/Charts/Presentation/TransformDataPanelControllerAdapter.cs` — remaining transform workflow and chart/grid handoff concentration
@@ -678,6 +730,33 @@ Read these through the enhanced ownership lens: each outlier should be classifie
 - `Core/Rendering/Engines/ChartRenderEngine.cs` — render normalization, axis shaping, tooltip range
 - `Core/Rendering/Helpers/ChartHelper.cs` — scattered tooltip/axis/clearing helpers
 - `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` — rendering family concentration
+
+
+### 11.1 Provider / Consumer Boundary Audit Targets
+
+These are not necessarily outliers. They are high-value verification targets because they sit near the current migration frontier.
+
+- `ConsumerProviderContract`
+- `ConsumerProviderContracts`
+- `ConsumerProviderRegistry`
+- `ChartProgramDeliveryTargetResolver`
+- `ChartRenderPlanProviderMetadata`
+- `ChartRenderPlanVocabularyMetadata`
+- `ChartRenderPlanAdapterQualification`
+
+Audit question:
+
+```text
+Do these types enforce the intended contract/boundary seam,
+or do they merely rename delivery routing?
+```
+
+Preferred outcome:
+- contracts constrain what crosses the boundary
+- provider selection is explicit and testable
+- consumer delivery remains downstream and non-authoritative
+- projection/translation remains subordinate to contracts
+- terminal delivery stays replaceable
 
 ---
 
@@ -692,6 +771,7 @@ Read these through the enhanced ownership lens: each outlier should be classifie
 - client-specific repair logic ownership classification
 - authority/context/request/result ownership classification
 - contract/boundary fan-out placement
+- provider/consumer contract boundary enforcement versus delivery-routing renaming
 - consumer/interaction separation from controller/event plumbing
 - overlay definition versus overlay delivery ownership
 - projection/translation components that hide semantic choice or execution policy
@@ -745,6 +825,7 @@ Already banked (do not reopen casually):
 - the reasoning engine's generality increases with each capability — programs become more consumer-agnostic
 - no regression in existing chart delivery, evidence, or structural integrity
 - Phase 7 advances the enhanced architecture through the forward stages in Section 8.5, using the architectural vocabulary as concept grammar and without reopening Phase 5/6 closure tracks
+- the provider/consumer boundary is proven as an enforceable seam rather than a naming layer over delivery routing
 
 ---
 

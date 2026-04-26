@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-04-26 14:14:10
+Generated: 2026-04-26 19:11:56
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -547,6 +547,7 @@ DataAnalyser/
           TransformOperationStateCoordinator.cs
           TransformRenderCoordinator.cs
           TransformSelectionInteractionCoordinator.cs
+          TransformSeriesOperationRequestMapper.cs
           TransformSessionMilestoneRecorder.cs
           TransformSubtypeSelectionCoordinator.cs
           TransformWorkflowCoordinator.cs
@@ -699,9 +700,13 @@ DataAnalyser/
         CapabilityRequest.cs
         ChartDisplayMode.cs
         ChartProgram.cs
+        ChartProgramDeliveryTargetResolver.cs
         ChartProgramKind.cs
         ChartProgramRequest.cs
         ConsumerDeliveryContract.cs
+        ConsumerProviderContract.cs
+        ConsumerProviderContracts.cs
+        ConsumerProviderRegistry.cs
         DataViewKind.cs
         InteractionRequest.cs
         MetricLoadSnapshot.cs
@@ -720,8 +725,10 @@ DataAnalyser/
         ChartBackendSelector.cs
         ChartRenderPlan.cs
         ChartRenderPlanAdapter.cs
+        ChartRenderPlanAdapterQualification.cs
         ChartRenderPlanMetadataKeys.cs
         ChartRenderPlanProjector.cs
+        ChartRenderPlanProviderMetadata.cs
         ChartRenderPlanVocabularyMetadata.cs
         RenderDensityPolicy.cs
         TimeBucketRenderAggregationKernel.cs
@@ -760,6 +767,7 @@ DataAnalyser/
       TransformDataPanelControllerAdapterTests.cs
       TransformRenderCoordinatorTests.cs
       TransformSelectionInteractionCoordinatorTests.cs
+      TransformSeriesOperationRequestMapperTests.cs
       TransformSessionMilestoneRecorderTests.cs
       TransformWorkflowCoordinatorTests.cs
       WeekdayTrendChartControllerAdapterTests.cs
@@ -925,9 +933,11 @@ DataAnalyser/
       AnalyticalIntentContractsTests.cs
       AnalyticalIntentFactoryTests.cs
       AnalyticalRenderPlanPipelineTests.cs
+      ChartProgramDeliveryTargetResolverTests.cs
       ChartProgramPlannerTests.cs
       ChartRenderPlanAdapterTests.cs
       ChartRenderPlanProjectorTests.cs
+      ConsumerProviderRegistryTests.cs
       DistributionSessionMilestoneRecorderTests.cs
       FamilyRuntimeDiagnosticsTests.cs
       LegacyChartProgramProjectorTests.cs

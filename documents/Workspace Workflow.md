@@ -78,6 +78,27 @@ The architectural vocabulary document is mandatory because it preserves the shar
 
 - Solution ZIP / package (reference only)
 
+### 2.1 Artifact Classes and Readiness
+
+Workspace materials are not all the same kind of artifact.
+
+| Artifact Class | Examples | Role |
+|---|---|---|
+| Foundational documents | Bible, System Map, Roadmap, Overview, Subsystem Plan, Vocabulary, MOP | Authority, structure, sequencing, execution governance, or orientation |
+| Procedural documents | Workspace Workflow, Collaboration Protocol | Workspace setup and collaboration mechanics |
+| Generated structural lookup artifacts | `project-tree.txt`, `codebase-index.md`, `dependency-summary.md` | Generated structure/navigation aids; authoritative for observed structure, not intent |
+| Generated evidence artifacts | reachability exports, parity exports, smoke exports, runtime diagnostics | Audit/proof outputs; not foundational context |
+| Source artifacts | live repository, solution ZIP, attached source files | Required for implementation work |
+
+Readiness levels:
+
+| Readiness | Required Materials | Allows |
+|---|---|---|
+| Alignment-ready | Foundational documents | architectural alignment and phase grounding |
+| Navigation-ready | Alignment-ready + generated structural lookup artifacts | file/symbol orientation |
+| Audit-ready | Navigation-ready + relevant generated evidence artifacts | closure, parity, reachability, or regression review |
+| Implementation-ready | Navigation-ready + live repo / solution ZIP / relevant source files | code changes |
+
 ---
 
 ## 3. Workspace Lifecycle
@@ -368,6 +389,7 @@ WORKSPACE CONTEXT DECLARATION
      - Temporary instrumentation
      - Parity harness
      - Evidence export with RuntimePath and signature chain
+     - Provider/consumer boundary seam proof
      - Mixed (declare per step)
 
    Constraints / Notes:

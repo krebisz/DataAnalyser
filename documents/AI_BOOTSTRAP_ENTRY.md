@@ -3,7 +3,7 @@
 **Scope:** Minimal workspace grounding, document routing, escalation levels, and default loading discipline  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `DataVisualiser-Architectural-Vocabulary.md`, `Project Roadmap.md`, and `MASTER_OPERATING_PROTOCOL.md`  
 **Applies To:** AI assistant initialization and ongoing task routing for the `DataAnalyser` solution  
-**Last Updated:** 2026-04-24
+**Last Updated:** 2026-04-26
 
 ---
 
@@ -23,6 +23,8 @@ It exists to:
 This document is intentionally small.  
 It does **not** replace higher-authority documents.  
 It tells the assistant **where to go next**.
+
+Its routing role remains useful after current implementation work is complete: it preserves how future assistants should re-enter the project, classify tasks, and avoid drifting away from the established architecture.
 
 If a conflict exists:
 
@@ -133,6 +135,8 @@ Also load `DataVisualiser-Architectural-Vocabulary.md` when the task involves:
 Do not track new progress against closed historical phases or closed primer work unless the user explicitly asks for historical review.
 
 Do **not** load the full document set by default unless the task explicitly requires cross-boundary reasoning, rehydration, or phase/legality review.
+
+Protocol, workflow, and collaboration documents should not be treated as obsolete merely because the current development mode changes. They remain available escalation references for future agents, recovery cases, multi-agent work, and audit-safe alignment.
 
 ---
 
@@ -258,6 +262,11 @@ Use when:
 When the classification itself is uncertain, pair this with `DataVisualiser-Architectural-Vocabulary.md`.
 
 This is the highest-value practical working document for most nontrivial `DataVisualiser` tasks.
+
+For architectural migration progress questions:
+- use `DataVisualiser-Architectural-Vocabulary.md` for the accepted progress estimate and conceptual interpretation
+- use `DataVisualiser_Subsystem_Plan.md` for execution-plan implications and provider/consumer boundary audit targets
+- use `Project Roadmap.md` only when sequencing, closure, or phase legality is being decided
 
 ---
 

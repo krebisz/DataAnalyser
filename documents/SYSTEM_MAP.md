@@ -2,6 +2,8 @@
 **Status:** Canonical (Structural)  
 **Scope:** Conceptual architecture, execution boundaries, rendering boundaries, and data-flow constraints  
 **Authority:** Subordinate only to `Project Bible.md`
+**Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership-container language, and do-not-confuse distinctions used by this structural map
+**Last Updated:** 2026-04-26
 
 ---
 
@@ -106,6 +108,46 @@ The containers are:
 
 These containers do not reopen any historical phase.
 They define the structural ownership model for active and future work.
+
+---
+
+
+### 2.6 Structural Migration Maturity (Descriptive)
+
+This section records structural maturity only. It is not sequencing authority and does not define execution work.
+
+Current accepted estimate:
+
+```text
+Architectural migration: approximately 65–70% complete
+Working estimate: ~68%
+```
+
+Structural reading:
+
+| Structural area | Approx. maturity | Structural meaning |
+|---|---:|---|
+| Vocabulary / conceptual model | 90% | Ownership containers and promoted concepts are stable enough to govern structural interpretation. |
+| VNext reasoning spine | 75% | Reasoning, analytical intent, program planning, and session coordination are materially present. |
+| Contract / boundary model | 65% | Consumer/provider and render-plan seams exist, but boundary enforcement remains the main structural proof point. |
+| Rendering demotion | 60% | Rendering has a terminal-delivery path through render plans, but rendering infrastructure remains structurally large. |
+| Consumer / interaction separation | 55% | Consumers and interactions are better named, but UI/presentation remains heavy. |
+| Governance / evidence | 75% | Evidence and parity structures are strong, but must remain observational. |
+| Legacy coexistence cleanup | 50–60% | Legacy remains compatibility/fallback/projection while VNext-native paths mature. |
+
+Structural consequence:
+
+- the system has crossed from presentation/rendering-heavy structure toward reasoning-engine + contract/provider/consumer boundary + terminal delivery
+- the next structural risk is not direction, but enforcement
+- provider/consumer boundary types must be checked as seams, not merely delivery-routing names
+- broad decomposition is not structurally implied by this estimate
+
+Primary structural audit question:
+
+```text
+Do provider/consumer boundary types enforce what may cross the seam,
+or do they merely rename delivery routing?
+```
 
 ---
 
@@ -260,6 +302,7 @@ The process/execution layer coordinates execution, not meaning.
 - strategy selection through explicit declared mechanisms
 - execution routing, including runtime-path selection between VNext and legacy load paths
 - consumer-request / chart-program result composition handoff
+- provider/consumer boundary handoff where execution chooses delivery path without redefining meaning
 - migration coexistence handling
 - evidence/export initiation
 - runtime-path tracking via explicit state (`LoadRuntimeState`) so downstream diagnostics and evidence can observe which path was used
@@ -421,6 +464,7 @@ Examples include:
 - rendering logic altering computation
 - backend lifecycle quirks driving orchestration design
 - controller-specific assumptions redefining a chart family's architectural contract
+- provider/consumer boundary types acting as hidden delivery policy or semantic authority
 
 Such violations constitute architectural breach.
 
@@ -552,6 +596,8 @@ Language is part of architecture.
 - charts are one consumer family among several possible clients
 - non-chart consumers may consume the same analytical programs through different delivery contracts
 - programmable composition is allowed only as a downstream, reversible, provenance-visible capability
+
+The accepted structural migration estimate is approximately 65–70% complete, with a working estimate of ~68%.
 
 This map defines what the system is allowed to be.
 
