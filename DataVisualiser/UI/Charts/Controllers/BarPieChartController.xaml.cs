@@ -1,8 +1,7 @@
-using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Presentation;
 using System.Windows;
 using System.Windows.Controls;
-using DataVisualiser.UI.Defaults;
+using DataVisualiser.UI;
 
 namespace DataVisualiser.UI.Charts.Controllers;
 

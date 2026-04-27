@@ -2,6 +2,7 @@ using DataFileReader.Canonical;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Orchestration.MainChart;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Tests.Orchestration;

@@ -1,6 +1,7 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Strategies.Factories;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 
 namespace DataVisualiser.Tests.Strategies;
 
@@ -26,7 +27,7 @@ public sealed class MultiMetricStrategyFactoryTests
             To = To
         };
 
-        var parameters = new Core.Strategies.Abstractions.StrategyCreationParameters
+        var parameters = new DataVisualiser.Core.Strategies.Abstractions.StrategyCreationParameters
         {
             CmsSeries = cmsSeries,
             Labels = ["A", "B", "C"],
@@ -61,7 +62,7 @@ public sealed class MultiMetricStrategyFactoryTests
             To = To
         };
 
-        var parameters = new Core.Strategies.Abstractions.StrategyCreationParameters
+        var parameters = new DataVisualiser.Core.Strategies.Abstractions.StrategyCreationParameters
         {
             CmsSeries = cmsSeries,
             Labels = ["Fat", "Water", "Skeletal"],

@@ -3,6 +3,7 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
 using LiveCharts.Wpf;
 

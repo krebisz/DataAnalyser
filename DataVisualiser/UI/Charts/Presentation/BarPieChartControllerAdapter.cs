@@ -1,18 +1,17 @@
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 using System.Windows.Controls;
 using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
-using DataVisualiser.UI.Defaults;
-using DataVisualiser.UI.Charts.Presentation.Rendering;
+using DataVisualiser.UI;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
-using UiChartRenderModel = DataVisualiser.UI.Charts.Presentation.Rendering.UiChartRenderModel;
+using UiChartRenderModel = DataVisualiser.UI.Charts.Presentation.UiChartRenderModel;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Presentation;

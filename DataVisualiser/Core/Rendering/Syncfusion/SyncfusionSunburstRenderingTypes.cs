@@ -1,5 +1,5 @@
-using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Syncfusion;
+using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.UI.Charts.Syncfusion;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
 

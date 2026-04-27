@@ -1,5 +1,6 @@
 using System.Windows;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.Theming;
 
 namespace DataVisualiser.Tests.UI.Theming;

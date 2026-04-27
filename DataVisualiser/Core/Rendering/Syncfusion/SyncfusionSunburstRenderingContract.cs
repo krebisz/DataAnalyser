@@ -1,4 +1,4 @@
-using DataVisualiser.UI.Syncfusion;
+using DataVisualiser.UI.Charts.Syncfusion;
 using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.Syncfusion;

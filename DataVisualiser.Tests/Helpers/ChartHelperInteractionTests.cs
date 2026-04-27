@@ -1,6 +1,8 @@
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.Helpers;

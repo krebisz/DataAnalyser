@@ -5,15 +5,15 @@ using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.Charts.Controllers;
-using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using LiveCharts.Wpf;
 
+using DataVisualiser.UI.Charts.Presentation;
 namespace DataVisualiser.Tests.UI.MainHost;
 
 public sealed class MainChartsUiSurfaceDiagnosticsReaderTests

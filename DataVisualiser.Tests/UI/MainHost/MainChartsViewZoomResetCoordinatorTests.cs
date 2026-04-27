@@ -1,8 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.State;

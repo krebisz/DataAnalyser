@@ -520,6 +520,23 @@ It should be demoted beneath stronger upstream concepts:
 - provider contracts
 - consumer boundaries
 
+#### Partial correction via folder restructure (April 2026)
+
+A structural folder restructure partially corrected a symptom of this pressure.
+
+The previous layout placed rendering-related sub-backends (`ECharts/`, `LiveCharts/`) one level deeper inside `UI/Charts/Presentation/Rendering/`, which gave `Rendering` the appearance of a nested architectural center within the UI boundary.
+
+The restructure:
+- flattened `UI/Charts/Presentation/Rendering/` into `UI/Charts/Presentation/`, promoting the root-level rendering types directly into the consumer/interaction field
+- relocated the vendor-specific sub-backends (`ECharts/`, `LiveCharts/`) as siblings at `UI/Charts/Presentation/ECharts/` and `UI/Charts/Presentation/LiveCharts/`, making their terminal nature more visible
+- moved Syncfusion types from `UI/Syncfusion/` to `UI/Charts/Syncfusion/`, co-locating them with the rest of the consumer/interaction field rather than treating them as a top-level UI concern
+- consolidated controller interfaces from `UI/Charts/Interfaces/` into `UI/Charts/Presentation/`, making it clearer that controller interfaces and their adapters belong to the same coherent consumer/interaction container
+- extracted tooltip helpers from `Core/Rendering/Helpers/` into `Core/Rendering/Tooltip/`, separating pure rendering support from general helper utilities
+
+This does not yet fully demote rendering to Terminal Delivery Infrastructure as described in Section 8.3.
+The `Core.Rendering` layer remains structurally large.
+But the folder layout now better reflects the intended ownership shape: vendor backends are visibly terminal, and controller interfaces live within the consumer/interaction field where they belong.
+
 ### 3.7 Migration architecture must not become steady-state architecture
 
 A further non-conflicting conclusion is that the migration machinery is at risk of becoming part of the permanent architecture if it is not kept bounded.
@@ -1917,6 +1934,20 @@ This section records the current implementation state of the sequence above so f
 - Main, Syncfusion, and Admin tabs now share more workspace-host and evidence/session behavior.
 - Large-data rendering preparation introduced render-budget planning and vocabulary for viewport/detail strategies, but full adaptive zoom/detail behavior remains future work.
 
+#### Structural folder restructure (April 2026)
+
+A folder restructure was applied to bring the physical layout closer to the intended ownership shape described in this document. The following changes were completed with all 894 automated tests passing:
+
+- `UI/Syncfusion/` relocated to `UI/Charts/Syncfusion/` — Syncfusion types (view, coordinator, helpers, items) are now co-located within the consumer/interaction field rather than treated as a top-level UI concern.
+- `UI/Charts/Interfaces/` merged into `UI/Charts/Presentation/` — controller interfaces and their adapters now live in one coherent consumer/interaction container; the `Interfaces` sub-namespace is eliminated.
+- `UI/Charts/Presentation/Rendering/` flattened into `UI/Charts/Presentation/` — rendering orchestration types (`ChartRendererResolver`, `IChartRenderer`, `IChartSurface`, `UiChartRenderModel`, etc.) are promoted directly into the consumer/interaction field, removing the illusion of a rendering sub-center.
+- Vendor-specific sub-backends promoted from `Presentation/Rendering/ECharts/` and `Presentation/Rendering/LiveCharts/` to `Presentation/ECharts/` and `Presentation/LiveCharts/` — backend siblings are now visibly terminal within the consumer field rather than nested inside a rendering sub-hierarchy.
+- `Core/Rendering/Tooltip/` extracted from `Core/Rendering/Helpers/` — tooltip formatting helpers are isolated into their own sub-namespace, separating dedicated tooltip support from general rendering helpers.
+- `UI/Defaults/` dissolved into `UI/` — `UiDefaults` is now a flat member of the `DataVisualiser.UI` namespace, removing a spurious sub-container for a single utility class.
+- Test project: `Tests/Controls/` renamed to `Tests/UI/Charts/Presentation/` — mirrors the restructured production namespace.
+- Test project: `Tests/UI/Rendering/` relocated to `Tests/Core/Rendering/` — test files now mirror their production counterparts under `Core.Rendering`.
+- Test project: `Tests/Helpers/Infrastructure/` extracted from `Tests/Helpers/` — builder, stub, and test-helper infrastructure types are isolated from general helper utilities.
+
 ### 13.3 Current next practical work
 
 - Finish removing remaining bypasses around live consumer/provider delivery before Phase 7 capability expansion unless explicitly deferred.
@@ -1924,6 +1955,10 @@ This section records the current implementation state of the sequence above so f
 - Continue extracting chart-family request planning and runtime mapping into shared VNext planning seams; provider selection now has an initial shared contract/qualification surface.
 - Preserve legacy execution as a compatibility/fallback adapter until VNext parity and smoke evidence are strong enough to retire each path safely.
 - Avoid broad folder or family-framework consolidation unless it directly strengthens the contract/provider seam.
+
+#### Folder restructure complete (April 2026)
+
+The structural folder restructure described in §3.6 and §13.2 is complete. The physical layout now more closely reflects the intended ownership containers. No further folder-level reorganization is planned as a priority; the next leverage is in behavioral/ownership enforcement rather than file location.
 
 ### 13.4 Manual validation state
 
@@ -2006,8 +2041,8 @@ Working estimate: ~68%
 | Vocabulary / conceptual model | 90% | Stable promoted concepts and target hierarchy exist. |
 | VNext reasoning spine | 75% | `ReasoningEngine`, analytical intent, program planning, and session coordination exist. |
 | Contract / boundary model | 65% | Consumer/provider contracts are emerging, but boundary enforcement is not fully proven. |
-| Rendering demotion | 60% | Render-plan delivery exists, but `Core.Rendering` remains structurally large. |
-| Consumer / interaction separation | 55% | Better contracts exist, but UI/presentation remains heavy. |
+| Rendering demotion | 63% | Render-plan delivery exists; folder restructure removed the `Presentation/Rendering/` sub-hierarchy, but `Core.Rendering` remains structurally large. |
+| Consumer / interaction separation | 60% | Controller interfaces and adapters now live in one coherent `UI.Charts.Presentation` container; Syncfusion types relocated into the consumer field; further behavioral enforcement remains. |
 | Governance / evidence | 75% | Evidence, parity, and diagnostics infrastructure are strong, but must remain observational. |
 | Legacy coexistence cleanup | 50–60% | Older mesh structures still coexist with VNext and family-specific delivery patterns. |
 
@@ -2032,11 +2067,12 @@ The remaining work is mostly consolidation, enforcement, and selective relocatio
 The old architectural mesh still carries significant weight, especially around:
 
 - `UI.MainHost.Coordination`
-- `UI.Charts.Presentation`
 - `Core.Rendering`
 - family-specific rendering contracts, builders, resolvers, and qualification structures
 
 These areas may still contain responsibilities that belong higher in the target hierarchy.
+
+Note: `UI.Charts.Presentation` was previously listed here as a problem area. The April 2026 folder restructure partially corrected it by merging controller interfaces into the presentation container, flattening the rendering sub-hierarchy, and relocating vendor backends to visibly terminal positions. The physical layout is now more aligned. Behavioral enforcement — ensuring that nothing in this layer acts as a semantic authority — remains in progress.
 
 ### Why the estimate is not lower
 

@@ -6,7 +6,7 @@ using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Core.Transforms;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 

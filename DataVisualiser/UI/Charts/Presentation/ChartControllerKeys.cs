@@ -1,4 +1,4 @@
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 

@@ -1,11 +1,10 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.State;
 
+using DataVisualiser.UI.Charts.Presentation;
 namespace DataVisualiser.Tests.UI.MainHost;
 
 public sealed class MainChartsViewControllerExtrasCoordinatorTests

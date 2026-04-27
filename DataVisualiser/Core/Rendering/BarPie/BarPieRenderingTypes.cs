@@ -1,4 +1,4 @@
-using DataVisualiser.UI.Charts.Presentation.Rendering;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
 

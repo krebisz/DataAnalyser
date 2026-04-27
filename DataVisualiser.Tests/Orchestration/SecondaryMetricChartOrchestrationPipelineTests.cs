@@ -5,6 +5,7 @@ using DataVisualiser.Core.Orchestration.SecondaryCharts;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
 using LiveCharts;
 using LiveCharts.Wpf;

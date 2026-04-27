@@ -1,6 +1,7 @@
 using DataVisualiser.Core.Transforms;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 
 namespace DataVisualiser.Tests.Services;
 

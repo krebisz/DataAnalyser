@@ -1,4 +1,4 @@
-using DataVisualiser.UI.Syncfusion;
+using DataVisualiser.UI.Charts.Syncfusion;
 
 namespace DataVisualiser.Tests.UI.Syncfusion;
 

@@ -1,5 +1,6 @@
 ﻿using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 
 namespace DataVisualiser.Tests.Strategies;
 

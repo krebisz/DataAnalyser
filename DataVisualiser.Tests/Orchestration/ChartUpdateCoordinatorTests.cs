@@ -9,6 +9,7 @@ using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;

@@ -12,6 +12,7 @@ using DataVisualiser.Core.Strategies.Abstractions;
 using Moq;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
 using LiveCharts.Wpf;

@@ -7,7 +7,7 @@ using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;

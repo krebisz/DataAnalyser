@@ -1,9 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Presentation;
 
+using DataVisualiser.UI.Charts.Presentation;
 namespace DataVisualiser.UI.MainHost.Evidence;
 
 internal sealed class MainChartsUiSurfaceDiagnosticsReader

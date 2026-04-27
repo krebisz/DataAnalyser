@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:DataVisualiser.UI.Charts.Controllers"
-             xmlns:ui="clr-namespace:DataVisualiser.UI.Defaults"
+             xmlns:ui="clr-namespace:DataVisualiser.UI"
              mc:Ignorable="d"
              d:DesignHeight="550" d:DesignWidth="800">
     <Grid x:Name="RootGrid">

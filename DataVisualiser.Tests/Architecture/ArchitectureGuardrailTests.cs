@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 
 namespace DataVisualiser.Tests.Architecture;
 
@@ -237,7 +238,7 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(mainSource, "private void InitializeDateRange"), StringComparison.Ordinal);
         Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(mainSource, "private void ResetDateRangeToDefault"), StringComparison.Ordinal);
 
-        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
         Assert.Contains("ChartHostDateRangeCoordinator", syncfusionSource, StringComparison.Ordinal);
         Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(syncfusionSource, "private void InitializeDateRange"), StringComparison.Ordinal);
         Assert.Contains("_dateRangeCoordinator.ApplyDefaultRange", ExtractMethodBody(syncfusionSource, "private void ResetDateRangeToDefault"), StringComparison.Ordinal);
@@ -419,7 +420,7 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("_selectorManager.SuppressSelectionChanged()", mainAddSubtypeBody, StringComparison.Ordinal);
         Assert.Contains("RenderChartsFromLastContext", mainAddSubtypeBody, StringComparison.Ordinal);
 
-        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
         Assert.Contains("ChartHostMetricSelectionCoordinator", syncfusionSource, StringComparison.Ordinal);
         Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(syncfusionSource, "private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions"), StringComparison.Ordinal);
         Assert.Contains("_viewModel.BeginSelectionStateBatch", ExtractMethodBody(syncfusionSource, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions"), StringComparison.Ordinal);
@@ -461,7 +462,7 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void SyncfusionChartsView_ShouldReuseSharedStateProjectionCoordinator()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
 
         Assert.Contains("MainChartsViewStateSyncCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("_stateSyncCoordinator.Apply", ExtractMethodBody(source, "private void ApplySelectionStateToUi"), StringComparison.Ordinal);
@@ -476,7 +477,7 @@ public sealed class ArchitectureGuardrailTests
     [Fact]
     public void SyncfusionChartsView_ShouldDelegateLoadValidationExecutionAndClearFlowThroughDedicatedCoordinator()
     {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
 
         Assert.Contains("SyncfusionChartsViewLoadCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("_loadCoordinator.ValidateAndPrepareLoad", ExtractMethodBody(source, "private Task<bool> LoadDataAndValidate"), StringComparison.Ordinal);
@@ -552,7 +553,7 @@ public sealed class ArchitectureGuardrailTests
         var source = SourceTreeTestHelper.ReadRepositoryFile(
             "DataVisualiser", "Core", "Rendering", "Helpers", "ChartHelper.cs");
         var tooltipSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Helpers", "ChartTooltipFormattingHelper.cs");
+            "DataVisualiser", "Core", "Rendering", "Tooltip", "ChartTooltipFormattingHelper.cs");
 
         Assert.Contains("ChartTooltipFormattingHelper.GetChartValuesAtIndex", source, StringComparison.Ordinal);
         Assert.Contains("ChartTooltipFormattingHelper.GetChartValuesFormattedAtIndex", source, StringComparison.Ordinal);
@@ -571,7 +572,7 @@ public sealed class ArchitectureGuardrailTests
     public void MainAndSyncfusionHosts_ShouldShareUiBusyScopeLease()
     {
         var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
-        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
 
         Assert.Contains("new UiBusyScopeLease(EndUiBusyScope)", mainSource, StringComparison.Ordinal);
         Assert.Contains("new UiBusyScopeLease(EndUiBusyScope)", syncfusionSource, StringComparison.Ordinal);
@@ -655,7 +656,7 @@ public sealed class ArchitectureGuardrailTests
         var mainSource = SourceTreeTestHelper.ReadRepositoryFile(
             "DataVisualiser", "UI", "MainChartsView.xaml.cs");
         var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+            "DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
 
         Assert.Contains("ThemeToggled", ExtractMethodBody(mainSource, "private void OnToggleTheme"), StringComparison.Ordinal);
         Assert.Contains("ZoomResetRequested", ExtractMethodBody(mainSource, "private void ResetRegisteredChartsZoom"), StringComparison.Ordinal);
@@ -667,7 +668,7 @@ public sealed class ArchitectureGuardrailTests
     public void SyncfusionHost_ShouldRecordLoadRenderAndExportSmokeMilestones()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+            "DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
 
         Assert.Contains("SyncfusionLoadRequested", ExtractMethodBody(source, "private async void OnLoadData"), StringComparison.Ordinal);
         Assert.Contains("SyncfusionLoadValidationFailed", ExtractMethodBody(source, "private async void OnLoadData"), StringComparison.Ordinal);
@@ -881,7 +882,7 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("MetricSelectionPanelEventBinder", mainSource, StringComparison.Ordinal);
         Assert.DoesNotContain("SelectionPanel.LoadDataRequested +=", mainSource, StringComparison.Ordinal);
 
-        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
         Assert.Contains("ChartTabHost.SelectionSurface", syncfusionSource, StringComparison.Ordinal);
         Assert.Contains("SelectionPanel.MetricTypeCombo", syncfusionSource, StringComparison.Ordinal);
         Assert.Contains("MetricSelectionPanelEventBinder", syncfusionSource, StringComparison.Ordinal);
@@ -894,7 +895,7 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("<ScrollViewer", mainXaml, StringComparison.Ordinal);
         Assert.DoesNotContain("x:Name=\"TablesCombo\"", mainXaml, StringComparison.Ordinal);
 
-        var syncfusionXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Syncfusion", "SyncfusionChartsView.xaml");
+        var syncfusionXaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml");
         Assert.Contains("ChartTabHost", syncfusionXaml, StringComparison.Ordinal);
         Assert.DoesNotContain("MetricSelectionPanel", syncfusionXaml, StringComparison.Ordinal);
         Assert.DoesNotContain("<DockPanel", syncfusionXaml, StringComparison.Ordinal);

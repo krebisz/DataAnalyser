@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using LiveCharts.Wpf;

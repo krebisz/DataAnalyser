@@ -1,9 +1,11 @@
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Core.Rendering.Interaction;
 using LiveCharts;
 using LiveCharts.Wpf;
 
+using DataVisualiser.Tests.Helpers.Infrastructure;
 namespace DataVisualiser.Tests.Helpers;
 
 public sealed class ChartTooltipFormattingHelperTests

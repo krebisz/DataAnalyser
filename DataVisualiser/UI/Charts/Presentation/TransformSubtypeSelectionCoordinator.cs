@@ -1,6 +1,6 @@
 using System.Windows;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.Charts.Presentation;

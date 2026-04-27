@@ -3,7 +3,7 @@ using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;

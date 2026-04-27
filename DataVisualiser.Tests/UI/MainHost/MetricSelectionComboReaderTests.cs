@@ -1,6 +1,7 @@
 using System.Windows.Controls;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.MainHost;
 
 namespace DataVisualiser.Tests.UI.MainHost;

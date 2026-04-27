@@ -1,6 +1,7 @@
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using LiveCharts.Wpf;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;

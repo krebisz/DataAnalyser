@@ -4,14 +4,14 @@ using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Presentation.Rendering;
-using DataVisualiser.UI.Defaults;
+using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.UI;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Contracts;
-using UiChartRenderModel = DataVisualiser.UI.Charts.Presentation.Rendering.UiChartRenderModel;
+using UiChartRenderModel = DataVisualiser.UI.Charts.Presentation.UiChartRenderModel;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 

@@ -9,8 +9,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using DataVisualiser.Core.Rendering.Helpers;
-using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Syncfusion;
+using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.UI.Charts.Syncfusion;
 using DataVisualiser.Shared.Helpers;
 using Syncfusion.UI.Xaml.SunburstChart;
 

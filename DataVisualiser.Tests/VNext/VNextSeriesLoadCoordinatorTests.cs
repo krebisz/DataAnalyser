@@ -1,5 +1,6 @@
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.VNext.Application;
 using DataVisualiser.VNext.Contracts;

@@ -3,6 +3,7 @@ using DataVisualiser.Core.Data;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using Moq;
 
 namespace DataVisualiser.Tests.Services;

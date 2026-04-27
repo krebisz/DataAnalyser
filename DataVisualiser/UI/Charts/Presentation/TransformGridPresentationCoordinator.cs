@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 

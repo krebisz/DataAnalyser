@@ -1,4 +1,4 @@
-using DataVisualiser.UI.Charts.Presentation.Rendering;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.Adapters;

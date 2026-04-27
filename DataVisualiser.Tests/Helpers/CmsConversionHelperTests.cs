@@ -1,5 +1,6 @@
 using DataVisualiser.Shared.Helpers;
 
+using DataVisualiser.Tests.Helpers.Infrastructure;
 namespace DataVisualiser.Tests.Helpers;
 
 public sealed class CmsConversionHelperTests

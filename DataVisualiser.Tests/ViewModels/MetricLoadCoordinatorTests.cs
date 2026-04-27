@@ -495,7 +495,7 @@ public sealed class MetricLoadCoordinatorTests
             chartState, metricState, uiState, service, validator, ex => ex.Message, vnext);
 
         // CMS is disabled globally — routing should still use VNext (visibility-based, not CMS-based)
-        Core.Configuration.CmsConfiguration.UseCmsData = false;
+        DataVisualiser.Core.Configuration.CmsConfiguration.UseCmsData = false;
         try
         {
             var request = new MetricLoadRequest("Weight", metricState.SelectedSeries.ToList(), metricState.FromDate!.Value, metricState.ToDate!.Value, metricState.ResolutionTableName!);
@@ -505,7 +505,7 @@ public sealed class MetricLoadCoordinatorTests
         }
         finally
         {
-            Core.Configuration.CmsConfiguration.UseCmsData = true;
+            DataVisualiser.Core.Configuration.CmsConfiguration.UseCmsData = true;
         }
     }
 

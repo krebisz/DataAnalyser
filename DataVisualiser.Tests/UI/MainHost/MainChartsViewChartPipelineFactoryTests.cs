@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Threading;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Coordination;
 using LiveCharts.Wpf;

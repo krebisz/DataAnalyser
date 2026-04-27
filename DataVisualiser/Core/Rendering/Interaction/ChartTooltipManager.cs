@@ -5,6 +5,7 @@ using System.Windows.Input;
 using LiveCharts;
 using LiveCharts.Wpf;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Tooltip;
 
 namespace DataVisualiser.Core.Rendering.Interaction;
 

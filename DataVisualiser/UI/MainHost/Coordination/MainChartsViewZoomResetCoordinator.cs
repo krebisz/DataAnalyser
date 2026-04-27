@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 
 namespace DataVisualiser.UI.MainHost.Coordination;
 

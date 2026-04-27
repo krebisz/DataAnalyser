@@ -6,8 +6,6 @@ using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Core.Rendering.Syncfusion;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
-using DataVisualiser.UI.Charts.Interfaces;
-using DataVisualiser.UI.Charts.Presentation.Rendering;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.Core.Rendering.Distribution;

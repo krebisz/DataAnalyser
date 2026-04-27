@@ -1,5 +1,5 @@
 using DataVisualiser.Core.Orchestration;
-using DataVisualiser.UI.Charts.Interfaces;
+using DataVisualiser.UI.Charts.Presentation;
 using System.Windows.Controls;
 
 namespace DataVisualiser.UI.Charts.Presentation;

@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:DataVisualiser.UI.Charts.Controllers"
              xmlns:syncfusion="clr-namespace:Syncfusion.UI.Xaml.SunburstChart;assembly=Syncfusion.SfSunburstChart.WPF"
-             xmlns:ui="clr-namespace:DataVisualiser.UI.Defaults"
+             xmlns:ui="clr-namespace:DataVisualiser.UI"
              mc:Ignorable="d"
              d:DesignHeight="550"
              d:DesignWidth="800">

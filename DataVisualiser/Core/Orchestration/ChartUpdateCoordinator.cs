@@ -8,6 +8,7 @@ using DataVisualiser.Core.Rendering.Adapters;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;

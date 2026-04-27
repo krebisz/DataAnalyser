@@ -3,6 +3,7 @@ using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
+using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;

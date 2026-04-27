@@ -1,4 +1,3 @@
-using DataVisualiser.UI.Charts.Interfaces;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
 
