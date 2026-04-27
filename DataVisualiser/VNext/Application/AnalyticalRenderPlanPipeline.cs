@@ -47,6 +47,9 @@ public sealed class AnalyticalRenderPlanPipeline
     {
         ArgumentNullException.ThrowIfNull(intentSet);
 
+        foreach (var intent in intentSet.Intents)
+            ValidateNonRenderingProvider(intent);
+
         return await _engine.ExecuteAsync(intentSet, cancellationToken);
     }
 
@@ -66,6 +69,24 @@ public sealed class AnalyticalRenderPlanPipeline
         return new AnalyticalRenderPlanResult(execution, renderPlan);
     }
 
+    public async Task<AnalyticalRenderPlanResult> BuildCartesianAsync(
+        AnalyticalIntent intent,
+        ChartBackendCandidateSet backendCandidates,
+        ChartViewport? viewport = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(backendCandidates);
+        ArgumentNullException.ThrowIfNull(intent);
+        EnsureRenderPlanRequested(intent);
+        var provider = _providerRegistry.Resolve(intent.Delivery, ChartRenderPlanKind.Cartesian);
+        var backend = backendCandidates.Select(ChartRenderPlanKind.Cartesian, provider.ProviderKey);
+
+        var execution = await _engine.ExecuteAsync(intent, cancellationToken);
+        var density = _densityPolicy.Resolve(execution.Program, viewport, backend);
+        var renderPlan = AttachProviderMetadata(_projector.ProjectCartesian(execution, density), provider);
+        return new AnalyticalRenderPlanResult(execution, renderPlan);
+    }
+
     public async Task<AnalyticalRenderPlanResult> BuildHierarchyAsync(
         AnalyticalIntent intent,
         IReadOnlyList<ChartHierarchyNodePlan> roots,
@@ -75,6 +96,24 @@ public sealed class AnalyticalRenderPlanPipeline
         ArgumentNullException.ThrowIfNull(roots);
         EnsureRenderPlanRequested(intent);
         var provider = _providerRegistry.Resolve(intent.Delivery, ChartRenderPlanKind.Hierarchy);
+
+        var execution = await _engine.ExecuteAsync(intent, cancellationToken);
+        var renderPlan = AttachProviderMetadata(_projector.ProjectHierarchy(execution, roots), provider);
+        return new AnalyticalRenderPlanResult(execution, renderPlan);
+    }
+
+    public async Task<AnalyticalRenderPlanResult> BuildHierarchyAsync(
+        AnalyticalIntent intent,
+        IReadOnlyList<ChartHierarchyNodePlan> roots,
+        ChartBackendCandidateSet backendCandidates,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(backendCandidates);
+        ArgumentNullException.ThrowIfNull(intent);
+        ArgumentNullException.ThrowIfNull(roots);
+        EnsureRenderPlanRequested(intent);
+        var provider = _providerRegistry.Resolve(intent.Delivery, ChartRenderPlanKind.Hierarchy);
+        backendCandidates.Select(ChartRenderPlanKind.Hierarchy, provider.ProviderKey);
 
         var execution = await _engine.ExecuteAsync(intent, cancellationToken);
         var renderPlan = AttachProviderMetadata(_projector.ProjectHierarchy(execution, roots), provider);
@@ -116,6 +155,39 @@ public sealed class AnalyticalRenderPlanPipeline
             .Select((execution, index) =>
             {
                 var density = _densityPolicy.Resolve(execution.Program, viewport, backendCapabilities);
+                return AttachProviderMetadata(_projector.ProjectCartesian(execution, density), providers[index]);
+            })
+            .ToArray();
+
+        return new AnalyticalRenderPlanSetResult(
+            executionSet,
+            renderPlans);
+    }
+
+    public async Task<AnalyticalRenderPlanSetResult> BuildCartesianSetAsync(
+        AnalyticalIntentSet intentSet,
+        ChartBackendCandidateSet backendCandidates,
+        ChartViewport? viewport = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intentSet);
+        ArgumentNullException.ThrowIfNull(backendCandidates);
+
+        foreach (var intent in intentSet.Intents)
+            EnsureRenderPlanRequested(intent);
+
+        var providers = intentSet.Intents
+            .Select(intent => _providerRegistry.Resolve(intent.Delivery, ChartRenderPlanKind.Cartesian))
+            .ToArray();
+        var backends = providers
+            .Select(provider => backendCandidates.Select(ChartRenderPlanKind.Cartesian, provider.ProviderKey))
+            .ToArray();
+
+        var executionSet = await _engine.ExecuteAsync(intentSet, cancellationToken);
+        var renderPlans = executionSet.Results
+            .Select((execution, index) =>
+            {
+                var density = _densityPolicy.Resolve(execution.Program, viewport, backends[index]);
                 return AttachProviderMetadata(_projector.ProjectCartesian(execution, density), providers[index]);
             })
             .ToArray();

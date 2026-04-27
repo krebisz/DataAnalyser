@@ -22,21 +22,42 @@ public sealed class ConsumerProviderRegistry
 
     public IReadOnlyList<ConsumerProviderContract> Providers => _providers;
 
+    public IReadOnlyList<ConsumerProviderContract> FindCandidates(
+        ConsumerDeliveryContract delivery,
+        ChartRenderPlanKind? planKind = null)
+    {
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        return _providers
+            .Where(candidate => candidate.Supports(delivery, planKind))
+            .ToArray();
+    }
+
+    public bool TryResolve(
+        ConsumerDeliveryContract delivery,
+        out ConsumerProviderContract? provider,
+        ChartRenderPlanKind? planKind = null)
+    {
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        provider = _providers.FirstOrDefault(candidate => candidate.Supports(delivery, planKind));
+        return provider != null;
+    }
+
     public ConsumerProviderContract Resolve(
         ConsumerDeliveryContract delivery,
         ChartRenderPlanKind? planKind = null)
     {
         ArgumentNullException.ThrowIfNull(delivery);
 
-        var provider = _providers.FirstOrDefault(candidate => candidate.Supports(delivery, planKind));
-        if (provider == null)
+        if (!TryResolve(delivery, out var provider, planKind))
         {
             var planDescription = planKind.HasValue ? $" and render plan kind '{planKind}'" : string.Empty;
             throw new InvalidOperationException(
                 $"No consumer provider supports '{delivery.ConsumerKind}' delivery for program '{delivery.ProgramKind}'{planDescription}.");
         }
 
-        return provider;
+        return provider!;
     }
 
     public static ConsumerProviderRegistry BuiltIn { get; } = new(

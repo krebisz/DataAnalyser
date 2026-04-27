@@ -48,6 +48,42 @@ public sealed class AnalyticalRenderPlanPipelineTests
     }
 
     [Fact]
+    public async Task BuildCartesianAsync_WithBackendCandidates_ShouldUseProviderQualifiedBackendForDensity()
+    {
+        var pipeline = CreatePipeline(new RenderDensityPolicy(new RenderDensityPolicyOptions(
+            FullFidelityPointThreshold: 1,
+            OverviewTargetPointCount: 1)));
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram());
+        var viewport = new ChartViewport(selection.From, selection.To);
+        var backends = new ChartBackendCandidateSet(
+            [
+                ChartBackendCapabilities.LiveChartsWpf with { SupportsViewportRefinement = true }
+            ]);
+
+        var result = await pipeline.BuildCartesianAsync(intent, backends, viewport);
+
+        Assert.Equal(ChartRenderDensityMode.ViewportRefined, result.RenderPlan.Density.Mode);
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+    }
+
+    [Fact]
+    public async Task BuildCartesianAsync_WithBackendCandidates_ShouldRejectMissingProviderBackend()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram());
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            pipeline.BuildCartesianAsync(
+                intent,
+                new ChartBackendCandidateSet([ChartBackendCapabilities.SyncfusionSunburst])));
+
+        Assert.Contains("Cartesian", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("LiveChartsWpf", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task BuildHierarchyAsync_ShouldProjectHierarchyWithoutBackendTypes()
     {
         var pipeline = CreatePipeline();
@@ -64,6 +100,24 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.Equal(ChartRenderPlanKind.Hierarchy, result.RenderPlan.PlanKind);
         Assert.Equal(ConsumerKind.HierarchyChart.ToString(), result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
         Assert.Equal("Sunburst", result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(ConsumerProviderContracts.SyncfusionSunburst.ProviderKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+    }
+
+    [Fact]
+    public async Task BuildHierarchyAsync_WithBackendCandidates_ShouldRequireProviderQualifiedBackend()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.SyncfusionSunburst());
+
+        var result = await pipeline.BuildHierarchyAsync(
+            intent,
+            [new ChartHierarchyNodePlan("root", "All", 10, Array.Empty<ChartHierarchyNodePlan>(), new Dictionary<string, string>())],
+            ChartBackendCandidateSet.BuiltIn);
+
+        Assert.Equal(ChartRenderPlanKind.Hierarchy, result.RenderPlan.PlanKind);
         Assert.Equal(ConsumerProviderContracts.SyncfusionSunburst.ProviderKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
     }
 
@@ -98,6 +152,27 @@ public sealed class AnalyticalRenderPlanPipelineTests
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             pipeline.ExecuteAsync(intent));
+
+        Assert.Contains("No consumer provider supports", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("Export", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Set_ShouldRejectNonRenderingConsumerWithoutProvider()
+    {
+        var registry = new ConsumerProviderRegistry([ConsumerProviderContracts.LiveChartsWpf]);
+        var pipeline = CreatePipeline(providerRegistry: registry);
+        var selection = CreateSelection(seriesCount: 1);
+        var intentSet = AnalyticalIntentSet.FromIntents(
+            [
+                AnalyticalIntent.FromRequests(
+                    selection,
+                    ChartProgramRequest.MainProgram(),
+                    ConsumerDeliveryContract.Export(ChartProgramKind.Main))
+            ]);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            pipeline.ExecuteAsync(intentSet));
 
         Assert.Contains("No consumer provider supports", ex.Message, StringComparison.Ordinal);
         Assert.Contains("Export", ex.Message, StringComparison.Ordinal);
@@ -165,6 +240,34 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.Equal("NormalizedChart", result.RenderPlans[1].Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
         Assert.All(result.RenderPlans, plan =>
             Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, plan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]));
+    }
+
+    [Fact]
+    public async Task BuildCartesianSetAsync_WithBackendCandidates_ShouldUseProviderQualifiedBackendsForDensity()
+    {
+        var pipeline = CreatePipeline(new RenderDensityPolicy(new RenderDensityPolicyOptions(
+            FullFidelityPointThreshold: 1,
+            OverviewTargetPointCount: 1)));
+        var selection = CreateSelection(seriesCount: 2);
+        var intentSet = AnalyticalIntentSet.FromIntents(
+            [
+                AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram()),
+                AnalyticalIntent.FromRequests(selection, ChartProgramRequest.Normalized())
+            ]);
+        var viewport = new ChartViewport(selection.From, selection.To);
+        var backends = new ChartBackendCandidateSet(
+            [
+                ChartBackendCapabilities.LiveChartsWpf with { SupportsViewportRefinement = true }
+            ]);
+
+        var result = await pipeline.BuildCartesianSetAsync(intentSet, backends, viewport);
+
+        Assert.Equal(2, result.RenderPlans.Count);
+        Assert.All(result.RenderPlans, plan =>
+        {
+            Assert.Equal(ChartRenderDensityMode.ViewportRefined, plan.Density.Mode);
+            Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, plan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        });
     }
 
     [Fact]

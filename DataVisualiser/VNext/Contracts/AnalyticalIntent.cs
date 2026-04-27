@@ -64,7 +64,7 @@ public sealed record AnalyticalIntent
             selection,
             programRequest,
             provenance ?? ProvenanceDescriptor.FromSelection(selection),
-            delivery ?? ConsumerDeliveryContract.Chart(programRequest.Kind),
+            delivery ?? ChartProgramDeliveryTargetResolver.CreateDelivery(programRequest.Kind),
             capability,
             overlays,
             interactions);

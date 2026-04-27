@@ -7,10 +7,27 @@ public sealed class ChartBackendSelector
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(candidates);
 
-        var match = candidates.FirstOrDefault(candidate => candidate.Supports(plan.PlanKind));
-        if (match == null)
-            throw new InvalidOperationException($"No chart backend supports render plan kind '{plan.PlanKind}'.");
+        try
+        {
+            return new ChartBackendCandidateSet(candidates)
+                .Select(plan.PlanKind, ResolveProviderKey(plan));
+        }
+        catch (InvalidOperationException)
+        {
+            var providerDescription = plan.Metadata.TryGetValue(ChartRenderPlanMetadataKeys.ProviderKey, out var providerKey) &&
+                                      !string.IsNullOrWhiteSpace(providerKey)
+                ? $" for provider '{providerKey}'"
+                : string.Empty;
+            throw new InvalidOperationException(
+                $"No chart backend supports render plan kind '{plan.PlanKind}'{providerDescription}.");
+        }
+    }
 
-        return match;
+    private static string? ResolveProviderKey(ChartRenderPlan plan)
+    {
+        return plan.Metadata.TryGetValue(ChartRenderPlanMetadataKeys.ProviderKey, out var providerKey) &&
+               !string.IsNullOrWhiteSpace(providerKey)
+            ? providerKey
+            : null;
     }
 }

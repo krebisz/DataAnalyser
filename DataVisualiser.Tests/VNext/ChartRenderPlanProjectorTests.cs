@@ -194,6 +194,51 @@ public sealed class ChartRenderPlanProjectorTests
     }
 
     [Fact]
+    public void BackendSelector_ShouldHonorProviderMetadataWhenPresent()
+    {
+        var plan = AddProviderMetadata(
+            new ChartRenderPlanProjector().ProjectCartesian(CreateProgram(ChartProgramKind.Main)),
+            "LiveChartsWpf");
+        var selector = new ChartBackendSelector();
+
+        var selected = selector.Select(
+            plan,
+            [
+                ChartBackendCapabilities.SyncfusionSunburst,
+                ChartBackendCapabilities.LiveChartsWpf
+            ]);
+
+        Assert.Equal("LiveChartsWpf", selected.BackendKey);
+    }
+
+    [Fact]
+    public void BackendCandidateSet_ShouldReturnProviderQualifiedBackends()
+    {
+        var plan = AddProviderMetadata(
+            new ChartRenderPlanProjector().ProjectCartesian(CreateProgram(ChartProgramKind.Main)),
+            "LiveChartsWpf");
+
+        var candidates = ChartBackendCandidateSet.BuiltIn.FindQualified(plan);
+
+        Assert.Equal(["LiveChartsWpf"], candidates.Select(candidate => candidate.BackendKey).ToArray());
+    }
+
+    [Fact]
+    public void BackendSelector_ShouldRejectPlanKindMatchWhenProviderMetadataConflicts()
+    {
+        var plan = AddProviderMetadata(
+            new ChartRenderPlanProjector().ProjectCartesian(CreateProgram(ChartProgramKind.Main)),
+            "ThirdPartyCartesian");
+        var selector = new ChartBackendSelector();
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            selector.Select(plan, [ChartBackendCapabilities.LiveChartsWpf]));
+
+        Assert.Contains("Cartesian", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("ThirdPartyCartesian", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void BackendSelector_ShouldFailWhenNoBackendSupportsPlanKind()
     {
         var plan = new ChartRenderPlanProjector().ProjectHierarchy(
@@ -250,6 +295,16 @@ public sealed class ChartRenderPlanProjectorTests
                 new ChartSeriesProgram("evening", "Evening", [3d, 4d], [3.1d, 3.9d])
             ],
             "sig-1");
+    }
+
+    private static ChartRenderPlan AddProviderMetadata(ChartRenderPlan plan, string providerKey)
+    {
+        var metadata = new Dictionary<string, string>(plan.Metadata)
+        {
+            [ChartRenderPlanMetadataKeys.ProviderKey] = providerKey
+        };
+
+        return plan with { Metadata = metadata };
     }
 
     private static ChartProgram CreateLargeProgram(ChartProgramKind kind, int pointCount)

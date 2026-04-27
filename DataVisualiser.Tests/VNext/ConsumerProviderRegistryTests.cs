@@ -65,6 +65,44 @@ public sealed class ConsumerProviderRegistryTests
     }
 
     [Fact]
+    public void TryResolve_ShouldReturnFalseWithoutThrowingForUnsupportedProvider()
+    {
+        var delivery = ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart");
+
+        var resolved = ConsumerProviderRegistry.BuiltIn.TryResolve(
+            delivery,
+            out var provider,
+            ChartRenderPlanKind.Hierarchy);
+
+        Assert.False(resolved);
+        Assert.Null(provider);
+    }
+
+    [Fact]
+    public void FindCandidates_ShouldReturnAllMatchingProvidersInRegistrationOrder()
+    {
+        var first = new ConsumerProviderContract(
+            "FirstCartesian",
+            "First Cartesian",
+            ConsumerKind.Chart,
+            new HashSet<ChartProgramKind> { ChartProgramKind.Main },
+            new HashSet<ChartRenderPlanKind> { ChartRenderPlanKind.Cartesian });
+        var second = new ConsumerProviderContract(
+            "SecondCartesian",
+            "Second Cartesian",
+            ConsumerKind.Chart,
+            new HashSet<ChartProgramKind> { ChartProgramKind.Main },
+            new HashSet<ChartRenderPlanKind> { ChartRenderPlanKind.Cartesian });
+        var registry = new ConsumerProviderRegistry([first, second]);
+
+        var candidates = registry.FindCandidates(
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
+            ChartRenderPlanKind.Cartesian);
+
+        Assert.Equal(["FirstCartesian", "SecondCartesian"], candidates.Select(candidate => candidate.ProviderKey).ToArray());
+    }
+
+    [Fact]
     public void Registry_ShouldRejectDuplicateProviderKeys()
     {
         var first = ConsumerProviderContracts.LiveChartsWpf;

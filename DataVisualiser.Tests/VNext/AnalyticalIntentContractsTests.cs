@@ -26,6 +26,7 @@ public sealed class AnalyticalIntentContractsTests
         Assert.Same(programRequest, intent.ProgramRequest);
         Assert.Equal(ConsumerKind.Chart, intent.Delivery.ConsumerKind);
         Assert.Equal(ChartProgramKind.Main, intent.Delivery.ProgramKind);
+        Assert.Equal("MainChart", intent.Delivery.DeliveryTarget);
         Assert.Equal(selection.Signature, intent.Provenance.SourceSignature);
         Assert.Equal(AnalyticalCapabilityKind.Identity, intent.Capability.CapabilityKind);
         Assert.Equal(CompositionKind.MultiSeries, intent.Capability.CompositionKind);
@@ -33,6 +34,20 @@ public sealed class AnalyticalIntentContractsTests
         Assert.Single(intent.Interactions);
         Assert.Contains(selection.Signature, intent.Signature, StringComparison.Ordinal);
         Assert.Contains("Average", intent.Signature, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FromRequests_ShouldUseCanonicalHierarchyDeliveryForSyncfusionByDefault()
+    {
+        var selection = CreateSelection();
+
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.SyncfusionSunburst());
+
+        Assert.Equal(ConsumerKind.HierarchyChart, intent.Delivery.ConsumerKind);
+        Assert.Equal(ChartProgramKind.SyncfusionSunburst, intent.Delivery.ProgramKind);
+        Assert.Equal("SyncfusionSunburst", intent.Delivery.DeliveryTarget);
     }
 
     [Fact]
