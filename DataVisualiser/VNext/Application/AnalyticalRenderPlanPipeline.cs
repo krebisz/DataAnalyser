@@ -17,17 +17,20 @@ public sealed class AnalyticalRenderPlanPipeline
     private readonly RenderDensityPolicy _densityPolicy;
     private readonly ChartRenderPlanProjector _projector;
     private readonly ConsumerProviderRegistry _providerRegistry;
+    private readonly AnalyticalInterpretationBuilder _interpretationBuilder;
 
     public AnalyticalRenderPlanPipeline(
         IReasoningEngine engine,
         RenderDensityPolicy? densityPolicy = null,
         ChartRenderPlanProjector? projector = null,
-        ConsumerProviderRegistry? providerRegistry = null)
+        ConsumerProviderRegistry? providerRegistry = null,
+        AnalyticalInterpretationBuilder? interpretationBuilder = null)
     {
         _engine = engine ?? throw new ArgumentNullException(nameof(engine));
         _densityPolicy = densityPolicy ?? new RenderDensityPolicy();
         _projector = projector ?? new ChartRenderPlanProjector();
         _providerRegistry = providerRegistry ?? ConsumerProviderRegistry.BuiltIn;
+        _interpretationBuilder = interpretationBuilder ?? new AnalyticalInterpretationBuilder();
     }
 
     public async Task<AnalyticalExecutionResult> ExecuteAsync(
@@ -67,6 +70,58 @@ public sealed class AnalyticalRenderPlanPipeline
         var density = _densityPolicy.Resolve(execution.Program, viewport, backendCapabilities);
         var renderPlan = AttachBindingMetadata(_projector.ProjectCartesian(execution, density), binding);
         return new AnalyticalRenderPlanResult(execution, renderPlan);
+    }
+
+    public async Task<AnalyticalInterpretationResult> InterpretAsync(
+        AnalyticalIntent intent,
+        bool includeAverageLines = false,
+        bool includeMedianLines = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+
+        var execution = await ExecuteAsync(intent, cancellationToken);
+        return _interpretationBuilder.Build(
+            execution,
+            includeAverageLines,
+            includeMedianLines);
+    }
+
+    public async Task<AnalyticalInterpretationResult> InterpretAsync(
+        AnalyticalIntent intent,
+        AnalyticalInterpretationOptions? options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+
+        var execution = await ExecuteAsync(intent, cancellationToken);
+        return _interpretationBuilder.Build(execution, options);
+    }
+
+    public async Task<AnalyticalInterpretationSetResult> InterpretSetAsync(
+        AnalyticalIntentSet intentSet,
+        bool includeAverageLines = false,
+        bool includeMedianLines = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intentSet);
+
+        var executionSet = await ExecuteAsync(intentSet, cancellationToken);
+        return _interpretationBuilder.BuildSet(
+            executionSet,
+            includeAverageLines,
+            includeMedianLines);
+    }
+
+    public async Task<AnalyticalInterpretationSetResult> InterpretSetAsync(
+        AnalyticalIntentSet intentSet,
+        AnalyticalInterpretationOptions? options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intentSet);
+
+        var executionSet = await ExecuteAsync(intentSet, cancellationToken);
+        return _interpretationBuilder.BuildSet(executionSet, options);
     }
 
     public async Task<AnalyticalRenderPlanResult> BuildCartesianAsync(

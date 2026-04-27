@@ -53,7 +53,12 @@ public sealed class AnalyticalRenderPlanPipelineTests
         var pipeline = CreatePipeline(new RenderDensityPolicy(new RenderDensityPolicyOptions(
             FullFidelityPointThreshold: 1,
             OverviewTargetPointCount: 1)));
-        var selection = CreateSelection(seriesCount: 1);
+        var selection = new MetricSelectionRequest(
+            "Weight",
+            [new MetricSeriesRequest("Weight", "negative")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 3),
+            "HealthMetrics");
         var intent = AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram());
         var viewport = new ChartViewport(selection.From, selection.To);
         var backends = new ChartBackendCandidateSet(
@@ -139,6 +144,71 @@ public sealed class AnalyticalRenderPlanPipelineTests
         Assert.False(result.Intent.Delivery.RequiresRenderPlan);
         Assert.Equal(ChartProgramKind.Main, result.Program.Kind);
         Assert.Equal(selection.Signature, result.Snapshot.Signature);
+    }
+
+    [Fact]
+    public async Task InterpretAsync_ShouldExecuteIntentAndBuildInterpretation()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram(),
+            ConsumerDeliveryContract.Export(ChartProgramKind.Main));
+
+        var result = await pipeline.InterpretAsync(
+            intent,
+            includeAverageLines: true,
+            includeMedianLines: true);
+
+        Assert.Same(intent, result.Execution.Intent);
+        Assert.Equal(selection.Signature, result.Execution.Program.SourceSignature);
+        Assert.False(result.Confidence.HasAnnotations);
+        Assert.Equal(2, result.Overlays.Count);
+        Assert.Contains(result.Overlays, overlay => overlay.Kind == OverlayKind.AverageLine);
+        Assert.Contains(result.Overlays, overlay => overlay.Kind == OverlayKind.MedianLine);
+    }
+
+    [Fact]
+    public async Task InterpretAsync_WithOptions_ShouldApplyRequestedOverlayRules()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram());
+
+        var result = await pipeline.InterpretAsync(
+            intent,
+            new AnalyticalInterpretationOptions(
+                IncludeAverageLines: true,
+                ExcludeCriticalConfidenceSeriesFromOverlays: true));
+
+        Assert.False(result.Confidence.HasAnnotations);
+        var overlay = Assert.Single(result.Overlays);
+        Assert.Equal(OverlayKind.AverageLine, overlay.Kind);
+    }
+
+    [Fact]
+    public async Task InterpretSetAsync_ShouldLoadOnceAndBuildInterpretations()
+    {
+        var loader = new StubMetricSeriesLoader();
+        var pipeline = CreatePipeline(engine: new ReasoningEngine(
+            new LegacyMetricViewGateway(loader),
+            new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel())));
+        var selection = CreateSelection(seriesCount: 1);
+        var intentSet = AnalyticalIntentSet.FromIntents(
+            [
+                AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram()),
+                AnalyticalIntent.FromRequests(selection, ChartProgramRequest.Normalized())
+            ]);
+
+        var result = await pipeline.InterpretSetAsync(intentSet, includeAverageLines: true);
+
+        Assert.Equal(1, loader.LoadCallCount);
+        Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Normalized], result.ExecutionSet.ProgramKinds);
+        Assert.Equal(2, result.Interpretations.Count);
+        Assert.All(result.Interpretations, interpretation => Assert.Single(interpretation.Overlays));
     }
 
     [Fact]
@@ -296,9 +366,10 @@ public sealed class AnalyticalRenderPlanPipelineTests
 
     private static AnalyticalRenderPlanPipeline CreatePipeline(
         RenderDensityPolicy? densityPolicy = null,
-        ConsumerProviderRegistry? providerRegistry = null)
+        ConsumerProviderRegistry? providerRegistry = null,
+        IReasoningEngine? engine = null)
     {
-        var engine = new ReasoningEngine(
+        engine ??= new ReasoningEngine(
             new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
 
@@ -321,6 +392,8 @@ public sealed class AnalyticalRenderPlanPipelineTests
 
     private sealed class StubMetricSeriesLoader : IMetricSeriesLoader
     {
+        public int LoadCallCount { get; private set; }
+
         public Task<LoadedMetricSeries> LoadAsync(
             MetricSeriesRequest request,
             DateTime from,
@@ -328,6 +401,7 @@ public sealed class AnalyticalRenderPlanPipelineTests
             string resolutionTableName,
             CancellationToken cancellationToken = default)
         {
+            LoadCallCount++;
             var offset = request.QuerySubtype?.EndsWith("2", StringComparison.OrdinalIgnoreCase) == true ? 10 : 0;
             return Task.FromResult(new LoadedMetricSeries(
                 [

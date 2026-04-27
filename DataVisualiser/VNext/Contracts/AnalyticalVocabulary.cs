@@ -64,3 +64,17 @@ public enum ProvenanceTrustClass
     Projected,
     Delivered
 }
+
+public enum ConfidenceAnnotationKind
+{
+    MissingSeriesData,
+    NonFiniteRawValue,
+    NonFiniteSmoothedValue
+}
+
+public enum ConfidenceSeverity
+{
+    Info,
+    Warning,
+    Critical
+}
