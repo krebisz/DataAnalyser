@@ -47,7 +47,8 @@ public sealed class DistributionChartControllerAdapterTests
                     () => null,
                     distributionService,
                     distributionService,
-                    new DistributionPolarRenderingService());
+                    new DistributionPolarRenderingService(),
+                    new DistributionPolarProjectionInteractionFactory());
             var adapter = new DistributionChartControllerAdapter(
                     controller,
                     viewModel,
@@ -129,7 +130,8 @@ public sealed class DistributionChartControllerAdapterTests
                     () => null,
                     distributionService,
                     distributionService,
-                    new DistributionPolarRenderingService());
+                    new DistributionPolarRenderingService(),
+                    new DistributionPolarProjectionInteractionFactory());
             var adapter = new DistributionChartControllerAdapter(
                     controller,
                     viewModel,
@@ -210,7 +212,8 @@ public sealed class DistributionChartControllerAdapterTests
                     () => null,
                     distributionService,
                     distributionService,
-                    new DistributionPolarRenderingService());
+                    new DistributionPolarRenderingService(),
+                    new DistributionPolarProjectionInteractionFactory());
             var adapter = new DistributionChartControllerAdapter(
                     controller,
                     viewModel,

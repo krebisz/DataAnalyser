@@ -54,7 +54,8 @@ public sealed class ChartControllerFactory : IChartControllerFactory
             context.GetChartRenderingOrchestrator,
             context.WeeklyDistributionService,
             context.HourlyDistributionService,
-            context.DistributionPolarRenderingService);
+            context.DistributionPolarRenderingService,
+            new DistributionPolarProjectionInteractionFactory());
 
         var vnextSeriesCoordinator = new VNextSeriesLoadCoordinator(context.MetricSelectionService);
 

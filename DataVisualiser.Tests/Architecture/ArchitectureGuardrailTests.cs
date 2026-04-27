@@ -27,6 +27,81 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void ArchitectureVocabulary_ShouldRecordDependencyDensityAuditAndSequentialClosureGate()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser-Architectural-Vocabulary.md");
+
+        Assert.Contains("Dependency-density audit reconciliation", source, StringComparison.Ordinal);
+        Assert.Contains("Legitimate steady-state coupling", source, StringComparison.Ordinal);
+        Assert.Contains("Legitimate transitional coupling", source, StringComparison.Ordinal);
+        Assert.Contains("Diagram/export noise", source, StringComparison.Ordinal);
+        Assert.Contains("Accidental coupling", source, StringComparison.Ordinal);
+        Assert.Contains("Current remaining architecture plan", source, StringComparison.Ordinal);
+        Assert.Contains("Only one step should be treated as active at a time", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartUpdateCoordinator_ShouldNotAcquireSemanticProviderOrEvidenceAuthority()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
+        var forbiddenTokens = new[]
+        {
+            "EvidenceDiagnosticsBuilder",
+            "MainChartsEvidenceExportService",
+            "ConsumerProviderRegistry",
+            "ChartRenderDeliveryBinding",
+            "ChartBackendSelector",
+            "AnalyticalIntentFactory",
+            "ReasoningSessionCoordinator",
+            "ConfidenceAnnotationEvaluator",
+            "InterpretiveOverlayPlanner"
+        };
+
+        foreach (var token in forbiddenTokens)
+            Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartControllerFactoryContext_ShouldRemainCompositionContextNotProviderOrEvidenceBag()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "ChartControllerFactory.cs");
+        var forbiddenTokens = new[]
+        {
+            "EvidenceDiagnosticsBuilder",
+            "MainChartsEvidenceExportService",
+            "ConsumerProviderRegistry",
+            "ChartRenderDeliveryBinding",
+            "ChartBackendSelector",
+            "AnalyticalIntentFactory",
+            "ReasoningSessionCoordinator",
+            "ConfidenceAnnotationEvaluator",
+            "InterpretiveOverlayPlanner"
+        };
+
+        foreach (var token in forbiddenTokens)
+            Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EvidenceDiagnosticsBuilder_ShouldRemainObservationalAndNotDriveLiveRendering()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Evidence", "EvidenceDiagnosticsBuilder.cs");
+        var forbiddenTokens = new[]
+        {
+            "UpdateChartUsingStrategyAsync(",
+            "RenderAsync(",
+            "ApplyAsync(",
+            "LoadProgramAsync(",
+            "ExecuteAsync(",
+            "ChartRenderDeliveryBinding.Resolve",
+            "ConsumerProviderRegistry.BuiltIn.Resolve"
+        };
+
+        foreach (var token in forbiddenTokens)
+            Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MainChartsEvidenceExportService_ShouldDelegateParityAssemblyToDedicatedBuilder()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Evidence", "MainChartsEvidenceExportService.cs");
@@ -816,6 +891,33 @@ public sealed class ArchitectureGuardrailTests
         var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
             [Path.Combine("DataVisualiser", "VNext", "Application")],
             ["using LiveCharts", "using Syncfusion", "using System.Windows", "DataVisualiser.UI"]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void CoreAndUi_ShouldNotOwnProviderDeliveryPolicy()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [
+                Path.Combine("DataVisualiser", "Core"),
+                Path.Combine("DataVisualiser", "UI")
+            ],
+            [
+                "ConsumerProviderRegistry",
+                "ChartRenderDeliveryBinding",
+                "ChartBackendSelector"
+            ]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void CoreRenderingContracts_ShouldNotImportConcreteUiInteractionTypes()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [Path.Combine("DataVisualiser", "Core", "Rendering", "Contracts")],
+            ["DataVisualiser.UI.Charts.Interaction"]);
 
         AssertNoMatches(offenders);
     }

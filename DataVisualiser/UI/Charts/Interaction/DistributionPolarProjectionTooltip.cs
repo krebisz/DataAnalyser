@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
@@ -13,7 +14,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.Charts.Interaction;
 
-public sealed class DistributionPolarProjectionTooltip : IDisposable
+public sealed class DistributionPolarProjectionTooltip : IDistributionPolarProjectionInteraction
 {
     private const double HoverMoveTolerancePx = 8.0;
 

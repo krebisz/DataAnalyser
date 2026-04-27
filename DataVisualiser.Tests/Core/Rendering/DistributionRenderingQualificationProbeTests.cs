@@ -24,7 +24,12 @@ public sealed class DistributionRenderingQualificationProbeTests
         await StaTestHelper.RunAsync(async () =>
         {
             var service = new ProbeDistributionService();
-            var contract = new DistributionRenderingContract(() => null, service, service, new DistributionPolarRenderingService());
+            var contract = new DistributionRenderingContract(
+                () => null,
+                service,
+                service,
+                new DistributionPolarRenderingService(),
+                new ProbePolarProjectionInteractionFactory());
             var probe = new DistributionRenderingQualificationProbe();
             var chartState = new ChartState();
             var tooltip = new ToolTip
@@ -57,7 +62,12 @@ public sealed class DistributionRenderingQualificationProbeTests
         await StaTestHelper.RunAsync(async () =>
         {
             var service = new ProbeDistributionService();
-            var contract = new DistributionRenderingContract(() => null, service, service, new DistributionPolarRenderingService());
+            var contract = new DistributionRenderingContract(
+                () => null,
+                service,
+                service,
+                new DistributionPolarRenderingService(),
+                new ProbePolarProjectionInteractionFactory());
             var probe = new DistributionRenderingQualificationProbe();
             var chartState = new ChartState
             {
@@ -203,6 +213,24 @@ public sealed class DistributionRenderingQualificationProbeTests
                 _disposed = true;
                 _owner.DisposedInteractionCount++;
             }
+        }
+    }
+
+    private sealed class ProbePolarProjectionInteractionFactory : IDistributionPolarProjectionInteractionFactory
+    {
+        public IDistributionPolarProjectionInteraction Create(
+            CartesianChart chart,
+            DistributionModeDefinition definition,
+            DistributionRangeResult rangeResult)
+        {
+            return new ProbePolarProjectionInteraction();
+        }
+    }
+
+    private sealed class ProbePolarProjectionInteraction : IDistributionPolarProjectionInteraction
+    {
+        public void Dispose()
+        {
         }
     }
 }

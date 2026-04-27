@@ -1,5 +1,4 @@
 using DataVisualiser.Core.Rendering.Adapters;
-using DataVisualiser.UI;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.VNext.Rendering;
 
@@ -7,6 +6,8 @@ namespace DataVisualiser.Core.Rendering.BarPie;
 
 public sealed class BarPieRenderingContract : IBarPieRenderingContract
 {
+    private const string EmptyChartTitle = "Bar / Pie";
+
     private readonly ChartRenderPlanAdapterDispatcher<UiChartRenderSurface> _dispatcher;
 
     private static readonly IReadOnlyList<BarPieBackendQualification> QualificationMatrix =
@@ -145,7 +146,7 @@ public sealed class BarPieRenderingContract : IBarPieRenderingContract
     {
         return new UiChartRenderModel
         {
-            Title = ChartUiDefaults.BarPieChartTitle,
+            Title = EmptyChartTitle,
             IsVisible = isVisible,
             Series = Array.Empty<ChartSeriesModel>(),
             Facets = Array.Empty<ChartFacetModel>()

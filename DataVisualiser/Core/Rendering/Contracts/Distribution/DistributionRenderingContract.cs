@@ -6,7 +6,6 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
@@ -59,6 +58,7 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
     private readonly Func<ChartRenderingOrchestrator?> _getChartRenderingOrchestrator;
     private readonly IDistributionService _hourlyDistributionService;
     private readonly DistributionPolarRenderingService _polarRenderingService;
+    private readonly IDistributionPolarProjectionInteractionFactory? _polarProjectionInteractionFactory;
     private readonly IDistributionService _weeklyDistributionService;
 
     public DistributionRenderingContract(
@@ -66,12 +66,14 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
         IDistributionService weeklyDistributionService,
         IDistributionService hourlyDistributionService,
         DistributionPolarRenderingService polarRenderingService,
+        IDistributionPolarProjectionInteractionFactory? polarProjectionInteractionFactory = null,
         ChartRenderPlanAdapterDispatcher<DistributionRenderSurface>? dispatcher = null)
     {
         _getChartRenderingOrchestrator = getChartRenderingOrchestrator ?? throw new ArgumentNullException(nameof(getChartRenderingOrchestrator));
         _weeklyDistributionService = weeklyDistributionService ?? throw new ArgumentNullException(nameof(weeklyDistributionService));
         _hourlyDistributionService = hourlyDistributionService ?? throw new ArgumentNullException(nameof(hourlyDistributionService));
         _polarRenderingService = polarRenderingService ?? throw new ArgumentNullException(nameof(polarRenderingService));
+        _polarProjectionInteractionFactory = polarProjectionInteractionFactory;
         _dispatcher = dispatcher
             ?? new ChartRenderPlanAdapterDispatcher<DistributionRenderSurface>([new DistributionRenderPlanAdapter(RenderCoreAsync)]);
     }
@@ -140,7 +142,7 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
         if (host == null)
             throw new ArgumentNullException(nameof(host));
 
-        if (route == DistributionRenderingRoute.PolarFallback && host.CartesianChart.Tag is DistributionPolarProjectionTooltip)
+        if (route == DistributionRenderingRoute.PolarFallback && host.CartesianChart.Tag is IDistributionPolarProjectionInteraction)
         {
             _polarRenderingService.RefitPolarProjection(host.CartesianChart);
             return;
@@ -199,7 +201,7 @@ public sealed class DistributionRenderingContract : IDistributionRenderingContra
 
         var definition = DistributionModeCatalog.Get(request.Mode);
         _polarRenderingService.RenderPolarChart(rangeResult, definition, host.CartesianChart);
-        host.CartesianChart.Tag = new DistributionPolarProjectionTooltip(host.CartesianChart, definition, rangeResult);
+        host.CartesianChart.Tag = _polarProjectionInteractionFactory?.Create(host.CartesianChart, definition, rangeResult);
         host.PolarChart.Tag = null;
     }
 

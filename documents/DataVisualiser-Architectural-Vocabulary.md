@@ -550,6 +550,35 @@ A further ownership correction relocated concrete tooltip and interaction types 
 
 Two pre-existing upward violations are noted but not corrected by this work: `DistributionRenderingContract` (namespace `Core.Rendering.Contracts.Distribution`) and `WeekdayTrendChartUpdateCoordinator` (namespace `Core.Orchestration`) both already imported `DataVisualiser.UI.*` before this work.
 
+#### Dependency-density audit reconciliation (April 2026)
+
+A later dependency-density audit was performed after the VNext reasoning, interpretation, confidence, overlay, provider/delivery binding, render-plan metadata, adapter qualification, tooltip/interaction separation, and rendering-contract restructuring work had increased the apparent type-dependency graph density.
+
+The audit did not find evidence that the density increase is primarily architectural drift. The observed increase has three main causes:
+
+- diagram/export amplification, including repeated edges and self-referential record/value-object edges in the generated type diagram
+- legitimate contract enrichment around render-plan vocabulary, provider metadata, backend qualification, and evidence diagnostics
+- legitimate transitional bridging where older rendering/orchestration paths now emit or consume VNext render-plan metadata while legacy compatibility remains active
+
+The key classification is mixed but bounded:
+
+- **Legitimate steady-state coupling**: VNext provider, delivery, render-plan, backend selector, and adapter qualification types form a real contract/boundary seam. They constrain what may cross the seam and reject unsupported provider/plan/backend combinations.
+- **Legitimate transitional coupling**: `ChartUpdateCoordinator` still bridges legacy computation/render-model output into render-plan delivery. This is acceptable while legacy/VNext coexistence remains explicit, but it must not become the long-term home for new analytical capability.
+- **Diagram/export noise**: the generated diagram materially overstates coupling because it repeats edges and includes many self-links. Raw edge count should not be treated as drift evidence without source inspection.
+- **Accidental coupling**: older `Core.Rendering.Contracts` family-specific contracts still import UI, state, and presentation types and preserve family-specific rendering micro-frameworks too centrally.
+- **Actual architectural drift**: not established by this audit.
+
+This changes the forward reading of the provider/consumer question. The provider/consumer boundary is no longer merely an unproven naming layer: current evidence indicates it is an enforceable seam for VNext render-plan delivery. The remaining risk is that older `Core.Rendering.Contracts` and transitional coordinators can keep the old integration mesh alive beside that seam if new Phase 7 capability is added through them instead of through reasoning/program/contract structures.
+
+Planning consequence:
+
+- do not roll back or flatten the VNext provider/render-plan/provider-metadata structures merely because the graph is denser
+- do not start a broad family-framework collapse in response to the diagram
+- add or preserve guardrails that keep VNext contracts/rendering/application backend-neutral and UI-neutral
+- cap `ChartControllerFactoryContext` as a composition-root context, not a service locator for semantic, evidence, or planning services
+- treat `Core.Rendering.Contracts` UI-aware family contracts as the next narrow seam-hardening area, but only through small behavior-preserving slices
+- keep tooltip factories and timestamp sinks as consumer/interaction relays; do not move semantic or rendering authority into them
+
 ### 3.7 Migration architecture must not become steady-state architecture
 
 A further non-conflicting conclusion is that the migration machinery is at risk of becoming part of the permanent architecture if it is not kept bounded.
@@ -1852,13 +1881,15 @@ It is the shortest path from conceptual architecture to enforceable structural r
 
 ---
 
-## 12. Summarized Implementation Sequence
+## 12. Summarized Architecture Closure Sequence
 
-The enhanced architecture suggests the following high-level implementation order.
+The enhanced architecture suggests the following high-level closure order.
 
-This is optimized for architectural leverage rather than raw speed.
+This is not a literal history of the order in which code was touched. The migration has required downstream scaffolding in rendering, interaction, and evidence before every upstream closure step was complete. Those supporting slices are valid, but they do not mean the later closure steps are complete.
 
-### 12.1 Recommended sequence
+The sequence below should therefore be read as the order in which architectural ownership is meant to be closed and enforced.
+
+### 12.1 Recommended closure sequence
 
 1. **Authority spine + canonical intent model**  
    Make authority, provenance, and intent explicit so `Context`, `State`, `Request`, and `Result` stop carrying blurred ownership.
@@ -1870,25 +1901,32 @@ This is optimized for architectural leverage rather than raw speed.
    Keep strategy, capability, composition, transform, and overlay definition in the reasoning container; keep workflow, routing, fallback, and sequencing in the process container.
 
 4. **Contract / boundary seam**  
-   Establish program, delivery, interaction, and multi-result contracts as the main fan-out seam between upstream meaning and downstream consumption.
+   Preserve the now-proven VNext program, delivery, provider, render-plan, interaction, and multi-result contracts as the main fan-out seam between upstream meaning and downstream consumption. Completion work should protect provider/plan/backend qualification guardrails, move live consumers onto this seam, and prevent older family-specific delivery routes from bypassing it.
 
 5. **Consumer / interaction branching**  
-   Model charts, exports, APIs, and future clients as real consumer families fed from the same contract seam, with interaction treated as a named boundary concern.
+   Model charts, exports, APIs, and future clients as real consumer families fed from the same contract seam, with interaction treated as a named boundary concern. Completion work should keep tooltip factories, timestamp sinks, controller adapters, and host coordination as consumer/interaction relays rather than semantic, evidence, or rendering authorities.
 
 6. **Terminal rendering demotion**  
-   Push backend routing, qualification, host binding, and vendor-specific behavior fully into terminal delivery infrastructure.
+   Push backend routing, qualification, host binding, and vendor-specific behavior fully into terminal delivery infrastructure. Completion work should harden the older UI-aware `Core.Rendering.Contracts` family host/request/route types one behavior-preserving slice at a time, without flattening the VNext provider/render-plan seam or collapsing all family frameworks prematurely.
 
 7. **Diagnostics / migration sidecar isolation**  
-   Keep parity, evidence, reachability, qualification, and migration machinery observational and structurally outside the main authority path.
+   Keep parity, evidence, reachability, qualification, and migration machinery observational and structurally outside the main authority path. Completion work should preserve evidence as a reader of runtime state, render-plan diagnostics, vocabulary coverage, and provider coverage, never as a live routing or semantic decision mechanism.
 
 8. **Collapse repeated family micro-frameworks**  
-   Only after the spine, contracts, and consumer seams are real, reduce repeated family-specific request/route/qualification/adapter patterns into fewer shared structures.
+   Only after the spine, contracts, and consumer seams are real and guarded, reduce repeated family-specific request/route/qualification/adapter patterns into fewer shared structures. Completion work should begin with proven accidental coupling in UI-aware rendering contracts, not with diagram-density-driven broad consolidation.
 
 ### 12.2 Short form
 
 ```text
+Closure order:
 Authority -> Intent -> Execution -> Process -> Contracts -> Consumers -> Terminal Delivery
-                                                \-> Governance / Evidence
+                                                \-> Governance / Evidence as observer
+```
+
+Completion emphasis:
+
+```text
+Preserve proven VNext seams -> harden old UI-aware rendering contracts narrowly -> then consolidate repeated family patterns only where the seam is already clear
 ```
 
 ### 12.3 Why this order
@@ -1897,7 +1935,11 @@ This sequence:
 
 - establishes the right upstream centers first
 - delays branching until the correct boundary
+- distinguishes closure order from prerequisite scaffolding that may already exist downstream
 - prevents UI/rendering cleanup from becoming cosmetic only
+- treats dependency density as evidence to classify before refactoring, not as automatic proof of drift
+- preserves the provider/render-plan seam that is already enforcing boundary rules
+- focuses remaining correction on older accidental coupling instead of broad consolidation
 - makes later consolidation cheaper and more honest
 
 
@@ -1905,35 +1947,40 @@ This sequence:
 
 ---
 
-## 13. Implementation Status Snapshot
+## 13. Architecture Closure Status Snapshot
 
-This section records the current implementation state of the sequence above so future agents can continue without re-litigating completed architectural work.
+This section records the current closure state of the sequence above so future agents can continue without re-litigating completed architectural work.
 
-### 13.1 Current status by sequence step
+It separates two facts that were previously easy to confuse:
 
-1. **Authority spine + canonical intent model - substantially implemented / still maturing**  
+- **closure status**: whether the step is the active, enforceable architectural home
+- **implementation coverage**: whether supporting code already exists because live migration required it
+
+### 13.1 Current closure status by sequence step
+
+1. **Authority spine + canonical intent model - mostly closed, final normalization still maturing**  
    The system now has explicit VNext request, snapshot, analytical intent, capability, composition, consumer-delivery, provider, render-plan, runtime provenance, and evidence vocabulary. The remaining work is to keep reducing legacy `ChartDataContext` authority and make canonical intent the normal live entry point instead of a projected compatibility path.
 
-2. **One primary execution model - substantially implemented for current chart families**  
+2. **One primary execution model - mostly closed for current chart families**  
    The VNext reasoning/program path is live across the available chart-family routes, including Main, Normalized, Distribution, WeekdayTrend, Bar/Pie, and Transform operations; Diff/Ratio has VNext strategy support but lacks a current frontend controller surface. Legacy execution remains as fallback/compatibility rather than the preferred architectural model.
 
-3. **Reasoning vs process separation - mostly implemented**  
+3. **Reasoning vs process separation - mostly closed, with remaining coordinator/process cleanup**  
    Reasoning concerns now live primarily in VNext contracts, kernel, analytical intent, operation execution, program planning, provider contracts, and render-plan projection. Process concerns remain in coordinators, route policies, runtime-state recording, and tab/controller adapters.
 
-4. **Contract / boundary seam - substantially implemented**  
-   `AnalyticalIntent`, `CapabilityRequest`, `ConsumerDeliveryContract`, `ConsumerProviderContract`, `ChartProgram`, `ChartRenderPlan`, provider metadata, and vocabulary diagnostics now form the main seam between upstream meaning and downstream consumers. The remaining work is to keep moving live consumers onto this seam and remove family-specific bypasses where they no longer provide value.
+4. **Contract / boundary seam - current closure step**  
+   `AnalyticalIntent`, `CapabilityRequest`, `ConsumerDeliveryContract`, `ConsumerProviderContract`, `ChartProgram`, `ChartRenderPlan`, provider metadata, and vocabulary diagnostics now form the main seam between upstream meaning and downstream consumers. The dependency-density audit found that the VNext provider/render-plan boundary is more than renamed delivery routing: provider registry, delivery binding, backend candidate selection, and adapter qualification enforce provider/plan/backend compatibility. The remaining work is to preserve these guardrails, keep moving live consumers onto this seam, and remove family-specific bypasses where they no longer provide value.
 
-5. **Consumer / interaction branching - actively maturing**  
+5. **Consumer / interaction branching - scaffolded, not yet a closed sequence step**  
    Main, Syncfusion, Admin, evidence export, API response, chart-controller paths, and future plugin providers are now modeled more clearly as consumers/providers rather than semantic authorities. Provider registry and adapter qualification now allow chart libraries to be selected by contract metadata rather than hard-coded tab/vendor assumptions.
 
-6. **Terminal rendering demotion - in progress, with validated provider boundary**  
-   Rendering has been pushed toward disposable backend adaptation through render plans, backend capabilities, provider-aware adapter dispatchers, provider contracts, provider metadata, render-plan diagnostics, and vocabulary coverage. Recent manual smoke verified provider-aware rendering for LiveCharts and Syncfusion without missing provider/vocabulary coverage.
+6. **Terminal rendering demotion - scaffolded and partially hardened, not yet a closed sequence step**  
+   Rendering has been pushed toward disposable backend adaptation through render plans, backend capabilities, provider-aware adapter dispatchers, provider contracts, provider metadata, render-plan diagnostics, and vocabulary coverage. Recent manual smoke verified provider-aware rendering for LiveCharts and Syncfusion without missing provider/vocabulary coverage. The dependency-density audit supports this direction: VNext render-plan delivery density is mostly legitimate seam enforcement and metadata propagation, not drift. The remaining terminal-delivery risk sits in older `Core.Rendering.Contracts` family micro-frameworks that still import UI/state/presentation types too centrally.
 
-7. **Diagnostics / migration sidecar isolation - substantially implemented**  
+7. **Diagnostics / migration sidecar isolation - scaffolded early and largely behaving correctly, not yet final closure**  
    Evidence export, reachability diagnostics, runtime-path state, family runtime state, render-plan diagnostics, provider metadata coverage, vocabulary coverage, and session milestones now observe the system rather than define live behavior. Evidence now reports missing vocabulary/provider coverage so migration gaps are provable instead of inferred manually.
 
-8. **Collapse repeated family micro-frameworks - partially implemented / lower priority now**  
-   Safe consolidation has happened around parity comparison, workspace milestones, load coordination, binary chart context mechanics, qualification probe support, VNext request planning, and provider metadata stamping. Broader family-framework collapse should be guided by the contract/provider seam, not by cosmetic file-count reduction.
+8. **Collapse repeated family micro-frameworks - deferred as a closure step**  
+   Safe consolidation has happened around parity comparison, workspace milestones, load coordination, binary chart context mechanics, qualification probe support, VNext request planning, and provider metadata stamping. Broader family-framework collapse should be guided by the contract/provider seam, not by cosmetic file-count reduction. The dependency-density audit reinforces that broad collapse is still premature: the next useful work is narrow seam-hardening around UI-aware `Core.Rendering.Contracts` types, not wholesale removal of family-specific rendering structures.
 
 ### 13.2 Completed material changes
 
@@ -1975,7 +2022,11 @@ Concrete tooltip and interaction types were corrected from `Core/Rendering/Inter
 
 ### 13.3 Current next practical work
 
-- Finish removing remaining bypasses around live consumer/provider delivery before Phase 7 capability expansion unless explicitly deferred.
+- Preserve the VNext provider/render-plan boundary as an enforceable seam before Phase 7 capability expansion. Current evidence indicates provider/consumer contracts, delivery binding, backend selection, and adapter qualification already reject incompatible crossings; the immediate need is guardrail preservation rather than another provider-boundary discovery pass.
+- Treat the dependency-density increase as a bounded risk, not an automatic refactor trigger. Before proposing changes from graph density alone, classify the dependency as steady-state coupling, transitional coupling, diagram/export noise, accidental coupling, or drift.
+- Address accidental coupling first in small behavior-preserving slices around older UI-aware `Core.Rendering.Contracts` family contracts. Do not begin with broad family-framework collapse.
+- Cap `ChartControllerFactoryContext` as a composition-root context. It may carry controllers, factories, and already-created runtime collaborators needed to assemble chart adapters, but it must not absorb semantic authority, evidence export orchestration, VNext planning, provider registry policy, or analytical capability services.
+- Keep `ChartUpdateCoordinator` as a bounded transitional bridge for legacy render-model to render-plan delivery. New Phase 7 analytical capability should enter through reasoning/program/contract structures, not by expanding this coordinator's responsibilities.
 - Keep `MetricLoadCoordinator` and chart-family adapters as process/consumer coordinators, not semantic authorities.
 - Continue extracting chart-family request planning and runtime mapping into shared VNext planning seams; provider selection now has an initial shared contract/qualification surface.
 - Preserve legacy execution as a compatibility/fallback adapter until VNext parity and smoke evidence are strong enough to retire each path safely.
@@ -1988,6 +2039,44 @@ The structural folder restructure (Groups A, B, D) and the tooltip/interaction o
 ### 13.4 Manual validation state
 
 Recent automated validation has covered the current structural, contract, provider, metadata, and evidence work, including full solution test runs. Manual smoke has verified Main, Distribution, WeekdayTrend, Bar/Pie, Syncfusion render/export, and complete provider/vocabulary coverage after provider-aware adapter qualification. New manual smoke is only required after further live behavior changes, especially when changing runtime routing, render delivery, provider selection, chart-controller interaction behavior, or adaptive viewport/detail behavior.
+
+### 13.5 Current remaining architecture plan
+
+This is the practical forward sequence from the current codebase state. It is intentionally separate from the ideal closure sequence and should be used as the working plan for the remaining migration.
+
+Only one step should be treated as active at a time. A later step may receive a small retroactive adjustment only when it is required to close the current step safely, and that adjustment must be recorded as supporting work rather than as closure of the later step.
+
+1. **Close the dependency-density audit and guardrail baseline**
+   Record the current classification of dense dependencies as steady-state coupling, transitional coupling, diagram/export noise, accidental coupling, or drift. Preserve the finding that most VNext provider/render-plan density is legitimate or diagram-amplified, while the concrete accidental-coupling concern is older UI-aware `Core.Rendering.Contracts`. Completion requires guardrail tests or equivalent evidence for VNext UI/backend neutrality, provider/plan/backend mismatch rejection, render-plan metadata preservation, and evidence remaining observational.
+
+2. **Close the contract / boundary seam**
+   Preserve the VNext provider/render-plan seam as the required fan-out point. Keep provider registry, delivery binding, backend candidate selection, adapter qualification, vocabulary metadata, and render-plan diagnostics guarded by tests. Move remaining live consumers toward `ConsumerDeliveryContract`, `ConsumerProviderContract`, `ChartProgram`, and `ChartRenderPlan` handoff only where doing so is behavior-preserving. Do not add new capability through family-specific rendering routes when it can enter through reasoning/program/contracts.
+
+3. **Stop integration hubs from growing**
+   Cap `ChartControllerFactoryContext`, `ChartUpdateCoordinator`, `MetricLoadCoordinator`, and chart-family adapters to their current ownership roles. These types may coordinate, bridge, or compose, but must not absorb semantic authority, evidence orchestration, provider policy, render-policy authority, or new analytical capability. Completion requires guardrails or focused tests proving no new semantic, evidence, provider-registry, or capability-planning dependencies were added to these hubs.
+
+4. **Harden UI-aware rendering contracts narrowly**
+   Address accidental coupling in older `Core.Rendering.Contracts` one family slice at a time. Before any code change, state the category being corrected, why it is not transitional coupling or diagram/export noise, which ownership-container rule justifies the correction, and which tests prove behavior is preserved. The first target should be the smallest safe host/request/route boundary that reduces Core-to-UI/state/presentation dependency without changing behavior. Do not collapse all family rendering frameworks as part of this step.
+
+5. **Keep interaction as consumer-side relay**
+   Tooltip factories, timestamp sinks, controller event handlers, and host coordination should remain interaction or consumer adaptation mechanisms. They must not become sources of semantic interpretation, render-policy selection, provider selection, or evidence decisions. Completion requires proving tooltip/timestamp paths remain relays and do not acquire semantic or rendering authority.
+
+6. **Keep evidence observational**
+   Evidence and diagnostics may read runtime state, render-plan metadata, provider coverage, vocabulary coverage, parity, and reachability. They must not influence live routing, semantic decisions, provider selection, or computation. Completion requires evidence paths to remain sidecars and tests/guardrails to prevent diagnostics from becoming execution policy.
+
+7. **Add new capability only through reasoning/program/contracts**
+   Confidence, overlays, programmable composition, and future analytical behavior should be expressed first in reasoning/capability and contract/boundary structures, then delivered to consumers. Do not implement new capability by expanding `ChartUpdateCoordinator`, `ChartControllerFactoryContext`, tooltip helpers, or family rendering contracts.
+
+8. **Consolidate repeated family micro-frameworks last**
+   Collapse repeated request/route/qualification/adapter patterns only after multiple hardened slices prove the shared shape. Consolidation should reduce accidental coupling and strengthen the contract/provider seam, not merely reduce file or diagram count.
+
+Completion rule:
+
+```text
+Do not advance to the next step if the current step leaves a new integration hub,
+a new Core-to-UI dependency, an unguarded provider/render-plan bypass,
+or an unclassified dependency-density increase behind.
+```
 
 
 ---
@@ -2065,9 +2154,9 @@ Working estimate: ~70%
 |---|---:|---|
 | Vocabulary / conceptual model | 90% | Stable promoted concepts and target hierarchy exist. |
 | VNext reasoning spine | 75% | `ReasoningEngine`, analytical intent, program planning, and session coordination exist. |
-| Contract / boundary model | 65% | Consumer/provider contracts are emerging, but boundary enforcement is not fully proven. |
-| Rendering demotion | 70% | Render-plan delivery exists; folder restructure removed the `Presentation/Rendering/` sub-hierarchy; Group C moved concrete tooltip/interaction types out of `Core.Rendering` into `UI.Charts.Interaction` with dependency inversion applied. `Core.Rendering` is meaningfully smaller; two pre-existing upward violations remain. |
-| Consumer / interaction separation | 65% | Controller interfaces, adapters, and concrete tooltip/interaction types now live in `UI.Charts.Presentation` and `UI.Charts.Interaction`; Syncfusion types relocated; Core depends on abstractions for tooltip construction; further behavioral enforcement and violation cleanup remains. |
+| Contract / boundary model | 68% | Consumer/provider contracts are emerging and the dependency-density audit found real boundary enforcement in provider registry, render-delivery binding, backend selection, and adapter qualification. Remaining work is live adoption, guardrail preservation, and removal of older family-specific bypasses. |
+| Rendering demotion | 70% | Render-plan delivery exists; folder restructure removed the `Presentation/Rendering/` sub-hierarchy; Group C moved concrete tooltip/interaction types out of `Core.Rendering` into `UI.Charts.Interaction` with dependency inversion applied. `Core.Rendering` is meaningfully smaller. The remaining risk is now read more precisely as older UI-aware `Core.Rendering.Contracts` family micro-framework coupling, not as failure of the VNext provider/render-plan seam. |
+| Consumer / interaction separation | 65% | Controller interfaces, adapters, and concrete tooltip/interaction types now live in `UI.Charts.Presentation` and `UI.Charts.Interaction`; Syncfusion types relocated; Core depends on abstractions for tooltip construction; further behavioral enforcement and violation cleanup remains. Tooltip factories and timestamp sinks are currently acceptable interaction relays, not semantic/rendering authorities. |
 | Governance / evidence | 75% | Evidence, parity, and diagnostics infrastructure are strong, but must remain observational. |
 | Legacy coexistence cleanup | 50–60% | Older mesh structures still coexist with VNext and family-specific delivery patterns. |
 
@@ -2085,7 +2174,7 @@ toward:
 reasoning-engine + contract/provider/consumer boundary + terminal delivery
 ```
 
-The remaining work is mostly consolidation, enforcement, and selective relocation rather than another broad decomposition campaign.
+The remaining work is mostly consolidation, enforcement, and selective relocation rather than another broad decomposition campaign. The latest dependency-density evidence strengthens this reading: the graph is denser, but much of that density is legitimate metadata propagation, boundary qualification, and diagram/export amplification rather than architectural drift.
 
 ### Why the estimate is not higher
 
@@ -2099,6 +2188,8 @@ These areas may still contain responsibilities that belong higher in the target 
 
 Note: `UI.Charts.Presentation` was previously listed here as a problem area. The April 2026 folder restructure partially corrected it by merging controller interfaces into the presentation container, flattening the rendering sub-hierarchy, and relocating vendor backends to visibly terminal positions. The Group C work further corrected it by moving concrete tooltip and interaction types into `UI.Charts.Interaction` and applying dependency inversion so Core no longer imports UI concretions. The physical layout is now substantially more aligned. Two pre-existing upward violations (`DistributionRenderingContract` and `WeekdayTrendChartUpdateCoordinator` importing `DataVisualiser.UI.*` from Core namespaces) remain and are the primary structural enforcement gap in this area.
 
+Dependency-density audit note: the latest type dependency diagram should not be read by raw edge count alone. It contains repeated and self-referential edges that amplify apparent density. Source inspection shows the VNext provider/render-plan path is structurally cleaner than the diagram suggests, while the real concern remains the older `Core.Rendering.Contracts` family-specific delivery/request/host structures that still couple Core to UI/state/presentation concepts.
+
 ### Why the estimate is not lower
 
 The core migration shape now exists in code:
@@ -2106,21 +2197,27 @@ The core migration shape now exists in code:
 - reasoning-engine structures exist
 - analytical intent and program planning exist
 - render-plan delivery exists
-- consumer/provider contracts are emerging
+- consumer/provider contracts are emerging and have initial enforcement proof
 - evidence and parity infrastructure are well established
 
 That means the project has crossed from conceptual planning into structural implementation.
 
 ### Best next assessment move
 
-The next useful review is a narrow ownership audit of the provider/consumer boundary and nearby delivery types.
+The narrow ownership audit of the provider/consumer boundary and nearby delivery types has now been performed at dependency-density level.
 
-Primary question:
+Audit answer:
 
 ```text
-Do these types enforce the intended boundary,
-or do they merely rename delivery routing?
+VNext provider/consumer and render-plan boundary types enforce the intended boundary
+well enough to proceed with guardrail preservation and narrow seam-hardening.
 ```
 
-This should be answered before starting another broad refactor.
+The next useful assessment is narrower:
 
+```text
+Which UI-aware Core.Rendering.Contracts family host/request/route types can be hardened
+one slice at a time without changing behavior or collapsing family-specific frameworks prematurely?
+```
+
+This should be answered before starting Phase 7 work that depends on those family contracts, but it should not block reasoning-engine capability work that flows through the VNext contract/provider seam without expanding the older rendering mesh.
