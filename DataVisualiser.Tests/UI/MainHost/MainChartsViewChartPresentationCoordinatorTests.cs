@@ -57,7 +57,7 @@ public sealed class MainChartsViewChartPresentationCoordinatorTests
     }
 
     [Fact]
-    public void ClearHiddenCharts_ShouldClearOnlyHiddenKeys()
+    public void ClearHiddenCharts_ShouldClearOnlyHiddenMainTabKeys()
     {
         var cleared = new List<string>();
         var coordinator = new MainChartsViewChartPresentationCoordinator();
@@ -79,7 +79,7 @@ public sealed class MainChartsViewChartPresentationCoordinatorTests
         Assert.Contains(ChartControllerKeys.DiffRatio, cleared);
         Assert.Contains(ChartControllerKeys.WeeklyTrend, cleared);
         Assert.Contains(ChartControllerKeys.BarPie, cleared);
-        Assert.Contains(ChartControllerKeys.SyncfusionSunburst, cleared);
+        Assert.DoesNotContain(ChartControllerKeys.SyncfusionSunburst, cleared);
         Assert.DoesNotContain(ChartControllerKeys.Main, cleared);
         Assert.DoesNotContain(ChartControllerKeys.Distribution, cleared);
         Assert.DoesNotContain(ChartControllerKeys.Transform, cleared);

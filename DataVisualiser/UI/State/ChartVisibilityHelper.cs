@@ -4,7 +4,7 @@ namespace DataVisualiser.UI.State;
 
 public static class ChartVisibilityHelper
 {
-    public static IReadOnlyList<string> GetHiddenChartKeys(ChartState state)
+    public static IReadOnlyList<string> GetHiddenMainChartKeys(ChartState state)
     {
         if (state == null)
             throw new ArgumentNullException(nameof(state));
@@ -31,6 +31,16 @@ public static class ChartVisibilityHelper
 
         if (!state.IsBarPieVisible)
             hidden.Add(ChartControllerKeys.BarPie);
+
+        return hidden;
+    }
+
+    public static IReadOnlyList<string> GetHiddenChartKeys(ChartState state)
+    {
+        if (state == null)
+            throw new ArgumentNullException(nameof(state));
+
+        var hidden = GetHiddenMainChartKeys(state).ToList();
 
         if (!state.IsSyncfusionSunburstVisible)
             hidden.Add(ChartControllerKeys.SyncfusionSunburst);

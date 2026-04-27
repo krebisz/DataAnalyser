@@ -14,9 +14,11 @@ public class ChartState
     private readonly Dictionary<ChartProgramKind, LoadRuntimeState> _familyLoadRuntimes = new();
     private readonly Dictionary<ChartProgramKind, RenderPlanDiagnosticsSnapshot> _renderPlanDiagnostics = new();
     private readonly List<RenderPlanHistorySnapshot> _renderPlanHistory = new();
+    private readonly List<InterpretationResultDiagnosticsSnapshot> _interpretationDiagnostics = new();
     private readonly List<PerformanceTimingSnapshot> _performanceTimings = new();
     private readonly List<SessionMilestoneSnapshot> _sessionMilestones = new();
     private const int MaxRenderPlanHistory = 100;
+    private const int MaxInterpretationDiagnostics = 100;
     private const int MaxSessionMilestones = 50;
     private const int MaxPerformanceTimings = 100;
 
@@ -81,6 +83,7 @@ public class ChartState
     public IReadOnlyDictionary<ChartProgramKind, LoadRuntimeState> FamilyLoadRuntimes => _familyLoadRuntimes;
     public IReadOnlyDictionary<ChartProgramKind, RenderPlanDiagnosticsSnapshot> RenderPlanDiagnostics => _renderPlanDiagnostics;
     public IReadOnlyList<RenderPlanHistorySnapshot> RenderPlanHistory => _renderPlanHistory;
+    public IReadOnlyList<InterpretationResultDiagnosticsSnapshot> InterpretationDiagnostics => _interpretationDiagnostics;
     public IReadOnlyList<PerformanceTimingSnapshot> PerformanceTimings => _performanceTimings;
     public IReadOnlyList<SessionMilestoneSnapshot> SessionMilestones => _sessionMilestones;
 
@@ -151,6 +154,39 @@ public class ChartState
     {
         _renderPlanDiagnostics.Clear();
         _renderPlanHistory.Clear();
+    }
+
+    public void RecordInterpretationDiagnostics(AnalyticalInterpretationResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        var snapshot = new InterpretationResultDiagnosticsSnapshot
+        {
+            ProgramKind = result.Execution.Program.Kind.ToString(),
+            ExecutionSignature = result.Execution.Signature,
+            InterpretationSignature = result.Signature,
+            SourceSignature = result.Execution.Program.SourceSignature,
+            ConfidenceAnnotationCount = result.Confidence.Annotations.Count,
+            CriticalConfidenceAnnotationCount = result.Confidence.CriticalCount,
+            WarningConfidenceAnnotationCount = result.Confidence.WarningCount,
+            OverlayCount = result.Overlays.Count,
+            OverlayKinds = result.Overlays
+                .Select(overlay => overlay.Kind.ToString())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList()
+        };
+
+        _interpretationDiagnostics.Add(snapshot);
+        if (_interpretationDiagnostics.Count <= MaxInterpretationDiagnostics)
+            return;
+
+        _interpretationDiagnostics.RemoveRange(0, _interpretationDiagnostics.Count - MaxInterpretationDiagnostics);
+    }
+
+    public void ClearInterpretationDiagnostics()
+    {
+        _interpretationDiagnostics.Clear();
     }
 
     public void RecordPerformanceTiming(

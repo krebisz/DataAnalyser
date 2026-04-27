@@ -92,6 +92,7 @@ public sealed class DiagnosticsSnapshot
     public Dictionary<string, RenderPlanDiagnosticsSnapshot> RenderPlans { get; set; } = new();
     public RenderPlanVocabularyDiagnosticsSnapshot RenderPlanVocabulary { get; set; } = new();
     public IReadOnlyList<RenderPlanHistorySnapshot> RenderPlanHistory { get; set; } = Array.Empty<RenderPlanHistorySnapshot>();
+    public InterpretationDiagnosticsSnapshot Interpretation { get; set; } = new();
 }
 
 public sealed class PerformanceTimingSnapshot
@@ -305,6 +306,33 @@ public sealed class RenderPlanVocabularyDiagnosticsSnapshot
     public int InteractionCountTotal { get; set; }
     public IReadOnlyList<string> MissingVocabularyPlanKinds { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingProviderPlanKinds { get; set; } = Array.Empty<string>();
+}
+
+public sealed class InterpretationDiagnosticsSnapshot
+{
+    public int InterpretationCount { get; set; }
+    public int TotalConfidenceAnnotations { get; set; }
+    public int CriticalConfidenceAnnotations { get; set; }
+    public int WarningConfidenceAnnotations { get; set; }
+    public bool HasCriticalConfidence { get; set; }
+    public int TotalOverlays { get; set; }
+    public IReadOnlyList<string> ProgramKinds { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> OverlayKinds { get; set; } = Array.Empty<string>();
+    public string? LatestInterpretationSignature { get; set; }
+    public IReadOnlyList<InterpretationResultDiagnosticsSnapshot> Results { get; set; } = Array.Empty<InterpretationResultDiagnosticsSnapshot>();
+}
+
+public sealed class InterpretationResultDiagnosticsSnapshot
+{
+    public string ProgramKind { get; set; } = string.Empty;
+    public string ExecutionSignature { get; set; } = string.Empty;
+    public string InterpretationSignature { get; set; } = string.Empty;
+    public string SourceSignature { get; set; } = string.Empty;
+    public int ConfidenceAnnotationCount { get; set; }
+    public int CriticalConfidenceAnnotationCount { get; set; }
+    public int WarningConfidenceAnnotationCount { get; set; }
+    public int OverlayCount { get; set; }
+    public IReadOnlyList<string> OverlayKinds { get; set; } = Array.Empty<string>();
 }
 
 public class RenderPlanDiagnosticsSnapshot

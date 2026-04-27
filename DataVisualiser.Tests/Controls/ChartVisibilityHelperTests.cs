@@ -51,4 +51,26 @@ public sealed class ChartVisibilityHelperTests
         Assert.Contains(ChartControllerKeys.BarPie, hidden);
         Assert.Contains(ChartControllerKeys.SyncfusionSunburst, hidden);
     }
+
+    [Fact]
+    public void GetHiddenMainChartKeys_ExcludesSyncfusionSunburst()
+    {
+        var state = new ChartState
+        {
+                IsMainVisible = false,
+                IsNormalizedVisible = false,
+                IsDiffRatioVisible = false,
+                IsDistributionVisible = false,
+                IsWeeklyTrendVisible = false,
+                IsTransformPanelVisible = false,
+                IsBarPieVisible = false,
+                IsSyncfusionSunburstVisible = false
+        };
+
+        var hidden = ChartVisibilityHelper.GetHiddenMainChartKeys(state);
+
+        Assert.Contains(ChartControllerKeys.Main, hidden);
+        Assert.Contains(ChartControllerKeys.BarPie, hidden);
+        Assert.DoesNotContain(ChartControllerKeys.SyncfusionSunburst, hidden);
+    }
 }

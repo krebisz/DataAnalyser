@@ -146,7 +146,8 @@ public sealed class EvidenceDiagnosticsBuilder
             VNextFamilies = BuildVNextFamilyDiagnostics(chartState),
             RenderPlans = BuildRenderPlanDiagnostics(chartState),
             RenderPlanVocabulary = BuildRenderPlanVocabularyDiagnostics(chartState),
-            RenderPlanHistory = chartState.RenderPlanHistory
+            RenderPlanHistory = chartState.RenderPlanHistory,
+            Interpretation = BuildInterpretationDiagnostics(chartState)
         };
     }
 
@@ -401,6 +402,34 @@ public sealed class EvidenceDiagnosticsBuilder
             InteractionCountTotal = SumMetadataInt(snapshots, ChartRenderPlanMetadataKeys.InteractionCount),
             MissingVocabularyPlanKinds = missingVocabulary,
             MissingProviderPlanKinds = missingProvider
+        };
+    }
+
+    internal static InterpretationDiagnosticsSnapshot BuildInterpretationDiagnostics(ChartState chartState)
+    {
+        var results = chartState.InterpretationDiagnostics.ToList();
+        return new InterpretationDiagnosticsSnapshot
+        {
+            InterpretationCount = results.Count,
+            TotalConfidenceAnnotations = results.Sum(result => result.ConfidenceAnnotationCount),
+            CriticalConfidenceAnnotations = results.Sum(result => result.CriticalConfidenceAnnotationCount),
+            WarningConfidenceAnnotations = results.Sum(result => result.WarningConfidenceAnnotationCount),
+            HasCriticalConfidence = results.Any(result => result.CriticalConfidenceAnnotationCount > 0),
+            TotalOverlays = results.Sum(result => result.OverlayCount),
+            ProgramKinds = results
+                .Select(result => result.ProgramKind)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            OverlayKinds = results
+                .SelectMany(result => result.OverlayKinds)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList(),
+            LatestInterpretationSignature = results.LastOrDefault()?.InterpretationSignature,
+            Results = results
         };
     }
 

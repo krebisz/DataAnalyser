@@ -58,7 +58,7 @@ public sealed class MainChartsViewChartPresentationCoordinator
         ArgumentNullException.ThrowIfNull(chartState);
         ArgumentNullException.ThrowIfNull(actions);
 
-        foreach (var key in ChartVisibilityHelper.GetHiddenChartKeys(chartState))
+        foreach (var key in ChartVisibilityHelper.GetHiddenMainChartKeys(chartState))
             actions.ClearChart(key);
     }
 }
