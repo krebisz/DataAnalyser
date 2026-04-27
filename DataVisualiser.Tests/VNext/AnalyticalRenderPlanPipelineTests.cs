@@ -65,6 +65,7 @@ public sealed class AnalyticalRenderPlanPipelineTests
 
         Assert.Equal(ChartRenderDensityMode.ViewportRefined, result.RenderPlan.Density.Mode);
         Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.Equal(ChartBackendCapabilities.LiveChartsWpf.BackendKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.BackendKey]);
     }
 
     [Fact]
@@ -119,6 +120,7 @@ public sealed class AnalyticalRenderPlanPipelineTests
 
         Assert.Equal(ChartRenderPlanKind.Hierarchy, result.RenderPlan.PlanKind);
         Assert.Equal(ConsumerProviderContracts.SyncfusionSunburst.ProviderKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.Equal(ChartBackendCapabilities.SyncfusionSunburst.BackendKey, result.RenderPlan.Metadata[ChartRenderPlanMetadataKeys.BackendKey]);
     }
 
     [Fact]
@@ -267,6 +269,7 @@ public sealed class AnalyticalRenderPlanPipelineTests
         {
             Assert.Equal(ChartRenderDensityMode.ViewportRefined, plan.Density.Mode);
             Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, plan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+            Assert.Equal(ChartBackendCapabilities.LiveChartsWpf.BackendKey, plan.Metadata[ChartRenderPlanMetadataKeys.BackendKey]);
         });
     }
 

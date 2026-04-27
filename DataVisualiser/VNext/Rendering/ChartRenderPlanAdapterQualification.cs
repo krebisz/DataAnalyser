@@ -3,9 +3,11 @@ namespace DataVisualiser.VNext.Rendering;
 public sealed record ChartRenderPlanAdapterQualification(
     bool SupportsPlanKind,
     string? RequiredProviderKey,
-    bool ProviderMatchesAdapter)
+    string? RequiredBackendKey,
+    bool ProviderMatchesAdapter,
+    bool BackendMatchesAdapter)
 {
-    public bool IsQualified => SupportsPlanKind && ProviderMatchesAdapter;
+    public bool IsQualified => SupportsPlanKind && ProviderMatchesAdapter && BackendMatchesAdapter;
 }
 
 public static class ChartRenderPlanAdapterQualificationRules
@@ -19,13 +21,18 @@ public static class ChartRenderPlanAdapterQualificationRules
 
         var supportsPlanKind = capabilities.Supports(plan.PlanKind);
         var requiredProviderKey = ResolveProviderKey(plan);
+        var requiredBackendKey = ResolveBackendKey(plan);
         var providerMatchesAdapter = requiredProviderKey == null ||
             string.Equals(requiredProviderKey, capabilities.BackendKey, StringComparison.OrdinalIgnoreCase);
+        var backendMatchesAdapter = requiredBackendKey == null ||
+            BackendMatches(capabilities.BackendKey, requiredBackendKey);
 
         return new ChartRenderPlanAdapterQualification(
             supportsPlanKind,
             requiredProviderKey,
-            providerMatchesAdapter);
+            requiredBackendKey,
+            providerMatchesAdapter,
+            backendMatchesAdapter);
     }
 
     public static bool CanRender(
@@ -39,5 +46,19 @@ public static class ChartRenderPlanAdapterQualificationRules
                !string.IsNullOrWhiteSpace(providerKey)
             ? providerKey
             : null;
+    }
+
+    private static string? ResolveBackendKey(ChartRenderPlan plan)
+    {
+        return plan.Metadata.TryGetValue(ChartRenderPlanMetadataKeys.BackendKey, out var backendKey) &&
+               !string.IsNullOrWhiteSpace(backendKey)
+            ? backendKey
+            : null;
+    }
+
+    private static bool BackendMatches(string adapterBackendKey, string requiredBackendKey)
+    {
+        return string.Equals(requiredBackendKey, adapterBackendKey, StringComparison.OrdinalIgnoreCase) ||
+               requiredBackendKey.StartsWith($"{adapterBackendKey}.", StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -161,4 +161,63 @@ public sealed class ConsumerProviderRegistryTests
         Assert.False(added);
         Assert.False(metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderKey));
     }
+
+    [Fact]
+    public void RenderDeliveryBinding_ShouldResolveProviderWithoutBackendCandidates()
+    {
+        var binding = ChartRenderDeliveryBinding.Resolve(
+            ConsumerProviderRegistry.BuiltIn,
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
+            ChartRenderPlanKind.Cartesian);
+
+        Assert.Equal(ChartRenderPlanKind.Cartesian, binding.PlanKind);
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, binding.Provider.ProviderKey);
+        Assert.Null(binding.Backend);
+    }
+
+    [Fact]
+    public void RenderDeliveryBinding_ShouldResolveProviderQualifiedBackend()
+    {
+        var binding = ChartRenderDeliveryBinding.Resolve(
+            ConsumerProviderRegistry.BuiltIn,
+            ConsumerDeliveryContract.HierarchyChart(ChartProgramKind.SyncfusionSunburst, "SyncfusionSunburst"),
+            ChartRenderPlanKind.Hierarchy,
+            ChartBackendCandidateSet.BuiltIn);
+
+        Assert.Equal(ConsumerProviderContracts.SyncfusionSunburst.ProviderKey, binding.Provider.ProviderKey);
+        Assert.Equal(ChartBackendCapabilities.SyncfusionSunburst.BackendKey, binding.Backend?.BackendKey);
+    }
+
+    [Fact]
+    public void RenderDeliveryBinding_ShouldAttachProviderAndBackendMetadata()
+    {
+        var binding = ChartRenderDeliveryBinding.Resolve(
+            ConsumerProviderRegistry.BuiltIn,
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
+            ChartRenderPlanKind.Cartesian,
+            ChartBackendCandidateSet.BuiltIn);
+        var metadata = new Dictionary<string, string>();
+
+        binding.AddTo(metadata);
+
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.Equal(ChartBackendCapabilities.LiveChartsWpf.BackendKey, metadata[ChartRenderPlanMetadataKeys.BackendKey]);
+        Assert.Equal(ChartBackendCapabilities.LiveChartsWpf.DisplayName, metadata[ChartRenderPlanMetadataKeys.BackendDisplayName]);
+    }
+
+    [Fact]
+    public void RenderDeliveryBinding_ShouldRejectProviderBackendMismatch()
+    {
+        var candidates = new ChartBackendCandidateSet([ChartBackendCapabilities.SyncfusionSunburst]);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ChartRenderDeliveryBinding.Resolve(
+                ConsumerProviderRegistry.BuiltIn,
+                ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
+                ChartRenderPlanKind.Cartesian,
+                candidates));
+
+        Assert.Contains("Cartesian", ex.Message, StringComparison.Ordinal);
+        Assert.Contains(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, ex.Message, StringComparison.Ordinal);
+    }
 }

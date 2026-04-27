@@ -3,6 +3,7 @@ namespace DataVisualiser.VNext.Rendering;
 public static class ChartRenderPlanMetadataKeys
 {
     public const string BackendKey = "BackendKey";
+    public const string BackendDisplayName = "BackendDisplayName";
     public const string IntentSignature = "IntentSignature";
     public const string ProvenanceSignature = "ProvenanceSignature";
     public const string ConsumerKind = "ConsumerKind";

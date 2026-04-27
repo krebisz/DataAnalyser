@@ -42,14 +42,29 @@ public sealed class ChartRenderPlanAdapterDispatcher<TSurface>
         var adapter = _adapters.FirstOrDefault(candidate => candidate.CanRender(plan));
         if (adapter == null)
         {
-            var providerDescription = plan.Metadata.TryGetValue(ChartRenderPlanMetadataKeys.ProviderKey, out var providerKey) &&
-                                      !string.IsNullOrWhiteSpace(providerKey)
+            var providerDescription = TryReadMetadata(plan, ChartRenderPlanMetadataKeys.ProviderKey, out var providerKey)
                 ? $" for provider '{providerKey}'"
                 : string.Empty;
+            var backendDescription = TryReadMetadata(plan, ChartRenderPlanMetadataKeys.BackendKey, out var backendKey)
+                ? $" and backend '{backendKey}'"
+                : string.Empty;
             throw new InvalidOperationException(
-                $"No chart render adapter supports render plan kind '{plan.PlanKind}'{providerDescription}.");
+                $"No chart render adapter supports render plan kind '{plan.PlanKind}'{providerDescription}{backendDescription}.");
         }
 
         return await adapter.ApplyAsync(surface, plan, cancellationToken);
+    }
+
+    private static bool TryReadMetadata(ChartRenderPlan plan, string key, out string value)
+    {
+        if (plan.Metadata.TryGetValue(key, out var candidate) &&
+            !string.IsNullOrWhiteSpace(candidate))
+        {
+            value = candidate;
+            return true;
+        }
+
+        value = string.Empty;
+        return false;
     }
 }

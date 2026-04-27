@@ -80,7 +80,9 @@ public sealed class ChartRenderPlanAdapterTests
 
         Assert.True(qualification.SupportsPlanKind);
         Assert.Null(qualification.RequiredProviderKey);
+        Assert.Null(qualification.RequiredBackendKey);
         Assert.True(qualification.ProviderMatchesAdapter);
+        Assert.True(qualification.BackendMatchesAdapter);
         Assert.True(qualification.IsQualified);
     }
 
@@ -97,9 +99,60 @@ public sealed class ChartRenderPlanAdapterTests
 
         Assert.Equal("SyncfusionSunburst", liveChartsQualification.RequiredProviderKey);
         Assert.False(liveChartsQualification.ProviderMatchesAdapter);
+        Assert.True(liveChartsQualification.BackendMatchesAdapter);
         Assert.False(liveChartsQualification.IsQualified);
         Assert.True(syncfusionQualification.ProviderMatchesAdapter);
+        Assert.True(syncfusionQualification.BackendMatchesAdapter);
         Assert.False(syncfusionQualification.IsQualified);
+    }
+
+    [Fact]
+    public void AdapterQualification_ShouldRequireMatchingBackendWhenMetadataIsPresent()
+    {
+        var plan = CreateCartesianPlanWithBackend("SyncfusionSunburst");
+        var liveChartsQualification = ChartRenderPlanAdapterQualificationRules.Evaluate(
+            ChartBackendCapabilities.LiveChartsWpf,
+            plan);
+        var syncfusionQualification = ChartRenderPlanAdapterQualificationRules.Evaluate(
+            ChartBackendCapabilities.SyncfusionSunburst,
+            plan);
+
+        Assert.Equal("SyncfusionSunburst", liveChartsQualification.RequiredBackendKey);
+        Assert.False(liveChartsQualification.BackendMatchesAdapter);
+        Assert.False(liveChartsQualification.IsQualified);
+        Assert.True(syncfusionQualification.BackendMatchesAdapter);
+        Assert.False(syncfusionQualification.IsQualified);
+    }
+
+    [Fact]
+    public void AdapterQualification_ShouldAllowProviderScopedBackendMetadata()
+    {
+        var plan = CreateCartesianPlanWithBackend("LiveChartsWpf.Column");
+        var qualification = ChartRenderPlanAdapterQualificationRules.Evaluate(
+            ChartBackendCapabilities.LiveChartsWpf,
+            plan);
+
+        Assert.Equal("LiveChartsWpf.Column", qualification.RequiredBackendKey);
+        Assert.True(qualification.BackendMatchesAdapter);
+        Assert.True(qualification.IsQualified);
+    }
+
+    [Fact]
+    public async Task Dispatcher_ShouldFailWhenBackendMetadataSelectsDifferentAdapter()
+    {
+        var surface = new FakeRenderSurface();
+        var plan = CreateCartesianPlanWithBackend("SyncfusionSunburst");
+        var dispatcher = new ChartRenderPlanAdapterDispatcher<FakeRenderSurface>(
+            [
+                new FakeCartesianAdapter(),
+                new FakeHierarchyAdapter()
+            ]);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await dispatcher.ApplyAsync(surface, plan));
+
+        Assert.Contains("Cartesian", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("SyncfusionSunburst", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -132,6 +185,17 @@ public sealed class ChartRenderPlanAdapterTests
         var metadata = new Dictionary<string, string>(plan.Metadata)
         {
             [ChartRenderPlanMetadataKeys.ProviderKey] = providerKey
+        };
+
+        return plan with { Metadata = metadata };
+    }
+
+    private static ChartRenderPlan CreateCartesianPlanWithBackend(string backendKey)
+    {
+        var plan = CreateCartesianPlan();
+        var metadata = new Dictionary<string, string>(plan.Metadata)
+        {
+            [ChartRenderPlanMetadataKeys.BackendKey] = backendKey
         };
 
         return plan with { Metadata = metadata };
