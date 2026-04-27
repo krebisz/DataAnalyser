@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-04-27 09:20:33
+Generated: 2026-04-27 19:01:25
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -184,6 +184,7 @@ DataAnalyser/
           SecondaryMetricChartRenderInvocationStage.cs
           SecondaryMetricChartRenderRequest.cs
           SecondaryMetricChartStrategySelectionStage.cs
+        CartesianMetricChartRenderInvoker.cs
         ChartCumulativeSeriesBuilder.cs
         ChartDataContext.cs
         ChartDataContextBuilder.cs
@@ -191,8 +192,11 @@ DataAnalyser/
         ChartRenderingOrchestrator.cs
         ChartUpdateCoordinator.cs
         ChartYAxisDataBuilder.cs
+        ICartesianMetricChartRenderInvoker.cs
+        ITransformChartRenderInvoker.cs
         MetricLoadRequest.cs
         StrategySelectionService.cs
+        TransformChartRenderInvoker.cs
         WeekdayTrendChartUpdateCoordinator.cs
       Rendering/
         Adapters/
@@ -201,23 +205,38 @@ DataAnalyser/
         BarPie/
           BarPieBackendQualification.cs
           BarPieRenderingCapabilities.cs
-          BarPieRenderingContract.cs
           BarPieRenderingQualificationProbe.cs
           BarPieRenderingQualificationProbeResult.cs
-          BarPieRenderingRouteResolver.cs
-          BarPieRenderingTypes.cs
-          IBarPieRenderingContract.cs
         CartesianMetrics/
-          CartesianMetricChartRenderingContract.cs
           CartesianMetricChartRenderingQualificationProbe.cs
-          CartesianMetricChartRenderInvoker.cs
-          ICartesianMetricChartRenderingContract.cs
-          ICartesianMetricChartRenderInvoker.cs
+        Contracts/
+          BarPie/
+            BarPieRenderingContract.cs
+            BarPieRenderingRouteResolver.cs
+            BarPieRenderingTypes.cs
+            IBarPieRenderingContract.cs
+          CartesianMetrics/
+            CartesianMetricChartRenderingContract.cs
+            ICartesianMetricChartRenderingContract.cs
+          Distribution/
+            DistributionPolarProjectionInteraction.cs
+            DistributionRenderingContract.cs
+            IDistributionRenderingContract.cs
+          Syncfusion/
+            ISyncfusionSunburstRenderingContract.cs
+            SyncfusionSunburstRenderingContract.cs
+            SyncfusionSunburstRenderingTypes.cs
+          Transform/
+            ITransformRenderingContract.cs
+            TransformRenderingContract.cs
+            TransformRenderingTypes.cs
+          WeekdayTrend/
+            IWeekdayTrendRenderingContract.cs
+            WeekdayTrendRenderingContract.cs
+          ChartRenderModel.cs
         Distribution/
-          DistributionRenderingContract.cs
           DistributionRenderingQualificationProbe.cs
           DistributionRenderPlanAdapter.cs
-          IDistributionRenderingContract.cs
         Engines/
           ChartRenderEngine.cs
           DistributionPolarRenderingService.cs
@@ -237,28 +256,15 @@ DataAnalyser/
           SeriesAlignmentHelper.cs
           TransformChartAxisCalculator.cs
         Interaction/
-          BucketDistributionTooltip.cs
-          ChartInteractionVisualHelper.cs
           ChartStackingTooltipState.cs
-          ChartTooltipManager.cs
-          ChartTooltipParticipationCalculator.cs
-          DistributionPolarProjectionTooltip.cs
-          HourlyDistributionTooltip.cs
-          SimpleChartTooltip.cs
-          WeeklyDistributionTooltip.cs
+          IChartTimestampSink.cs
         Shading/
           BucketIntervalRenderer.cs
-          FrequencyBasedShadingStrategy.cs
           FrequencyShadingRenderer.cs
           HourlyIntervalRenderer.cs
           IFrequencyShadingRenderer.cs
-          IIntervalShadingStrategy.cs
-          IntervalShadingContext.cs
           WeeklyIntervalRenderer.cs
         Syncfusion/
-          ISyncfusionSunburstRenderingContract.cs
-          SyncfusionSunburstRenderingContract.cs
-          SyncfusionSunburstRenderingTypes.cs
           SyncfusionSunburstRenderPlanAdapter.cs
         Tooltip/
           ChartTooltipCumulativeFormatter.cs
@@ -269,21 +275,13 @@ DataAnalyser/
           ChartTooltipStackedFormatter.cs
           ChartTooltipValueFormatter.cs
         Transform/
-          ITransformChartRenderInvoker.cs
-          ITransformRenderingContract.cs
           TransformBackendQualification.cs
-          TransformChartRenderInvoker.cs
           TransformRenderingCapabilities.cs
-          TransformRenderingContract.cs
           TransformRenderingQualificationProbe.cs
           TransformRenderingQualificationProbeResult.cs
-          TransformRenderingTypes.cs
         WeekdayTrend/
-          IWeekdayTrendRenderingContract.cs
-          WeekdayTrendRenderingContract.cs
           WeekdayTrendRenderingQualificationProbe.cs
           WeekdayTrendRenderPlanAdapter.cs
-        ChartRenderModel.cs
         ChartSeriesMode.cs
         RenderingQualificationProbeSupport.cs
       Services/
@@ -292,6 +290,7 @@ DataAnalyser/
           IDataPreparationService.cs
           IDistributionConfiguration.cs
           IDistributionService.cs
+          IDistributionTooltipFactory.cs
           ISmoothingService.cs
           ITimelineService.cs
           IUnitResolutionService.cs
@@ -317,6 +316,8 @@ DataAnalyser/
       Strategies/
         Abstractions/
           IChartComputationStrategy.cs
+          IIntervalShadingStrategy.cs
+          IntervalShadingContext.cs
           IStrategyCutOverService.cs
           IStrategyFactory.cs
           IWeekdayTrendResultProvider.cs
@@ -340,6 +341,7 @@ DataAnalyser/
           CmsWeeklyDistributionStrategy.cs
           CombinedMetricStrategy.cs
           DifferenceStrategy.cs
+          FrequencyBasedShadingStrategy.cs
           HourlyDistributionStrategy.cs
           MultiMetricStrategy.cs
           NormalizedStrategy.cs
@@ -454,6 +456,18 @@ DataAnalyser/
           TransformDataPanelControllerV2.xaml.cs
           WeekdayTrendChartController.xaml
           WeekdayTrendChartController.xaml.cs
+        Interaction/
+          BucketDistributionTooltip.cs
+          ChartInteractionVisualHelper.cs
+          ChartTooltipManager.cs
+          ChartTooltipParticipationCalculator.cs
+          DistributionPolarProjectionInteractionFactory.cs
+          DistributionPolarProjectionTooltip.cs
+          HourlyDistributionTooltip.cs
+          HourlyDistributionTooltipFactory.cs
+          SimpleChartTooltip.cs
+          WeeklyDistributionTooltip.cs
+          WeeklyDistributionTooltipFactory.cs
         Presentation/
           ECharts/
             EChartsChartRenderer.cs
@@ -970,7 +984,6 @@ DataAnalyser/
     Project Overview.md
     Project Philosophy.md
     Project Roadmap.md
-    reachability-20260427-070547.json
     SYSTEM_MAP.md
     TODO Enhancements.md
     Workspace Workflow.md

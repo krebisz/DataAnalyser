@@ -112,6 +112,11 @@ public sealed class MainChartsViewChartUpdateCoordinator
             await actions.RenderChartAsync(ChartControllerKeys.BarPie, safeContext);
     }
 
+    public static bool ShouldRestoreChartsWhenViewLoads(bool isInitializing, ChartDataContext? context)
+    {
+        return !isInitializing && ShouldRenderCharts(context);
+    }
+
     public async Task RenderSingleChartAsync(ChartState chartState, string chartName, ChartDataContext context, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(chartState);

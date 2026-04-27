@@ -35,7 +35,7 @@ internal sealed class MainChartsViewStateSyncCoordinator
             actions.SetMetricType(metricType);
 
         var selections = viewModel.MetricState.SelectedSeries.ToList();
-        if (selections.Count > 0)
+        if (selections.Count > 0 && metricType != null)
             actions.ApplySubtypeSelections(selections, metricType);
 
         actions.SelectBarPieBucketCount(viewModel.ChartState.BarPieBucketCount);

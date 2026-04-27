@@ -263,6 +263,14 @@ public sealed class ChartControllerFactoryTests
     private sealed class FakeSyncfusionSunburstChartController : FakeChartPanelHost, ISyncfusionSunburstChartController
     {
         public object? ItemsSource { get; set; }
+        public bool HasItems => ItemsSource is IEnumerable<DataVisualiser.UI.Charts.Syncfusion.SunburstItem> items && items.Any();
+
+        public void SetItems(IReadOnlyList<DataVisualiser.Core.Rendering.Syncfusion.SyncfusionSunburstItem> items)
+        {
+            ItemsSource = items
+                .Select(item => new DataVisualiser.UI.Charts.Syncfusion.SunburstItem(item.Bucket, item.Submetric, item.Value))
+                .ToArray();
+        }
     }
 
     private sealed class NoOpDisposable : IDisposable

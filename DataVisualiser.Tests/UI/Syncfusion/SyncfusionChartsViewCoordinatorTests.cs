@@ -18,10 +18,9 @@ public sealed class SyncfusionChartsViewCoordinatorTests
     {
         var coordinator = new SyncfusionChartsViewCoordinator();
 
-        Assert.True(coordinator.ShouldRenderAfterSubtypeSelectionChange(false, true, Context));
-        Assert.False(coordinator.ShouldRenderAfterSubtypeSelectionChange(true, true, Context));
-        Assert.False(coordinator.ShouldRenderAfterSubtypeSelectionChange(false, false, Context));
-        Assert.False(coordinator.ShouldRenderAfterSubtypeSelectionChange(false, true, null));
+        Assert.True(coordinator.ShouldRenderAfterSubtypeSelectionChange(false, true));
+        Assert.False(coordinator.ShouldRenderAfterSubtypeSelectionChange(true, true));
+        Assert.False(coordinator.ShouldRenderAfterSubtypeSelectionChange(false, false));
     }
 
     [Fact]

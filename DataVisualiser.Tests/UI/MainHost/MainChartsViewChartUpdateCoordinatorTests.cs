@@ -224,6 +224,15 @@ public sealed class MainChartsViewChartUpdateCoordinatorTests
     }
 
     [Fact]
+    public void ShouldRestoreChartsWhenViewLoads_IsTrueOnlyForInitializedViewWithRenderableContext()
+    {
+        Assert.True(MainChartsViewChartUpdateCoordinator.ShouldRestoreChartsWhenViewLoads(false, CreateContext()));
+        Assert.False(MainChartsViewChartUpdateCoordinator.ShouldRestoreChartsWhenViewLoads(true, CreateContext()));
+        Assert.False(MainChartsViewChartUpdateCoordinator.ShouldRestoreChartsWhenViewLoads(false, null));
+        Assert.False(MainChartsViewChartUpdateCoordinator.ShouldRestoreChartsWhenViewLoads(false, new ChartDataContext()));
+    }
+
+    [Fact]
     public async Task RenderSingleChartAsync_ShouldRenderRequestedVisibleChart()
     {
         var rendered = new List<string>();

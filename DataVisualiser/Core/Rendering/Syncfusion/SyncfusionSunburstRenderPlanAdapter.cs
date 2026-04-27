@@ -1,4 +1,3 @@
-using DataVisualiser.UI.Charts.Syncfusion;
 using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.Syncfusion;
@@ -24,9 +23,9 @@ public sealed class SyncfusionSunburstRenderPlanAdapter : IChartRenderPlanAdapte
 
         var items = surface.IsVisible
             ? FlattenHierarchy(plan.HierarchyRoots)
-            : Array.Empty<SunburstItem>();
+            : Array.Empty<SyncfusionSunburstItem>();
 
-        surface.Controller.ItemsSource = items;
+        surface.Target.SetItems(items);
 
         return ValueTask.FromResult(new ChartRenderAdapterResult(
             SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy,
@@ -39,19 +38,19 @@ public sealed class SyncfusionSunburstRenderPlanAdapter : IChartRenderPlanAdapte
             plan.Metadata));
     }
 
-    private static IReadOnlyList<SunburstItem> FlattenHierarchy(IReadOnlyList<ChartHierarchyNodePlan> roots)
+    private static IReadOnlyList<SyncfusionSunburstItem> FlattenHierarchy(IReadOnlyList<ChartHierarchyNodePlan> roots)
     {
-        var items = new List<SunburstItem>();
+        var items = new List<SyncfusionSunburstItem>();
         foreach (var root in roots)
         {
             foreach (var child in root.Children)
-                items.Add(new SunburstItem(root.Label, child.Label, child.Value));
+                items.Add(new SyncfusionSunburstItem(root.Label, child.Label, child.Value));
         }
 
         return items;
     }
 
-    private static int CountDistinctSubmetrics(IReadOnlyList<SunburstItem> items)
+    private static int CountDistinctSubmetrics(IReadOnlyList<SyncfusionSunburstItem> items)
     {
         return items
             .Select(item => item.Submetric)

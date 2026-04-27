@@ -64,6 +64,58 @@ public sealed class MainChartsViewStateSyncCoordinatorTests
     }
 
     [Fact]
+    public void Apply_WhenMetricTypeOptionsEmpty_ShouldNotCallSetMetricTypeOrApplySubtypeSelections()
+    {
+        var metricState = new MetricState { SelectedMetricType = "Weight" };
+        metricState.SetSeriesSelections([new DataVisualiser.Shared.Models.MetricSeriesSelection("Weight", "avg")]);
+        var viewModel = new MainWindowViewModel(new ChartState(), metricState, new UiState(), new DataVisualiser.Core.Services.MetricSelectionService("TestConnection"));
+        var coordinator = new MainChartsViewStateSyncCoordinator();
+
+        var setMetricTypeCalled = false;
+        var applySubtypeSelectionsCalled = false;
+
+        coordinator.Apply(
+            viewModel,
+            [],
+            new MainChartsViewStateSyncCoordinator.Actions(
+                _ => { },
+                _ => { },
+                _ => { },
+                _ => setMetricTypeCalled = true,
+                (_, _) => applySubtypeSelectionsCalled = true,
+                _ => { }));
+
+        Assert.False(setMetricTypeCalled);
+        Assert.False(applySubtypeSelectionsCalled);
+    }
+
+    [Fact]
+    public void Apply_WhenSavedMetricTypeNotInOptions_ShouldNotCallSetMetricTypeOrApplySubtypeSelections()
+    {
+        var metricState = new MetricState { SelectedMetricType = "Steps" };
+        metricState.SetSeriesSelections([new DataVisualiser.Shared.Models.MetricSeriesSelection("Steps", "avg")]);
+        var viewModel = new MainWindowViewModel(new ChartState(), metricState, new UiState(), new DataVisualiser.Core.Services.MetricSelectionService("TestConnection"));
+        var coordinator = new MainChartsViewStateSyncCoordinator();
+
+        var setMetricTypeCalled = false;
+        var applySubtypeSelectionsCalled = false;
+
+        coordinator.Apply(
+            viewModel,
+            [new DataVisualiser.Shared.Models.MetricNameOption("Weight", "Weight")],
+            new MainChartsViewStateSyncCoordinator.Actions(
+                _ => { },
+                _ => { },
+                _ => { },
+                _ => setMetricTypeCalled = true,
+                (_, _) => applySubtypeSelectionsCalled = true,
+                _ => { }));
+
+        Assert.False(setMetricTypeCalled);
+        Assert.False(applySubtypeSelectionsCalled);
+    }
+
+    [Fact]
     public void ApplyComboSelectionByValue_ShouldSelectMatchingSubtype()
     {
         StaTestHelper.Run(() =>

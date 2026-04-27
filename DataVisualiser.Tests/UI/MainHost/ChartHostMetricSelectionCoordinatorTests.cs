@@ -122,6 +122,38 @@ public sealed class ChartHostMetricSelectionCoordinatorTests
     }
 
     [Fact]
+    public void HandleSubtypesLoaded_ShouldReturnApplySelectionStateWhenDataAlreadyLoaded()
+    {
+        // Syncfusion→Charts tab-switch scenario: HasLoadedData is true (shared viewmodel carries
+        // a valid LastContext) and SelectedSeriesCount > 0 and not initializing.
+        // The coordinator returns ApplySelectionState — which is why _pendingTabSwitchRestore
+        // must be checked before the followUp branches in OnSubtypesLoaded. Without that early
+        // check, the standard ApplySelectionState path overwrites the combos with defaulted state
+        // before CompleteTabSwitchRestoreAsync can apply the saved selections.
+        var coordinator = new ChartHostMetricSelectionCoordinator();
+
+        var result = coordinator.HandleSubtypesLoaded(
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedInput(
+                [new MetricNameOption("Weight", "Weight")],
+                new MetricNameOption("Weight", "Weight"),
+                IsMetricTypeChangePending: false,
+                HasLoadedData: true,
+                ShouldRefreshDateRangeForCurrentSelection: true,
+                IsInitializing: false,
+                SelectedSeriesCount: 2),
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedActions(
+                _ => { },
+                () => new TestScope(() => { }),
+                () => new TestScope(() => { }),
+                (_, _, _) => { },
+                _ => { },
+                () => { },
+                _ => { }));
+
+        Assert.Equal(ChartHostMetricSelectionCoordinator.SubtypesFollowUp.ApplySelectionState, result);
+    }
+
+    [Fact]
     public void HandleSubtypesLoaded_ShouldReturnApplySelectionStateWhenSelectionExistsAndNotInitializing()
     {
         var coordinator = new ChartHostMetricSelectionCoordinator();
@@ -145,6 +177,43 @@ public sealed class ChartHostMetricSelectionCoordinatorTests
                 _ => { }));
 
         Assert.Equal(ChartHostMetricSelectionCoordinator.SubtypesFollowUp.ApplySelectionState, result);
+    }
+
+    [Fact]
+    public void HandleSubtypesLoaded_ShouldCallUpdateSelectedSubtypesInViewModelBeforeReturningApplySelectionState()
+    {
+        // This pins the call ordering that MainChartsView depends on:
+        // UpdateSelectedSubtypesInViewModel runs synchronously inside HandleSubtypesLoaded,
+        // so the delegate passed from CreateSubtypesLoadedActions can suppress it when
+        // _pendingTabSwitchRestore is set — preventing the saved selections from being
+        // overwritten with the freshly-defaulted combo state before CompleteTabSwitchRestoreAsync runs.
+        var coordinator = new ChartHostMetricSelectionCoordinator();
+        var calls = new List<string>();
+
+        var result = coordinator.HandleSubtypesLoaded(
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedInput(
+                [new MetricNameOption("Weight", "Weight")],
+                new MetricNameOption("Weight", "Weight"),
+                IsMetricTypeChangePending: false,
+                HasLoadedData: false,
+                ShouldRefreshDateRangeForCurrentSelection: false,
+                IsInitializing: false,
+                SelectedSeriesCount: 1),
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedActions(
+                value => calls.Add($"sync:{value}"),
+                () => new TestScope(() => calls.Add("suppress:dispose")),
+                () => new TestScope(() => calls.Add("batch:dispose")),
+                (_, _, _) => calls.Add("refresh-primary"),
+                _ => calls.Add("build-dynamic"),
+                () => calls.Add("update-selected"),
+                _ => { }));
+
+        Assert.Equal(ChartHostMetricSelectionCoordinator.SubtypesFollowUp.ApplySelectionState, result);
+        Assert.Contains("update-selected", calls);
+        // Must complete before sync is re-enabled (i.e. before the outer sync:False)
+        var updateIndex = calls.IndexOf("update-selected");
+        var syncOffIndex = calls.LastIndexOf("sync:False");
+        Assert.True(updateIndex < syncOffIndex, "UpdateSelectedSubtypesInViewModel must run while sync suppression is still active");
     }
 
     private sealed class TestScope : IDisposable

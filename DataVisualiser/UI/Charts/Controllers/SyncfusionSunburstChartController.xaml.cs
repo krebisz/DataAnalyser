@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Syncfusion;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Syncfusion;
 using DataVisualiser.Shared.Helpers;
@@ -81,6 +82,8 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         set => SetValue(ItemsSourceProperty, value);
     }
 
+    public bool HasItems => _rawItems.Count > 0;
+
     public ChartPanelController Panel => PanelController;
 
     public Button ToggleButton => PanelController.ToggleButtonControl;
@@ -104,6 +107,13 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
     }
 
     public event EventHandler? ToggleRequested;
+
+    public void SetItems(IReadOnlyList<SyncfusionSunburstItem> items)
+    {
+        ItemsSource = (items ?? Array.Empty<SyncfusionSunburstItem>())
+            .Select(item => new SunburstItem(item.Bucket, item.Submetric, item.Value))
+            .ToArray();
+    }
 
     public void SetHeaderControls(UIElement? controls)
     {

@@ -15,9 +15,9 @@ public sealed class SyncfusionChartsViewCoordinator
         return ReachabilityExportWiredMessage;
     }
 
-    public bool ShouldRenderAfterSubtypeSelectionChange(bool isApplyingSelectionSync, bool hasLoadedData, ChartDataContext? context)
+    public bool ShouldRenderAfterSubtypeSelectionChange(bool isApplyingSelectionSync, bool canRenderCurrentSelection)
     {
-        return !isApplyingSelectionSync && hasLoadedData && context != null;
+        return !isApplyingSelectionSync && canRenderCurrentSelection;
     }
 
     public bool ShouldRenderAfterVisibilityOnlyToggle(ChartUpdateRequestedEventArgs args, ChartDataContext? context)

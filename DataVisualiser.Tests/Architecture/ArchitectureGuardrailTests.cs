@@ -562,6 +562,65 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void SyncfusionChartsView_ShouldRenderSubtypeChangesFromCurrentSelection_NotOnlyLoadedContext()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var subtypeChangedBody = ExtractMethodBody(source, "private async void OnAnySubtypeSelectionChanged");
+        var addSubtypeBody = ExtractMethodBody(source, "private async void AddSubtypeComboBox");
+
+        Assert.Contains("HasRenderableSelection()", subtypeChangedBody, StringComparison.Ordinal);
+        Assert.Contains("LastContext ?? new ChartDataContext()", subtypeChangedBody, StringComparison.Ordinal);
+        Assert.Contains("HasRenderableSelection()", addSubtypeBody, StringComparison.Ordinal);
+        Assert.Contains("LastContext ?? new ChartDataContext()", addSubtypeBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShouldRenderAfterSubtypeSelectionChange(_isApplyingSelectionSync, HasRenderableContext()", subtypeChangedBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldRestoreVisibleChartsFromSharedContextWhenLoaded()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var onLoadedBody = ExtractMethodBody(source, "private async void OnLoaded");
+        var restoreBody = ExtractMethodBody(source, "private async Task RestoreChartsFromSharedLastContextAsync");
+        var completeRestoreBody = ExtractMethodBody(source, "private async Task CompleteTabSwitchRestoreAsync");
+        var visibilityBody = ExtractMethodBody(source, "private async void OnViewVisibilityChanged");
+
+        var subtypesLoadedBody = ExtractMethodBody(source, "private void OnSubtypesLoaded");
+        var subtypesLoadedActionsBody = ExtractMethodBody(source, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions");
+
+        Assert.Contains("RestoreChartsFromSharedLastContextAsync", onLoadedBody, StringComparison.Ordinal);
+        Assert.Contains("ShouldRestoreChartsWhenViewLoads(_isInitializing, ctx)", restoreBody, StringComparison.Ordinal);
+        // Deferred path: metric types not loaded OR saved metric type differs from what TablesCombo
+        // currently shows (e.g. data was loaded under a different type in the Syncfusion tab).
+        // In both cases set the flag and reload subtypes before completing the restore.
+        Assert.Contains("TablesCombo.Items.Count == 0", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("needsSubtypeReload", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("_pendingTabSwitchRestore = true", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("LoadSubtypesCommand", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("CompleteTabSwitchRestoreAsync", restoreBody, StringComparison.Ordinal);
+        // Direct path: full restore lives in CompleteTabSwitchRestoreAsync
+        Assert.Contains("_dataLoadedCoordinator.HandleAsync", completeRestoreBody, StringComparison.Ordinal);
+        Assert.Contains("RenderChartsFromLastContext()", completeRestoreBody, StringComparison.Ordinal);
+        // The pending flag must be checked before the followUp branches in OnSubtypesLoaded.
+        // With HasLoadedData true the coordinator returns ApplySelectionState; without the early
+        // check that branch overwrites the combos with defaulted state before CompleteTabSwitchRestoreAsync runs.
+        var pendingFlagIndex = subtypesLoadedBody.IndexOf("_pendingTabSwitchRestore", StringComparison.Ordinal);
+        var applySelectionBranchIndex = subtypesLoadedBody.IndexOf("SubtypesFollowUp.ApplySelectionState", StringComparison.Ordinal);
+        Assert.True(pendingFlagIndex >= 0, "_pendingTabSwitchRestore check missing from OnSubtypesLoaded");
+        Assert.True(pendingFlagIndex < applySelectionBranchIndex, "_pendingTabSwitchRestore must be checked before ApplySelectionState branch");
+        // UpdateSelectedSubtypesInViewModel must be suppressed during a pending restore so
+        // HandleSubtypesLoaded cannot overwrite the saved selections before CompleteTabSwitchRestoreAsync applies them.
+        Assert.Contains("_pendingTabSwitchRestore", subtypesLoadedActionsBody, StringComparison.Ordinal);
+        Assert.Contains("UpdateSelectedSubtypesInViewModel", subtypesLoadedActionsBody, StringComparison.Ordinal);
+        // OnLoaded only fires once (first visual-tree entry). Tab-switch back does NOT re-fire Loaded.
+        // OnViewVisibilityChanged handles subsequent tab switches: bind/unbind the event binder and
+        // trigger restore when the view becomes visible again after initialization completes.
+        Assert.Contains("_viewModelEventBinder?.Bind()", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("_viewModelEventBinder?.Unbind()", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("RestoreChartsFromSharedLastContextAsync", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("!_isInitializing", visibilityBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MainChartsViewAndMainHost_ShouldNotReintroduceNamedControlFallbacks()
     {
         var mainChartsViewSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
@@ -923,6 +982,24 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void CoreSyncfusionRendering_ShouldDependOnNeutralSunburstTarget()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [
+                Path.Combine("DataVisualiser", "Core", "Rendering", "Contracts", "Syncfusion"),
+                Path.Combine("DataVisualiser", "Core", "Rendering", "Syncfusion")
+            ],
+            [
+                "DataVisualiser.UI.Charts.Syncfusion",
+                "DataVisualiser.UI.Charts.Presentation",
+                "ISyncfusionSunburstChartController",
+                "new SunburstItem"
+            ]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
     public void CoreOrchestrationAndMainHost_ShouldNotReferenceSyncfusionOrLiveChartsCore()
     {
         var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
@@ -1049,6 +1126,36 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("RecordGridEdited", coordinatorSource, StringComparison.Ordinal);
         Assert.Contains("RecordSaveRequested", coordinatorSource, StringComparison.Ordinal);
         Assert.Contains("RecordSaveCompleted", coordinatorSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionChartsView_ShouldBindAndUnbindViewModelEventsWithVisibility()
+    {
+        // Root cause of the Syncfusion→Charts tab-switch bug: SyncfusionChartsView was permanently
+        // subscribed to MetricTypesLoaded/SubtypesLoaded. When Charts tab triggered LoadSubtypesCommand,
+        // Syncfusion's OnSubtypesLoaded fired and called UpdateSelectedSubtypesInViewModel with
+        // defaulted combo state, overwriting MetricState.SelectedSeries before CompleteTabSwitchRestoreAsync
+        // could apply the saved selections. Fix: use MainChartsViewEventBinder driven by IsVisibleChanged,
+        // matching the bind/unbind contract already used by MainChartsView via Loaded/Unloaded.
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var wireBody = ExtractMethodBody(source, "private void WireViewModelEvents");
+        var visibilityBody = ExtractMethodBody(source, "private async void OnViewVisibilityChanged");
+
+        // WireViewModelEvents must create the binder, not subscribe raw events
+        Assert.Contains("MainChartsViewEventBinder", wireBody, StringComparison.Ordinal);
+        Assert.Contains("_viewModelEventBinder.Bind()", wireBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("+= OnMetricTypesLoaded", wireBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("+= OnSubtypesLoaded", wireBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("+= OnDataLoaded", wireBody, StringComparison.Ordinal);
+
+        // OnViewVisibilityChanged must bind when visible and unbind when hidden
+        Assert.Contains("_viewModelEventBinder?.Bind()", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("_viewModelEventBinder?.Unbind()", visibilityBody, StringComparison.Ordinal);
+
+        // Bind must come before Unbind (true branch first, false branch second)
+        var bindIndex = visibilityBody.IndexOf("_viewModelEventBinder?.Bind()", StringComparison.Ordinal);
+        var unbindIndex = visibilityBody.IndexOf("_viewModelEventBinder?.Unbind()", StringComparison.Ordinal);
+        Assert.True(bindIndex < unbindIndex, "Bind() must appear before Unbind() in OnViewVisibilityChanged");
     }
 
     [Fact]

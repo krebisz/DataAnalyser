@@ -112,6 +112,15 @@ public sealed class SyncfusionSunburstChartControllerAdapterTests
         public object? ItemsSource { get; set; }
         public ChartPanelController Panel { get; } = new();
         public Button ToggleButton { get; } = new();
+
+        public bool HasItems => ItemsSource is IEnumerable<SunburstItem> items && items.Any();
+
+        public void SetItems(IReadOnlyList<SyncfusionSunburstItem> items)
+        {
+            ItemsSource = items
+                .Select(item => new SunburstItem(item.Bucket, item.Submetric, item.Value))
+                .ToArray();
+        }
     }
 
     private sealed class FakeSyncfusionSunburstRenderingContract : ISyncfusionSunburstRenderingContract
@@ -124,7 +133,7 @@ public sealed class SyncfusionSunburstChartControllerAdapterTests
 
         public Task<ChartRenderAdapterResult> RenderAsync(SyncfusionSunburstChartRenderRequest request, SyncfusionSunburstChartRenderHost host)
         {
-            host.Controller.ItemsSource = request.Items;
+            host.Target.SetItems(request.Items);
             return Task.FromResult(new ChartRenderAdapterResult(
                 SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy,
                 "test-syncfusion-plan",

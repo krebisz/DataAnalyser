@@ -45,6 +45,7 @@ public partial class SyncfusionChartsView : UserControl
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isApplyingSelectionSync;
+    private MainChartsViewEventBinder? _viewModelEventBinder;
     private MetricSelectionService _metricSelectionService = null!;
     private SubtypeSelectorManager _selectorManager = null!;
     private List<MetricNameOption>? _subtypeList;
@@ -185,14 +186,18 @@ public partial class SyncfusionChartsView : UserControl
 
     private void WireViewModelEvents()
     {
-        _viewModel.ErrorOccured += OnErrorOccured;
-        _viewModel.MetricTypesLoaded += OnMetricTypesLoaded;
-        _viewModel.SubtypesLoaded += OnSubtypesLoaded;
-        _viewModel.DateRangeLoaded += OnDateRangeLoaded;
-        _viewModel.DataLoaded += OnDataLoaded;
-        _viewModel.ChartVisibilityChanged += OnChartVisibilityChanged;
-        _viewModel.ChartUpdateRequested += OnChartUpdateRequested;
-        _viewModel.SelectionStateChanged += OnSelectionStateChanged;
+        _viewModelEventBinder = new MainChartsViewEventBinder(
+            _viewModel,
+            new MainChartsViewEventBinder.Handlers(
+                OnChartVisibilityChanged,
+                OnErrorOccured,
+                OnMetricTypesLoaded,
+                OnSubtypesLoaded,
+                OnDateRangeLoaded,
+                OnDataLoaded,
+                OnChartUpdateRequested,
+                OnSelectionStateChanged));
+        _viewModelEventBinder.Bind();
     }
 
     private void InitializeDateRange()
@@ -375,9 +380,9 @@ public partial class SyncfusionChartsView : UserControl
 
         UpdateSelectedSubtypesInViewModel();
 
-        if (_coordinator.ShouldRenderAfterSubtypeSelectionChange(_isApplyingSelectionSync, HasRenderableContext(), _viewModel.ChartState.LastContext))
+        if (_coordinator.ShouldRenderAfterSubtypeSelectionChange(_isApplyingSelectionSync, HasRenderableSelection()))
         {
-            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext!);
+            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext ?? new ChartDataContext());
             return;
         }
 
@@ -399,6 +404,14 @@ public partial class SyncfusionChartsView : UserControl
     private bool HasRenderableContext()
     {
         return ChartContextSelectionGuard.HasRenderableContext(_viewModel.ChartState.LastContext, _viewModel.MetricState.SelectedMetricType);
+    }
+
+    private bool HasRenderableSelection()
+    {
+        return !string.IsNullOrWhiteSpace(_viewModel.MetricState.SelectedMetricType) &&
+               _viewModel.MetricState.FromDate.HasValue &&
+               _viewModel.MetricState.ToDate.HasValue &&
+               _viewModel.MetricState.SelectedSeries.Any(selection => selection.QuerySubtype != null);
     }
 
     private bool ShouldRefreshDateRangeForCurrentSelection()
@@ -521,8 +534,8 @@ public partial class SyncfusionChartsView : UserControl
         using var selectionBatch = _viewModel.BeginSelectionStateBatch();
         UpdateSelectedSubtypesInViewModel();
 
-        if (_viewModel.ChartState.LastContext != null)
-            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext);
+        if (HasRenderableSelection())
+            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext ?? new ChartDataContext());
         else if (ShouldRefreshDateRangeForCurrentSelection())
             await LoadDateRangeForSelectedMetrics();
     }
@@ -537,9 +550,8 @@ public partial class SyncfusionChartsView : UserControl
         if (_viewModel.ChartState.IsBarPieVisible)
             _viewModel.RequestChartUpdate(false, ChartControllerKeys.BarPie);
 
-        var ctx = _viewModel.ChartState.LastContext;
-        if (ctx != null)
-            _ = RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx);
+        if (HasRenderableSelection())
+            _ = RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext ?? new ChartDataContext());
     }
 
     private void OnResetZoom(object sender, RoutedEventArgs e)
@@ -759,10 +771,17 @@ public partial class SyncfusionChartsView : UserControl
 
     private async void OnViewVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
+        var isVisible = e.NewValue is bool b && b;
+
+        if (isVisible)
+            _viewModelEventBinder?.Bind();
+        else
+            _viewModelEventBinder?.Unbind();
+
         var ctx = _viewModel.ChartState.LastContext;
         if (_coordinator.ShouldRenderWhenViewBecomesVisible(
                 _isInitializing,
-                e.NewValue is bool isVisible && isVisible,
+                isVisible,
                 _viewModel.ChartState.IsSyncfusionSunburstVisible,
                 ctx))
             await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx!);

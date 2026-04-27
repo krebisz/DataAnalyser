@@ -99,19 +99,19 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
     {
         var selections = GetDistinctSelectedSeries();
         if (selections.Count == 0)
-            return new SyncfusionSunburstRenderModel(Array.Empty<SunburstItem>(), 0, 0, null, null);
+            return new SyncfusionSunburstRenderModel(Array.Empty<SyncfusionSunburstItem>(), 0, 0, null, null);
 
         if (!TryResolveDateRange(out var from, out var to))
-            return new SyncfusionSunburstRenderModel(Array.Empty<SunburstItem>(), 0, selections.Count, null, null);
+            return new SyncfusionSunburstRenderModel(Array.Empty<SyncfusionSunburstItem>(), 0, selections.Count, null, null);
 
         var bucketCount = ResolveBucketCount(from, to);
         var bucketPlan = BuildBucketPlan(from, to, bucketCount);
         var seriesTotals = await LoadSeriesTotalsAsync(selections, from, to, bucketPlan);
 
         if (seriesTotals.Count == 0)
-            return new SyncfusionSunburstRenderModel(Array.Empty<SunburstItem>(), bucketCount, selections.Count, from, to);
+            return new SyncfusionSunburstRenderModel(Array.Empty<SyncfusionSunburstItem>(), bucketCount, selections.Count, from, to);
 
-        var items = new List<SunburstItem>();
+        var items = new List<SyncfusionSunburstItem>();
         foreach (var bucket in bucketPlan.Buckets)
         {
             foreach (var series in seriesTotals)
@@ -124,7 +124,7 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
                     ? series.Selection.DisplayKey
                     : series.Selection.DisplayName;
 
-                items.Add(new SunburstItem(bucket.Label, label, value.Value));
+                items.Add(new SyncfusionSunburstItem(bucket.Label, label, value.Value));
             }
         }
 
@@ -257,7 +257,7 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
     private sealed record BucketPlan(DateTime From, DateTime To, double BucketTicks, IReadOnlyList<Bucket> Buckets);
 
     private sealed record SyncfusionSunburstRenderModel(
-        IReadOnlyList<SunburstItem> Items,
+        IReadOnlyList<SyncfusionSunburstItem> Items,
         int BucketCount,
         int SelectionCount,
         DateTime? From,

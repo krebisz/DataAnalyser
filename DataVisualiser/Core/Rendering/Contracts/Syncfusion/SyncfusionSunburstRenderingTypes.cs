@@ -1,5 +1,3 @@
-using DataVisualiser.UI.Charts.Presentation;
-using DataVisualiser.UI.Charts.Syncfusion;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
 
@@ -15,20 +13,32 @@ public enum SyncfusionSunburstRenderingRoute
     Hierarchy = 0
 }
 
+public sealed record SyncfusionSunburstItem(
+    string Bucket,
+    string Submetric,
+    double Value);
+
+public interface ISyncfusionSunburstRenderTarget
+{
+    void SetItems(IReadOnlyList<SyncfusionSunburstItem> items);
+
+    bool HasItems { get; }
+}
+
 public sealed record SyncfusionSunburstChartRenderRequest(
     SyncfusionSunburstRenderingRoute Route,
-    IReadOnlyList<SunburstItem> Items,
+    IReadOnlyList<SyncfusionSunburstItem> Items,
     int BucketCount,
     int SelectionCount,
     DateTime? From,
     DateTime? To);
 
 public sealed record SyncfusionSunburstChartRenderHost(
-    ISyncfusionSunburstChartController Controller,
+    ISyncfusionSunburstRenderTarget Target,
     bool IsVisible);
 
 public sealed record SyncfusionSunburstRenderSurface(
-    ISyncfusionSunburstChartController Controller,
+    ISyncfusionSunburstRenderTarget Target,
     bool IsVisible);
 
 public static class SyncfusionSunburstRenderPlanBuilder

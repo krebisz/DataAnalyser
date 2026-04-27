@@ -1,4 +1,3 @@
-using DataVisualiser.UI.Charts.Syncfusion;
 using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.Syncfusion;
@@ -21,7 +20,7 @@ public sealed class SyncfusionSunburstRenderingContract : ISyncfusionSunburstRen
 
         var plan = SyncfusionSunburstRenderPlanBuilder.Build(request);
         return await _dispatcher.ApplyAsync(
-            new SyncfusionSunburstRenderSurface(host.Controller, host.IsVisible),
+            new SyncfusionSunburstRenderSurface(host.Target, host.IsVisible),
             plan);
     }
 
@@ -29,7 +28,7 @@ public sealed class SyncfusionSunburstRenderingContract : ISyncfusionSunburstRen
     {
         ArgumentNullException.ThrowIfNull(host);
 
-        host.Controller.ItemsSource = Array.Empty<SunburstItem>();
+        host.Target.SetItems(Array.Empty<SyncfusionSunburstItem>());
     }
 
     public void ResetView(SyncfusionSunburstRenderingRoute route, SyncfusionSunburstChartRenderHost host)
@@ -47,6 +46,6 @@ public sealed class SyncfusionSunburstRenderingContract : ISyncfusionSunburstRen
         if (route != SyncfusionSunburstRenderingRoute.Hierarchy)
             throw new ArgumentOutOfRangeException(nameof(route), route, "Unknown Syncfusion Sunburst rendering route.");
 
-        return host.Controller.ItemsSource is IEnumerable<SunburstItem> items && items.Any();
+        return host.Target.HasItems;
     }
 }

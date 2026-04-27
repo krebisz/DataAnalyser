@@ -86,6 +86,7 @@ public partial class MainChartsView : UserControl
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isApplyingSelectionSync;
+    private bool _pendingTabSwitchRestore;
     private MainChartsViewThemeCoordinator _themeCoordinator = null!;
     private MainChartsViewEventBinder? _viewModelEventBinder;
 
@@ -149,6 +150,7 @@ public partial class MainChartsView : UserControl
 
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+        IsVisibleChanged += OnViewVisibilityChanged;
     }
 
     private DiffRatioChartController DiffRatioChartController { get; } = new();
@@ -172,7 +174,7 @@ public partial class MainChartsView : UserControl
                 (s, e) => OnCmsStrategyToggled(s!, e)));
     }
 
-    private void OnLoaded(object? sender, RoutedEventArgs e)
+    private async void OnLoaded(object? sender, RoutedEventArgs e)
     {
         _viewModelEventBinder?.Bind();
         _themeCoordinator.Attach();
@@ -182,6 +184,8 @@ public partial class MainChartsView : UserControl
             InitializeTooltipManager();
             InitializeTooltips();
         }
+
+        await RestoreChartsFromSharedLastContextAsync();
     }
 
     private void OnUnloaded(object? sender, RoutedEventArgs e)
@@ -191,6 +195,20 @@ public partial class MainChartsView : UserControl
         // Dispose tooltip manager to prevent memory leaks
         _tooltipManager?.Dispose();
         _tooltipManager = null;
+    }
+
+    private async void OnViewVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        var isVisible = e.NewValue is bool b && b;
+
+        if (isVisible)
+            _viewModelEventBinder?.Bind();
+        else
+            _viewModelEventBinder?.Unbind();
+
+        // Only trigger restore on tab-switch back (not during initial startup — OnLoaded handles that).
+        if (isVisible && !_isInitializing)
+            await RestoreChartsFromSharedLastContextAsync();
     }
 
     private void OnToggleTheme(object sender, RoutedEventArgs e)
@@ -336,6 +354,13 @@ public partial class MainChartsView : UserControl
                 _isInitializing,
                 _viewModel.MetricState.SelectedSeries.Count),
             CreateSubtypesLoadedActions());
+
+        if (_pendingTabSwitchRestore)
+        {
+            _pendingTabSwitchRestore = false;
+            _ = CompleteTabSwitchRestoreAsync();
+            return;
+        }
 
         if (followUp == ChartHostMetricSelectionCoordinator.SubtypesFollowUp.LoadDateRange)
         {
@@ -565,6 +590,73 @@ public partial class MainChartsView : UserControl
                 _viewModel.ChartState.LastLoadRuntime?.RuntimePath);
             _chartRenderGate.Release();
         }
+    }
+
+    private async Task RestoreChartsFromSharedLastContextAsync()
+    {
+        var ctx = _viewModel.ChartState.LastContext;
+        if (!MainChartsViewChartUpdateCoordinator.ShouldRestoreChartsWhenViewLoads(_isInitializing, ctx))
+            return;
+
+        // If the metric types haven't loaded yet, or the currently-selected metric type in
+        // TablesCombo doesn't match the saved one (e.g. data was loaded under a different metric
+        // type in the Syncfusion tab), we need to reload subtypes for the correct metric type
+        // before restoring. Defer via _pendingTabSwitchRestore until OnSubtypesLoaded fires.
+        var savedMetricType = _viewModel.MetricState.SelectedMetricType;
+        var currentMetricType = GetSelectedMetricValue(TablesCombo);
+        var needsSubtypeReload = TablesCombo.Items.Count == 0
+            || !string.Equals(savedMetricType, currentMetricType, StringComparison.OrdinalIgnoreCase);
+
+        if (needsSubtypeReload)
+        {
+            _pendingTabSwitchRestore = true;
+            if (TablesCombo.Items.Count == 0)
+            {
+                // Metric types not loaded yet — LoadMetricsCommand will populate TablesCombo and
+                // then fire LoadSubtypesCommand for the selected type. CreateMetricTypesLoadedActions
+                // overrides SetSelectedMetricIndex to select the saved metric type when the flag is set.
+                _viewModel.LoadMetricsCommand.Execute(null);
+            }
+            else
+            {
+                // Metric types already loaded but wrong type selected. Select the saved type in the
+                // combo with suppression so OnMetricTypeSelectionChanged doesn't clear LastContext,
+                // then fire LoadSubtypesCommand directly so OnSubtypesLoaded delivers the right list.
+                _isApplyingSelectionSync = true;
+                try
+                {
+                    var savedOption = TablesCombo.Items.OfType<MetricNameOption>()
+                        .FirstOrDefault(o => string.Equals(o.Value, savedMetricType, StringComparison.OrdinalIgnoreCase));
+                    if (savedOption != null)
+                        TablesCombo.SelectedItem = savedOption;
+                }
+                finally
+                {
+                    _isApplyingSelectionSync = false;
+                }
+                _viewModel.LoadSubtypesCommand.Execute(null);
+            }
+            return;
+        }
+
+        await CompleteTabSwitchRestoreAsync();
+    }
+
+    private async Task CompleteTabSwitchRestoreAsync()
+    {
+        var ctx = _viewModel.ChartState.LastContext;
+
+        ApplySelectionStateToUi();
+        UpdateChartTitlesFromSelections();
+
+        var selectedSubtypeCount = CountSelectedSubtypes(_viewModel.MetricState.SelectedSeries);
+        await _dataLoadedCoordinator.HandleAsync(
+            ctx!,
+            selectedSubtypeCount,
+            _viewModel.ChartState.IsBarPieVisible,
+            CreateDataLoadedActions());
+
+        await RenderChartsFromLastContext();
     }
 
     private async Task RenderSingleChartAsync(string chartName, ChartDataContext ctx)
@@ -1297,7 +1389,27 @@ public partial class MainChartsView : UserControl
             () => TablesCombo.Items.Count,
             value => _isApplyingSelectionSync = value,
             _viewModel.BeginSelectionStateBatch,
-            index => TablesCombo.SelectedIndex = index,
+            index =>
+            {
+                // When restoring after a tab switch, select the saved metric type so that
+                // LoadSubtypes fires for the correct type and _subtypeList is valid for restore.
+                if (_pendingTabSwitchRestore)
+                {
+                    var savedMetricType = _viewModel.MetricState.SelectedMetricType;
+                    if (!string.IsNullOrWhiteSpace(savedMetricType))
+                    {
+                        var items = TablesCombo.Items.OfType<MetricNameOption>().ToList();
+                        var savedIndex = items.FindIndex(item =>
+                            string.Equals(item.Value, savedMetricType, StringComparison.OrdinalIgnoreCase));
+                        if (savedIndex >= 0)
+                        {
+                            TablesCombo.SelectedIndex = savedIndex;
+                            return;
+                        }
+                    }
+                }
+                TablesCombo.SelectedIndex = index;
+            },
             () => GetSelectedMetricValue(TablesCombo),
             _viewModel.SetSelectedMetricType,
             () => _viewModel.LoadSubtypesCommand.Execute(null),
@@ -1331,7 +1443,9 @@ public partial class MainChartsView : UserControl
             _viewModel.BeginSelectionStateBatch,
             (subtypes, preserveSelection, selectedMetricType) => RefreshPrimarySubtypeCombo(subtypes, preserveSelection, selectedMetricType),
             subtypes => BuildDynamicSubtypeControls(subtypes),
-            UpdateSelectedSubtypesInViewModel,
+            // Skip overwriting the saved selections when a tab-switch restore is pending —
+            // CompleteTabSwitchRestoreAsync will apply the correct saved state immediately after.
+            () => { if (!_pendingTabSwitchRestore) UpdateSelectedSubtypesInViewModel(); },
             value => _isMetricTypeChangePending = value);
     }
 
@@ -1505,4 +1619,3 @@ public partial class MainChartsView : UserControl
 
     #endregion
 }
-
