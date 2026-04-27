@@ -1,10 +1,10 @@
 using System.Windows.Media;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Helpers;
-using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
@@ -187,7 +187,7 @@ public sealed class BaseDistributionServiceTests
 
     private sealed class TestDistributionService : BaseDistributionService
     {
-        public TestDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService) : base(configuration, chartTimestamps, strategyCutOverService, new NoOpNotificationService(), new FrequencyBasedShadingStrategy(configuration.BucketCount))
+        public TestDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService) : base(configuration, chartTimestamps, strategyCutOverService, new NoOpNotificationService(), shadingStrategy: new FrequencyBasedShadingStrategy(configuration.BucketCount))
         {
         }
 

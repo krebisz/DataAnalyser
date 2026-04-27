@@ -1,6 +1,6 @@
+using System.Windows.Controls;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
-using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using LiveCharts.Wpf;
@@ -16,15 +16,17 @@ public sealed class WeekdayTrendChartUpdateCoordinator
     private readonly Dictionary<CartesianChart, List<DateTime>> _chartTimestamps;
     private readonly ChartRenderGate _renderGate = new();
     private readonly WeekdayTrendRenderingService _renderingService;
+    private readonly Func<UserControl>? _tooltipFactory;
     private CartesianChart? _cartesianChart;
     private ChartState? _chartState;
     private WeekdayTrendResult? _lastResult;
     private CartesianChart? _polarChart;
 
-    public WeekdayTrendChartUpdateCoordinator(WeekdayTrendRenderingService renderingService, Dictionary<CartesianChart, List<DateTime>> chartTimestamps)
+    public WeekdayTrendChartUpdateCoordinator(WeekdayTrendRenderingService renderingService, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, Func<UserControl>? tooltipFactory = null)
     {
         _renderingService = renderingService ?? throw new ArgumentNullException(nameof(renderingService));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
+        _tooltipFactory = tooltipFactory;
     }
 
     public void UpdateChart(WeekdayTrendResult? result, ChartState chartState, CartesianChart cartesianChart, CartesianChart polarChart)
@@ -56,9 +58,9 @@ public sealed class WeekdayTrendChartUpdateCoordinator
         return true;
     }
 
-    private static void FinalizeChart(CartesianChart chart)
+    private void FinalizeChart(CartesianChart chart)
     {
-        ChartHelper.InitializeChartTooltip(chart);
+        ChartHelper.InitializeChartTooltip(chart, _tooltipFactory);
         chart.Update(true, true);
     }
 

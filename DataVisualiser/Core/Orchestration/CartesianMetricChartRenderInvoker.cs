@@ -1,7 +1,7 @@
-using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Shared.Models;
 
-namespace DataVisualiser.Core.Rendering.CartesianMetrics;
+namespace DataVisualiser.Core.Orchestration;
 
 public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRenderInvoker
 {
@@ -37,16 +37,11 @@ public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRen
         CartesianMetricChartRenderRequest request,
         CartesianMetricChartRenderHost host)
     {
-        var context = request.Context;
-        var data1 = context.Data1;
+        var data1 = request.Context.Data1;
         if (data1 == null)
             return Task.CompletedTask;
 
-        return RenderMainAndCaptureContextAsync(
-            orchestrator,
-            request,
-            host,
-            data1);
+        return RenderMainAndCaptureContextAsync(orchestrator, request, host, data1);
     }
 
     private static async Task RenderMainAndCaptureContextAsync(

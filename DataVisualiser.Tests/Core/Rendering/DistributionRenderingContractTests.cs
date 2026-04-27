@@ -7,7 +7,7 @@ using LiveChartsCore.SkiaSharpView.WPF;
 using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
 using DataVisualiser.Core.Services.Abstractions;
-using DataVisualiser.Core.Rendering.Shading;
+using DataVisualiser.Core.Strategies.Abstractions;
 namespace DataVisualiser.Tests.Core.Rendering;
 
 public sealed class DistributionRenderingContractTests
@@ -127,7 +127,7 @@ public sealed class DistributionRenderingContractTests
             return Task.FromResult<Shared.Models.DistributionRangeResult?>(null);
         }
 
-        public void SetShadingStrategy(DataVisualiser.Core.Rendering.Shading.IIntervalShadingStrategy strategy)
+        public void SetShadingStrategy(IIntervalShadingStrategy strategy)
         {
         }
     }

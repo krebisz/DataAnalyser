@@ -2,18 +2,18 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.Core.Rendering.Interaction;
 using LiveCharts;
 using LiveCharts.Wpf;
-using DataVisualiser.Core.Rendering.Helpers;
-using DataVisualiser.Core.Rendering.Tooltip;
 
-namespace DataVisualiser.Core.Rendering.Interaction;
+namespace DataVisualiser.UI.Charts.Interaction;
 
 /// <summary>
 ///     Manages tooltip display and vertical line indicators for one or more CartesianChart instances.
 ///     Provides a reusable, modular solution for chart hover interactions.
 /// </summary>
-public class ChartTooltipManager : IDisposable
+public class ChartTooltipManager : IChartTimestampSink, IDisposable
 {
     private readonly Dictionary<CartesianChart, string> _chartLabels;
     private readonly Dictionary<CartesianChart, TextBlock> _chartTextBlocks;
@@ -39,7 +39,6 @@ public class ChartTooltipManager : IDisposable
         _chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
         _chartLabels = chartLabels ?? new Dictionary<CartesianChart, string>();
 
-        // Create the shared hover popup UI
         _timestampText = ChartInteractionVisualHelper.CreateHoverText(true);
         var stack = new StackPanel
         {
@@ -54,17 +53,12 @@ public class ChartTooltipManager : IDisposable
         _hoverPopup = CreatePopup(border);
     }
 
-    /// <summary>
-    ///     Disposes of resources and detaches all charts.
-    /// </summary>
     public void Dispose()
     {
-        // Detach all charts
         var charts = _chartTextBlocks.Keys.ToArray();
         foreach (var chart in charts)
             DetachChart(chart);
 
-        // Close and clear popup
         if (_hoverPopup != null)
             _hoverPopup.IsOpen = false;
 
@@ -74,9 +68,6 @@ public class ChartTooltipManager : IDisposable
         _chartLabels.Clear();
     }
 
-    /// <summary>
-    ///     Attaches a chart to this tooltip manager. The chart will display tooltips and vertical lines on hover.
-    /// </summary>
     public void AttachChart(CartesianChart chart, string? label = null)
     {
         if (!CanAttach(chart))
@@ -94,10 +85,6 @@ public class ChartTooltipManager : IDisposable
         InitializeVerticalLineTracking(chart);
     }
 
-
-    /// <summary>
-    ///     Detaches a chart from this tooltip manager, removing event handlers and cleaning up resources.
-    /// </summary>
     public void DetachChart(CartesianChart chart)
     {
         if (!CanDetach(chart))
@@ -113,7 +100,6 @@ public class ChartTooltipManager : IDisposable
         RemoveVerticalLine(chart);
         RemoveTextBlockFromPopup(chart);
     }
-
 
     private bool CanAttach(CartesianChart? chart)
     {
@@ -183,12 +169,6 @@ public class ChartTooltipManager : IDisposable
         _chartLabels.Remove(chart);
     }
 
-
-    /// <summary>
-    ///     Updates the timestamp data for a chart. This should be called whenever chart data is updated.
-    /// </summary>
-    /// <param name="chart">The chart whose timestamps are being updated.</param>
-    /// <param name="timestamps">The list of timestamps corresponding to the chart's data points.</param>
     public void UpdateChartTimestamps(CartesianChart chart, List<DateTime> timestamps)
     {
         if (chart == null)
@@ -196,10 +176,6 @@ public class ChartTooltipManager : IDisposable
         _chartTimestamps[chart] = timestamps ?? new List<DateTime>();
     }
 
-    /// <summary>
-    ///     Clears the timestamp data for a chart.
-    /// </summary>
-    /// <param name="chart">The chart whose timestamps should be cleared.</param>
     public void ClearChartTimestamps(CartesianChart chart)
     {
         if (chart == null)
@@ -207,11 +183,6 @@ public class ChartTooltipManager : IDisposable
         _chartTimestamps.Remove(chart);
     }
 
-    /// <summary>
-    ///     Updates the label for a chart.
-    /// </summary>
-    /// <param name="chart">The chart whose label should be updated.</param>
-    /// <param name="label">The new label for the chart.</param>
     public void UpdateChartLabel(CartesianChart chart, string label)
     {
         if (chart == null)
@@ -220,9 +191,6 @@ public class ChartTooltipManager : IDisposable
             _chartLabels[chart] = label;
     }
 
-    /// <summary>
-    ///     Handles the DataHover event from any attached chart.
-    /// </summary>
     private void OnChartDataHover(object? sender, ChartPoint chartPoint)
     {
         if (sender is not CartesianChart chart || chartPoint == null)
@@ -264,18 +232,11 @@ public class ChartTooltipManager : IDisposable
             }
     }
 
-
-    /// <summary>
-    ///     Handles the MouseLeave event from any attached chart.
-    /// </summary>
     private void OnChartMouseLeave(object? sender, MouseEventArgs e)
     {
         ClearHoverVisuals();
     }
 
-    /// <summary>
-    ///     Clears the tooltip popup and all vertical lines.
-    /// </summary>
     private void ClearHoverVisuals()
     {
         if (_hoverPopup.IsOpen)
@@ -288,10 +249,6 @@ public class ChartTooltipManager : IDisposable
         }
     }
 
-
-    /// <summary>
-    ///     Gets the timestamp text for a given index by searching through all attached charts' timestamp data.
-    /// </summary>
     private string GetTimestampTextForIndex(int index)
     {
         foreach (var kvp in _chartTimestamps)
@@ -304,9 +261,6 @@ public class ChartTooltipManager : IDisposable
         return "Timestamp: N/A";
     }
 
-    /// <summary>
-    ///     Creates a Popup control with the specified child content.
-    /// </summary>
     private Popup CreatePopup(Border border)
     {
         var popup = new Popup

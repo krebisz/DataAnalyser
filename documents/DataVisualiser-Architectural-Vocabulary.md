@@ -537,6 +537,19 @@ This does not yet fully demote rendering to Terminal Delivery Infrastructure as 
 The `Core.Rendering` layer remains structurally large.
 But the folder layout now better reflects the intended ownership shape: vendor backends are visibly terminal, and controller interfaces live within the consumer/interaction field where they belong.
 
+#### Group C: tooltip and interaction type ownership correction (April 2026)
+
+A further ownership correction relocated concrete tooltip and interaction types that had been mishoused in `Core/Rendering/Interaction/` into their correct layer:
+
+- Eight concrete types (`ChartInteractionVisualHelper`, `ChartTooltipParticipationCalculator`, `BucketDistributionTooltip`, `HourlyDistributionTooltip`, `WeeklyDistributionTooltip`, `SimpleChartTooltip`, `ChartTooltipManager`, `DistributionPolarProjectionTooltip`) moved from `Core/Rendering/Interaction/` to `UI/Charts/Interaction/` with namespace `DataVisualiser.UI.Charts.Interaction` — WPF-dependent consumer/interaction types now live in the correct layer (Layer 5 / Consumer and Interaction Field).
+- Two types intentionally retained in `Core/Rendering/Interaction/`: `ChartStackingTooltipState` (pure data carrier, no WPF dependency) and `IChartTimestampSink` (new Core abstraction introduced for dependency inversion).
+- Two new factory types added to `UI/Charts/Interaction/`: `HourlyDistributionTooltipFactory` and `WeeklyDistributionTooltipFactory`, each implementing `IDistributionTooltipFactory` (a new Core abstraction in `Core/Services/Abstractions/`).
+- `ChartHelper.InitializeChartTooltip` refactored to accept `Func<UserControl>?` — Core rendering helper now depends on a factory delegate rather than a UI concrete.
+- `ChartUpdateCoordinator` and `WeekdayTrendChartUpdateCoordinator` accept `IChartTimestampSink?` and `Func<UserControl>?` — Core orchestration types no longer import concrete UI types for tooltip construction.
+- `BaseDistributionService`, `HourlyDistributionService`, and `WeeklyDistributionService` accept `IDistributionTooltipFactory?` — distribution services now depend on their own Core abstraction rather than a concrete WPF `UserControl`.
+
+Two pre-existing upward violations are noted but not corrected by this work: `DistributionRenderingContract` (namespace `Core.Rendering.Contracts.Distribution`) and `WeekdayTrendChartUpdateCoordinator` (namespace `Core.Orchestration`) both already imported `DataVisualiser.UI.*` before this work.
+
 ### 3.7 Migration architecture must not become steady-state architecture
 
 A further non-conflicting conclusion is that the migration machinery is at risk of becoming part of the permanent architecture if it is not kept bounded.
@@ -1948,6 +1961,18 @@ A folder restructure was applied to bring the physical layout closer to the inte
 - Test project: `Tests/UI/Rendering/` relocated to `Tests/Core/Rendering/` — test files now mirror their production counterparts under `Core.Rendering`.
 - Test project: `Tests/Helpers/Infrastructure/` extracted from `Tests/Helpers/` — builder, stub, and test-helper infrastructure types are isolated from general helper utilities.
 
+#### Group C: tooltip and interaction ownership correction (April 2026)
+
+Concrete tooltip and interaction types were corrected from `Core/Rendering/Interaction/` to `UI/Charts/Interaction/`, with dependency inversion applied so Core no longer imports UI concretions. The following changes were completed with all 894 automated tests passing:
+
+- Eight concrete WPF-dependent types moved from `Core/Rendering/Interaction/` to `UI/Charts/Interaction/` (namespace `DataVisualiser.UI.Charts.Interaction`): `ChartInteractionVisualHelper`, `ChartTooltipParticipationCalculator`, `BucketDistributionTooltip`, `HourlyDistributionTooltip`, `WeeklyDistributionTooltip`, `SimpleChartTooltip`, `ChartTooltipManager`, `DistributionPolarProjectionTooltip`.
+- Two types retained in `Core/Rendering/Interaction/`: `ChartStackingTooltipState` (pure data carrier) and `IChartTimestampSink` (new Core interface).
+- New `IDistributionTooltipFactory` interface added to `Core/Services/Abstractions/`; `HourlyDistributionTooltipFactory` and `WeeklyDistributionTooltipFactory` implementations added to `UI/Charts/Interaction/`.
+- `ChartHelper.InitializeChartTooltip` now accepts `Func<UserControl>?` instead of referencing a concrete UI type.
+- `ChartUpdateCoordinator` and `WeekdayTrendChartUpdateCoordinator` depend on `IChartTimestampSink?` and `Func<UserControl>?` rather than `ChartTooltipManager`.
+- `BaseDistributionService`, `HourlyDistributionService`, `WeeklyDistributionService` depend on `IDistributionTooltipFactory?` rather than concrete UI tooltip types.
+- `UI/MainHost/Coordination/MainChartsViewChartPipelineFactory` supplies concrete factory implementations at composition root.
+
 ### 13.3 Current next practical work
 
 - Finish removing remaining bypasses around live consumer/provider delivery before Phase 7 capability expansion unless explicitly deferred.
@@ -1956,9 +1981,9 @@ A folder restructure was applied to bring the physical layout closer to the inte
 - Preserve legacy execution as a compatibility/fallback adapter until VNext parity and smoke evidence are strong enough to retire each path safely.
 - Avoid broad folder or family-framework consolidation unless it directly strengthens the contract/provider seam.
 
-#### Folder restructure complete (April 2026)
+#### Folder restructure and Group C ownership correction complete (April 2026)
 
-The structural folder restructure described in §3.6 and §13.2 is complete. The physical layout now more closely reflects the intended ownership containers. No further folder-level reorganization is planned as a priority; the next leverage is in behavioral/ownership enforcement rather than file location.
+The structural folder restructure (Groups A, B, D) and the tooltip/interaction ownership correction (Group C) described in §3.6 and §13.2 are complete. The physical layout now more closely reflects the intended ownership containers, and Core no longer imports concrete UI tooltip types through direct references (dependency inversion applied via `IChartTimestampSink`, `IDistributionTooltipFactory`, and `Func<UserControl>?`). No further broad folder-level reorganization is planned as a priority; the next leverage is in behavioral/ownership enforcement and resolving the two pre-existing upward violations noted in §3.6.
 
 ### 13.4 Manual validation state
 
@@ -2030,8 +2055,8 @@ This section is an approximate, non-binding progress assessment based on the lat
 ### Current estimated completion
 
 ```text
-Architectural migration: approximately 65–70% complete
-Working estimate: ~68%
+Architectural migration: approximately 68–73% complete
+Working estimate: ~70%
 ```
 
 ### Breakdown
@@ -2041,8 +2066,8 @@ Working estimate: ~68%
 | Vocabulary / conceptual model | 90% | Stable promoted concepts and target hierarchy exist. |
 | VNext reasoning spine | 75% | `ReasoningEngine`, analytical intent, program planning, and session coordination exist. |
 | Contract / boundary model | 65% | Consumer/provider contracts are emerging, but boundary enforcement is not fully proven. |
-| Rendering demotion | 63% | Render-plan delivery exists; folder restructure removed the `Presentation/Rendering/` sub-hierarchy, but `Core.Rendering` remains structurally large. |
-| Consumer / interaction separation | 60% | Controller interfaces and adapters now live in one coherent `UI.Charts.Presentation` container; Syncfusion types relocated into the consumer field; further behavioral enforcement remains. |
+| Rendering demotion | 70% | Render-plan delivery exists; folder restructure removed the `Presentation/Rendering/` sub-hierarchy; Group C moved concrete tooltip/interaction types out of `Core.Rendering` into `UI.Charts.Interaction` with dependency inversion applied. `Core.Rendering` is meaningfully smaller; two pre-existing upward violations remain. |
+| Consumer / interaction separation | 65% | Controller interfaces, adapters, and concrete tooltip/interaction types now live in `UI.Charts.Presentation` and `UI.Charts.Interaction`; Syncfusion types relocated; Core depends on abstractions for tooltip construction; further behavioral enforcement and violation cleanup remains. |
 | Governance / evidence | 75% | Evidence, parity, and diagnostics infrastructure are strong, but must remain observational. |
 | Legacy coexistence cleanup | 50–60% | Older mesh structures still coexist with VNext and family-specific delivery patterns. |
 
@@ -2072,7 +2097,7 @@ The old architectural mesh still carries significant weight, especially around:
 
 These areas may still contain responsibilities that belong higher in the target hierarchy.
 
-Note: `UI.Charts.Presentation` was previously listed here as a problem area. The April 2026 folder restructure partially corrected it by merging controller interfaces into the presentation container, flattening the rendering sub-hierarchy, and relocating vendor backends to visibly terminal positions. The physical layout is now more aligned. Behavioral enforcement — ensuring that nothing in this layer acts as a semantic authority — remains in progress.
+Note: `UI.Charts.Presentation` was previously listed here as a problem area. The April 2026 folder restructure partially corrected it by merging controller interfaces into the presentation container, flattening the rendering sub-hierarchy, and relocating vendor backends to visibly terminal positions. The Group C work further corrected it by moving concrete tooltip and interaction types into `UI.Charts.Interaction` and applying dependency inversion so Core no longer imports UI concretions. The physical layout is now substantially more aligned. Two pre-existing upward violations (`DistributionRenderingContract` and `WeekdayTrendChartUpdateCoordinator` importing `DataVisualiser.UI.*` from Core namespaces) remain and are the primary structural enforcement gap in this area.
 
 ### Why the estimate is not lower
 

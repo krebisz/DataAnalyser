@@ -11,7 +11,7 @@ using DataVisualiser.UI.State;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Interaction;
+namespace DataVisualiser.UI.Charts.Interaction;
 
 public sealed class DistributionPolarProjectionTooltip : IDisposable
 {
@@ -25,6 +25,7 @@ public sealed class DistributionPolarProjectionTooltip : IDisposable
     private readonly TextBlock _text;
     private DateTime _lastValidHoverTime;
     private Point _lastValidHoverPosition;
+
     public DistributionPolarProjectionTooltip(CartesianChart chart, DistributionModeDefinition definition, DistributionRangeResult rangeResult)
     {
         _chart = chart ?? throw new ArgumentNullException(nameof(chart));

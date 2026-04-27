@@ -1,4 +1,6 @@
-namespace DataVisualiser.Core.Rendering.CartesianMetrics;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
+
+namespace DataVisualiser.Core.Orchestration;
 
 public interface ICartesianMetricChartRenderInvoker
 {

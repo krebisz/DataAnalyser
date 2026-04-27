@@ -1,5 +1,6 @@
 using System.Windows.Media;
 using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Core.Strategies.Abstractions;
 using LiveCharts;
 using LiveCharts.Wpf;
 

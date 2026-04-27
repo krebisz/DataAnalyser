@@ -9,6 +9,7 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Implementations;
 using DataVisualiser.Shared.Models;
 using LiveCharts;
 using LiveCharts.Wpf;
@@ -26,17 +27,19 @@ public abstract class BaseDistributionService : IDistributionService
     protected readonly IUserNotificationService _notificationService;
     protected readonly ChartRenderGate _renderGate = new();
     protected readonly IStrategyCutOverService _strategyCutOverService;
+    protected readonly IDistributionTooltipFactory? _tooltipFactory;
 
     protected readonly IDistributionConfiguration Configuration;
     protected FrequencyShadingCalculator _frequencyShadingCalculator;
     protected IIntervalShadingStrategy _shadingStrategy;
 
-    protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IUserNotificationService notificationService, IIntervalShadingStrategy? shadingStrategy = null)
+    protected BaseDistributionService(IDistributionConfiguration configuration, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IUserNotificationService notificationService, IDistributionTooltipFactory? tooltipFactory = null, IIntervalShadingStrategy? shadingStrategy = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+        _tooltipFactory = tooltipFactory;
         _shadingStrategy = shadingStrategy ?? new FrequencyBasedShadingStrategy(Configuration.BucketCount);
         _frequencyRenderer = new FrequencyShadingRenderer(RenderingDefaults.MaxColumnWidth, Configuration.BucketCount);
         _frequencyShadingCalculator = new FrequencyShadingCalculator(_shadingStrategy, Configuration.BucketCount);

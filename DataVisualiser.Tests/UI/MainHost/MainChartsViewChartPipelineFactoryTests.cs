@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Threading;
-using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.MainHost;

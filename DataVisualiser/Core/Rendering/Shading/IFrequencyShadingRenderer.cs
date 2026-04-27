@@ -1,4 +1,5 @@
 using System.Windows.Media;
+using DataVisualiser.Core.Strategies.Abstractions;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.Shading;

@@ -6,6 +6,7 @@ using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;

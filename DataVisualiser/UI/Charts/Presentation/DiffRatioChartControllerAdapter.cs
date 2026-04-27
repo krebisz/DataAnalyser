@@ -5,7 +5,7 @@ using DataFileReader.Canonical;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.CartesianMetrics;
-using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;

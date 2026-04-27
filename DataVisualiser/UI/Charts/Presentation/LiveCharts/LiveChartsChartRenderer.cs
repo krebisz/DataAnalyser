@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Rendering.Helpers;
+using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.UI;
@@ -157,7 +158,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             chart.Name = model.ChartName;
 
         if (string.Equals(model.ChartName, RenderingDefaults.BarPieChartName, StringComparison.OrdinalIgnoreCase))
-            ChartHelper.InitializeChartTooltip(chart);
+            ChartHelper.InitializeChartTooltip(chart, () => new SimpleChartTooltip());
 
         renderedChart = chart;
 

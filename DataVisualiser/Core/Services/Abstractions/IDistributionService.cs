@@ -1,5 +1,5 @@
 using DataFileReader.Canonical;
-using DataVisualiser.Core.Rendering.Shading;
+using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using LiveCharts.Wpf;
 

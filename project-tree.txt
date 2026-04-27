@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-04-26 19:11:56
+Generated: 2026-04-27 09:20:33
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -230,13 +230,6 @@ DataAnalyser/
           ChartRenderGate.cs
           ChartSeriesLabelFormatter.cs
           ChartSeriesMaterializer.cs
-          ChartTooltipCumulativeFormatter.cs
-          ChartTooltipFormattingHelper.cs
-          ChartTooltipPairFormatter.cs
-          ChartTooltipSeriesFilter.cs
-          ChartTooltipSeriesTitleParser.cs
-          ChartTooltipStackedFormatter.cs
-          ChartTooltipValueFormatter.cs
           ColourPalette.cs
           DistributionAxisCoordinator.cs
           DistributionDebugSummaryLogger.cs
@@ -267,6 +260,14 @@ DataAnalyser/
           SyncfusionSunburstRenderingContract.cs
           SyncfusionSunburstRenderingTypes.cs
           SyncfusionSunburstRenderPlanAdapter.cs
+        Tooltip/
+          ChartTooltipCumulativeFormatter.cs
+          ChartTooltipFormattingHelper.cs
+          ChartTooltipPairFormatter.cs
+          ChartTooltipSeriesFilter.cs
+          ChartTooltipSeriesTitleParser.cs
+          ChartTooltipStackedFormatter.cs
+          ChartTooltipValueFormatter.cs
         Transform/
           ITransformChartRenderInvoker.cs
           ITransformRenderingContract.cs
@@ -421,9 +422,6 @@ DataAnalyser/
         WeekdayTrendSeries.cs
         WeeklyDistributionResult.cs
       ErrorEventArgs.cs
-    Tests/
-      UI/
-        Rendering/
     UI/
       Admin/
         AdminEditableHealthMetricsCountEntry.cs
@@ -456,7 +454,42 @@ DataAnalyser/
           TransformDataPanelControllerV2.xaml.cs
           WeekdayTrendChartController.xaml
           WeekdayTrendChartController.xaml.cs
-        Interfaces/
+        Presentation/
+          ECharts/
+            EChartsChartRenderer.cs
+            EChartsWebViewSurface.cs
+          LiveCharts/
+            LiveChartsChartRenderer.cs
+          BarPieChartControllerAdapter.cs
+          BarPieRenderModelBuilder.cs
+          BinaryMetricChartContextHelper.cs
+          CartesianChartControllerAdapterBase.cs
+          ChartAxisModel.cs
+          ChartComboItemHelper.cs
+          ChartContextSelectionGuard.cs
+          ChartControllerAdapterBase.cs
+          ChartControllerFactory.cs
+          ChartControllerKeys.cs
+          ChartControllerRegistry.cs
+          ChartFacetModel.cs
+          ChartInteractionModel.cs
+          ChartLegendItemModel.cs
+          ChartLegendModel.cs
+          ChartLegendPlacement.cs
+          ChartOverlayModel.cs
+          ChartPanelSurface.cs
+          ChartRendererKind.cs
+          ChartRendererResolver.cs
+          ChartSeriesModel.cs
+          ChartSeriesType.cs
+          ChartSubtypeComboHelper.cs
+          ChartSurfaceFactory.cs
+          ChartSurfaceHelper.cs
+          ChartUiHelper.cs
+          DefaultTransformOperationProvider.cs
+          DiffRatioChartControllerAdapter.cs
+          DistributionChartControllerAdapter.cs
+          DistributionSessionMilestoneRecorder.cs
           IBarPieChartController.cs
           IBarPieChartControllerExtras.cs
           ICartesianChartControllerHost.cs
@@ -465,7 +498,12 @@ DataAnalyser/
           IChartControllerFactory.cs
           IChartControllerRegistry.cs
           IChartPanelControllerHost.cs
+          IChartPanelHost.cs
           IChartPanelScaffold.cs
+          IChartRenderer.cs
+          IChartRendererResolver.cs
+          IChartSurface.cs
+          IChartSurfaceFactory.cs
           IDiffRatioChartController.cs
           IDiffRatioChartControllerExtras.cs
           IDistributionChartController.cs
@@ -475,65 +513,22 @@ DataAnalyser/
           INormalizedChartController.cs
           IPolarChartSurface.cs
           ISyncfusionSunburstChartController.cs
+          ITrackedCartesianChartSurface.cs
+          ITrackedChartContentSurface.cs
           ITransformDataPanelController.cs
           ITransformLayoutCapabilities.cs
+          ITransformOperationProvider.cs
           ITransformPanelControllerExtras.cs
           IWeekdayTrendChartController.cs
           IWeekdayTrendChartControllerExtras.cs
           IWpfCartesianChartHost.cs
           IWpfChartPanelHost.cs
-        Presentation/
-          Rendering/
-            ECharts/
-              EChartsChartRenderer.cs
-              EChartsWebViewSurface.cs
-            LiveCharts/
-              LiveChartsChartRenderer.cs
-            ChartAxisModel.cs
-            ChartFacetModel.cs
-            ChartInteractionModel.cs
-            ChartLegendItemModel.cs
-            ChartLegendModel.cs
-            ChartLegendPlacement.cs
-            ChartOverlayModel.cs
-            ChartPanelSurface.cs
-            ChartRendererKind.cs
-            ChartRendererResolver.cs
-            ChartSeriesModel.cs
-            ChartSeriesType.cs
-            ChartSurfaceFactory.cs
-            IChartPanelHost.cs
-            IChartRenderer.cs
-            IChartRendererResolver.cs
-            IChartSurface.cs
-            IChartSurfaceFactory.cs
-            ITrackedCartesianChartSurface.cs
-            ITrackedChartContentSurface.cs
-            LegendToggleManager.cs
-            PieFacetLegendToggleManager.cs
-            UiChartRenderModel.cs
-          BarPieChartControllerAdapter.cs
-          BarPieRenderModelBuilder.cs
-          BinaryMetricChartContextHelper.cs
-          CartesianChartControllerAdapterBase.cs
-          ChartComboItemHelper.cs
-          ChartContextSelectionGuard.cs
-          ChartControllerAdapterBase.cs
-          ChartControllerFactory.cs
-          ChartControllerKeys.cs
-          ChartControllerRegistry.cs
-          ChartSubtypeComboHelper.cs
-          ChartSurfaceHelper.cs
-          ChartUiHelper.cs
-          DefaultTransformOperationProvider.cs
-          DiffRatioChartControllerAdapter.cs
-          DistributionChartControllerAdapter.cs
-          DistributionSessionMilestoneRecorder.cs
-          ITransformOperationProvider.cs
+          LegendToggleManager.cs
           MainChartControllerAdapter.cs
           MetricSeriesSelectionAdapterHelper.cs
           MetricSeriesSelectionCache.cs
           NormalizedChartControllerAdapter.cs
+          PieFacetLegendToggleManager.cs
           RenderingHostLifecycleAdapterHelper.cs
           SubtypeSelectorManager.cs
           SyncfusionSunburstChartControllerAdapter.cs
@@ -551,14 +546,20 @@ DataAnalyser/
           TransformSessionMilestoneRecorder.cs
           TransformSubtypeSelectionCoordinator.cs
           TransformWorkflowCoordinator.cs
+          UiChartRenderModel.cs
           VNextDataResolutionHelper.cs
           WeekdayTrendChartControllerAdapter.cs
+        Syncfusion/
+          SunburstItem.cs
+          SyncfusionChartsView.xaml
+          SyncfusionChartsView.xaml.cs
+          SyncfusionChartsViewCoordinator.cs
+          SyncfusionChartsViewLoadCoordinator.cs
+          SyncfusionTooltipReflectionHelper.cs
       Converters/
         FirstNonEmptyTextConverter.cs
         MultiplyConverter.cs
         NormalizationModeConverter.cs
-      Defaults/
-        UiDefaults.cs
       Events/
         ChartUpdateRequestedEventArgs.cs
         ChartVisibilityChangedEventArgs.cs
@@ -629,13 +630,6 @@ DataAnalyser/
         UiState.cs
         WeekdayTrendAverageWindow.cs
         WeekdayTrendChartMode.cs
-      Syncfusion/
-        SunburstItem.cs
-        SyncfusionChartsView.xaml
-        SyncfusionChartsView.xaml.cs
-        SyncfusionChartsViewCoordinator.cs
-        SyncfusionChartsViewLoadCoordinator.cs
-        SyncfusionTooltipReflectionHelper.cs
       Theming/
         AppTheme.cs
         AppThemeChangedEventArgs.cs
@@ -674,6 +668,7 @@ DataAnalyser/
       MetricSelectionPanel.xaml
       MetricSelectionPanel.xaml.cs
       README_ChartPanelController.md
+      UiDefaults.cs
       WorkspaceHeaderPanel.xaml
       WorkspaceHeaderPanel.xaml.cs
       WorkspaceTabHost.xaml
@@ -681,9 +676,12 @@ DataAnalyser/
     VNext/
       Application/
         AnalyticalIntentFactory.cs
+        AnalyticalInterpretationBuilder.cs
         AnalyticalRenderPlanPipeline.cs
         ChartProgramPlanner.cs
+        ConfidenceAnnotationEvaluator.cs
         IMetricSeriesLoader.cs
+        InterpretiveOverlayPlanner.cs
         IReasoningEngine.cs
         LegacyChartProgramProjector.cs
         LegacyMetricViewGateway.cs
@@ -695,6 +693,8 @@ DataAnalyser/
         AnalyticalExecutionResult.cs
         AnalyticalIntent.cs
         AnalyticalIntentSet.cs
+        AnalyticalInterpretationOptions.cs
+        AnalyticalInterpretationResult.cs
         AnalyticalResultSet.cs
         AnalyticalVocabulary.cs
         CapabilityRequest.cs
@@ -703,6 +703,7 @@ DataAnalyser/
         ChartProgramDeliveryTargetResolver.cs
         ChartProgramKind.cs
         ChartProgramRequest.cs
+        ConfidenceAnnotation.cs
         ConsumerDeliveryContract.cs
         ConsumerProviderContract.cs
         ConsumerProviderContracts.cs
@@ -721,8 +722,10 @@ DataAnalyser/
         OperationKernel.cs
         TimeSeriesAlignmentKernel.cs
       Rendering/
+        ChartBackendCandidateSet.cs
         ChartBackendCapabilities.cs
         ChartBackendSelector.cs
+        ChartRenderDeliveryBinding.cs
         ChartRenderPlan.cs
         ChartRenderPlanAdapter.cs
         ChartRenderPlanAdapterQualification.cs
@@ -749,51 +752,49 @@ DataAnalyser/
   DataVisualiser.Tests/
     Architecture/
       ArchitectureGuardrailTests.cs
-    Controls/
-      BarPieChartControllerAdapterResetZoomTests.cs
-      BarPieChartControllerAdapterTests.cs
-      BarPieRenderModelBuilderTests.cs
-      CartesianChartControllerAdapterBaseTests.cs
-      CartesianMetricControllerAdapterLifecycleTests.cs
-      ChartContextSelectionGuardTests.cs
-      ChartControllerFactoryTests.cs
-      ChartControllerRegistryTests.cs
-      ChartVisibilityHelperTests.cs
-      DiffRatioNormalizedSelectionAdapterTests.cs
-      DistributionChartControllerAdapterTests.cs
-      SubtypeSelectorManagerTests.cs
-      SyncfusionSunburstChartControllerAdapterTests.cs
-      TransformCoordinatorTests.cs
-      TransformDataPanelControllerAdapterTests.cs
-      TransformRenderCoordinatorTests.cs
-      TransformSelectionInteractionCoordinatorTests.cs
-      TransformSeriesOperationRequestMapperTests.cs
-      TransformSessionMilestoneRecorderTests.cs
-      TransformWorkflowCoordinatorTests.cs
-      WeekdayTrendChartControllerAdapterTests.cs
     Converters/
       SunburstTooltipConvertersTests.cs
     Core/
       Data/
         DataFetcherMetricDataQueriesTests.cs
+      Rendering/
+        BarPieRenderingContractTests.cs
+        BarPieRenderingQualificationProbeTests.cs
+        CartesianMetricChartRenderingContractTests.cs
+        CartesianMetricChartRenderingQualificationProbeTests.cs
+        ChartRendererResolverTests.cs
+        ChartSeriesLabelFormatterTests.cs
+        ChartSeriesMaterializerTests.cs
+        DistributionAxisCoordinatorTests.cs
+        DistributionRenderingContractTests.cs
+        DistributionRenderingQualificationProbeTests.cs
+        DistributionSeriesBuilderTests.cs
+        LegendToggleManagerTests.cs
+        LiveChartsChartRendererTests.cs
+        PieFacetLegendToggleManagerTests.cs
+        TransformRenderingContractTests.cs
+        TransformRenderingQualificationProbeTests.cs
+        WeekdayTrendRenderingContractTests.cs
+        WeekdayTrendRenderingQualificationProbeTests.cs
     Helpers/
+      Infrastructure/
+        HealthMetricDataBuilder.cs
+        MockCanonicalMetricSeries.cs
+        MockCmsBuilder.cs
+        SourceTreeTestHelper.cs
+        StaTestHelper.cs
+        TestDataBuilders.cs
+        TestHelpers.cs
+        VNextTestStubs.cs
       ChartHelperInteractionTests.cs
       ChartLabelFormatterTests.cs
       ChartTooltipFormattingHelperTests.cs
       ChartTooltipParticipationCalculatorTests.cs
       CmsConversionHelperTests.cs
       FrequencyBinningHelperTests.cs
-      HealthMetricDataBuilder.cs
       MathHelperTests.cs
-      MockCanonicalMetricSeries.cs
-      MockCmsBuilder.cs
-      SourceTreeTestHelper.cs
-      StaTestHelper.cs
       StrategyComputationHelperTests.cs
-      TestDataBuilders.cs
-      TestHelpers.cs
       TransformChartAxisCalculatorTests.cs
-      VNextTestStubs.cs
     Orchestration/
       ChartCumulativeSeriesBuilderTests.cs
       ChartDataContextBuilderTests.cs
@@ -851,7 +852,28 @@ DataAnalyser/
         AdminSessionMilestoneRecorderTests.cs
       Charts/
         Presentation/
+          BarPieChartControllerAdapterResetZoomTests.cs
+          BarPieChartControllerAdapterTests.cs
+          BarPieRenderModelBuilderTests.cs
           BinaryMetricChartContextHelperTests.cs
+          CartesianChartControllerAdapterBaseTests.cs
+          CartesianMetricControllerAdapterLifecycleTests.cs
+          ChartContextSelectionGuardTests.cs
+          ChartControllerFactoryTests.cs
+          ChartControllerRegistryTests.cs
+          ChartVisibilityHelperTests.cs
+          DiffRatioNormalizedSelectionAdapterTests.cs
+          DistributionChartControllerAdapterTests.cs
+          SubtypeSelectorManagerTests.cs
+          SyncfusionSunburstChartControllerAdapterTests.cs
+          TransformCoordinatorTests.cs
+          TransformDataPanelControllerAdapterTests.cs
+          TransformRenderCoordinatorTests.cs
+          TransformSelectionInteractionCoordinatorTests.cs
+          TransformSeriesOperationRequestMapperTests.cs
+          TransformSessionMilestoneRecorderTests.cs
+          TransformWorkflowCoordinatorTests.cs
+          WeekdayTrendChartControllerAdapterTests.cs
       MainHost/
         ChartHostDateRangeCoordinatorTests.cs
         ChartHostMetricSelectionCoordinatorTests.cs
@@ -887,25 +909,6 @@ DataAnalyser/
         ReachabilityExportPathResolverTests.cs
         ReachabilityExportWriterTests.cs
         UiBusyScopeLeaseTests.cs
-      Rendering/
-        BarPieRenderingContractTests.cs
-        BarPieRenderingQualificationProbeTests.cs
-        CartesianMetricChartRenderingContractTests.cs
-        CartesianMetricChartRenderingQualificationProbeTests.cs
-        ChartRendererResolverTests.cs
-        ChartSeriesLabelFormatterTests.cs
-        ChartSeriesMaterializerTests.cs
-        DistributionAxisCoordinatorTests.cs
-        DistributionRenderingContractTests.cs
-        DistributionRenderingQualificationProbeTests.cs
-        DistributionSeriesBuilderTests.cs
-        LegendToggleManagerTests.cs
-        LiveChartsChartRendererTests.cs
-        PieFacetLegendToggleManagerTests.cs
-        TransformRenderingContractTests.cs
-        TransformRenderingQualificationProbeTests.cs
-        WeekdayTrendRenderingContractTests.cs
-        WeekdayTrendRenderingQualificationProbeTests.cs
       Syncfusion/
         SyncfusionChartsViewCoordinatorTests.cs
         SyncfusionChartsViewLoadCoordinatorTests.cs
@@ -932,14 +935,18 @@ DataAnalyser/
     VNext/
       AnalyticalIntentContractsTests.cs
       AnalyticalIntentFactoryTests.cs
+      AnalyticalInterpretationBuilderTests.cs
       AnalyticalRenderPlanPipelineTests.cs
       ChartProgramDeliveryTargetResolverTests.cs
       ChartProgramPlannerTests.cs
       ChartRenderPlanAdapterTests.cs
       ChartRenderPlanProjectorTests.cs
+      ConfidenceAnnotationEvaluatorTests.cs
       ConsumerProviderRegistryTests.cs
       DistributionSessionMilestoneRecorderTests.cs
       FamilyRuntimeDiagnosticsTests.cs
+      InterpretationDiagnosticsTests.cs
+      InterpretiveOverlayPlannerTests.cs
       LegacyChartProgramProjectorTests.cs
       LegacyMetricViewGatewayTests.cs
       OperationKernelTests.cs
@@ -963,11 +970,10 @@ DataAnalyser/
     Project Overview.md
     Project Philosophy.md
     Project Roadmap.md
-    Project Roadmap_UPDATED.md
+    reachability-20260427-070547.json
     SYSTEM_MAP.md
     TODO Enhancements.md
     Workspace Workflow.md
-    Workspace Workflow_UPDATED.md
   images/
     Logo.png
   scripts/

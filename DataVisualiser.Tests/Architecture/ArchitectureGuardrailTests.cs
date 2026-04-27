@@ -974,10 +974,10 @@ public sealed class ArchitectureGuardrailTests
         var builderFiles = new[]
         {
             Path.Combine("DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs"),
-            Path.Combine("DataVisualiser", "Core", "Rendering", "BarPie", "BarPieRenderingTypes.cs"),
-            Path.Combine("DataVisualiser", "Core", "Rendering", "Distribution", "DistributionRenderingContract.cs"),
-            Path.Combine("DataVisualiser", "Core", "Rendering", "Syncfusion", "SyncfusionSunburstRenderingTypes.cs"),
-            Path.Combine("DataVisualiser", "Core", "Rendering", "WeekdayTrend", "WeekdayTrendRenderingContract.cs")
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Contracts", "BarPie", "BarPieRenderingTypes.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Contracts", "Distribution", "DistributionRenderingContract.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Contracts", "Syncfusion", "SyncfusionSunburstRenderingTypes.cs"),
+            Path.Combine("DataVisualiser", "Core", "Rendering", "Contracts", "WeekdayTrend", "WeekdayTrendRenderingContract.cs")
         };
 
         foreach (var file in builderFiles)

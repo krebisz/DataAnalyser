@@ -1,5 +1,5 @@
+using System.Windows.Controls;
 using System.Windows.Media;
-using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -46,13 +46,12 @@ public static class ChartHelper
         chartTimestamps?.Remove(chart);
     }
 
-    public static void InitializeChartTooltip(CartesianChart chart)
+    public static void InitializeChartTooltip(CartesianChart chart, Func<UserControl>? tooltipFactory = null)
     {
-        if (chart == null)
+        if (chart == null || tooltipFactory == null)
             return;
 
-        if (chart.DataTooltip is not SimpleChartTooltip)
-            chart.DataTooltip = new SimpleChartTooltip();
+        chart.DataTooltip = tooltipFactory();
     }
 
     public static string GetTimestampTextForIndex(int index, Dictionary<CartesianChart, List<DateTime>> chartTimestamps, params CartesianChart[] charts)

@@ -1,15 +1,16 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Core.Configuration.Defaults;
+using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.Shared.Helpers;
 using LiveCharts.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Interaction;
+namespace DataVisualiser.UI.Charts.Interaction;
 
 public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyPropertyChanged
 {
@@ -373,7 +374,3 @@ public sealed class SimpleChartTooltip : UserControl, IChartTooltip, INotifyProp
     private static readonly IReadOnlyDictionary<string, double> EmptyParticipationLookup =
         new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 }
-
-
-
-

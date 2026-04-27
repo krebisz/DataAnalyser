@@ -1,7 +1,7 @@
-using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.VNext.Contracts;
 
-namespace DataVisualiser.Core.Rendering.Transform;
+namespace DataVisualiser.Core.Orchestration;
 
 public sealed class TransformChartRenderInvoker : ITransformChartRenderInvoker
 {
@@ -19,8 +19,7 @@ public sealed class TransformChartRenderInvoker : ITransformChartRenderInvoker
         if (host == null)
             throw new ArgumentNullException(nameof(host));
 
-        var context = request.Context;
-        return RenderAndCaptureDiagnosticsAsync(request, host, context);
+        return RenderAndCaptureDiagnosticsAsync(request, host, request.Context);
     }
 
     private async Task RenderAndCaptureDiagnosticsAsync(

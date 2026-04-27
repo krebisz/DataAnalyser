@@ -1,4 +1,4 @@
-using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.UI.Charts.Interaction;
 using LiveCharts;
 using LiveCharts.Wpf;
 using DataVisualiser.Tests.Helpers;

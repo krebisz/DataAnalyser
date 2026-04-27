@@ -10,19 +10,19 @@ using DataVisualiser.Shared.Helpers;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Interaction;
+namespace DataVisualiser.UI.Charts.Interaction;
 
 public abstract class BucketDistributionTooltip : IDisposable
 {
-    private const int HoverCheckIntervalMs = RenderingDefaults.TooltipHoverCheckIntervalMs; // Check every 100ms
-    private const int HoverTimeoutMs = RenderingDefaults.TooltipHoverTimeoutMs;             // Hide if no valid hover for 300ms AND mouse moved away
+    private const int HoverCheckIntervalMs = RenderingDefaults.TooltipHoverCheckIntervalMs;
+    private const int HoverTimeoutMs = RenderingDefaults.TooltipHoverTimeoutMs;
     private readonly Dictionary<int, double> _bucketAverages;
     private readonly Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> _bucketIntervalData;
     private readonly CartesianChart _chart;
 
     private readonly Popup _tooltipPopup;
     private DispatcherTimer? _hoverCheckTimer;
-    private int _lastValidBucketIndex = -1; // Track which bucket we last hovered over
+    private int _lastValidBucketIndex = -1;
     private DateTime _lastValidHoverTime;
 
     public BucketDistributionTooltip(CartesianChart chart, Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>> bucketIntervalData, Dictionary<int, double>? bucketAverages = null)
@@ -31,7 +31,6 @@ public abstract class BucketDistributionTooltip : IDisposable
         _bucketIntervalData = bucketIntervalData ?? new Dictionary<int, List<(double Min, double Max, int Count, double Percentage)>>();
         _bucketAverages = bucketAverages ?? new Dictionary<int, double>();
 
-        // Find parent window for popup
         Window? parentWindow = null;
         DependencyObject current = chart;
         while (current != null && parentWindow == null)
@@ -40,27 +39,22 @@ public abstract class BucketDistributionTooltip : IDisposable
             parentWindow = current as Window;
         }
 
-        // Create popup for tooltip
         _tooltipPopup = new Popup
         {
                 Placement = PlacementMode.RelativePoint,
                 PlacementTarget = chart,
-                StaysOpen = false, // Close when focus is lost
+                StaysOpen = false,
                 AllowsTransparency = true,
                 PopupAnimation = PopupAnimation.Fade
         };
 
-        // Subscribe to chart events
         _chart.DataHover += OnChartDataHover;
-        _chart.DataClick += OnChartDataClick; // Also hide on click
+        _chart.DataClick += OnChartDataClick;
         _chart.MouseLeave += OnChartMouseLeave;
-        _chart.MouseMove += OnChartMouseMove; // Track mouse movement
+        _chart.MouseMove += OnChartMouseMove;
 
-        // Also handle popup mouse leave - but don't hide immediately
-        // Allow mouse to move to popup without hiding
         _tooltipPopup.MouseEnter += OnPopupMouseEnter;
 
-        // Start timer to periodically check if we're still hovering over valid data
         _hoverCheckTimer = new DispatcherTimer
         {
                 Interval = TimeSpan.FromMilliseconds(HoverCheckIntervalMs)
@@ -71,14 +65,11 @@ public abstract class BucketDistributionTooltip : IDisposable
         _lastValidHoverTime = DateTime.MinValue;
     }
 
-    // Abstract properties that derived classes must provide
     protected abstract int BucketCount { get; }
     protected abstract string[] BucketNames { get; }
 
-
     public void Dispose()
     {
-        // Stop and dispose timer
         if (_hoverCheckTimer != null)
         {
             _hoverCheckTimer.Stop();
@@ -107,28 +98,15 @@ public abstract class BucketDistributionTooltip : IDisposable
         if (_tooltipPopup == null || !_tooltipPopup.IsOpen || _chart == null)
             return;
 
-        // Check if mouse is still over the chart
         var mousePos = Mouse.GetPosition(_chart);
         var isOverChart = mousePos.X >= 0 && mousePos.Y >= 0 && mousePos.X <= _chart.ActualWidth && mousePos.Y <= _chart.ActualHeight;
 
         if (!isOverChart)
-                // Mouse has left the chart - hide immediately
             HideTooltip();
-
-        // Mouse is still over chart - check if we've received a valid hover recently
-        // DataHover doesn't fire continuously, so we only hide if:
-        // 1. No valid hover for a while AND
-        // 2. Mouse has moved to a different area (we can't easily detect this, so we rely on timeout)
-        // Actually, since DataHover doesn't fire continuously, we should keep tooltip open
-        // as long as mouse is over chart. Only hide if mouse leaves chart or DataHover fires with invalid data.
-        // So we'll only use the timer to hide if mouse has left chart (already handled above)
-        // For now, don't auto-hide based on timeout if mouse is still over chart
     }
 
     private void OnPopupMouseEnter(object? sender, MouseEventArgs e)
     {
-        // Keep tooltip open when mouse enters popup
-        // This allows user to move mouse from chart to tooltip
     }
 
     private void OnChartDataHover(object? sender, ChartPoint chartPoint)
@@ -179,41 +157,28 @@ public abstract class BucketDistributionTooltip : IDisposable
         _tooltipPopup.IsOpen = true;
     }
 
-
     private void OnChartDataClick(object? sender, ChartPoint chartPoint)
     {
-        // Hide tooltip when clicking on chart
         HideTooltip();
     }
 
     private void OnChartMouseMove(object? sender, MouseEventArgs e)
     {
-        // Hide tooltip if mouse moves but we're not over valid data
-        // This catches cases where mouse moves to empty areas of the chart
         if (_chart != null && _tooltipPopup != null && _tooltipPopup.IsOpen)
         {
-            // Check if mouse is outside chart bounds
             var mousePos = e.GetPosition(_chart);
             if (mousePos.X < 0 || mousePos.Y < 0 || mousePos.X > _chart.ActualWidth || mousePos.Y > _chart.ActualHeight)
                 HideTooltip();
-
-            // If mouse is over chart but not over data, LiveCharts won't fire DataHover
-            // We'll rely on MouseLeave to hide it, but also check if we're in an empty area
-            // by verifying the mouse is still within reasonable bounds of data columns
-            // (This is a fallback - MouseLeave should handle most cases)
         }
     }
 
     private void OnChartMouseLeave(object? sender, MouseEventArgs e)
     {
-        // Immediately hide when mouse leaves chart
         HideTooltip();
     }
 
     private void OnPopupMouseLeave(object? sender, MouseEventArgs e)
     {
-        // Hide tooltip when mouse leaves popup
-        // This ensures tooltip closes when mouse moves away
         HideTooltip();
     }
 
@@ -225,7 +190,6 @@ public abstract class BucketDistributionTooltip : IDisposable
         _lastValidHoverTime = DateTime.MinValue;
         _lastValidBucketIndex = -1;
     }
-
 
     private FrameworkElement CreateTooltipContent(int bucketIndex, List<(double Min, double Max, int Count, double Percentage)> intervals)
     {

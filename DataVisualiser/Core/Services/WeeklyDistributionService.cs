@@ -1,5 +1,4 @@
 using DataVisualiser.Core.Computation.Results;
-using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Shading;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
@@ -15,7 +14,7 @@ namespace DataVisualiser.Core.Services;
 /// </summary>
 public class WeeklyDistributionService : BaseDistributionService
 {
-    public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IUserNotificationService notificationService, IIntervalShadingStrategy? shadingStrategy = null) : base(new WeeklyDistributionConfiguration(), chartTimestamps, strategyCutOverService, notificationService, shadingStrategy)
+    public WeeklyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IStrategyCutOverService strategyCutOverService, IUserNotificationService notificationService, IDistributionTooltipFactory? tooltipFactory = null, IIntervalShadingStrategy? shadingStrategy = null) : base(new WeeklyDistributionConfiguration(), chartTimestamps, strategyCutOverService, notificationService, tooltipFactory, shadingStrategy)
     {
     }
 
@@ -45,16 +44,12 @@ public class WeeklyDistributionService : BaseDistributionService
 
         if (tooltipData != null && tooltipData.Count > 0)
         {
-            var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
-            oldTooltip?.Dispose();
-
-            var tooltip = new WeeklyDistributionTooltip(targetChart, tooltipData, averages);
-            targetChart.Tag = tooltip;
+            (targetChart.Tag as IDisposable)?.Dispose();
+            targetChart.Tag = _tooltipFactory?.Create(targetChart, tooltipData, averages);
         }
         else
         {
-            var oldTooltip = targetChart.Tag as WeeklyDistributionTooltip;
-            oldTooltip?.Dispose();
+            (targetChart.Tag as IDisposable)?.Dispose();
             targetChart.Tag = null;
         }
     }

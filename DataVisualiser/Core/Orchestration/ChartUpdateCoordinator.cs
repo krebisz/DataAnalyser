@@ -1,14 +1,14 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Adapters;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering.Helpers;
-using DataVisualiser.Core.Rendering.Tooltip;
+using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
@@ -18,6 +18,7 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
+using Separator = LiveCharts.Wpf.Separator;
 
 namespace DataVisualiser.Core.Orchestration;
 
@@ -34,25 +35,28 @@ public class ChartUpdateCoordinator
     private readonly ChartRenderPlanAdapterDispatcher<LiveChartsRenderSurface> _renderPlanAdapterDispatcher;
     private readonly ChartRenderPlanProjector _renderPlanProjector;
     private readonly IUserNotificationService _notificationService;
-    private readonly ChartTooltipManager _tooltipManager;
+    private readonly IChartTimestampSink? _tooltipManager;
+    private readonly Func<UserControl>? _tooltipFactory;
 
     public ChartUpdateCoordinator(
         ChartComputationEngine computationEngine,
         ChartRenderEngine renderEngine,
-        ChartTooltipManager tooltipManager,
+        IChartTimestampSink? tooltipManager,
         Dictionary<CartesianChart, List<DateTime>> chartTimestamps,
         IUserNotificationService notificationService,
         ChartRenderPlanProjector? renderPlanProjector = null,
-        ChartRenderPlanAdapterDispatcher<LiveChartsRenderSurface>? renderPlanAdapterDispatcher = null)
+        ChartRenderPlanAdapterDispatcher<LiveChartsRenderSurface>? renderPlanAdapterDispatcher = null,
+        Func<UserControl>? tooltipFactory = null)
     {
         _chartComputationEngine = computationEngine ?? throw new ArgumentNullException(nameof(computationEngine));
         _chartRenderEngine = renderEngine ?? throw new ArgumentNullException(nameof(renderEngine));
-        _tooltipManager = tooltipManager ?? throw new ArgumentNullException(nameof(tooltipManager));
+        _tooltipManager = tooltipManager;
         _chartTimestamps = chartTimestamps ?? throw new ArgumentNullException(nameof(chartTimestamps));
         _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         _renderPlanProjector = renderPlanProjector ?? new ChartRenderPlanProjector();
         _renderPlanAdapterDispatcher = renderPlanAdapterDispatcher
             ?? new ChartRenderPlanAdapterDispatcher<LiveChartsRenderSurface>([new LiveChartsRenderPlanAdapter()]);
+        _tooltipFactory = tooltipFactory;
     }
 
     /// <summary>
@@ -402,7 +406,7 @@ public class ChartUpdateCoordinator
         Debug.WriteLine($"[TransformChart] After NormalizeYAxis: chart={targetChart.Name}, YMin={yAxis.MinValue}, YMax={yAxis.MaxValue}, ShowLabels={yAxis.ShowLabels}");
 
         ChartHelper.AdjustChartHeightBasedOnYAxis(targetChart, minHeight);
-        ChartHelper.InitializeChartTooltip(targetChart);
+        ChartHelper.InitializeChartTooltip(targetChart, _tooltipFactory);
     }
 
     private static void ApplyOverlayRangeIfNeeded(Axis yAxis, IReadOnlyList<SeriesResult>? overlaySeries)

@@ -1,7 +1,7 @@
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Interaction;
+namespace DataVisualiser.UI.Charts.Interaction;
 
 public static class ChartTooltipParticipationCalculator
 {

@@ -1,6 +1,6 @@
 using LiveCharts.Wpf;
 
-namespace DataVisualiser.Core.Rendering.Interaction;
+namespace DataVisualiser.UI.Charts.Interaction;
 
 /// <summary>
 ///     Custom tooltip manager for Weekly Distribution Chart that shows interval breakdown with percentages and counts.

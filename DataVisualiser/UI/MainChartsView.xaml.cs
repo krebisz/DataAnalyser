@@ -8,7 +8,7 @@ using DataVisualiser.Core.Configuration;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Tooltip;
 using DataVisualiser.Core.Rendering;

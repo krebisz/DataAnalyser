@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;

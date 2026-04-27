@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Shading;
+using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;

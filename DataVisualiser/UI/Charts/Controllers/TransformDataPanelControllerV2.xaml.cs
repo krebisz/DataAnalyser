@@ -3,7 +3,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.UI;
-using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.UI.Charts.Interaction;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
 

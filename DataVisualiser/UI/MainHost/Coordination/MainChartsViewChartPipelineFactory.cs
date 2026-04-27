@@ -1,13 +1,13 @@
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.Engines;
-using DataVisualiser.Core.Rendering.Interaction;
 using DataVisualiser.Core.Rendering;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Reachability;
+using DataVisualiser.UI.Charts.Interaction;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.UI.MainHost.Coordination;
@@ -43,13 +43,15 @@ public sealed class MainChartsViewChartPipelineFactory
             renderEngine,
             context.TooltipManager,
             context.ChartTimestamps,
-            notificationService);
+            notificationService,
+            tooltipFactory: () => new SimpleChartTooltip());
         chartUpdateCoordinator.SeriesMode = ChartSeriesMode.RawAndSmoothed;
 
         var distributionPolarRenderingService = new DistributionPolarRenderingService();
         var weekdayTrendChartUpdateCoordinator = new WeekdayTrendChartUpdateCoordinator(
             new WeekdayTrendRenderingService(),
-            context.ChartTimestamps);
+            context.ChartTimestamps,
+            () => new SimpleChartTooltip());
 
         var weeklyDistributionService = CreateWeeklyDistributionService(context.ChartTimestamps, notificationService);
         var hourlyDistributionService = CreateHourlyDistributionService(context.ChartTimestamps, notificationService);
@@ -79,13 +81,13 @@ public sealed class MainChartsViewChartPipelineFactory
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
-        return new WeeklyDistributionService(chartTimestamps, strategyCutOverService, notificationService);
+        return new WeeklyDistributionService(chartTimestamps, strategyCutOverService, notificationService, new WeeklyDistributionTooltipFactory());
     }
 
     private static IDistributionService CreateHourlyDistributionService(Dictionary<CartesianChart, List<DateTime>> chartTimestamps, IUserNotificationService notificationService)
     {
         var dataPreparationService = new DataPreparationService();
         var strategyCutOverService = new StrategyCutOverService(dataPreparationService, StrategyReachabilityStoreProbe.Default);
-        return new HourlyDistributionService(chartTimestamps, strategyCutOverService, notificationService);
+        return new HourlyDistributionService(chartTimestamps, strategyCutOverService, notificationService, new HourlyDistributionTooltipFactory());
     }
 }

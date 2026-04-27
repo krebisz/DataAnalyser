@@ -1,5 +1,5 @@
 using System.Windows.Media;
-using DataVisualiser.Core.Rendering.Shading;
+using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Services;
 using Moq;
 

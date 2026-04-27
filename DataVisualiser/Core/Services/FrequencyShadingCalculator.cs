@@ -1,4 +1,4 @@
-using DataVisualiser.Core.Rendering.Shading;
+using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Helpers;
 
 namespace DataVisualiser.Core.Services;

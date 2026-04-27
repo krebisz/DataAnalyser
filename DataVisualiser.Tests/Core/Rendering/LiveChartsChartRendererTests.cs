@@ -1,7 +1,7 @@
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.Core.Configuration.Defaults;
-using DataVisualiser.Core.Rendering.Interaction;
+using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.UI.Charts.Presentation.LiveCharts;
 using LiveCharts.Wpf;
 using System.Collections;
