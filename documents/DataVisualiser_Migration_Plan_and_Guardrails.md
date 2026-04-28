@@ -573,19 +573,51 @@ Keep projectors, adapters, resolvers, selectors, converters, and formatters from
 
 Tasks:
 
-- [ ] Identify current projectors/adapters/resolvers/selectors in VNext, Core, UI, and delivery paths.
-- [ ] Classify each as projection, adaptation, selection, resolution, construction, or policy.
-- [ ] Check whether any translation role owns semantic policy.
-- [ ] Check whether any translation role owns provider policy.
-- [ ] Check whether any translation role owns evidence policy.
-- [ ] Check whether any translation role mutates provenance or confidence.
-- [ ] Move no code unless a violation is confirmed and covered by tests.
-- [ ] Add guardrail tests for translation roles where practical.
+- [x] Identify current projectors/adapters/resolvers/selectors in VNext, Core, UI, and delivery paths.
+- [x] Classify each as projection, adaptation, selection, resolution, construction, or policy.
+- [x] Check whether any translation role owns semantic policy.
+- [x] Check whether any translation role owns provider policy.
+- [x] Check whether any translation role owns evidence policy.
+- [x] Check whether any translation role mutates provenance or confidence.
+- [x] Move no code unless a violation is confirmed and covered by tests.
+- [x] Add guardrail tests for translation roles where practical.
 
 Completion condition:
 
 ```text
 Projection and translation move meaning across boundaries without creating meaning, hiding policy, or discarding provenance.
+```
+
+Phase 8 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Projection_Translation_Containment_Audit.md
+
+Translation roles inspected:
+- ChartRenderPlanProjector
+- LegacyChartProgramProjector
+- ChartBackendSelector
+- ChartRenderPlanAdapterDispatcher
+- render-plan adapters under Core/Rendering
+- route resolvers under Core/Rendering/Contracts
+- chart-family adapters/helpers under UI/Charts/Presentation
+- formatter/converter helpers under Core/Rendering and UI/Converters
+
+Tests added:
+- RenderPlanProjectors_ShouldRemainNonAuthoritativeTranslation
+- RenderPlanAdapters_ShouldNotAcquireAuthorityPolicyOrEvidenceOwnership
+- AdapterDispatcher_ShouldOnlyQualifyAndDispatchPlans
+
+Validation:
+- ArchitectureGuardrailTests passed 78 tests
+- projector/adapter validation passed 33 tests
+
+Implementation result:
+- no production behavior code changed in Phase 8
+- no translation role violation confirmed
+- projectors, adapters, and dispatcher are now guarded against acquiring authority, evidence, provider, confidence, or interpretation policy
+- UI/controller adapter thinning is intentionally carried into Phase 9
 ```
 
 ---
@@ -613,18 +645,49 @@ UI state helpers
 
 Tasks:
 
-- [ ] Confirm interaction types relay behavior only.
-- [ ] Confirm tooltip logic does not own semantic interpretation.
-- [ ] Confirm timestamp sinks do not own analytical authority.
-- [ ] Confirm controllers do not select provider policy.
-- [ ] Confirm ViewModel/state helpers do not own canonical meaning.
-- [ ] Confirm consumer adapters do not own capability planning.
-- [ ] Add guardrail tests or structural checks where feasible.
+- [x] Confirm interaction types relay behavior only.
+- [x] Confirm tooltip logic does not own semantic interpretation.
+- [x] Confirm timestamp sinks do not own analytical authority.
+- [x] Confirm controllers do not select provider policy.
+- [x] Confirm ViewModel/state helpers do not own canonical meaning.
+- [x] Confirm consumer adapters do not own capability planning.
+- [x] Add guardrail tests or structural checks where feasible.
 
 Completion condition:
 
 ```text
 Consumers receive output and interactions relay behavior without redefining authority, intent, provider policy, or analytical meaning.
+```
+
+Phase 9 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Consumer_Interaction_Containment_Audit.md
+
+Consumer/interaction targets inspected:
+- chart controllers under DataVisualiser/UI/Charts/Controllers
+- controller adapters under DataVisualiser/UI/Charts/Presentation
+- tooltip factories/helpers under DataVisualiser/UI/Charts/Interaction
+- timestamp sink contract under DataVisualiser/Core/Rendering/Interaction
+- tooltip formatting helpers under DataVisualiser/Core/Rendering/Tooltip
+- event binders under DataVisualiser/UI/MainHost/Coordination
+- UI state helpers under DataVisualiser/UI/State
+- view-model state helpers under DataVisualiser/UI/ViewModels
+
+Tests added:
+- ChartControllersAndInteractions_ShouldRemainNonAuthoritativeConsumers
+- EventBindersAndUiStateHelpers_ShouldNotOwnAnalyticalOrProviderPolicy
+- ViewModelStateHelpers_ShouldNotConstructAnalyticalMeaning
+
+Validation:
+- Phase 9 consumer/interaction validation passed 118 tests
+
+Implementation result:
+- no production behavior code changed in Phase 9
+- consumer/interaction targets were confirmed as event, display, state, and interaction relays
+- provider/backend, analytical intent, confidence, interpretation, render-plan projection, adapter dispatch, and evidence export ownership are now guarded out of the targeted consumer/interaction layer
+- chart-family adapter risk remains visible through Phase 6, Phase 8, and Phase 9 guardrails
 ```
 
 ---
@@ -639,19 +702,55 @@ Make consumer-neutral surface models the bridge before terminal delivery.
 
 Tasks:
 
-- [ ] Identify current render models, UI models, and delivery models.
-- [ ] Identify where a consumer-neutral surface model already exists.
-- [ ] Identify where UI/render/vendor assumptions enter too early.
-- [ ] Add or strengthen surface-level contracts where needed.
-- [ ] Ensure surface models do not own semantic authority.
-- [ ] Ensure surface models do not own vendor lifecycle.
-- [ ] Ensure surface models preserve envelope/provenance/metadata where required.
-- [ ] Add tests proving surface output can be consumed without vendor assumptions where practical.
+- [x] Identify current render models, UI models, and delivery models.
+- [x] Identify where a consumer-neutral surface model already exists.
+- [x] Identify where UI/render/vendor assumptions enter too early.
+- [x] Add or strengthen surface-level contracts where needed.
+- [x] Ensure surface models do not own semantic authority.
+- [x] Ensure surface models do not own vendor lifecycle.
+- [x] Ensure surface models preserve envelope/provenance/metadata where required.
+- [x] Add tests proving surface output can be consumed without vendor assumptions where practical.
 
 Completion condition:
 
 ```text
 Surface-level output is consumer-neutral, metadata-preserving, and upstream of terminal delivery.
+```
+
+Phase 10 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Surface_Model_Seam_Audit.md
+
+Model types inspected:
+- ChartRenderPlan
+- ChartRenderModel
+- UiChartRenderModel
+- ChartSeriesModel
+- ChartFacetModel
+- ChartAxisModel
+- ChartLegendModel
+- ChartOverlayModel
+- ChartInteractionModel
+- render request/host/surface records under Core/Rendering/Contracts
+- render-plan adapters under Core/Rendering
+- UI renderers under UI/Charts/Presentation
+
+Tests added:
+- ChartRenderPlan_ShouldRemainConsumerNeutralSurfaceModel
+- SurfaceModels_ShouldNotAcquireSemanticProviderOrEvidenceAuthority
+- UiRenderModels_ShouldStayUpstreamOfConcreteRendererLifecycle
+
+Validation:
+- Phase 10 surface-model validation passed 121 tests
+
+Implementation result:
+- no production behavior code changed in Phase 10
+- ChartRenderPlan is confirmed as the consumer-neutral, metadata-preserving surface seam
+- ChartRenderModel remains a legacy render model with WPF color assumptions
+- UiChartRenderModel remains a UI presentation model upstream of concrete renderer lifecycle
+- terminal delivery structures are carried into Phase 11
 ```
 
 ---
@@ -1097,6 +1196,9 @@ Use this section during implementation.
 | 2026-04-28 | Plan refinement | Added a current migration read summarizing Phases 1-5 and orienting Phase 6 toward containment. | `documents/DataVisualiser_Migration_Plan_and_Guardrails.md`; documentation-only change. | Complete |
 | 2026-04-28 | Phase 6 | Classified integration hub responsibilities and added containment guardrails. | `documents/DataVisualiser_Integration_Hub_Containment_Audit.md`; `ArchitectureGuardrailTests`; architecture validation passed 75 tests. | Complete |
 | 2026-04-28 | Phase 7 | Audited contract/boundary/qualification seam and added delivery-binding metadata preservation guardrail. | `documents/DataVisualiser_Contract_Boundary_Qualification_Audit.md`; `ConsumerProviderRegistryTests`; VNext seam validation passed 67 tests; architecture validation passed 75 tests. | Complete |
+| 2026-04-28 | Phase 8 | Classified projection/translation roles and added non-authority containment guardrails. | `documents/DataVisualiser_Projection_Translation_Containment_Audit.md`; `ArchitectureGuardrailTests`; projector/adapter validation passed 33 tests; architecture validation passed 78 tests. | Complete |
+| 2026-04-28 | Phase 9 | Audited consumer/interaction layer and added non-authority guardrails. | `documents/DataVisualiser_Consumer_Interaction_Containment_Audit.md`; `ArchitectureGuardrailTests`; consumer/interaction validation passed 118 tests. | Complete |
+| 2026-04-28 | Phase 10 | Audited surface-model seam and added neutrality/lifecycle guardrails. | `documents/DataVisualiser_Surface_Model_Seam_Audit.md`; `ArchitectureGuardrailTests`; surface-model validation passed 121 tests. | Complete |
 
 ---
 
