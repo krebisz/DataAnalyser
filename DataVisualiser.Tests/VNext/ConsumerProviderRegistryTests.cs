@@ -206,6 +206,36 @@ public sealed class ConsumerProviderRegistryTests
     }
 
     [Fact]
+    public void RenderDeliveryBinding_ShouldPreserveExistingSemanticMetadataWhenAttached()
+    {
+        var binding = ChartRenderDeliveryBinding.Resolve(
+            ConsumerProviderRegistry.BuiltIn,
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
+            ChartRenderPlanKind.Cartesian,
+            ChartBackendCandidateSet.BuiltIn);
+        var metadata = new Dictionary<string, string>
+        {
+            [ChartRenderPlanMetadataKeys.IntentSignature] = "intent:sig",
+            [ChartRenderPlanMetadataKeys.ProvenanceSignature] = "provenance:sig",
+            [ChartRenderPlanMetadataKeys.ConsumerKind] = ConsumerKind.Chart.ToString(),
+            [ChartRenderPlanMetadataKeys.DeliveryTarget] = "MainChart",
+            [ChartRenderPlanMetadataKeys.CapabilityKind] = AnalyticalCapabilityKind.Identity.ToString(),
+            [ChartRenderPlanMetadataKeys.CompositionKind] = CompositionKind.MultiSeries.ToString()
+        };
+
+        binding.AddTo(metadata);
+
+        Assert.Equal("intent:sig", metadata[ChartRenderPlanMetadataKeys.IntentSignature]);
+        Assert.Equal("provenance:sig", metadata[ChartRenderPlanMetadataKeys.ProvenanceSignature]);
+        Assert.Equal(ConsumerKind.Chart.ToString(), metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+        Assert.Equal("MainChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(AnalyticalCapabilityKind.Identity.ToString(), metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal(CompositionKind.MultiSeries.ToString(), metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf.ProviderKey, metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.Equal(ChartBackendCapabilities.LiveChartsWpf.BackendKey, metadata[ChartRenderPlanMetadataKeys.BackendKey]);
+    }
+
+    [Fact]
     public void RenderDeliveryBinding_ShouldRejectProviderBackendMismatch()
     {
         var candidates = new ChartBackendCandidateSet([ChartBackendCapabilities.SyncfusionSunburst]);

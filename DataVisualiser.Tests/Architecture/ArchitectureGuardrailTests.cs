@@ -83,6 +83,70 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void ChartRenderingOrchestrator_ShouldRemainCoordinationOnly()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Orchestration", "ChartRenderingOrchestrator.cs");
+        var forbiddenTokens = new[]
+        {
+            "EvidenceDiagnosticsBuilder",
+            "MainChartsEvidenceExportService",
+            "ConsumerProviderRegistry",
+            "ChartRenderDeliveryBinding",
+            "ChartBackendSelector",
+            "ChartRenderPlanProjector",
+            "ChartRenderPlanAdapterDispatcher",
+            "AnalyticalIntentFactory",
+            "ReasoningSessionCoordinator",
+            "ConfidenceAnnotationEvaluator",
+            "InterpretiveOverlayPlanner"
+        };
+
+        foreach (var token in forbiddenTokens)
+            Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MetricLoadCoordinator_ShouldNotAcquireRenderProviderOrInterpretationPolicy()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "ViewModels", "MetricLoadCoordinator.cs");
+        var forbiddenTokens = new[]
+        {
+            "ConsumerProviderRegistry",
+            "ChartRenderDeliveryBinding",
+            "ChartBackendSelector",
+            "ChartRenderPlanProjector",
+            "ChartRenderPlanAdapterDispatcher",
+            "LiveChartsRenderPlanAdapter",
+            "SyncfusionSunburstRenderPlanAdapter",
+            "ConfidenceAnnotationEvaluator",
+            "InterpretiveOverlayPlanner"
+        };
+
+        foreach (var token in forbiddenTokens)
+            Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartFamilyAdapters_ShouldNotAcquireProviderBackendOrAnalyticalAuthority()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [Path.Combine("DataVisualiser", "UI", "Charts", "Presentation")],
+            [
+                "ConsumerProviderRegistry",
+                "ChartRenderDeliveryBinding",
+                "ChartBackendSelector",
+                "ChartRenderPlanAdapterDispatcher",
+                "AnalyticalIntentFactory",
+                "ReasoningSessionCoordinator",
+                "ConfidenceAnnotationEvaluator",
+                "InterpretiveOverlayPlanner",
+                "MainChartsEvidenceExportService"
+            ]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
     public void EvidenceDiagnosticsBuilder_ShouldRemainObservationalAndNotDriveLiveRendering()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainHost", "Evidence", "EvidenceDiagnosticsBuilder.cs");

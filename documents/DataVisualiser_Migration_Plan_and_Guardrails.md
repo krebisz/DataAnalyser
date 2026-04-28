@@ -439,20 +439,48 @@ chart-family adapters
 
 Tasks:
 
-- [ ] Inspect each target hub.
-- [ ] List semantic responsibilities currently held by each.
-- [ ] List capability/program responsibilities currently held by each.
-- [ ] List provider/qualification responsibilities currently held by each.
-- [ ] List evidence/diagnostic responsibilities currently held by each.
-- [ ] List delivery/rendering responsibilities currently held by each.
-- [ ] Identify responsibilities that should remain coordination-only.
-- [ ] Identify responsibilities that should move later, but do not move yet without tests.
-- [ ] Add tests or static checks preventing new semantic/provider/evidence/capability authority from being added to these hubs.
+- [x] Inspect each target hub.
+- [x] List semantic responsibilities currently held by each.
+- [x] List capability/program responsibilities currently held by each.
+- [x] List provider/qualification responsibilities currently held by each.
+- [x] List evidence/diagnostic responsibilities currently held by each.
+- [x] List delivery/rendering responsibilities currently held by each.
+- [x] Identify responsibilities that should remain coordination-only.
+- [x] Identify responsibilities that should move later, but do not move yet without tests.
+- [x] Add tests or static checks preventing new semantic/provider/evidence/capability authority from being added to these hubs.
 
 Completion condition:
 
 ```text
 Hubs may coordinate, but must not become homes for authority, capability, provider policy, evidence policy, or delivery policy.
+```
+
+Phase 6 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Integration_Hub_Containment_Audit.md
+
+Hubs inspected:
+- DataVisualiser/Core/Orchestration/ChartUpdateCoordinator.cs
+- DataVisualiser/Core/Orchestration/ChartRenderingOrchestrator.cs
+- DataVisualiser/UI/ViewModels/MetricLoadCoordinator.cs
+- DataVisualiser/UI/Charts/Presentation/ChartControllerFactory.cs
+- chart-family adapters under DataVisualiser/UI/Charts/Presentation
+
+Tests added:
+- ChartRenderingOrchestrator_ShouldRemainCoordinationOnly
+- MetricLoadCoordinator_ShouldNotAcquireRenderProviderOrInterpretationPolicy
+- ChartFamilyAdapters_ShouldNotAcquireProviderBackendOrAnalyticalAuthority
+
+Validation:
+- ArchitectureGuardrailTests passed 75 tests
+
+Implementation result:
+- no production behavior code changed in Phase 6
+- hub responsibilities were classified before moving code
+- containment guardrails now cover orchestrator, load coordinator, and chart-family adapters
+- MetricLoadCoordinator remains the highest-risk transitional bridge and should be revisited after contract/boundary/projection phases
 ```
 
 ---
@@ -483,20 +511,54 @@ ChartRenderPlanAdapterDispatcher
 
 Tasks:
 
-- [ ] Verify provider metadata survives render-plan projection.
-- [ ] Verify vocabulary metadata survives render-plan projection.
-- [ ] Verify semantic/provenance context survives contract crossing.
-- [ ] Verify provider/plan/backend mismatches are rejected.
-- [ ] Verify adapter qualification is enforced before delivery.
-- [ ] Verify bindings are inspectable and not hidden route policy.
-- [ ] Verify consumers cannot bypass the contract seam where a VNext route exists.
-- [ ] Add tests for invalid backend/provider/delivery combinations.
-- [ ] Add tests for metadata preservation through delivery binding.
+- [x] Verify provider metadata survives render-plan projection.
+- [x] Verify vocabulary metadata survives render-plan projection.
+- [x] Verify semantic/provenance context survives contract crossing.
+- [x] Verify provider/plan/backend mismatches are rejected.
+- [x] Verify adapter qualification is enforced before delivery.
+- [x] Verify bindings are inspectable and not hidden route policy.
+- [x] Verify consumers cannot bypass the contract seam where a VNext route exists.
+- [x] Add tests for invalid backend/provider/delivery combinations.
+- [x] Add tests for metadata preservation through delivery binding.
 
 Completion condition:
 
 ```text
 Downstream delivery is contract-bound, boundary-safe, qualification-backed, binding-explicit, and metadata-preserving.
+```
+
+Phase 7 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Contract_Boundary_Qualification_Audit.md
+
+Structures inspected:
+- ConsumerDeliveryContract
+- ConsumerProviderContract
+- ConsumerProviderRegistry
+- ChartRenderPlan
+- ChartRenderDeliveryBinding
+- ChartRenderPlanProviderMetadata
+- ChartRenderPlanVocabularyMetadata
+- ChartBackendSelector
+- ChartRenderPlanAdapterQualification
+- ChartRenderPlanAdapterQualificationRules
+- ChartRenderPlanAdapterDispatcher
+- AnalyticalRenderPlanPipeline
+
+Tests added:
+- RenderDeliveryBinding_ShouldPreserveExistingSemanticMetadataWhenAttached
+
+Validation:
+- VNext contract/boundary/qualification tests passed 67 tests
+- ArchitectureGuardrailTests passed 75 tests
+
+Implementation result:
+- no production behavior code changed in Phase 7
+- delivery binding remains explicit and inspectable
+- provider/backend mismatch rejection and adapter qualification are test-backed
+- binding metadata now has a guardrail proving semantic/provenance metadata is preserved
 ```
 
 ---
@@ -1033,6 +1095,8 @@ Use this section during implementation.
 | 2026-04-28 | Phase 4 | Classified refactoring opportunities and avoided unproven code movement. | `documents/DataVisualiser_Refactoring_Opportunity_Audit.md`; safe-now code refactors: none; candidates deferred to tests/guardrails or later family-pattern consolidation. | Complete |
 | 2026-04-28 | Phase 5 | Audited authority/provenance/fidelity handoffs and added preservation guardrails. | `documents/DataVisualiser_Authority_Provenance_Fidelity_Audit.md`; `AnalyticalIntentContractsTests`; `AnalyticalInterpretationBuilderTests`; targeted VNext provenance/fidelity validation passed 70 tests. | Complete |
 | 2026-04-28 | Plan refinement | Added a current migration read summarizing Phases 1-5 and orienting Phase 6 toward containment. | `documents/DataVisualiser_Migration_Plan_and_Guardrails.md`; documentation-only change. | Complete |
+| 2026-04-28 | Phase 6 | Classified integration hub responsibilities and added containment guardrails. | `documents/DataVisualiser_Integration_Hub_Containment_Audit.md`; `ArchitectureGuardrailTests`; architecture validation passed 75 tests. | Complete |
+| 2026-04-28 | Phase 7 | Audited contract/boundary/qualification seam and added delivery-binding metadata preservation guardrail. | `documents/DataVisualiser_Contract_Boundary_Qualification_Audit.md`; `ConsumerProviderRegistryTests`; VNext seam validation passed 67 tests; architecture validation passed 75 tests. | Complete |
 
 ---
 
