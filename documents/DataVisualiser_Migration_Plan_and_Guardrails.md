@@ -45,6 +45,19 @@ status is yellow
 migration should proceed by stabilization, seam hardening, then expansion
 ```
 
+Current migration read after Phases 1-5:
+
+```text
+VNext authority/provenance spine exists and is testable.
+Legacy/UI paths remain active transitional bridges.
+Generated governance now references the architectural vocabulary.
+Dependency density is classified before refactoring.
+Refactoring opportunities are documented but not yet broadly actionable.
+Provenance, provider, vocabulary, confidence, and interpretation guardrails now exist.
+The next implementation risk is old integration hubs absorbing new responsibilities.
+Phase 6 should focus on containment and seam hardening before capability expansion.
+```
+
 ---
 
 # 1. Migration Plan
@@ -1019,6 +1032,7 @@ Use this section during implementation.
 | 2026-04-28 | Phase 3 | Classified dependency density before refactoring. | `documents/DataVisualiser_Dependency_Density_Audit.md`; supplied diagram parsed at 4434 edges; generated diagram recorded 6039 textual edges and 0.6656% density; no actual drift confirmed by density alone. | Complete |
 | 2026-04-28 | Phase 4 | Classified refactoring opportunities and avoided unproven code movement. | `documents/DataVisualiser_Refactoring_Opportunity_Audit.md`; safe-now code refactors: none; candidates deferred to tests/guardrails or later family-pattern consolidation. | Complete |
 | 2026-04-28 | Phase 5 | Audited authority/provenance/fidelity handoffs and added preservation guardrails. | `documents/DataVisualiser_Authority_Provenance_Fidelity_Audit.md`; `AnalyticalIntentContractsTests`; `AnalyticalInterpretationBuilderTests`; targeted VNext provenance/fidelity validation passed 70 tests. | Complete |
+| 2026-04-28 | Plan refinement | Added a current migration read summarizing Phases 1-5 and orienting Phase 6 toward containment. | `documents/DataVisualiser_Migration_Plan_and_Guardrails.md`; documentation-only change. | Complete |
 
 ---
 
