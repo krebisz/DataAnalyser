@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-04-27 19:01:25
+Generated: 2026-04-28 11:56:05
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -977,6 +977,7 @@ DataAnalyser/
   documents/
     AI_BOOTSTRAP_ENTRY.md
     Collaboration Protocol.md
+    DataVisualiser_Migration_Plan_and_Guardrails.md
     DataVisualiser_Subsystem_Plan.md
     DataVisualiser-Architectural-Vocabulary.md
     MASTER_OPERATING_PROTOCOL.md
@@ -986,6 +987,7 @@ DataAnalyser/
     Project Roadmap.md
     SYSTEM_MAP.md
     TODO Enhancements.md
+    Type Dependencies Diagram for ChartComputationResult and other elements4.md
     Workspace Workflow.md
   images/
     Logo.png
@@ -999,6 +1001,7 @@ DataAnalyser/
     Generate-ProjectTree.ps1
     Generate-Repo-FileLinks.cmd
     Generate-Repo-FileLinks.ps1
+    Generate-TypeDependencyDiagram.ps1
     Initialize-DataVisualiserWorkspace.ps1
     Refresh-WorkspaceWithLatestPackage.ps1
     Run-PublishPipeline.ps1
@@ -1015,3 +1018,4 @@ DataAnalyser/
   NuGet.Config
   output.txt
   result.txt
+  type-dependency-diagram.md

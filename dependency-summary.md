@@ -1,6 +1,6 @@
 ﻿# Dependency Summary
 
-Generated: 2026-04-27 19:01:29
+Generated: 2026-04-28 11:57:34
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
@@ -70,6 +70,7 @@ No inference. No semantic interpretation.
 - Boundary concerns must be evaluated against:
   - SYSTEM_MAP.md
   - Project Bible.md
+  - DataVisualiser-Architectural-Vocabulary.md
 
 ------------------------------------------------------
 

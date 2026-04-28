@@ -1,6 +1,6 @@
 ﻿# Codebase Index
 
-Generated: 2026-04-27 19:01:19  
+Generated: 2026-04-28 11:55:55  
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
