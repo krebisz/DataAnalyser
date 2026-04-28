@@ -60,6 +60,36 @@ Phase 6 should focus on containment and seam hardening before capability expansi
 
 ---
 
+## Produced Artifact Index
+
+This index records the evidence produced or consumed by Phases 1-13. Phase 1 and Phase 2 use generated repository artifacts and script output rather than dedicated audit notes; Phases 3-13 use focused audit notes plus targeted tests where applicable.
+
+| Phase | Artifact Type | Files |
+|---|---|---|
+| Phase 1 | Generated baseline | `project-tree.txt`; `codebase-index.md`; `dependency-summary.md`; `type-dependency-diagram.md` |
+| Phase 2 | Generator/script update | `scripts/Generate-DependencySummary.ps1`; regenerated `dependency-summary.md` |
+| Phase 3 | Audit note | `documents/DataVisualiser_Dependency_Density_Audit.md` |
+| Phase 4 | Audit note | `documents/DataVisualiser_Refactoring_Opportunity_Audit.md` |
+| Phase 5 | Audit note and guardrails | `documents/DataVisualiser_Authority_Provenance_Fidelity_Audit.md`; VNext provenance/fidelity tests |
+| Phase 6 | Audit note and guardrails | `documents/DataVisualiser_Integration_Hub_Containment_Audit.md`; `ArchitectureGuardrailTests` |
+| Phase 7 | Audit note and guardrails | `documents/DataVisualiser_Contract_Boundary_Qualification_Audit.md`; contract/boundary tests |
+| Phase 8 | Audit note and guardrails | `documents/DataVisualiser_Projection_Translation_Containment_Audit.md`; projection/adapter guardrails |
+| Phase 9 | Audit note and guardrails | `documents/DataVisualiser_Consumer_Interaction_Containment_Audit.md`; consumer/interaction guardrails |
+| Phase 10 | Audit note and guardrails | `documents/DataVisualiser_Surface_Model_Seam_Audit.md`; surface-model guardrails |
+| Phase 11 | Audit note and guardrails | `documents/DataVisualiser_Terminal_Delivery_Boundary_Audit.md`; terminal-delivery guardrails |
+| Phase 12 | Audit note and guardrails | `documents/DataVisualiser_Evidence_Observability_Audit.md`; evidence observability guardrails |
+| Phase 13 | Audit note and guardrails | `documents/DataVisualiser_Governance_Constraints_Audit.md`; governance documentation guardrails |
+
+Historical planning note:
+
+```text
+DataVisualiser_Subsystem_Plan.md uses older subsystem phase numbering.
+This migration plan is the active sequential execution plan for the Phase 1-17 migration described here.
+When phase numbers conflict, use this migration plan and its progress log as the authoritative current sequence.
+```
+
+---
+
 # 1. Migration Plan
 
 ## 1.1 Execution Rules
@@ -779,19 +809,52 @@ vendor lifecycle helpers
 
 Tasks:
 
-- [ ] Identify vendor-specific delivery boundaries.
-- [ ] Confirm vendor code does not define analytical meaning.
-- [ ] Confirm backend code does not define semantic policy.
-- [ ] Confirm rendering code does not own interpretation.
-- [ ] Confirm host/lifecycle code is terminal.
-- [ ] Confirm delivery adapters consume surface/contract output rather than upstream internals.
-- [ ] Add tests proving upstream contracts do not depend on vendor-specific types.
-- [ ] Defer broad render-family consolidation until at least two hardened slices reveal a shared shape.
+- [x] Identify vendor-specific delivery boundaries.
+- [x] Confirm vendor code does not define analytical meaning.
+- [x] Confirm backend code does not define semantic policy.
+- [x] Confirm rendering code does not own interpretation.
+- [x] Confirm host/lifecycle code is terminal.
+- [x] Confirm delivery adapters consume surface/contract output rather than upstream internals.
+- [x] Add tests proving upstream contracts do not depend on vendor-specific types.
+- [x] Defer broad render-family consolidation until at least two hardened slices reveal a shared shape.
 
 Completion condition:
 
 ```text
 Delivery remains downstream, replaceable, vendor-contained, and semantically non-authoritative.
+```
+
+Phase 11 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Terminal_Delivery_Boundary_Audit.md
+
+Delivery/vendor boundaries inspected:
+- render engines under DataVisualiser/Core/Rendering/Engines
+- render adapters under DataVisualiser/Core/Rendering/Adapters
+- chart-family render adapters under DataVisualiser/Core/Rendering
+- backend capability/selector types under DataVisualiser/VNext/Rendering
+- Syncfusion render contracts under DataVisualiser/Core/Rendering/Contracts/Syncfusion
+- Syncfusion delivery adapter under DataVisualiser/Core/Rendering/Syncfusion
+- LiveCharts renderer under DataVisualiser/UI/Charts/Presentation/LiveCharts
+- ECharts placeholder renderer/surface under DataVisualiser/UI/Charts/Presentation/ECharts
+- render host/lifecycle helpers under DataVisualiser/UI/Charts/Presentation
+
+Tests added:
+- VNextSurfaceAndBackendContracts_ShouldNotImportConcreteVendorOrUiLibraries
+- TerminalRenderDelivery_ShouldNotAcquireAnalyticalOrEvidenceAuthority
+- RenderingHostLifecycleHelpers_ShouldRemainTerminalWiring
+
+Validation:
+- Phase 11 terminal-delivery validation passed 142 tests
+
+Implementation result:
+- no production behavior code changed in Phase 11
+- upstream VNext surface/backend contracts remain free of concrete vendor/UI imports
+- terminal render delivery is guarded against analytical, provider-resolution, interpretation, confidence, and evidence authority
+- broad render-family consolidation remains deferred
+- Syncfusion view evidence export composition is carried into Phase 12
 ```
 
 ---
@@ -806,23 +869,54 @@ Ensure evidence, diagnostics, parity, reachability, validation, and audit do not
 
 Tasks:
 
-- [ ] Identify all evidence/diagnostics readers.
-- [ ] Identify all evidence/export services.
-- [ ] Identify parity evaluators.
-- [ ] Identify reachability validators.
-- [ ] Identify validation flows.
-- [ ] Identify audit/export flows.
-- [ ] Confirm evidence reads state but does not mutate live decisions.
-- [ ] Confirm diagnostics do not select providers.
-- [ ] Confirm parity does not route execution.
-- [ ] Confirm reachability does not become live policy.
-- [ ] Confirm validation does not become hidden runtime authority unless explicitly designed as policy.
-- [ ] Add guardrail tests or static checks where feasible.
+- [x] Identify all evidence/diagnostics readers.
+- [x] Identify all evidence/export services.
+- [x] Identify parity evaluators.
+- [x] Identify reachability validators.
+- [x] Identify validation flows.
+- [x] Identify audit/export flows.
+- [x] Confirm evidence reads state but does not mutate live decisions.
+- [x] Confirm diagnostics do not select providers.
+- [x] Confirm parity does not route execution.
+- [x] Confirm reachability does not become live policy.
+- [x] Confirm validation does not become hidden runtime authority unless explicitly designed as policy.
+- [x] Add guardrail tests or static checks where feasible.
 
 Completion condition:
 
 ```text
 Evidence proves, records, exports, validates, and audits without controlling runtime behavior.
+```
+
+Phase 12 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Evidence_Observability_Audit.md
+
+Evidence/diagnostics/export paths inspected:
+- DataVisualiser/UI/MainHost/Evidence
+- DataVisualiser/UI/MainHost/Export
+- DataVisualiser/Core/Validation
+- DataVisualiser/Core/Validation/Parity
+- DataVisualiser/Core/Strategies/Reachability
+- session milestone recorders under UI/Admin, UI/Workspace, UI/Charts/Presentation
+
+Tests added:
+- EvidenceAndDiagnostics_ShouldRemainObservationalNotLiveRouting
+- EvidenceExport_ShouldKeepFileSystemWritesOnDedicatedExportWriter
+- ParityAndReachabilityEvidence_ShouldNotMutateLiveChartState
+
+Validation:
+- Phase 12 evidence/diagnostics/parity/reachability validation passed 158 tests
+
+Implementation result:
+- no production behavior code changed in Phase 12
+- evidence/export remains observational and file writes remain on the dedicated writer seam
+- diagnostics and parity evidence are guarded against live rendering/provider/backend routing
+- evidence export timing remains permitted as observational telemetry
+- runtime validation/parity policy remains explicit and separate from evidence/export
+- Syncfusion view evidence export composition remains documented host composition
 ```
 
 ---
@@ -837,21 +931,51 @@ Make architectural growth bounded and auditable.
 
 Tasks:
 
-- [ ] Define guardrails for new vocabulary.
-- [ ] Define guardrails for new concepts.
-- [ ] Define guardrails for new capabilities.
-- [ ] Define guardrails for new transformations.
-- [ ] Define guardrails for new consumers.
-- [ ] Define guardrails for new delivery backends.
-- [ ] Define guardrails for new evidence paths.
-- [ ] Ensure future additions map to the reduced grammar.
-- [ ] Ensure future additions do not centralize UI/render/vendor concerns.
-- [ ] Ensure future additions support losslessness, traceability, reversibility, neutrality, or evidence.
+- [x] Define guardrails for new vocabulary.
+- [x] Define guardrails for new concepts.
+- [x] Define guardrails for new capabilities.
+- [x] Define guardrails for new transformations.
+- [x] Define guardrails for new consumers.
+- [x] Define guardrails for new delivery backends.
+- [x] Define guardrails for new evidence paths.
+- [x] Ensure future additions map to the reduced grammar.
+- [x] Ensure future additions do not centralize UI/render/vendor concerns.
+- [x] Ensure future additions support losslessness, traceability, reversibility, neutrality, or evidence.
 
 Completion condition:
 
 ```text
 New architectural growth is possible, governed, auditable, and aligned with the target grammar.
+```
+
+Phase 13 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Governance_Constraints_Audit.md
+
+Governance constraints defined for:
+- new vocabulary
+- new concepts
+- new capabilities
+- new transformations
+- new consumers
+- new delivery backends
+- new evidence paths
+
+Tests added:
+- ArchitectureVocabulary_ShouldDefineGovernedGrowthCriteriaAndExtensionPool
+- MigrationPlan_ShouldKeepGovernanceBeforeCapabilityExpansion
+- GovernanceConstraintsAudit_ShouldMapFutureGrowthToReducedGrammar
+
+Validation:
+- ArchitectureGuardrailTests passed 93 tests
+
+Implementation result:
+- no production behavior code changed in Phase 13
+- future growth is tied to the reduced grammar and governed extension pool
+- capability expansion remains gated behind governance and the target spine
+- source-boundary guardrails from Phases 6 through 12 remain the enforcement layer for current code
 ```
 
 ---
@@ -1199,6 +1323,9 @@ Use this section during implementation.
 | 2026-04-28 | Phase 8 | Classified projection/translation roles and added non-authority containment guardrails. | `documents/DataVisualiser_Projection_Translation_Containment_Audit.md`; `ArchitectureGuardrailTests`; projector/adapter validation passed 33 tests; architecture validation passed 78 tests. | Complete |
 | 2026-04-28 | Phase 9 | Audited consumer/interaction layer and added non-authority guardrails. | `documents/DataVisualiser_Consumer_Interaction_Containment_Audit.md`; `ArchitectureGuardrailTests`; consumer/interaction validation passed 118 tests. | Complete |
 | 2026-04-28 | Phase 10 | Audited surface-model seam and added neutrality/lifecycle guardrails. | `documents/DataVisualiser_Surface_Model_Seam_Audit.md`; `ArchitectureGuardrailTests`; surface-model validation passed 121 tests. | Complete |
+| 2026-04-28 | Phase 11 | Audited terminal delivery/vendor boundaries and added downstream containment guardrails. | `documents/DataVisualiser_Terminal_Delivery_Boundary_Audit.md`; `ArchitectureGuardrailTests`; terminal-delivery validation passed 142 tests. | Complete |
+| 2026-04-28 | Phase 12 | Audited evidence/diagnostics/parity/reachability/validation flows and added observational guardrails. | `documents/DataVisualiser_Evidence_Observability_Audit.md`; `ArchitectureGuardrailTests`; evidence/parity/reachability validation passed 158 tests. | Complete |
+| 2026-04-28 | Phase 13 | Defined governance constraints for future vocabulary, concepts, capabilities, transformations, consumers, backends, and evidence paths. | `documents/DataVisualiser_Governance_Constraints_Audit.md`; `ArchitectureGuardrailTests`; architecture validation passed 93 tests. | Complete |
 
 ---
 

@@ -6,6 +6,8 @@
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, do-not-confuse distinctions, and migration-risk language  
 **Last Updated:** 2026-04-26
 
+**Historical numbering note:** This document preserves older subsystem phase numbering. For the current DataVisualiser migration sequence, use `DataVisualiser_Migration_Plan_and_Guardrails.md` as the active sequential plan and progress log. When phase numbers differ, the migration plan's Phase 1-17 sequence is authoritative for current execution.
+
 ---
 
 ## 1. Purpose

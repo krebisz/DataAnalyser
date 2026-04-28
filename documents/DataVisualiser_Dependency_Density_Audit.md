@@ -2,6 +2,8 @@
 
 Recorded: 2026-04-28
 
+Phase: 3 - Classify Dependency Density
+
 ## Purpose
 
 This note classifies the current dependency-density evidence before refactoring or capability expansion continues. It is a Phase 3 audit artifact for `DataVisualiser_Migration_Plan_and_Guardrails.md`.

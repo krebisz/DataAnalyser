@@ -2,6 +2,8 @@
 
 Recorded: 2026-04-28
 
+Phase: 4 - Identify Refactoring Opportunities
+
 ## Purpose
 
 This note records Phase 4 refactoring-opportunity classification from `DataVisualiser_Migration_Plan_and_Guardrails.md`. It follows the Phase 3 dependency-density audit and intentionally separates safe refactoring from density-driven churn.

@@ -41,6 +41,58 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void ArchitectureVocabulary_ShouldDefineGovernedGrowthCriteriaAndExtensionPool()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser-Architectural-Vocabulary.md");
+
+        Assert.Contains("### 7.6 Governed Extension Pool", source, StringComparison.Ordinal);
+        Assert.Contains("### 7.7 Governed Growth Criteria", source, StringComparison.Ordinal);
+        Assert.Contains("Authority / Semantics / Provenance / Traceability / Envelope", source, StringComparison.Ordinal);
+        Assert.Contains("Intent / Capability / Composition / Transformation / Interpretation / Confidence / Overlay", source, StringComparison.Ordinal);
+        Assert.Contains("Program / Policy / Contract / Boundary / Neutrality / Qualification", source, StringComparison.Ordinal);
+        Assert.Contains("Provider / Consumer / Interaction / SurfaceModel / Binding", source, StringComparison.Ordinal);
+        Assert.Contains("Delivery / Backend / RuntimeBoundary / VendorBoundary / Lifecycle", source, StringComparison.Ordinal);
+        Assert.Contains("Evidence / Diagnostics / Parity / Reachability / Validation / Audit / Record", source, StringComparison.Ordinal);
+        Assert.Contains("New concepts may be added later when they materially improve", source, StringComparison.Ordinal);
+        Assert.Contains("Reject new concepts when they only", source, StringComparison.Ordinal);
+        Assert.Contains("centralize delivery, UI, or vendor concerns", source, StringComparison.Ordinal);
+        Assert.Contains("governed by project goals", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MigrationPlan_ShouldKeepGovernanceBeforeCapabilityExpansion()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Migration_Plan_and_Guardrails.md");
+
+        Assert.True(
+            source.IndexOf("## 1.14 Phase 13", StringComparison.Ordinal) <
+            source.IndexOf("## 1.15 Phase 14", StringComparison.Ordinal));
+        Assert.Contains("Make architectural growth bounded and auditable.", source, StringComparison.Ordinal);
+        Assert.Contains("New architectural growth is possible, governed, auditable, and aligned with the target grammar.", source, StringComparison.Ordinal);
+        Assert.Contains("Add new analytical behavior only through the target spine.", source, StringComparison.Ordinal);
+        Assert.Contains("Do not add new analytical capability until containment, seams, and guardrails are stable.", source, StringComparison.Ordinal);
+        Assert.Contains("Do not add new capability before containment.", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GovernanceConstraintsAudit_ShouldMapFutureGrowthToReducedGrammar()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Governance_Constraints_Audit.md");
+
+        Assert.Contains("Reduced Grammar Anchor", source, StringComparison.Ordinal);
+        Assert.Contains("Growth Guardrails", source, StringComparison.Ordinal);
+        Assert.Contains("Review Gate", source, StringComparison.Ordinal);
+        Assert.Contains("New vocabulary must improve clarity", source, StringComparison.Ordinal);
+        Assert.Contains("New concepts must declare ownership", source, StringComparison.Ordinal);
+        Assert.Contains("New capabilities must enter through intent", source, StringComparison.Ordinal);
+        Assert.Contains("New transformations must preserve provenance", source, StringComparison.Ordinal);
+        Assert.Contains("New consumers must receive authoritative output through contracts", source, StringComparison.Ordinal);
+        Assert.Contains("New delivery backends must remain terminal and replaceable", source, StringComparison.Ordinal);
+        Assert.Contains("New evidence paths must remain observational", source, StringComparison.Ordinal);
+        Assert.Contains("Which old hub is explicitly prevented from absorbing the responsibility?", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ChartUpdateCoordinator_ShouldNotAcquireSemanticProviderOrEvidenceAuthority()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
@@ -385,6 +437,152 @@ public sealed class ArchitectureGuardrailTests
             foreach (var token in forbiddenTokens)
                 Assert.DoesNotContain(token, source, StringComparison.Ordinal);
         }
+    }
+
+    [Fact]
+    public void VNextSurfaceAndBackendContracts_ShouldNotImportConcreteVendorOrUiLibraries()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [
+                Path.Combine("DataVisualiser", "VNext", "Contracts"),
+                Path.Combine("DataVisualiser", "VNext", "Rendering")
+            ],
+            [
+                "using LiveCharts",
+                "using Syncfusion",
+                "using System.Windows",
+                "DataVisualiser.UI"
+            ]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void TerminalRenderDelivery_ShouldNotAcquireAnalyticalOrEvidenceAuthority()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [
+                Path.Combine("DataVisualiser", "Core", "Rendering", "Engines"),
+                Path.Combine("DataVisualiser", "Core", "Rendering", "Adapters"),
+                Path.Combine("DataVisualiser", "Core", "Rendering", "Distribution"),
+                Path.Combine("DataVisualiser", "Core", "Rendering", "Syncfusion"),
+                Path.Combine("DataVisualiser", "Core", "Rendering", "WeekdayTrend"),
+                Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "LiveCharts"),
+                Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ECharts")
+            ],
+            [
+                "AnalyticalIntentFactory",
+                "ReasoningSessionCoordinator",
+                "ConfidenceAnnotationEvaluator",
+                "InterpretiveOverlayPlanner",
+                "EvidenceDiagnosticsBuilder",
+                "MainChartsEvidenceExportService",
+                "ConsumerProviderRegistry",
+                "ChartRenderDeliveryBinding"
+            ]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void RenderingHostLifecycleHelpers_ShouldRemainTerminalWiring()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "UI",
+            "Charts",
+            "Presentation",
+            "RenderingHostLifecycleAdapterHelper.cs");
+        var forbiddenTokens = new[]
+        {
+            "AnalyticalIntentFactory",
+            "ReasoningSessionCoordinator",
+            "ConfidenceAnnotationEvaluator",
+            "InterpretiveOverlayPlanner",
+            "EvidenceDiagnosticsBuilder",
+            "MainChartsEvidenceExportService",
+            "ConsumerProviderRegistry",
+            "ChartRenderDeliveryBinding",
+            "ChartBackendSelector",
+            "ChartRenderPlanProjector",
+            "ChartRenderPlanAdapterDispatcher"
+        };
+
+        foreach (var token in forbiddenTokens)
+            Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EvidenceAndDiagnostics_ShouldRemainObservationalNotLiveRouting()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [Path.Combine("DataVisualiser", "UI", "MainHost", "Evidence")],
+            [
+                "UpdateChartUsingStrategyAsync(",
+                "RenderAsync(",
+                ".ApplyAsync(",
+                "LoadProgramAsync(",
+                "ChartRenderDeliveryBinding.Resolve",
+                "ConsumerProviderRegistry",
+                "ChartBackendSelector",
+                "SetRenderPlanDiagnostics",
+                "LastContext =",
+                "LastLoadRuntime =",
+                "IsMainVisible =",
+                "IsNormalizedVisible =",
+                "IsDiffRatioVisible =",
+                "IsDistributionVisible ="
+            ]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void EvidenceExport_ShouldKeepFileSystemWritesOnDedicatedExportWriter()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [Path.Combine("DataVisualiser", "UI", "MainHost", "Evidence")],
+            [
+                "File.WriteAllText(",
+                "Directory.CreateDirectory(",
+                "JsonSerializer.Serialize("
+            ]);
+
+        AssertNoMatches(offenders);
+
+        var writerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "UI",
+            "MainHost",
+            "Export",
+            "ReachabilityExportWriter.cs");
+        Assert.Contains("Directory.CreateDirectory", writerSource, StringComparison.Ordinal);
+        Assert.Contains("File.WriteAllText", writerSource, StringComparison.Ordinal);
+        Assert.Contains("JsonSerializer.Serialize", writerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ParityAndReachabilityEvidence_ShouldNotMutateLiveChartState()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [
+                Path.Combine("DataVisualiser", "UI", "MainHost", "Evidence"),
+                Path.Combine("DataVisualiser", "Core", "Validation", "Parity"),
+                Path.Combine("DataVisualiser", "Core", "Strategies", "Reachability")
+            ],
+            [
+                "UpdateChartUsingStrategyAsync(",
+                "RenderAsync(",
+                ".ApplyAsync(",
+                "SetRenderPlanDiagnostics",
+                "LastContext =",
+                "LastLoadRuntime =",
+                "ConsumerProviderRegistry",
+                "ChartRenderDeliveryBinding",
+                "ChartBackendSelector"
+            ]);
+
+        AssertNoMatches(offenders);
     }
 
     [Fact]
