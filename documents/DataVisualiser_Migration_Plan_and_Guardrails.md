@@ -229,19 +229,42 @@ actual drift
 
 Tasks:
 
-- [ ] Inspect latest type dependency diagram.
-- [ ] Identify dense Authority / Reasoning / Contract / Delivery / Evidence seams.
-- [ ] Identify transitional bridge clusters.
-- [ ] Identify diagram/export noise.
-- [ ] Identify accidental coupling clusters.
-- [ ] Identify any actual drift.
-- [ ] Document findings in a short audit note.
-- [ ] Flag refactoring candidates only after classification.
+- [x] Inspect latest type dependency diagram.
+- [x] Identify dense Authority / Reasoning / Contract / Delivery / Evidence seams.
+- [x] Identify transitional bridge clusters.
+- [x] Identify diagram/export noise.
+- [x] Identify accidental coupling clusters.
+- [x] Identify any actual drift.
+- [x] Document findings in a short audit note.
+- [x] Flag refactoring candidates only after classification.
 
 Completion condition:
 
 ```text
 Density is classified before refactoring or capability expansion proceeds.
+```
+
+Phase 3 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Dependency_Density_Audit.md
+
+Inputs inspected:
+- documents/Type Dependencies Diagram.md
+- type-dependency-diagram.md
+- codebase-index.md
+- dependency-summary.md
+- DataVisualiser-Architectural-Vocabulary.md
+- SYSTEM_MAP.md
+- selected hub files under DataVisualiser/Core, DataVisualiser/UI, and DataVisualiser/VNext
+
+Classification result:
+- legitimate steady-state seams: domain/state carriers, strategy contracts, render-plan contracts, metadata keys, and vocabulary/program identifiers
+- legitimate transitional bridges: MetricLoadCoordinator, VNext main/series load coordinators, VNext data resolution, legacy projectors/gateways, chart-family adapter bridges, parity/evidence comparison paths
+- diagram/export noise: generic nested names, test-only density, repeated family request/route/capability records, and repeated Mermaid node/edge output
+- accidental coupling candidates: MainChartsView, SyncfusionChartsView, ChartUpdateCoordinator, ChartRenderingOrchestrator, ChartControllerFactory, ChartControllerFactoryContext, BaseDistributionService, chart-family controller adapters, TransformDataPanelControllerAdapter, EvidenceDiagnosticsBuilder
+- actual drift: none confirmed by density evidence alone
 ```
 
 ---
@@ -948,7 +971,7 @@ Use this section during implementation.
 |---|---|---|---|---|
 | 2026-04-28 | Phase 1 | Regenerated baseline artifacts and recorded structural baseline. | `project-tree.txt`; `codebase-index.md`; `dependency-summary.md`; `type-dependency-diagram.md`; supplied dependency diagram parsed at 4434 edges; test discovery listed 925 tests; indexed 988 symbols; density reading 0.6656%; validation passed 925 tests. | Complete |
 | 2026-04-28 | Phase 2 | Updated dependency summary generator to include the architectural vocabulary in boundary-evaluation references. | `scripts/Generate-DependencySummary.ps1`; regenerated `dependency-summary.md`; confirmed `Project Bible.md`, `SYSTEM_MAP.md`, and `DataVisualiser-Architectural-Vocabulary.md` references; validation passed 925 tests. | Complete |
-|  |  |  |  |  |
+| 2026-04-28 | Phase 3 | Classified dependency density before refactoring. | `documents/DataVisualiser_Dependency_Density_Audit.md`; supplied diagram parsed at 4434 edges; generated diagram recorded 6039 textual edges and 0.6656% density; no actual drift confirmed by density alone. | Complete |
 
 ---
 
