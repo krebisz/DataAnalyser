@@ -304,29 +304,46 @@ breaks parity or behavior
 
 Tasks:
 
-- [ ] Identify repeated structures across chart/render/delivery families.
-- [ ] Identify exception-driven paths that can become generalized seams.
-- [ ] Identify contradictory ownership between Core, VNext, UI, rendering, delivery, and evidence.
-- [ ] Identify hubs that can lose responsibility safely.
-- [ ] Identify duplicated request/route/qualification/adapter patterns.
-- [ ] Identify places where target grammar can replace implementation-shaped concepts:
-  - [ ] `Controller` -> `ConsumerAdapter`
-  - [ ] `ViewModel` -> `ConsumerState`
-  - [ ] `Renderer` -> `DeliveryAdapter`
-  - [ ] `Route` -> `Binding`
-  - [ ] `Host` -> `RuntimeBoundary` / `DeliverySurface`
-  - [ ] `Diagnostics` -> `Evidence`, where proof/audit is intended
-- [ ] Classify each opportunity as:
-  - [ ] safe now
-  - [ ] needs tests first
-  - [ ] defer until another slice proves shared shape
-  - [ ] reject because difference is real
-- [ ] Implement only safe-now or test-backed opportunities.
+- [x] Identify repeated structures across chart/render/delivery families.
+- [x] Identify exception-driven paths that can become generalized seams.
+- [x] Identify contradictory ownership between Core, VNext, UI, rendering, delivery, and evidence.
+- [x] Identify hubs that can lose responsibility safely.
+- [x] Identify duplicated request/route/qualification/adapter patterns.
+- [x] Identify places where target grammar can replace implementation-shaped concepts:
+  - [x] `Controller` -> `ConsumerAdapter`
+  - [x] `ViewModel` -> `ConsumerState`
+  - [x] `Renderer` -> `DeliveryAdapter`
+  - [x] `Route` -> `Binding`
+  - [x] `Host` -> `RuntimeBoundary` / `DeliverySurface`
+  - [x] `Diagnostics` -> `Evidence`, where proof/audit is intended
+- [x] Classify each opportunity as:
+  - [x] safe now
+  - [x] needs tests first
+  - [x] defer until another slice proves shared shape
+  - [x] reject because difference is real
+- [x] Implement only safe-now or test-backed opportunities.
 
 Completion condition:
 
 ```text
 Refactoring opportunities are recorded and only behavior-preserving, architecture-strengthening changes proceed.
+```
+
+Phase 4 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Refactoring_Opportunity_Audit.md
+
+Classification result:
+- safe-now code refactors: none identified
+- needs tests first: old hub caps for ChartUpdateCoordinator, ChartRenderingOrchestrator, MetricLoadCoordinator, ChartControllerFactory, EvidenceDiagnosticsBuilder; contract/boundary metadata preservation and mismatch rejection
+- defer until another slice proves shared shape: repeated render request/route/qualification/capability/host/surface/adapter/builder patterns
+- reject for now: cosmetic target-grammar renames and dense domain/state carrier refactors
+
+Implementation result:
+- no behavior code changed in Phase 4
+- no refactoring performed without safe-now or test-backed justification
 ```
 
 ---
@@ -341,21 +358,49 @@ Prevent canonical meaning, provenance, traceability, fidelity, determinism, and 
 
 Tasks:
 
-- [ ] Identify current authority/provenance-carrying structures.
-- [ ] Identify request/result/snapshot types crossing major seams.
-- [ ] Identify where Envelope-like carriers are already present or needed.
-- [ ] Check whether semantic context is preserved across those crossings.
-- [ ] Check whether transformation/projection steps are lossless or explicitly annotated.
-- [ ] Check whether reversible/traceable paths exist where required.
-- [ ] Add or strengthen tests proving provenance/metadata preservation.
-- [ ] Add guardrail tests for loss of provider/vocabulary metadata.
-- [ ] Ensure confidence remains annotation unless consumed by explicit policy.
-- [ ] Ensure interpretation does not mutate canonical result truth.
+- [x] Identify current authority/provenance-carrying structures.
+- [x] Identify request/result/snapshot types crossing major seams.
+- [x] Identify where Envelope-like carriers are already present or needed.
+- [x] Check whether semantic context is preserved across those crossings.
+- [x] Check whether transformation/projection steps are lossless or explicitly annotated.
+- [x] Check whether reversible/traceable paths exist where required.
+- [x] Add or strengthen tests proving provenance/metadata preservation.
+- [x] Add guardrail tests for loss of provider/vocabulary metadata.
+- [x] Ensure confidence remains annotation unless consumed by explicit policy.
+- [x] Ensure interpretation does not mutate canonical result truth.
 
 Completion condition:
 
 ```text
 Key analytical outputs preserve semantic context, provenance, traceability, fidelity, confidence, and reversibility across major handoffs.
+```
+
+Phase 5 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Authority_Provenance_Fidelity_Audit.md
+
+Code inspected:
+- DataVisualiser/VNext/Contracts
+- DataVisualiser/VNext/Application
+- DataVisualiser/VNext/Rendering
+- DataVisualiser/Core/Rendering/Adapters
+- DataVisualiser.Tests/VNext
+- DataVisualiser.Tests/UI/MainHost
+
+Tests strengthened:
+- DataVisualiser.Tests/VNext/AnalyticalIntentContractsTests.cs
+- DataVisualiser.Tests/VNext/AnalyticalInterpretationBuilderTests.cs
+
+Validation:
+- targeted VNext provenance/fidelity guardrails passed 70 tests
+
+Implementation result:
+- no production behavior code changed in Phase 5
+- existing VNext authority/provenance carriers were confirmed sufficient for this phase
+- guardrail tests now cover provider/vocabulary metadata and interpretation confidence immutability
+- legacy projection, derived-program reversibility, and lossy density projection remain documented transitional risks for later phases
 ```
 
 ---
@@ -972,6 +1017,8 @@ Use this section during implementation.
 | 2026-04-28 | Phase 1 | Regenerated baseline artifacts and recorded structural baseline. | `project-tree.txt`; `codebase-index.md`; `dependency-summary.md`; `type-dependency-diagram.md`; supplied dependency diagram parsed at 4434 edges; test discovery listed 925 tests; indexed 988 symbols; density reading 0.6656%; validation passed 925 tests. | Complete |
 | 2026-04-28 | Phase 2 | Updated dependency summary generator to include the architectural vocabulary in boundary-evaluation references. | `scripts/Generate-DependencySummary.ps1`; regenerated `dependency-summary.md`; confirmed `Project Bible.md`, `SYSTEM_MAP.md`, and `DataVisualiser-Architectural-Vocabulary.md` references; validation passed 925 tests. | Complete |
 | 2026-04-28 | Phase 3 | Classified dependency density before refactoring. | `documents/DataVisualiser_Dependency_Density_Audit.md`; supplied diagram parsed at 4434 edges; generated diagram recorded 6039 textual edges and 0.6656% density; no actual drift confirmed by density alone. | Complete |
+| 2026-04-28 | Phase 4 | Classified refactoring opportunities and avoided unproven code movement. | `documents/DataVisualiser_Refactoring_Opportunity_Audit.md`; safe-now code refactors: none; candidates deferred to tests/guardrails or later family-pattern consolidation. | Complete |
+| 2026-04-28 | Phase 5 | Audited authority/provenance/fidelity handoffs and added preservation guardrails. | `documents/DataVisualiser_Authority_Provenance_Fidelity_Audit.md`; `AnalyticalIntentContractsTests`; `AnalyticalInterpretationBuilderTests`; targeted VNext provenance/fidelity validation passed 70 tests. | Complete |
 
 ---
 

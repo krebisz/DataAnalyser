@@ -159,6 +159,43 @@ public sealed class AnalyticalIntentContractsTests
         Assert.Equal("RatioChart", plan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
         Assert.Equal(AnalyticalCapabilityKind.Comparison.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
         Assert.Equal(CompositionKind.DerivedSeries.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.Equal("LiveChartsWpf", plan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.True(plan.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderSignature));
+    }
+
+    [Fact]
+    public void ProjectHierarchy_WithExecutionResult_ShouldCarryProvenanceVocabularyAndProviderMetadata()
+    {
+        var snapshot = CreateSnapshot();
+        var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
+        var intent = AnalyticalIntent.FromRequests(
+            snapshot.Request,
+            ChartProgramRequest.SyncfusionSunburst(),
+            ConsumerDeliveryContract.HierarchyChart(ChartProgramKind.SyncfusionSunburst, "SyncfusionSunburst"));
+        var program = planner.BuildProgram(snapshot, intent);
+        var result = new AnalyticalExecutionResult(intent, snapshot, program);
+        var projector = new ChartRenderPlanProjector();
+
+        var plan = projector.ProjectHierarchy(
+            result,
+            [
+                new ChartHierarchyNodePlan(
+                    "root",
+                    "All",
+                    10,
+                    Array.Empty<ChartHierarchyNodePlan>(),
+                    new Dictionary<string, string>())
+            ]);
+
+        Assert.Equal(ChartRenderPlanKind.Hierarchy, plan.PlanKind);
+        Assert.Equal(intent.Signature, plan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature]);
+        Assert.Equal(intent.Provenance.Signature, plan.Metadata[ChartRenderPlanMetadataKeys.ProvenanceSignature]);
+        Assert.Equal(ConsumerKind.HierarchyChart.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+        Assert.Equal("SyncfusionSunburst", plan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(AnalyticalCapabilityKind.Hierarchy.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal(CompositionKind.Hierarchy.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.Equal("SyncfusionSunburst", plan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.True(plan.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderSignature));
     }
 
     [Theory]

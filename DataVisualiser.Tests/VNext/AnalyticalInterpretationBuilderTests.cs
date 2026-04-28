@@ -49,9 +49,38 @@ public sealed class AnalyticalInterpretationBuilderTests
                 ExcludeCriticalConfidenceSeriesFromOverlays: true));
 
         Assert.True(interpretation.Confidence.HasAnnotations);
+        Assert.Same(execution, interpretation.Execution);
+        Assert.Same(execution.Program, interpretation.Execution.Program);
+        Assert.Equal(2, interpretation.Execution.Program.Series.Count);
         var overlay = Assert.Single(interpretation.Overlays);
         Assert.Equal("evening", overlay.ResolvedParameters["SeriesId"]);
         Assert.Equal(2, execution.Program.Series.Count);
+    }
+
+    [Fact]
+    public void Build_ShouldKeepConfidenceAsAnnotationWithoutChangingProgramTruth()
+    {
+        var execution = CreateExecution(
+            new ChartSeriesProgram("morning", "Morning", [1d, double.NaN], [1d, 2d]));
+        var originalProgram = execution.Program;
+        var originalSeries = execution.Program.Series[0];
+
+        var interpretation = new AnalyticalInterpretationBuilder().Build(
+            execution,
+            includeAverageLines: true,
+            includeMedianLines: true);
+
+        Assert.Same(execution, interpretation.Execution);
+        Assert.Same(originalProgram, interpretation.Execution.Program);
+        Assert.Same(originalSeries, interpretation.Execution.Program.Series[0]);
+        Assert.Equal([1d, double.NaN], interpretation.Execution.Program.Series[0].RawValues);
+        Assert.True(interpretation.Confidence.HasAnnotations);
+        Assert.Equal(execution.Program.SourceSignature, interpretation.Confidence.SourceSignature);
+        Assert.All(interpretation.Overlays, overlay =>
+        {
+            Assert.Equal("False", overlay.ResolvedParameters["Authoritative"]);
+            Assert.Equal(execution.Program.SourceSignature, overlay.ResolvedParameters["SourceSignature"]);
+        });
     }
 
     [Fact]
