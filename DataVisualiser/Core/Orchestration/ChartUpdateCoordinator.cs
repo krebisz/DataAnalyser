@@ -72,12 +72,14 @@ public class ChartUpdateCoordinator
     ///     Runs the supplied strategy, then renders the result into the target chart.
     ///     If the strategy returns null, the chart is cleared.
     /// </summary>
-    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null, bool useRenderPlanAdapter = false, ChartProgramKind renderProgramKind = ChartProgramKind.Main, ChartProgramRequest? renderProgramRequest = null, CapabilityRequest? renderCapability = null, ConsumerDeliveryContract? renderDelivery = null)
+    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, ChartUpdateRequest request)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
         if (strategy == null)
             throw new ArgumentNullException(nameof(strategy));
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
 
         // -------------------------
         // Phase 1: Compute
@@ -93,13 +95,13 @@ public class ChartUpdateCoordinator
         // -------------------------
         // Phase 2: Build render model
         // -------------------------
-        var cumulativeBundle = isCumulative ? BuildCumulativeSeries(result, strategy, primaryLabel, secondaryLabel) : (RenderSeries: null, OriginalSeries: null);
+        var cumulativeBundle = request.IsCumulative ? BuildCumulativeSeries(result, strategy, request.PrimaryLabel, request.SecondaryLabel) : (RenderSeries: null, OriginalSeries: null);
         var renderSeries = cumulativeBundle.RenderSeries;
 
-        var model = BuildChartRenderModel(strategy, result, targetChart, primaryLabel, secondaryLabel, metricType, primarySubtype, secondarySubtype, operationType, isOperationChart, secondaryMetricType, displayPrimaryMetricType, displaySecondaryMetricType, displayPrimarySubtype, displaySecondarySubtype, isStacked, renderSeries, overlaySeries);
+        var model = BuildChartRenderModel(strategy, result, targetChart, request.PrimaryLabel, request.SecondaryLabel, request.MetricType, request.PrimarySubtype, request.SecondarySubtype, request.OperationType, request.IsOperationChart, request.SecondaryMetricType, request.DisplayPrimaryMetricType, request.DisplaySecondaryMetricType, request.DisplayPrimarySubtype, request.DisplaySecondarySubtype, request.IsStacked, renderSeries, request.OverlaySeries);
 
-        if (isStacked || isCumulative)
-            targetChart.Tag = new ChartStackingTooltipState(true, isCumulative, isCumulative ? cumulativeBundle.OriginalSeries : null, overlaySeries?.Select(series => series.DisplayName).ToList());
+        if (request.IsStacked || request.IsCumulative)
+            targetChart.Tag = new ChartStackingTooltipState(true, request.IsCumulative, request.IsCumulative ? cumulativeBundle.OriginalSeries : null, request.OverlaySeries?.Select(series => series.DisplayName).ToList());
         else if (targetChart.Tag is ChartStackingTooltipState)
             targetChart.Tag = null;
 
@@ -113,17 +115,16 @@ public class ChartUpdateCoordinator
                     {
                         LastRenderPlanAdapterResult = null;
 
-                        if (useRenderPlanAdapter)
+                        if (request.UseRenderPlanAdapter)
                         {
-                            var renderPlan = CartesianMetricRenderPlanBuilder.Build(model, metricType, isCumulative, renderProgramKind, _renderPlanProjector, renderProgramRequest, renderCapability, renderDelivery);
+                            var renderPlan = CartesianMetricRenderPlanBuilder.Build(model, request.MetricType, request.IsCumulative, request.RenderProgramKind, _renderPlanProjector, request.RenderProgramRequest, request.RenderCapability, request.RenderDelivery);
                             LastRenderPlanAdapterResult = _renderPlanAdapterDispatcher.ApplyAsync(
-                                new LiveChartsRenderSurface(targetChart, _chartRenderEngine, minHeight),
+                                new LiveChartsRenderSurface(targetChart, _chartRenderEngine, request.MinHeight),
                                 renderPlan).AsTask().GetAwaiter().GetResult();
                         }
                         else
                         {
-                            // Render series (sync render engine)
-                            _chartRenderEngine.Render(targetChart, model, minHeight);
+                            _chartRenderEngine.Render(targetChart, model, request.MinHeight);
                         }
 
                         // Track timestamps for tooltips / hover sync
@@ -134,7 +135,7 @@ public class ChartUpdateCoordinator
 
                         // Normalise Y-axis and adjust chart height based on rendered data
                         if (targetChart.AxisY.Count > 0)
-                            NormalizeYAxisForChart(targetChart, model, minHeight);
+                            NormalizeYAxisForChart(targetChart, model, request.MinHeight);
 
                         // Force chart update (important if chart was hidden when rendered)
                         targetChart.Update(true, true);

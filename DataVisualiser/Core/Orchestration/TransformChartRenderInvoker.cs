@@ -30,24 +30,26 @@ public sealed class TransformChartRenderInvoker : ITransformChartRenderInvoker
         await _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
             host.Chart,
             request.Strategy,
-            request.PrimaryLabel,
-            null,
-            request.MinHeight,
-            context.PrimaryMetricType ?? context.MetricType,
-            context.PrimarySubtype,
-            context.SecondarySubtype,
-            request.OperationType,
-            request.IsOperationChart,
-            context.SecondaryMetricType,
-            context.DisplayPrimaryMetricType,
-            context.DisplaySecondaryMetricType,
-            context.DisplayPrimarySubtype,
-            context.DisplaySecondarySubtype,
-            useRenderPlanAdapter: true,
-            renderProgramKind: ChartProgramKind.Transform,
-            renderProgramRequest: request.CapabilityContract?.ProgramRequest,
-            renderCapability: request.CapabilityContract?.Capability,
-            renderDelivery: request.CapabilityContract?.Delivery);
+            new ChartUpdateRequest
+            {
+                PrimaryLabel = request.PrimaryLabel,
+                MinHeight = request.MinHeight,
+                MetricType = context.PrimaryMetricType ?? context.MetricType,
+                PrimarySubtype = context.PrimarySubtype,
+                SecondarySubtype = context.SecondarySubtype,
+                OperationType = request.OperationType,
+                IsOperationChart = request.IsOperationChart,
+                SecondaryMetricType = context.SecondaryMetricType,
+                DisplayPrimaryMetricType = context.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = context.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = context.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = context.DisplaySecondarySubtype,
+                UseRenderPlanAdapter = true,
+                RenderProgramKind = ChartProgramKind.Transform,
+                RenderProgramRequest = request.CapabilityContract?.ProgramRequest,
+                RenderCapability = request.CapabilityContract?.Capability,
+                RenderDelivery = request.CapabilityContract?.Delivery
+            });
 
         if (_chartUpdateCoordinator.LastRenderPlanAdapterResult != null)
             host.ChartState.SetRenderPlanDiagnostics(

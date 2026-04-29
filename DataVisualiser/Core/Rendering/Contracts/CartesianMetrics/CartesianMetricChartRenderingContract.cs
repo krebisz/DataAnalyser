@@ -209,7 +209,7 @@ public sealed record CartesianMetricCapabilityContract
 
     public static CartesianMetricCapabilityContract Create(ChartProgramKind kind)
     {
-        if (!new HashSet<ChartProgramKind> { ChartProgramKind.Main, ChartProgramKind.Normalized, ChartProgramKind.Difference, ChartProgramKind.Ratio }.Contains(kind))
+        if (!ValidKinds.Contains(kind))
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "Kind must be a CartesianMetric kind.");
 
         var programRequest = kind switch

@@ -52,21 +52,24 @@ public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRen
     {
         var context = request.Context;
         var renderedContext = await orchestrator.RenderPrimaryChartAsync(
-            context,
             host.Chart,
-            data1,
-            context.Data2,
-            context.DisplayName1 ?? string.Empty,
-            context.DisplayName2 ?? string.Empty,
-            context.From,
-            context.To,
-            context.MetricType,
-            request.SelectedSeries,
-            request.ResolutionTableName,
-            request.IsStacked,
-            request.IsCumulative,
-            request.OverlaySeries,
-            request.CapabilityContract);
+            new PrimaryChartRenderRequest
+            {
+                Context = context,
+                Data1 = data1,
+                Data2 = context.Data2,
+                DisplayName1 = context.DisplayName1 ?? string.Empty,
+                DisplayName2 = context.DisplayName2 ?? string.Empty,
+                From = context.From,
+                To = context.To,
+                MetricType = context.MetricType,
+                SelectedSeries = request.SelectedSeries,
+                ResolutionTableName = request.ResolutionTableName,
+                IsStacked = request.IsStacked,
+                IsCumulative = request.IsCumulative,
+                OverlaySeries = request.OverlaySeries,
+                CapabilityContract = request.CapabilityContract
+            });
 
         if (renderedContext != null)
             host.ChartState.LastContext = renderedContext;

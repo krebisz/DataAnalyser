@@ -35,21 +35,23 @@ public sealed class SecondaryMetricChartRenderInvocationStage : ISecondaryMetric
         return _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
             chart,
             plan.Strategy,
-            plan.PrimaryLabel,
-            plan.SecondaryLabel,
-            minHeight: 400,
-            metricType: context.MetricType,
-            primarySubtype: context.PrimarySubtype,
-            secondarySubtype: context.SecondarySubtype,
-            operationType: plan.OperationType,
-            isOperationChart: plan.IsOperationChart,
-            secondaryMetricType: context.SecondaryMetricType,
-            displayPrimaryMetricType: context.DisplayPrimaryMetricType,
-            displaySecondaryMetricType: context.DisplaySecondaryMetricType,
-            displayPrimarySubtype: context.DisplayPrimarySubtype,
-            displaySecondarySubtype: context.DisplaySecondarySubtype,
-            useRenderPlanAdapter: true,
-            renderProgramKind: programKind,
-            renderDelivery: capabilityContract.Delivery);
+            new ChartUpdateRequest
+            {
+                PrimaryLabel = plan.PrimaryLabel,
+                SecondaryLabel = plan.SecondaryLabel,
+                MetricType = context.MetricType,
+                PrimarySubtype = context.PrimarySubtype,
+                SecondarySubtype = context.SecondarySubtype,
+                OperationType = plan.OperationType,
+                IsOperationChart = plan.IsOperationChart,
+                SecondaryMetricType = context.SecondaryMetricType,
+                DisplayPrimaryMetricType = context.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = context.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = context.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = context.DisplaySecondarySubtype,
+                UseRenderPlanAdapter = true,
+                RenderProgramKind = programKind,
+                RenderDelivery = capabilityContract.Delivery
+            });
     }
 }
