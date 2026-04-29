@@ -111,6 +111,9 @@ internal static class TransformChartPresentationCoordinator
         var strategy = new TransformResultStrategy(dataList, results, label, from, to);
         var operationType = operation == "Subtract" ? "-" : operation == "Add" ? "+" : operation == "Divide" ? "/" : null;
         var isOperationChart = operation == "Subtract" || operation == "Add" || operation == "Divide";
+        var operationRequests = TransformSeriesOperationRequestMapper.TryCreate(operation, transformContext.DisplayPrimarySubtype ?? transformContext.DisplayName1 ?? "Primary", transformContext.DisplaySecondarySubtype ?? transformContext.DisplayName2, out var operationRequest) && operationRequest != null
+            ? new[] { operationRequest }
+            : Array.Empty<DataVisualiser.VNext.Contracts.SeriesOperationRequest>();
 
         await renderingContract.RenderAsync(
             new TransformChartRenderRequest(
@@ -119,7 +122,8 @@ internal static class TransformChartPresentationCoordinator
                 strategy,
                 label,
                 operationType,
-                isOperationChart),
+                isOperationChart,
+                CapabilityContract: TransformCapabilityContract.Create(label, operationRequests)),
             renderHost);
     }
 }

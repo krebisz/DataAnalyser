@@ -90,6 +90,12 @@ public sealed class WeekdayTrendChartControllerAdapterTests
             Assert.Equal(WeekdayTrendChartMode.Polar, setup.ChartState.WeekdayTrendChartMode);
             Assert.NotNull(setup.RenderingContract.LastRenderRequest);
             Assert.Equal(WeekdayTrendRenderingRoute.Polar, setup.RenderingContract.LastRenderRequest!.Route);
+            Assert.NotNull(setup.RenderingContract.LastRenderRequest.CapabilityContract);
+            Assert.Equal(ChartProgramKind.WeekdayTrend, setup.RenderingContract.LastRenderRequest.CapabilityContract!.ProgramRequest.Kind);
+            Assert.Equal(AnalyticalCapabilityKind.TemporalTrend, setup.RenderingContract.LastRenderRequest.CapabilityContract.Capability.CapabilityKind);
+            Assert.Equal(CompositionKind.SingleSeries, setup.RenderingContract.LastRenderRequest.CapabilityContract.Capability.CompositionKind);
+            Assert.Equal(ConsumerKind.Chart, setup.RenderingContract.LastRenderRequest.CapabilityContract.Delivery.ConsumerKind);
+            Assert.Equal("WeekdayTrendChart", setup.RenderingContract.LastRenderRequest.CapabilityContract.Delivery.DeliveryTarget);
             Assert.Equal("Scatter", setup.Controller.ChartTypeToggleButton.Content);
             Assert.Equal(1, setup.CutOverService.CreateStrategyCallCount);
             Assert.Equal(1, setup.CutOverService.Strategy.ComputeCallCount);
@@ -247,9 +253,11 @@ public sealed class WeekdayTrendChartControllerAdapterTests
             };
             ChartRenderPlanVocabularyMetadata.AddTo(
                 metadata,
-                ChartProgramKind.WeekdayTrend,
+                request.CapabilityContract?.ProgramRequest ?? ChartProgramRequest.WeekdayTrend(),
+                request.CapabilityContract?.Capability ?? CapabilityRequest.FromProgramRequest(ChartProgramRequest.WeekdayTrend()),
+                request.CapabilityContract?.Delivery ?? ConsumerDeliveryContract.Chart(ChartProgramKind.WeekdayTrend, "WeekdayTrendChart"),
                 $"{request.SelectionDisplayKey}:{request.Route}",
-                deliveryTarget: "WeekdayTrendChart");
+                overlayCount: 0);
 
             return new ChartRenderAdapterResult(
                 WeekdayTrendBackendKey.LiveChartsWpfCartesian,

@@ -71,7 +71,7 @@ public class ChartUpdateCoordinator
     ///     Runs the supplied strategy, then renders the result into the target chart.
     ///     If the strategy returns null, the chart is cleared.
     /// </summary>
-    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null, bool useRenderPlanAdapter = false, ChartProgramKind renderProgramKind = ChartProgramKind.Main)
+    public async Task UpdateChartUsingStrategyAsync(CartesianChart targetChart, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel = null, double minHeight = 400.0, string? metricType = null, string? primarySubtype = null, string? secondarySubtype = null, string? operationType = null, bool isOperationChart = false, string? secondaryMetricType = null, string? displayPrimaryMetricType = null, string? displaySecondaryMetricType = null, string? displayPrimarySubtype = null, string? displaySecondarySubtype = null, bool isStacked = false, bool isCumulative = false, IReadOnlyList<SeriesResult>? overlaySeries = null, bool useRenderPlanAdapter = false, ChartProgramKind renderProgramKind = ChartProgramKind.Main, ChartProgramRequest? renderProgramRequest = null, CapabilityRequest? renderCapability = null, ConsumerDeliveryContract? renderDelivery = null)
     {
         if (targetChart == null)
             throw new ArgumentNullException(nameof(targetChart));
@@ -114,7 +114,7 @@ public class ChartUpdateCoordinator
 
                         if (useRenderPlanAdapter)
                         {
-                            var renderPlan = BuildChartRenderPlan(model, metricType, isCumulative, renderProgramKind);
+                            var renderPlan = BuildChartRenderPlan(model, metricType, isCumulative, renderProgramKind, renderProgramRequest, renderCapability, renderDelivery);
                             LastRenderPlanAdapterResult = _renderPlanAdapterDispatcher.ApplyAsync(
                                 new LiveChartsRenderSurface(targetChart, _chartRenderEngine, minHeight),
                                 renderPlan).AsTask().GetAwaiter().GetResult();
@@ -195,13 +195,16 @@ public class ChartUpdateCoordinator
         };
     }
 
-    private ChartRenderPlan BuildChartRenderPlan(ChartRenderModel model, string? title, bool isCumulative, ChartProgramKind programKind)
+    private ChartRenderPlan BuildChartRenderPlan(ChartRenderModel model, string? title, bool isCumulative, ChartProgramKind programKind, ChartProgramRequest? programRequest = null, CapabilityRequest? capability = null, ConsumerDeliveryContract? delivery = null)
     {
         var timeline = ResolveRenderPlanTimeline(model);
         var sourceSignature = BuildRenderPlanSignature(model, timeline);
+        var resolvedProgramRequest = programRequest ?? new ChartProgramRequest(programKind, ResolveDisplayMode(model, isCumulative));
+        var resolvedCapability = capability ?? CapabilityRequest.FromProgramRequest(resolvedProgramRequest);
+        var resolvedDelivery = delivery ?? ChartProgramDeliveryTargetResolver.CreateDelivery(resolvedProgramRequest.Kind);
         var program = new ChartProgram(
-            programKind,
-            ResolveDisplayMode(model, isCumulative),
+            resolvedProgramRequest.Kind,
+            resolvedProgramRequest.DisplayMode,
             title ?? model.MetricType ?? model.PrimarySeriesName,
             timeline.Count > 0 ? timeline[0] : DateTime.MinValue,
             timeline.Count > 0 ? timeline[^1] : DateTime.MinValue,
@@ -212,8 +215,8 @@ public class ChartUpdateCoordinator
         var plan = _renderPlanProjector.ProjectCartesian(program);
         return plan with
         {
-            Metadata = BuildRenderPlanMetadata(model, programKind, sourceSignature, program.DisplayMode),
-            OverlaySeries = BuildOverlayRenderPlanSeries(model, timeline, programKind)
+            Metadata = BuildRenderPlanMetadata(model, resolvedProgramRequest, resolvedCapability, resolvedDelivery, sourceSignature),
+            OverlaySeries = BuildOverlayRenderPlanSeries(model, timeline, resolvedProgramRequest.Kind)
         };
     }
 
@@ -309,14 +312,15 @@ public class ChartUpdateCoordinator
 
     private static IReadOnlyDictionary<string, string> BuildRenderPlanMetadata(
         ChartRenderModel model,
-        ChartProgramKind programKind,
-        string sourceSignature,
-        ChartDisplayMode displayMode)
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery,
+        string sourceSignature)
     {
         var metadata = new Dictionary<string, string>
         {
             ["Projection"] = "ChartRenderModel",
-            ["ProgramKind"] = programKind.ToString(),
+            ["ProgramKind"] = programRequest.Kind.ToString(),
             [LiveChartsRenderPlanAdapter.TickIntervalMetadataKey] = model.TickInterval.ToString(),
             [LiveChartsRenderPlanAdapter.SeriesModeMetadataKey] = model.SeriesMode.ToString(),
             [LiveChartsRenderPlanAdapter.IsStackedMetadataKey] = model.IsStacked.ToString(),
@@ -336,9 +340,10 @@ public class ChartUpdateCoordinator
         AddMetadata(metadata, LiveChartsRenderPlanAdapter.OperationTypeMetadataKey, model.OperationType);
         ChartRenderPlanVocabularyMetadata.AddTo(
             metadata,
-            programKind,
+            programRequest,
+            capability,
+            delivery,
             sourceSignature,
-            displayMode,
             overlayCount: model.OverlaySeries?.Count ?? 0);
 
         return metadata;

@@ -44,7 +44,10 @@ public sealed class TransformChartRenderInvoker : ITransformChartRenderInvoker
             context.DisplayPrimarySubtype,
             context.DisplaySecondarySubtype,
             useRenderPlanAdapter: true,
-            renderProgramKind: ChartProgramKind.Transform);
+            renderProgramKind: ChartProgramKind.Transform,
+            renderProgramRequest: request.CapabilityContract?.ProgramRequest,
+            renderCapability: request.CapabilityContract?.Capability,
+            renderDelivery: request.CapabilityContract?.Delivery);
 
         if (_chartUpdateCoordinator.LastRenderPlanAdapterResult != null)
             host.ChartState.SetRenderPlanDiagnostics(

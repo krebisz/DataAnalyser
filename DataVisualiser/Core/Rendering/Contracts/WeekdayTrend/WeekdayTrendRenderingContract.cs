@@ -193,7 +193,43 @@ public sealed record WeekdayTrendChartRenderRequest(
     WeekdayTrendRenderingRoute Route,
     WeekdayTrendResult Result,
     ChartState ChartState,
-    string SelectionDisplayKey = "<none>");
+    string SelectionDisplayKey = "<none>",
+    WeekdayTrendCapabilityContract? CapabilityContract = null);
+
+public sealed record WeekdayTrendCapabilityContract
+{
+    public WeekdayTrendCapabilityContract(
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery)
+    {
+        ArgumentNullException.ThrowIfNull(programRequest);
+        ArgumentNullException.ThrowIfNull(capability);
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        if (programRequest.Kind != ChartProgramKind.WeekdayTrend)
+            throw new ArgumentException("WeekdayTrend capability contracts must use a WeekdayTrend program request.", nameof(programRequest));
+        if (delivery.ProgramKind != programRequest.Kind)
+            throw new ArgumentException("WeekdayTrend delivery contract must target the WeekdayTrend program kind.", nameof(delivery));
+
+        ProgramRequest = programRequest;
+        Capability = capability;
+        Delivery = delivery;
+    }
+
+    public ChartProgramRequest ProgramRequest { get; }
+    public CapabilityRequest Capability { get; }
+    public ConsumerDeliveryContract Delivery { get; }
+
+    public static WeekdayTrendCapabilityContract Create()
+    {
+        var programRequest = ChartProgramRequest.WeekdayTrend();
+        return new WeekdayTrendCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ChartProgramDeliveryTargetResolver.CreateDelivery(programRequest.Kind, "WeekdayTrendChart"));
+    }
+}
 
 public sealed record WeekdayTrendChartRenderHost(
     CartesianChart CartesianChart,
@@ -210,6 +246,7 @@ public static class WeekdayTrendRenderPlanBuilder
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var capabilityContract = request.CapabilityContract ?? WeekdayTrendCapabilityContract.Create();
         var backendKey = ResolveBackendKey(request.Route);
         var sourcePointCount = request.Result.SeriesByDay.Values.Sum(series => series.Points.Count);
         var sourceSignature = $"{request.SelectionDisplayKey}:{request.Route}:{sourcePointCount}:{request.Result.Unit}";
@@ -217,20 +254,21 @@ public static class WeekdayTrendRenderPlanBuilder
         {
             ["Adapter"] = nameof(WeekdayTrendRenderPlanAdapter),
             [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
-            ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
+            ["ProgramKind"] = capabilityContract.ProgramRequest.Kind.ToString(),
             ["Route"] = request.Route.ToString(),
             ["Mode"] = request.ChartState.WeekdayTrendChartMode.ToString(),
             ["Selection"] = request.SelectionDisplayKey
         };
         ChartRenderPlanVocabularyMetadata.AddTo(
             metadata,
-            ChartProgramKind.WeekdayTrend,
-            sourceSignature,
-            deliveryTarget: "WeekdayTrendChart");
+            capabilityContract.ProgramRequest,
+            capabilityContract.Capability,
+            capabilityContract.Delivery,
+            sourceSignature);
 
         return new ChartRenderPlan(
             $"{backendKey}:{request.SelectionDisplayKey}:{request.Route}:{request.Result.From:O}:{request.Result.To:O}",
-            ChartProgramKind.WeekdayTrend,
+            capabilityContract.ProgramRequest.Kind,
             ChartRenderPlanKind.Cartesian,
             ChartDisplayMode.Regular,
             "Weekday Trend",

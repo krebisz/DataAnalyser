@@ -307,7 +307,8 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
                 renderTarget.Route,
                 result,
                 _viewModel.ChartState,
-                _viewModel.ChartState.SelectedWeekdayTrendSeries?.DisplayKey ?? "<none>"),
+                _viewModel.ChartState.SelectedWeekdayTrendSeries?.DisplayKey ?? "<none>",
+                WeekdayTrendCapabilityContract.Create()),
             renderTarget.Host);
     }
 

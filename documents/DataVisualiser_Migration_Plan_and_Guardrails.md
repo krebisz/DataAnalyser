@@ -1029,6 +1029,8 @@ Audit note:
 
 Selected capability slice:
 - active Distribution capability
+- active WeekdayTrend capability
+- active Transform capability
 
 Target-spine proof:
 - intent/program entry: AnalyticalIntentFactory.Distribution and ChartProgramRequest.Distribution
@@ -1037,6 +1039,16 @@ Target-spine proof:
 - qualification: DistributionRenderingContract exposes qualified Cartesian route and tactical polar fallback route
 - surface/delivery: DistributionChartControllerAdapter attaches DistributionCapabilityContract to the live render request, and DistributionRenderPlanBuilder emits ChartRenderPlan metadata from that runtime capability/program/delivery contract
 - evidence: VNextDataResolutionHelper records EvidenceRuntimePath.VNextDistribution and render-plan diagnostics capture Distribution metadata
+- intent/program entry: ChartProgramRequest.WeekdayTrend
+- capability mapping: CapabilityRequest.FromProgramRequest maps WeekdayTrend to AnalyticalCapabilityKind.TemporalTrend and CompositionKind.SingleSeries
+- contract/boundary: ConsumerDeliveryContract / ChartProgramDeliveryTargetResolver provides WeekdayTrendChart delivery
+- qualification: WeekdayTrendRenderingContract exposes the existing WeekdayTrend render-plan path while carrying WeekdayTrendCapabilityContract through the live controller request
+- surface/delivery: WeekdayTrendChartControllerAdapter attaches WeekdayTrendCapabilityContract to the live render request, and WeekdayTrendRenderPlanBuilder emits ChartRenderPlan metadata from that runtime capability/program/delivery contract
+- intent/program entry: ChartProgramRequest.Transform with explicit SeriesOperationRequest payloads where the UI can derive the selected operation
+- capability mapping: CapabilityRequest.FromProgramRequest maps Transform to AnalyticalCapabilityKind.Transform and CompositionKind.DerivedSeries when operation payloads are present
+- contract/boundary: ConsumerDeliveryContract / ChartProgramDeliveryTargetResolver provides TransformChart delivery
+- qualification: TransformRenderingContract and TransformChartRenderInvoker carry TransformCapabilityContract through the existing render-plan adapter path without moving transform semantics into UI/controller code
+- surface/delivery: TransformChartPresentationCoordinator derives operation requests from the selected transform operation and supplies TransformCapabilityContract to the render request
 
 Tests added:
 - DistributionCapabilitySlice_ShouldRemainOwnedByTargetSpine
@@ -1045,18 +1057,30 @@ Tests added:
 - RenderAsync_ShouldPassDistributionCapabilityContract_ToRenderingContract
 - DistributionRenderPlanBuilder_ShouldUseRuntimeCapabilityContract
 - DistributionCapabilityContract_ShouldRejectProgramKindDrift
+- WeekdayTrendRenderPlanBuilder_ShouldUseRuntimeCapabilityContract
+- WeekdayTrendCapabilityContract_ShouldRejectProgramKindDrift
+- OnChartTypeToggleRequested_ShouldToggleMode_AndRenderLastContext verifies WeekdayTrend capability/delivery metadata on the live adapter request
+- RenderAsync_ShouldForwardTransformCapabilityContract
+- TransformCapabilityContract_ShouldRejectProgramKindDrift
+- TransformChartRenderInvoker_ShouldUseRenderPlanAdapter_AndCaptureTransformDiagnostics verifies Transform DerivedSeries metadata
 
 Validation:
 - Phase 14 Distribution capability validation passed 197 focused Distribution/VNext/architecture tests after the reopened implementation correction
+- Phase 14 Distribution/WeekdayTrend/Transform capability validation passed 227 focused contract, adapter, render-plan, and orchestration tests after completing the remaining implementation slices
 
 Implementation result:
 - Phase 14 was reopened because the first closure was proof-only and did not satisfy the agreed implementation-slice intent
 - production code now carries DistributionCapabilityContract through DistributionChartRenderRequest on the live Distribution controller/rendering path
+- production code now carries WeekdayTrendCapabilityContract through WeekdayTrendChartRenderRequest on the live WeekdayTrend controller/rendering path
+- production code now carries TransformCapabilityContract through TransformChartRenderRequest and TransformChartRenderInvoker on the live Transform controller/rendering path
 - ChartRenderPlanVocabularyMetadata now accepts explicit program/capability/delivery contracts so render-plan metadata can be built from the runtime contract rather than reconstructed constants
-- Distribution is proven as the first active capability slice through the target spine
+- Distribution, WeekdayTrend, and Transform are proven as active capability slices through the target spine
 - UI/controller code relays Distribution behavior without owning capability semantics
+- UI/controller code relays WeekdayTrend and Transform behavior without owning capability semantics
 - transformation reversibility is not applicable to this single-series Distribution slice
+- Transform operation traceability is carried through SeriesOperationRequest where the current UI operation can be mapped
 - confidence remains annotation-only; no Distribution policy consumes confidence
+- confidence remains annotation-only; no WeekdayTrend or Transform policy consumes confidence
 ```
 
 ---
@@ -1367,6 +1391,7 @@ Use this section during implementation.
 | 2026-04-28 | Phase 13 | Defined governance constraints for future vocabulary, concepts, capabilities, transformations, consumers, backends, and evidence paths. | `documents/DataVisualiser_Governance_Constraints_Audit.md`; `ArchitectureGuardrailTests`; architecture validation passed 93 tests. | Complete |
 | 2026-04-28 | Phase 14 | Selected active Distribution as the first capability slice and proved it through the target spine. | `documents/DataVisualiser_Distribution_Capability_Slice_Audit.md`; `ArchitectureGuardrailTests`; Distribution/VNext/rendering/parity validation passed 172 tests. | Complete |
 | 2026-04-29 | Phase 14 correction | Reopened the Distribution capability slice to add actual production contract carriage through the live controller/rendering path. | `DistributionCapabilityContract`; `DistributionChartRenderRequest`; `ChartRenderPlanVocabularyMetadata`; focused Distribution/VNext/architecture validation passed 197 tests. | Complete |
+| 2026-04-29 | Phase 14 completion | Implemented the remaining Phase 14 production contract-carriage slices for WeekdayTrend and Transform, keeping capability ownership in the target spine. | `WeekdayTrendCapabilityContract`; `TransformCapabilityContract`; `WeekdayTrendChartRenderRequest`; `TransformChartRenderRequest`; focused Distribution/WeekdayTrend/Transform/render-plan/orchestration validation passed 227 tests. | Complete |
 
 ---
 

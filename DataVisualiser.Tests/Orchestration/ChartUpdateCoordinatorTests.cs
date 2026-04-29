@@ -226,7 +226,10 @@ public sealed class ChartUpdateCoordinatorTests
                         new StubStrategy(CreateSingleSeriesResult()),
                         "Transform Result",
                         "log",
-                        true),
+                        true,
+                        CapabilityContract: TransformCapabilityContract.Create(
+                            "Transform Result",
+                            [SeriesOperationRequest.Logarithm(0, "transform::log", "Log(Weight - Fat (mass))")])),
                     new TransformChartRenderHost(chart, chartState));
                 await FlushChartAsync(chart);
 
@@ -238,7 +241,7 @@ public sealed class ChartUpdateCoordinatorTests
                 Assert.Equal("Chart", metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
                 Assert.Equal("TransformChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
                 Assert.Equal("Transform", metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
-                Assert.Equal("MultiSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+                Assert.Equal("DerivedSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
                 Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
                 Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
             }

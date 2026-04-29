@@ -5,6 +5,8 @@ using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.Core.Rendering;
@@ -122,6 +124,42 @@ public sealed class WeekdayTrendRenderingContractTests
         }
     }
 
+    [Fact]
+    public void WeekdayTrendRenderPlanBuilder_ShouldUseRuntimeCapabilityContract()
+    {
+        var programRequest = ChartProgramRequest.WeekdayTrend();
+        var request = new WeekdayTrendChartRenderRequest(
+            WeekdayTrendRenderingRoute.Scatter,
+            CreateResult(),
+            new ChartState { WeekdayTrendChartMode = WeekdayTrendChartMode.Scatter },
+            "Weight:body_fat_mass",
+            new WeekdayTrendCapabilityContract(
+                programRequest,
+                CapabilityRequest.FromProgramRequest(programRequest),
+                ConsumerDeliveryContract.Chart(ChartProgramKind.WeekdayTrend, "WeekdayTrendDiagnosticSurface")));
+
+        var plan = WeekdayTrendRenderPlanBuilder.Build(request);
+
+        Assert.Equal(ChartProgramKind.WeekdayTrend, plan.ProgramKind);
+        Assert.Equal(WeekdayTrendBackendKey.LiveChartsWpfScatter, plan.Metadata[ChartRenderPlanMetadataKeys.BackendKey]);
+        Assert.Equal("Scatter", plan.Metadata["Route"]);
+        Assert.Equal("WeekdayTrendDiagnosticSurface", plan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(AnalyticalCapabilityKind.TemporalTrend.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal(CompositionKind.SingleSeries.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.Contains("Chart:WeekdayTrend:WeekdayTrendDiagnosticSurface", plan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WeekdayTrendCapabilityContract_ShouldRejectProgramKindDrift()
+    {
+        var programRequest = ChartProgramRequest.Distribution();
+
+        Assert.Throws<ArgumentException>(() => new WeekdayTrendCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.WeekdayTrend, "WeekdayTrendChart")));
+    }
+
     private static WeekdayTrendRenderingContract CreateContract()
     {
         return new WeekdayTrendRenderingContract(
@@ -133,5 +171,32 @@ public sealed class WeekdayTrendRenderingContractTests
     private static WeekdayTrendChartRenderHost CreateHost(ChartState chartState)
     {
         return new WeekdayTrendChartRenderHost(new CartesianChart(), new CartesianChart(), chartState);
+    }
+
+    private static WeekdayTrendResult CreateResult()
+    {
+        var result = new WeekdayTrendResult
+        {
+            From = new DateTime(2026, 1, 1),
+            To = new DateTime(2026, 1, 7),
+            GlobalMin = 1d,
+            GlobalMax = 5d,
+            Unit = "kg"
+        };
+
+        result.SeriesByDay[0] = new WeekdayTrendSeries
+        {
+            Day = DayOfWeek.Monday,
+            Points =
+            [
+                new WeekdayTrendPoint
+                {
+                    Date = new DateTime(2026, 1, 5),
+                    Value = 2d
+                }
+            ]
+        };
+
+        return result;
     }
 }
