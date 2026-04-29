@@ -1291,7 +1291,45 @@ Implementation result:
 
 ---
 
-## 1.19 Phase 18 — Migrate Hub Responsibilities to the Target Spine
+## 1.19 Phase 18 — Complete CapabilityContract Carriage Across Remaining Families
+
+Goal:
+
+```text
+Align SyncfusionSunburst and MainChartControllerAdapter with the Phase 14/17 contract-carriage pattern
+so no chart family or top-level adapter remains as an inline-creation outlier.
+```
+
+Primary targets:
+
+```text
+SyncfusionSunburstChartControllerAdapter
+SyncfusionSunburst render plan builder
+MainChartControllerAdapter
+```
+
+Tasks:
+
+- [ ] Compare SyncfusionSunburst against the hardened LiveCharts family pattern.
+- [ ] Add SyncfusionSunburstCapabilityContract using ConsumerDeliveryContract.HierarchyChart — not Chart.
+- [ ] Thread the contract through the SyncfusionSunburst render request and render plan builder.
+- [ ] Update SyncfusionSunburstChartControllerAdapter to pass the contract on the live render request.
+- [ ] Inspect MainChartControllerAdapter for capability or delivery decisions that should be contract-bound.
+- [ ] Thread contract carriage through MainChartControllerAdapter where applicable.
+- [ ] Add tests proving contract carriage and program kind drift rejection for each new contract.
+- [ ] Explicitly preserve the HierarchyChart delivery distinction — do not flatten it to the LiveCharts Chart family shape.
+
+Completion condition:
+
+```text
+All chart families carry explicit CapabilityContracts through their live render paths.
+No family or top-level adapter remains as an inline-creation outlier.
+SyncfusionSunburst hierarchy delivery distinction is preserved in the contract.
+```
+
+---
+
+## 1.20 Phase 19 — Migrate Hub Responsibilities to the Target Spine
 
 Goal:
 
@@ -1329,7 +1367,7 @@ No hub owns capability, provider, delivery, or evidence authority.
 
 ---
 
-## 1.20 Phase 19 — Thin the Chart-Family Adapter Layer
+## 1.21 Phase 20 — Thin the Chart-Family Adapter Layer
 
 Goal:
 
@@ -1367,7 +1405,7 @@ No adapter owns capability, provider, rendering, or semantic decisions.
 
 ---
 
-## 1.21 Phase 20 — Retire Legacy Bridges Selectively
+## 1.22 Phase 21 — Retire Legacy Bridges Selectively
 
 Goal:
 
@@ -1407,7 +1445,7 @@ Any remaining bridge is explicitly bounded, documented, and carries a named reti
 
 ---
 
-## 1.22 Phase 21 — Prove the Spine End-to-End with a New Capability and Independent Consumer
+## 1.23 Phase 22 — Prove the Spine End-to-End with a New Capability and Independent Consumer
 
 Goal:
 
