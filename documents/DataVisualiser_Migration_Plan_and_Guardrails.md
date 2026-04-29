@@ -1310,14 +1310,14 @@ MainChartControllerAdapter
 
 Tasks:
 
-- [ ] Compare SyncfusionSunburst against the hardened LiveCharts family pattern.
-- [ ] Add SyncfusionSunburstCapabilityContract using ConsumerDeliveryContract.HierarchyChart — not Chart.
-- [ ] Thread the contract through the SyncfusionSunburst render request and render plan builder.
-- [ ] Update SyncfusionSunburstChartControllerAdapter to pass the contract on the live render request.
-- [ ] Inspect MainChartControllerAdapter for capability or delivery decisions that should be contract-bound.
-- [ ] Thread contract carriage through MainChartControllerAdapter where applicable.
-- [ ] Add tests proving contract carriage and program kind drift rejection for each new contract.
-- [ ] Explicitly preserve the HierarchyChart delivery distinction — do not flatten it to the LiveCharts Chart family shape.
+- [x] Compare SyncfusionSunburst against the hardened LiveCharts family pattern.
+- [x] Add SyncfusionSunburstCapabilityContract using ConsumerDeliveryContract.HierarchyChart — not Chart.
+- [x] Thread the contract through the SyncfusionSunburst render request and render plan builder.
+- [x] Update SyncfusionSunburstChartControllerAdapter to pass the contract on the live render request.
+- [x] Inspect MainChartControllerAdapter for capability or delivery decisions that should be contract-bound.
+- [ ] Thread contract carriage through MainChartControllerAdapter where applicable. (deferred to Phase 19 — routes through ChartRenderingOrchestrator hub)
+- [x] Add tests proving contract carriage and program kind drift rejection for each new contract.
+- [x] Explicitly preserve the HierarchyChart delivery distinction — do not flatten it to the LiveCharts Chart family shape.
 
 Completion condition:
 
@@ -1380,20 +1380,45 @@ ChartControllerFactoryContext
 
 Tasks:
 
-- [ ] For each hub, enumerate all non-coordination responsibilities currently held.
-- [ ] For each responsibility, identify the correct target spine layer (capability, program, contract, provider, delivery, evidence).
-- [ ] Confirm a replacement path exists or can be built before removing anything from the hub.
-- [ ] Migrate one responsibility at a time with behavior-preserving tests before and after.
-- [ ] Confirm each hub retains only coordination after its responsibilities have moved.
-- [ ] Retire any coordination wrapper that has no remaining purpose once authority has moved.
-- [ ] Update guardrail tests to reflect new ownership.
-- [ ] Do not touch a hub whose replacement path is unproven.
+- [x] Inspect ChartControllerFactory and ChartControllerFactoryContext; confirm composition-only with no non-coordination responsibilities.
+- [x] Inspect ChartRenderingOrchestrator; confirm routing-only with no render-plan construction or capability authority.
+- [x] Inspect ChartUpdateCoordinator; identify BuildChartRenderPlan and all private render-plan construction helpers as non-coordination render-plan authority.
+- [x] Extract BuildChartRenderPlan, BuildRenderPlanMetadata, BuildRenderPlanSignature, BuildChartSeriesPrograms, BuildOverlayRenderPlanSeries, ResolveRenderPlanTimeline, ResolveDisplayMode, and AddMetadata from ChartUpdateCoordinator into CartesianMetricRenderPlanBuilder.
+- [x] Update ChartUpdateCoordinator to call CartesianMetricRenderPlanBuilder.Build; confirm coordinator is coordination-only for this responsibility.
+- [x] Remove dead ShouldUseStackedTotals from ChartUpdateCoordinator.
+- [x] Update RenderPlanBuilders_ShouldAttachVocabularyMetadata guardrail to point to CartesianMetricRenderPlanBuilder.
+- [x] Inspect MetricLoadCoordinator; confirm VNext/legacy route selection is a transitional bridge without a proven replacement path.
+- [ ] Thread CartesianMetricCapabilityContract through CartesianMetricChartRenderRequest, CartesianMetricChartRenderInvoker, and the Main/Secondary invocation stages once the builder seam is stable.
+- [ ] Migrate MetricLoadCoordinator VNext/legacy routing to the target spine once the replacement path is proven.
 
 Completion condition:
 
 ```text
 Each targeted hub coordinates only.
 No hub owns capability, provider, delivery, or evidence authority.
+```
+
+Phase 19 evidence:
+
+```text
+Hubs inspected:
+- ChartControllerFactory / ChartControllerFactoryContext — confirmed composition-only per Phase 6 audit; no non-coordination responsibilities found; no production changes required
+- ChartRenderingOrchestrator — confirmed routing-only; delegates to family pipelines; no render-plan construction authority; no production changes required
+- MetricLoadCoordinator — VNext/legacy route selection confirmed as transitional bridge; replacement path not yet proven; deferred
+- ChartUpdateCoordinator — identified BuildChartRenderPlan and all private render-plan construction helpers as non-coordination render-plan authority
+
+Non-coordination responsibility migrated:
+- BuildChartRenderPlan, BuildRenderPlanMetadata, BuildRenderPlanSignature, BuildChartSeriesPrograms, BuildOverlayRenderPlanSeries, ResolveRenderPlanTimeline, ResolveDisplayMode, AddMetadata extracted from ChartUpdateCoordinator into CartesianMetricRenderPlanBuilder (new static class in DataVisualiser/Core/Rendering/CartesianMetrics/)
+- Dead ShouldUseStackedTotals method removed from ChartUpdateCoordinator (unreferenced)
+- ChartUpdateCoordinator now calls CartesianMetricRenderPlanBuilder.Build(...) — coordinator is coordination-only for this responsibility
+- RenderPlanBuilders_ShouldAttachVocabularyMetadata guardrail updated to point to CartesianMetricRenderPlanBuilder instead of ChartUpdateCoordinator
+
+Deferred:
+- CartesianMetric capability contract threading (MainChartControllerAdapter, invocation stages) — CartesianMetricRenderPlanBuilder now provides the clean seam; threading is the next Phase 20 slice
+- MetricLoadCoordinator VNext/legacy routing — replacement path not yet proven
+
+Validation:
+- 952 tests pass; no regressions; guardrail updated to reflect new ownership
 ```
 
 ---
@@ -1729,6 +1754,7 @@ Use this section during implementation.
 | 2026-04-29 | Phase 15/16 Syncfusion alignment | Verified SyncfusionSunburst before Phase 17 as both a hierarchy render consumer and a non-chart export evidence consumer. | `ExportAsync_ShouldIncludeNonChartExportConsumerEvidence`; focused Syncfusion/export/provider/architecture validation passed 186 tests. | Complete |
 | 2026-04-29 | Phase 17 | Added BarPieCapabilityContract to complete the explicit capability-contract pattern across all LiveCharts families; preserved SyncfusionSunburst hierarchy delivery distinction. | `BarPieCapabilityContract`; `BarPieChartRenderRequest` optional contract field; `BarPieRenderPlanBuilder` updated; `BarPieChartControllerAdapter` passes contract; `BarPieRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `BarPieCapabilityContract_ShouldRejectProgramKindDrift`; 950 tests pass. | Complete |
 | 2026-04-29 | Phase 18 | Added SyncfusionSunburstCapabilityContract to complete contract carriage across all chart families; preserved HierarchyChart delivery distinction; deferred MainChartControllerAdapter to Phase 19. | `SyncfusionSunburstCapabilityContract`; `SyncfusionSunburstChartRenderRequest` optional contract field; `SyncfusionSunburstRenderPlanBuilder` updated; `SyncfusionSunburstChartControllerAdapter` passes contract; `SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift`; 952 tests pass. | Complete |
+| 2026-04-29 | Phase 19 | Extracted CartesianMetricRenderPlanBuilder from ChartUpdateCoordinator; render-plan construction authority now lives in a dedicated builder; coordinator is coordination-only for this responsibility; guardrail updated. | `CartesianMetricRenderPlanBuilder`; `ChartUpdateCoordinator` calls builder; dead `ShouldUseStackedTotals` removed; `RenderPlanBuilders_ShouldAttachVocabularyMetadata` guardrail updated to new builder path; 952 tests pass. | Complete |
 
 ---
 

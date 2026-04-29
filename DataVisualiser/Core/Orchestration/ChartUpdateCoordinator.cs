@@ -6,6 +6,7 @@ using System.Windows.Media;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Rendering.Adapters;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Interaction;
@@ -114,7 +115,7 @@ public class ChartUpdateCoordinator
 
                         if (useRenderPlanAdapter)
                         {
-                            var renderPlan = BuildChartRenderPlan(model, metricType, isCumulative, renderProgramKind, renderProgramRequest, renderCapability, renderDelivery);
+                            var renderPlan = CartesianMetricRenderPlanBuilder.Build(model, metricType, isCumulative, renderProgramKind, _renderPlanProjector, renderProgramRequest, renderCapability, renderDelivery);
                             LastRenderPlanAdapterResult = _renderPlanAdapterDispatcher.ApplyAsync(
                                 new LiveChartsRenderSurface(targetChart, _chartRenderEngine, minHeight),
                                 renderPlan).AsTask().GetAwaiter().GetResult();
@@ -195,177 +196,9 @@ public class ChartUpdateCoordinator
         };
     }
 
-    private ChartRenderPlan BuildChartRenderPlan(ChartRenderModel model, string? title, bool isCumulative, ChartProgramKind programKind, ChartProgramRequest? programRequest = null, CapabilityRequest? capability = null, ConsumerDeliveryContract? delivery = null)
-    {
-        var timeline = ResolveRenderPlanTimeline(model);
-        var sourceSignature = BuildRenderPlanSignature(model, timeline);
-        var resolvedProgramRequest = programRequest ?? new ChartProgramRequest(programKind, ResolveDisplayMode(model, isCumulative));
-        var resolvedCapability = capability ?? CapabilityRequest.FromProgramRequest(resolvedProgramRequest);
-        var resolvedDelivery = delivery ?? ChartProgramDeliveryTargetResolver.CreateDelivery(resolvedProgramRequest.Kind);
-        var program = new ChartProgram(
-            resolvedProgramRequest.Kind,
-            resolvedProgramRequest.DisplayMode,
-            title ?? model.MetricType ?? model.PrimarySeriesName,
-            timeline.Count > 0 ? timeline[0] : DateTime.MinValue,
-            timeline.Count > 0 ? timeline[^1] : DateTime.MinValue,
-            timeline,
-            BuildChartSeriesPrograms(model),
-            sourceSignature);
-
-        var plan = _renderPlanProjector.ProjectCartesian(program);
-        return plan with
-        {
-            Metadata = BuildRenderPlanMetadata(model, resolvedProgramRequest, resolvedCapability, resolvedDelivery, sourceSignature),
-            OverlaySeries = BuildOverlayRenderPlanSeries(model, timeline, resolvedProgramRequest.Kind)
-        };
-    }
-
-    private static ChartDisplayMode ResolveDisplayMode(ChartRenderModel model, bool isCumulative)
-    {
-        if (model.IsStacked)
-            return ChartDisplayMode.Stacked;
-
-        return isCumulative ? ChartDisplayMode.Summed : ChartDisplayMode.Regular;
-    }
-
-    private static IReadOnlyList<ChartSeriesProgram> BuildChartSeriesPrograms(ChartRenderModel model)
-    {
-        if (model.Series != null && model.Series.Count > 0)
-        {
-            return model.Series
-                .Select(series => new ChartSeriesProgram(
-                    series.SeriesId,
-                    series.DisplayName,
-                    series.RawValues,
-                    series.Smoothed ?? series.RawValues))
-                .ToArray();
-        }
-
-        var programs = new List<ChartSeriesProgram>
-        {
-            new(
-                "primary",
-                model.PrimarySeriesName,
-                model.PrimaryRaw.ToList(),
-                model.PrimarySmoothed.ToList())
-        };
-
-        if (model.SecondaryRaw != null && model.SecondaryRaw.Count > 0)
-        {
-            programs.Add(new ChartSeriesProgram(
-                "secondary",
-                model.SecondarySeriesName,
-                model.SecondaryRaw.ToList(),
-                (model.SecondarySmoothed ?? model.SecondaryRaw).ToList()));
-        }
-
-        return programs;
-    }
-
-    private IReadOnlyList<ChartSeriesPlan> BuildOverlayRenderPlanSeries(ChartRenderModel model, IReadOnlyList<DateTime> timeline, ChartProgramKind programKind)
-    {
-        if (model.OverlaySeries == null || model.OverlaySeries.Count == 0)
-            return Array.Empty<ChartSeriesPlan>();
-
-        var overlayPrograms = model.OverlaySeries
-            .Select((series, index) => new ChartSeriesProgram(
-                string.IsNullOrWhiteSpace(series.SeriesId) ? $"overlay_{index}" : series.SeriesId,
-                series.DisplayName,
-                series.RawValues,
-                series.Smoothed ?? series.RawValues))
-            .ToArray();
-
-        var overlayProgram = new ChartProgram(
-            programKind,
-            ChartDisplayMode.Regular,
-            model.MetricType ?? model.PrimarySeriesName,
-            timeline.Count > 0 ? timeline[0] : DateTime.MinValue,
-            timeline.Count > 0 ? timeline[^1] : DateTime.MinValue,
-            timeline,
-            overlayPrograms,
-            $"{BuildRenderPlanSignature(model, timeline)}:overlay");
-
-        return _renderPlanProjector.ProjectCartesian(overlayProgram).Series;
-    }
-
-    private static List<DateTime> ResolveRenderPlanTimeline(ChartRenderModel model)
-    {
-        if (model.Timestamps.Count > 0)
-            return model.Timestamps.ToList();
-
-        if (model.Series == null || model.Series.Count == 0)
-            return [];
-
-        return model.Series
-            .SelectMany(series => series.Timestamps)
-            .Distinct()
-            .OrderBy(timestamp => timestamp)
-            .ToList();
-    }
-
-    private static string BuildRenderPlanSignature(ChartRenderModel model, IReadOnlyList<DateTime> timeline)
-    {
-        var from = timeline.Count > 0 ? timeline[0].ToString("O") : string.Empty;
-        var to = timeline.Count > 0 ? timeline[^1].ToString("O") : string.Empty;
-        return $"legacy-render:{model.MetricType}:{model.PrimarySeriesName}:{model.SecondarySeriesName}:{from}:{to}:{timeline.Count}";
-    }
-
-    private static IReadOnlyDictionary<string, string> BuildRenderPlanMetadata(
-        ChartRenderModel model,
-        ChartProgramRequest programRequest,
-        CapabilityRequest capability,
-        ConsumerDeliveryContract delivery,
-        string sourceSignature)
-    {
-        var metadata = new Dictionary<string, string>
-        {
-            ["Projection"] = "ChartRenderModel",
-            ["ProgramKind"] = programRequest.Kind.ToString(),
-            [LiveChartsRenderPlanAdapter.TickIntervalMetadataKey] = model.TickInterval.ToString(),
-            [LiveChartsRenderPlanAdapter.SeriesModeMetadataKey] = model.SeriesMode.ToString(),
-            [LiveChartsRenderPlanAdapter.IsStackedMetadataKey] = model.IsStacked.ToString(),
-            [LiveChartsRenderPlanAdapter.IsOperationChartMetadataKey] = model.IsOperationChart.ToString()
-        };
-
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.UnitMetadataKey, model.Unit);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.MetricTypeMetadataKey, model.MetricType);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.PrimaryMetricTypeMetadataKey, model.PrimaryMetricType);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.SecondaryMetricTypeMetadataKey, model.SecondaryMetricType);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.PrimarySubtypeMetadataKey, model.PrimarySubtype);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.SecondarySubtypeMetadataKey, model.SecondarySubtype);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplayPrimaryMetricTypeMetadataKey, model.DisplayPrimaryMetricType);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplaySecondaryMetricTypeMetadataKey, model.DisplaySecondaryMetricType);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplayPrimarySubtypeMetadataKey, model.DisplayPrimarySubtype);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.DisplaySecondarySubtypeMetadataKey, model.DisplaySecondarySubtype);
-        AddMetadata(metadata, LiveChartsRenderPlanAdapter.OperationTypeMetadataKey, model.OperationType);
-        ChartRenderPlanVocabularyMetadata.AddTo(
-            metadata,
-            programRequest,
-            capability,
-            delivery,
-            sourceSignature,
-            overlayCount: model.OverlaySeries?.Count ?? 0);
-
-        return metadata;
-    }
-
-    private static void AddMetadata(IDictionary<string, string> metadata, string key, string? value)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-            metadata[key] = value;
-    }
-
     private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeries(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)
     {
         return ChartCumulativeSeriesBuilder.Build(result, strategy, primaryLabel, secondaryLabel);
-    }
-
-    private static bool ShouldUseStackedTotals(ChartRenderModel model)
-    {
-        return model.IsStacked && (
-            (model.Series != null && model.Series.Count > 1) ||
-            model.SecondaryRaw != null ||
-            model.SecondarySmoothed != null);
     }
 
     /// <summary>
