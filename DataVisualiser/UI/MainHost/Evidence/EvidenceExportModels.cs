@@ -91,6 +91,7 @@ public sealed class DiagnosticsSnapshot
     public Dictionary<string, VNextDiagnosticsSnapshot> VNextFamilies { get; set; } = new();
     public Dictionary<string, RenderPlanDiagnosticsSnapshot> RenderPlans { get; set; } = new();
     public RenderPlanVocabularyDiagnosticsSnapshot RenderPlanVocabulary { get; set; } = new();
+    public IReadOnlyList<ConsumerDeliveryEvidenceSnapshot> ExportConsumers { get; set; } = Array.Empty<ConsumerDeliveryEvidenceSnapshot>();
     public IReadOnlyList<RenderPlanHistorySnapshot> RenderPlanHistory { get; set; } = Array.Empty<RenderPlanHistorySnapshot>();
     public InterpretationDiagnosticsSnapshot Interpretation { get; set; } = new();
 }
@@ -306,6 +307,23 @@ public sealed class RenderPlanVocabularyDiagnosticsSnapshot
     public int InteractionCountTotal { get; set; }
     public IReadOnlyList<string> MissingVocabularyPlanKinds { get; set; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingProviderPlanKinds { get; set; } = Array.Empty<string>();
+}
+
+public sealed class ConsumerDeliveryEvidenceSnapshot
+{
+    public string ProgramKind { get; set; } = string.Empty;
+    public string SourceSignature { get; set; } = string.Empty;
+    public string IntentSignature { get; set; } = string.Empty;
+    public string ConsumerKind { get; set; } = string.Empty;
+    public string DeliveryTarget { get; set; } = string.Empty;
+    public bool RequiresRenderPlan { get; set; }
+    public string CapabilityKind { get; set; } = string.Empty;
+    public string CompositionKind { get; set; } = string.Empty;
+    public string ProvenanceSignature { get; set; } = string.Empty;
+    public string ProviderKey { get; set; } = string.Empty;
+    public string ProviderDisplayName { get; set; } = string.Empty;
+    public string ProviderSignature { get; set; } = string.Empty;
+    public IReadOnlyDictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
 }
 
 public sealed class InterpretationDiagnosticsSnapshot

@@ -13,6 +13,7 @@ using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.MainHost.Export;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Tests.UI.MainHost;
@@ -206,6 +207,78 @@ public sealed class MainChartsEvidenceExportServiceTests
     }
 
     [Fact]
+    public async Task ExportAsync_ShouldIncludeNonChartExportConsumerEvidence()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var service = CreateService(tempDir);
+            var chartState = new ChartState
+            {
+                LastLoadRuntime = new LoadRuntimeState(
+                    EvidenceRuntimePath.VNextMain,
+                    "request-main",
+                    "snapshot-main",
+                    ChartProgramKind.Main,
+                    "program-main",
+                    "context-main",
+                    null,
+                    false)
+            };
+            chartState.SetFamilyRuntime(
+                ChartProgramKind.Transform,
+                new LoadRuntimeState(
+                    EvidenceRuntimePath.VNextTransform,
+                    "request-transform",
+                    "snapshot-transform",
+                    ChartProgramKind.Transform,
+                    "program-transform",
+                    "context-transform",
+                    null,
+                    false));
+            var metricState = new MetricState
+            {
+                SelectedMetricType = "Weight",
+                FromDate = new DateTime(2024, 1, 1),
+                ToDate = new DateTime(2024, 1, 2),
+                ResolutionTableName = "HealthMetrics"
+            };
+            metricState.SetSeriesSelections(
+            [
+                new MetricSeriesSelection("Weight", "morning"),
+                new MetricSeriesSelection("Weight", "evening")
+            ]);
+
+            var result = await service.ExportAsync(chartState, metricState, new DateTime(2026, 4, 29, 16, 30, 0, DateTimeKind.Utc));
+            using var document = JsonDocument.Parse(File.ReadAllText(result.FilePath));
+            var exportConsumers = document.RootElement
+                .GetProperty("Diagnostics")
+                .GetProperty("ExportConsumers")
+                .EnumerateArray()
+                .ToList();
+
+            Assert.Equal(2, exportConsumers.Count);
+            Assert.Contains(exportConsumers, consumer =>
+                consumer.GetProperty("ProgramKind").GetString() == "Main" &&
+                consumer.GetProperty("ConsumerKind").GetString() == "Export" &&
+                consumer.GetProperty("DeliveryTarget").GetString() == "EvidenceExport" &&
+                consumer.GetProperty("RequiresRenderPlan").GetBoolean() == false &&
+                consumer.GetProperty("ProviderKey").GetString() == "EvidenceExport" &&
+                consumer.GetProperty("CapabilityKind").GetString() == "Identity");
+            Assert.Contains(exportConsumers, consumer =>
+                consumer.GetProperty("ProgramKind").GetString() == "Transform" &&
+                consumer.GetProperty("ConsumerKind").GetString() == "Export" &&
+                consumer.GetProperty("CompositionKind").GetString() == "MultiSeries");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
     public async Task ExportAsync_ShouldReportNoMissingVocabulary_WhenAllRenderPlansCarryVocabularyMetadata()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), "DataVisualiser.Tests", Guid.NewGuid().ToString("N"));
@@ -230,7 +303,13 @@ public sealed class MainChartsEvidenceExportServiceTests
                 {
                     ["ProgramKind"] = kind.ToString()
                 };
-                ChartRenderPlanVocabularyMetadata.AddTo(metadata, kind, $"source:{kind}");
+                var programRequest = new ChartProgramRequest(kind);
+                ChartRenderPlanVocabularyMetadata.AddTo(
+                    metadata,
+                    programRequest,
+                    CapabilityRequest.FromProgramRequest(programRequest),
+                    ChartProgramDeliveryTargetResolver.CreateDelivery(programRequest.Kind),
+                    $"source:{kind}");
                 chartState.SetRenderPlanDiagnostics(
                     kind,
                     new ChartRenderAdapterResult(

@@ -146,6 +146,7 @@ public sealed class EvidenceDiagnosticsBuilder
             VNextFamilies = BuildVNextFamilyDiagnostics(chartState),
             RenderPlans = BuildRenderPlanDiagnostics(chartState),
             RenderPlanVocabulary = BuildRenderPlanVocabularyDiagnostics(chartState),
+            ExportConsumers = EvidenceExportConsumerContractBuilder.Build(chartState, metricState),
             RenderPlanHistory = chartState.RenderPlanHistory,
             Interpretation = BuildInterpretationDiagnostics(chartState)
         };

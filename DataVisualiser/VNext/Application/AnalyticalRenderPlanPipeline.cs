@@ -44,6 +44,24 @@ public sealed class AnalyticalRenderPlanPipeline
         return await _engine.ExecuteAsync(intent, cancellationToken);
     }
 
+    public async Task<AnalyticalConsumerDeliveryResult> ExecuteForConsumerAsync(
+        AnalyticalIntent intent,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(intent);
+
+        if (intent.Delivery.RequiresRenderPlan)
+        {
+            throw new InvalidOperationException(
+                $"Consumer '{intent.Delivery.ConsumerKind}' requires a render plan. Use a render-plan build path for rendering consumers.");
+        }
+
+        var provider = _providerRegistry.Resolve(intent.Delivery);
+        var execution = await _engine.ExecuteAsync(intent, cancellationToken);
+        var evidence = ConsumerDeliveryEvidence.FromIntent(intent, provider, execution.Signature);
+        return new AnalyticalConsumerDeliveryResult(execution, evidence);
+    }
+
     public async Task<AnalyticalResultSet> ExecuteAsync(
         AnalyticalIntentSet intentSet,
         CancellationToken cancellationToken = default)

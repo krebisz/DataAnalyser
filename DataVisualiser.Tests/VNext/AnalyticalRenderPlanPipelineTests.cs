@@ -147,6 +147,30 @@ public sealed class AnalyticalRenderPlanPipelineTests
     }
 
     [Fact]
+    public async Task ExecuteForConsumerAsync_ShouldReturnExportDeliveryEvidenceWithoutRenderPlan()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram(),
+            ConsumerDeliveryContract.Export(ChartProgramKind.Main));
+
+        var result = await pipeline.ExecuteForConsumerAsync(intent);
+
+        Assert.Same(intent, result.Execution.Intent);
+        Assert.Equal(ConsumerKind.Export, result.Evidence.ConsumerKind);
+        Assert.Equal("EvidenceExport", result.Evidence.DeliveryTarget);
+        Assert.False(result.Evidence.RequiresRenderPlan);
+        Assert.Equal(AnalyticalCapabilityKind.Identity, result.Evidence.CapabilityKind);
+        Assert.Equal(CompositionKind.MultiSeries, result.Evidence.CompositionKind);
+        Assert.Equal(ConsumerProviderContracts.EvidenceExport.ProviderKey, result.Evidence.ProviderKey);
+        Assert.Equal(selection.Signature, result.Evidence.SourceSignature);
+        Assert.Equal(intent.Signature, result.Evidence.IntentSignature);
+        Assert.Equal(result.Execution.Signature, result.Evidence.ExecutionSignature);
+    }
+
+    [Fact]
     public async Task InterpretAsync_ShouldExecuteIntentAndBuildInterpretation()
     {
         var pipeline = CreatePipeline();
@@ -265,6 +289,19 @@ public sealed class AnalyticalRenderPlanPipelineTests
 
         Assert.Contains("does not require a render plan", ex.Message, StringComparison.Ordinal);
         Assert.Contains("ExecuteAsync", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ExecuteForConsumerAsync_ShouldRejectRenderingConsumer()
+    {
+        var pipeline = CreatePipeline();
+        var selection = CreateSelection(seriesCount: 1);
+        var intent = AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram());
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            pipeline.ExecuteForConsumerAsync(intent));
+
+        Assert.Contains("requires a render plan", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]

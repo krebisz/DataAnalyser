@@ -6,13 +6,12 @@ public static class ChartRenderPlanProviderMetadata
 {
     public static bool TryAddBuiltInProvider(
         IDictionary<string, string> metadata,
-        ConsumerDeliveryContract delivery,
-        ChartProgramKind programKind)
+        ConsumerDeliveryContract delivery)
     {
         ArgumentNullException.ThrowIfNull(metadata);
         ArgumentNullException.ThrowIfNull(delivery);
 
-        var planKind = ResolvePlanKind(programKind);
+        var planKind = ResolvePlanKind(delivery.ProgramKind);
         return TryAddBuiltInProvider(metadata, delivery, planKind);
     }
 

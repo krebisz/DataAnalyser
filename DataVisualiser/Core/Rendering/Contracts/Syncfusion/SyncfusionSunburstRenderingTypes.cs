@@ -82,11 +82,14 @@ public static class SyncfusionSunburstRenderPlanBuilder
             ["BucketCount"] = request.BucketCount.ToString(),
             ["SelectionCount"] = request.SelectionCount.ToString()
         };
+        var programRequest = ChartProgramRequest.SyncfusionSunburst();
         ChartRenderPlanVocabularyMetadata.AddTo(
             metadata,
-            ChartProgramKind.SyncfusionSunburst,
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ConsumerDeliveryContract.HierarchyChart(programRequest.Kind, "SyncfusionSunburst"),
             sourceSignature,
-            deliveryTarget: "SyncfusionSunburst");
+            overlayCount: 0);
 
         return new ChartRenderPlan(
             $"{SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy}:{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}",

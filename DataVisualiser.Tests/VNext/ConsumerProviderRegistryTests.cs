@@ -141,8 +141,7 @@ public sealed class ConsumerProviderRegistryTests
         var metadata = new Dictionary<string, string>();
         var added = ChartRenderPlanProviderMetadata.TryAddBuiltInProvider(
             metadata,
-            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
-            ChartProgramKind.Main);
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"));
 
         Assert.True(added);
         Assert.Equal("LiveChartsWpf", metadata[ChartRenderPlanMetadataKeys.ProviderKey]);

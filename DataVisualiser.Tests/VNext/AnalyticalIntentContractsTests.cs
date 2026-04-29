@@ -208,14 +208,21 @@ public sealed class AnalyticalIntentContractsTests
     [InlineData(ChartProgramKind.WeekdayTrend, "Chart", "WeekdayTrendChart", "TemporalTrend", "SingleSeries")]
     [InlineData(ChartProgramKind.BarPie, "Chart", "BarPieChart", "Identity", "MultiSeries")]
     [InlineData(ChartProgramKind.SyncfusionSunburst, "HierarchyChart", "SyncfusionSunburst", "Hierarchy", "Hierarchy")]
-    public void ChartRenderPlanVocabularyMetadata_ShouldInferContractMetadata(
+    public void ChartRenderPlanVocabularyMetadata_ShouldUseExplicitContractMetadata(
         ChartProgramKind kind,
         string expectedConsumer,
         string expectedDeliveryTarget,
         string expectedCapability,
         string expectedComposition)
     {
-        var metadata = ChartRenderPlanVocabularyMetadata.Build(kind, "source-signature");
+        var programRequest = new ChartProgramRequest(kind);
+        var capability = CapabilityRequest.FromProgramRequest(programRequest);
+        var delivery = ChartProgramDeliveryTargetResolver.CreateDelivery(programRequest.Kind);
+        var metadata = ChartRenderPlanVocabularyMetadata.Build(
+            programRequest,
+            capability,
+            delivery,
+            "source-signature");
 
         Assert.Equal(expectedConsumer, metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
         Assert.Equal(expectedDeliveryTarget, metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);

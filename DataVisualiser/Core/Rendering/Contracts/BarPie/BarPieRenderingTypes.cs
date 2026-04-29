@@ -55,11 +55,14 @@ public static class BarPieRenderPlanBuilder
             ["RendererKind"] = rendererKind.ToString(),
             ["Route"] = request.Route.ToString()
         };
+        var programRequest = ChartProgramRequest.BarPie();
         ChartRenderPlanVocabularyMetadata.AddTo(
             metadata,
-            ChartProgramKind.BarPie,
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ConsumerDeliveryContract.Chart(programRequest.Kind, "BarPieChart"),
             sourceSignature,
-            deliveryTarget: "BarPieChart");
+            overlayCount: 0);
 
         return new ChartRenderPlan(
             $"{backendKey}:{model.ChartName}:{request.Route}:{model.Title}:{model.Series.Count}:{model.Facets.Count}",

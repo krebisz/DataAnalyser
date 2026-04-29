@@ -5,20 +5,6 @@ namespace DataVisualiser.VNext.Rendering;
 public static class ChartRenderPlanVocabularyMetadata
 {
     public static IReadOnlyDictionary<string, string> Build(
-        ChartProgramKind programKind,
-        string sourceSignature,
-        ChartDisplayMode displayMode = ChartDisplayMode.Regular,
-        string? deliveryTarget = null,
-        int overlayCount = 0,
-        int interactionCount = 0)
-    {
-        var programRequest = CreateProgramRequest(programKind, displayMode);
-        var capability = CapabilityRequest.FromProgramRequest(programRequest);
-        var delivery = ChartProgramDeliveryTargetResolver.CreateDelivery(programKind, deliveryTarget);
-        return Build(programRequest, capability, delivery, sourceSignature, overlayCount, interactionCount);
-    }
-
-    public static IReadOnlyDictionary<string, string> Build(
         ChartProgramRequest programRequest,
         CapabilityRequest capability,
         ConsumerDeliveryContract delivery,
@@ -56,23 +42,8 @@ public static class ChartRenderPlanVocabularyMetadata
             [ChartRenderPlanMetadataKeys.InteractionCount] = interactionCount.ToString()
         };
 
-        ChartRenderPlanProviderMetadata.TryAddBuiltInProvider(metadata, delivery, programRequest.Kind);
+        ChartRenderPlanProviderMetadata.TryAddBuiltInProvider(metadata, delivery);
         return metadata;
-    }
-
-    public static void AddTo(
-        IDictionary<string, string> metadata,
-        ChartProgramKind programKind,
-        string sourceSignature,
-        ChartDisplayMode displayMode = ChartDisplayMode.Regular,
-        string? deliveryTarget = null,
-        int overlayCount = 0,
-        int interactionCount = 0)
-    {
-        ArgumentNullException.ThrowIfNull(metadata);
-
-        foreach (var pair in Build(programKind, sourceSignature, displayMode, deliveryTarget, overlayCount, interactionCount))
-            metadata[pair.Key] = pair.Value;
     }
 
     public static void AddTo(
@@ -89,22 +60,4 @@ public static class ChartRenderPlanVocabularyMetadata
         foreach (var pair in Build(programRequest, capability, delivery, sourceSignature, overlayCount, interactionCount))
             metadata[pair.Key] = pair.Value;
     }
-
-    private static ChartProgramRequest CreateProgramRequest(ChartProgramKind kind, ChartDisplayMode displayMode)
-    {
-        return kind switch
-        {
-            ChartProgramKind.Main => ChartProgramRequest.MainProgram(displayMode),
-            ChartProgramKind.Normalized => ChartProgramRequest.Normalized(),
-            ChartProgramKind.Difference => ChartProgramRequest.Difference(),
-            ChartProgramKind.Ratio => ChartProgramRequest.Ratio(),
-            ChartProgramKind.Transform => ChartProgramRequest.Transform("Transform", []),
-            ChartProgramKind.Distribution => ChartProgramRequest.Distribution(),
-            ChartProgramKind.WeekdayTrend => ChartProgramRequest.WeekdayTrend(),
-            ChartProgramKind.BarPie => ChartProgramRequest.BarPie(),
-            ChartProgramKind.SyncfusionSunburst => ChartProgramRequest.SyncfusionSunburst(),
-            _ => new ChartProgramRequest(kind, displayMode)
-        };
-    }
-
 }

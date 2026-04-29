@@ -1105,17 +1105,46 @@ diagnostic consumer
 
 Tasks:
 
-- [ ] Select one non-chart or chart-independent consumer path.
-- [ ] Use the same contract/boundary/qualification model.
-- [ ] Use a consumer-neutral surface or equivalent output shape.
-- [ ] Avoid render-specific assumptions.
-- [ ] Preserve semantics/provenance/evidence.
-- [ ] Add tests proving consumer-general behavior.
+- [x] Select one non-chart or chart-independent consumer path.
+- [x] Use the same contract/boundary/qualification model.
+- [x] Use a consumer-neutral surface or equivalent output shape.
+- [x] Avoid render-specific assumptions.
+- [x] Preserve semantics/provenance/evidence.
+- [x] Add tests proving consumer-general behavior.
 
 Completion condition:
 
 ```text
 At least one non-chart consumer uses the same target seam without chart/render assumptions.
+```
+
+Phase 15 evidence:
+
+```text
+Selected non-chart consumer path:
+- evidence export
+
+Target-spine proof:
+- intent/program entry: AnalyticalIntent with ConsumerDeliveryContract.Export
+- capability mapping: CapabilityRequest.FromProgramRequest still supplies capability/composition semantics for export consumers
+- contract/boundary: ConsumerProviderRegistry resolves ConsumerProviderContracts.EvidenceExport for ConsumerKind.Export without requiring a render plan
+- consumer-neutral surface: ConsumerDeliveryEvidence captures program, source, intent, capability, delivery, provenance, and provider metadata without ChartRenderPlan dependency
+- delivery: AnalyticalRenderPlanPipeline.ExecuteForConsumerAsync executes non-rendering consumers and returns AnalyticalConsumerDeliveryResult
+- evidence export: EvidenceExportConsumerContractBuilder emits ExportConsumers diagnostics from the same contract/provider seam
+
+Tests added:
+- ExecuteForConsumerAsync_ShouldReturnExportDeliveryEvidenceWithoutRenderPlan
+- ExecuteForConsumerAsync_ShouldRejectRenderingConsumer
+- ExportAsync_ShouldIncludeNonChartExportConsumerEvidence
+
+Validation:
+- Phase 15 focused VNext pipeline and evidence export validation passed 34 tests
+
+Implementation result:
+- non-chart export consumer evidence is now represented as a first-class neutral output shape
+- evidence export can report export consumer contract/provenance/provider metadata without depending on render-plan construction
+- render-plan build paths still reject non-rendering consumers, and non-rendering consumer execution rejects rendering consumers
+- no UI rendering behavior was changed
 ```
 
 ---
@@ -1130,19 +1159,53 @@ Remove old bypasses only after target replacements are proven.
 
 Tasks:
 
-- [ ] List known legacy bypass paths.
-- [ ] For each path, identify target replacement.
-- [ ] Confirm parity evidence.
-- [ ] Confirm smoke evidence.
-- [ ] Confirm metadata preservation.
-- [ ] Confirm semantic/provenance preservation.
-- [ ] Confirm no consumer still depends on the bypass.
-- [ ] Remove one bypass at a time.
+- [x] List known legacy bypass paths.
+- [x] For each path, identify target replacement.
+- [x] Confirm parity evidence.
+- [x] Confirm smoke evidence.
+- [x] Confirm metadata preservation.
+- [x] Confirm semantic/provenance preservation.
+- [x] Confirm no consumer still depends on the bypass.
+- [x] Remove one bypass at a time.
 
 Completion condition:
 
 ```text
 Legacy coexistence shrinks without behavior loss, metadata loss, or semantic drift.
+```
+
+Phase 16 evidence:
+
+```text
+Bypass classification:
+- retired: ChartRenderPlanVocabularyMetadata overloads that accepted only ChartProgramKind and reconstructed program/capability/delivery metadata internally
+- retired: ChartRenderPlanProviderMetadata overload that accepted delivery plus a separate ChartProgramKind, allowing provider metadata to drift from the delivery contract
+- contained: VNext fallback runtime paths remain preserved because they carry runtime/evidence state and still provide operational flexibility
+- contained: ChartUpdateCoordinator fallback construction remains preserved for callers not yet carrying explicit contracts, but explicit program/capability/delivery inputs are now available and used by hardened slices
+- preserved: legacy computation/parity strategies remain preserved because parity, diagnostics, and manual smoke evidence still rely on them as comparison and fallback paths
+
+Target replacement for retired bypass:
+- callers now pass ChartProgramRequest, CapabilityRequest, and ConsumerDeliveryContract into ChartRenderPlanVocabularyMetadata
+- BarPie and Syncfusion render-plan builders now construct explicit vocabulary contracts before adding render-plan metadata
+- provider metadata now derives its default plan-kind resolution from ConsumerDeliveryContract.ProgramKind instead of accepting a separate program kind
+- tests now build explicit program/capability/delivery contracts instead of depending on kind-only metadata inference
+
+Evidence checks:
+- parity evidence remains preserved by existing parity export and strategy parity tests
+- smoke evidence remains preserved by the completed Phase 14 manual exports for chart slices and Phase 15 export evidence path
+- metadata preservation is covered by render-plan vocabulary diagnostics tests and architecture guardrails
+- semantic/provenance preservation is covered by explicit contract metadata tests
+- no production caller remains dependent on the removed kind-only vocabulary metadata overload
+
+Validation:
+- Phase 16 focused metadata/export/rendering/architecture validation passed 176 tests
+- Phase 16 second-pass provider metadata/render-plan/architecture validation passed 196 tests
+
+Implementation result:
+- duplicate semantic inference bypasses were removed from vocabulary metadata and provider metadata
+- flexibility-preserving legacy/fallback paths were not removed
+- the target seam is stricter: render metadata now requires explicit program/capability/delivery contracts
+- provider metadata can no longer drift by receiving a delivery contract and conflicting program kind
 ```
 
 ---
@@ -1392,6 +1455,8 @@ Use this section during implementation.
 | 2026-04-28 | Phase 14 | Selected active Distribution as the first capability slice and proved it through the target spine. | `documents/DataVisualiser_Distribution_Capability_Slice_Audit.md`; `ArchitectureGuardrailTests`; Distribution/VNext/rendering/parity validation passed 172 tests. | Complete |
 | 2026-04-29 | Phase 14 correction | Reopened the Distribution capability slice to add actual production contract carriage through the live controller/rendering path. | `DistributionCapabilityContract`; `DistributionChartRenderRequest`; `ChartRenderPlanVocabularyMetadata`; focused Distribution/VNext/architecture validation passed 197 tests. | Complete |
 | 2026-04-29 | Phase 14 completion | Implemented the remaining Phase 14 production contract-carriage slices for WeekdayTrend and Transform, keeping capability ownership in the target spine. | `WeekdayTrendCapabilityContract`; `TransformCapabilityContract`; `WeekdayTrendChartRenderRequest`; `TransformChartRenderRequest`; focused Distribution/WeekdayTrend/Transform/render-plan/orchestration validation passed 227 tests. | Complete |
+| 2026-04-29 | Phase 15 | Added a non-chart evidence export consumer path through the same intent/capability/delivery/provider seam. | `ConsumerDeliveryEvidence`; `AnalyticalRenderPlanPipeline.ExecuteForConsumerAsync`; `EvidenceExportConsumerContractBuilder`; focused VNext/evidence export validation passed 34 tests. | Complete |
+| 2026-04-29 | Phase 16 | Retired duplicate metadata bypasses while preserving flexible legacy/fallback paths. | Removed kind-only `ChartRenderPlanVocabularyMetadata` overloads and delivery-plus-program-kind `ChartRenderPlanProviderMetadata` overload; BarPie/Syncfusion/tests now pass explicit program/capability/delivery contracts; focused metadata/export/rendering/architecture validation passed 176 tests and provider metadata/render-plan/architecture validation passed 196 tests. | Complete |
 
 ---
 
