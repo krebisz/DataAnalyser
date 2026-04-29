@@ -312,7 +312,8 @@ public sealed class DistributionChartControllerAdapter : CartesianChartControlle
             renderInput.CmsSeries,
             BuildDistributionContext(ctx, renderInput),
             _viewModel.ChartState,
-            renderInput.SelectedSeries?.DisplayKey ?? "<none>");
+            renderInput.SelectedSeries?.DisplayKey ?? "<none>",
+            DistributionCapabilityContract.Create());
 
         var renderResult = await _distributionRenderingContract.RenderAsync(request, renderTarget.Host);
         _viewModel.ChartState.SetRenderPlanDiagnostics(

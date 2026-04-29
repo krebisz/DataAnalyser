@@ -292,7 +292,43 @@ public sealed record DistributionChartRenderRequest(
     ICanonicalMetricSeries? CmsSeries,
     ChartDataContext RenderingContext,
     ChartState ChartState,
-    string SelectionDisplayKey = "<none>");
+    string SelectionDisplayKey = "<none>",
+    DistributionCapabilityContract? CapabilityContract = null);
+
+public sealed record DistributionCapabilityContract
+{
+    public DistributionCapabilityContract(
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery)
+    {
+        ArgumentNullException.ThrowIfNull(programRequest);
+        ArgumentNullException.ThrowIfNull(capability);
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        if (programRequest.Kind != ChartProgramKind.Distribution)
+            throw new ArgumentException("Distribution capability contracts must use a Distribution program request.", nameof(programRequest));
+        if (delivery.ProgramKind != programRequest.Kind)
+            throw new ArgumentException("Distribution delivery contract must target the Distribution program kind.", nameof(delivery));
+
+        ProgramRequest = programRequest;
+        Capability = capability;
+        Delivery = delivery;
+    }
+
+    public ChartProgramRequest ProgramRequest { get; }
+    public CapabilityRequest Capability { get; }
+    public ConsumerDeliveryContract Delivery { get; }
+
+    public static DistributionCapabilityContract Create()
+    {
+        var programRequest = ChartProgramRequest.Distribution();
+        return new DistributionCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ChartProgramDeliveryTargetResolver.CreateDelivery(programRequest.Kind, "DistributionChart"));
+    }
+}
 
 public sealed record DistributionChartRenderHost(
     CartesianChart CartesianChart,
@@ -310,26 +346,28 @@ public static class DistributionRenderPlanBuilder
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var capabilityContract = request.CapabilityContract ?? DistributionCapabilityContract.Create();
         var backendKey = ResolveBackendKey(request.Route);
         var sourceSignature = $"{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}:{request.Data.Count}";
         var metadata = new Dictionary<string, string>
         {
             ["Adapter"] = nameof(DistributionRenderPlanAdapter),
             [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
-            ["ProgramKind"] = ChartProgramKind.Distribution.ToString(),
+            ["ProgramKind"] = capabilityContract.ProgramRequest.Kind.ToString(),
             ["Route"] = request.Route.ToString(),
             ["Mode"] = request.Mode.ToString(),
             ["Selection"] = request.SelectionDisplayKey
         };
         ChartRenderPlanVocabularyMetadata.AddTo(
             metadata,
-            ChartProgramKind.Distribution,
-            sourceSignature,
-            deliveryTarget: "DistributionChart");
+            capabilityContract.ProgramRequest,
+            capabilityContract.Capability,
+            capabilityContract.Delivery,
+            sourceSignature);
 
         return new ChartRenderPlan(
             $"{backendKey}:{request.Mode}:{request.DisplayName}:{request.From:O}:{request.To:O}:{request.Settings.IntervalCount}",
-            ChartProgramKind.Distribution,
+            capabilityContract.ProgramRequest.Kind,
             ChartRenderPlanKind.Cartesian,
             ChartDisplayMode.Regular,
             request.DisplayName,

@@ -12,12 +12,30 @@ public static class ChartRenderPlanVocabularyMetadata
         int overlayCount = 0,
         int interactionCount = 0)
     {
-        if (string.IsNullOrWhiteSpace(sourceSignature))
-            sourceSignature = "<unknown>";
-
         var programRequest = CreateProgramRequest(programKind, displayMode);
         var capability = CapabilityRequest.FromProgramRequest(programRequest);
         var delivery = ChartProgramDeliveryTargetResolver.CreateDelivery(programKind, deliveryTarget);
+        return Build(programRequest, capability, delivery, sourceSignature, overlayCount, interactionCount);
+    }
+
+    public static IReadOnlyDictionary<string, string> Build(
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery,
+        string sourceSignature,
+        int overlayCount = 0,
+        int interactionCount = 0)
+    {
+        ArgumentNullException.ThrowIfNull(programRequest);
+        ArgumentNullException.ThrowIfNull(capability);
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        if (delivery.ProgramKind != programRequest.Kind)
+            throw new ArgumentException("Delivery program kind must match the render-plan program request.", nameof(delivery));
+
+        if (string.IsNullOrWhiteSpace(sourceSignature))
+            sourceSignature = "<unknown>";
+
         var provenance = ProvenanceDescriptor.Projected(sourceSignature, AnalyticalAuthority.Legacy);
         var intentSignature = string.Join("::",
             sourceSignature,
@@ -38,7 +56,7 @@ public static class ChartRenderPlanVocabularyMetadata
             [ChartRenderPlanMetadataKeys.InteractionCount] = interactionCount.ToString()
         };
 
-        ChartRenderPlanProviderMetadata.TryAddBuiltInProvider(metadata, delivery, programKind);
+        ChartRenderPlanProviderMetadata.TryAddBuiltInProvider(metadata, delivery, programRequest.Kind);
         return metadata;
     }
 
@@ -54,6 +72,21 @@ public static class ChartRenderPlanVocabularyMetadata
         ArgumentNullException.ThrowIfNull(metadata);
 
         foreach (var pair in Build(programKind, sourceSignature, displayMode, deliveryTarget, overlayCount, interactionCount))
+            metadata[pair.Key] = pair.Value;
+    }
+
+    public static void AddTo(
+        IDictionary<string, string> metadata,
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery,
+        string sourceSignature,
+        int overlayCount = 0,
+        int interactionCount = 0)
+    {
+        ArgumentNullException.ThrowIfNull(metadata);
+
+        foreach (var pair in Build(programRequest, capability, delivery, sourceSignature, overlayCount, interactionCount))
             metadata[pair.Key] = pair.Value;
     }
 

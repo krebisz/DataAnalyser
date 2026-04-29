@@ -102,6 +102,13 @@ public abstract class BucketDistributionTooltip : IDisposable
         var isOverChart = mousePos.X >= 0 && mousePos.Y >= 0 && mousePos.X <= _chart.ActualWidth && mousePos.Y <= _chart.ActualHeight;
 
         if (!isOverChart)
+        {
+            HideTooltip();
+            return;
+        }
+
+        if (_lastValidHoverTime != DateTime.MinValue &&
+            (DateTime.Now - _lastValidHoverTime).TotalMilliseconds > HoverTimeoutMs)
             HideTooltip();
     }
 
@@ -117,8 +124,8 @@ public abstract class BucketDistributionTooltip : IDisposable
             return;
         }
 
-        UpdateHoverState(bucketIndex);
         ShowTooltip(bucketIndex, intervals);
+        UpdateHoverState(bucketIndex);
     }
 
     private bool TryResolveHoverContext(ChartPoint chartPoint, out int bucketIndex, out List<(double Min, double Max, int Count, double Percentage)> intervals)
@@ -148,6 +155,10 @@ public abstract class BucketDistributionTooltip : IDisposable
 
     private void ShowTooltip(int bucketIndex, List<(double Min, double Max, int Count, double Percentage)> intervals)
     {
+        var bucketChanged = _lastValidBucketIndex != bucketIndex;
+        if (bucketChanged && _tooltipPopup.IsOpen)
+            _tooltipPopup.IsOpen = false;
+
         _tooltipPopup.Child = CreateTooltipContent(bucketIndex, intervals);
 
         var mousePos = Mouse.GetPosition(_chart);
@@ -357,6 +368,7 @@ public abstract class BucketDistributionTooltip : IDisposable
         return new Border
         {
                 Child = content,
+                IsHitTestVisible = false,
                 Background = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipBackgroundBrush", Brushes.White),
                 BorderBrush = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipBorderBrush", new SolidColorBrush(Color.FromRgb(180, 180, 180))),
                 BorderThickness = new Thickness(1),

@@ -8,7 +8,7 @@ Selected slice: active Distribution capability
 
 ## Scope
 
-This audit records why Distribution was selected as the first Phase 14 capability slice and how the existing implementation maps to the target spine without adding new user-visible behavior.
+This audit records why Distribution was selected as the first Phase 14 capability slice and how the live implementation now carries the target-spine contract through the active Distribution rendering path without adding new user-visible behavior.
 
 Distribution was selected because it is active, UI-reachable, analytically meaningful, and already crosses the main target seams: intent, capability, program, delivery contract, qualification, surface/render plan, terminal delivery, and evidence.
 
@@ -37,9 +37,9 @@ Evidence / Audit
 
 ## Active UI Path
 
-The active UI path is `DistributionChartControllerAdapter`. It relays interaction, resolves data, builds a distribution render request, and delegates delivery to `IDistributionRenderingContract`.
+The active UI path is `DistributionChartControllerAdapter`. It relays interaction, resolves data, builds a distribution render request, attaches a validated `DistributionCapabilityContract`, and delegates delivery to `IDistributionRenderingContract`.
 
-The adapter does not define the Distribution capability, composition kind, consumer kind, provider key, or delivery target. Those are defined upstream through VNext contracts and render-plan vocabulary metadata.
+The adapter does not define the Distribution capability, composition kind, consumer kind, provider key, or delivery target. It now passes the upstream VNext capability/program/delivery contract into the render request, and render-plan vocabulary metadata is built from that runtime contract.
 
 ## Existing Evidence
 
@@ -59,9 +59,13 @@ Phase 14 adds targeted tests proving:
 - Distribution VNext loading returns a traceable Distribution program signature through the capability/program path
 - Distribution render plans preserve target-spine metadata across delivery
 - Distribution capability ownership stays in VNext capability/program/contract structures, not in the UI adapter
+- the live Distribution controller adapter passes a `DistributionCapabilityContract` into the rendering contract
+- the Distribution render-plan builder uses the runtime capability/delivery contract instead of reconstructing delivery metadata from constants
 
 ## Findings
 
-No production behavior change is required for this slice. The current implementation already supports Distribution as an active capability path. The Phase 14 work should therefore focus on tightening proof around the existing path rather than enabling new capability behavior.
+The original Phase 14 closure was proof-heavy and did not satisfy the agreed first production implementation slice. The reopened Phase 14 correction adds production contract carriage through the active Distribution path: `DistributionChartControllerAdapter -> DistributionChartRenderRequest -> DistributionRenderingContract -> DistributionRenderPlanBuilder`.
+
+This remains behavior-preserving from the user's perspective, but it is a real implementation change: the live Distribution render path now transports the target-spine capability/program/delivery contract instead of relying on tests and render-plan constants to infer that relationship.
 
 The next capability-expansion slice should only proceed after this one remains green through focused validation.

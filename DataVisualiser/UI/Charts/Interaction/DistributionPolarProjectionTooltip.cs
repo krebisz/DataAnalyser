@@ -24,6 +24,7 @@ public sealed class DistributionPolarProjectionTooltip : IDistributionPolarProje
     private readonly Popup _popup;
     private readonly DistributionRangeResult _rangeResult;
     private readonly TextBlock _text;
+    private int _lastValidBucketIndex = -1;
     private DateTime _lastValidHoverTime;
     private Point _lastValidHoverPosition;
 
@@ -51,7 +52,8 @@ public sealed class DistributionPolarProjectionTooltip : IDistributionPolarProje
                         CornerRadius = new CornerRadius(4),
                         BorderThickness = new Thickness(1),
                         BorderBrush = ChartInteractionVisualHelper.GetThemeBrush("ThemeTooltipBorderBrush", Brushes.Black),
-                        Child = _text
+                        Child = _text,
+                        IsHitTestVisible = false
                 }
         };
 
@@ -97,8 +99,11 @@ public sealed class DistributionPolarProjectionTooltip : IDistributionPolarProje
         var deltaValue = FormatValue(ResolveDelta(bucketIndex));
 
         _text.Text = $"{label}\nMin: {minValue}\nMax: {maxValue}\nAvg: {avgValue}\nDelta: {deltaValue}";
+        if (_lastValidBucketIndex != bucketIndex && _popup.IsOpen)
+            _popup.IsOpen = false;
 
         var position = Mouse.GetPosition(_chart);
+        _lastValidBucketIndex = bucketIndex;
         _lastValidHoverPosition = position;
         _lastValidHoverTime = DateTime.UtcNow;
 
@@ -134,10 +139,8 @@ public sealed class DistributionPolarProjectionTooltip : IDistributionPolarProje
             return;
 
         var elapsed = DateTime.UtcNow - _lastValidHoverTime;
-        if (elapsed.TotalMilliseconds <= RenderingDefaults.TooltipHoverTimeoutMs)
-            return;
-
-        if (GetDistance(currentMousePosition, _lastValidHoverPosition) > HoverMoveTolerancePx)
+        if (elapsed.TotalMilliseconds > RenderingDefaults.TooltipHoverTimeoutMs ||
+            GetDistance(currentMousePosition, _lastValidHoverPosition) > HoverMoveTolerancePx)
             HideTooltip();
     }
 
@@ -192,6 +195,7 @@ public sealed class DistributionPolarProjectionTooltip : IDistributionPolarProje
     private void HideTooltip()
     {
         _popup.IsOpen = false;
+        _lastValidBucketIndex = -1;
         _lastValidHoverTime = DateTime.MinValue;
         _lastValidHoverPosition = new Point(double.NaN, double.NaN);
     }

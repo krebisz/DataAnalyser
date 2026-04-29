@@ -148,6 +148,35 @@ public sealed class DistributionRenderingContractTests
         Assert.True(plan.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderSignature));
     }
 
+    [Fact]
+    public void DistributionRenderPlanBuilder_ShouldUseRuntimeCapabilityContract()
+    {
+        var programRequest = ChartProgramRequest.Distribution();
+        var request = CreateRequest(DistributionRenderingRoute.Cartesian, DistributionMode.Weekly) with
+        {
+            CapabilityContract = new DistributionCapabilityContract(
+                programRequest,
+                CapabilityRequest.FromProgramRequest(programRequest),
+                ConsumerDeliveryContract.Chart(ChartProgramKind.Distribution, "DistributionDiagnosticSurface"))
+        };
+
+        var plan = DistributionRenderPlanBuilder.Build(request);
+
+        Assert.Equal("DistributionDiagnosticSurface", plan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Contains("Chart:Distribution:DistributionDiagnosticSurface", plan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DistributionCapabilityContract_ShouldRejectProgramKindDrift()
+    {
+        var programRequest = ChartProgramRequest.MainProgram();
+
+        Assert.Throws<ArgumentException>(() => new DistributionCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Distribution, "DistributionChart")));
+    }
+
     private static DistributionRenderingContract CreateContract()
     {
         var distributionService = new StubDistributionService();
