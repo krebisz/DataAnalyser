@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration.MainChart;
@@ -19,5 +20,5 @@ public interface IMainChartStrategySelectionStage
 
 public interface IMainChartRenderInvocationStage
 {
-    Task RenderAsync(MainChartStrategyPlan plan, CartesianChart chart);
+    Task RenderAsync(MainChartStrategyPlan plan, CartesianChart chart, CartesianMetricCapabilityContract? capabilityContract = null);
 }

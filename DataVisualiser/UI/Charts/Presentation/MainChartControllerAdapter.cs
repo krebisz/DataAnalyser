@@ -4,6 +4,7 @@ using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.CartesianMetrics;
+using DataVisualiser.VNext.Contracts;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
@@ -182,7 +183,8 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
                 _viewModel.MetricState.ResolutionTableName,
                 canStack,
                 isCumulative,
-                overlaySeries),
+                overlaySeries,
+                CapabilityContract: CartesianMetricCapabilityContract.Create(ChartProgramKind.Main)),
             CreateRenderHost());
     }
 

@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration.SecondaryCharts;
@@ -29,6 +30,8 @@ public sealed class SecondaryMetricChartRenderInvocationStage : ISecondaryMetric
             _ => throw new ArgumentOutOfRangeException(nameof(request.Route), request.Route, "Unknown secondary metric chart route.")
         };
 
+        var capabilityContract = CartesianMetricCapabilityContract.Create(programKind);
+
         return _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
             chart,
             plan.Strategy,
@@ -46,6 +49,7 @@ public sealed class SecondaryMetricChartRenderInvocationStage : ISecondaryMetric
             displayPrimarySubtype: context.DisplayPrimarySubtype,
             displaySecondarySubtype: context.DisplaySecondarySubtype,
             useRenderPlanAdapter: true,
-            renderProgramKind: programKind);
+            renderProgramKind: programKind,
+            renderDelivery: capabilityContract.Delivery);
     }
 }

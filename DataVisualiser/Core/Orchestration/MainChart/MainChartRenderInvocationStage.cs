@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration.MainChart;
@@ -11,7 +12,7 @@ public sealed class MainChartRenderInvocationStage : IMainChartRenderInvocationS
         _chartUpdateCoordinator = chartUpdateCoordinator ?? throw new ArgumentNullException(nameof(chartUpdateCoordinator));
     }
 
-    public Task RenderAsync(MainChartStrategyPlan plan, CartesianChart chart)
+    public Task RenderAsync(MainChartStrategyPlan plan, CartesianChart chart, CartesianMetricCapabilityContract? capabilityContract = null)
     {
         if (plan == null)
             throw new ArgumentNullException(nameof(plan));
@@ -37,6 +38,7 @@ public sealed class MainChartRenderInvocationStage : IMainChartRenderInvocationS
             isStacked: plan.IsStacked,
             isCumulative: plan.IsCumulative,
             overlaySeries: plan.OverlaySeries,
-            useRenderPlanAdapter: true);
+            useRenderPlanAdapter: true,
+            renderDelivery: capabilityContract?.Delivery);
     }
 }

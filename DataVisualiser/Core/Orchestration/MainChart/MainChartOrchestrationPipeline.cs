@@ -27,7 +27,7 @@ public sealed class MainChartOrchestrationPipeline : IMainChartOrchestrationPipe
 
         var preparedData = await _preparationStage.PrepareAsync(request);
         var strategyPlan = _strategySelectionStage.Select(preparedData);
-        await _renderInvocationStage.RenderAsync(strategyPlan, chart);
+        await _renderInvocationStage.RenderAsync(strategyPlan, chart, request.CapabilityContract);
         return preparedData;
     }
 }

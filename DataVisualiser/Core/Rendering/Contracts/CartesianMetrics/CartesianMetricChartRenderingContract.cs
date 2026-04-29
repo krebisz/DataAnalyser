@@ -3,6 +3,7 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.CartesianMetrics;
@@ -164,4 +165,65 @@ public sealed record CartesianMetricChartRenderRequest(
     string? ResolutionTableName = null,
     bool IsStacked = false,
     bool IsCumulative = false,
-    IReadOnlyList<SeriesResult>? OverlaySeries = null);
+    IReadOnlyList<SeriesResult>? OverlaySeries = null,
+    CartesianMetricCapabilityContract? CapabilityContract = null);
+
+/// <summary>
+///     Binds rendering authority for a CartesianMetric chart kind.
+///     Valid kinds: Main, Normalized, Difference, Ratio.
+///     Note: display mode is resolved dynamically per render; only Delivery is threaded
+///     into the builder to preserve correct stacked/cumulative mode resolution.
+/// </summary>
+public sealed record CartesianMetricCapabilityContract
+{
+    private static readonly IReadOnlySet<ChartProgramKind> ValidKinds = new HashSet<ChartProgramKind>
+    {
+        ChartProgramKind.Main,
+        ChartProgramKind.Normalized,
+        ChartProgramKind.Difference,
+        ChartProgramKind.Ratio
+    };
+
+    public CartesianMetricCapabilityContract(
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery)
+    {
+        ArgumentNullException.ThrowIfNull(programRequest);
+        ArgumentNullException.ThrowIfNull(capability);
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        if (!ValidKinds.Contains(programRequest.Kind))
+            throw new ArgumentException($"CartesianMetric capability contracts must use a valid CartesianMetric program kind (Main, Normalized, Difference, Ratio). Got: {programRequest.Kind}.", nameof(programRequest));
+        if (delivery.ProgramKind != programRequest.Kind)
+            throw new ArgumentException("CartesianMetric delivery contract must target the same program kind as the program request.", nameof(delivery));
+
+        ProgramRequest = programRequest;
+        Capability = capability;
+        Delivery = delivery;
+    }
+
+    public ChartProgramRequest ProgramRequest { get; }
+    public CapabilityRequest Capability { get; }
+    public ConsumerDeliveryContract Delivery { get; }
+
+    public static CartesianMetricCapabilityContract Create(ChartProgramKind kind)
+    {
+        if (!new HashSet<ChartProgramKind> { ChartProgramKind.Main, ChartProgramKind.Normalized, ChartProgramKind.Difference, ChartProgramKind.Ratio }.Contains(kind))
+            throw new ArgumentOutOfRangeException(nameof(kind), kind, "Kind must be a CartesianMetric kind.");
+
+        var programRequest = kind switch
+        {
+            ChartProgramKind.Main => ChartProgramRequest.MainProgram(),
+            ChartProgramKind.Normalized => ChartProgramRequest.Normalized(),
+            ChartProgramKind.Difference => ChartProgramRequest.Difference(),
+            ChartProgramKind.Ratio => ChartProgramRequest.Ratio(),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+
+        return new CartesianMetricCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ChartProgramDeliveryTargetResolver.CreateDelivery(kind));
+    }
+}

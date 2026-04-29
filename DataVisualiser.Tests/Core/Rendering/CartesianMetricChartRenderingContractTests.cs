@@ -3,6 +3,7 @@ using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -49,6 +50,42 @@ public sealed class CartesianMetricChartRenderingContractTests
 
             Assert.True(contract.HasRenderableContent(CartesianMetricChartRoute.Main, host));
         });
+    }
+
+    [Theory]
+    [InlineData(ChartProgramKind.Main, "MainChart")]
+    [InlineData(ChartProgramKind.Normalized, "NormalizedChart")]
+    [InlineData(ChartProgramKind.Difference, "DiffRatioChart")]
+    [InlineData(ChartProgramKind.Ratio, "DiffRatioChart")]
+    public void CartesianMetricCapabilityContract_Create_ShouldBindCorrectDeliveryTarget(ChartProgramKind kind, string expectedTarget)
+    {
+        var contract = CartesianMetricCapabilityContract.Create(kind);
+
+        Assert.Equal(kind, contract.ProgramRequest.Kind);
+        Assert.Equal(kind, contract.Delivery.ProgramKind);
+        Assert.Equal(expectedTarget, contract.Delivery.DeliveryTarget);
+    }
+
+    [Fact]
+    public void CartesianMetricCapabilityContract_ShouldRejectInvalidKind()
+    {
+        var programRequest = ChartProgramRequest.BarPie();
+
+        Assert.Throws<ArgumentException>(() => new CartesianMetricCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ChartProgramDeliveryTargetResolver.CreateDelivery(ChartProgramKind.BarPie)));
+    }
+
+    [Fact]
+    public void CartesianMetricCapabilityContract_ShouldRejectDeliveryKindMismatch()
+    {
+        var programRequest = ChartProgramRequest.MainProgram();
+
+        Assert.Throws<ArgumentException>(() => new CartesianMetricCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ChartProgramDeliveryTargetResolver.CreateDelivery(ChartProgramKind.Normalized)));
     }
 
     private sealed class StubRenderInvoker : ICartesianMetricChartRenderInvoker

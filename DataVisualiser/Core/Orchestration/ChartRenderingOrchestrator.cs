@@ -1,6 +1,7 @@
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Orchestration.DistributionCharts;
 using DataVisualiser.Core.Orchestration.MainChart;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Orchestration.SecondaryCharts;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
@@ -218,7 +219,8 @@ public sealed class ChartRenderingOrchestrator
         string? resolutionTableName = null,
         bool isStacked = false,
         bool isCumulative = false,
-        IReadOnlyList<SeriesResult>? overlaySeries = null)
+        IReadOnlyList<SeriesResult>? overlaySeries = null,
+        CartesianMetricCapabilityContract? capabilityContract = null)
     {
         if (ctx == null || chartMain == null)
             return null;
@@ -232,7 +234,8 @@ public sealed class ChartRenderingOrchestrator
                 resolutionTableName,
                 isStacked,
                 isCumulative,
-                overlaySeries),
+                overlaySeries,
+                CapabilityContract: capabilityContract),
             chartMain);
         return preparedData.WorkingContext;
     }

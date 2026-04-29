@@ -65,7 +65,8 @@ public sealed class CartesianMetricChartRenderInvoker : ICartesianMetricChartRen
             request.ResolutionTableName,
             request.IsStacked,
             request.IsCumulative,
-            request.OverlaySeries);
+            request.OverlaySeries,
+            request.CapabilityContract);
 
         if (renderedContext != null)
             host.ChartState.LastContext = renderedContext;

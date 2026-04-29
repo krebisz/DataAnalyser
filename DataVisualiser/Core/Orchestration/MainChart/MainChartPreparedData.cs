@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 
@@ -20,7 +21,8 @@ public sealed record MainChartRenderRequest(
     bool IsCumulative = false,
     IReadOnlyList<SeriesResult>? OverlaySeries = null,
     IReadOnlyList<IEnumerable<MetricData>>? AdditionalSeries = null,
-    IReadOnlyList<string>? AdditionalLabels = null);
+    IReadOnlyList<string>? AdditionalLabels = null,
+    CartesianMetricCapabilityContract? CapabilityContract = null);
 
 public sealed record MainChartStrategyPlan(
     StrategyType StrategyType,

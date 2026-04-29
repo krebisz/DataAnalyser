@@ -1388,7 +1388,7 @@ Tasks:
 - [x] Remove dead ShouldUseStackedTotals from ChartUpdateCoordinator.
 - [x] Update RenderPlanBuilders_ShouldAttachVocabularyMetadata guardrail to point to CartesianMetricRenderPlanBuilder.
 - [x] Inspect MetricLoadCoordinator; confirm VNext/legacy route selection is a transitional bridge without a proven replacement path.
-- [ ] Thread CartesianMetricCapabilityContract through CartesianMetricChartRenderRequest, CartesianMetricChartRenderInvoker, and the Main/Secondary invocation stages once the builder seam is stable.
+- [x] Thread CartesianMetricCapabilityContract through CartesianMetricChartRenderRequest, CartesianMetricChartRenderInvoker, and the Main/Secondary invocation stages once the builder seam is stable.
 - [ ] Migrate MetricLoadCoordinator VNext/legacy routing to the target spine once the replacement path is proven.
 
 Completion condition:
@@ -1413,12 +1413,24 @@ Non-coordination responsibility migrated:
 - ChartUpdateCoordinator now calls CartesianMetricRenderPlanBuilder.Build(...) — coordinator is coordination-only for this responsibility
 - RenderPlanBuilders_ShouldAttachVocabularyMetadata guardrail updated to point to CartesianMetricRenderPlanBuilder instead of ChartUpdateCoordinator
 
+CartesianMetricCapabilityContract threaded (2026-04-29):
+- CartesianMetricCapabilityContract sealed record added to CartesianMetricChartRenderingContract.cs; validates kind ∈ {Main, Normalized, Difference, Ratio}; static Create(kind) factory; constructor rejects delivery kind mismatch
+- CartesianMetricChartRenderRequest gains optional CapabilityContract field
+- CartesianMetricChartRenderInvoker.RenderMainAndCaptureContextAsync threads contract to ChartRenderingOrchestrator.RenderPrimaryChartAsync
+- ChartRenderingOrchestrator.RenderPrimaryChartAsync gains optional capabilityContract param; passes to MainChartRenderRequest
+- MainChartRenderRequest gains optional CapabilityContract field
+- MainChartOrchestrationPipeline passes request.CapabilityContract to IMainChartRenderInvocationStage.RenderAsync
+- IMainChartRenderInvocationStage.RenderAsync gains optional CartesianMetricCapabilityContract? param
+- MainChartRenderInvocationStage passes contract.Delivery as renderDelivery to UpdateChartUsingStrategyAsync (display mode remains dynamically resolved; program request and capability intentionally not passed to preserve stacked/cumulative mode correctness)
+- SecondaryMetricChartRenderInvocationStage creates CartesianMetricCapabilityContract.Create(programKind) inline; passes contract.Delivery as renderDelivery
+- MainChartControllerAdapter.RenderMainChartAsync passes CartesianMetricCapabilityContract.Create(ChartProgramKind.Main) on the render request
+- 6 new contract tests added (Create delivery targets for all 4 kinds; invalid kind rejection; delivery kind mismatch rejection); 958 tests pass
+
 Deferred:
-- CartesianMetric capability contract threading (MainChartControllerAdapter, invocation stages) — CartesianMetricRenderPlanBuilder now provides the clean seam; threading is the next Phase 20 slice
 - MetricLoadCoordinator VNext/legacy routing — replacement path not yet proven
 
 Validation:
-- 952 tests pass; no regressions; guardrail updated to reflect new ownership
+- 958 tests pass; no regressions
 ```
 
 ---
@@ -1754,7 +1766,8 @@ Use this section during implementation.
 | 2026-04-29 | Phase 15/16 Syncfusion alignment | Verified SyncfusionSunburst before Phase 17 as both a hierarchy render consumer and a non-chart export evidence consumer. | `ExportAsync_ShouldIncludeNonChartExportConsumerEvidence`; focused Syncfusion/export/provider/architecture validation passed 186 tests. | Complete |
 | 2026-04-29 | Phase 17 | Added BarPieCapabilityContract to complete the explicit capability-contract pattern across all LiveCharts families; preserved SyncfusionSunburst hierarchy delivery distinction. | `BarPieCapabilityContract`; `BarPieChartRenderRequest` optional contract field; `BarPieRenderPlanBuilder` updated; `BarPieChartControllerAdapter` passes contract; `BarPieRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `BarPieCapabilityContract_ShouldRejectProgramKindDrift`; 950 tests pass. | Complete |
 | 2026-04-29 | Phase 18 | Added SyncfusionSunburstCapabilityContract to complete contract carriage across all chart families; preserved HierarchyChart delivery distinction; deferred MainChartControllerAdapter to Phase 19. | `SyncfusionSunburstCapabilityContract`; `SyncfusionSunburstChartRenderRequest` optional contract field; `SyncfusionSunburstRenderPlanBuilder` updated; `SyncfusionSunburstChartControllerAdapter` passes contract; `SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift`; 952 tests pass. | Complete |
-| 2026-04-29 | Phase 19 | Extracted CartesianMetricRenderPlanBuilder from ChartUpdateCoordinator; render-plan construction authority now lives in a dedicated builder; coordinator is coordination-only for this responsibility; guardrail updated. | `CartesianMetricRenderPlanBuilder`; `ChartUpdateCoordinator` calls builder; dead `ShouldUseStackedTotals` removed; `RenderPlanBuilders_ShouldAttachVocabularyMetadata` guardrail updated to new builder path; 952 tests pass. | Complete |
+| 2026-04-29 | Phase 19 (builder extraction) | Extracted CartesianMetricRenderPlanBuilder from ChartUpdateCoordinator; render-plan construction authority now lives in a dedicated builder; coordinator is coordination-only for this responsibility; guardrail updated. | `CartesianMetricRenderPlanBuilder`; `ChartUpdateCoordinator` calls builder; dead `ShouldUseStackedTotals` removed; `RenderPlanBuilders_ShouldAttachVocabularyMetadata` guardrail updated to new builder path; 952 tests pass. | Complete |
+| 2026-04-29 | Phase 19 (contract threading) | Threaded CartesianMetricCapabilityContract through the full Main and Secondary invocation chains; delivery authority is now explicit at every render boundary. | `CartesianMetricCapabilityContract`; `CartesianMetricChartRenderRequest`; `CartesianMetricChartRenderInvoker`; `ChartRenderingOrchestrator.RenderPrimaryChartAsync`; `MainChartRenderRequest`; `MainChartOrchestrationPipeline`; `IMainChartRenderInvocationStage`; `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `MainChartControllerAdapter`; 6 new contract tests; 958 tests pass. | Complete |
 
 ---
 
