@@ -238,6 +238,24 @@ public sealed class MainChartsEvidenceExportServiceTests
                     "context-transform",
                     null,
                     false));
+            chartState.SetRenderPlanDiagnostics(
+                ChartProgramKind.SyncfusionSunburst,
+                new ChartRenderAdapterResult(
+                    "SyncfusionWpf.Hierarchy",
+                    "SyncfusionSunburst:plan",
+                    ChartRenderPlanKind.Hierarchy,
+                    ChartRenderDensityMode.FullFidelity,
+                    RenderedSeriesCount: 0,
+                    RenderedHierarchyNodeCount: 4,
+                    RenderedPointCount: 4,
+                    new Dictionary<string, string>
+                    {
+                        [ChartRenderPlanMetadataKeys.ConsumerKind] = ConsumerKind.HierarchyChart.ToString(),
+                        [ChartRenderPlanMetadataKeys.DeliveryTarget] = "SyncfusionSunburst",
+                        [ChartRenderPlanMetadataKeys.CapabilityKind] = AnalyticalCapabilityKind.Hierarchy.ToString(),
+                        [ChartRenderPlanMetadataKeys.CompositionKind] = CompositionKind.Hierarchy.ToString(),
+                        [ChartRenderPlanMetadataKeys.ProviderKey] = ConsumerProviderContracts.SyncfusionSunburst.ProviderKey
+                    }));
             var metricState = new MetricState
             {
                 SelectedMetricType = "Weight",
@@ -259,7 +277,7 @@ public sealed class MainChartsEvidenceExportServiceTests
                 .EnumerateArray()
                 .ToList();
 
-            Assert.Equal(2, exportConsumers.Count);
+            Assert.Equal(3, exportConsumers.Count);
             Assert.Contains(exportConsumers, consumer =>
                 consumer.GetProperty("ProgramKind").GetString() == "Main" &&
                 consumer.GetProperty("ConsumerKind").GetString() == "Export" &&
@@ -271,6 +289,22 @@ public sealed class MainChartsEvidenceExportServiceTests
                 consumer.GetProperty("ProgramKind").GetString() == "Transform" &&
                 consumer.GetProperty("ConsumerKind").GetString() == "Export" &&
                 consumer.GetProperty("CompositionKind").GetString() == "MultiSeries");
+            Assert.Contains(exportConsumers, consumer =>
+                consumer.GetProperty("ProgramKind").GetString() == "SyncfusionSunburst" &&
+                consumer.GetProperty("ConsumerKind").GetString() == "Export" &&
+                consumer.GetProperty("DeliveryTarget").GetString() == "EvidenceExport" &&
+                consumer.GetProperty("RequiresRenderPlan").GetBoolean() == false &&
+                consumer.GetProperty("ProviderKey").GetString() == "EvidenceExport" &&
+                consumer.GetProperty("CapabilityKind").GetString() == "Hierarchy" &&
+                consumer.GetProperty("CompositionKind").GetString() == "Hierarchy");
+
+            var renderPlan = document.RootElement
+                .GetProperty("Diagnostics")
+                .GetProperty("RenderPlans")
+                .GetProperty("SyncfusionSunburst");
+            Assert.Equal("HierarchyChart", renderPlan.GetProperty("Metadata").GetProperty("ConsumerKind").GetString());
+            Assert.Equal("SyncfusionSunburst", renderPlan.GetProperty("Metadata").GetProperty("DeliveryTarget").GetString());
+            Assert.Equal("SyncfusionSunburst", renderPlan.GetProperty("Metadata").GetProperty("ProviderKey").GetString());
         }
         finally
         {

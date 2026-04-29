@@ -1145,6 +1145,11 @@ Implementation result:
 - evidence export can report export consumer contract/provenance/provider metadata without depending on render-plan construction
 - render-plan build paths still reject non-rendering consumers, and non-rendering consumer execution rejects rendering consumers
 - no UI rendering behavior was changed
+
+Syncfusion alignment note:
+- SyncfusionSunburst participates in export consumer evidence as ConsumerKind.Export / DeliveryTarget EvidenceExport / ProviderKey EvidenceExport
+- SyncfusionSunburst remains a hierarchy render delivery as ConsumerKind.HierarchyChart / DeliveryTarget SyncfusionSunburst / ProviderKey SyncfusionSunburst
+- the distinction is intentionally preserved so Phase 17 consolidation does not flatten hierarchy-chart delivery into the LiveCharts chart family shape
 ```
 
 ---
@@ -1180,6 +1185,7 @@ Phase 16 evidence:
 Bypass classification:
 - retired: ChartRenderPlanVocabularyMetadata overloads that accepted only ChartProgramKind and reconstructed program/capability/delivery metadata internally
 - retired: ChartRenderPlanProviderMetadata overload that accepted delivery plus a separate ChartProgramKind, allowing provider metadata to drift from the delivery contract
+- checked: SyncfusionSunburst-specific render metadata now uses explicit program/capability/delivery contracts and has no remaining direct provider-resolution bypass in the UI adapter path
 - contained: VNext fallback runtime paths remain preserved because they carry runtime/evidence state and still provide operational flexibility
 - contained: ChartUpdateCoordinator fallback construction remains preserved for callers not yet carrying explicit contracts, but explicit program/capability/delivery inputs are now available and used by hardened slices
 - preserved: legacy computation/parity strategies remain preserved because parity, diagnostics, and manual smoke evidence still rely on them as comparison and fallback paths
@@ -1200,12 +1206,14 @@ Evidence checks:
 Validation:
 - Phase 16 focused metadata/export/rendering/architecture validation passed 176 tests
 - Phase 16 second-pass provider metadata/render-plan/architecture validation passed 196 tests
+- Syncfusion Phase 15/16 alignment validation passed 186 focused Syncfusion/export/provider/architecture tests
 
 Implementation result:
 - duplicate semantic inference bypasses were removed from vocabulary metadata and provider metadata
 - flexibility-preserving legacy/fallback paths were not removed
 - the target seam is stricter: render metadata now requires explicit program/capability/delivery contracts
 - provider metadata can no longer drift by receiving a delivery contract and conflicting program kind
+- Syncfusion is explicitly verified before Phase 17 as both a hierarchy render consumer and a non-chart export evidence consumer
 ```
 
 ---
@@ -1457,6 +1465,7 @@ Use this section during implementation.
 | 2026-04-29 | Phase 14 completion | Implemented the remaining Phase 14 production contract-carriage slices for WeekdayTrend and Transform, keeping capability ownership in the target spine. | `WeekdayTrendCapabilityContract`; `TransformCapabilityContract`; `WeekdayTrendChartRenderRequest`; `TransformChartRenderRequest`; focused Distribution/WeekdayTrend/Transform/render-plan/orchestration validation passed 227 tests. | Complete |
 | 2026-04-29 | Phase 15 | Added a non-chart evidence export consumer path through the same intent/capability/delivery/provider seam. | `ConsumerDeliveryEvidence`; `AnalyticalRenderPlanPipeline.ExecuteForConsumerAsync`; `EvidenceExportConsumerContractBuilder`; focused VNext/evidence export validation passed 34 tests. | Complete |
 | 2026-04-29 | Phase 16 | Retired duplicate metadata bypasses while preserving flexible legacy/fallback paths. | Removed kind-only `ChartRenderPlanVocabularyMetadata` overloads and delivery-plus-program-kind `ChartRenderPlanProviderMetadata` overload; BarPie/Syncfusion/tests now pass explicit program/capability/delivery contracts; focused metadata/export/rendering/architecture validation passed 176 tests and provider metadata/render-plan/architecture validation passed 196 tests. | Complete |
+| 2026-04-29 | Phase 15/16 Syncfusion alignment | Verified SyncfusionSunburst before Phase 17 as both a hierarchy render consumer and a non-chart export evidence consumer. | `ExportAsync_ShouldIncludeNonChartExportConsumerEvidence`; focused Syncfusion/export/provider/architecture validation passed 186 tests. | Complete |
 
 ---
 
