@@ -153,7 +153,7 @@ public sealed class BarPieChartControllerAdapter : ChartControllerAdapterBase, I
         var model = await _renderModelBuilder.BuildAsync(isPieMode);
         var route = ResolveRenderingRoute();
         var renderResult = await _barPieRenderingContract.RenderAsync(
-            new BarPieChartRenderRequest(route, model),
+            new BarPieChartRenderRequest(route, model, BarPieCapabilityContract.Create()),
             CreateRenderHost());
         _viewModel.ChartState.SetRenderPlanDiagnostics(
             ChartProgramKind.BarPie,

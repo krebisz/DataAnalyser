@@ -1228,19 +1228,211 @@ Collapse repeated request/route/qualification/adapter patterns only after multip
 
 Tasks:
 
-- [ ] Compare at least two hardened family slices.
-- [ ] Identify repeated safe structure.
-- [ ] Identify real family-specific differences.
-- [ ] Extract only genuinely shared patterns.
-- [ ] Preserve explicit differences.
-- [ ] Preserve behavior.
-- [ ] Preserve tests.
-- [ ] Confirm consolidation strengthens the target seam.
+- [x] Compare at least two hardened family slices.
+- [x] Identify repeated safe structure.
+- [x] Identify real family-specific differences.
+- [x] Extract only genuinely shared patterns.
+- [x] Preserve explicit differences.
+- [x] Preserve behavior.
+- [x] Preserve tests.
+- [x] Confirm consolidation strengthens the target seam.
 
 Completion condition:
 
 ```text
 Consolidation strengthens the generalized architecture instead of hiding real differences.
+```
+
+Phase 17 evidence:
+
+```text
+Slices compared:
+- Distribution (DistributionCapabilityContract, DistributionRenderPlanBuilder) — Phase 14 hardened
+- WeekdayTrend (WeekdayTrendCapabilityContract, WeekdayTrendRenderPlanBuilder) — Phase 14 hardened
+- Transform (TransformCapabilityContract) — Phase 14 hardened
+- BarPie (previously inline program/capability/delivery creation) — Phase 17 target
+- SyncfusionSunburst (previously inline HierarchyChart creation) — preserved distinct
+
+Repeated safe structure identified:
+- Sealed record CapabilityContract with ProgramRequest, Capability, Delivery
+- Constructor validates programRequest.Kind == expected family kind
+- Constructor validates delivery.ProgramKind == programRequest.Kind
+- Static Create() factory using ChartProgramRequest.Xxx() / CapabilityRequest.FromProgramRequest / ConsumerDeliveryContract.Chart
+- Optional CapabilityContract field on render request (null fallback to Create())
+- RenderPlanBuilder uses capabilityContract.ProgramRequest / .Capability / .Delivery instead of inline creation
+
+Real family-specific differences preserved:
+- SyncfusionSunburst uses ConsumerDeliveryContract.HierarchyChart (not Chart); builds hierarchy node trees (not flat series);
+  the Phase 15/16 alignment distinction is explicitly preserved — no SyncfusionSunburstCapabilityContract added
+- BarPie's builder takes an extra rendererKind parameter for backend key resolution; this remains a delivery-layer concern
+  separate from the capability contract (which covers program/capability/delivery only)
+- Transform's Create() takes title and operations parameters; remains as-is
+
+Consolidation applied:
+- BarPieCapabilityContract added to BarPieRenderingTypes.cs (same sealed record pattern as Distribution/WeekdayTrend/Transform)
+- BarPieChartRenderRequest gains optional CapabilityContract field
+- BarPieRenderPlanBuilder.Build updated to use capabilityContract when provided, fallback to Create()
+- BarPieChartControllerAdapter.RenderBarPieChartAsync now passes BarPieCapabilityContract.Create() on the render request
+
+Tests added:
+- BarPieRenderPlanBuilder_ShouldUseRuntimeCapabilityContract
+- BarPieCapabilityContract_ShouldRejectProgramKindDrift
+
+Validation:
+- 950 tests pass (up from 948; 2 new tests added)
+- all existing BarPie tests continue to pass without changes
+
+Implementation result:
+- BarPie now carries an explicit capability contract through the render request, matching the Distribution/WeekdayTrend/Transform pattern
+- the last inline-creation outlier among the LiveCharts chart families has been resolved
+- SyncfusionSunburst hierarchy delivery distinction is explicitly preserved and not collapsed
+- no production behavior changed; fallback to Create() ensures backward compatibility for any callers not yet providing the contract
+```
+
+---
+
+## 1.19 Phase 18 — Migrate Hub Responsibilities to the Target Spine
+
+Goal:
+
+```text
+Move capability, provider, and delivery authority out of integration hubs into the correct spine layers.
+```
+
+Primary targets:
+
+```text
+MetricLoadCoordinator
+ChartUpdateCoordinator
+ChartRenderingOrchestrator
+ChartControllerFactory
+ChartControllerFactoryContext
+```
+
+Tasks:
+
+- [ ] For each hub, enumerate all non-coordination responsibilities currently held.
+- [ ] For each responsibility, identify the correct target spine layer (capability, program, contract, provider, delivery, evidence).
+- [ ] Confirm a replacement path exists or can be built before removing anything from the hub.
+- [ ] Migrate one responsibility at a time with behavior-preserving tests before and after.
+- [ ] Confirm each hub retains only coordination after its responsibilities have moved.
+- [ ] Retire any coordination wrapper that has no remaining purpose once authority has moved.
+- [ ] Update guardrail tests to reflect new ownership.
+- [ ] Do not touch a hub whose replacement path is unproven.
+
+Completion condition:
+
+```text
+Each targeted hub coordinates only.
+No hub owns capability, provider, delivery, or evidence authority.
+```
+
+---
+
+## 1.20 Phase 19 — Thin the Chart-Family Adapter Layer
+
+Goal:
+
+```text
+Replace adapter-owned logic with contract/surface/delivery delegation so adapters relay only.
+```
+
+Primary targets:
+
+```text
+DistributionChartControllerAdapter
+WeekdayTrendChartControllerAdapter
+BarPieChartControllerAdapter
+TransformChartPresentationCoordinator
+SyncfusionSunburstChartControllerAdapter
+MainChartControllerAdapter
+```
+
+Tasks:
+
+- [ ] For each adapter, identify logic that is not pure relay.
+- [ ] Classify each non-relay responsibility as: capability decision, provider selection, rendering decision, state management, or interaction relay.
+- [ ] For each non-relay responsibility, identify the correct target layer.
+- [ ] Move one responsibility at a time with behavior-preserving tests before and after.
+- [ ] Confirm the adapter remains a thin relay after migration.
+- [ ] Do not collapse real family-specific differences; preserve them at the correct layer.
+- [ ] Update guardrail tests to reflect thinned adapter responsibilities.
+
+Completion condition:
+
+```text
+Adapter code relays behavior through contract/surface/delivery seams.
+No adapter owns capability, provider, rendering, or semantic decisions.
+```
+
+---
+
+## 1.21 Phase 20 — Retire Legacy Bridges Selectively
+
+Goal:
+
+```text
+Remove remaining VNext coexistence paths and legacy fallbacks only after target replacements are proven.
+```
+
+Known bridges:
+
+```text
+VNextMainChartIntegrationCoordinator
+VNextSeriesLoadCoordinator
+VNextDataResolutionHelper
+LegacyChartProgramProjector
+LegacyMetricViewGateway
+ChartUpdateCoordinator fallback construction paths
+parity/evidence comparison paths
+```
+
+Tasks:
+
+- [ ] For each bridge, identify its target replacement.
+- [ ] Confirm parity evidence exists before removal.
+- [ ] Confirm smoke evidence exists before removal.
+- [ ] Confirm metadata preservation before removal.
+- [ ] Confirm no production consumer depends on the bridge.
+- [ ] Retire one bridge at a time.
+- [ ] Update parity evidence and guardrails after each retirement.
+- [ ] Explicitly document any bridge that cannot yet be retired and the condition required before it can be.
+
+Completion condition:
+
+```text
+Legacy coexistence paths are retired where replacements are proven.
+Any remaining bridge is explicitly bounded, documented, and carries a named retirement condition.
+```
+
+---
+
+## 1.22 Phase 21 — Prove the Spine End-to-End with a New Capability and Independent Consumer
+
+Goal:
+
+```text
+Demonstrate the architecture can grow through its own seams without touching old hubs or legacy bridges.
+```
+
+Tasks:
+
+- [ ] Define one small new analytical capability not currently in the system.
+- [ ] Express it through intent/capability/program structures from scratch without modifying existing hubs.
+- [ ] Deliver it through contract/qualification/surface to at least one chart consumer.
+- [ ] Deliver it through the same contract/qualification/surface to at least one genuinely independent non-chart consumer.
+- [ ] Use a non-LiveCharts backend for at least part of the delivery path to prove replaceability in practice.
+- [ ] Confirm no old hub absorbs the new capability.
+- [ ] Confirm no legacy bridge is required.
+- [ ] Add evidence through the full spine from intent to delivery to audit record.
+- [ ] Confirm all completion criteria in Section 3 are satisfied by the result.
+
+Completion condition:
+
+```text
+A new capability enters through the target spine and is consumed by two independent consumers
+without touching old hubs or legacy bridges.
+All Section 3 completion criteria are satisfied.
 ```
 
 ---
@@ -1466,6 +1658,7 @@ Use this section during implementation.
 | 2026-04-29 | Phase 15 | Added a non-chart evidence export consumer path through the same intent/capability/delivery/provider seam. | `ConsumerDeliveryEvidence`; `AnalyticalRenderPlanPipeline.ExecuteForConsumerAsync`; `EvidenceExportConsumerContractBuilder`; focused VNext/evidence export validation passed 34 tests. | Complete |
 | 2026-04-29 | Phase 16 | Retired duplicate metadata bypasses while preserving flexible legacy/fallback paths. | Removed kind-only `ChartRenderPlanVocabularyMetadata` overloads and delivery-plus-program-kind `ChartRenderPlanProviderMetadata` overload; BarPie/Syncfusion/tests now pass explicit program/capability/delivery contracts; focused metadata/export/rendering/architecture validation passed 176 tests and provider metadata/render-plan/architecture validation passed 196 tests. | Complete |
 | 2026-04-29 | Phase 15/16 Syncfusion alignment | Verified SyncfusionSunburst before Phase 17 as both a hierarchy render consumer and a non-chart export evidence consumer. | `ExportAsync_ShouldIncludeNonChartExportConsumerEvidence`; focused Syncfusion/export/provider/architecture validation passed 186 tests. | Complete |
+| 2026-04-29 | Phase 17 | Added BarPieCapabilityContract to complete the explicit capability-contract pattern across all LiveCharts families; preserved SyncfusionSunburst hierarchy delivery distinction. | `BarPieCapabilityContract`; `BarPieChartRenderRequest` optional contract field; `BarPieRenderPlanBuilder` updated; `BarPieChartControllerAdapter` passes contract; `BarPieRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `BarPieCapabilityContract_ShouldRejectProgramKindDrift`; 950 tests pass. | Complete |
 
 ---
 

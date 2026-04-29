@@ -26,7 +26,43 @@ public enum BarPieRenderingQualification
 
 public sealed record BarPieChartRenderRequest(
     BarPieRenderingRoute Route,
-    UiChartRenderModel Model);
+    UiChartRenderModel Model,
+    BarPieCapabilityContract? CapabilityContract = null);
+
+public sealed record BarPieCapabilityContract
+{
+    public BarPieCapabilityContract(
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery)
+    {
+        ArgumentNullException.ThrowIfNull(programRequest);
+        ArgumentNullException.ThrowIfNull(capability);
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        if (programRequest.Kind != ChartProgramKind.BarPie)
+            throw new ArgumentException("BarPie capability contracts must use a BarPie program request.", nameof(programRequest));
+        if (delivery.ProgramKind != programRequest.Kind)
+            throw new ArgumentException("BarPie delivery contract must target the BarPie program kind.", nameof(delivery));
+
+        ProgramRequest = programRequest;
+        Capability = capability;
+        Delivery = delivery;
+    }
+
+    public ChartProgramRequest ProgramRequest { get; }
+    public CapabilityRequest Capability { get; }
+    public ConsumerDeliveryContract Delivery { get; }
+
+    public static BarPieCapabilityContract Create()
+    {
+        var programRequest = ChartProgramRequest.BarPie();
+        return new BarPieCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ConsumerDeliveryContract.Chart(programRequest.Kind, "BarPieChart"));
+    }
+}
 
 public sealed record BarPieChartRenderHost(
     IChartSurface Surface,
@@ -41,6 +77,7 @@ public static class BarPieRenderPlanBuilder
         ArgumentNullException.ThrowIfNull(request);
 
         var model = request.Model;
+        var capabilityContract = request.CapabilityContract ?? BarPieCapabilityContract.Create();
         var planKind = request.Route == BarPieRenderingRoute.PieFacet
             ? ChartRenderPlanKind.Faceted
             : ChartRenderPlanKind.Cartesian;
@@ -51,22 +88,20 @@ public static class BarPieRenderPlanBuilder
         {
             ["Adapter"] = "UiChartRenderPlanAdapter",
             [ChartRenderPlanMetadataKeys.BackendKey] = backendKey,
-            ["ProgramKind"] = ChartProgramKind.BarPie.ToString(),
+            ["ProgramKind"] = capabilityContract.ProgramRequest.Kind.ToString(),
             ["RendererKind"] = rendererKind.ToString(),
             ["Route"] = request.Route.ToString()
         };
-        var programRequest = ChartProgramRequest.BarPie();
         ChartRenderPlanVocabularyMetadata.AddTo(
             metadata,
-            programRequest,
-            CapabilityRequest.FromProgramRequest(programRequest),
-            ConsumerDeliveryContract.Chart(programRequest.Kind, "BarPieChart"),
-            sourceSignature,
-            overlayCount: 0);
+            capabilityContract.ProgramRequest,
+            capabilityContract.Capability,
+            capabilityContract.Delivery,
+            sourceSignature);
 
         return new ChartRenderPlan(
             $"{backendKey}:{model.ChartName}:{request.Route}:{model.Title}:{model.Series.Count}:{model.Facets.Count}",
-            ChartProgramKind.BarPie,
+            capabilityContract.ProgramRequest.Kind,
             planKind,
             ChartDisplayMode.Regular,
             model.Title ?? "Bar/Pie",

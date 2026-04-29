@@ -2,6 +2,7 @@ using DataVisualiser.Core.Rendering.BarPie;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
@@ -107,6 +108,45 @@ public sealed class BarPieRenderingContractTests
         Assert.Equal("MultiSeries", result.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
         Assert.True(result.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
         Assert.True(result.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
+    }
+
+    [Fact]
+    public void BarPieRenderPlanBuilder_ShouldUseRuntimeCapabilityContract()
+    {
+        var programRequest = ChartProgramRequest.BarPie();
+        var request = new BarPieChartRenderRequest(
+            BarPieRenderingRoute.Column,
+            new UiChartRenderModel
+            {
+                ChartName = "BarPie",
+                Title = "Buckets",
+                Series = [new ChartSeriesModel { Name = "Weight", Values = [1, 2] }]
+            },
+            new BarPieCapabilityContract(
+                programRequest,
+                CapabilityRequest.FromProgramRequest(programRequest),
+                ConsumerDeliveryContract.Chart(ChartProgramKind.BarPie, "BarPieDiagnosticSurface")));
+
+        var plan = BarPieRenderPlanBuilder.Build(request, ChartRendererKind.LiveCharts);
+
+        Assert.Equal(ChartProgramKind.BarPie, plan.ProgramKind);
+        Assert.Equal(BarPieBackendKey.LiveChartsWpfColumn, plan.Metadata[ChartRenderPlanMetadataKeys.BackendKey]);
+        Assert.Equal("Column", plan.Metadata["Route"]);
+        Assert.Equal("BarPieDiagnosticSurface", plan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(AnalyticalCapabilityKind.Identity.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal(CompositionKind.MultiSeries.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.Contains("Chart:BarPie:BarPieDiagnosticSurface", plan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BarPieCapabilityContract_ShouldRejectProgramKindDrift()
+    {
+        var programRequest = ChartProgramRequest.Distribution();
+
+        Assert.Throws<ArgumentException>(() => new BarPieCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.BarPie, "BarPieChart")));
     }
 
     private sealed class StubTrackedSurface : IChartSurface, ITrackedChartContentSurface, ITrackedCartesianChartSurface
