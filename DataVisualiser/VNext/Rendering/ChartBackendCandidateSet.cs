@@ -52,6 +52,7 @@ public sealed class ChartBackendCandidateSet
     public static ChartBackendCandidateSet BuiltIn { get; } = new(
         [
             ChartBackendCapabilities.LiveChartsWpf,
-            ChartBackendCapabilities.SyncfusionSunburst
+            ChartBackendCapabilities.SyncfusionSunburst,
+            ChartBackendCapabilities.TabularSummary
         ]);
 }

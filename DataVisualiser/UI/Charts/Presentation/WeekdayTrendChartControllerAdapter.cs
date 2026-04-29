@@ -1,16 +1,13 @@
 using DataVisualiser.UI.Charts.Presentation;
 using System.Windows;
 using System.Windows.Controls;
-using DataFileReader.Canonical;
-using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
+using DataVisualiser.UI.MainHost;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Events;
-using DataVisualiser.UI.MainHost;
-using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Contracts;
@@ -23,11 +20,8 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 {
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly IWeekdayTrendChartController _controller;
-    private readonly Func<IStrategyCutOverService?> _getStrategyCutOverService;
+    private readonly WeekdayTrendComputationInvoker _computationInvoker;
     private readonly Func<bool> _isInitializing;
-    private readonly MetricSelectionService _metricSelectionService;
-    private readonly MetricSeriesSelectionCache _selectionCache = new();
-    private readonly VNextSeriesLoadCoordinator _vnextCoordinator;
     private readonly IWeekdayTrendRenderingContract _weekdayTrendRenderingContract;
     private readonly MainWindowViewModel _viewModel;
     private bool _isUpdatingSubtypeCombo;
@@ -39,17 +33,17 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
-        _metricSelectionService = metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService));
-        _getStrategyCutOverService = getStrategyCutOverService ?? throw new ArgumentNullException(nameof(getStrategyCutOverService));
+        ArgumentNullException.ThrowIfNull(metricSelectionService);
+        ArgumentNullException.ThrowIfNull(getStrategyCutOverService);
         _weekdayTrendRenderingContract = weekdayTrendRenderingContract ?? throw new ArgumentNullException(nameof(weekdayTrendRenderingContract));
-        _vnextCoordinator = vnextCoordinator ?? new VNextSeriesLoadCoordinator(metricSelectionService);
+        _computationInvoker = new WeekdayTrendComputationInvoker(viewModel, metricSelectionService, getStrategyCutOverService, vnextCoordinator);
     }
 
     public CartesianChart PolarChart => _controller.PolarChart;
 
     public override void ClearCache()
     {
-        _selectionCache.Clear();
+        _computationInvoker.ClearCache();
     }
 
     public override string Key => ChartControllerKeys.WeeklyTrend;
@@ -202,10 +196,9 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
 
         if (_viewModel.ChartState.IsWeeklyTrendVisible && _viewModel.ChartState.LastContext != null)
         {
-            var result = ComputeWeekdayTrend(_viewModel.ChartState.LastContext);
+            var result = _computationInvoker.ComputeFromContext(_viewModel.ChartState.LastContext);
             if (result != null)
             {
-                var route = ResolveRenderingRoute();
                 var renderResult = RenderWeekdayTrendChart(result);
                 _viewModel.ChartState.SetRenderPlanDiagnostics(
                     ChartProgramKind.WeekdayTrend,
@@ -225,48 +218,15 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
             return;
 
         var selectedSeries = ResolveSelectedWeekdayTrendSeries(ctx);
-        var data = await ResolveWeekdayTrendDataAsync(ctx, selectedSeries);
-        if (data == null || data.Count == 0)
-            return;
-
         var displayName = ResolveWeekdayTrendDisplayName(ctx, selectedSeries);
-        var trendContext = new ChartDataContext
-        {
-                Data1 = data,
-                DisplayName1 = displayName,
-                MetricType = selectedSeries?.MetricType ?? ctx.MetricType,
-                PrimaryMetricType = selectedSeries?.MetricType ?? ctx.PrimaryMetricType,
-                PrimarySubtype = selectedSeries?.Subtype,
-                DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
-                DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-                From = ctx.From,
-                To = ctx.To
-        };
-
-        var result = ComputeWeekdayTrend(trendContext);
+        var result = await _computationInvoker.ComputeAsync(ctx, selectedSeries, displayName);
         if (result != null)
         {
-            var route = ResolveRenderingRoute();
             var renderResult = RenderWeekdayTrendChart(result);
             _viewModel.ChartState.SetRenderPlanDiagnostics(
                 ChartProgramKind.WeekdayTrend,
                 renderResult);
         }
-    }
-
-    private async Task<IReadOnlyList<MetricData>?> ResolveWeekdayTrendDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
-    {
-        var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var (data, _) = await VNextDataResolutionHelper.ResolveSeriesDataAsync(
-            ctx, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
-            ChartProgramKind.WeekdayTrend, EvidenceRuntimePath.VNextWeekdayTrend,
-            runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.WeekdayTrend, runtime),
-            async (sel, from, to, table) =>
-            {
-                var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(sel.MetricType, sel.QuerySubtype, null, from, to, table);
-                return ((IReadOnlyList<MetricData>)primary.ToList(), (ICanonicalMetricSeries?)null);
-            });
-        return data;
     }
 
     private MetricSeriesSelection? ResolveSelectedWeekdayTrendSeries(ChartDataContext ctx)
@@ -277,26 +237,6 @@ public sealed class WeekdayTrendChartControllerAdapter : CartesianChartControlle
     private static string ResolveWeekdayTrendDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         return MetricSeriesSelectionAdapterHelper.ResolveDisplayName(ctx, selectedSeries);
-    }
-
-    private WeekdayTrendResult? ComputeWeekdayTrend(ChartDataContext ctx)
-    {
-        var strategyCutOverService = _getStrategyCutOverService();
-        if (strategyCutOverService == null)
-            throw new InvalidOperationException("StrategyCutOverService is not initialized. Ensure InitializeChartPipeline() is called before using strategies.");
-
-        var parameters = new StrategyCreationParameters
-        {
-                LegacyData1 = ctx.Data1 ?? Array.Empty<MetricData>(),
-                Label1 = ctx.DisplayName1,
-                From = ctx.From,
-                To = ctx.To
-        };
-
-        var strategy = strategyCutOverService.CreateStrategy(StrategyType.WeekdayTrend, ctx, parameters);
-        strategy.Compute();
-
-        return strategy is IWeekdayTrendResultProvider provider ? provider.ExtendedResult : null;
     }
 
     private ChartRenderAdapterResult RenderWeekdayTrendChart(WeekdayTrendResult result)

@@ -46,6 +46,23 @@ public static class ConsumerProviderContracts
             ["ProviderRole"] = "BuiltInHierarchyRenderer"
         });
 
+    public static ConsumerProviderContract TabularSummaryChart { get; } = new(
+        "TabularSummaryChart",
+        "Tabular Summary Chart",
+        ConsumerKind.Chart,
+        new HashSet<ChartProgramKind>
+        {
+            ChartProgramKind.MovingAverage
+        },
+        new HashSet<ChartRenderPlanKind>
+        {
+            ChartRenderPlanKind.Cartesian
+        },
+        new Dictionary<string, string>
+        {
+            ["ProviderRole"] = "TabularSummaryConsumer"
+        });
+
     public static ConsumerProviderContract EvidenceExport { get; } = new(
         "EvidenceExport",
         "Evidence Export",

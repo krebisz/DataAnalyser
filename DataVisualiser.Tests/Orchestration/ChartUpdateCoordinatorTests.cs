@@ -41,7 +41,7 @@ public sealed class ChartUpdateCoordinatorTests
                 await coordinator.UpdateChartUsingStrategyAsync(
                     chart,
                     new StubStrategy(CreateSingleSeriesResult()),
-                    "Primary");
+                    new ChartUpdateRequest { PrimaryLabel = "Primary" });
                 await FlushChartAsync(chart);
 
                 Assert.NotEmpty(chart.Series);
@@ -77,9 +77,7 @@ public sealed class ChartUpdateCoordinatorTests
                 await coordinator.UpdateChartUsingStrategyAsync(
                     chart,
                     new StubStrategy(CreateSingleSeriesResult()),
-                    "Primary",
-                    metricType: "Weight",
-                    useRenderPlanAdapter: true);
+                    new ChartUpdateRequest { PrimaryLabel = "Primary", MetricType = "Weight" });
                 await FlushChartAsync(chart);
 
                 Assert.NotEmpty(chart.Series);
@@ -125,10 +123,7 @@ public sealed class ChartUpdateCoordinatorTests
                 await coordinator.UpdateChartUsingStrategyAsync(
                     chart,
                     new StubStrategy(CreateSingleSeriesResult()),
-                    "Primary",
-                    metricType: "Weight",
-                    overlaySeries: [CreateOverlaySeriesResult()],
-                    useRenderPlanAdapter: true);
+                    new ChartUpdateRequest { PrimaryLabel = "Primary", MetricType = "Weight", OverlaySeries = [CreateOverlaySeriesResult()] });
                 await FlushChartAsync(chart);
 
                 Assert.Contains(chart.Series, series => series.Title.Contains("Overlay", StringComparison.Ordinal));
@@ -175,11 +170,52 @@ public sealed class ChartUpdateCoordinatorTests
                 await coordinator.UpdateChartUsingStrategyAsync(
                     chart,
                     new StubStrategy(null),
-                    "Primary");
+                    new ChartUpdateRequest { PrimaryLabel = "Primary" });
                 await FlushChartAsync(chart);
 
                 Assert.Empty(chart.Series);
                 Assert.False(chartTimestamps.ContainsKey(chart));
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public async Task UpdateChartUsingStrategyAsync_WithExplicitRenderDelivery_ShouldUseContractDeliveryInMetadata()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var coordinator = new ChartUpdateCoordinator(
+                    new ChartComputationEngine(),
+                    new ChartRenderEngine(),
+                    tooltipManager,
+                    chartTimestamps,
+                    new CapturingNotificationService());
+
+                await coordinator.UpdateChartUsingStrategyAsync(
+                    chart,
+                    new StubStrategy(CreateSingleSeriesResult()),
+                    new ChartUpdateRequest
+                    {
+                        PrimaryLabel = "Primary",
+                        MetricType = "Weight",
+                        RenderDelivery = ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "CustomDiagnosticSurface")
+                    });
+                await FlushChartAsync(chart);
+
+                Assert.NotNull(coordinator.LastRenderPlanAdapterResult);
+                var metadata = coordinator.LastRenderPlanAdapterResult!.Metadata;
+                Assert.Equal("CustomDiagnosticSurface", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
             }
             finally
             {

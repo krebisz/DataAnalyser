@@ -35,7 +35,8 @@ public enum AnalyticalCapabilityKind
     Transform,
     Distribution,
     TemporalTrend,
-    Hierarchy
+    Hierarchy,
+    Smoothing
 }
 
 public enum CompositionKind

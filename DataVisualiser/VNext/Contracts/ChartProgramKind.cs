@@ -10,5 +10,6 @@ public enum ChartProgramKind
     Distribution = 5,
     WeekdayTrend = 6,
     BarPie = 7,
-    SyncfusionSunburst = 8
+    SyncfusionSunburst = 8,
+    MovingAverage = 9
 }

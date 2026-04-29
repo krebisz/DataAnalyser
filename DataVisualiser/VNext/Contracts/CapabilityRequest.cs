@@ -49,6 +49,10 @@ public sealed record CapabilityRequest(
                 AnalyticalCapabilityKind.Hierarchy,
                 CompositionKind.Hierarchy,
                 request.SeriesOperations),
+            ChartProgramKind.MovingAverage => new CapabilityRequest(
+                AnalyticalCapabilityKind.Smoothing,
+                request.SeriesOperations.Count == 0 ? CompositionKind.SingleSeries : CompositionKind.DerivedSeries,
+                request.SeriesOperations),
             _ => throw new InvalidOperationException($"Unsupported program kind '{request.Kind}'.")
         };
     }

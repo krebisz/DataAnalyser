@@ -111,6 +111,12 @@ public sealed class ArchitectureGuardrailTests
             "Charts",
             "Presentation",
             "DistributionChartControllerAdapter.cs");
+        var builderSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "UI",
+            "Charts",
+            "Presentation",
+            "DistributionRenderInputBuilder.cs");
 
         Assert.Contains("ChartProgramKind.Distribution => new CapabilityRequest", capabilitySource, StringComparison.Ordinal);
         Assert.Contains("AnalyticalCapabilityKind.Distribution", capabilitySource, StringComparison.Ordinal);
@@ -118,9 +124,9 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("public AnalyticalIntent Distribution(", intentFactorySource, StringComparison.Ordinal);
         Assert.Contains("ChartProgramRequest.Distribution()", intentFactorySource, StringComparison.Ordinal);
         Assert.Contains("ChartProgramRequest.Distribution()", plannerSource, StringComparison.Ordinal);
-        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", builderSource, StringComparison.Ordinal);
         Assert.Contains("ChartProgramKind.Distribution", adapterSource, StringComparison.Ordinal);
-        Assert.Contains("EvidenceRuntimePath.VNextDistribution", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("EvidenceRuntimePath.VNextDistribution", builderSource, StringComparison.Ordinal);
         Assert.Contains("ChartRenderPlanVocabularyMetadata.AddTo", renderingContractSource, StringComparison.Ordinal);
         Assert.Contains("ChartProgramKind.Distribution", renderingContractSource, StringComparison.Ordinal);
         Assert.Contains("DistributionRenderingQualification.Qualified", renderingContractSource, StringComparison.Ordinal);
@@ -865,14 +871,14 @@ public sealed class ArchitectureGuardrailTests
     public void ChartAdapters_ShouldUseSharedTimeBucketAggregationHelper()
     {
         var barPieBuilderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "BarPieRenderModelBuilder.cs");
-        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "SyncfusionSunburstChartControllerAdapter.cs");
+        var syncfusionBuilderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "SyncfusionSunburstRenderModelBuilder.cs");
 
         Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", barPieBuilderSource, StringComparison.Ordinal);
-        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", syncfusionSource, StringComparison.Ordinal);
+        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", syncfusionBuilderSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private static double?[] BuildBucketTotals", barPieBuilderSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("private static double?[] BuildBucketTotals", syncfusionSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static double?[] BuildBucketTotals", syncfusionBuilderSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private static int ResolveBucketIndex", barPieBuilderSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("private static int ResolveBucketIndex", syncfusionSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static int ResolveBucketIndex", syncfusionBuilderSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -894,6 +900,71 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", builderSource, StringComparison.Ordinal);
         Assert.Contains("LoadSeriesTotalsAsync", builderSource, StringComparison.Ordinal);
         Assert.Contains("BuildBucketPlan", builderSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionSunburstAdapter_ShouldDelegateModelBuildingToBuilder()
+    {
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "SyncfusionSunburstChartControllerAdapter.cs");
+        var builderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "SyncfusionSunburstRenderModelBuilder.cs");
+
+        Assert.Contains("SyncfusionSunburstRenderModelBuilder", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("_renderModelBuilder.BuildAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadMetricDataAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadSeriesTotalsAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildBucketPlan", adapterSource, StringComparison.Ordinal);
+
+        Assert.Contains("LoadSeriesTotalsAsync", builderSource, StringComparison.Ordinal);
+        Assert.Contains("BuildBucketPlan", builderSource, StringComparison.Ordinal);
+        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", builderSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DistributionAdapter_ShouldDelegateDataPreparationToBuilder()
+    {
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "DistributionChartControllerAdapter.cs");
+        var builderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "DistributionRenderInputBuilder.cs");
+
+        Assert.Contains("DistributionRenderInputBuilder", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("_renderInputBuilder.BuildAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadMetricDataAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("VNextDataResolutionHelper.ResolveSeriesDataAsync", adapterSource, StringComparison.Ordinal);
+
+        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", builderSource, StringComparison.Ordinal);
+        Assert.Contains("LoadMetricDataWithCmsAsync", builderSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WeekdayTrendAdapter_ShouldDelegateComputationToInvoker()
+    {
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "WeekdayTrendChartControllerAdapter.cs");
+        var invokerSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "WeekdayTrendComputationInvoker.cs");
+
+        Assert.Contains("WeekdayTrendComputationInvoker", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("_computationInvoker.ComputeAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateStrategy", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadMetricDataAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("VNextDataResolutionHelper", adapterSource, StringComparison.Ordinal);
+
+        Assert.Contains("CreateStrategy", invokerSource, StringComparison.Ordinal);
+        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", invokerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartAdapter_ShouldDelegateOverlayBuildingToBuilder()
+    {
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "MainChartControllerAdapter.cs");
+        var builderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "CartesianMetricOverlaySeriesBuilder.cs");
+
+        Assert.Contains("CartesianMetricOverlaySeriesBuilder", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("_overlayBuilder.BuildAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadMetricDataAsync", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("SmoothingService", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildOverlaySeriesAsync", adapterSource, StringComparison.Ordinal);
+
+        Assert.Contains("LoadMetricDataAsync", builderSource, StringComparison.Ordinal);
+        Assert.Contains("SmoothingService", builderSource, StringComparison.Ordinal);
+        Assert.Contains("IsMatchingSelection", builderSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1736,6 +1807,61 @@ public sealed class ArchitectureGuardrailTests
             var source = SourceTreeTestHelper.ReadRepositoryFile(file);
             Assert.Contains("ChartRenderPlanVocabularyMetadata.AddTo", source, StringComparison.Ordinal);
         }
+    }
+
+    // Phase 22: MovingAverage capability enters through the VNext spine only
+
+    [Fact]
+    public void MovingAverageCapability_ShouldNotReferenceOldHubs()
+    {
+        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "VNext", "Rendering", "MovingAverage", "MovingAverageCapabilityContract.cs"));
+
+        Assert.DoesNotContain("ChartDataContext", contractSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartUpdateCoordinator", contractSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LegacyChartProgramProjector", contractSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("VNextMainChartIntegrationCoordinator", contractSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MovingAverageCapability_ShouldExpressItselfThroughVNextSpine()
+    {
+        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "VNext", "Rendering", "MovingAverage", "MovingAverageCapabilityContract.cs"));
+
+        Assert.Contains("ChartProgramKind.MovingAverage", contractSource, StringComparison.Ordinal);
+        Assert.Contains("CapabilityRequest", contractSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerDeliveryContract", contractSource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramDeliveryTargetResolver", contractSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TabularSummaryBackend_ShouldBeIndependentOfLiveCharts()
+    {
+        var backendSource = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "VNext", "Rendering", "ChartBackendCapabilities.cs"));
+
+        Assert.Contains("TabularSummaryChart", backendSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("LiveCharts", backendSource.Substring(
+            backendSource.IndexOf("TabularSummary", StringComparison.Ordinal)),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TabularSummaryConsumer_ShouldSupportOnlyMovingAverageProgramKind()
+    {
+        var consumerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "VNext", "Contracts", "ConsumerProviderContracts.cs"));
+
+        var tabularStart = consumerSource.IndexOf("TabularSummaryChart", StringComparison.Ordinal);
+        Assert.True(tabularStart >= 0, "TabularSummaryChart consumer not found.");
+
+        var tabularBlock = consumerSource.Substring(tabularStart,
+            consumerSource.IndexOf("EvidenceExport", StringComparison.Ordinal) - tabularStart);
+
+        Assert.Contains("ChartProgramKind.MovingAverage", tabularBlock, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartProgramKind.Main", tabularBlock, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartProgramKind.Normalized", tabularBlock, StringComparison.Ordinal);
     }
 
     private static void AssertNoMatches(IReadOnlyList<string> offenders)

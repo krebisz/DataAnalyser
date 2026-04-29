@@ -31,6 +31,8 @@ public sealed class ChartProgramPlanner
             ChartProgramKind.WeekdayTrend => BuildIdentityProgram(snapshot, ChartProgramKind.WeekdayTrend),
             ChartProgramKind.BarPie => BuildIdentityProgram(snapshot, ChartProgramKind.BarPie),
             ChartProgramKind.SyncfusionSunburst => BuildIdentityProgram(snapshot, ChartProgramKind.SyncfusionSunburst),
+            ChartProgramKind.MovingAverage when request.SeriesOperations.Count > 0 => BuildDerivedProgram(snapshot, request),
+            ChartProgramKind.MovingAverage => BuildIdentityProgram(snapshot, ChartProgramKind.MovingAverage),
             _ => throw new InvalidOperationException($"Unsupported program kind '{request.Kind}'.")
         };
     }

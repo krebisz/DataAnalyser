@@ -20,6 +20,7 @@ public sealed class OperationKernel
             SeriesOperationKind.Sum => CreateSeriesProgram(request, Sum(indexes.Select(series => series.RawValues), bundle.Timeline.Count), Sum(indexes.Select(series => series.SmoothedValues), bundle.Timeline.Count)),
             SeriesOperationKind.Difference => CreateSeriesProgram(request, ApplyBinary(indexes[0].RawValues, indexes[1].RawValues, (left, right) => left - right), ApplyBinary(indexes[0].SmoothedValues, indexes[1].SmoothedValues, (left, right) => left - right)),
             SeriesOperationKind.Ratio => CreateSeriesProgram(request, ApplyBinary(indexes[0].RawValues, indexes[1].RawValues, (left, right) => right == 0d ? double.NaN : left / right), ApplyBinary(indexes[0].SmoothedValues, indexes[1].SmoothedValues, (left, right) => right == 0d ? double.NaN : left / right)),
+            SeriesOperationKind.MovingAverage => CreateSeriesProgram(request, ApplyMovingAverage(indexes[0].RawValues, request.WindowSize > 0 ? request.WindowSize : 7), ApplyMovingAverage(indexes[0].SmoothedValues, request.WindowSize > 0 ? request.WindowSize : 7)),
             _ => throw new InvalidOperationException($"Unsupported operation kind '{request.Kind}'.")
         };
     }
@@ -107,6 +108,27 @@ public sealed class OperationKernel
             result[index] = double.IsNaN(value) ? double.NaN : operation(value);
         }
 
+        return result;
+    }
+
+    private static IReadOnlyList<double> ApplyMovingAverage(IReadOnlyList<double> values, int windowSize)
+    {
+        var result = new double[values.Count];
+        for (var i = 0; i < values.Count; i++)
+        {
+            var start = Math.Max(0, i - windowSize + 1);
+            var sum = 0d;
+            var count = 0;
+            for (var j = start; j <= i; j++)
+            {
+                if (!double.IsNaN(values[j]))
+                {
+                    sum += values[j];
+                    count++;
+                }
+            }
+            result[i] = count == 0 ? double.NaN : sum / count;
+        }
         return result;
     }
 

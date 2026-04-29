@@ -8,7 +8,8 @@ public enum SeriesOperationKind
     Difference = 3,
     Ratio = 4,
     Logarithm = 5,
-    SquareRoot = 6
+    SquareRoot = 6,
+    MovingAverage = 7
 }
 
 public sealed record SeriesOperationRequest
@@ -36,6 +37,7 @@ public sealed record SeriesOperationRequest
     public IReadOnlyList<int> InputIndexes { get; }
     public string Id { get; }
     public string Label { get; }
+    public int WindowSize { get; init; }
 
     public static SeriesOperationRequest Identity(int index, string id, string label) =>
         new(SeriesOperationKind.Identity, [index], id, label);
@@ -57,4 +59,7 @@ public sealed record SeriesOperationRequest
 
     public static SeriesOperationRequest Ratio(int leftIndex, int rightIndex, string label) =>
         new(SeriesOperationKind.Ratio, [leftIndex, rightIndex], "ratio", label);
+
+    public static SeriesOperationRequest MovingAverage(int index, int windowSize, string id, string label) =>
+        new(SeriesOperationKind.MovingAverage, [index], id, label) { WindowSize = windowSize };
 }

@@ -23,22 +23,22 @@ public sealed class MainChartRenderInvocationStage : IMainChartRenderInvocationS
         return _chartUpdateCoordinator.UpdateChartUsingStrategyAsync(
             chart,
             plan.Strategy,
-            plan.PrimaryLabel,
-            plan.SecondaryLabel,
-            400,
-            context.MetricType,
-            context.PrimarySubtype,
-            plan.SecondaryLabel != null ? context.SecondarySubtype : null,
-            isOperationChart: false,
-            secondaryMetricType: context.SecondaryMetricType,
-            displayPrimaryMetricType: context.DisplayPrimaryMetricType,
-            displaySecondaryMetricType: context.DisplaySecondaryMetricType,
-            displayPrimarySubtype: context.DisplayPrimarySubtype,
-            displaySecondarySubtype: context.DisplaySecondarySubtype,
-            isStacked: plan.IsStacked,
-            isCumulative: plan.IsCumulative,
-            overlaySeries: plan.OverlaySeries,
-            useRenderPlanAdapter: true,
-            renderDelivery: capabilityContract?.Delivery);
+            new ChartUpdateRequest
+            {
+                PrimaryLabel = plan.PrimaryLabel,
+                SecondaryLabel = plan.SecondaryLabel,
+                MetricType = context.MetricType,
+                PrimarySubtype = context.PrimarySubtype,
+                SecondarySubtype = plan.SecondaryLabel != null ? context.SecondarySubtype : null,
+                SecondaryMetricType = context.SecondaryMetricType,
+                DisplayPrimaryMetricType = context.DisplayPrimaryMetricType,
+                DisplaySecondaryMetricType = context.DisplaySecondaryMetricType,
+                DisplayPrimarySubtype = context.DisplayPrimarySubtype,
+                DisplaySecondarySubtype = context.DisplaySecondarySubtype,
+                IsStacked = plan.IsStacked,
+                IsCumulative = plan.IsCumulative,
+                OverlaySeries = plan.OverlaySeries,
+                RenderDelivery = capabilityContract?.Delivery
+            });
     }
 }

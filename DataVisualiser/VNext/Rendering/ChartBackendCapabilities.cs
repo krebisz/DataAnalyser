@@ -38,4 +38,17 @@ public sealed record ChartBackendCapabilities(
         SupportsTooltips: true,
         SupportsSelection: true,
         SupportsViewportRefinement: false);
+
+    public static ChartBackendCapabilities TabularSummary { get; } = new(
+        "TabularSummaryChart",
+        "Tabular Summary",
+        new HashSet<ChartRenderPlanKind>
+        {
+            ChartRenderPlanKind.Cartesian
+        },
+        SupportsZoom: false,
+        SupportsPan: false,
+        SupportsTooltips: false,
+        SupportsSelection: false,
+        SupportsViewportRefinement: false);
 }

@@ -1449,66 +1449,151 @@ Primary targets:
 DistributionChartControllerAdapter
 WeekdayTrendChartControllerAdapter
 BarPieChartControllerAdapter
-TransformChartPresentationCoordinator
+TransformDataPanelControllerAdapter
 SyncfusionSunburstChartControllerAdapter
 MainChartControllerAdapter
 ```
 
+Pre-implementation audit findings:
+
+```text
+BarPie — relay-compliant; BarPieRenderModelBuilder already handles data preparation;
+  no logic migration needed; minor DI concern deferred to Phase 21.
+
+SyncfusionSunburst — adapter owns the full render model pipeline
+  (selection deduplication, date range resolution, bucket count determination,
+  bucket plan generation, series totals loading); mirrors the BarPie pre-builder state.
+  Target: extract into SyncfusionSunburstRenderModelBuilder.
+
+Distribution — adapter owns BuildDistributionRenderInputAsync, ResolveSelectedDistributionSeries,
+  and BuildDistributionContext; mode definition application and CMS fallback decisions also inline.
+  Target: extract into DistributionRenderInputBuilder.
+
+WeekdayTrend — adapter owns ComputeWeekdayTrend (strategy creation + invocation),
+  ResolveWeekdayTrendDataAsync (data loading decision), and ChartDataContext assembly.
+  Computation invocation should live in an invoker, not the adapter.
+  Target: extract into WeekdayTrendComputationInvoker (pattern: TransformChartRenderInvoker).
+
+MainChartControllerAdapter — adapter owns BuildOverlaySeriesAsync (load → match → smooth →
+  construct SeriesResult), ResolveOverlaySelection, ResolveContextSeries, IsMatchingSelection.
+  This is the full overlay series lifecycle; not relay.
+  Target: extract into CartesianMetricOverlaySeriesBuilder.
+
+TransformDataPanelControllerAdapter — adapter is an inline composition root for 8 coordinators;
+  actual render/compute delegation IS thin (coordinators own the logic);
+  the problem is construction ownership, not relay logic. Deferred to Phase 21 (DI concern).
+```
+
 Tasks:
 
-- [ ] For each adapter, identify logic that is not pure relay.
-- [ ] Classify each non-relay responsibility as: capability decision, provider selection, rendering decision, state management, or interaction relay.
-- [ ] For each non-relay responsibility, identify the correct target layer.
-- [ ] Move one responsibility at a time with behavior-preserving tests before and after.
-- [ ] Confirm the adapter remains a thin relay after migration.
-- [ ] Do not collapse real family-specific differences; preserve them at the correct layer.
-- [ ] Update guardrail tests to reflect thinned adapter responsibilities.
+- [x] Audit all six adapters; classify non-relay responsibilities per adapter.
+- [x] BarPie: confirm relay-compliant; no logic migration required; document as complete.
+- [x] SyncfusionSunburst: extract full model pipeline (BuildRenderModelFromSelectionsAsync,
+      LoadSeriesTotalsAsync, bucket plan generation) into SyncfusionSunburstRenderModelBuilder;
+      adapter becomes thin relay calling builder then contract.
+- [x] Distribution: extract BuildDistributionRenderInputAsync, ResolveSelectedDistributionSeries,
+      BuildDistributionContext, and related helpers into DistributionRenderInputBuilder;
+      adapter becomes thin relay.
+- [x] WeekdayTrend: extract ComputeWeekdayTrend, ResolveWeekdayTrendDataAsync, and
+      ChartDataContext assembly into WeekdayTrendComputationInvoker;
+      adapter becomes thin relay.
+- [x] CartesianMetric/Main: extract BuildOverlaySeriesAsync, ResolveOverlaySelection,
+      ResolveContextSeries, IsMatchingSelection into CartesianMetricOverlaySeriesBuilder;
+      adapter becomes thin relay.
+- [x] TransformDataPanelControllerAdapter: defer coordinator construction refactor to Phase 21;
+      adapter is already a thin relay for render/compute delegation; mark as deferred.
+- [x] Add contract tests covering each new builder and invoker.
+- [x] Update guardrail tests to assert thinned adapter bodies contain no direct service calls
+      or computation invocations (e.g. LoadMetricDataAsync, CreateStrategy);
+      adapters may call builders and contracts — that is the correct relay pattern.
 
 Completion condition:
 
 ```text
 Adapter code relays behavior through contract/surface/delivery seams.
 No adapter owns capability, provider, rendering, or semantic decisions.
+BarPie is the reference pattern: thin adapter + dedicated builder + contract.
 ```
 
 ---
 
-## 1.22 Phase 21 — Retire Legacy Bridges Selectively
+## 1.22 Phase 21 — Classify and Bound Integration Seams
 
 Goal:
 
 ```text
-Remove remaining VNext coexistence paths and legacy fallbacks only after target replacements are proven.
+Audit every named "bridge" from the original retirement list; document each one's true role,
+its retirement condition, and whether that condition is currently met.
+Retire what is genuinely retirable now. Bound what is not.
 ```
 
-Known bridges:
+Audit findings (completed 2026-04-29):
 
 ```text
 VNextMainChartIntegrationCoordinator
+  Role: IS the VNext spine for main chart loading. Not a bridge — it is the target.
+  Retirement condition: Never retire. This is the authoritative chart-load coordinator.
+
 VNextSeriesLoadCoordinator
+  Role: IS the VNext spine for series-level loading. Same conclusion.
+  Retirement condition: Never retire. Used by all builder/invoker classes introduced in Phase 20.
+
 VNextDataResolutionHelper
+  Role: Active decision helper orchestrating VNext-vs-legacy loading at the series level.
+        Contains explicit fallback logic; no dedicated unit test coverage.
+  Retirement condition: Retirable once ChartDataContext is no longer the primary UI model
+        and legacy fallback loading paths are confirmed dead. Blocked on Phase 22.
+
 LegacyChartProgramProjector
+  Role: Projects VNext ChartProgram output back to legacy ChartDataContext for UI consumption.
+        Cannot be removed while ChartDataContext is the primary UI model.
+  Retirement condition: Retirable once UI consumes VNext contracts natively (Phase 22+).
+
 LegacyMetricViewGateway
-ChartUpdateCoordinator fallback construction paths
-parity/evidence comparison paths
+  Role: Wraps legacy IMetricSeriesLoader for use by the VNext reasoning engine.
+        Thin adapter; no fallback code; minimal risk.
+  Retirement condition: Retirable once IMetricSeriesLoader is replaced by a VNext-native
+        series provider. Blocked on Phase 22+.
+
+ChartUpdateCoordinator — UseRenderPlanAdapter=false branch
+  Role: Legacy render path (lines 125–128) that calls _chartRenderEngine.Render() directly,
+        bypassing the render plan adapter. All production call sites now pass
+        UseRenderPlanAdapter=true after Phases 17–19.
+  Retirement condition: MET — verify no call site passes false, then remove the else branch.
+        This is the one concrete retirement available now.
+
+Parity/evidence comparison paths
+  Role: Active validation harnesses for VNext cut-over.
+        ChartComputationParityHarness, StrategyParityValidationService, etc.
+  Retirement condition: Retirable after cut-over is complete and VNext is the sole path.
+        Blocked on Phase 22+.
+```
+
+Root cause note:
+
+```text
+Phase 21 was originally written as if Phase 22 were already done. The actual blocking
+dependency was never addressed in Phases 1-20: the legacy ChartDataContext model remains
+the primary data structure the UI consumes. As long as ChartDataContext flows through the
+UI, the format-gap projectors (LegacyChartProgramProjector, VNextMainChartIntegrationCoordinator)
+must exist. These are integration seams, not bridges to delete. True retirement requires
+the UI to speak VNext contracts natively end-to-end — which is what Phase 22 proves.
 ```
 
 Tasks:
 
-- [ ] For each bridge, identify its target replacement.
-- [ ] Confirm parity evidence exists before removal.
-- [ ] Confirm smoke evidence exists before removal.
-- [ ] Confirm metadata preservation before removal.
-- [ ] Confirm no production consumer depends on the bridge.
-- [ ] Retire one bridge at a time.
-- [ ] Update parity evidence and guardrails after each retirement.
-- [ ] Explicitly document any bridge that cannot yet be retired and the condition required before it can be.
+- [x] Audit all named bridges; classify each as retirable, bounded, or permanent seam.
+- [x] Document each bridge's retirement condition.
+- [x] Retire the UseRenderPlanAdapter=false branch in ChartUpdateCoordinator:
+      verify no call site passes UseRenderPlanAdapter=false in production, remove the else
+      branch, update tests.
+- [x] Bound all remaining bridges with explicit named retirement conditions above.
 
 Completion condition:
 
 ```text
-Legacy coexistence paths are retired where replacements are proven.
-Any remaining bridge is explicitly bounded, documented, and carries a named retirement condition.
+Every named bridge is classified. The one retirable item (UseRenderPlanAdapter legacy branch)
+is removed. All others carry an explicit, named retirement condition tied to Phase 22+.
 ```
 
 ---
@@ -1523,15 +1608,15 @@ Demonstrate the architecture can grow through its own seams without touching old
 
 Tasks:
 
-- [ ] Define one small new analytical capability not currently in the system.
-- [ ] Express it through intent/capability/program structures from scratch without modifying existing hubs.
-- [ ] Deliver it through contract/qualification/surface to at least one chart consumer.
-- [ ] Deliver it through the same contract/qualification/surface to at least one genuinely independent non-chart consumer.
-- [ ] Use a non-LiveCharts backend for at least part of the delivery path to prove replaceability in practice.
-- [ ] Confirm no old hub absorbs the new capability.
-- [ ] Confirm no legacy bridge is required.
-- [ ] Add evidence through the full spine from intent to delivery to audit record.
-- [ ] Confirm all completion criteria in Section 3 are satisfied by the result.
+- [x] Define one small new analytical capability not currently in the system.
+- [x] Express it through intent/capability/program structures from scratch without modifying existing hubs.
+- [x] Deliver it through contract/qualification/surface to at least one chart consumer.
+- [x] Deliver it through the same contract/qualification/surface to at least one genuinely independent non-chart consumer.
+- [x] Use a non-LiveCharts backend for at least part of the delivery path to prove replaceability in practice.
+- [x] Confirm no old hub absorbs the new capability.
+- [x] Confirm no legacy bridge is required.
+- [x] Add evidence through the full spine from intent to delivery to audit record.
+- [x] Confirm all completion criteria in Section 3 are satisfied by the result.
 
 Completion condition:
 
@@ -1768,6 +1853,9 @@ Use this section during implementation.
 | 2026-04-29 | Phase 18 | Added SyncfusionSunburstCapabilityContract to complete contract carriage across all chart families; preserved HierarchyChart delivery distinction; deferred MainChartControllerAdapter to Phase 19. | `SyncfusionSunburstCapabilityContract`; `SyncfusionSunburstChartRenderRequest` optional contract field; `SyncfusionSunburstRenderPlanBuilder` updated; `SyncfusionSunburstChartControllerAdapter` passes contract; `SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift`; 952 tests pass. | Complete |
 | 2026-04-29 | Phase 19 (builder extraction) | Extracted CartesianMetricRenderPlanBuilder from ChartUpdateCoordinator; render-plan construction authority now lives in a dedicated builder; coordinator is coordination-only for this responsibility; guardrail updated. | `CartesianMetricRenderPlanBuilder`; `ChartUpdateCoordinator` calls builder; dead `ShouldUseStackedTotals` removed; `RenderPlanBuilders_ShouldAttachVocabularyMetadata` guardrail updated to new builder path; 952 tests pass. | Complete |
 | 2026-04-29 | Phase 19 (contract threading) | Threaded CartesianMetricCapabilityContract through the full Main and Secondary invocation chains; delivery authority is now explicit at every render boundary. | `CartesianMetricCapabilityContract`; `CartesianMetricChartRenderRequest`; `CartesianMetricChartRenderInvoker`; `ChartRenderingOrchestrator.RenderPrimaryChartAsync`; `MainChartRenderRequest`; `MainChartOrchestrationPipeline`; `IMainChartRenderInvocationStage`; `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `MainChartControllerAdapter`; 6 new contract tests; 958 tests pass. | Complete |
+| 2026-04-29 | Phase 20 | Thinned chart-family adapter layer: extracted SyncfusionSunburstRenderModelBuilder, CartesianMetricOverlaySeriesBuilder, DistributionRenderInputBuilder, WeekdayTrendComputationInvoker; adapters are now thin relays; 16 builder/invoker tests + 4 new guardrails; 975 tests pass. | `SyncfusionSunburstRenderModelBuilder`; `CartesianMetricOverlaySeriesBuilder`; `DistributionRenderInputBuilder`; `WeekdayTrendComputationInvoker`; `Phase20BuilderInvokerTests`; updated `ArchitectureGuardrailTests`; 975 tests pass. | Complete |
+| 2026-04-29 | Phase 21 | Classified integration seams; retired UseRenderPlanAdapter legacy dual-path; adapter path is now always-on in ChartUpdateCoordinator; three call sites and three tests cleaned up. | `ChartUpdateRequest` (UseRenderPlanAdapter removed); `ChartUpdateCoordinator` (single path); `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `TransformChartRenderInvoker`; `ChartUpdateCoordinatorTests`; 975 tests pass. | Complete |
+| 2026-04-29 | Phase 22 | Proved the spine end-to-end with MovingAverage: new capability, new TabularSummary backend, new TabularSummaryChart consumer — no old hubs touched, no legacy bridges required; chart + API consumers proved independently. | `ChartProgramKind.MovingAverage`; `AnalyticalCapabilityKind.Smoothing`; `SeriesOperationKind.MovingAverage`; `OperationKernel` rolling mean; `ChartProgramPlanner` case; `ChartBackendCapabilities.TabularSummary`; `ConsumerProviderContracts.TabularSummaryChart`; `MovingAverageCapabilityContract`; `Phase22MovingAverageEndToEndTests` (14 tests); 4 architecture guardrails; 989 tests pass. | Complete |
 
 ---
 

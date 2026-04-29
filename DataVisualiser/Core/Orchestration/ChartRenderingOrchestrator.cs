@@ -205,37 +205,22 @@ public sealed class ChartRenderingOrchestrator
 
     public ChartRenderAdapterResult? LastRenderPlanAdapterResult => _chartUpdateCoordinator.LastRenderPlanAdapterResult;
 
-    public async Task<ChartDataContext?> RenderPrimaryChartAsync(
-        ChartDataContext ctx,
-        CartesianChart chartMain,
-        IEnumerable<MetricData> data1,
-        IEnumerable<MetricData>? data2,
-        string displayName1,
-        string displayName2,
-        DateTime from,
-        DateTime to,
-        string? metricType = null,
-        IReadOnlyList<MetricSeriesSelection>? selectedSeries = null,
-        string? resolutionTableName = null,
-        bool isStacked = false,
-        bool isCumulative = false,
-        IReadOnlyList<SeriesResult>? overlaySeries = null,
-        CartesianMetricCapabilityContract? capabilityContract = null)
+    public async Task<ChartDataContext?> RenderPrimaryChartAsync(CartesianChart chartMain, PrimaryChartRenderRequest request)
     {
-        if (ctx == null || chartMain == null)
+        if (chartMain == null || request == null)
             return null;
 
-        var requestedContext = BuildPrimaryRequestContext(ctx, data1, data2, displayName1, displayName2, from, to, metricType);
+        var requestedContext = BuildPrimaryRequestContext(request.Context, request.Data1, request.Data2, request.DisplayName1, request.DisplayName2, request.From, request.To, request.MetricType);
 
         var preparedData = await _mainChartOrchestrationPipeline.RenderAsync(
             new MainChartRenderRequest(
                 requestedContext,
-                selectedSeries,
-                resolutionTableName,
-                isStacked,
-                isCumulative,
-                overlaySeries,
-                CapabilityContract: capabilityContract),
+                request.SelectedSeries,
+                request.ResolutionTableName,
+                request.IsStacked,
+                request.IsCumulative,
+                request.OverlaySeries,
+                CapabilityContract: request.CapabilityContract),
             chartMain);
         return preparedData.WorkingContext;
     }

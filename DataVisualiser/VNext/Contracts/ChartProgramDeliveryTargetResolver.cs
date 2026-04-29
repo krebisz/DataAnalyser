@@ -14,6 +14,7 @@ public static class ChartProgramDeliveryTargetResolver
             ChartProgramKind.WeekdayTrend => "WeekdayTrendChart",
             ChartProgramKind.BarPie => "BarPieChart",
             ChartProgramKind.SyncfusionSunburst => "SyncfusionSunburst",
+            ChartProgramKind.MovingAverage => "MovingAverageChart",
             _ => "ChartSurface"
         };
     }

@@ -64,6 +64,7 @@ public sealed class ConsumerProviderRegistry
         [
             ConsumerProviderContracts.LiveChartsWpf,
             ConsumerProviderContracts.SyncfusionSunburst,
+            ConsumerProviderContracts.TabularSummaryChart,
             ConsumerProviderContracts.EvidenceExport,
             ConsumerProviderContracts.ApiResponse
         ]);

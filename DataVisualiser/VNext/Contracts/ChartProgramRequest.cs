@@ -30,4 +30,7 @@ public sealed record ChartProgramRequest
     public static ChartProgramRequest WeekdayTrend() => new(ChartProgramKind.WeekdayTrend);
     public static ChartProgramRequest BarPie() => new(ChartProgramKind.BarPie);
     public static ChartProgramRequest SyncfusionSunburst() => new(ChartProgramKind.SyncfusionSunburst);
+
+    public static ChartProgramRequest MovingAverage(string title, IReadOnlyList<SeriesOperationRequest> seriesOperations) =>
+        new(ChartProgramKind.MovingAverage, ChartDisplayMode.Regular, title, seriesOperations);
 }
