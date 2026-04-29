@@ -93,6 +93,45 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void DistributionCapabilitySlice_ShouldRemainOwnedByTargetSpine()
+    {
+        var capabilitySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "VNext", "Contracts", "CapabilityRequest.cs");
+        var intentFactorySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "VNext", "Application", "AnalyticalIntentFactory.cs");
+        var plannerSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "ViewModels", "VNextChartProgramRequestPlanner.cs");
+        var renderingContractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "Core",
+            "Rendering",
+            "Contracts",
+            "Distribution",
+            "DistributionRenderingContract.cs");
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "UI",
+            "Charts",
+            "Presentation",
+            "DistributionChartControllerAdapter.cs");
+
+        Assert.Contains("ChartProgramKind.Distribution => new CapabilityRequest", capabilitySource, StringComparison.Ordinal);
+        Assert.Contains("AnalyticalCapabilityKind.Distribution", capabilitySource, StringComparison.Ordinal);
+        Assert.Contains("CompositionKind.SingleSeries", capabilitySource, StringComparison.Ordinal);
+        Assert.Contains("public AnalyticalIntent Distribution(", intentFactorySource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramRequest.Distribution()", intentFactorySource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramRequest.Distribution()", plannerSource, StringComparison.Ordinal);
+        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramKind.Distribution", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("EvidenceRuntimePath.VNextDistribution", adapterSource, StringComparison.Ordinal);
+        Assert.Contains("ChartRenderPlanVocabularyMetadata.AddTo", renderingContractSource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramKind.Distribution", renderingContractSource, StringComparison.Ordinal);
+        Assert.Contains("DistributionRenderingQualification.Qualified", renderingContractSource, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("AnalyticalCapabilityKind.Distribution", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CompositionKind.SingleSeries", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("CapabilityRequest", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnalyticalIntentFactory", adapterSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ChartUpdateCoordinator_ShouldNotAcquireSemanticProviderOrEvidenceAuthority()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");

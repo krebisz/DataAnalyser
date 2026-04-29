@@ -79,6 +79,7 @@ This index records the evidence produced or consumed by Phases 1-13. Phase 1 and
 | Phase 11 | Audit note and guardrails | `documents/DataVisualiser_Terminal_Delivery_Boundary_Audit.md`; terminal-delivery guardrails |
 | Phase 12 | Audit note and guardrails | `documents/DataVisualiser_Evidence_Observability_Audit.md`; evidence observability guardrails |
 | Phase 13 | Audit note and guardrails | `documents/DataVisualiser_Governance_Constraints_Audit.md`; governance documentation guardrails |
+| Phase 14 | Capability-slice audit and guardrails | `documents/DataVisualiser_Distribution_Capability_Slice_Audit.md`; Distribution target-spine tests |
 
 Historical planning note:
 
@@ -1005,19 +1006,52 @@ Intent
 
 Tasks:
 
-- [ ] Select one small new or existing capability slice.
-- [ ] Express it through capability/program structures.
-- [ ] Keep UI/controller/rendering out of capability ownership.
-- [ ] Preserve provenance and traceability.
-- [ ] Preserve transformation reversibility where applicable.
-- [ ] Preserve confidence as annotation unless policy explicitly consumes it.
-- [ ] Add tests through the contract/delivery/evidence path.
-- [ ] Verify no old hub absorbs the new capability.
+- [x] Select one small new or existing capability slice.
+- [x] Express it through capability/program structures.
+- [x] Keep UI/controller/rendering out of capability ownership.
+- [x] Preserve provenance and traceability.
+- [x] Preserve transformation reversibility where applicable.
+- [x] Preserve confidence as annotation unless policy explicitly consumes it.
+- [x] Add tests through the contract/delivery/evidence path.
+- [x] Verify no old hub absorbs the new capability.
 
 Completion condition:
 
 ```text
 At least one capability moves through the target spine without old-hub ownership.
+```
+
+Phase 14 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_Distribution_Capability_Slice_Audit.md
+
+Selected capability slice:
+- active Distribution capability
+
+Target-spine proof:
+- intent/program entry: AnalyticalIntentFactory.Distribution and ChartProgramRequest.Distribution
+- capability mapping: CapabilityRequest.FromProgramRequest maps Distribution to AnalyticalCapabilityKind.Distribution and CompositionKind.SingleSeries
+- contract/boundary: ConsumerDeliveryContract / ChartProgramDeliveryTargetResolver provides DistributionChart delivery
+- qualification: DistributionRenderingContract exposes qualified Cartesian route and tactical polar fallback route
+- surface/delivery: DistributionRenderPlanBuilder emits ChartRenderPlan metadata for capability, composition, provider, backend, route, source, and provenance
+- evidence: VNextDataResolutionHelper records EvidenceRuntimePath.VNextDistribution and render-plan diagnostics capture Distribution metadata
+
+Tests added:
+- DistributionCapabilitySlice_ShouldRemainOwnedByTargetSpine
+- LoadAsync_ForDistribution_ShouldPreserveProgramKindAndDataLineage
+- DistributionRenderPlanBuilder_ShouldPreserveCapabilityContractAndDeliveryMetadata
+
+Validation:
+- Phase 14 Distribution capability validation passed 172 tests
+
+Implementation result:
+- no production behavior code changed in Phase 14
+- Distribution is proven as the first active capability slice through the target spine
+- UI/controller code relays Distribution behavior without owning capability semantics
+- transformation reversibility is not applicable to this single-series Distribution slice
+- confidence remains annotation-only; no Distribution policy consumes confidence
 ```
 
 ---
@@ -1326,6 +1360,7 @@ Use this section during implementation.
 | 2026-04-28 | Phase 11 | Audited terminal delivery/vendor boundaries and added downstream containment guardrails. | `documents/DataVisualiser_Terminal_Delivery_Boundary_Audit.md`; `ArchitectureGuardrailTests`; terminal-delivery validation passed 142 tests. | Complete |
 | 2026-04-28 | Phase 12 | Audited evidence/diagnostics/parity/reachability/validation flows and added observational guardrails. | `documents/DataVisualiser_Evidence_Observability_Audit.md`; `ArchitectureGuardrailTests`; evidence/parity/reachability validation passed 158 tests. | Complete |
 | 2026-04-28 | Phase 13 | Defined governance constraints for future vocabulary, concepts, capabilities, transformations, consumers, backends, and evidence paths. | `documents/DataVisualiser_Governance_Constraints_Audit.md`; `ArchitectureGuardrailTests`; architecture validation passed 93 tests. | Complete |
+| 2026-04-28 | Phase 14 | Selected active Distribution as the first capability slice and proved it through the target spine. | `documents/DataVisualiser_Distribution_Capability_Slice_Audit.md`; `ArchitectureGuardrailTests`; Distribution/VNext/rendering/parity validation passed 172 tests. | Complete |
 
 ---
 

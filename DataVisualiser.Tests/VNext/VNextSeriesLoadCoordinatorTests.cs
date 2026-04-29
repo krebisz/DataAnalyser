@@ -46,6 +46,23 @@ public sealed class VNextSeriesLoadCoordinatorTests
     }
 
     [Fact]
+    public async Task LoadAsync_ForDistribution_ShouldPreserveProgramKindAndDataLineage()
+    {
+        var coordinator = CreateCoordinator();
+        var series = new MetricSeriesSelection("Weight", "morning", "Weight", "Morning");
+
+        var result = await coordinator.LoadAsync(series, From, To, "HealthMetrics", ChartProgramKind.Distribution);
+
+        Assert.True(result.Success);
+        Assert.Equal(ChartProgramKind.Distribution, result.ProgramKind);
+        Assert.NotNull(result.ProgramSourceSignature);
+        Assert.Contains("Weight::HealthMetrics", result.ProgramSourceSignature, StringComparison.Ordinal);
+        Assert.Contains("Weight:morning", result.ProgramSourceSignature, StringComparison.Ordinal);
+        Assert.Equal(result.RequestSignature, result.SnapshotSignature);
+        Assert.Equal(result.RequestSignature, result.ProgramSourceSignature);
+    }
+
+    [Fact]
     public async Task LoadAsync_ShouldReturnFailureOnException()
     {
         var coordinator = new VNextSeriesLoadCoordinator(

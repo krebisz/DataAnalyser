@@ -1,8 +1,12 @@
 using DataVisualiser.Core.Rendering.Distribution;
 using DataVisualiser.Core.Rendering.Engines;
+using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
+using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveChartsCore.SkiaSharpView.WPF;
 using CartesianChart = LiveCharts.Wpf.CartesianChart;
 
@@ -109,10 +113,64 @@ public sealed class DistributionRenderingContractTests
         }
     }
 
+    [Theory]
+    [InlineData(DistributionRenderingRoute.Cartesian, DistributionMode.Weekly, DistributionBackendKey.LiveChartsWpfCartesian)]
+    [InlineData(DistributionRenderingRoute.PolarFallback, DistributionMode.Hourly, DistributionBackendKey.LiveChartsWpfPolarFallbackProjection)]
+    public void DistributionRenderPlanBuilder_ShouldPreserveCapabilityContractAndDeliveryMetadata(
+        DistributionRenderingRoute route,
+        DistributionMode mode,
+        string expectedBackendKey)
+    {
+        var request = CreateRequest(route, mode);
+
+        var plan = DistributionRenderPlanBuilder.Build(request);
+
+        Assert.Equal(ChartProgramKind.Distribution, plan.ProgramKind);
+        Assert.Equal(ChartRenderPlanKind.Cartesian, plan.PlanKind);
+        Assert.Equal(ChartRenderDensityMode.FullFidelity, plan.Density.Mode);
+        Assert.Equal(2, plan.Density.SourcePointCount);
+        Assert.Equal(2, plan.Density.RenderedPointCount);
+        Assert.Equal(request.Settings.IntervalCount, plan.Density.BucketCount);
+        Assert.Equal(expectedBackendKey, plan.Metadata[ChartRenderPlanMetadataKeys.BackendKey]);
+        Assert.Equal(nameof(DistributionRenderPlanAdapter), plan.Metadata["Adapter"]);
+        Assert.Equal(ChartProgramKind.Distribution.ToString(), plan.Metadata["ProgramKind"]);
+        Assert.Equal(route.ToString(), plan.Metadata["Route"]);
+        Assert.Equal(mode.ToString(), plan.Metadata["Mode"]);
+        Assert.Equal("Weight - Morning", plan.Metadata["Selection"]);
+        Assert.Equal(ConsumerKind.Chart.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.ConsumerKind]);
+        Assert.Equal("DistributionChart", plan.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+        Assert.Equal(AnalyticalCapabilityKind.Distribution.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        Assert.Equal(CompositionKind.SingleSeries.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+        Assert.Equal("LiveChartsWpf", plan.Metadata[ChartRenderPlanMetadataKeys.ProviderKey]);
+        Assert.Contains("Distribution:SingleSeries", plan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+        Assert.Contains(plan.SourceSignature, plan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+        Assert.Contains(plan.SourceSignature, plan.Metadata[ChartRenderPlanMetadataKeys.ProvenanceSignature], StringComparison.Ordinal);
+        Assert.True(plan.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProviderSignature));
+    }
+
     private static DistributionRenderingContract CreateContract()
     {
         var distributionService = new StubDistributionService();
         return new DistributionRenderingContract(() => null, distributionService, distributionService, new DistributionPolarRenderingService());
+    }
+
+    private static DistributionChartRenderRequest CreateRequest(DistributionRenderingRoute route, DistributionMode mode)
+    {
+        return new DistributionChartRenderRequest(
+            route,
+            mode,
+            new DistributionModeSettings(true, 7),
+            [
+                new MetricData { NormalizedTimestamp = new DateTime(2026, 1, 1), Value = 1m },
+                new MetricData { NormalizedTimestamp = new DateTime(2026, 1, 2), Value = 2m }
+            ],
+            "Weight",
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 31),
+            null,
+            new ChartDataContext(),
+            new ChartState(),
+            "Weight - Morning");
     }
 
     private sealed class StubDistributionService : DataVisualiser.Core.Services.Abstractions.IDistributionService
