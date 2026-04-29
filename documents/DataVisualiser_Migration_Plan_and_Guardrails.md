@@ -1327,6 +1327,37 @@ No family or top-level adapter remains as an inline-creation outlier.
 SyncfusionSunburst hierarchy delivery distinction is preserved in the contract.
 ```
 
+Phase 18 evidence:
+
+```text
+Slices compared:
+- Distribution, WeekdayTrend, Transform, BarPie — Phase 14/17 hardened, all carrying explicit CapabilityContracts
+- SyncfusionSunburst — Phase 18 target; previously inline-creating ChartProgramRequest/CapabilityRequest/ConsumerDeliveryContract in the builder
+- MainChartControllerAdapter — inspected; routes through CartesianMetricChartRenderInvoker into ChartRenderingOrchestrator (old hub); no clean CapabilityContract seam without Phase 19 hub restructuring; deferred to Phase 19
+
+Consolidation applied:
+- SyncfusionSunburstCapabilityContract added to SyncfusionSunburstRenderingTypes.cs (sealed record pattern matching all other families)
+- Constructor validates programRequest.Kind == ChartProgramKind.SyncfusionSunburst
+- Constructor validates delivery.ProgramKind == programRequest.Kind
+- Static Create() uses ConsumerDeliveryContract.HierarchyChart (not Chart) — hierarchy delivery distinction explicitly preserved
+- SyncfusionSunburstChartRenderRequest gains optional CapabilityContract field
+- SyncfusionSunburstRenderPlanBuilder.Build updated to use capabilityContract when provided, fallback to Create()
+- SyncfusionSunburstChartControllerAdapter.RenderSunburstAsync now passes SyncfusionSunburstCapabilityContract.Create() on the render request
+
+Real differences preserved:
+- ConsumerDeliveryContract.HierarchyChart used throughout — not collapsed to Chart
+- Hierarchy node tree building unchanged
+- MainChartControllerAdapter deferred; it is a hub-owned path not a family contract pattern
+
+Tests added:
+- SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract
+- SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift
+
+Validation:
+- 952 tests pass (up from 950; 2 new tests added)
+- all existing SyncfusionSunburst tests continue to pass without changes
+```
+
 ---
 
 ## 1.20 Phase 19 — Migrate Hub Responsibilities to the Target Spine
@@ -1697,6 +1728,7 @@ Use this section during implementation.
 | 2026-04-29 | Phase 16 | Retired duplicate metadata bypasses while preserving flexible legacy/fallback paths. | Removed kind-only `ChartRenderPlanVocabularyMetadata` overloads and delivery-plus-program-kind `ChartRenderPlanProviderMetadata` overload; BarPie/Syncfusion/tests now pass explicit program/capability/delivery contracts; focused metadata/export/rendering/architecture validation passed 176 tests and provider metadata/render-plan/architecture validation passed 196 tests. | Complete |
 | 2026-04-29 | Phase 15/16 Syncfusion alignment | Verified SyncfusionSunburst before Phase 17 as both a hierarchy render consumer and a non-chart export evidence consumer. | `ExportAsync_ShouldIncludeNonChartExportConsumerEvidence`; focused Syncfusion/export/provider/architecture validation passed 186 tests. | Complete |
 | 2026-04-29 | Phase 17 | Added BarPieCapabilityContract to complete the explicit capability-contract pattern across all LiveCharts families; preserved SyncfusionSunburst hierarchy delivery distinction. | `BarPieCapabilityContract`; `BarPieChartRenderRequest` optional contract field; `BarPieRenderPlanBuilder` updated; `BarPieChartControllerAdapter` passes contract; `BarPieRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `BarPieCapabilityContract_ShouldRejectProgramKindDrift`; 950 tests pass. | Complete |
+| 2026-04-29 | Phase 18 | Added SyncfusionSunburstCapabilityContract to complete contract carriage across all chart families; preserved HierarchyChart delivery distinction; deferred MainChartControllerAdapter to Phase 19. | `SyncfusionSunburstCapabilityContract`; `SyncfusionSunburstChartRenderRequest` optional contract field; `SyncfusionSunburstRenderPlanBuilder` updated; `SyncfusionSunburstChartControllerAdapter` passes contract; `SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift`; 952 tests pass. | Complete |
 
 ---
 

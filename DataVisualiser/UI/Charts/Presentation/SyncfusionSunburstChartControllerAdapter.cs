@@ -87,7 +87,8 @@ public sealed class SyncfusionSunburstChartControllerAdapter : ChartControllerAd
             model.BucketCount,
             model.SelectionCount,
             model.From,
-            model.To);
+            model.To,
+            SyncfusionSunburstCapabilityContract.Create());
 
         var renderResult = await _renderingContract.RenderAsync(request, CreateRenderHost());
         _viewModel.ChartState.SetRenderPlanDiagnostics(

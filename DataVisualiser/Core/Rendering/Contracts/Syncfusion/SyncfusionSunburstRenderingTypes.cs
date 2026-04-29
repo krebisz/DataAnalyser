@@ -25,13 +25,49 @@ public interface ISyncfusionSunburstRenderTarget
     bool HasItems { get; }
 }
 
+public sealed record SyncfusionSunburstCapabilityContract
+{
+    public SyncfusionSunburstCapabilityContract(
+        ChartProgramRequest programRequest,
+        CapabilityRequest capability,
+        ConsumerDeliveryContract delivery)
+    {
+        ArgumentNullException.ThrowIfNull(programRequest);
+        ArgumentNullException.ThrowIfNull(capability);
+        ArgumentNullException.ThrowIfNull(delivery);
+
+        if (programRequest.Kind != ChartProgramKind.SyncfusionSunburst)
+            throw new ArgumentException("SyncfusionSunburst capability contracts must use a SyncfusionSunburst program request.", nameof(programRequest));
+        if (delivery.ProgramKind != programRequest.Kind)
+            throw new ArgumentException("SyncfusionSunburst delivery contract must target the SyncfusionSunburst program kind.", nameof(delivery));
+
+        ProgramRequest = programRequest;
+        Capability = capability;
+        Delivery = delivery;
+    }
+
+    public ChartProgramRequest ProgramRequest { get; }
+    public CapabilityRequest Capability { get; }
+    public ConsumerDeliveryContract Delivery { get; }
+
+    public static SyncfusionSunburstCapabilityContract Create()
+    {
+        var programRequest = ChartProgramRequest.SyncfusionSunburst();
+        return new SyncfusionSunburstCapabilityContract(
+            programRequest,
+            CapabilityRequest.FromProgramRequest(programRequest),
+            ConsumerDeliveryContract.HierarchyChart(programRequest.Kind, "SyncfusionSunburst"));
+    }
+}
+
 public sealed record SyncfusionSunburstChartRenderRequest(
     SyncfusionSunburstRenderingRoute Route,
     IReadOnlyList<SyncfusionSunburstItem> Items,
     int BucketCount,
     int SelectionCount,
     DateTime? From,
-    DateTime? To);
+    DateTime? To,
+    SyncfusionSunburstCapabilityContract? CapabilityContract = null);
 
 public sealed record SyncfusionSunburstChartRenderHost(
     ISyncfusionSunburstRenderTarget Target,
@@ -74,26 +110,25 @@ public static class SyncfusionSunburstRenderPlanBuilder
 
         var renderedNodeCount = CountNodes(roots);
         var sourceSignature = $"{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}";
+        var capabilityContract = request.CapabilityContract ?? SyncfusionSunburstCapabilityContract.Create();
         var metadata = new Dictionary<string, string>
         {
             ["Adapter"] = nameof(SyncfusionSunburstRenderPlanAdapter),
-            ["ProgramKind"] = ChartProgramKind.SyncfusionSunburst.ToString(),
+            ["ProgramKind"] = capabilityContract.ProgramRequest.Kind.ToString(),
             ["Route"] = request.Route.ToString(),
             ["BucketCount"] = request.BucketCount.ToString(),
             ["SelectionCount"] = request.SelectionCount.ToString()
         };
-        var programRequest = ChartProgramRequest.SyncfusionSunburst();
         ChartRenderPlanVocabularyMetadata.AddTo(
             metadata,
-            programRequest,
-            CapabilityRequest.FromProgramRequest(programRequest),
-            ConsumerDeliveryContract.HierarchyChart(programRequest.Kind, "SyncfusionSunburst"),
-            sourceSignature,
-            overlayCount: 0);
+            capabilityContract.ProgramRequest,
+            capabilityContract.Capability,
+            capabilityContract.Delivery,
+            sourceSignature);
 
         return new ChartRenderPlan(
             $"{SyncfusionSunburstBackendKey.SyncfusionWpfHierarchy}:{request.Route}:{request.BucketCount}:{request.SelectionCount}:{request.From:O}:{request.To:O}:{request.Items.Count}",
-            ChartProgramKind.SyncfusionSunburst,
+            capabilityContract.ProgramRequest.Kind,
             ChartRenderPlanKind.Hierarchy,
             ChartDisplayMode.Regular,
             "Syncfusion Sunburst",
