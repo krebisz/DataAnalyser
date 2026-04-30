@@ -9,7 +9,6 @@ using DataVisualiser.UI.Events;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
-using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.UI.ViewModels;
 
@@ -21,7 +20,7 @@ public sealed class MetricLoadCoordinator
     private readonly MetricState _metricState;
     private readonly UiState _uiState;
     private readonly DataLoadValidator _validator;
-    private readonly VNextMainChartIntegrationCoordinator _vnextMainChartIntegrationCoordinator;
+    private readonly VNextMetricLoadRouter _vnextMetricLoadRouter;
 
     private MetricLoadCoordinator(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError, VNextMainChartIntegrationCoordinator? vnextMainChartIntegrationCoordinator = null)
     {
@@ -31,7 +30,9 @@ public sealed class MetricLoadCoordinator
         _metricService = metricService ?? throw new ArgumentNullException(nameof(metricService));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _formatError = formatError ?? throw new ArgumentNullException(nameof(formatError));
-        _vnextMainChartIntegrationCoordinator = vnextMainChartIntegrationCoordinator ?? new VNextMainChartIntegrationCoordinator(metricService);
+        _vnextMetricLoadRouter = new VNextMetricLoadRouter(
+            chartState,
+            vnextMainChartIntegrationCoordinator ?? new VNextMainChartIntegrationCoordinator(metricService));
     }
 
     public static MetricLoadCoordinator CreateInstance(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError)
@@ -150,56 +151,9 @@ public sealed class MetricLoadCoordinator
         {
             _uiState.IsLoadingData = true;
 
-            if (VNextChartRoutePolicy.ShouldUseMainFamilyPath(_chartState))
-            {
-                var vnextStopwatch = Stopwatch.StartNew();
-                var vnextResults = await _vnextMainChartIntegrationCoordinator.LoadProgramsAsync(
-                    request,
-                    VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(_chartState));
-                vnextStopwatch.Stop();
-                var vnextResult = vnextResults.FirstOrDefault(result => result.ProgramKind == ChartProgramKind.Main) ??
-                                  vnextResults.First();
-                _chartState.RecordPerformanceTiming(
-                    "MetricLoad",
-                    "VNextMainFamilyLoad",
-                    vnextStopwatch.ElapsedMilliseconds,
-                    EvidenceRuntimePath.VNextMain,
-                    vnextResult.Success ? null : vnextResult.FailureReason);
-
-                if (vnextResult.Success && vnextResult.ProjectedContext != null)
-                {
-                    RecordVNextFamilyRuntimes(vnextResults, request.Signature);
-                    var supportsOnlyMainChart = VNextChartRoutePolicy.SupportsOnlyMainChart(_chartState);
-                    _chartState.LastContext = vnextResult.ProjectedContext;
-                    _chartState.LastLoadRuntime = new LoadRuntimeState(
-                        EvidenceRuntimePath.VNextMain,
-                        vnextResult.RequestSignature ?? request.Signature,
-                        vnextResult.SnapshotSignature,
-                        vnextResult.ProgramKind,
-                        vnextResult.ProgramSourceSignature,
-                        vnextResult.ProjectedContextSignature,
-                        null,
-                        supportsOnlyMainChart);
-                    totalStopwatch.Stop();
-                    _chartState.RecordPerformanceTiming(
-                        "MetricLoad",
-                        "Total",
-                        totalStopwatch.ElapsedMilliseconds,
-                        EvidenceRuntimePath.VNextMain,
-                        "VNext success");
-                    return true;
-                }
-
-                _chartState.LastLoadRuntime = new LoadRuntimeState(
-                    EvidenceRuntimePath.VNextMain,
-                    vnextResult.RequestSignature ?? request.Signature,
-                    vnextResult.SnapshotSignature,
-                    vnextResult.ProgramKind,
-                    vnextResult.ProgramSourceSignature,
-                    vnextResult.ProjectedContextSignature,
-                    vnextResult.FailureReason,
-                    false);
-            }
+            var vnextRoutingResult = await _vnextMetricLoadRouter.TryLoadAsync(request, totalStopwatch);
+            if (vnextRoutingResult.Succeeded)
+                return true;
 
             var legacyStopwatch = Stopwatch.StartNew();
             var dataLoaded = await LoadAndValidateMetricDataAsync(request, primarySelection, secondarySelection, onError);
@@ -364,30 +318,6 @@ public sealed class MetricLoadCoordinator
         var secondary = request.SelectedSeries.Count > 1 ? request.SelectedSeries[1] : null;
 
         return (primary, secondary);
-    }
-
-    private void RecordVNextFamilyRuntimes(
-        IReadOnlyList<VNextMainChartLoadResult> results,
-        string fallbackRequestSignature)
-    {
-        foreach (var result in results.Where(result => result.Success && result.ProgramKind.HasValue))
-        {
-            var programKind = result.ProgramKind!.Value;
-            if (programKind == ChartProgramKind.Main)
-                continue;
-
-            _chartState.SetFamilyRuntime(
-                programKind,
-                new LoadRuntimeState(
-                    VNextChartProgramRequestPlanner.ResolveRuntimePath(programKind),
-                    result.RequestSignature ?? fallbackRequestSignature,
-                    result.SnapshotSignature,
-                    result.ProgramKind,
-                    result.ProgramSourceSignature,
-                    result.ProjectedContextSignature,
-                    null,
-                    false));
-        }
     }
 
     /// <summary>

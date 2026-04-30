@@ -221,13 +221,18 @@ public static class MathHelper
         var min = valid.Min();
         var max = valid.Max();
 
-        if (double.IsNaN(min) || double.IsNaN(max) || min == max)
-            return values.Select(_ => double.NaN).ToList();
-
         return mode switch
         {
-                NormalizationMode.ZeroToOne => values.Select(v => double.IsNaN(v) ? double.NaN : (v - min) / (max - min)).ToList(),
-                NormalizationMode.PercentageOfMax => values.Select(v => double.IsNaN(v) ? double.NaN : v / max * 100.0).ToList(),
+                NormalizationMode.ZeroToOne => double.IsNaN(min) || double.IsNaN(max)
+                    ? values.Select(_ => double.NaN).ToList()
+                    : min == max
+                        ? values.Select(v => double.IsNaN(v) ? double.NaN : 0.0).ToList()
+                        : values.Select(v => double.IsNaN(v) ? double.NaN : (v - min) / (max - min)).ToList(),
+                NormalizationMode.PercentageOfMax => double.IsNaN(max)
+                    ? values.Select(_ => double.NaN).ToList()
+                    : max == 0
+                        ? values.Select(v => double.IsNaN(v) ? double.NaN : 0.0).ToList()
+                        : values.Select(v => double.IsNaN(v) ? double.NaN : v / max * 100.0).ToList(),
                 _ => throw new NotSupportedException()
         };
     }

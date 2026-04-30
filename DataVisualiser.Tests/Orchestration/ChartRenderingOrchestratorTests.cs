@@ -216,6 +216,51 @@ public sealed class ChartRenderingOrchestratorTests
     }
 
     [Fact]
+    public async Task RenderNormalizedChartAsync_ShouldRenderFlatSmoothedAndRawSeries_WhenNormalizedValuesAreConstant()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var cutOverService = new Mock<IStrategyCutOverService>(MockBehavior.Strict);
+                cutOverService
+                    .Setup(service => service.CreateStrategy(
+                        StrategyType.Normalized,
+                        It.IsAny<ChartDataContext>(),
+                        It.IsAny<StrategyCreationParameters>()))
+                    .Returns(new StubStrategy(new ChartComputationResult
+                    {
+                        Timestamps = [new DateTime(2024, 1, 1), new DateTime(2024, 1, 2)],
+                        PrimaryRawValues = [100d, 100d],
+                        PrimarySmoothed = [100d, 100d],
+                        SecondaryRawValues = [100d, 100d],
+                        SecondarySmoothed = [100d, 100d]
+                    }));
+
+                var orchestrator = CreateOrchestrator(chartTimestamps, tooltipManager, cutOverService, out _);
+                var context = CreateSecondaryContext();
+
+                await orchestrator.RenderNormalizedChartAsync(context, chart, new ChartState());
+                await FlushChartAsync(chart);
+
+                Assert.Equal(4, chart.Series.Count);
+                Assert.Equal(2, chart.Series.Count(series => series.Title?.EndsWith(" (smooth)", StringComparison.OrdinalIgnoreCase) == true));
+                Assert.Equal(2, chart.Series.Count(series => series.Title?.EndsWith(" (raw)", StringComparison.OrdinalIgnoreCase) == true));
+                Assert.All(chart.Series, series => Assert.Equal([100d, 100d], series.Values.Cast<double>().ToList()));
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
     public async Task RenderDiffRatioChartAsync_ShouldUseRatioCutOver_WhenRatioModeSelected()
     {
         await StaTestHelper.RunAsync(async () =>

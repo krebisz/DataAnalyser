@@ -224,6 +224,23 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void MetricLoadCoordinator_ShouldDelegateVNextRoutingToMetricLoadRouter()
+    {
+        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "ViewModels", "MetricLoadCoordinator.cs");
+        var routerSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "ViewModels", "VNextMetricLoadRouter.cs");
+
+        Assert.Contains("VNextMetricLoadRouter", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("TryLoadAsync", coordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("VNextChartRoutePolicy.ShouldUseMainFamilyPath", coordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests", coordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("RecordVNextFamilyRuntimes", coordinatorSource, StringComparison.Ordinal);
+
+        Assert.Contains("VNextChartRoutePolicy.ShouldUseMainFamilyPath", routerSource, StringComparison.Ordinal);
+        Assert.Contains("VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests", routerSource, StringComparison.Ordinal);
+        Assert.Contains("RecordVNextFamilyRuntimes", routerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ChartFamilyAdapters_ShouldNotAcquireProviderBackendOrAnalyticalAuthority()
     {
         var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
@@ -1769,6 +1786,30 @@ public sealed class ArchitectureGuardrailTests
         var bindIndex = visibilityBody.IndexOf("_viewModelEventBinder?.Bind()", StringComparison.Ordinal);
         var unbindIndex = visibilityBody.IndexOf("_viewModelEventBinder?.Unbind()", StringComparison.Ordinal);
         Assert.True(bindIndex < unbindIndex, "Bind() must appear before Unbind() in OnViewVisibilityChanged");
+    }
+
+    [Fact]
+    public void SyncfusionChartsView_ShouldSuppressSelectionHandlersDuringResolutionReset()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        Assert.Contains("_isChangingResolution = true", ExtractMethodBody(source, "private void ResetForResolutionChange"), StringComparison.Ordinal);
+        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private void OnMetricTypeSelectionChanged"), StringComparison.Ordinal);
+        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private async void OnAnySubtypeSelectionChanged"), StringComparison.Ordinal);
+        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private void OnSelectionStateChanged"), StringComparison.Ordinal);
+        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private async Task RenderChartAsync"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionChartsView_RenderFailures_ShouldNotEscapeAsyncVoidEventHandlers()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var renderBody = ExtractMethodBody(source, "private async Task RenderChartAsync");
+        var catchIndex = renderBody.IndexOf("catch (Exception ex)", StringComparison.Ordinal);
+
+        Assert.True(catchIndex >= 0, "RenderChartAsync should catch render exceptions.");
+        Assert.DoesNotContain("throw;", renderBody[catchIndex..], StringComparison.Ordinal);
+        Assert.Contains("SyncfusionRenderFailed", renderBody, StringComparison.Ordinal);
     }
 
     [Fact]

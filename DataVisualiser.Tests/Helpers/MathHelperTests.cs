@@ -78,7 +78,39 @@ public sealed class MathHelperTests
     }
 
     [Fact]
-    public void ReturnValueNormalized_RelativeToMax_ShouldPropagateNaN_WhenFirstSeriesHasNoRange()
+    public void ReturnValueNormalized_ZeroToOne_ShouldRenderConstantSeriesAsFlatZeroLine()
+    {
+        var values = new List<double>
+        {
+                10,
+                10,
+                10
+        };
+
+        var normalized = MathHelper.ReturnValueNormalized(values, NormalizationMode.ZeroToOne);
+
+        Assert.NotNull(normalized);
+        Assert.Equal([0.0, 0.0, 0.0], normalized!);
+    }
+
+    [Fact]
+    public void ReturnValueNormalized_PercentageOfMax_ShouldRenderConstantSeriesAsFlatHundredLine()
+    {
+        var values = new List<double>
+        {
+                10,
+                10,
+                10
+        };
+
+        var normalized = MathHelper.ReturnValueNormalized(values, NormalizationMode.PercentageOfMax);
+
+        Assert.NotNull(normalized);
+        Assert.Equal([100.0, 100.0, 100.0], normalized!);
+    }
+
+    [Fact]
+    public void ReturnValueNormalized_RelativeToMax_ShouldRenderConstantBaselineAsFlatHundredLine()
     {
         var first = new List<double>
         {
@@ -96,7 +128,7 @@ public sealed class MathHelperTests
         Assert.NotNull(relative);
         Assert.NotNull(baseline);
         Assert.All(baseline!, v => Assert.Equal(100.0, v));
-        Assert.All(relative!, v => Assert.True(double.IsNaN(v)));
+        Assert.Equal([50.0, 100.0], relative!);
     }
 
     [Fact]

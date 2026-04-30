@@ -56,7 +56,7 @@ public class ChartState
 
 
     // Normalization mode
-    public NormalizationMode SelectedNormalizationMode { get; set; }
+    public NormalizationMode SelectedNormalizationMode { get; set; } = NormalizationMode.PercentageOfMax;
 
     // Distribution chart options
     public DistributionMode SelectedDistributionMode { get; set; } = DistributionMode.Weekly;

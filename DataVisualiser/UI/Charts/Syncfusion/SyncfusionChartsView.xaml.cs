@@ -239,7 +239,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing || _isApplyingSelectionSync)
+        if (_isInitializing || _isApplyingSelectionSync || _isChangingResolution)
             return;
 
         _viewModel.SetDateRange(FromDate.SelectedDate, ToDate.SelectedDate);
@@ -255,7 +255,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnResolutionSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isApplyingSelectionSync)
+        if (_isApplyingSelectionSync || _isChangingResolution)
             return;
 
         if (ResolutionCombo.SelectedItem == null)
@@ -292,7 +292,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnMetricTypeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing || _isApplyingSelectionSync)
+        if (_isInitializing || _isApplyingSelectionSync || _isChangingResolution)
             return;
 
         if (_viewModel.UiState.IsLoadingMetricTypes)
@@ -375,7 +375,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private async void OnAnySubtypeSelectionChanged(object? sender, SelectionChangedEventArgs? e)
     {
-        if (_isApplyingSelectionSync)
+        if (_isApplyingSelectionSync || _isChangingResolution)
             return;
 
         UpdateSelectedSubtypesInViewModel();
@@ -421,7 +421,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private async Task LoadDateRangeForSelectedMetrics()
     {
-        if (_isInitializing)
+        if (_isInitializing || _isChangingResolution)
             return;
 
         if (_viewModel.UiState.IsLoadingSubtypes || _viewModel.UiState.IsLoadingMetricTypes)
@@ -507,7 +507,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnSelectionStateChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing)
+        if (_isInitializing || _isChangingResolution)
             return;
 
         if (!Dispatcher.CheckAccess())
@@ -521,6 +521,9 @@ public partial class SyncfusionChartsView : UserControl
 
     private async void AddSubtypeComboBox(object sender, RoutedEventArgs e)
     {
+        if (_isChangingResolution)
+            return;
+
         if (_subtypeList == null || !_subtypeList.Any())
             return;
 
@@ -542,7 +545,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnSunburstBucketCountChanged(object? sender, int bucketCount)
     {
-        if (_isInitializing || _isApplyingSelectionSync)
+        if (_isInitializing || _isApplyingSelectionSync || _isChangingResolution)
             return;
 
         _viewModel.SetBarPieBucketCount(bucketCount);
@@ -708,6 +711,9 @@ public partial class SyncfusionChartsView : UserControl
 
     private async Task RenderChartAsync(string key, ChartDataContext ctx)
     {
+        if (_isChangingResolution)
+            return;
+
         if (!await _chartRenderGate.WaitAsync(0))
         {
             _viewModel.ChartState.RecordPerformanceTiming(
@@ -741,7 +747,6 @@ public partial class SyncfusionChartsView : UserControl
                 _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
                 ex.GetType().Name);
             RecordSessionMilestone("SyncfusionRenderFailed", "Error", $"Render failed for {key}: {ex.Message}");
-            throw;
         }
         finally
         {
