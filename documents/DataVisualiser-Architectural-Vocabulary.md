@@ -1,3544 +1,1751 @@
-# DataVisualiser Vocabulary Rebuild — Step 1
+# DataVisualiser Migration Plan and Guardrails — Compact Continuation Version
 
 ## Purpose
 
-Extract reusable architectural vocabulary from current project evidence and prepare it for grammar reduction.
+Implementation-facing companion to the rebuilt architectural vocabulary and target architecture document.
+
+Use this document for:
 
 ```text
-as-is vocabulary
--> stripped compound concepts
--> as-is code map
--> atomized vocabulary
--> extension vocabulary
--> full language pool
--> Step 2 grammar reduction
+AI agent execution in an IDE
+human review
+sequential progress tracking
+auditable completion
 ```
 
-## Source Priority
+Refactoring is permitted only when it reduces architectural sprawl, contradiction, duplication, or exception-driven structure without violating behavior, tests, or authority boundaries.
 
-1. Type dependency diagram
-2. Codebase index
-3. Project tree
-4. Dependency summary
-5. Existing vocabulary document
-6. Foundational project documents
-
-## Working Table of Contents
-
-This table of contents is provisional and may be adjusted as the rebuild proceeds.
-
-```text
-1. Extract vocabulary and map current state
-2. Build flexible grammar
-3. Promote core concepts
-4. Map concept relationships
-5. Define target architecture
-6. Compare current vs target
-7. Identify gaps and risks
-8. Define migration plan
-9. Set guardrails
-10. Define completion criteria
-```
-
-Working flow:
-
-```text
-evidence
--> language
--> concepts
--> relationships
--> target
--> gap
--> plan
--> enforcement
--> closure
-```
+Do not treat this as permission for broad, cosmetic, speculative, or folder/class reshuffling refactors.
 
 ---
 
-## Reduction Rule
+## Source Context
 
-Strip concrete family, vendor, UI, and scenario qualifiers before vocabulary reduction.
+Target architecture is defined around:
 
 ```text
-BarPieRenderingContract          -> RenderingContract
-CartesianMetricChartRenderHost   -> RenderHost
-SyncfusionSunburstRenderSurface  -> RenderSurface
-DistributionRenderPlanBuilder    -> RenderPlanBuilder
-ChartControllerFactoryContext    -> ControllerFactoryContext
+Authority / Semantics / Provenance / Traceability / Envelope
+Fidelity / Determinism / Reversibility / Constraint / Governance
+Intent / Capability / Composition / Transformation / Interpretation / Confidence / Overlay
+Program / Policy / Contract / Boundary / Neutrality / Qualification
+Provider / Consumer / Interaction / SurfaceModel / Binding
+Projection / Adapter / Resolver / Selector / Registry
+Delivery / Backend / RuntimeBoundary / VendorBoundary / Lifecycle
+Evidence / Diagnostics / Parity / Reachability / Validation / Audit / Record
 ```
 
----
+Current state:
 
-## 1. Non-Atomized Vocabulary / Concepts
-
-Implementation-stripped compound vocabulary discovered from the as-is project.
-
-```text
-AccessDefaults, AlignmentHelper, AlignmentMode, AnalyticalAuthority
-AnalyticalCapabilityKind, AnalyticalExecutionResult, AnalyticalIntent, AnalyticalIntentFactory
-AnalyticalIntentSet, AnalyticalInterpretation, AnalyticalInterpretationBuilder, AnalyticalInterpretationResult
-AnalyticalInterpretationSetResult, AnalyticalRenderPlanPipeline, AnalyticalRenderPlanResult, AnalyticalRenderPlanSetResult
-AnalyticalResultSet, BackendCandidateSet, BackendCapabilities, BackendKey
-BackendQualification, BackendSelector, BasedShadingStrategy, BaseService
-BinningHelper, Breakdown, Builder, Bundle
-BusyStateTracker, Calculator, CapabilityRequest, CompositionKind
-ComputationDefaults, ComputationEngine, ComputationHelper, ComputationParityHarness
-ComputationResult, ComputationService, ComputationStrategy, ConfidenceAnnotation
-ConfidenceAnnotationEvaluator, ConfidenceAnnotationKind, ConfidenceAnnotationSet, ConfidenceSeverity
-Configuration, ConsumerDeliveryContract, ConsumerKind, ConsumerProviderContract
-ConsumerProviderContracts, ConsumerProviderRegistry, Context, ContextBuilder
-ContextDiagnosticsSnapshot, ContextHelper, ContextSelectionGuard, Control
-Controller, Controller2, ControllerAdapter, ControllerAdapterBase
-ControllerCoordinator, ControllerFactory, ControllerFactoryContext, ControllerFactoryResult
-ControllerHost, ControllerKeys, ControllerRegistry, ConversionHelper
-Converter, Coordinator, DebugSummaryLogger, DefaultOperationProvider
-Defaults, DiagnosticsSnapshot, DisplayMode, Entry
-ERenderer, ESurface, EventArgs, EventBinder
-EventSource, EvidenceDiagnosticsBuilder, EvidenceExportCoordinator, EvidenceExportService
-EvidenceParityBuilder, EvidenceParityBundle, EvidenceParityComputer, EvidenceParityEvaluator
-EvidenceParityResolver, EvidenceParitySummaryBuilder, EvidenceResolutionHelper, EvidenceRuntimePath
-EvidenceStrategyParityExecutor, ExecutionResult, Expression, ExpressionBuilder
-ExpressionEvaluator, Factory, Fetcher, FetcherCatalogQueries
-FetcherQueries, FetcherQueryGroup, FetcherRangeQueries, FetcherRepository
-Filter, Formatter, FormattingHelper, GridPresentationCoordinator
-Handlers, Helper, HierarchyNodePlan, Host
-HostDiagnosticsSnapshot, HostRangeCoordinator, HostSelectionCoordinator, Input
-InteractionKind, InteractionModel, InteractionPlan, InteractionRequest
-InteractionVisualHelper, InterpretationDiagnosticsSnapshot, InterpretationResultDiagnosticsSnapshot, InterpretiveOverlayPlanner
-LabelFormatter, Layout, LayoutCapabilities, LegacyExecutionResult
-LegacyGateway, LegacyProgramProjector, LoadCoordinator, Loader
-LoadExecutionActions, LoadLifecycle, LoadRequest, LoadResult
-LoadRuntimeState, LoadSnapshot, LoadState, LoadStrategy
-LoadStrategyResolver, LoadValidationInput, LoadValidator, Manager
-ManagerCoordinator, Materializer, MathHelper, ModeCatalog
-ModeDefinition, Model, ModeSettings, MultiplyConverter
-NormalizationMode, NormalizationModeConverter, Operand, Operation
-OperationExecutionCoordinator, OperationKernel, OperationKind, OperationProvider
-OperationRegistry, OperationRequest, OperationRequestMapper, OperationStateCoordinator
-OperatorRegistry, Operators, OrchestrationPipeline, OrchestrationRequest
-OverlayKind, OverlayModel, OverlayPlan, Palette
-Parity, ParityComparer, ParityFailure, ParityHarness
-ParityLayer, ParityMode, ParityResult, ParityResultAdapter
-ParityResultSnapshot, ParitySnapshot, ParitySummarySnapshot, ParityTolerance
-ParityValidationService, Parser, ParticipationCalculator, PerformanceTimingSnapshot
-PipelineDiagnosticsSnapshot, PipelineFactory, Placement, Plan
-PreparationHelper, PreparationService, PreparationStage, Prepared
-PresentationCoordinator, PresentationSpine, PresentationState, Program
-ProgramDeliveryTargetResolver, ProgramKind, ProgramPlanner, ProgramRequest
-Projection, ProjectionInteraction, ProjectionInteractionFactory, ProvenanceDescriptor
-ProvenanceTrust, QueryBuilder, QueryMode, RangeEventArgs
-RangeResult, RangeResultBuilder, RangeUiDiagnosticsSnapshot, ReachabilityDiagnosticsSnapshot
-ReachabilityEvidenceExportResult, ReachabilityEvidenceStore, ReachabilityExportPathResolver, ReachabilityExportWriter
-ReasoningEngine, ReasoningEngineFactory, ReasoningSessionCoordinator, ReasoningSessionState
-ReasoningSessionTransitions, ReflectionHelper, RegistryCoordinator, Render
-RenderAdapterResult, RenderBuffer, RenderCoordinator, RenderDefaults
-RenderDeliveryBinding, RenderDensityMode, RenderDensityPlan, RenderDensityPolicy
-RenderEngine, Renderer, RendererCore, RendererKind
-RendererResolver, RenderGate, RenderHost, RenderingCapabilities
-RenderingContext, RenderingContextAdapter, RenderingContract, RenderingDefaults
-RenderingHostLifecycleAdapterHelper, RenderingHostTarget, RenderingOrchestrator, RenderingQualification
-RenderingQualificationProbe, RenderingQualificationProbeResult, RenderingQualificationProbeSupport, RenderingRoute
-RenderingRouteResolver, RenderingService, RenderInput, RenderInvocationStage
-RenderInvoker, RenderModel, RenderModelBuilder, RenderPlan
-RenderPlanAdapter, RenderPlanAdapterDispatcher, RenderPlanAdapterQualification, RenderPlanAdapterQualificationRules
-RenderPlanBuilder, RenderPlanDiagnosticsSnapshot, RenderPlanHistorySnapshot, RenderPlanKind
-RenderPlanMetadataKeys, RenderPlanProjector, RenderPlanProviderMetadata, RenderPlanVocabularyDiagnosticsSnapshot
-RenderPlanVocabularyMetadata, RenderRequest, RenderState, RenderSurface
-RenderTarget, Repository, Request, ResetCoordinator
-ResolutionCoordinator, ResolutionResetCoordinator, ResolutionResult, Result
-ResultStrategy, Route, RuntimeConfiguration, SaveResult
-Scaffold, Selection, SelectionActions, SelectionAdapterHelper
-SelectionCache, SelectionCoordinator, SelectionDiagnosticsSnapshot, SelectionEventBinder
-SelectionInteractionCoordinator, SelectionQueries, SelectionReader, SelectionRequest
-SelectionResolution, SelectionService, SelectionServiceLoader, SelectionState
-SelectionStateBatchScope, SelectionSuppressionScope, SelectorManager, Service
-SessionDiagnosticsRecorder, SessionMilestoneRecorder, SessionMilestoneSnapshot, Shading
-ShadingCalculator, ShadingContext, ShadingDefaults, ShadingRenderer
-ShadingStrategy, SharedModelContext, SharedModelProvider, SmokeHeuristicsSnapshot
-Snapshot, StartupCoordinator, State, StateCoordinator
-StateEvaluator, StateSyncCoordinator, Strategy, StrategyComputationHelper
-StrategyCreationParameters, StrategyCutOverService, StrategyDecision, StrategyDecisionEvaluator
-StrategyFactory, StrategyFactoryBase, StrategyInfo, StrategyInput
-StrategyMetadata, StrategyParityContext, StrategyParityHarness, StrategyParityValidationService
-StrategyPlan, StrategyReachability, StrategyReachabilityEvidenceStore, StrategyReachabilityProbe
-StrategyReachabilityStoreProbe, StrategySelectionService, StrategySelectionStage, Surface
-SurfaceCoordinator, SurfaceFactory, SurfaceHelper, SyncActions
-TemporalHelper, Tick, TimeAggregationHelper, TimeAlignmentKernel
-TimeHelper, TimeRenderAggregationKernel, TimestampSink, Totals
-TrackedContentSurface, TrackedSurface, TransitionDiagnosticsSnapshot, TrendBackendKey
-TrendBackendQualification, TrendComputationStrategy, TrendController, TrendControllerAdapter
-TrendDefaults, TrendEventArgs, TrendMode, TrendRenderHost
-TrendRenderingCapabilities, TrendRenderingContract, TrendRenderingQualification, TrendRenderingQualificationProbe
-TrendRenderingQualificationProbeResult, TrendRenderingRoute, TrendRenderingRouteResolver, TrendRenderingService
-TrendRenderPlanAdapter, TrendRenderPlanBuilder, TrendRenderRequest, TrendRenderSurface
-TrendResult, TrendResultProvider, TrendStrategy, TrendStrategyFactory
-TrendUpdateCoordinator, UiBusyScopeLease, UiDefaults, UiDiagnosticsSnapshot
-UiHelper, UiRenderModel, UiRenderPlanAdapter, UiRenderSurface
-UiState, UiSurfaceDiagnosticsReader, UiSurfaceDiagnosticsSnapshot, UnitResolutionService
-Up, UpdateCoordinator, UpdateRequestedEventArgs, UserNotificationService
-ValidationActions, ValidationHelper, Viewport, VisibilityController
-VisibilityEventArgs, VisibilityHelper, VNextDiagnosticsSnapshot, VNextIntegrationCoordinator
-VNextLoadCoordinator, VNextLoadResult, VNextProgramRequestPlanner, VNextResolutionHelper
-VNextRoutePolicy, WorkflowCoordinator, WorkflowPlanRequest, WorkflowState
-YBuilder
-```
-
----
-
-## 2. Current As-Is Architecture / Code Map
-
-Descriptive map using the non-atomized vocabulary.
-
-```text
-CURRENT AS-IS CONCEPT MAP
-
-Authority / Truth Carriers
-├── AnalyticalAuthority
-├── AnalyticalIntent
-├── ProvenanceDescriptor
-├── ProvenanceTrustClass
-├── ExecutionResult
-├── ResultSet
-├── SelectionRequest
-├── LoadSnapshot
-└── SeriesSnapshot
-
-Reasoning / Capability Spine
-├── ReasoningEngine
-├── ReasoningSessionCoordinator
-├── CapabilityRequest
-├── CompositionKind
-├── ProgramPlanner
-├── ProgramRequest
-├── OperationKernel
-├── AlignmentKernel
-├── InterpretationBuilder
-├── InterpretationResult
-├── ConfidenceAnnotation
-├── OverlayPlan
-└── RenderPlanPipeline
-
-Program / Plan Structures
-├── Program
-├── ProgramRequest
-├── ProgramDeliveryTargetResolver
-├── RenderPlan
-├── RenderPlanProjector
-├── RenderPlanProviderMetadata
-├── RenderPlanVocabularyMetadata
-├── RenderDeliveryBinding
-├── HierarchyNodePlan
-├── InteractionPlan
-├── DensityPlan
-└── RenderPlanBuilder
-
-Contract / Boundary Structures
-├── ConsumerDeliveryContract
-├── ConsumerProviderContract
-├── ConsumerProviderRegistry
-├── BackendCandidateSet
-├── BackendCapabilities
-├── BackendSelector
-├── AdapterQualification
-├── AdapterQualificationRules
-├── AdapterDispatcher
-├── RenderingContract
-├── RenderingQualification
-├── QualificationProbe
-└── RenderingCapabilities
-
-Consumer / Interaction Structures
-├── InteractionRequest
-├── InteractionKind
-├── InteractionPlan
-├── InteractionModel
-├── TooltipManager
-├── TimestampSink
-├── TooltipFactory
-├── ProjectionInteractionFactory
-├── ProjectionInteraction
-├── EventArgs
-├── EventBinder
-└── Handlers
-
-Terminal Delivery Structures
-├── RenderEngine
-├── RenderModel
-├── RenderAdapterResult
-├── RenderPlanAdapter
-├── RenderSurface
-├── RendererResolver
-├── Renderer
-├── RendererKind
-├── SurfaceFactory
-├── Surface
-├── PanelHost
-├── LifecycleAdapter
-└── RenderTarget
-
-Process / Orchestration Mesh
-├── Coordinator
-├── Orchestrator
-├── Pipeline
-├── Stage
-├── Workflow
-├── Transition
-├── Route
-├── Resolver
-├── Selector
-├── Factory
-├── Loader
-├── ControllerFactory
-├── ControllerFactoryContext
-├── UpdateCoordinator
-├── RenderingOrchestrator
-├── LoadCoordinator
-├── OrchestrationPipeline
-├── PreparationStage
-├── SelectionStage
-└── InvocationStage
-
-Evidence / Diagnostics Sidecar
-├── DiagnosticsSnapshot
-├── EvidenceDiagnosticsBuilder
-├── EvidenceParityBuilder
-├── EvidenceBundle
-├── EvidenceRuntimePath
-├── DataResolutionHelper
-├── ParityEvaluator
-├── ParityExecutor
-├── EvidenceExportService
-├── SurfaceDiagnosticsReader
-├── RenderPlanDiagnosticsSnapshot
-├── VocabularyDiagnosticsSnapshot
-├── InterpretationDiagnosticsSnapshot
-├── ReachabilityDiagnosticsSnapshot
-├── ParityResult
-├── ReachabilityRecord
-├── ExportWriter
-├── Validator
-├── Probe
-├── Harness
-├── Recorder
-└── Writer
-
-State / Context Carriers
-├── State
-├── RuntimeState
-├── PresentationState
-├── ReasoningSessionState
-├── WorkflowState
-├── SelectionState
-├── DataContext
-├── FactoryContext
-├── SharedViewModelContext
-├── Context
-├── Result
-├── Request
-└── Snapshot
-
-Presentation / UI Shell
-├── MainView
-├── VendorView
-├── ViewModel
-├── PresentationSpine
-├── RenderingContextAdapter
-├── TabHost
-├── SelectionPanel
-├── Controller
-├── ControllerAdapter
-├── UiHelper
-├── Defaults
-├── BusyStateTracker
-├── VisibilityController
-├── SelectorManager
-└── ToggleManager
-```
-
-### 2.1 As-Is Reading
-
-```text
-Target spine exists:
-Authority -> Reasoning -> Program/Plan -> Contract/Boundary -> Delivery
-
-Old mesh remains active:
-Process/Orchestration + Rendering/Delivery + Presentation/UI still carry too much integration weight.
-
-Main risk:
-Older hubs and rendering contracts can absorb VNext authority before the contract boundary is fully locked.
-```
-
----
-
-## 3. Unique Atomized Terms
-
-Atomized terms extracted from Section 1.
-
-```text
-Access, Actions, Adapter, Aggregation, Alignment, Analytical, Annotation, Args
-Authority, Backend, Base, Batch, Binder, Binding, Binning, Breakdown
-Buffer, Builder, Bundle, Busy, Cache, Calculator, Candidate, Capabilities
-Capability, Catalog, Comparer, Composition, Computation, Computer, Confidence, Configuration
-Consumer, Content, Context, Contract, Contracts, Control, Controller, Conversion
-Converter, Coordinator, Core, Creation, Cut, Debug, Decision, Default
-Defaults, Definition, Delivery, Density, Descriptor, Diagnostics, Dispatcher, Display
-Engine, Entry, Evaluator, Event, Evidence, Execution, Executor, Export
-Expression, Factory, Failure, Fetcher, Filter, Formatter, Gateway, Guard
-Handlers, Harness, Helper, Hierarchy, History, Host, Intent, Interaction
-Interpretation, Interpretive, Invoker, Kernel, Key, Keys, Kind, Layout
-Lifecycle, Load, Loader, Manager, Mapper, Materializer, Metadata, Milestone
-Mode, Model, Notification, Operand, Operation, Operator, Operators, Orchestration
-Orchestrator, Overlay, Parity, Performance, Plan, Planner, Preparation, Prepared
-Presentation, Probe, Program, Projector, Provider, Qualification, Queries, Query
-Reader, Reasoning, Recorder, Registry, Request, Reset, Resolution, Resolver
-Result, Runtime, Scope, Selection, Selector, Service, Session, Shading
-Snapshot, Source, Spine, Stage, State, Strategy, Support, Suppression
-Surface, Sync, Target, Timing, Transition, Transitions, Trust, Validation
-Validator, Visibility, Visual, Vocabulary, Writer
-```
-
----
-
-## 4. Extension-Only Atomized Vocabulary
-
-Candidate language extensions for the enhanced target architecture.
-
-### 4.1 Extension Compound Concepts
-
-```text
-TruthEnvelope                 -> Truth, Envelope
-SemanticEnvelope              -> Semantic, Envelope
-AuthorityEnvelope             -> Authority, Envelope
-ProvenanceEnvelope            -> Provenance, Envelope
-CapabilityEnvelope            -> Capability, Envelope
-ResultEnvelope                -> Result, Envelope
-RequestEnvelope               -> Request, Envelope
-
-SemanticNeutrality            -> Semantic, Neutrality
-ConsumerNeutrality            -> Consumer, Neutrality
-BackendNeutrality             -> Backend, Neutrality
-VendorNeutrality              -> Vendor, Neutrality
-PresentationNeutrality        -> Presentation, Neutrality
-
-SurfaceModel                  -> Surface, Model
-DeliverySurface               -> Delivery, Surface
-InteractionSurface            -> Interaction, Surface
-ConsumerSurface               -> Consumer, Surface
-EvidenceSurface               -> Evidence, Surface
-
-DeliveryBinding               -> Delivery, Binding
-ExecutionBinding              -> Execution, Binding
-CapabilityBinding             -> Capability, Binding
-ProviderBinding               -> Provider, Binding
-ConsumerBinding               -> Consumer, Binding
-
-RuntimeBoundary               -> Runtime, Boundary
-VendorBoundary                -> Vendor, Boundary
-ConsumerBoundary              -> Consumer, Boundary
-AuthorityBoundary             -> Authority, Boundary
-EvidenceBoundary              -> Evidence, Boundary
-
-SemanticContract              -> Semantic, Contract
-CapabilityContract            -> Capability, Contract
-ConsumerContract              -> Consumer, Contract
-ProviderContract              -> Provider, Contract
-DeliveryContract              -> Delivery, Contract
-InteractionContract           -> Interaction, Contract
-EvidenceContract              -> Evidence, Contract
-
-InterpretationLayer           -> Interpretation, Layer
-ConfidenceLayer               -> Confidence, Layer
-OverlayLayer                  -> Overlay, Layer
-CapabilityLayer               -> Capability, Layer
-EvidenceLayer                 -> Evidence, Layer
-
-SemanticPolicy                -> Semantic, Policy
-CapabilityPolicy              -> Capability, Policy
-DeliveryPolicy                -> Delivery, Policy
-QualificationPolicy           -> Qualification, Policy
-EvidencePolicy                -> Evidence, Policy
-
-TrustModel                    -> Trust, Model
-ConfidenceModel               -> Confidence, Model
-ProvenanceModel               -> Provenance, Model
-CapabilityModel               -> Capability, Model
-InterpretationModel           -> Interpretation, Model
-
-SemanticProjection            -> Semantic, Projection
-CapabilityProjection          -> Capability, Projection
-ConsumerProjection            -> Consumer, Projection
-DeliveryProjection            -> Delivery, Projection
-EvidenceProjection            -> Evidence, Projection
-
-ResultLineage                 -> Result, Lineage
-DataLineage                   -> Data, Lineage
-ProvenanceLineage             -> Provenance, Lineage
-DecisionLineage               -> Decision, Lineage
-InterpretationLineage         -> Interpretation, Lineage
-
-SemanticIdentity              -> Semantic, Identity
-ResultIdentity                -> Result, Identity
-CapabilityIdentity            -> Capability, Identity
-ConsumerIdentity              -> Consumer, Identity
-ProviderIdentity              -> Provider, Identity
-
-SemanticRole                  -> Semantic, Role
-ConsumerRole                  -> Consumer, Role
-ProviderRole                  -> Provider, Role
-EvidenceRole                  -> Evidence, Role
-DeliveryRole                  -> Delivery, Role
-
-DecisionRecord                -> Decision, Record
-EvidenceRecord                -> Evidence, Record
-ProvenanceRecord              -> Provenance, Record
-InterpretationRecord          -> Interpretation, Record
-QualificationRecord           -> Qualification, Record
-
-AnalyticalSurface             -> Analytical, Surface
-AnalyticalEnvelope            -> Analytical, Envelope
-AnalyticalContract            -> Analytical, Contract
-AnalyticalBoundary            -> Analytical, Boundary
-AnalyticalLineage             -> Analytical, Lineage
-
-CompositionGraph              -> Composition, Graph
-CapabilityGraph               -> Capability, Graph
-DependencyGraph               -> Dependency, Graph
-EvidenceGraph                 -> Evidence, Graph
-ProvenanceGraph               -> Provenance, Graph
-
-SemanticKernel                -> Semantic, Kernel
-CapabilityKernel              -> Capability, Kernel
-InterpretationKernel          -> Interpretation, Kernel
-EvidenceKernel                -> Evidence, Kernel
-ProjectionKernel              -> Projection, Kernel
-
-SystemContour                 -> System, Contour
-ArchitectureContour           -> Architecture, Contour
-BoundaryContour               -> Boundary, Contour
-CapabilityContour             -> Capability, Contour
-
-SemanticGravity               -> Semantic, Gravity
-ArchitecturalGravity          -> Architectural, Gravity
-AuthorityGravity              -> Authority, Gravity
-CapabilityGravity             -> Capability, Gravity
-
-ArchitecturalInvariant        -> Architectural, Invariant
-SemanticInvariant             -> Semantic, Invariant
-ProvenanceInvariant           -> Provenance, Invariant
-CapabilityInvariant           -> Capability, Invariant
-BoundaryInvariant             -> Boundary, Invariant
-
-SemanticFlow                  -> Semantic, Flow
-AuthorityFlow                 -> Authority, Flow
-EvidenceFlow                  -> Evidence, Flow
-DeliveryFlow                  -> Delivery, Flow
-InteractionFlow               -> Interaction, Flow
-
-SystemGrammar                 -> System, Grammar
-ArchitectureGrammar           -> Architecture, Grammar
-CapabilityGrammar             -> Capability, Grammar
-InteractionGrammar            -> Interaction, Grammar
-EvidenceGrammar               -> Evidence, Grammar
-```
-
-### 4.2 Unique Extension Atoms
-
-```text
-Analytical
-Architecture
-Architectural
-Authority
-Backend
-Binding
-Boundary
-Capability
-Confidence
-Consumer
-Contour
-Contract
-Data
-Decision
-Delivery
-Dependency
-Envelope
-Evidence
-Execution
-Flow
-Grammar
-Graph
-Gravity
-Identity
-Interaction
-Interpretation
-Invariant
-Kernel
-Layer
-Lineage
-Model
-Neutrality
-Overlay
-Policy
-Projection
-Provider
-Provenance
-Qualification
-Record
-Request
-Result
-Role
-Semantic
-Surface
-System
-Trust
-Truth
-Vendor
-```
-
-### 4.3 Strongest Extension Candidates to Test
-
-```text
-Envelope
-Neutrality
-Surface
-Binding
-Lineage
-Identity
-Invariant
-Grammar
-```
-
-### 4.4 Foundational Discipline Atoms
-
-These atoms are added from the foundational project goals rather than from current codebase naming.
-
-```text
-Canonical
-Semantics
-Lossless
-Determinism
-Reversibility
-Fidelity
-Constraint
-Governance
-Traceability
-Transformation
-```
-
-Reason:
-
-```text
-single semantic authority
-lossless ingestion
-deterministic behavior
-reversible transformation
-fidelity preservation
-explicit constraint
-governance discipline
-traceable evolution
-```
-
-
----
-
-## 5. Current Vocabulary Families
-
-### 5.1 Authority / Truth
-
-```text
-AnalyticalAuthority
-ProvenanceDescriptor
-ProvenanceTrustClass
-AnalyticalIntent
-AnalyticalIntentSet
-AnalyticalExecutionResult
-AnalyticalResultSet
-MetricSelectionRequest
-MetricSeriesRequest
-MetricLoadSnapshot
-MetricSeriesSnapshot
-LoadedMetricSeries
-```
-
-Use:
-
-```text
-authority, provenance, intent, trust, request/result lineage
-```
-
-Risk:
-
-```text
-Request / Result / Snapshot must not become generic transport bags.
-```
-
-### 5.2 Reasoning / Capability
-
-```text
-ReasoningEngine
-ReasoningSessionCoordinator
-ReasoningSessionState
-AnalyticalCapabilityKind
-CapabilityRequest
-CompositionKind
-ChartProgramPlanner
-ChartProgram
-ChartSeriesProgram
-OperationKernel
-TimeSeriesAlignmentKernel
-AnalyticalInterpretationBuilder
-AnalyticalInterpretationResult
-ConfidenceAnnotation
-ConfidenceAnnotationEvaluator
-InterpretiveOverlayPlanner
-OverlayPlan
-AnalyticalRenderPlanPipeline
-```
-
-Use:
-
-```text
-reasoning, capability, composition, interpretation, confidence, overlay, analytical program
-```
-
-Risk:
-
-```text
-ChartProgram is currently chart-shaped, but its target role is broader analytical-program planning.
-```
-
-### 5.3 Program / Plan
-
-```text
-ChartProgram
-ChartProgramRequest
-ChartProgramKind
-ChartProgramDeliveryTargetResolver
-ChartRenderPlan
-ChartRenderPlanProjector
-ChartRenderPlanProviderMetadata
-ChartRenderPlanVocabularyMetadata
-ChartRenderDeliveryBinding
-ChartHierarchyNodePlan
-ChartSeriesPlan
-ChartInteractionPlan
-RenderDensityPlan
-RenderDensityPolicy
-*RenderPlanBuilder
-```
-
-Use:
-
-```text
-program planning, render planning, metadata preservation, delivery binding
-```
-
-Risk:
-
-```text
-Family-specific *RenderPlanBuilder types preserve old micro-framework pressure.
-```
-
-### 5.4 Contract / Boundary
-
-```text
-ConsumerDeliveryContract
-ConsumerProviderContract
-ConsumerProviderContracts
-ConsumerProviderRegistry
-ConsumerKind
-ChartBackendCandidateSet
-ChartBackendCapabilities
-ChartBackendSelector
-ChartRenderPlanAdapterQualification
-ChartRenderPlanAdapterQualificationRules
-ChartRenderPlanAdapterDispatcher
-*RenderingContract
-*RenderingQualification
-*RenderingQualificationProbe
-*BackendQualification
-*RenderingCapabilities
-```
-
-Use:
-
-```text
-contract seam, provider compatibility, backend qualification, delivery enforcement
-```
-
-Risk:
-
-```text
-Older *RenderingContract families may keep terminal delivery too central.
-```
-
-### 5.5 Consumer / Interaction
-
-```text
-InteractionRequest
-InteractionKind
-ChartInteractionPlan
-ChartInteractionModel
-ChartTooltipManager
-IChartTimestampSink
-IDistributionTooltipFactory
-*TooltipFactory
-DistributionPolarProjectionInteractionFactory
-IDistributionPolarProjectionInteraction
-*Tooltip
-*EventArgs
-EventBinder
-Handlers
-ConsumerKind
-```
-
-Use:
-
-```text
-consumer behavior, interaction relay, tooltip/timestamp/event handling
-```
-
-Risk:
-
-```text
-Interaction must relay behavior only; it must not own semantic interpretation or provider policy.
-```
-
-### 5.6 Rendering / Delivery
-
-```text
-ChartRenderEngine
-ChartRenderModel
-UiChartRenderModel
-ChartRenderAdapterResult
-*RenderPlanAdapter
-*RenderSurface
-ChartRendererResolver
-IChartRenderer
-ChartRendererKind
-LiveChartsChartRenderer
-EChartsChartRenderer
-ChartSurfaceFactory
-IChartSurface
-IChartPanelHost
-RenderingHostLifecycleAdapterHelper
-RenderingHostTarget
-ISyncfusionSunburstRenderTarget
-```
-
-Use:
-
-```text
-terminal delivery, render surfaces, backend/vendor adaptation
-```
-
-Risk:
-
-```text
-Rendering is still large; it must remain terminal and replaceable.
-```
-
-### 5.7 Process / Orchestration
-
-```text
-Coordinator
-Orchestrator
-Pipeline
-Stage
-Workflow
-Transition
-Route
-Resolver
-Selector
-Factory
-Loader
-Lifecycle
-ChartRenderingOrchestrator
-ChartUpdateCoordinator
-MetricLoadCoordinator
-ChartControllerFactory
-ChartControllerFactoryContext
-*OrchestrationPipeline
-*PreparationStage
-*StrategySelectionStage
-*RenderInvocationStage
-StrategySelectionService
-StrategyCutOverService
-VNextMainChartIntegrationCoordinator
-VNextSeriesLoadCoordinator
-```
-
-Use:
-
-```text
-workflow, sequencing, routing, transition, coexistence, orchestration
-```
-
-Risk:
-
-```text
-Process terms are overrepresented; old hubs may absorb VNext authority.
-```
-
-### 5.8 Evidence / Diagnostics
-
-```text
-DiagnosticsSnapshot
-EvidenceDiagnosticsBuilder
-EvidenceParityBuilder
-EvidenceParityBundle
-EvidenceRuntimePath
-EvidenceDataResolutionHelper
-*ParityEvaluator
-EvidenceStrategyParityExecutor
-MainChartsEvidenceExportService
-MainChartsUiSurfaceDiagnosticsReader
-RenderPlanDiagnosticsSnapshot
-RenderPlanVocabularyDiagnosticsSnapshot
-InterpretationDiagnosticsSnapshot
-ReachabilityDiagnosticsSnapshot
-UiSurfaceDiagnosticsSnapshot
-VNextDiagnosticsSnapshot
-ParityResult
-StrategyReachabilityRecord
-ReachabilityEvidenceExportResult
-ReachabilityExportWriter
-Validator
-Probe
-Harness
-Recorder
-Writer
-```
-
-Use:
-
-```text
-evidence, diagnostics, parity, reachability, validation, audit
-```
-
-Risk:
-
-```text
-Evidence must observe only; it must not control live routing, provider selection, or semantics.
-```
-
-### 5.9 State / Context / Snapshot
-
-```text
-ChartState
-MetricState
-UiState
-LoadState
-LoadRuntimeState
-PresentationState
-ReasoningSessionState
-WorkflowState
-SelectionState
-ChartDataContext
-ChartControllerFactoryContext
-Context
-Result
-Request
-Snapshot
-MetricLoadSnapshot
-MetricSeriesSnapshot
-DiagnosticsSnapshot
-SessionMilestoneSnapshot
-```
-
-Use:
-
-```text
-state, context, lifecycle, request/result carriers, snapshots
-```
-
-Risk:
-
-```text
-State and Context are the highest overload risks. No universal context. No generic state authority.
-```
-
-### 5.10 UI / Presentation
-
-```text
-MainChartsView
-SyncfusionChartsView
-MainWindowViewModel
-ChartPresentationSpine
-ChartRenderingContextAdapter
-ChartTabHost
-MetricSelectionPanel
-*ChartController
-*ChartControllerAdapter
-ChartAxisModel
-ChartFacetModel
-ChartLegendModel
-ChartOverlayModel
-ChartSeriesModel
-ChartUiHelper
-BusyStateTracker
-ChartVisibilityController
-SubtypeSelectorManager
-LegendToggleManager
-```
-
-Use:
-
-```text
-consumer surface, UI state, presentation adaptation, visual assembly
-```
-
-Risk:
-
-```text
-UI must not become the integration shell for authority, reasoning, provider policy, or evidence policy.
-```
-
----
-
-## 6. Weak / Overloaded Terms
-
-```text
-Actions
-Result
-Context
-State
-Helper
-Manager
-Coordinator
-Factory
-Resolver
-Selector
-Route
-Host
-Surface
-Model
-Request
-Snapshot
-Defaults
-Provider
-Registry
-```
-
-Rule:
-
-```text
-Keep as descriptive vocabulary.
-Do not let them hide authority, policy, routing, or semantic decisions.
-```
-
----
-
-## 7. Family / Vendor / Scenario Qualifiers
-
-```text
-Chart
-Main
-Secondary
-BarPie
-Cartesian
-Distribution
-Hourly
-Weekly
-WeekdayTrend
-Transform
-DiffRatio
-Normalized
-Combined
-Single
-Multi
-Bucket
-Cms
-Admin
-Syncfusion
-Sunburst
-LiveCharts
-ECharts
-Wpf
-DateRange
-Metric
-Subtype
-Toggle
-Zoom
-Theme
-Tooltip
-```
-
-Rule:
-
-```text
-Useful locally.
-Not target-architecture concepts unless explicitly discussing terminal delivery or current structure.
-```
-
----
-
-## 8. Step 1 Findings
-
-### 8.1 Target Spine Exists
-
-```text
-AnalyticalAuthority
-AnalyticalIntent
-CapabilityRequest
-CompositionKind
-ReasoningEngine
-ChartProgram
-AnalyticalInterpretationResult
-ConfidenceAnnotation
-OverlayPlan
-ConsumerDeliveryContract
-ConsumerProviderContract
-ConsumerProviderRegistry
-ChartRenderPlan
-ChartRenderDeliveryBinding
-ChartRenderPlanProviderMetadata
-ChartRenderPlanVocabularyMetadata
-EvidenceDiagnosticsBuilder
-```
-
-Meaning:
-
-```text
-The intended target architecture exists materially in code.
-```
-
-### 8.2 Old Mesh Remains Active
-
-```text
-ChartUpdateCoordinator
-ChartRenderingOrchestrator
-ChartControllerFactory
-ChartControllerFactoryContext
-MetricLoadCoordinator
-MainChartsView*Coordinator
-*ChartControllerAdapter
-*RenderingContract
-*RenderingRoute
-*RenderHost
-*RenderRequest
-ChartState
-ChartDataContext
-MainWindowViewModel
-```
-
-Meaning:
-
-```text
-Older coordination, rendering, and UI integration paths still carry significant architectural weight.
-```
-
-### 8.3 Current State
-
 ```text
-Direction: valid
-Target spine: visible
-Old mesh: active
-Risk: old hubs and rendering contracts absorbing VNext authority
-Status: yellow
+target spine exists
+old mesh remains active
+status is yellow
+migration proceeds by stabilization, seam hardening, consumption migration, convergence, then productization
 ```
 
----
+Current post-synopsis read after Phases 1-23:
 
-## 9. Candidate Target Vocabulary
-
-Carry these into Step 2.
-
-```text
-Authority
-Provenance
-Trust
-Intent
-Capability
-Composition
-Interpretation
-Confidence
-Overlay
-Program
-Plan
-Contract
-Boundary
-Provider
-Consumer
-Interaction
-Qualification
-Metadata
-Surface Model
-Delivery Binding
-Backend Capability
-Evidence
-Diagnostics
-Parity
-Reachability
-Audit
-```
-
-Possible refinements to test:
-
-```text
-Envelope
-Neutrality
-```
-
-Rule:
-
-```text
-Add only if the term improves the target architecture.
-```
-
----
-
-## 10. Terms to Scrutinize Later
-
-```text
-Controller
-ViewModel
-Renderer
-Route
-Host
-Manager
-Helper
-Args
-Defaults
-Tracker
-Context
-State
-Result
-Coordinator
-Factory
-Resolver
-Selector
-```
-
-Rule:
-
-```text
-Do not remove yet.
-Do not promote blindly.
-Reassess during grammar and target-architecture rebuild.
-```
-
----
-
-## 11. Full Atomized Vocabulary
-
-Combined atomized vocabulary: extracted atoms plus extension atoms.
-
-```text
-Access, Actions, Adapter, Aggregation, Alignment, Analytical, Annotation, Architectural
-Architecture, Args, Authority, Backend, Base, Batch, Binder, Binding
-Binning, Boundary, Breakdown, Buffer, Builder, Bundle, Busy, Cache
-Calculator, Candidate, Canonical, Capabilities, Capability, Catalog, Comparer, Composition
-Computation, Computer, Confidence, Configuration, Constraint, Consumer, Content, Context
-Contour, Contract, Contracts, Control, Controller, Conversion, Converter, Coordinator
-Core, Creation, Cut, Data, Debug, Decision, Default, Defaults
-Definition, Delivery, Density, Dependency, Descriptor, Determinism, Diagnostics, Dispatcher
-Display, Engine, Entry, Envelope, Evaluator, Event, Evidence, Execution
-Executor, Export, Expression, Factory, Failure, Fetcher, Fidelity, Filter
-Flow, Formatter, Gateway, Governance, Grammar, Graph, Gravity, Guard
-Handlers, Harness, Helper, Hierarchy, History, Host, Identity, Intent
-Interaction, Interpretation, Interpretive, Invariant, Invoker, Kernel, Key, Keys
-Kind, Layer, Layout, Lifecycle, Lineage, Load, Loader, Lossless
-Manager, Mapper, Materializer, Metadata, Milestone, Mode, Model, Neutrality
-Notification, Operand, Operation, Operator, Operators, Orchestration, Orchestrator, Overlay
-Parity, Performance, Plan, Planner, Policy, Preparation, Prepared, Presentation
-Probe, Program, Projection, Projector, Provenance, Provider, Qualification, Queries
-Query, Reader, Reasoning, Record, Recorder, Registry, Request, Reset
-Resolution, Resolver, Result, Reversibility, Role, Runtime, Scope, Selection
-Selector, Semantic, Semantics, Service, Session, Shading, Snapshot, Source
-Spine, Stage, State, Strategy, Support, Suppression, Surface, Sync
-System, Target, Timing, Traceability, Transformation, Transition, Transitions, Trust
-Truth, Validation, Validator, Vendor, Visibility, Visual, Vocabulary, Writer
-```
-
-### 11.1 Count
-
-```text
-Existing extracted atoms:       157
-Extension-only atoms:           48
-Foundational discipline atoms:  10
-Combined unique atoms:          192
-```
-
----
-
-## Step 1 Output
-
-```text
-The target architecture is visible in the vocabulary,
-but the old integration mesh is still structurally active.
-```
-
-Next:
-
-```text
-Step 2 — Reduce the full atomized vocabulary into a working architectural grammar.
-```
-
----
-
----
-
----
-
-
----
-
-## Step 1 Capability Notes
-
-These are information-only current-state capabilities derived from the same evidence used in Step 1.
-
-They are not closure claims and not migration instructions.
-
-```text
-VNext analytical intent exists.
-Reasoning-engine structures exist.
-Capability request and composition vocabulary exists.
-Analytical program planning exists.
-Interpretation result structures exist.
-Confidence annotation structures exist.
-Overlay planning structures exist.
-Render-plan projection exists.
-Provider-aware render-plan metadata exists.
-Vocabulary metadata exists.
-Consumer/provider contract structures exist.
-Provider registry structures exist.
-Backend capability and qualification structures exist.
-Adapter qualification structures exist.
-Evidence, parity, reachability, validation, and diagnostics structures exist.
-Current UI/presentation integration remains active.
-Legacy/VNext coexistence remains active.
-Older coordination and rendering hubs remain structurally important.
-```
-
-Current-state reading:
-
-```text
-The project has real target-aligned capabilities in code,
-but they are not yet fully protected by the final target architecture.
-```
-
----
-
-# Step 2 — Exploratory Architectural Grammar
-
-## Purpose
-
-```text
-Create a flexible grammar pool from the extracted and extended vocabulary.
-Do not promote concepts yet.
-Do not prune vocabulary yet.
-Do not finalize substitutions yet.
-Use this section only to prepare target-architecture language.
-```
-
-Step 2 remains exploratory.
-
-```text
-full language pool
--> possible compound grammar
--> grooming hypotheses
--> constrained terms
--> implementation-facing terms
--> generalization strip terms
-```
-
----
-
-## 1. Grammar Pools
-
-### 1.1 Authority / Truth
-
-```text
-AuthorityEnvelope
-ProvenanceEnvelope
-TruthEnvelope
-SemanticEnvelope
-ResultEnvelope
-RequestEnvelope
-ProvenanceDescriptor
-TrustModel
-SemanticIdentity
-ResultIdentity
-CapabilityIdentity
-DecisionLineage
-ResultLineage
-InterpretationLineage
-ProvenanceLineage
-SemanticInvariant
-ProvenanceInvariant
-```
-
-Use:
-
-```text
-truth, identity, trust, provenance, reversibility, lineage
-```
-
-Open:
-
-```text
-Envelope
-Lineage
-Identity
-Invariant
-```
-
----
-
-### 1.2 Reasoning / Capability
-
-```text
-ReasoningEngine
-CapabilityRequest
-CapabilityModel
-CapabilityPolicy
-CapabilityContract
-CapabilityGraph
-CapabilityKernel
-CompositionGraph
-AnalyticalProgram
-AnalyticalIntent
-SemanticPolicy
-InterpretationModel
-InterpretationKernel
-ConfidenceModel
-OverlayLayer
-SemanticProjection
-CapabilityProjection
-```
-
-Use:
-
-```text
-reasoning, capability, composition, interpretation, confidence, overlays
-```
-
-Open:
-
-```text
-Strategy -> Capability / Policy / distinct
-Operation -> Capability / Composition / primitive
-Kernel -> computation-core only?
-Interpretation -> promoted concept?
-```
-
----
-
-### 1.3 Program / Plan
-
-```text
-AnalyticalProgram
-ProgramRequest
-ProgramPlan
-ExecutionPlan
-RenderPlan
-InteractionPlan
-DeliveryPlan
-DensityPlan
-SurfaceModel
-ProgramDeliveryBinding
-DeliveryBinding
-ExecutionBinding
-ProviderBinding
-ConsumerBinding
-```
-
-Use:
-
-```text
-planned analytical work before consumer-specific delivery
-```
-
-Open:
-
-```text
-ChartProgram vs AnalyticalProgram
-Plan vs Program
-Route vs Binding
-SurfaceModel placement
-```
-
----
-
-### 1.4 Contract / Boundary
-
-```text
-SemanticContract
-CapabilityContract
-ProviderContract
-ConsumerContract
-DeliveryContract
-InteractionContract
-EvidenceContract
-ContractBoundary
-ProviderBoundary
-ConsumerBoundary
-RuntimeBoundary
-VendorBoundary
-AuthorityBoundary
-EvidenceBoundary
-QualificationPolicy
-BackendCapability
-BackendQualification
-AdapterQualification
-BoundaryInvariant
-NeutralityInvariant
-```
-
-Use:
-
-```text
-lawful crossings, neutrality, compatibility, qualification
-```
-
-Open:
-
-```text
-Contract / Boundary: one container or paired concepts?
-Qualification: promoted concept?
-Neutrality: principle / property / concept?
-RenderingContract -> DeliveryContract / ProviderContract?
-```
-
----
-
-### 1.5 Projection / Translation
-
-```text
-SemanticProjection
-CapabilityProjection
-ConsumerProjection
-DeliveryProjection
-EvidenceProjection
-ProjectionKernel
-Projector
-Adapter
-Resolver
-Selector
-Mapper
-Converter
-Formatter
-Materializer
-```
-
-Use:
-
-```text
-translation across boundaries without semantic authority
-```
-
-Open:
-
-```text
-Projection bridge status
-Adapter / Resolver / Selector separation
-Mapper / Converter / Formatter / Materializer separation
-Policy leakage in translation roles
-```
-
----
-
-### 1.6 Consumer / Interaction
-
-```text
-ConsumerSurface
-ConsumerState
-ConsumerRole
-ConsumerContract
-ConsumerBinding
-ConsumerAdapter
-InteractionSurface
-InteractionState
-InteractionRequest
-InteractionContract
-InteractionFlow
-InteractionGrammar
-EventBinding
-```
-
-Use:
-
-```text
-consumer behavior, local state, event flow, interaction relay
-```
-
-Open:
-
-```text
-Controller -> ConsumerAdapter?
-ViewModel -> ConsumerState?
-Event -> InteractionFlow / EventBinding?
-Interaction separate from Consumer?
-```
-
----
-
-### 1.7 Terminal Delivery
-
-```text
-DeliverySurface
-DeliveryAdapter
-DeliveryBinding
-DeliveryContract
-DeliveryPolicy
-DeliveryFlow
-RenderSurface
-RenderAdapter
-RenderTarget
-BackendCapability
-VendorBoundary
-RuntimeBoundary
-Lifecycle
-```
-
-Use:
-
-```text
-replaceable terminal infrastructure
-```
-
-Open:
-
-```text
-Renderer -> DeliveryAdapter?
-Host -> RuntimeBoundary / DeliverySurface?
-Surface -> SurfaceModel / DeliverySurface?
-VendorBoundary promoted?
-```
-
----
-
-### 1.8 Governance / Evidence
-
-```text
-EvidenceLayer
-EvidenceContract
-EvidenceSurface
-EvidenceRecord
-EvidenceGraph
-EvidenceFlow
-EvidenceKernel
-EvidenceProjection
-DiagnosticsSnapshot
-ParityEvidence
-ReachabilityEvidence
-ValidationEvidence
-AuditRecord
-QualificationRecord
-DecisionRecord
-```
-
-Use:
-
-```text
-observation, proof, validation, audit, parity, reachability
-```
-
-Open:
-
-```text
-Diagnostics -> Evidence when proof?
-Diagnostics separate for runtime inspection?
-EvidenceContract real target concept?
-Evidence observes contract seams?
-```
-
----
-
-### 1.9 Process / Execution
-
-```text
-Workflow
-ExecutionBinding
-ExecutionPlan
-ProcessCoordinator
-OrchestrationPipeline
-Stage
-Transition
-FallbackPolicy
-CoexistencePolicy
-RuntimeState
-Lifecycle
-Observability
-```
-
-Use:
-
-```text
-sequencing, workflow, fallback, coexistence, transition
-```
-
-Open:
-
-```text
-Coordinator / Orchestrator -> ProcessCoordinator?
-Pipeline / Stage: target or implementation?
-Factory -> Provider / Registry / Builder / Adapter?
-Observability: process-side / evidence-side / both?
-```
-
----
-
-## 2. Grooming Hypotheses
-
-| Current / source language | Candidate target language | Test reason |
-|---|---|---|
-| `ChartProgram` | `AnalyticalProgram` | reduce chart-first bias |
-| `Request`, `Result`, `Snapshot` | `Envelope` | preserve provenance / confidence / lineage |
-| `Route` | `DeliveryBinding` | express lawful binding |
-| `Renderer` | `DeliveryAdapter` | generalize delivery |
-| `Controller` | `ConsumerAdapter` | avoid controller-first architecture |
-| `ViewModel` | `ConsumerState` | keep state consumer-side |
-| `Host` | `RuntimeBoundary` / `DeliverySurface` | reduce host ambiguity |
-| `Diagnostics` | `Evidence` | when proof/audit is intended |
-| `Manager` | `Policy` / `Coordinator` / `Registry` | expose ownership |
-| `Factory` | `Builder` / `Provider` / `Registry` / `Adapter` | expose actual role |
-| `Selection` | `Qualification` | when compatibility is tested |
-| `Layer` | `Boundary` | when crossing rules matter |
-| UI/render model | `SurfaceModel` | preserve consumer neutrality |
-
-Rule:
-
-```text
-Hypotheses only.
-No removals yet.
-No forced renames yet.
-```
-
----
-
-## 3. Constrained Terms
-
-```text
-Context
-State
-Request
-Result
-Snapshot
-Factory
-Coordinator
-Resolver
-Selector
-Builder
-Adapter
-Provider
-Registry
-Surface
-Model
-```
-
-Required checks:
-
-```text
-owner
-authority carried
-boundary crossed
-meaning vs transport
-semantic / process / consumer / delivery / evidence placement
-```
-
----
-
-## 4. Likely Implementation-Facing Terms
-
-```text
-Controller
-ViewModel
-Renderer
-Route
-Host
-Manager
-Helper
-Args
-Defaults
-Tracker
-```
-
-Candidate target-language alternatives:
-
-```text
-Controller -> ConsumerAdapter
-ViewModel  -> ConsumerState
-Renderer   -> DeliveryAdapter
-Route      -> DeliveryBinding
-Host       -> RuntimeBoundary / DeliverySurface
-Manager    -> Policy / Coordinator / Registry / StateOwner
-Helper     -> Adapter / Projector / Formatter / Utility
-Args       -> Request / Event / Contract
-Defaults   -> Policy / Configuration / Convention
-Tracker    -> Recorder / State / Evidence
-```
-
-Rule:
-
-```text
-Keep available.
-Do not promote blindly.
-Reassess during target architecture design.
-```
-
----
-
-## 5. Generalization Strip Terms
-
-```text
-Chart
-Main
-Secondary
-BarPie
-Cartesian
-Distribution
-Hourly
-Weekly
-WeekdayTrend
-Transform
-DiffRatio
-Normalized
-Combined
-Single
-Multi
-Bucket
-Cms
-Admin
-Syncfusion
-Sunburst
-LiveCharts
-ECharts
-Wpf
-DateRange
-Metric
-Subtype
-Toggle
-Zoom
-Theme
-Tooltip
-```
-
-Use for:
-
-```text
-current code
-family slices
-vendor delivery
-concrete migration work
-terminal rendering detail
-```
-
-Do not use for:
-
 ```text
-target architecture
-semantic authority
-capability grammar
-consumer-general contracts
-evidence model
+Phases 1-23 proved and hardened the structural spine.
+The target architecture is now partially implemented, not merely described.
+Capability, contract, render-plan, metadata, delivery-binding, and evidence seams are materially stronger.
+MovingAverage and TabularSummary prove that new capability and independent consumers can grow through the spine.
+Legacy bridges are classified and bounded, but not all are retired.
+The primary remaining convergence blocker is ChartDataContext as the dominant UI consumption model.
+LegacyChartProgramProjector, VNextDataResolutionHelper, LegacyMetricViewGateway, and parity/evidence bridge paths remain blocked by that UI consumption model.
+The next migration track is consumption migration and convergence: move production UI consumption onto VNext-native contracts, reduce ChartDataContext dependency, retire bridge paths selectively, and consolidate only after repeated family slices prove the same shape.
 ```
 
----
+Migration continuation rule:
 
-## 6. Step 2 Output
-
 ```text
-Flexible grammar pool established.
-Concept promotion deferred to Step 3.
-No pruning or binding semantic rules applied yet.
+Phases 1-23 are completed structural spine migration.
+Phases 24-35 are consumption migration and convergence.
+Phases 36+ are post-convergence formalisation and bounded-generativity alignment.
+Do not treat Phase 23 as full architectural completion.
+Do not add new capability as the next priority unless it directly supports consumption migration.
 ```
 
-Next:
+Scaffold audit consolidation rule:
 
 ```text
-Step 3 — Promote core concepts and define semantic rules.
+Early scaffold audit files from Phases 3-14 are historical evidence, not active working documents for Phase 24+.
+Their reusable constraints are carried forward in this compact plan where they support consumption migration and convergence.
+Do not require future agents to read the individual scaffold audits by default.
+Archive the individual scaffold audit files after accepting this consolidated carry-forward state.
+Regenerate structural artifacts for Phase 24+ instead of relying on Phase 3 density numbers.
 ```
-
-
----
-
----
-
-# Step 3 — Promoted Core Concepts and Semantic Rules
-
-## Purpose
-
-Promote selected vocabulary into binding architectural concepts.
 
-Step 3 is no longer exploratory language gathering. It defines the concepts that should guide ownership, naming, boundaries, implementation decisions, and future refactoring.
+Key carry-forward implications:
 
 ```text
-vocabulary
--> promoted concept
--> architectural force
--> misuse boundary
--> implementation implication
+ChartDataContext remains the primary consumption-model blocker.
+ChartRenderPlan remains the strongest current consumer-neutral surface candidate.
+LegacyChartProgramProjector, VNextDataResolutionHelper, LegacyMetricViewGateway, and parity/evidence bridge paths remain transitional or validation-adjacent until replacement, parity, smoke, metadata, and provenance evidence exists.
+Evidence observes; it must not route live behavior.
+UI, adapters, renderers, evidence, and terminal delivery must not own analytical authority.
 ```
 
-Rule:
+Prime Directive alignment:
 
 ```text
-A promoted concept is not just a useful word.
-It must improve architectural direction, ownership, or enforcement.
+The migration must preserve coherence while enabling bounded generativity.
 ```
 
----
+Formal concern to carry forward:
 
-## 1. Promoted Concept Set
-
-| Concept | Definition | Architectural Force | Misuse Boundary | Implementation Implication |
-|---|---|---|---|---|
-| **Authority** | The right to define semantic truth, legitimacy, and canonical meaning. | Meaning flows from authority downward. | Do not confuse with orchestration or coordination. | UI, rendering, evidence, and process must not invent semantic truth. |
-| **Canonical Semantics** | The single authoritative meaning assigned to data, requests, results, and interpretations. | Prevents competing meanings for the same thing. | Do not confuse with labels, display text, or convenience naming. | Semantic meaning must be defined upstream and preserved through contracts. |
-| **Lossless Fidelity** | Preservation of original meaning, structure, and recoverable detail through ingestion and transformation. | Prevents destructive simplification. | Do not confuse with visual fidelity. | Transformations must preserve or explicitly annotate loss. |
-| **Determinism** | Repeatable behavior for the same inputs, rules, and context. | Makes reasoning, testing, and audit possible. | Do not confuse with lack of flexibility. | Analytical and migration behavior should be reproducible unless variation is explicit. |
-| **Reversibility** | Ability to trace or recover prior state, source meaning, or transformation path. | Protects experimentation and correction. | Do not confuse with undo UI only. | Transform/projection paths should preserve lineage and recovery information. |
-| **Constraint** | Explicit lawful limit on capability, composition, delivery, or interpretation. | Prevents unbounded feature growth and hidden policy. | Do not confuse with arbitrary restriction. | Constraints should be visible in contracts, policies, and qualifications. |
-| **Governance** | Oversight discipline for rules, evidence, constraints, audit, and architectural legitimacy. | Keeps evolution aligned with project law. | Do not confuse with diagnostics. | Governance shapes guardrails without becoming live semantic execution. |
-| **Provenance** | The lineage of where data, meaning, decisions, and derived results came from. | Every meaningful result must remain traceable. | Do not reduce to diagnostics. | Results, envelopes, interpretations, and evidence must preserve source lineage. |
-| **Envelope** | A truth-carrying wrapper for request/result/state crossing boundaries. | Preserves meaning, provenance, confidence, and reversibility across seams. | Do not use as a generic bag. | Requests/results/snapshots that cross boundaries should carry semantic context explicitly. |
-| **Intent** | The declared analytical purpose before execution. | Drives program/capability selection. | Do not confuse with UI event or user gesture. | Analytical work should begin from intent, not from presentation state. |
-| **Capability** | A reusable analytical ability that can be requested, composed, qualified, and delivered. | Replaces feature-by-feature growth. | Do not confuse with visible feature. | New analytical behavior should enter through capability structures, not UI/controller paths. |
-| **Composition** | Lawful combination of capabilities, operations, results, or overlays. | Enables higher-order analytical behavior. | Do not confuse with builder mechanics. | Composition rules belong upstream of delivery and presentation. |
-| **Interpretation** | Explanation or semantic reading of analytical output. | Makes meaning explicit without mutating truth. | Do not confuse with rendering or annotation text. | Interpretive output should be separate from raw computation and presentation. |
-| **Confidence** | Explicit certainty, risk, or trust annotation. | Qualifies meaning without changing the result. | Do not use as filtering authority unless explicitly promoted by policy. | Confidence remains annotation unless a later policy consumes it. |
-| **Overlay** | Additional interpretive layer applied over authoritative output. | Adds context without altering canonical truth. | Do not confuse with rendering overlay. | Overlay planning belongs in reasoning/interpretation, not terminal rendering. |
-| **Program** | Planned analytical work derived from intent and capability. | Bridges reasoning to contract-bound delivery. | Do not equate with chart-only implementation. | Prefer target language like AnalyticalProgram when generalizing. |
-| **Contract** | A declared handoff shape between ownership containers. | Makes boundaries explicit and testable. | Do not use as passive DTO naming. | Contracts must prevent semantic leakage and consumer/vendor assumptions. |
-| **Boundary** | A governed crossing between responsibility containers. | Controls what may pass and what may not. | Do not confuse with folder/layer grouping. | Boundary violations should be testable or reviewable. |
-| **Neutrality** | Freedom from premature UI, vendor, backend, or consumer assumptions. | Protects upstream structures from terminal concerns. | Do not confuse with abstraction for its own sake. | Reasoning/program/contracts should stay consumer/backend neutral until the correct boundary. |
-| **Qualification** | Lawful acceptance of provider, backend, adapter, or delivery compatibility. | Prevents invalid handoffs. | Do not reduce to selection. | Selection should be justified by qualification where compatibility matters. |
-| **Provider** | A source of capability, delivery, data, or implementation fulfilment behind a contract. | Supplies capability without owning consumer meaning. | Do not let provider become authority. | Provider registration and lookup must respect contracts and qualification. |
-| **Consumer** | A downstream user of authoritative output. | Receives meaning without owning truth. | Do not equate with presentation only. | Charts, exports, APIs, plugins, and future clients are consumer families. |
-| **Interaction** | Consumer-side behavior, gesture, event, or flow. | Relays behavior without redefining meaning. | Do not confuse with semantic intent. | Tooltips, events, timestamps, and binders must not own provider/semantic policy. |
-| **SurfaceModel** | Consumer-neutral shape prepared for delivery or interaction. | Prevents raw semantic internals from leaking into terminal presentation. | Do not confuse with UI model or render model. | Surface models sit between contract and delivery/consumer adaptation. |
-| **Binding** | Lawful connection between plan, provider, consumer, execution, or delivery. | Replaces ad hoc route semantics where compatibility matters. | Do not use as hidden policy. | DeliveryBinding / ProviderBinding should be inspectable and qualified. |
-| **Delivery** | Terminal realization of output through renderer, export, host, or vendor adapter. | Keeps output mechanisms replaceable. | Do not confuse with semantics. | Rendering/export/vendor lifecycle belongs downstream of contracts. |
-| **Evidence** | Observational proof, parity, diagnostics, audit, reachability, or validation. | Proves behavior without controlling it. | Do not let evidence become live authority. | Evidence reads and records; it must not route, select, or mutate semantic output. |
-| **Audit** | Durable review path for decisions, evidence, provenance, and migration progress. | Supports reversibility and accountability. | Do not confuse with runtime logging only. | Migration and architecture claims should remain auditable. |
-
----
-
-## 2. Candidate Grammar Spine
-
-This spine is the promoted conceptual flow used to shape later diagrams.
-
 ```text
-Authority
--> Envelope
--> Provenance
--> Intent
--> Capability
--> Composition
--> Interpretation
--> Confidence
--> Overlay
--> Program
--> Contract
--> Boundary
--> Neutrality
--> Qualification
--> Provider
--> Consumer
--> Interaction
--> SurfaceModel
--> Binding
--> Delivery
--> Evidence
--> Audit
-```
+R = requirement space
+L = formal architectural language / grammar
+P = implementation plan
+C = implemented construction set
+E = documented architectural expressions
 
-Short form:
-
-```text
-Authority
--> Capability
--> Program
--> Contract
--> Consumer
--> Delivery
--> Evidence
+Required future pressure:
+- improve R -> L coverage
+- reduce harmful many-to-one language collapse
+- identify missing formal language where requirements cannot be expressed without semantic loss
+- evolve from architectural grammar toward construction algebra
 ```
 
 Interpretation:
 
 ```text
-Authority defines.
-Capability reasons.
-Program plans.
-Contract constrains.
-Consumer receives.
-Delivery terminalizes.
-Evidence proves.
+Phases 24-35 remain convergence work.
+Phases 36+ become post-convergence formalisation and bounded-generativity alignment.
+Do not force post-convergence algebra into the active convergence phases.
+Do not treat Phase 26 Operation Chain as full algebra implementation; treat it as the first bounded pressure test.
+```
+
+Implementation autonomy boundary:
+
+```text
+An AI IDE agent may continue implementing Phases 24-35 sequentially under this plan without reopening the broader theoretical/formal questions.
+
+The broader Prime Directive, coverage, construction-algebra, and bounded-generativity questions must be revisited before starting Phase 36+.
+
+Phase 35 convergence evidence and Phase 26 Operation Chain findings should be used as the primary inputs for that later refocus.
 ```
 
 ---
 
-## 3. Promoted Concept Families
-
-### 3.1 Authority Family
+# 1. Execution Rules
 
 ```text
-Authority
-Provenance
-Envelope
-Trust
-Lineage
-Identity
-Invariant
+Work top-to-bottom.
+Complete one phase before starting the next.
+Prefer narrow, test-backed changes.
+Preserve behavior.
+Preserve tests.
+Refactor only when it reduces sprawl, duplication, contradiction, or exception-driven structure.
+Prefer generalized seams only after shared shape is proven.
+Do not rename or move code cosmetically.
+Do not retire ChartDataContext-related bridges until replacement, parity, smoke, metadata, and provenance evidence exist.
+Update progress only when tests, generated evidence, or code inspection support completion.
+```
+
+---
+
+# 2. Completed Structural Spine Migration Summary — Phases 1-23
+
+This section intentionally compresses completed phase detail. Historical specifics remain in the referenced audit notes, tests, generated artifacts, and progress log.
+
+## Phase 1 — Establish Current Baseline
+
+```text
+Status: Complete
+Core outcome: Baseline artifacts, counts, density, high-risk hubs, high-density carriers, and legacy/VNext coexistence paths were captured before migration work proceeded.
+```
+
+## Phase 2 — Fix Generated Governance References
+
+```text
+Status: Complete
+Core outcome: dependency-summary generation was corrected so generated governance output references the architectural vocabulary alongside existing boundary authorities.
+```
+
+## Phase 3 — Classify Dependency Density
+
+```text
+Status: Complete
+Core outcome: Dense dependencies were classified before refactoring; no actual drift was confirmed from density evidence alone.
+```
+
+## Phase 4 — Identify Refactoring Opportunities
+
+```text
+Status: Complete
+Core outcome: Refactoring candidates were classified; no speculative or cosmetic code movement was allowed without test-backed justification.
+```
+
+## Phase 5 — Lock Authority / Semantics / Provenance / Fidelity
+
+```text
+Status: Complete
+Core outcome: Provenance, metadata, confidence immutability, and semantic-fidelity guardrails were established across key VNext handoffs.
+```
+
+## Phase 6 — Cap Integration Hubs
+
+```text
+Status: Complete
+Core outcome: Old integration hubs were bounded so they may coordinate but must not absorb authority, capability, provider, evidence, or delivery ownership.
+```
+
+## Phase 7 — Harden Contract / Boundary / Qualification Seam
+
+```text
+Status: Complete
+Core outcome: Contract, boundary, qualification, binding, and metadata-preservation seams were hardened as the required downstream handoff.
+```
+
+## Phase 8 — Preserve Projection as Non-Authoritative Translation
+
+```text
+Status: Complete
+Core outcome: Projectors, adapters, dispatchers, resolvers, and related translation roles were guarded against owning authority, policy, evidence, confidence, or interpretation.
+```
+
+## Phase 9 — Thin Consumer / Interaction Layer
+
+```text
+Status: Complete
+Core outcome: Controllers, adapters, events, tooltips, timestamp sinks, ViewModel/state helpers, and interaction flows were bounded as non-authoritative relays.
+```
+
+## Phase 10 — Elevate SurfaceModel Seam
+
+```text
+Status: Complete
+Core outcome: ChartRenderPlan was confirmed as the consumer-neutral, metadata-preserving surface seam before terminal delivery.
+```
+
+## Phase 11 — Demote Terminal Delivery
+
+```text
+Status: Complete
+Core outcome: Rendering, backend, vendor, host, and lifecycle code were constrained as downstream, replaceable, semantically non-authoritative delivery concerns.
+```
+
+## Phase 12 — Preserve Evidence as Observational
+
+```text
+Status: Complete
+Core outcome: Evidence, diagnostics, parity, reachability, validation, and audit paths were guarded so they observe and prove rather than control live behavior.
+```
+
+## Phase 13 — Add Governance Constraints
+
+```text
+Status: Complete
+Core outcome: Future vocabulary, concepts, capabilities, transformations, consumers, backends, and evidence paths were tied to governed architectural growth rules.
+```
+
+## Phase 14 — Resume Capability Expansion
+
+```text
+Status: Complete
+Core outcome: Distribution, WeekdayTrend, and Transform were carried through the target spine with explicit capability contracts and runtime metadata preservation.
+```
+
+## Phase 15 — Validate Non-Chart Consumer Path
+
+```text
+Status: Complete
+Core outcome: Evidence export proved a non-chart consumer can use the same intent/capability/delivery/provider seam without render-plan assumptions.
+```
+
+## Phase 16 — Retire Legacy Bypasses Selectively
+
+```text
+Status: Complete
+Core outcome: Proven metadata inference bypasses were removed; flexible fallback, parity, and runtime bridge paths were preserved where still needed.
+```
+
+## Phase 17 — Consolidate Repeated Family Patterns Last
+
+```text
+Status: Complete
+Core outcome: BarPie adopted the proven explicit capability-contract pattern while preserving real family differences and leaving Syncfusion hierarchy delivery distinct.
+```
+
+## Phase 18 — Complete CapabilityContract Carriage Across Remaining Families
+
+```text
+Status: Complete
+Core outcome: SyncfusionSunburst gained explicit capability-contract carriage while preserving HierarchyChart delivery semantics; MainChart carriage was deferred to the Phase 19 hub path.
+```
+
+## Phase 19 — Migrate Hub Responsibilities to the Target Spine
+
+```text
+Status: Complete
+Core outcome: Render-plan construction and VNext route policy were moved out of hubs into dedicated target-spine builders/routers; hubs remain coordination-focused.
+```
+
+## Phase 20 — Thin the Chart-Family Adapter Layer
+
+```text
+Status: Complete
+Core outcome: Chart-family adapters were thinned by extracting model-building, overlay-building, distribution input, and weekday computation work into focused builders/invokers.
+```
+
+## Phase 21 — Classify and Bound Integration Seams
+
+```text
+Status: Complete
+Core outcome: Named bridges were classified as permanent, bounded, or retirable; the obsolete UseRenderPlanAdapter=false legacy branch was removed.
+```
+
+## Phase 22 — Prove Spine End-to-End with New Capability and Independent Consumers
+
+```text
+Status: Complete
+Core outcome: MovingAverage proved new capability growth through the spine with independent chart and API consumers, no old hub changes, and no legacy bridge requirement.
+```
+
+## Phase 23 — Bound Composition Roots and Remaining DI Concentration
+
+```text
+Status: Complete
+Core outcome: Transform adapter coordinator construction was moved into a composition factory; remaining local DI defaults were classified and bounded.
+```
+
+---
+
+# 3. Produced Artifact Index
+
+## Completed Phases 1-23
+
+| Phase | Artifact Type | Files / Evidence |
+|---|---|---|
+| 1 | Generated baseline | `project-tree.txt`; `codebase-index.md`; `dependency-summary.md`; `type-dependency-diagram.md`; `documents/Type Dependencies Diagram.md` |
+| 2 | Generator/script update | `scripts/Generate-DependencySummary.ps1`; regenerated `dependency-summary.md` |
+| 3 | Audit note | `documents/DataVisualiser_Dependency_Density_Audit.md` |
+| 4 | Audit note | `documents/DataVisualiser_Refactoring_Opportunity_Audit.md` |
+| 5 | Audit note / guardrails | `documents/DataVisualiser_Authority_Provenance_Fidelity_Audit.md`; VNext provenance/fidelity tests |
+| 6 | Audit note / guardrails | `documents/DataVisualiser_Integration_Hub_Containment_Audit.md`; `ArchitectureGuardrailTests` |
+| 7 | Audit note / guardrails | `documents/DataVisualiser_Contract_Boundary_Qualification_Audit.md`; contract/boundary tests |
+| 8 | Audit note / guardrails | `documents/DataVisualiser_Projection_Translation_Containment_Audit.md`; projection/adapter guardrails |
+| 9 | Audit note / guardrails | `documents/DataVisualiser_Consumer_Interaction_Containment_Audit.md`; consumer/interaction guardrails |
+| 10 | Audit note / guardrails | `documents/DataVisualiser_Surface_Model_Seam_Audit.md`; surface-model guardrails |
+| 11 | Audit note / guardrails | `documents/DataVisualiser_Terminal_Delivery_Boundary_Audit.md`; terminal-delivery guardrails |
+| 12 | Audit note / guardrails | `documents/DataVisualiser_Evidence_Observability_Audit.md`; evidence observability guardrails |
+| 13 | Audit note / guardrails | `documents/DataVisualiser_Governance_Constraints_Audit.md`; governance guardrails |
+| 14 | Capability-slice audit / implementation | `documents/DataVisualiser_Distribution_Capability_Slice_Audit.md`; Distribution/WeekdayTrend/Transform contract-carriage tests |
+| 15 | Non-chart consumer proof | `ConsumerDeliveryEvidence`; `AnalyticalRenderPlanPipeline.ExecuteForConsumerAsync`; evidence export tests |
+| 16 | Bypass retirement | explicit metadata contract requirements; provider/vocabulary metadata tests |
+| 17 | Family-pattern consolidation | `BarPieCapabilityContract`; BarPie render-plan tests |
+| 18 | Remaining family contract carriage | `SyncfusionSunburstCapabilityContract`; Syncfusion hierarchy-contract tests |
+| 19 | Hub responsibility migration | `CartesianMetricRenderPlanBuilder`; `CartesianMetricCapabilityContract`; `VNextMetricLoadRouter`; hub guardrails |
+| 20 | Adapter thinning | `SyncfusionSunburstRenderModelBuilder`; `CartesianMetricOverlaySeriesBuilder`; `DistributionRenderInputBuilder`; `WeekdayTrendComputationInvoker`; builder/invoker tests |
+| 21 | Seam classification / branch retirement | `UseRenderPlanAdapter` retired; bridge classification captured |
+| 22 | End-to-end spine proof | MovingAverage; TabularSummary backend/provider; API consumer; end-to-end tests |
+| 23 | Composition-root cleanup | `TransformDataPanelControllerAdapterCompositionFactory`; composition guardrail |
+
+## Planned Continuation Phases 24-47
+
+| Phase | Artifact Type | Expected Files |
+|---|---|---|
+| Phase 24 | Audit note | `documents/DataVisualiser_ChartDataContext_Migration_Audit.md` |
+| Phase 25 | Contract specification / guardrails | `documents/DataVisualiser_VNext_Native_UI_Consumption_Contract.md`; UI consumption contract tests |
+| Phase 26 | Feature proving slice | `documents/DataVisualiser_Operation_Chain_Workbench_MVP_Audit.md`; operation-chain execution/provenance/evidence tests |
+| Phase 27 | First production-family migration audit | `documents/DataVisualiser_First_VNext_Native_Family_Migration_Audit.md`; family migration tests |
+| Phase 28 | Bridge retirement note | `documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md`; parity / metadata / UI behavior tests |
+| Phase 29 | Multi-family migration tracker | `documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md`; per-family migration tests |
+| Phase 30 | Surface-model convergence audit | `documents/DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md`; surface contract tests |
+| Phase 31 | UI / interaction / state thinning audit | `documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md`; UI guardrail tests |
+| Phase 32 | Delivery demotion audit | `documents/DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md`; vendor-boundary tests |
+| Phase 33 | Capability / contract consolidation audit | `documents/DataVisualiser_Capability_Contract_Consolidation_Audit.md`; shared-shape tests |
+| Phase 34 | Final legacy bypass retirement note | `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`; regression / parity tests |
+| Phase 35 | Final convergence audit | `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated baseline artifacts |
+| Phase 36 | Formal coverage | Requirements-to-language coverage matrix |
+| Phase 37 | Construction algebra | Construction algebra baseline |
+| Phase 38 | Operation / capability algebra | Operation, capability, arity, precondition, postcondition, and compatibility artifacts |
+| Phase 39 | Relation system | Typed relation model and graph-projection artifacts |
+| Phase 40 | Multiplicity / derived dataset model | Input/output/intermediate/derived set artifacts |
+| Phase 41 | Evidence sufficiency / promotion rules | Evidence sufficiency, promotion, quarantine, and governance artifacts |
+| Phase 42 | Semantic / interpretation model | Assumption, semantic plurality, interpretation, confidence, and explanation artifacts |
+| Phase 43 | Analytical fitness | Usefulness, distortion, signal-preservation, and analytical-fitness artifacts |
+| Phase 44 | Computational planning | Bounded search, pruning, cost, caching, and execution-planning artifacts |
+| Phase 45 | Generative multi-consumer output | Generated chart/table/report/API/export/evidence output artifacts |
+| Phase 46 | Governance / emergence review | Emergence review, guardrail scorecard, and agent/governance benchmark artifacts |
+| Phase 47 | Scenario hardening | Domain/provider/product scenario hardening artifacts |
+
+## Consolidated Scaffold Audit Handling
+
+The early scaffold audit files are retained as historical evidence only. Their reusable constraints have been carried forward into the active migration phases and guardrails where coherent.
+
+Recommended archive location:
+
+```text
+documents/archive/structural-spine-audits-2026-04-28/
+```
+
+Files covered by this consolidation:
+
+```text
+DataVisualiser_Dependency_Density_Audit.md
+DataVisualiser_Refactoring_Opportunity_Audit.md
+DataVisualiser_Authority_Provenance_Fidelity_Audit.md
+DataVisualiser_Integration_Hub_Containment_Audit.md
+DataVisualiser_Contract_Boundary_Qualification_Audit.md
+DataVisualiser_Projection_Translation_Containment_Audit.md
+DataVisualiser_Consumer_Interaction_Containment_Audit.md
+DataVisualiser_Surface_Model_Seam_Audit.md
+DataVisualiser_Terminal_Delivery_Boundary_Audit.md
+DataVisualiser_Evidence_Observability_Audit.md
+DataVisualiser_Governance_Constraints_Audit.md
+DataVisualiser_Distribution_Capability_Slice_Audit.md
+```
+
+Archive rule:
+
+```text
+Keep this compact plan as the active plan.
+Keep the consolidated scaffold-audit carry-forward constraints embedded here.
+Do not require IDE agents to read archived scaffold audits by default.
+Use archived audits only for historical investigation, not active execution routing.
+```
+
+---
+
+# 4. Active Migration Plan — Phases 24-35
+
+## 4.1 Phase 24 — Audit ChartDataContext Migration Path
+
+Goal:
+
+```text
+Map every site where ChartDataContext carries data between VNext, Core, UI, rendering, evidence, parity, and legacy bridge paths.
+```
+
+Context:
+
+```text
+ChartDataContext is the primary remaining consumption-model blocker.
+LegacyChartProgramProjector, VNextDataResolutionHelper, LegacyMetricViewGateway, and parity/evidence bridge paths cannot be retired cleanly while UI consumption remains ChartDataContext-first.
+```
+
+Scaffold audit carry-forward classification detail:
+
+```text
+For each ChartDataContext reference, identify whether the use is:
+construction
+read-only consumption
+mutation
+UI binding
+VNext bridge
+legacy compatibility
+fallback routing
+evidence/runtime recording
+parity/evidence comparison
+test-only
+candidate for VNext-native replacement
+```
+
+Tasks:
+
+- [ ] Find all `ChartDataContext` references in production code.
+- [ ] Find all `ChartDataContext` references in tests and parity/evidence paths.
+- [ ] Classify each reference as:
+  - [ ] retirable now
+  - [ ] needs VNext-native equivalent
+  - [ ] needs consumer contract shape
+  - [ ] needs surface model shape
+  - [ ] test/parity/evidence only
+  - [ ] must remain temporarily
+- [ ] Identify every `LegacyChartProgramProjector` dependency.
+- [ ] Identify every `VNextDataResolutionHelper` dependency.
+- [ ] Identify every `LegacyMetricViewGateway` dependency.
+- [ ] Identify all parity/evidence paths still dependent on `ChartDataContext`.
+- [ ] Identify all UI/controller/adapter paths where `ChartDataContext` is still the primary consumed model.
+- [ ] Document target replacement shape for each dependency class.
+- [ ] Do not retire anything in this phase unless it is already proven dead and covered by tests.
+
+Completion condition:
+
+```text
+A ChartDataContext retirement map exists.
+Every ChartDataContext dependency has a classification and target replacement condition.
+No bridge retirement proceeds without this map.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_ChartDataContext_Migration_Audit.md
+fresh reference search output
+focused guardrail tests if new static checks are added
+```
+
+## 4.2 Phase 25 — Define VNext-Native UI Consumption Contract
+
+Goal:
+
+```text
+Define what production UI consumes instead of ChartDataContext.
+```
+
+Contract requirements:
+
+```text
+consumer-facing
+metadata-preserving
+surface-ready
+non-authoritative
+delivery-neutral
+provenance-preserving
+interaction-aware without owning interaction policy
+```
+
+Minimum metadata preservation requirement:
+
+```text
+program kind
+capability kind
+composition kind
+delivery target
+consumer kind
+provider key/signature
+intent/provenance signature
+source/load signature
+overlay and interaction metadata where applicable
+```
+
+Candidate inputs:
+
+```text
+ConsumerDeliveryContract
+ConsumerDeliveryEvidence
+ChartProgramRequest / Program shape
+ChartRenderPlan or successor SurfaceModel shape
+Provider metadata
+Vocabulary metadata
+InteractionRequest / Interaction contract
+Delivery binding
+```
+
+Tasks:
+
+- [ ] Define the VNext-native UI consumption shape.
+- [ ] Define how the shape preserves program, capability, delivery, provider, vocabulary, provenance, and evidence metadata.
+- [ ] Define how the shape supports chart consumers without becoming chart-only.
+- [ ] Define how the shape supports non-chart consumers without render-plan assumptions.
+- [ ] Define how interaction/toggle/tooltip concerns attach without owning semantic meaning.
+- [ ] Define how existing `ChartRenderPlan` participates or is wrapped as a consumer-neutral surface.
+- [ ] Define compatibility rules for existing chart-family adapters.
+- [ ] Add contract tests for metadata preservation and invalid drift.
+- [ ] Add guardrails preventing UI consumption contracts from importing concrete vendor/UI rendering types.
+
+Completion condition:
+
+```text
+A VNext-native UI consumption contract shape exists and is test-backed before any family migration begins.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_VNext_Native_UI_Consumption_Contract.md
+contract metadata preservation tests
+vendor/UI import guardrails
+```
+
+## 4.3 Phase 26 — Operation Chain Workbench MVP
+
+Goal:
+
+```text
+Create a new tab/workbench that chains N operations over multiple input data series to produce derived datasets through the VNext-native UI consumption contract.
+```
+
+Tasks:
+
+- [ ] Define `OperationChainRequest`.
+- [ ] Define `OperationChainStep`.
+- [ ] Define `OperationChainProgram`.
+- [ ] Define `OperationChainExecutionPlan`.
+- [ ] Define `OperationChainExecutor`.
+- [ ] Define `OperationChainResult`.
+- [ ] Define `DerivedDataset`.
+- [ ] Define `DerivedDatasetSurfaceModel` or equivalent consumer-neutral output shape.
+- [ ] Define `OperationChainEvidence`.
+- [ ] Define `OperationChainTrace`.
+- [ ] Support at least two input series.
+- [ ] Support an ordered list of operations.
+- [ ] Support at least one derived dataset output.
+- [ ] Support at least three initial operations from the existing operation kernel / transform capabilities.
+- [ ] Deliver output through the Phase 25 VNext-native UI consumption contract.
+- [ ] Display result in a simple tab surface.
+- [ ] Prefer table/export first and chart rendering second unless the existing contract path makes chart display equally safe.
+- [ ] Preserve source provenance for every input series.
+- [ ] Preserve operation traceability for every chain step.
+- [ ] Preserve transformation reversibility/lossiness metadata where applicable.
+- [ ] Emit evidence/export metadata for the derived dataset.
+- [ ] Avoid `ChartDataContext` as the primary semantic model.
+- [ ] Avoid controller/ViewModel-owned operation execution.
+- [ ] Avoid vendor-specific rendering dependency in the operation-chain core.
+- [ ] Add tests for operation-chain execution.
+- [ ] Add tests for metadata preservation.
+- [ ] Add tests for provenance preservation.
+- [ ] Add tests for operation trace/evidence output.
+- [ ] Add guardrails preventing the new tab from owning analytical authority.
+
+Completion condition:
+
+```text
+The new tab can create at least one derived dataset from multiple source series through a VNext-native, metadata-preserving consumption path without making ChartDataContext the primary semantic model.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_Operation_Chain_Workbench_MVP_Audit.md
+operation-chain execution tests
+metadata/provenance/evidence tests
+UI consumption contract tests
+```
+
+## 4.4 Phase 27 — Migrate First Production Chart Family to VNext-Native Consumption
+
+Goal:
+
+```text
+Move one production chart family away from ChartDataContext-dependent consumption.
+```
+
+Selection rule:
+
+```text
+Choose the family with the clearest contract path, strongest tests, lowest UI coupling, and least ambiguous parity surface.
+Do not choose based only on easiest code movement.
+Use Phase 26 findings if the operation-chain MVP exposes better contract/surface requirements.
+```
+
+Tasks:
+
+- [ ] Select one chart family and document selection reason.
+- [ ] Capture current behavior with focused tests before changing production code.
+- [ ] Route the selected family through the VNext-native UI consumption contract.
+- [ ] Preserve capability contract carriage.
+- [ ] Preserve provider metadata.
+- [ ] Preserve vocabulary metadata.
+- [ ] Preserve provenance / traceability metadata.
+- [ ] Preserve UI behavior and interaction behavior.
+- [ ] Preserve evidence/export behavior.
+- [ ] Confirm no old hub absorbs the new migration responsibility.
+- [ ] Confirm `ChartDataContext` dependency is removed or reduced for the selected family.
+- [ ] Run focused family tests and full test suite.
+
+Completion condition:
+
+```text
+One production chart family consumes VNext-native contract output instead of relying on ChartDataContext as its primary model.
+Behavior, metadata, evidence, and parity remain preserved.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_First_VNext_Native_Family_Migration_Audit.md
+family-specific migration tests
+metadata preservation tests
+UI behavior tests
+```
+
+## 4.5 Phase 28 — Retire Corresponding Legacy Bridge for First Migrated Family
+
+Goal:
+
+```text
+Remove or disable the legacy bridge path for the first migrated family only after the VNext-native path is proven.
+```
+
+Tasks:
+
+- [ ] Identify the selected family's remaining legacy bridge path.
+- [ ] Confirm VNext-native replacement is used in production path.
+- [ ] Confirm parity evidence.
+- [ ] Confirm smoke evidence or UI behavior evidence.
+- [ ] Confirm metadata preservation.
+- [ ] Confirm semantic/provenance preservation.
+- [ ] Confirm evidence/export path still works.
+- [ ] Remove or disable only the selected family's retired bridge path.
+- [ ] Leave other family bridges untouched unless separately proven.
+- [ ] Run full validation.
+
+Completion condition:
+
+```text
+The first migrated family no longer depends on its corresponding legacy bridge path.
+No behavior, metadata, parity, or evidence regression occurs.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md
+family bridge-retirement tests
+parity / smoke / metadata evidence
+```
+
+## 4.6 Phase 29 — Repeat Production Family Migration Slice-by-Slice
+
+Goal:
+
+```text
+Migrate remaining production chart families through the VNext-native consumption path one family at a time.
+```
+
+Tasks:
+
+- [ ] Use the Phase 27/28 pattern for each remaining family.
+- [ ] Migrate one family at a time.
+- [ ] Retire only that family's proven legacy bridge.
+- [ ] Preserve capability contract carriage.
+- [ ] Preserve metadata and provenance.
+- [ ] Preserve UI behavior.
+- [ ] Preserve evidence/export behavior.
+- [ ] Update the migration tracker after each family.
+- [ ] After two families are migrated, identify common shape candidates.
+- [ ] Do not extract shared abstractions until common shape is proven by at least two migrated families.
+
+Completion condition:
+
+```text
+All production chart families either consume VNext-native contract output or have explicit documented reasons for temporary deferral.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md
+per-family migration tests
+per-family bridge retirement evidence
+```
+
+## 4.7 Phase 30 — Elevate Consumer-Neutral Surface Model
+
+Goal:
+
+```text
+Make the surface output shape explicit and consumer-neutral before terminal delivery.
+```
+
+Tasks:
+
+- [ ] Compare the VNext-native consumption shapes produced by migrated families.
+- [ ] Include Phase 26 operation-chain output in the comparison.
+- [ ] Identify common consumer-neutral surface elements.
+- [ ] Identify family-specific extensions that must remain explicit.
+- [ ] Define or refine `SurfaceModel` / equivalent output shape.
+- [ ] Ensure the surface shape preserves program, capability, provider, vocabulary, provenance, and delivery metadata.
+- [ ] Ensure the surface shape does not import concrete vendor/UI rendering types.
+- [ ] Ensure delivery adapters consume surface output rather than upstream internals.
+- [ ] Add tests proving surface output can support at least one chart consumer and one non-chart consumer.
+- [ ] Add tests proving surface output can support derived datasets from Operation Chain.
+- [ ] Update guardrails to treat the surface model as the required pre-delivery seam where applicable.
+
+Completion condition:
+
+```text
+A consumer-neutral, metadata-preserving surface seam exists before terminal delivery and is used by migrated production paths.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md
+surface contract tests
+chart + non-chart surface consumption tests
+derived-dataset surface tests
+```
+
+## 4.8 Phase 31 — Thin UI / Interaction / State Layer
+
+Goal:
+
+```text
+Move UI toward receiving already-authoritative, already-qualified output.
+```
+
+Tasks:
+
+- [ ] Identify UI/state responsibilities still carrying semantic or provider policy.
+- [ ] Identify interaction responsibilities that should become contract-mediated.
+- [ ] Identify ViewModel/state dependencies that still require `ChartDataContext`.
+- [ ] Confirm Operation Chain UI does not own operation execution.
+- [ ] Move or remove only responsibilities already replaced by VNext-native consumption.
+- [ ] Keep UI as display/state/interaction relay.
+- [ ] Keep interaction behavior non-authoritative.
+- [ ] Keep tooltip behavior explanatory, not semantic.
+- [ ] Add guardrails preventing reintroduction of authority/provider/evidence policy into UI/state.
+- [ ] Run focused UI/interaction/state tests and full validation.
+
+Completion condition:
+
+```text
+UI, interaction, and state layers consume target outputs and relay user behavior without owning semantic, provider, evidence, or delivery authority.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md
+UI/state/interaction guardrail tests
+operation-chain UI guardrails
+```
+
+## 4.9 Phase 32 — Demote Rendering / Backend / Vendor Fully
+
+Goal:
+
+```text
+Make rendering, backend, vendor, host, and lifecycle concerns terminal and replaceable.
+```
+
+Tasks:
+
+- [ ] Confirm upstream contracts do not depend on concrete vendor-specific types.
+- [ ] Confirm rendering code does not own interpretation.
+- [ ] Confirm backend code does not define semantic policy.
+- [ ] Confirm vendor code does not define analytical meaning.
+- [ ] Confirm host/lifecycle code is terminal.
+- [ ] Confirm delivery qualification is explicit and tested.
+- [ ] Confirm at least one migrated path can switch or target a non-default backend where applicable.
+- [ ] Confirm Operation Chain output can be delivered without vendor-specific assumptions.
+- [ ] Remove or bound any remaining vendor assumptions leaking upstream.
+- [ ] Run vendor-boundary and delivery tests.
+
+Completion condition:
+
+```text
+Delivery is downstream, replaceable, vendor-contained, and semantically non-authoritative for migrated production paths.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md
+vendor-boundary tests
+delivery qualification tests
+```
+
+## 4.10 Phase 33 — Consolidate Capability / Contract Families
+
+Goal:
+
+```text
+Prevent capability contracts and render-family contracts from becoming parallel family micro-frameworks.
+```
+
+Tasks:
+
+- [ ] Compare all migrated family capability contracts.
+- [ ] Compare all migrated family delivery contracts.
+- [ ] Compare all migrated family render/surface requests.
+- [ ] Compare Operation Chain contracts against existing Transform / MovingAverage / derived-series patterns.
+- [ ] Identify repeated safe structure.
+- [ ] Identify real family-specific differences.
+- [ ] Extract only genuinely shared patterns.
+- [ ] Preserve explicit family differences.
+- [ ] Remove duplicated exception-driven paths.
+- [ ] Add tests proving shared shape does not flatten real family distinctions.
+- [ ] Run full validation.
+
+Completion condition:
+
+```text
+Capability and contract families are generalized where proven and explicit where genuinely different.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_Capability_Contract_Consolidation_Audit.md
+shared-shape tests
+family-difference preservation tests
+operation-chain contract comparison
+```
+
+## 4.11 Phase 34 — Retire Remaining Legacy Bypasses
+
+Goal:
+
+```text
+Remove remaining legacy coexistence only after production paths have moved.
+```
+
+Tasks:
+
+- [ ] List all remaining legacy bypasses.
+- [ ] Confirm target replacement for each bypass.
+- [ ] Confirm no production consumer still depends on each bypass.
+- [ ] Confirm parity evidence.
+- [ ] Confirm smoke/UI behavior evidence.
+- [ ] Confirm metadata preservation.
+- [ ] Confirm semantic/provenance preservation.
+- [ ] Retire one bypass at a time.
+- [ ] Keep parity/evidence paths only where they still provide active validation value.
+- [ ] Update documentation and progress log after each retirement.
+
+Completion condition:
+
+```text
+Legacy coexistence is reduced to zero or to explicitly documented validation-only paths with named retirement conditions.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md
+bridge-retirement tests
+updated parity/evidence validation
+```
+
+## 4.12 Phase 35 — Final Convergence Audit
+
+Goal:
+
+```text
+Prove the target architecture, not merely implement it.
+```
+
+Tasks:
+
+- [ ] Regenerate latest `project-tree.txt`.
+- [ ] Regenerate latest `codebase-index.md`.
+- [ ] Regenerate latest `dependency-summary.md`.
+- [ ] Regenerate latest `type-dependency-diagram.md`.
+- [ ] Reclassify dependency density.
+- [ ] Confirm no unbounded `ChartDataContext` production bridge remains.
+- [ ] Confirm UI consumes VNext-native contract/surface output.
+- [ ] Confirm Operation Chain consumes VNext-native contract/surface output.
+- [ ] Confirm legacy projectors are retired or validation-only.
+- [ ] Confirm rendering/vendor concerns are terminal.
+- [ ] Confirm evidence remains observational.
+- [ ] Confirm non-chart consumer path still works.
+- [ ] Confirm capability contracts are generalized where proven.
+- [ ] Confirm all tests pass.
+- [ ] Confirm parity/smoke/metadata/provenance evidence.
+- [ ] Update final completion criteria and progress log.
+
+Completion condition:
+
+```text
+The production architecture can be described through the target grammar without relying on unbounded legacy bridges.
+The target spine is used by production consumers, not merely proven by isolated capability slices.
+```
+
+Planned evidence:
+
+```text
+documents/DataVisualiser_Final_Convergence_Audit.md
+fresh generated baseline artifacts
+full test validation
+parity / smoke / metadata / provenance evidence
+```
+
+---
+
+# 5. Post-Architecture Formalisation and Bounded-Generativity Phases
+
+These phases remain intentionally high-level.
+
+They are not the active migration track.
+
+They exist to align post-convergence work with the Prime Directive:
+
+```text
+preserve coherence while enabling governed analytical generation
+```
+
+They should be refined after Phase 35, using the Prime Directive coverage note, the final convergence audit, and the first Operation Chain evidence.
+
+---
+
+## Phase 36 — Requirements-to-Language Coverage Matrix
+
+Goal:
+
+```text
+Determine whether requirements, planned work, and implemented constructions map cleanly into the formal architectural language.
 ```
 
 Purpose:
 
 ```text
-preserve truth, source, legitimacy, reversibility, and semantic identity
+R -> L coverage
 ```
 
-Implementation pressure:
+Expected outputs:
 
 ```text
-Result / Request / Snapshot should carry explicit semantic context when crossing boundaries.
+RequirementsToLanguageCoverageMatrix
+CoverageStatus
+AmbiguityRisk
+MissingLanguageRecord
+CollapsedConcernRecord
+FormalExpressionGap
+```
+
+Coverage statuses:
+
+```text
+covered
+partially covered
+collapsed
+ambiguous
+missing
+deferred
+```
+
+Alignment focus:
+
+```text
+one-to-one clarity
+onto coverage
+semantic loss detection
+language gap discovery
 ```
 
 ---
 
-### 3.2 Reasoning Family
+## Phase 37 — Construction Algebra Baseline
+
+Goal:
 
 ```text
-Intent
-Capability
-Composition
-Interpretation
-Confidence
-Overlay
-Program
-Policy
+Define the first formal construction layer above vocabulary and grammar.
 ```
 
-Purpose:
+Expected outputs:
 
 ```text
-turn purpose into lawful analytical work and explicit meaning
+Construction
+Operation
+Relation
+InputSet
+OutputSet
+DerivedSet
+IntermediateSet
+CompositionGraph
+TransformationTrace
+EvidenceTrace
+ConflictRecord
+PromotionRecord
+QuarantineRecord
 ```
 
-Implementation pressure:
+Core laws to establish:
 
 ```text
-New capability should enter through reasoning/program structures, not controllers or rendering paths.
+arity law
+composition law
+transformation law
+provenance law
+traceability law
+lossiness / reversibility law
+qualification law
+consumer projection law
+boundary crossing law
+evidence sufficiency law
+promotion / quarantine law
 ```
 
----
-
-### 3.3 Contract Family
+Alignment focus:
 
 ```text
-Contract
-Boundary
-Neutrality
-Qualification
-Provider
-Consumer
-Interaction
-SurfaceModel
-Binding
-```
-
-Purpose:
-
-```text
-govern crossings, compatibility, consumer neutrality, and delivery readiness
-```
-
-Implementation pressure:
-
-```text
-Provider/consumer/render-plan/backend handoffs should be qualified and contract-bound.
+grammar -> algebra
+classification -> construction
+validity -> governed generativity
 ```
 
 ---
 
-### 3.4 Delivery Family
+## Phase 38 — Operation / Capability Algebra
+
+Goal:
 
 ```text
-Delivery
-Backend
-VendorBoundary
-RuntimeBoundary
-Lifecycle
-Adapter
-Surface
+Formalize analytical capability as lawful composable power, not feature growth.
 ```
 
-Purpose:
+Expected outputs:
 
 ```text
-terminalize output through replaceable infrastructure
+OperationAlgebra
+CapabilityPurpose
+CapabilityPrecondition
+CapabilityPostcondition
+CapabilityArity
+CapabilityCost
+CapabilityCompatibility
+CapabilityFitness
+CapabilityPromotionRule
 ```
 
-Implementation pressure:
+Alignment focus:
 
 ```text
-Rendering and vendor-specific delivery must remain downstream and replaceable.
-```
-
----
-
-### 3.5 Evidence Family
-
-```text
-Evidence
-Diagnostics
-Parity
-Reachability
-Validation
-Audit
-Record
-```
-
-Purpose:
-
-```text
-observe, prove, validate, compare, and preserve auditability
-```
-
-Implementation pressure:
-
-```text
-Evidence must not control live semantic decisions, provider selection, or routing.
+operation rules
+capability rules
+composition compatibility
+input/output discipline
+lossiness and reversibility declaration
 ```
 
 ---
 
-## 4. Semantic Rules
+## Phase 39 — Typed Relation System
 
-These distinctions are binding unless deliberately changed later.
+Goal:
 
 ```text
-Authority != Orchestration
-Provenance != Diagnostics
-Envelope != Bag
-Capability != Feature
-Composition != Builder
-Interpretation != Rendering
-Confidence != Truth Mutation
-Overlay != Render Decoration
-Program != Presentation Path
-Contract != DTO
-Boundary != Folder
-Neutrality != Generic Abstraction
-Qualification != Selection
-Provider != Authority
-Consumer != Presentation
-Interaction != Event
-SurfaceModel != UI Model
-Binding != Hidden Route Policy
-Delivery != Semantics
-Evidence != Control
-Audit != Logging Only
+Make relations between constructions explicit, typed, auditable, and projectable.
+```
+
+Expected outputs:
+
+```text
+TypedRelation
+OwnershipRelation
+DependencyRelation
+DerivationRelation
+ProjectionRelation
+QualificationRelation
+InterpretationRelation
+EvidenceRelation
+ContradictionRelation
+BoundaryRelation
+```
+
+Alignment focus:
+
+```text
+edges, not only nodes
+ownership clarity
+boundary crossing clarity
+relation-specific evidence
+graph projection by purpose
 ```
 
 ---
 
-## 5. Grooming Rules from Step 2
+## Phase 40 — Multiplicity / Derived Dataset Model
 
-The following are not mandatory renames yet. They are preferred target-language directions.
+Goal:
 
-| Current / implementation-shaped language | Preferred target-language direction |
-|---|---|
-| `ChartProgram` | `AnalyticalProgram` |
-| `Request`, `Result`, `Snapshot` | `Envelope`, where semantic crossing is involved |
-| `Route` | `Binding`, where compatibility or policy matters |
-| `Renderer` | `DeliveryAdapter`, where delivery is broader than rendering |
-| `Controller` | `ConsumerAdapter`, where consumer adaptation is the real role |
-| `ViewModel` | `ConsumerState`, where state is consumer-side |
-| `Host` | `RuntimeBoundary` or `DeliverySurface` |
-| `Diagnostics` | `Evidence`, where proof/audit is intended |
-| `Manager` | `Policy`, `Coordinator`, `Registry`, or `StateOwner` |
-| `Factory` | `Builder`, `Provider`, `Registry`, or `Adapter` |
-| `Selection` | `Qualification`, where compatibility is being tested |
-| `Layer` | `Boundary`, where crossing rules matter |
-| UI/render model | `SurfaceModel`, where consumer neutrality matters |
+```text
+Formalize N-input, N-operation, N-output analytical construction.
+```
+
+Expected outputs:
+
+```text
+Multiplicity
+Arity
+Cardinality
+Sequence
+Chain
+InputSet
+OutputSet
+DerivedSet
+IntermediateSet
+ManyToOne
+OneToMany
+ManyToMany
+DerivedDatasetIdentity
+```
+
+Alignment focus:
+
+```text
+Operation Chain pressure test
+derived dataset formalisation
+intermediate-state visibility
+consumer-neutral derived outputs
+```
+
+---
+
+## Phase 41 — Evidence Sufficiency / Promotion Rules
+
+Goal:
+
+```text
+Define when a generated construction has enough evidence to be promoted, retained, quarantined, or rejected.
+```
+
+Expected outputs:
+
+```text
+EvidenceSufficiencyRule
+PromotionRule
+QuarantineRule
+RejectionRule
+EvidenceTrace
+AuditRecord
+GovernanceReviewRecord
+ConstructionDecisionRecord
+```
+
+Alignment focus:
+
+```text
+evidence-backed promotion
+controlled emergence
+non-controlling evidence
+reviewable governance
+```
+
+---
+
+## Phase 42 — Semantic / Interpretation / Assumption Model
+
+Goal:
+
+```text
+Support semantic plurality without false certainty.
+```
+
+Expected outputs:
+
+```text
+SemanticAuthority
+AssumptionRecord
+InterpretationContext
+InterpretationModel
+ConfidenceModel
+ConflictRecord
+ContrastiveExplanation
+WhyThisOutput
+WhyThisDifference
+WhyThisMatters
+```
+
+Alignment focus:
+
+```text
+semantic ambiguity
+plural interpretation
+confidence and assumptions
+trace vs explanation
+meaning without UI/render ownership
+```
+
+---
+
+## Phase 43 — Analytical Fitness / Usefulness Evaluation
+
+Goal:
+
+```text
+Evaluate whether valid analytical constructions are useful, meaningful, or distortion-prone.
+```
+
+Expected outputs:
+
+```text
+AnalyticalFitness
+UsefulnessScore
+InsightHypothesis
+SignalPreservation
+DistortionProfile
+InterpretationPotential
+ConfidenceImpact
+FitnessEvidence
+```
+
+Alignment focus:
+
+```text
+validity != usefulness
+computability != meaning
+traceability != explanation
+analytical relevance over mere execution
+```
+
+---
+
+## Phase 44 — Computational Planning / Bounded Search
+
+Goal:
+
+```text
+Keep generative analytical construction computationally tractable.
+```
+
+Expected outputs:
+
+```text
+BoundedSearchPolicy
+OperationCostModel
+CapabilityPruningRule
+ExecutionPlanner
+IncrementalRecomputation
+IntermediateCache
+WorkflowCache
+ExecutionManifest
+DeterministicReplayRecord
+```
+
+Alignment focus:
+
+```text
+qualified search space
+bounded depth
+cost-aware execution
+reproducibility
+tractability under constraints
+```
+
+---
+
+## Phase 45 — Generative Multi-Consumer Output
+
+Goal:
+
+```text
+Allow generated analytical constructions to produce multiple consumer outputs without centralizing a new mega-model.
+```
+
+Expected outputs:
+
+```text
+GeneratedSurfaceModel
+GeneratedTableConsumer
+GeneratedChartConsumer
+GeneratedReportConsumer
+GeneratedApiConsumer
+GeneratedExportConsumer
+GeneratedEvidenceConsumer
+ConsumerProjectionRule
+```
+
+Alignment focus:
+
+```text
+one truth, many projections
+consumer-neutral core
+consumer-specific projection
+delivery-specific adaptation
+no ChartDataContext replacement mega-object
+```
+
+---
+
+## Phase 46 — Governance / Emergence Review
+
+Goal:
+
+```text
+Create reviewable governance for generated constructions, language growth, and architecture evolution.
+```
+
+Expected outputs:
+
+```text
+EmergenceReview
+LanguageGrowthRecord
+GuardrailScorecard
+AgentTaskPack
+MigrationBenchmarkScenario
+BeforeAfterDependencySnapshot
+RefactoringEvidenceReport
+GovernanceDecisionLog
+```
+
+Alignment focus:
+
+```text
+controlled language growth
+evidence-backed evolution
+agent governance
+architecture drift detection
+```
+
+---
+
+## Phase 47 — Scenario Hardening
+
+Goal:
+
+```text
+Harden one or more bounded product/domain scenarios against the formal coverage and construction algebra model.
+```
+
+Candidate scenarios:
+
+```text
+Operation Chain Workbench
+analytical workbench
+dashboard runtime
+personal analytics system
+evidence platform
+legacy migration framework
+AI-assisted architecture governance platform
+```
+
+Alignment focus:
+
+```text
+scenario proof
+formal coverage proof
+construction algebra proof
+evidence sufficiency proof
+bounded generativity proof
+```
+
+
+---
+
+# 6. Guardrails
+
+Status note:
+
+```text
+Completed Phase 1-23 guardrails remain active constraints.
+Unchecked consumption-migration guardrails must be satisfied before convergence can be claimed.
+```
+
+## 6.1 Consumption Migration Guardrails
+
+- [ ] Do not replace `ChartDataContext` with another chart-specific pseudo-core.
+- [ ] VNext-native UI consumption contracts must preserve program, capability, delivery, provider, vocabulary, provenance, and evidence metadata.
+- [ ] UI consumption contracts must not import concrete vendor/rendering types.
+- [ ] Production UI paths must move slice-by-slice, not through a broad rewrite.
+- [ ] Legacy bridge retirement must follow proven replacement, parity, smoke, metadata, and provenance evidence.
+- [ ] Family migration must preserve real family differences.
+- [ ] Generalization must wait until at least two migrated families prove the same shape.
+- [ ] `LegacyChartProgramProjector`, `VNextDataResolutionHelper`, and `LegacyMetricViewGateway` must not be removed until their named retirement conditions are met.
+- [ ] Operation Chain must use the VNext-native UI consumption contract defined in Phase 25.
+- [ ] Operation Chain must not use `ChartDataContext` as its primary semantic model.
+- [ ] Operation Chain UI must not own analytical operation execution.
+- [ ] Operation Chain must preserve source provenance, operation traceability, and evidence metadata.
+- [ ] Operation Chain must not introduce vendor-specific rendering dependencies into its core execution path.
+
+## 6.2 Refactoring Guardrails
+
+- [x] Refactoring must reduce sprawl, contradiction, duplication, or exception-driven architecture.
+- [x] Refactoring must strengthen the generalized target architecture.
+- [x] Refactoring must preserve behavior.
+- [x] Refactoring must preserve tests.
+- [x] Refactoring must not hide real family-specific differences.
+- [x] Refactoring must not centralize UI, rendering, vendor, process, or evidence authority.
+- [x] Refactoring must not replace explicit seams with hidden orchestration.
+- [x] Refactoring must be auditable through tests, parity, or dependency evidence.
+
+## 6.3 Authority Guardrails
+
+- [x] UI must not define canonical meaning.
+- [x] Rendering must not define analytical meaning.
+- [x] Process must not define semantic truth.
+- [x] Evidence must not create live semantic authority.
+- [x] Provider code must not become semantic authority.
+- [x] Consumer code must not redefine canonical meaning.
+
+## 6.4 Provenance / Traceability Guardrails
+
+- [x] Results must preserve source lineage.
+- [x] Interpretations must preserve derivation context.
+- [x] Transformations must record traceability.
+- [x] Projections must not discard provenance silently.
+- [x] Delivery must not remove required metadata.
+- [x] Evidence must expose lineage where relevant.
+
+## 6.5 Fidelity / Reversibility Guardrails
+
+- [x] Transformations must be lossless or explicitly annotated as lossy.
+- [x] Derived outputs must preserve recovery path where required.
+- [x] Projections must preserve semantic fidelity.
+- [x] Delivery adaptation must not alter canonical meaning.
+- [x] Any irreversible step must be explicit and justified.
+
+## 6.6 Capability Guardrails
+
+- [x] New analytical behavior must enter through capability/program structures.
+- [x] Controllers must not become capability owners.
+- [x] Renderers must not become capability owners.
+- [x] Coordinators must not absorb capability planning.
+- [x] Capability output must remain contract-bound.
+
+## 6.7 Contract / Boundary Guardrails
+
+- [x] Contracts must be explicit at major handoffs.
+- [x] Boundaries must prevent vendor assumptions from moving upstream.
+- [x] Boundaries must prevent UI assumptions from moving upstream.
+- [x] Boundaries must preserve metadata.
+- [x] Boundary bypasses must be identified and retired only after replacement proof.
+
+## 6.8 Qualification Guardrails
+
+- [x] Provider compatibility must be qualified.
+- [x] Backend compatibility must be qualified.
+- [x] Adapter compatibility must be qualified.
+- [x] Delivery compatibility must be qualified.
+- [x] Qualification must not become hidden selection.
+- [x] Selection must be justified when compatibility matters.
+
+## 6.9 Consumer / Interaction Guardrails
+
+- [x] Consumers receive meaning; they do not define it.
+- [x] Interaction relays behavior; it does not redefine intent.
+- [x] Tooltip logic must not own interpretation.
+- [x] Timestamp sinks must not own analytical meaning.
+- [x] ViewModels must not become semantic authorities.
+- [x] Controllers must not own provider policy.
+
+## 6.10 Delivery Guardrails
+
+- [x] Delivery remains terminal.
+- [x] Vendor concerns remain terminal.
+- [x] Backend concerns remain terminal.
+- [x] Rendering remains replaceable.
+- [x] Host/lifecycle concerns remain downstream.
+- [x] Delivery must not mutate canonical semantics.
+
+## 6.11 Evidence / Audit Guardrails
+
+- [x] Evidence observes only.
+- [x] Diagnostics do not control live routing.
+- [x] Parity does not control live execution.
+- [x] Reachability does not select providers.
+- [x] Validation does not become hidden authority.
+- [x] Audit records must be durable and reviewable.
+
+## 6.12 Governance Guardrails
+
+- [x] New vocabulary must improve architectural clarity.
+- [x] New concepts must align with project goals.
+- [x] New abstractions must not centralize UI/render/vendor concerns.
+- [x] New capabilities must use the target spine.
+- [x] New consumers must use contracts/boundaries.
+- [x] New delivery paths must remain replaceable.
+
+## 6.13 Scaffold Audit Carry-Forward Guardrails
+
+- [ ] Do not remove parity/evidence comparison paths before replacement, parity, smoke, metadata, and provenance evidence exists.
+- [ ] Do not let evidence or diagnostics control live behavior.
+- [ ] Do not let vendor/rendering types leak upstream into VNext-native consumption contracts.
+- [ ] Do not let old hubs absorb authority, capability, provider policy, evidence policy, or delivery policy.
+- [ ] Projectors translate; they do not create authority.
+- [ ] Adapters apply already-decided output; they do not own provider policy or analytical intent.
+- [ ] Selectors and resolvers must remain explicit and inspectable.
+- [ ] Mapping, conversion, and formatting must not mutate provenance, confidence, or canonical result values.
+- [ ] `ChartRenderModel` must not replace the architectural surface seam unless concrete rendering assumptions have been removed.
+- [ ] ECharts remains a placeholder seam unless later hardened through explicit qualification.
+
+## 6.14 Governance Growth Review Gate
+
+Before new growth, answer:
+
+```text
+Which promoted grammar concept owns the change?
+Which boundary or contract does it cross?
+What provenance, traceability, fidelity, determinism, or reversibility is preserved?
+What qualification or compatibility rule applies?
+Which consumer-neutral shape exists before terminal delivery?
+What evidence or audit path proves the behavior?
+Which old hub is explicitly prevented from absorbing the responsibility?
+```
+
+## 6.15 Prime Directive Coverage Gate
+
+Before post-convergence growth, answer:
+
+```text
+Which requirement does this construction satisfy?
+Which formal language term(s) express it?
+Does the construction collapse distinct concerns into one overloaded term?
+Does the current language fail to express the construction without semantic loss?
+Which operation, relation, arity, boundary, evidence, or promotion rule applies?
+Does this construction improve bounded generativity without weakening coherence?
+```
 
 Rule:
 
 ```text
-Use these directions when designing the target architecture.
-Do not force renames into current code without implementation justification.
+Do not expand the language merely because a term is interesting.
+Do not collapse requirements merely because one term can cover them.
+Do not generalize until repeated constructions prove shared shape.
+Do not promote generated constructions without evidence.
+Do not treat validity as usefulness.
+Do not treat traceability as explanation.
+Do not treat computability as meaning.
 ```
 
 ---
 
-## 6. Stable Safety Constraints
+# 7. Completion Criteria
+
+Status note:
 
 ```text
-UI must not own authority.
-Rendering must not own meaning.
-Evidence must not control live behavior.
-Process must not define semantic truth.
-Adapters must not become policy owners.
-Contexts must not become service locators.
-Results must not lose provenance.
-Contracts must not smuggle vendor assumptions upstream.
-Consumers must not redefine canonical meaning.
-Delivery must remain replaceable.
+Structural, behavioral, and migration completion criteria are checked for Phase 1-23 scope only.
+Consumption migration / convergence criteria remain open.
+```
+
+## 7.1 Structural Completion — Phase 1-23 Scope
+
+- [x] Authority, semantics, provenance, and traceability are explicit upstream concerns.
+- [x] Envelopes or equivalent carriers preserve semantic context across major seams.
+- [x] Reasoning owns capability, composition, transformation, interpretation, confidence, and overlay.
+- [x] Program structures bridge reasoning into downstream contracts.
+- [x] Contracts/boundaries/qualification/bindings are the required downstream handoff.
+- [x] Qualification governs provider/backend/adapter/delivery compatibility.
+- [x] SurfaceModel or equivalent consumer-neutral, metadata-preserving shape exists before terminal delivery.
+- [x] Delivery is terminal and replaceable.
+- [x] Evidence is observational and auditable.
+- [x] Governance constraints exist for future growth.
+
+## 7.2 Behavioral Completion — Phase 1-23 Scope
+
+- [x] Existing behavior is preserved.
+- [x] Existing tests pass.
+- [x] New guardrail tests pass.
+- [x] Parity is preserved for migrated paths.
+- [x] Smoke tests pass for affected delivery paths.
+- [x] Metadata preservation tests pass.
+- [x] Invalid provider/backend/adapter combinations are rejected.
+- [x] Evidence does not affect live execution.
+
+## 7.3 Migration Completion — Phase 1-23 Scope
+
+- [x] Refactoring opportunities have been classified and acted on where safe.
+- [x] Sprawl, duplication, contradiction, and exception-driven paths are reduced where proven.
+- [x] Major old hubs no longer absorb new target responsibilities.
+- [x] New capabilities enter through the target spine.
+- [x] At least one non-chart consumer path is proven.
+- [x] Legacy bypasses are reduced or explicitly bounded.
+- [x] Repeated family patterns are consolidated only where proven safe.
+- [x] Current architecture can be described through the target grammar.
+- [x] Documentation reflects validated state, not intended future state.
+
+## 7.4 Consumption Migration / Convergence Completion
+
+- [ ] `ChartDataContext` dependencies are classified and mapped to target replacements.
+- [ ] Production UI consumes VNext-native contract/surface output for migrated paths.
+- [ ] `LegacyChartProgramProjector` usage is retired or validation-only with named retirement condition.
+- [ ] `VNextDataResolutionHelper` bridge logic is retired or validation-only with named retirement condition.
+- [ ] `LegacyMetricViewGateway` is retired or explicitly bounded by provider replacement condition.
+- [ ] Operation Chain Workbench consumes VNext-native contract/surface output without `ChartDataContext` as primary semantic model.
+- [ ] At least one production chart family has fully migrated away from `ChartDataContext`-primary consumption.
+- [ ] All production chart families are migrated or explicitly deferred with named blocker.
+- [ ] Consumer-neutral surface output is the required pre-delivery seam for migrated paths.
+- [ ] UI, interaction, and state layers remain non-authoritative after migration.
+- [ ] Rendering, backend, vendor, host, and lifecycle concerns remain terminal.
+- [ ] Remaining legacy bypasses are retired or validation-only.
+- [ ] Fresh generated artifacts confirm no unclassified density or drift remains.
+- [ ] Full test, parity, smoke, metadata, and provenance evidence supports convergence.
+
+## 7.5 Prime Directive / Post-Convergence Readiness
+
+- [ ] Requirements-to-language coverage can be evaluated after convergence.
+- [ ] Operation Chain evidence can be used as the first formal pressure test.
+- [ ] Missing language can be recorded without blocking Phases 24-35.
+- [ ] Construction algebra work is deferred until convergence evidence exists.
+- [ ] Post-convergence phases are aligned to bounded generativity rather than ordinary feature/product expansion.
+- [ ] No post-convergence phase assumes that validity, usefulness, meaning, explanation, computability, and evidence are the same thing.
+
+## 7.6 Closure Definition
+
+The full migration can be considered complete when:
+
+```text
+canonical meaning is upstream
+provenance is traceable
+capabilities are composable
+contracts govern handoff
+qualification governs compatibility
+consumers remain non-authoritative
+delivery remains replaceable
+evidence remains observational
+governance controls future growth
+```
+
+No closure claim is valid unless supported by:
+
+```text
+tests
+parity evidence
+metadata preservation
+dependency review
+guardrail checks
+updated documentation
 ```
 
 ---
 
-## 7. Concept Promotion Result
+# 8. Compact Progress Log
 
-Promoted concept set:
-
-```text
-Authority
-Canonical Semantics
-Provenance
-Traceability
-Envelope
-Lossless Fidelity
-Determinism
-Reversibility
-Constraint
-Governance
-Intent
-Capability
-Composition
-Transformation
-Interpretation
-Confidence
-Overlay
-Program
-Contract
-Boundary
-Neutrality
-Qualification
-Provider
-Consumer
-Interaction
-SurfaceModel
-Binding
-Delivery
-Evidence
-Audit
-```
-
-Working architecture phrase:
-
-```text
-Authority-bound, canonically semantic, lossless, and traceable analytical capability
-expressed through neutral contracts,
-adapted by consumers,
-terminalized by replaceable delivery,
-and governed by observational evidence.
-```
-
----
-
-## 8. Step 3 Output
-
-Step 3 promotes the vocabulary that should now govern target-architecture design.
-
-Next:
-
-```text
-Step 4 — Map concept relationships.
-```
-
----
-
-# Step 4 — Concept Relationship Graph
-
-## Purpose
-
-Map the promoted and candidate concepts as a graph.
-
-This step is exploratory.
-
-It does not define final ownership, implementation placement, dependency rules, or migration sequence.
-
-```text
-atoms
--> parentage
--> compounds
--> relationship patterns
--> loose strength notes
--> target-architecture input
-```
-
----
-
-## 1. Relationship Model
-
-```text
-Concepts form a graph, not a strict tree.
-Atomic concepts may have multiple parents.
-Compound concepts inherit meaning from both their atoms and their parent context.
-A concept may be central in one context and supporting in another.
-```
-
-Use this step to discover:
-
-```text
-where concepts can live
-how concepts combine
-which compounds appear architecturally useful
-which relationships should be carried into target design
-```
-
-Do not use this step to decide:
-
-```text
-final ownership
-namespace placement
-code movement
-dependency rules
-implementation sequence
-vocabulary pruning
-```
-
----
-
-## 2. Atomic Parentage Map
-
-This section maps atomic concepts to possible parent concepts.
-
-The parent list is non-unique and non-final.
-
-| Atomic Concept | Possible Parents | Meaning Under Parent |
-|---|---|---|
-| `Authority` | Governance, Boundary, Contract, Evidence | semantic legitimacy, decision legitimacy, rule source |
-| `Canonical` | Authority, Semantics, Contract, Evidence | single accepted form or meaning |
-| `Semantics` | Authority, Interpretation, Contract, Consumer | meaning carried through the system |
-| `Provenance` | Authority, Envelope, Evidence, Audit | source lineage and derivation trail |
-| `Traceability` | Provenance, Evidence, Audit, Reversibility | ability to follow decisions/results backward |
-| `Envelope` | Authority, Contract, Boundary, Evidence | meaning-preserving carrier across seams |
-| `Lossless` | Fidelity, Transformation, Envelope, Contract | no unacknowledged information loss |
-| `Fidelity` | Lossless, Delivery, Projection, Evidence | preservation of meaning through transformation |
-| `Determinism` | Governance, Evidence, Capability, Audit | repeatable behavior under same inputs/rules |
-| `Reversibility` | Provenance, Transformation, Audit, Evidence | recovery or reconstruction of prior state/path |
-| `Constraint` | Governance, Policy, Contract, Boundary | lawful limitation or control rule |
-| `Governance` | Evidence, Audit, Constraint, Authority | oversight discipline and alignment enforcement |
-| `Intent` | Capability, Program, Interpretation, Consumer | declared purpose before execution |
-| `Capability` | Reasoning, Composition, Contract, Provider | reusable analytical ability |
-| `Composition` | Capability, Program, Transformation, Interpretation | lawful combination of capabilities/results |
-| `Transformation` | Capability, Composition, Projection, Reversibility | change in form/structure/representation |
-| `Interpretation` | Semantics, Confidence, Overlay, Evidence | explicit reading of analytical meaning |
-| `Confidence` | Interpretation, Evidence, Trust, Qualification, Envelope | certainty, risk, or reliability annotation |
-| `Overlay` | Interpretation, Delivery, Consumer, SurfaceModel | additional context over canonical result |
-| `Program` | Intent, Capability, Contract, Execution | planned analytical work |
-| `Policy` | Governance, Constraint, Qualification, Process | explicit decision rule |
-| `Contract` | Boundary, Provider, Consumer, Delivery | declared handoff shape |
-| `Boundary` | Contract, Neutrality, Governance, Runtime | governed crossing between responsibilities |
-| `Neutrality` | Contract, Boundary, SurfaceModel, Program | absence of premature consumer/vendor assumptions |
-| `Qualification` | Provider, Delivery, Evidence, Contract | compatibility proof or acceptance gate |
-| `Provider` | Capability, Contract, Registry, Delivery | fulfiller behind a contract |
-| `Consumer` | Contract, Interaction, SurfaceModel, Delivery | downstream receiver of authoritative output |
-| `Interaction` | Consumer, SurfaceModel, Event, Delivery | consumer-side behavior or flow |
-| `SurfaceModel` | Consumer, Contract, Delivery, Neutrality | consumer-neutral representation for delivery |
-| `Binding` | Program, Provider, Consumer, Delivery | lawful connection between selected parts |
-| `Delivery` | Consumer, SurfaceModel, Backend, VendorBoundary | terminal realization of output |
-| `Evidence` | Governance, Audit, Diagnostics, Qualification | observational proof |
-| `Audit` | Evidence, Provenance, Governance, Traceability | durable review path |
-
----
-
-## 3. Compound Formation Map
-
-This section records useful compound concepts that may help describe the target architecture later.
-
-These compounds are not final type names.
-
-| Compound Concept | Atomized Parts | Lives Under | Purpose |
-|---|---|---|---|
-| `CanonicalSemantics` | Canonical + Semantics | Authority, Contract | preserve one accepted meaning |
-| `TruthEnvelope` | Truth + Envelope | Authority, Boundary | carry authoritative meaning safely |
-| `SemanticEnvelope` | Semantic + Envelope | Authority, Contract | transport meaning without losing context |
-| `ProvenanceEnvelope` | Provenance + Envelope | Authority, Evidence | carry source lineage across seams |
-| `ResultEnvelope` | Result + Envelope | Contract, Evidence | preserve result meaning and metadata |
-| `CapabilityContract` | Capability + Contract | Capability, Boundary | declare capability handoff shape |
-| `ProviderContract` | Provider + Contract | Boundary, Provider | define provider obligations |
-| `ConsumerContract` | Consumer + Contract | Boundary, Consumer | define consumer-facing expectations |
-| `DeliveryContract` | Delivery + Contract | Boundary, Delivery | define terminal delivery handoff |
-| `InteractionContract` | Interaction + Contract | Consumer, Interaction | constrain consumer behavior exchange |
-| `EvidenceContract` | Evidence + Contract | Evidence, Audit | define observational proof shape |
-| `SurfaceModel` | Surface + Model | Contract, Consumer, Delivery | neutral output shape before terminal delivery |
-| `DeliveryBinding` | Delivery + Binding | Program, Delivery | connect plan to delivery target |
-| `ProviderBinding` | Provider + Binding | Contract, Provider | connect qualified provider to need |
-| `ConsumerBinding` | Consumer + Binding | Consumer, Contract | connect output to consumer family |
-| `RuntimeBoundary` | Runtime + Boundary | Delivery, Process | isolate runtime/host concerns |
-| `VendorBoundary` | Vendor + Boundary | Delivery | isolate vendor-specific behavior |
-| `QualificationPolicy` | Qualification + Policy | Governance, Contract | define lawful compatibility rules |
-| `BackendCapability` | Backend + Capability | Delivery, Provider | describe backend ability |
-| `AdapterQualification` | Adapter + Qualification | Delivery, Evidence | prove adapter compatibility |
-| `DecisionLineage` | Decision + Lineage | Governance, Audit | trace decision path |
-| `InterpretationLineage` | Interpretation + Lineage | Interpretation, Evidence | trace interpretive derivation |
-| `EvidenceRecord` | Evidence + Record | Evidence, Audit | durable proof item |
-| `AuditRecord` | Audit + Record | Audit, Governance | durable review item |
-| `CompositionGraph` | Composition + Graph | Capability, Program | model combinable analytical structure |
-| `CapabilityGraph` | Capability + Graph | Capability, Provider | model available capabilities |
-| `EvidenceGraph` | Evidence + Graph | Evidence, Audit | model proof relationships |
-| `ProvenanceGraph` | Provenance + Graph | Provenance, Audit | model source lineage |
-| `SemanticInvariant` | Semantic + Invariant | Authority, Contract | rule preserving meaning |
-| `BoundaryInvariant` | Boundary + Invariant | Boundary, Governance | rule preserving seam correctness |
-| `NeutralityInvariant` | Neutrality + Invariant | Boundary, Contract | rule preventing premature assumptions |
-
----
-
-## 4. Relationship Patterns
-
-### 4.1 Carrier Pattern
-
-```text
-Envelope carries:
-- provenance
-- canonical semantics
-- confidence
-- traceability
-- reversibility metadata
-```
-
-### 4.2 Qualification Pattern
-
-```text
-Qualification relates:
-- provider
-- backend
-- adapter
-- contract
-- delivery
-- evidence
-```
-
-### 4.3 Neutrality Pattern
-
-```text
-Neutrality protects:
-- reasoning from UI assumptions
-- contracts from vendor assumptions
-- programs from presentation assumptions
-- surface models from backend assumptions
-```
-
-### 4.4 Evidence Pattern
-
-```text
-Evidence observes:
-- authority
-- provenance
-- contracts
-- qualification
-- delivery
-- migration progress
-```
-
-### 4.5 Delivery Pattern
-
-```text
-Delivery terminalizes:
-- surface models
-- bindings
-- vendor adapters
-- runtime boundaries
-- lifecycle handling
-```
-
----
-
-## 5. Compound Strength Notes
-
-Loose classification only.
-
-No pruning yet.
-
-| Strength | Meaning |
-|---|---|
-| `Core` | likely central to final target architecture |
-| `Supporting` | useful but probably not central |
-| `Candidate` | promising, requires testing in target design |
-| `Transitional` | useful for current migration/state description |
-| `Deferred` | interesting but not needed now |
-
-Initial classification:
-
-| Compound | Strength |
-|---|---|
-| `CanonicalSemantics` | Core |
-| `ProvenanceEnvelope` | Core |
-| `SemanticEnvelope` | Candidate |
-| `CapabilityContract` | Core |
-| `ProviderContract` | Core |
-| `ConsumerContract` | Core |
-| `DeliveryContract` | Core |
-| `InteractionContract` | Supporting |
-| `EvidenceContract` | Candidate |
-| `SurfaceModel` | Core |
-| `DeliveryBinding` | Core |
-| `ProviderBinding` | Supporting |
-| `ConsumerBinding` | Supporting |
-| `RuntimeBoundary` | Supporting |
-| `VendorBoundary` | Supporting |
-| `QualificationPolicy` | Supporting |
-| `BackendCapability` | Supporting |
-| `AdapterQualification` | Supporting |
-| `DecisionLineage` | Supporting |
-| `InterpretationLineage` | Supporting |
-| `EvidenceRecord` | Supporting |
-| `AuditRecord` | Supporting |
-| `CompositionGraph` | Candidate |
-| `CapabilityGraph` | Candidate |
-| `EvidenceGraph` | Candidate |
-| `ProvenanceGraph` | Candidate |
-| `SemanticInvariant` | Candidate |
-| `BoundaryInvariant` | Candidate |
-| `NeutralityInvariant` | Candidate |
-
----
-
-## 6. Step 4 Output
-
-Step 4 establishes a concept graph for later target architecture design.
-
-```text
-atomic concepts may have many parents
-compounds are allowed when purpose-bounded
-compound strength is loose, not final
-ownership and implementation placement are deferred
-```
-
-Next:
-
-```text
-Step 5 — Define target architecture.
-```
-
----
-
-## 7. Reduced Grammar from Step 4
-
-This reduction is based on the Step 4 concept graph.
-
-It is architecture-language reduction, not implementation pruning.
-
-The grammar is reduced, not closed. It is optimized for the current target direction while remaining open to governed growth where new concepts improve the project’s ultimate goals.
-
-### 7.1 Reduced Atomized Grammar
-
-```text
-Authority
-Semantics
-Provenance
-Traceability
-Envelope
-Fidelity
-Determinism
-Reversibility
-Constraint
-Governance
-
-Intent
-Capability
-Composition
-Transformation
-Interpretation
-Confidence
-Overlay
-Program
-Policy
-
-Contract
-Boundary
-Neutrality
-Qualification
-Provider
-Consumer
-Interaction
-Surface
-Model
-Binding
-
-Projection
-Adapter
-Resolver
-Selector
-Registry
-
-Delivery
-Backend
-Runtime
-Vendor
-Lifecycle
-
-Evidence
-Diagnostics
-Parity
-Reachability
-Validation
-Audit
-Record
-```
-
-### 7.2 Folded / Collapsed Atom Notes
-
-```text
-Canonical -> Semantics / Authority
-Trust -> Provenance / Evidence / Confidence
-Lineage -> Provenance / Traceability
-Identity -> Authority / Semantics / Envelope
-Invariant -> Constraint / Governance / Boundary
-Layer -> Contextual grouping only
-Graph -> Relationship representation only
-Kernel -> Implementation detail unless computation-core specific
-```
-
-### 7.3 Current Reduced Atomic Grammar
-
-```text
-Authority
-Semantics
-Provenance
-Traceability
-Envelope
-Fidelity
-Determinism
-Reversibility
-Constraint
-Governance
-Intent
-Capability
-Composition
-Transformation
-Interpretation
-Confidence
-Overlay
-Program
-Policy
-Contract
-Boundary
-Neutrality
-Qualification
-Provider
-Consumer
-Interaction
-Surface
-Model
-Binding
-Projection
-Adapter
-Resolver
-Selector
-Registry
-Delivery
-Backend
-Runtime
-Vendor
-Lifecycle
-Evidence
-Diagnostics
-Parity
-Reachability
-Validation
-Audit
-Record
-```
-
-### 7.4 Current Reduced Compound Grammar
-
-```text
-CanonicalSemantics
-SemanticAuthority
-ProvenanceEnvelope
-SemanticEnvelope
-ResultEnvelope
-RequestEnvelope
-CapabilityContract
-ProviderContract
-ConsumerContract
-DeliveryContract
-InteractionContract
-EvidenceContract
-ContractBoundary
-ProviderBoundary
-ConsumerBoundary
-RuntimeBoundary
-VendorBoundary
-EvidenceBoundary
-SurfaceModel
-DeliveryBinding
-ProviderBinding
-ConsumerBinding
-ExecutionBinding
-CapabilityBinding
-QualificationPolicy
-BackendCapability
-BackendQualification
-AdapterQualification
-DecisionTrace
-ResultTrace
-InterpretationTrace
-EvidenceRecord
-AuditRecord
-DiagnosticRecord
-ValidationRecord
-ParityEvidence
-ReachabilityEvidence
-TransformationPolicy
-CompositionPolicy
-DeliveryPolicy
-GovernancePolicy
-NeutralityConstraint
-BoundaryConstraint
-SemanticConstraint
-FidelityConstraint
-ReversibilityConstraint
-```
-
-### 7.5 Reduced Grammar Spine
-
-```text
-Authority
--> Semantics
--> Provenance / Traceability
--> Envelope
--> Intent
--> Capability
--> Composition / Transformation
--> Interpretation / Confidence / Overlay
--> Program
--> Contract / Boundary
--> Neutrality / Qualification
--> Provider / Consumer / Interaction
--> SurfaceModel
--> Binding
--> Delivery
--> Evidence / Audit
-```
-
-Short form:
-
-```text
-Authority
--> Capability
--> Contract
--> Consumer
--> Delivery
--> Evidence
-```
-
-### 7.6 Governed Extension Pool
-
-Use this pool to describe future code maps and target-architecture permutations. This pool is the current reduced language, not a permanent closure of architectural vocabulary.
-
-```text
-Authority / Semantics / Provenance / Traceability / Envelope
-Fidelity / Determinism / Reversibility / Constraint / Governance
-Intent / Capability / Composition / Transformation / Interpretation / Confidence / Overlay
-Program / Policy / Contract / Boundary / Neutrality / Qualification
-Provider / Consumer / Interaction / SurfaceModel / Binding
-Projection / Adapter / Resolver / Selector / Registry
-Delivery / Backend / RuntimeBoundary / VendorBoundary / Lifecycle
-Evidence / Diagnostics / Parity / Reachability / Validation / Audit / Record
-```
-
-### 7.7 Governed Growth Criteria
-
-New concepts may be added later when they materially improve one or more of:
-
-```text
-authority, provenance, semantics, or traceability
-losslessness, fidelity, determinism, or reversibility
-capability, composition, transformation, or interpretation
-contract, boundary, neutrality, or qualification
-consumer / delivery separation
-observational evidence, validation, audit, or governance
-current-code clarity or future code-map clarity
-```
-
-Reject new concepts when they only:
-
-```text
-rename implementation detail
-duplicate an existing concept
-add aesthetic vocabulary without architectural force
-hide ownership, policy, or authority
-centralize delivery, UI, or vendor concerns
-```
-
-Growth rule:
-
-```text
-optimized
-bounded
-extensible
-governed by project goals
-```
-
----
-
-### 7.8 Step 4 Reduction Output
-
-```text
-The concept graph reduces to a compact but extensible grammar capable of describing future code maps:
-authority-bound meaning,
-traceable and reversible envelopes,
-capability-driven composition,
-contract-bound neutrality,
-qualified provider/consumer delivery,
-observational evidence,
-and governed growth.
-```
-
-Next:
-
-```text
-Step 5 — Define target architecture.
-```
-
----
-
----
-
-# Step 5 — Target Architecture Specification
-
-## 1. Target Architecture Specification
-
-DataVisualiser must become an authority-bound analytical architecture.
-
-It must preserve canonical semantics, provenance, traceability, fidelity, determinism, and reversibility from ingestion through delivery.
-
-Analytical work must be expressed through intent, capability, composition, transformation, interpretation, confidence, overlay, and program structures.
-
-Downstream use must cross explicit contracts, boundaries, bindings, and qualifications.
-
-Consumers must remain thin.
-
-Delivery must remain terminal and replaceable.
-
-Evidence must remain observational, auditable, and non-controlling.
-
-Governed growth is allowed only when it strengthens the project’s core architectural aims.
-
----
-
-## 2. Target Architecture Outcome
-
-```text
-Authority defines meaning.
-Provenance preserves lineage.
-Envelopes carry semantic context.
-Capabilities express analytical power.
-Composition and transformation create higher-order output.
-Interpretation, confidence, and overlays explain without mutating truth.
-Programs describe intended analytical work.
-Contracts and boundaries govern handoff.
-Neutrality prevents premature UI/vendor/backend/consumer assumptions.
-Qualification prevents invalid provider/backend/adapter/delivery use.
-Consumers receive meaning without owning it.
-Interaction relays behavior without redefining intent.
-Surface models prepare consumer-neutral output.
-Bindings connect qualified parts lawfully.
-Delivery terminalizes output through replaceable infrastructure.
-Evidence proves behavior without controlling behavior.
-Governance permits aligned growth.
-```
-
----
-
-## 3. Current vs Target Gap Comparison
-
-| Area | Current Architecture | Target Architecture | Gap |
-|---|---|---|---|
-| Authority | Authority concepts exist, but older UI/process/rendering paths still carry integration weight. | Semantic authority is explicit and upstream. | Prevent old hubs from absorbing meaning. |
-| Semantics | Canonical semantics are partially represented through VNext vocabulary. | Semantics are preserved consistently through envelopes, contracts, and evidence. | Make semantic preservation explicit across handoffs. |
-| Provenance / Traceability | Provenance and evidence structures exist. | Lineage is carried through analytical and delivery boundaries. | Ensure results cannot lose source/context lineage. |
-| Capability | Capability and reasoning structures exist. | New analytical behavior enters through capability/composition/program structures. | Stop new capability entering through controllers/rendering paths. |
-| Composition / Transformation | Composition and operation vocabulary exists. | Transformations are reversible, traceable, and governed. | Generalize transformation beyond current chart-specific paths. |
-| Interpretation / Confidence / Overlay | Structures exist but are still young. | Interpretation, confidence, and overlays explain meaning without mutating truth. | Guard them from rendering/UI ownership. |
-| Program / Plan | Program and render-plan structures exist. | Programs are analytical and consumer-neutral before delivery. | Reduce chart-first target language over time. |
-| Contracts / Boundaries | Consumer/provider contracts and render-plan qualification exist. | Contracts and boundaries are the main downstream fan-out seam. | Harden boundary enforcement and bypass prevention. |
-| Neutrality | Some VNext structures are neutral, but old paths remain UI/rendering-shaped. | Upstream architecture remains UI/vendor/backend/consumer neutral. | Prevent terminal assumptions leaking upstream. |
-| Qualification | Backend/provider/adapter qualification exists. | Qualification governs compatibility before use. | Treat qualification as enforcement, not incidental selection. |
-| Consumer / Interaction | Interaction and tooltip seams exist, but UI remains broad. | Consumers receive output; interaction relays behavior only. | Keep consumer/interaction non-authoritative. |
-| Surface / Delivery | Render plans and render surfaces exist; rendering remains large. | Delivery is terminal, replaceable, and vendor-contained. | Demote rendering further and isolate vendor concerns. |
-| Evidence / Governance | Evidence, parity, diagnostics, and reachability are strong. | Evidence proves and audits without controlling live behavior. | Guard evidence from becoming execution policy. |
-| Process / Orchestration | Coordinators, factories, pipelines, and stages remain heavy. | Process sequences work without owning semantic truth. | Cap hubs and prevent service-locator/context growth. |
-| Growth | Vocabulary and architecture are evolving. | Growth is governed by semantic, provenance, capability, contract, and evidence value. | Allow extension without abstraction sprawl. |
-
----
-
-## 4. Target Non-Goals
-
-```text
-not chart-first
-not UI-first
-not renderer-first
-not controller-first
-not vendor-first
-not diagnostics-controlled
-not feature-by-feature accumulation
-not adapter/coordinator mesh architecture
-```
-
-Forbidden outcomes:
-
-```text
-UI owns authority.
-Rendering owns meaning.
-Evidence controls live behavior.
-Process defines semantic truth.
-Adapters become policy owners.
-Contexts become service locators.
-Results lose provenance.
-Contracts smuggle vendor assumptions upstream.
-Consumers redefine canonical meaning.
-Delivery becomes non-replaceable.
-```
-
----
-
-## 5. Target Architecture Success Standard
-
-Future code maps should be describable primarily through:
-
-```text
-Authority / Semantics / Provenance / Traceability / Envelope
-Fidelity / Determinism / Reversibility / Constraint / Governance
-Intent / Capability / Composition / Transformation / Interpretation / Confidence / Overlay
-Program / Policy / Contract / Boundary / Neutrality / Qualification
-Provider / Consumer / Interaction / SurfaceModel / Binding
-Projection / Adapter / Resolver / Selector / Registry
-Delivery / Backend / RuntimeBoundary / VendorBoundary / Lifecycle
-Evidence / Diagnostics / Parity / Reachability / Validation / Audit / Record
-```
-
-Concrete family/vendor/UI terms may remain implementation details, but must not define the architecture.
-
-```text
-Chart
-Main
-Secondary
-BarPie
-Cartesian
-Distribution
-Syncfusion
-LiveCharts
-ECharts
-Wpf
-Tooltip
-```
-
----
-
-## 6. Step 5 Starting Position
-
-```text
-The target architecture is the governing shape that prevents analytical meaning
-from being captured by UI, rendering, vendor, or coordination concerns.
-```
-
-Next within Step 5:
-
-```text
-Define the target architecture containers and flow.
-```
-
----
-
----
-
----
-
-# Step 5 — Target Architecture Code Map
-
-```text
-TARGET ARCHITECTURE CODE MAP
-
-DataVisualiser
-├── Authority
-│   ├── SemanticAuthority
-│   ├── CanonicalSemantics
-│   ├── AuthorityBoundary
-│   ├── AuthorityEnvelope
-│   ├── AuthorityRecord
-│   ├── AuthorityConstraint
-│   └── AuthorityPolicy
-│
-├── Authority.Provenance
-│   ├── ProvenanceDescriptor
-│   ├── ProvenanceEnvelope
-│   ├── ProvenanceRecord
-│   ├── ProvenanceTrace
-│   ├── TraceabilityRecord
-│   ├── DecisionTrace
-│   ├── ResultTrace
-│   ├── InterpretationTrace
-│   ├── TransformationTrace
-│   └── ProvenanceAudit
-│
-├── Authority.Fidelity
-│   ├── LosslessConstraint
-│   ├── FidelityConstraint
-│   ├── ReversibilityConstraint
-│   ├── DeterminismConstraint
-│   ├── TransformationRecord
-│   ├── RecoveryRecord
-│   ├── FidelityEvidence
-│   └── ReversibilityEvidence
-│
-├── Envelopes
-│   ├── EnvelopeMetadata
-│   ├── SemanticEnvelope
-│   ├── RequestEnvelope
-│   ├── ResultEnvelope
-│   ├── ProgramEnvelope
-│   ├── InterpretationEnvelope
-│   ├── SurfaceEnvelope
-│   ├── DeliveryEnvelope
-│   ├── EvidenceEnvelope
-│   └── AuditEnvelope
-│
-├── Semantics
-│   ├── SemanticModel
-│   ├── SemanticDescriptor
-│   ├── SemanticIdentity
-│   ├── SemanticConstraint
-│   ├── SemanticPolicy
-│   ├── SemanticProjection
-│   ├── SemanticContract
-│   └── SemanticEvidence
-│
-├── Reasoning
-│   ├── AnalyticalIntent
-│   ├── IntentResolver
-│   ├── CapabilityRequest
-│   ├── CapabilityModel
-│   ├── CapabilityRegistry
-│   ├── CapabilityPolicy
-│   ├── CapabilityContract
-│   ├── CapabilityQualification
-│   └── CapabilityDiagnostics
-│
-├── Reasoning.Composition
-│   ├── CompositionModel
-│   ├── CompositionPolicy
-│   ├── CompositionGraph
-│   ├── CompositionNode
-│   ├── CompositionEdge
-│   ├── CompositionConstraint
-│   ├── CompositionEvidence
-│   └── CompositionTrace
-│
-├── Reasoning.Transformation
-│   ├── TransformationModel
-│   ├── TransformationPolicy
-│   ├── TransformationGraph
-│   ├── TransformationNode
-│   ├── TransformationEdge
-│   ├── TransformationConstraint
-│   ├── TransformationRecord
-│   ├── TransformationTrace
-│   └── TransformationEvidence
-│
-├── Reasoning.Interpretation
-│   ├── InterpretationModel
-│   ├── InterpretationPolicy
-│   ├── InterpretationResult
-│   ├── InterpretationTrace
-│   ├── InterpretationEnvelope
-│   ├── InterpretationEvidence
-│   └── InterpretationDiagnostics
-│
-├── Reasoning.Confidence
-│   ├── ConfidenceModel
-│   ├── ConfidencePolicy
-│   ├── ConfidenceAnnotation
-│   ├── ConfidenceEvidence
-│   ├── ConfidenceConstraint
-│   └── ConfidenceDiagnostics
-│
-├── Reasoning.Overlay
-│   ├── OverlayModel
-│   ├── OverlayPolicy
-│   ├── OverlayPlan
-│   ├── OverlayProjection
-│   ├── OverlayEvidence
-│   └── OverlayDiagnostics
-│
-├── Program
-│   ├── AnalyticalProgram
-│   ├── ProgramRequest
-│   ├── ProgramPlan
-│   ├── ProgramResult
-│   ├── ProgramPolicy
-│   ├── ProgramContract
-│   ├── ProgramEnvelope
-│   ├── ProgramTrace
-│   └── ProgramDiagnostics
-│
-├── Program.Execution
-│   ├── ExecutionPlan
-│   ├── ExecutionBinding
-│   ├── ExecutionPolicy
-│   ├── ExecutionState
-│   ├── ExecutionRecord
-│   ├── ExecutionEvidence
-│   └── ExecutionDiagnostics
-│
-├── Contracts
-│   ├── SemanticContract
-│   ├── CapabilityContract
-│   ├── ProgramContract
-│   ├── ProviderContract
-│   ├── ConsumerContract
-│   ├── InteractionContract
-│   ├── SurfaceContract
-│   ├── DeliveryContract
-│   ├── EvidenceContract
-│   ├── AuditContract
-│   └── ContractBoundary
-│
-├── Boundaries
-│   ├── AuthorityBoundary
-│   ├── SemanticBoundary
-│   ├── ContractBoundary
-│   ├── ProviderBoundary
-│   ├── ConsumerBoundary
-│   ├── InteractionBoundary
-│   ├── SurfaceBoundary
-│   ├── DeliveryBoundary
-│   ├── RuntimeBoundary
-│   ├── VendorBoundary
-│   ├── EvidenceBoundary
-│   └── AuditBoundary
-│
-├── Boundaries.Constraints
-│   ├── BoundaryConstraint
-│   ├── NeutralityConstraint
-│   ├── FidelityConstraint
-│   ├── ReversibilityConstraint
-│   ├── DeterminismConstraint
-│   ├── ConsumerNeutralityConstraint
-│   ├── BackendNeutralityConstraint
-│   ├── VendorNeutralityConstraint
-│   └── PresentationNeutralityConstraint
-│
-├── Qualification
-│   ├── QualificationPolicy
-│   ├── CapabilityQualification
-│   ├── ProviderQualification
-│   ├── ConsumerQualification
-│   ├── BackendQualification
-│   ├── AdapterQualification
-│   ├── SurfaceQualification
-│   ├── DeliveryQualification
-│   ├── QualificationRecord
-│   └── QualificationEvidence
-│
-├── Providers
-│   ├── ProviderRegistry
-│   ├── ProviderDescriptor
-│   ├── ProviderCapability
-│   ├── ProviderContract
-│   ├── ProviderBinding
-│   ├── ProviderMetadata
-│   ├── ProviderProjection
-│   ├── ProviderQualification
-│   └── ProviderDiagnostics
-│
-├── Projection
-│   ├── SemanticProjector
-│   ├── CapabilityProjector
-│   ├── ProgramProjector
-│   ├── ProviderProjector
-│   ├── ConsumerProjector
-│   ├── InteractionProjector
-│   ├── SurfaceProjector
-│   ├── DeliveryProjector
-│   ├── EvidenceProjector
-│   ├── AuditProjector
-│   └── ProjectionRecord
-│
-├── Consumers
-│   ├── ConsumerRegistry
-│   ├── ConsumerDescriptor
-│   ├── ConsumerContract
-│   ├── ConsumerBinding
-│   ├── ConsumerSurface
-│   ├── ConsumerState
-│   ├── ConsumerAdapter
-│   ├── ConsumerProjection
-│   ├── ConsumerQualification
-│   └── ConsumerDiagnostics
-│
-├── Interaction
-│   ├── InteractionRequest
-│   ├── InteractionContract
-│   ├── InteractionState
-│   ├── InteractionBinding
-│   ├── InteractionFlow
-│   ├── InteractionPolicy
-│   ├── EventBinding
-│   ├── InteractionAdapter
-│   └── InteractionDiagnostics
-│
-├── Surfaces
-│   ├── SurfaceModel
-│   ├── SurfaceEnvelope
-│   ├── SurfaceContract
-│   ├── SurfaceProjection
-│   ├── SurfaceBinding
-│   ├── SurfaceQualification
-│   ├── SurfaceValidation
-│   └── SurfaceDiagnostics
-│
-├── Delivery
-│   ├── DeliveryPlan
-│   ├── DeliveryContract
-│   ├── DeliveryBinding
-│   ├── DeliveryPolicy
-│   ├── DeliveryAdapter
-│   ├── DeliverySurface
-│   ├── DeliveryEnvelope
-│   ├── DeliveryLifecycle
-│   ├── DeliveryQualification
-│   └── DeliveryDiagnostics
-│
-├── Delivery.Backends
-│   ├── BackendRegistry
-│   ├── BackendCapability
-│   ├── BackendContract
-│   ├── BackendQualification
-│   ├── BackendBinding
-│   ├── BackendAdapter
-│   ├── BackendLifecycle
-│   └── BackendDiagnostics
-│
-├── Delivery.Vendors
-│   ├── VendorBoundary
-│   ├── VendorContract
-│   ├── VendorAdapter
-│   ├── VendorSurface
-│   ├── VendorLifecycle
-│   ├── VendorQualification
-│   └── VendorDiagnostics
-│
-├── Evidence
-│   ├── EvidenceContract
-│   ├── EvidenceEnvelope
-│   ├── EvidenceRecord
-│   ├── EvidenceProjection
-│   ├── EvidenceDiagnostics
-│   ├── EvidenceExport
-│   ├── EvidenceAudit
-│   └── EvidencePolicy
-│
-├── Evidence.Diagnostics
-│   ├── DiagnosticRecord
-│   ├── DiagnosticSnapshot
-│   ├── RuntimeDiagnostic
-│   ├── SemanticDiagnostic
-│   ├── ContractDiagnostic
-│   ├── BoundaryDiagnostic
-│   ├── QualificationDiagnostic
-│   └── DeliveryDiagnostic
-│
-├── Evidence.Parity
-│   ├── ParityEvidence
-│   ├── ParityRecord
-│   ├── ParityValidator
-│   ├── ParitySnapshot
-│   └── ParityReport
-│
-├── Evidence.Reachability
-│   ├── ReachabilityEvidence
-│   ├── ReachabilityRecord
-│   ├── ReachabilityValidator
-│   ├── ReachabilitySnapshot
-│   └── ReachabilityReport
-│
-├── Evidence.Validation
-│   ├── ValidationEvidence
-│   ├── ValidationRecord
-│   ├── ValidationPolicy
-│   ├── ValidationResult
-│   └── ValidationReport
-│
-├── Audit
-│   ├── AuditRecord
-│   ├── AuditEnvelope
-│   ├── AuditContract
-│   ├── AuditProjection
-│   ├── AuditReport
-│   └── AuditExport
-│
-└── Governance
-    ├── GovernancePolicy
-    ├── GovernanceConstraint
-    ├── GrowthConstraint
-    ├── SemanticConstraint
-    ├── BoundaryConstraint
-    ├── NeutralityConstraint
-    ├── FidelityConstraint
-    ├── ReversibilityConstraint
-    ├── DeterminismConstraint
-    ├── GovernanceEvidence
-    └── GovernanceAudit
-```
-
----
-
-# Target Architecture Flow Map
-
-```text
-Authority
-   ├── CanonicalSemantics
-   ├── Provenance
-   ├── Traceability
-   ├── Fidelity
-   ├── Determinism
-   └── Reversibility
-        │
-        v
-Envelopes
-   ├── RequestEnvelope
-   ├── ResultEnvelope
-   ├── ProgramEnvelope
-   ├── SurfaceEnvelope
-   ├── DeliveryEnvelope
-   └── EvidenceEnvelope
-        │
-        v
-Reasoning
-   ├── Intent
-   ├── Capability
-   ├── Composition
-   ├── Transformation
-   ├── Interpretation
-   ├── Confidence
-   └── Overlay
-        │
-        v
-Program
-   ├── AnalyticalProgram
-   ├── ProgramPlan
-   ├── ExecutionPlan
-   └── ExecutionBinding
-        │
-        v
-Contracts / Boundaries
-   ├── SemanticContract
-   ├── CapabilityContract
-   ├── ProviderContract
-   ├── ConsumerContract
-   ├── SurfaceContract
-   ├── DeliveryContract
-   └── EvidenceContract
-        │
-        v
-Qualification
-   ├── ProviderQualification
-   ├── ConsumerQualification
-   ├── BackendQualification
-   ├── AdapterQualification
-   ├── SurfaceQualification
-   └── DeliveryQualification
-        │
-        v
-Providers / Projection
-   ├── ProviderRegistry
-   ├── ProviderBinding
-   ├── SemanticProjection
-   ├── CapabilityProjection
-   ├── ConsumerProjection
-   ├── SurfaceProjection
-   └── DeliveryProjection
-        │
-        v
-Consumers / Interaction
-   ├── ConsumerBinding
-   ├── ConsumerSurface
-   ├── ConsumerState
-   ├── ConsumerAdapter
-   ├── InteractionRequest
-   ├── InteractionBinding
-   └── InteractionFlow
-        │
-        v
-Surfaces / Delivery
-   ├── SurfaceModel
-   ├── SurfaceBinding
-   ├── DeliveryBinding
-   ├── DeliveryAdapter
-   ├── DeliverySurface
-   ├── BackendAdapter
-   ├── RuntimeBoundary
-   └── VendorBoundary
-
-Evidence observes all seams.
-Audit records reviewable lineage.
-Governance constrains growth.
-Delivery remains terminal.
-```
-
----
-
-# Current vs Target Architecture Comparison
-
-```text
-CURRENT ARCHITECTURE
-
-DataVisualiser
-├── Core
-│   ├── computation
-│   ├── contracts
-│   ├── rendering contracts
-│   ├── strategies
-│   ├── diagnostics
-│   └── shared state/result models
-│
-├── VNext
-│   ├── analytical intent
-│   ├── reasoning engine
-│   ├── capability request
-│   ├── composition
-│   ├── interpretation
-│   ├── confidence
-│   ├── overlay
-│   ├── chart program
-│   ├── render plan
-│   ├── provider metadata
-│   └── delivery binding
-│
-├── UI
-│   ├── views
-│   ├── view models
-│   ├── chart controllers
-│   ├── controller adapters
-│   ├── rendering surfaces
-│   ├── tooltip / interaction helpers
-│   ├── factories
-│   ├── coordinators
-│   └── presentation state
-│
-├── Rendering / Delivery
-│   ├── render engines
-│   ├── render adapters
-│   ├── render surfaces
-│   ├── backend selectors
-│   ├── rendering qualifications
-│   └── vendor-specific infrastructure
-│
-├── Process / Orchestration
-│   ├── coordinators
-│   ├── orchestrators
-│   ├── pipelines
-│   ├── stages
-│   ├── factories
-│   ├── resolvers
-│   └── selectors
-│
-└── Evidence / Diagnostics
-    ├── parity
-    ├── reachability
-    ├── diagnostics snapshots
-    ├── evidence exports
-    ├── validation
-    └── session/runtime records
-```
-
-```text
-TARGET ARCHITECTURE
-
-DataVisualiser
-├── Authority / Provenance / Fidelity
-├── Envelopes
-├── Semantics
-├── Reasoning / Capability / Composition / Transformation
-├── Interpretation / Confidence / Overlay
-├── Program / Execution
-├── Contracts / Boundaries
-├── Qualification
-├── Providers / Projection
-├── Consumers / Interaction
-├── Surfaces / Delivery
-├── Evidence / Diagnostics / Parity / Reachability / Validation
-├── Audit
-└── Governance
-```
-
-```text
-COMPARISON SUMMARY
-
-Current:
-- target-aligned VNext vocabulary exists
-- authority, reasoning, render-plan, provider, delivery, and evidence structures are visible
-- Core, UI, rendering, process, and evidence still operate as strong peer structures
-- UI/process/rendering hubs still carry integration pressure
-- chart/rendering terminology remains structurally dominant
-- evidence is strong but must remain observational
-
-Target:
-- authority and canonical semantics are explicit upstream containers
-- provenance, traceability, fidelity, determinism, and reversibility are preserved through envelopes
-- reasoning owns capability, composition, transformation, interpretation, confidence, and overlay
-- program structures bridge reasoning into downstream contracts
-- contracts, boundaries, qualifications, and bindings become the required downstream seam
-- projection translates without owning authority
-- consumers and interaction remain thin and non-authoritative
-- surfaces are consumer-neutral before delivery
-- delivery is terminal, replaceable, backend/vendor-contained infrastructure
-- evidence observes and audits without controlling live behavior
-- governance constrains growth without becoming runtime semantic execution
-```
-
-```text
-TARGET EXPANSION OVER PRIOR MAP
-
-- Semantics is now explicit, not only implied under Authority.
-- Fidelity is expanded into lossless, deterministic, reversible movement.
-- Transformation is separated from Composition.
-- Confidence and Overlay are preserved as reasoning subdomains.
-- Program.Execution separates analytical planning from execution state.
-- Boundary constraints are explicitly separated from contracts.
-- SurfaceModel is elevated as a consumer-neutral bridge before delivery.
-- Audit is separated from Evidence as durable review.
-- Governance owns growth and constraint discipline.
-- Chart/render/vendor/UI language is not structurally central.
-```
-
----
-
-# Step 5 — Gap / Risk Register
-
-| Gap | Current Evidence | Target Requirement | Migration Implication | Risk |
+| Date | Phase | Compressed Change | Evidence / Test | Status |
 |---|---|---|---|---|
-| Authority / Semantics | UI, process, and rendering hubs still carry meaning-adjacent flow. | Meaning remains upstream, canonical, and explicit. | Cap hubs first. | semantic drift |
-| Provenance / Traceability | Provenance exists, but lineage is not yet uniformly carried through all seams. | Results, interpretations, surfaces, and evidence remain traceable. | Preserve lineage across handoffs. | lost audit path |
-| Fidelity / Reversibility | Transformation exists mostly through current analytical/rendering paths. | Transformations remain lossless, reversible, and explicit. | Generalize transformation discipline. | destructive simplification |
-| Capability / Composition | Capability and composition exist in VNext, but old strategy/controller paths remain active. | New analytical behavior enters through capability/composition/program structures. | Route new capability upstream. | feature sprawl |
-| Interpretation / Confidence / Overlay | Structures exist, but are still young and near delivery concerns. | Explanation remains reasoning-side and non-mutating. | Guard reasoning ownership. | presentation-owned meaning |
-| Program / Execution | Chart-shaped program structures exist. | Program describes analytical work before consumer-specific delivery. | Reduce chart-first framing. | target bias |
-| Contracts / Boundaries | Consumer/provider contracts exist beside older rendering contracts. | Contracts and boundaries become required downstream seam. | Harden seam. | bypass paths |
-| Neutrality | VNext is partly neutral, but old paths remain UI/render/vendor-shaped. | Upstream remains consumer/backend/vendor neutral. | Block assumption leakage. | terminal capture |
-| Qualification | Backend/provider/adapter qualification exists. | Qualification governs compatibility before use. | Treat as enforcement. | invalid handoff |
-| Projection | Projection exists through render-plan/projector structures. | Projection translates without authority. | Keep non-authoritative. | hidden policy |
-| Consumer / Interaction | Tooltip/interaction seams exist; UI remains broad. | Consumers receive; interactions relay. | Keep interaction thin. | consumer authority |
-| SurfaceModel / Delivery | Render surfaces exist; SurfaceModel role needs target centrality. | SurfaceModel bridges consumer-neutral output to delivery. | Elevate surface seam. | delivery coupling |
-| Backend / Vendor | Syncfusion/LiveCharts/ECharts concerns remain concrete and visible. | Backend/vendor behavior remains terminal. | Isolate vendor boundary. | vendor lock-in |
-| Evidence / Diagnostics | Evidence is strong and broad. | Evidence observes, validates, audits, and exports only. | Guard non-control. | diagnostics control |
-| Audit / Governance | Audit/governance are implied more than structurally dominant. | Governance constrains growth; audit preserves reviewability. | Make closure auditable. | unmanaged expansion |
-| Legacy Coexistence | Legacy/Core/UI/VNext paths coexist. | Coexistence is transitional and bounded. | Retire selectively. | permanent mesh |
-| Dependency Density | Dense hubs remain visible in current structure. | Density is justified only by governed seams. | Classify before refactor. | false cleanup |
+| 2026-04-28 | 1 | Regenerated baseline artifacts and recorded structural baseline. | 925 tests; 988 symbols; density 0.6656%; generated artifacts. | Complete |
+| 2026-04-28 | 2 | Added architectural vocabulary to generated dependency governance references. | dependency-summary.md regenerated; references confirmed. | Complete |
+| 2026-04-28 | 3 | Classified dependency density before refactoring. | Dependency density audit; no actual drift confirmed by density alone. | Complete |
+| 2026-04-28 | 4 | Classified refactoring opportunities; avoided unproven movement. | Refactoring opportunity audit. | Complete |
+| 2026-04-28 | 5 | Locked authority/provenance/fidelity guardrails. | Authority/provenance audit; 70 focused tests. | Complete |
+| 2026-04-28 | 6 | Capped integration hubs. | Integration hub audit; 75 architecture tests. | Complete |
+| 2026-04-28 | 7 | Hardened contract/boundary/qualification seam. | Contract/boundary audit; 67 VNext seam tests; 75 architecture tests. | Complete |
+| 2026-04-28 | 8 | Guarded projection/translation as non-authoritative. | Projection audit; 33 projector/adapter tests; 78 architecture tests. | Complete |
+| 2026-04-28 | 9 | Guarded consumer/interaction layer as non-authoritative. | Consumer/interaction audit; 118 tests. | Complete |
+| 2026-04-28 | 10 | Elevated surface-model seam. | Surface-model audit; 121 tests. | Complete |
+| 2026-04-28 | 11 | Demoted terminal delivery/vendor boundaries. | Terminal-delivery audit; 142 tests. | Complete |
+| 2026-04-28 | 12 | Preserved evidence as observational. | Evidence audit; 158 tests. | Complete |
+| 2026-04-28 | 13 | Added governance constraints. | Governance audit; 93 architecture tests. | Complete |
+| 2026-04-28/29 | 14 | Implemented target-spine contract carriage for Distribution, WeekdayTrend, Transform. | Capability-slice audit; 227 focused tests. | Complete |
+| 2026-04-29 | 15 | Added non-chart evidence export consumer path. | ConsumerDeliveryEvidence; ExecuteForConsumerAsync; 34 tests. | Complete |
+| 2026-04-29 | 16 | Retired duplicate metadata bypasses; preserved flexible fallback paths. | Explicit metadata contracts; 176/196/186 focused validations. | Complete |
+| 2026-04-29 | 17 | Added BarPieCapabilityContract; preserved Syncfusion hierarchy distinction. | BarPie tests; 950 tests. | Complete |
+| 2026-04-29 | 18 | Added SyncfusionSunburstCapabilityContract; preserved HierarchyChart delivery. | Syncfusion tests; 952 tests. | Complete |
+| 2026-04-29/30 | 19 | Extracted CartesianMetricRenderPlanBuilder; threaded CartesianMetricCapabilityContract; extracted VNextMetricLoadRouter. | Builder/contract/router tests; 996 DataVisualiser + 15 DataFileReader tests. | Complete |
+| 2026-04-29 | 20 | Thinned chart-family adapters via builders/invokers. | Phase20BuilderInvokerTests; adapter guardrails; 975 tests at closure. | Complete |
+| 2026-04-29 | 21 | Classified bridges; retired UseRenderPlanAdapter=false branch. | Single adapter render path; 975 tests at closure. | Complete |
+| 2026-04-29 | 22 | Proved new MovingAverage capability through chart and API consumers without old hubs. | MovingAverage; TabularSummary; API consumer; end-to-end tests. | Complete |
+| 2026-04-30 | 23 | Extracted Transform adapter composition factory and bounded DI concentration. | Composition factory guardrail; 996 DataVisualiser + 15 DataFileReader tests. | Complete |
+|  | 24 | Audit ChartDataContext migration path. | `documents/DataVisualiser_ChartDataContext_Migration_Audit.md`; reference classification. | Planned |
+|  | 25 | Define VNext-native UI consumption contract. | Contract specification; metadata preservation tests. | Planned |
+|  | 26 | Build Operation Chain Workbench MVP. | Operation-chain execution/provenance/evidence tests. | Planned |
+|  | 27 | Migrate first production chart family. | Family migration audit; UI/metadata/provenance tests. | Planned |
+|  | 28 | Retire first migrated family bridge. | Bridge-retirement note; parity/smoke/metadata/provenance evidence. | Planned |
+|  | 29 | Repeat family migration slice-by-slice. | Family migration tracker. | Planned |
+|  | 30 | Elevate consumer-neutral surface model. | Surface convergence audit. | Planned |
+|  | 31 | Thin UI / interaction / state layer. | UI/state/interaction guardrails. | Planned |
+|  | 32 | Demote rendering / backend / vendor fully. | Delivery demotion audit. | Planned |
+|  | 33 | Consolidate capability / contract families. | Consolidation audit. | Planned |
+|  | 34 | Retire remaining legacy bypasses. | Remaining bypass retirement audit. | Planned |
+|  | 35 | Final convergence audit. | Fresh generated artifacts; full evidence set. | Planned |
+|  | 36-47 | Post-convergence formalisation and bounded-generativity phases. | Coverage matrix, construction algebra, typed relations, evidence sufficiency, analytical fitness, bounded search, and scenario-hardening artifacts. | Planned |
 
 ---
 
-# Step 6 — Dependency-Density Audit Reconciliation
+# 9. Agent Instruction Summary
 
-Dependency-density audit reconciliation is required before any density-driven refactoring. Dense type relationships must be classified before they are treated as design faults.
+For IDE agents:
 
-Classification language:
-
-- Legitimate steady-state coupling: density caused by a stable seam, authority carrier, contract, or common domain type that is expected to remain shared.
-- Legitimate transitional coupling: density caused by an active migration bridge, compatibility path, parity lane, or legacy/VNext coexistence path that should shrink only after replacement proof exists.
-- Diagram/export noise: density caused by generated diagram shape, repeated edge emission, broad test references, framework plumbing, or non-semantic export artifacts.
-- Accidental coupling: density caused by avoidable responsibility spread, hidden ownership, convenience access, or a type absorbing work that belongs behind a clearer seam.
-
-Current remaining architecture plan:
-
-Only one step should be treated as active at a time. The migration sequence remains baseline establishment, generated-governance repair, density classification, refactoring-opportunity classification, seam hardening, hub containment, contract/boundary/qualification enforcement, projection neutrality, consumer thinning, surface elevation, delivery demotion, evidence observation, governance constraints, capability expansion, non-chart consumer proof, legacy bypass retirement, and final repeated-pattern consolidation.
+```text
+Read the vocabulary and target architecture document first.
+Use this file as the sequential execution plan.
+Use this file as the active carry-forward summary for scaffold audit constraints; do not require archived scaffold audits by default.
+Do not skip phases.
+Phases 1-23 are completed structural spine work.
+Phases 24-35 are consumption migration and convergence.
+Phases 36+ are post-convergence formalisation / bounded-generativity alignment.
+Start from the earliest incomplete planned phase.
+Do not refactor broadly or cosmetically.
+Do pursue targeted refactoring that reduces sprawl, contradiction, duplication, or exception-driven structure.
+Do not add new capability before consumption migration blockers are understood, except the planned Phase 26 Operation Chain proving slice after Phase 25.
+Do not enact Phase 36+ formal-algebra work before Phase 35 convergence evidence exists.
+Phases 24-35 may continue sequentially under this plan without reopening the broader theoretical/formal questions.
+Revisit the Prime Directive, coverage, construction-algebra, and bounded-generativity questions before starting Phase 36+.
+Use Phase 35 convergence evidence and Phase 26 Operation Chain findings as inputs for that refocus.
+Do not move code without behavior-preserving tests.
+Prefer small auditable changes.
+Prefer generalized seams where shared structure is proven by at least two migrated families.
+Do not retire ChartDataContext-related bridges until replacement, parity, smoke, metadata, and provenance evidence exist.
+Continue through logical work bundles without pausing for minor confirmation.
+Pause for manual testing, milestone review, architecture-affecting ambiguity, or behavior-risk decisions.
+Update progress only when tests or evidence support completion.
+```

@@ -1,6 +1,6 @@
 ﻿# Type Dependency Diagram
 
-Generated: 2026-04-28 11:57:38
+Generated: 2026-04-30 21:19:24
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
@@ -11,9 +11,9 @@ No compiler binding. No inference. No semantic interpretation.
 
 ## Summary
 
-- Declared type symbols: 953
-- Direct type-reference edges: 6039
-- Dependency-density reading: 0.6656%
+- Declared type symbols: 983
+- Direct type-reference edges: 6805
+- Dependency-density reading: 0.7050%
 - Private declarations included: False
 
 ------------------------------------------------------
@@ -44,7 +44,6 @@ graph TD
   AdminSessionMilestoneRecorderTests["AdminSessionMilestoneRecorderTests"] --> MetricSelectionService["MetricSelectionService"]
   AdminSessionMilestoneRecorderTests["AdminSessionMilestoneRecorderTests"] --> MetricSeriesSelection["MetricSeriesSelection"]
   AdminSessionMilestoneRecorderTests["AdminSessionMilestoneRecorderTests"] --> MetricState["MetricState"]
-  AdminSessionMilestoneRecorderTests["AdminSessionMilestoneRecorderTests"] --> UiState["UiState"]
   AlignedMetricSeries["AlignedMetricSeries"] --> MetricData["MetricData"]
   AlignedMetricSeries["AlignedMetricSeries"] --> MetricSeriesRequest["MetricSeriesRequest"]
   AlignedMetricSeries["AlignedMetricSeries"] --> Result["Result"]
@@ -54,26 +53,51 @@ graph TD
   AlignmentMode["AlignmentMode"] --> MetricData["MetricData"]
   AlignmentMode["AlignmentMode"] --> MetricSeriesRequest["MetricSeriesRequest"]
   AlignmentMode["AlignmentMode"] --> Result["Result"]
+  AnalyticalConsumerDeliveryResult["AnalyticalConsumerDeliveryResult"] --> ChartProgramKind["ChartProgramKind"]
+  AnalyticalConsumerDeliveryResult["AnalyticalConsumerDeliveryResult"] --> ChartProgramRequest["ChartProgramRequest"]
+  AnalyticalConsumerDeliveryResult["AnalyticalConsumerDeliveryResult"] --> CompositionKind["CompositionKind"]
+  AnalyticalConsumerDeliveryResult["AnalyticalConsumerDeliveryResult"] --> ConsumerDeliveryContract["ConsumerDeliveryContract"]
+  AnalyticalConsumerDeliveryResult["AnalyticalConsumerDeliveryResult"] --> ConsumerKind["ConsumerKind"]
+  AnalyticalConsumerDeliveryResult["AnalyticalConsumerDeliveryResult"] --> MetaData["MetaData"]
   AnalyticalExecutionResult["AnalyticalExecutionResult"] --> Program["Program"]
+  AnalyticalIntent["AnalyticalIntent"] --> CapabilityRequest["CapabilityRequest"]
+  AnalyticalIntent["AnalyticalIntent"] --> ChartProgramDeliveryTargetResolver["ChartProgramDeliveryTargetResolver"]
+  AnalyticalIntent["AnalyticalIntent"] --> ChartProgramRequest["ChartProgramRequest"]
+  AnalyticalIntent["AnalyticalIntent"] --> ConsumerDeliveryContract["ConsumerDeliveryContract"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> CapabilityRequest["CapabilityRequest"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartDisplayMode["ChartDisplayMode"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartHierarchyNodePlan["ChartHierarchyNodePlan"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartProgramDeliveryTargetResolver["ChartProgramDeliveryTargetResolver"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartProgramKind["ChartProgramKind"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartProgramRequest["ChartProgramRequest"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartRenderPlanKind["ChartRenderPlanKind"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ChartRenderPlanVocabularyMetadata["ChartRenderPlanVocabularyMetadata"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> CompositionKind["CompositionKind"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ConsumerDeliveryContract["ConsumerDeliveryContract"]
+  AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> ConsumerKind["ConsumerKind"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> MetaData["MetaData"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> MetricData["MetricData"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> MetricSeriesRequest["MetricSeriesRequest"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> Program["Program"]
   AnalyticalIntentContractsTests["AnalyticalIntentContractsTests"] --> Result["Result"]
+  AnalyticalIntentFactory["AnalyticalIntentFactory"] --> CapabilityRequest["CapabilityRequest"]
   AnalyticalIntentFactory["AnalyticalIntentFactory"] --> ChartDisplayMode["ChartDisplayMode"]
+  AnalyticalIntentFactory["AnalyticalIntentFactory"] --> ChartProgramDeliveryTargetResolver["ChartProgramDeliveryTargetResolver"]
   AnalyticalIntentFactory["AnalyticalIntentFactory"] --> ChartProgramKind["ChartProgramKind"]
+  AnalyticalIntentFactory["AnalyticalIntentFactory"] --> ChartProgramRequest["ChartProgramRequest"]
+  AnalyticalIntentFactory["AnalyticalIntentFactory"] --> ConsumerDeliveryContract["ConsumerDeliveryContract"]
   AnalyticalIntentFactoryTests["AnalyticalIntentFactoryTests"] --> ChartDisplayMode["ChartDisplayMode"]
   AnalyticalIntentFactoryTests["AnalyticalIntentFactoryTests"] --> ChartProgramKind["ChartProgramKind"]
+  AnalyticalIntentFactoryTests["AnalyticalIntentFactoryTests"] --> CompositionKind["CompositionKind"]
+  AnalyticalIntentFactoryTests["AnalyticalIntentFactoryTests"] --> ConsumerKind["ConsumerKind"]
   AnalyticalIntentFactoryTests["AnalyticalIntentFactoryTests"] --> MetricSeriesRequest["MetricSeriesRequest"]
   AnalyticalIntentSet["AnalyticalIntentSet"] --> ChartProgramKind["ChartProgramKind"]
   AnalyticalInterpretationBuilder["AnalyticalInterpretationBuilder"] --> Program["Program"]
   AnalyticalInterpretationBuilder["AnalyticalInterpretationBuilder"] --> Result["Result"]
   AnalyticalInterpretationBuilderTests["AnalyticalInterpretationBuilderTests"] --> ChartDisplayMode["ChartDisplayMode"]
   AnalyticalInterpretationBuilderTests["AnalyticalInterpretationBuilderTests"] --> ChartProgramKind["ChartProgramKind"]
+  AnalyticalInterpretationBuilderTests["AnalyticalInterpretationBuilderTests"] --> ChartProgramRequest["ChartProgramRequest"]
   AnalyticalInterpretationBuilderTests["AnalyticalInterpretationBuilderTests"] --> MetricData["MetricData"]
   AnalyticalInterpretationBuilderTests["AnalyticalInterpretationBuilderTests"] --> MetricSeriesRequest["MetricSeriesRequest"]
   AnalyticalInterpretationBuilderTests["AnalyticalInterpretationBuilderTests"] --> Program["Program"]
@@ -85,9 +109,13 @@ graph TD
   AnalyticalRenderPlanPipeline["AnalyticalRenderPlanPipeline"] --> Program["Program"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ChartHierarchyNodePlan["ChartHierarchyNodePlan"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ChartProgramKind["ChartProgramKind"]
+  AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ChartProgramRequest["ChartProgramRequest"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ChartRenderDensityMode["ChartRenderDensityMode"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ChartRenderPlanKind["ChartRenderPlanKind"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
+  AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> CompositionKind["CompositionKind"]
+  AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ConsumerDeliveryContract["ConsumerDeliveryContract"]
+  AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> ConsumerKind["ConsumerKind"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> MetaData["MetaData"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> MetricData["MetricData"]
   AnalyticalRenderPlanPipelineTests["AnalyticalRenderPlanPipelineTests"] --> MetricSeriesRequest["MetricSeriesRequest"]
@@ -107,18 +135,36 @@ graph TD
   AnalyticalResultSet["AnalyticalResultSet"] --> Program["Program"]
   AnalyticalResultSet["AnalyticalResultSet"] --> Result["Result"]
   AppThemeServiceTests["AppThemeServiceTests"] --> StaTestHelper["StaTestHelper"]
+  BarPieBackendKey["BarPieBackendKey"] --> CapabilityRequest["CapabilityRequest"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartDisplayMode["ChartDisplayMode"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartHierarchyNodePlan["ChartHierarchyNodePlan"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartInteractionPlan["ChartInteractionPlan"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartProgramKind["ChartProgramKind"]
+  BarPieBackendKey["BarPieBackendKey"] --> ChartProgramRequest["ChartProgramRequest"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartRenderDensityMode["ChartRenderDensityMode"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartRenderPlan["ChartRenderPlan"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartRenderPlanKind["ChartRenderPlanKind"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartRenderPlanVocabularyMetadata["ChartRenderPlanVocabularyMetadata"]
   BarPieBackendKey["BarPieBackendKey"] --> ChartSeriesPlan["ChartSeriesPlan"]
+  BarPieBackendKey["BarPieBackendKey"] --> ConsumerDeliveryContract["ConsumerDeliveryContract"]
   BarPieBackendKey["BarPieBackendKey"] --> MetaData["MetaData"]
   BarPieBackendKey["BarPieBackendKey"] --> RenderDensityPlan["RenderDensityPlan"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> CapabilityRequest["CapabilityRequest"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartDisplayMode["ChartDisplayMode"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartHierarchyNodePlan["ChartHierarchyNodePlan"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartInteractionPlan["ChartInteractionPlan"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartProgramKind["ChartProgramKind"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartProgramRequest["ChartProgramRequest"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartRenderDensityMode["ChartRenderDensityMode"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartRenderPlan["ChartRenderPlan"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartRenderPlanKind["ChartRenderPlanKind"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartRenderPlanVocabularyMetadata["ChartRenderPlanVocabularyMetadata"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ChartSeriesPlan["ChartSeriesPlan"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> ConsumerDeliveryContract["ConsumerDeliveryContract"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> MetaData["MetaData"]
+  BarPieCapabilityContract["BarPieCapabilityContract"] --> RenderDensityPlan["RenderDensityPlan"]
   BarPieChartControllerAdapter["BarPieChartControllerAdapter"] --> ChartControllerKeys["ChartControllerKeys"]
   BarPieChartControllerAdapter["BarPieChartControllerAdapter"] --> ChartDataContext["ChartDataContext"]
   BarPieChartControllerAdapter["BarPieChartControllerAdapter"] --> ChartProgramKind["ChartProgramKind"]
@@ -132,56 +178,10 @@ graph TD
   BarPieChartControllerAdapterResetZoomTests["BarPieChartControllerAdapterResetZoomTests"] --> MetricSelectionService["MetricSelectionService"]
   BarPieChartControllerAdapterResetZoomTests["BarPieChartControllerAdapterResetZoomTests"] --> MetricState["MetricState"]
   BarPieChartControllerAdapterResetZoomTests["BarPieChartControllerAdapterResetZoomTests"] --> StaTestHelper["StaTestHelper"]
-  BarPieChartControllerAdapterResetZoomTests["BarPieChartControllerAdapterResetZoomTests"] --> UiState["UiState"]
   BarPieChartControllerAdapterTests["BarPieChartControllerAdapterTests"] --> ChartControllerKeys["ChartControllerKeys"]
   BarPieChartControllerAdapterTests["BarPieChartControllerAdapterTests"] --> ChartState["ChartState"]
   BarPieChartControllerAdapterTests["BarPieChartControllerAdapterTests"] --> MainWindowViewModel["MainWindowViewModel"]
   BarPieChartControllerAdapterTests["BarPieChartControllerAdapterTests"] --> MetricSelectionService["MetricSelectionService"]
-  BarPieChartControllerAdapterTests["BarPieChartControllerAdapterTests"] --> MetricState["MetricState"]
-  BarPieChartControllerAdapterTests["BarPieChartControllerAdapterTests"] --> StaTestHelper["StaTestHelper"]
-  BarPieChartControllerAdapterTests["BarPieChartControllerAdapterTests"] --> UiState["UiState"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartDisplayMode["ChartDisplayMode"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartHierarchyNodePlan["ChartHierarchyNodePlan"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartInteractionPlan["ChartInteractionPlan"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartProgramKind["ChartProgramKind"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartRenderDensityMode["ChartRenderDensityMode"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartRenderPlan["ChartRenderPlan"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartRenderPlanKind["ChartRenderPlanKind"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartRenderPlanVocabularyMetadata["ChartRenderPlanVocabularyMetadata"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> ChartSeriesPlan["ChartSeriesPlan"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> MetaData["MetaData"]
-  BarPieChartRenderHost["BarPieChartRenderHost"] --> RenderDensityPlan["RenderDensityPlan"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartDisplayMode["ChartDisplayMode"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartHierarchyNodePlan["ChartHierarchyNodePlan"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartInteractionPlan["ChartInteractionPlan"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartProgramKind["ChartProgramKind"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartRenderDensityMode["ChartRenderDensityMode"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartRenderPlan["ChartRenderPlan"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartRenderPlanKind["ChartRenderPlanKind"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartRenderPlanVocabularyMetadata["ChartRenderPlanVocabularyMetadata"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> ChartSeriesPlan["ChartSeriesPlan"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> MetaData["MetaData"]
-  BarPieChartRenderRequest["BarPieChartRenderRequest"] --> RenderDensityPlan["RenderDensityPlan"]
-  BarPieRenderingContract["BarPieRenderingContract"] --> ChartRenderAdapterResult["ChartRenderAdapterResult"]
-  BarPieRenderingContract["BarPieRenderingContract"] --> ChartSurfaceHelper["ChartSurfaceHelper"]
-  BarPieRenderingContractTests["BarPieRenderingContractTests"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
-  BarPieRenderingContractTests["BarPieRenderingContractTests"] --> MetaData["MetaData"]
-  BarPieRenderingContractTests["BarPieRenderingContractTests"] --> Result["Result"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartDisplayMode["ChartDisplayMode"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartHierarchyNodePlan["ChartHierarchyNodePlan"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartInteractionPlan["ChartInteractionPlan"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartProgramKind["ChartProgramKind"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartRenderDensityMode["ChartRenderDensityMode"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartRenderPlan["ChartRenderPlan"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartRenderPlanKind["ChartRenderPlanKind"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartRenderPlanMetadataKeys["ChartRenderPlanMetadataKeys"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartRenderPlanVocabularyMetadata["ChartRenderPlanVocabularyMetadata"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> ChartSeriesPlan["ChartSeriesPlan"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> MetaData["MetaData"]
-  BarPieRenderingQualification["BarPieRenderingQualification"] --> RenderDensityPlan["RenderDensityPlan"]
-  BarPieRenderingQualificationProbeTests["BarPieRenderingQualificationProbeTests"] --> Result["Result"]
 ```
 
 ------------------------------------------------------
@@ -190,46 +190,46 @@ graph TD
 
 | Type | Incoming References |
 |------|---------------------|
-| MetricData | 183 |
-| Result | 171 |
-| ChartDataContext | 152 |
-| ChartState | 152 |
-| MetaData | 126 |
-| Context | 121 |
-| ChartProgramKind | 112 |
-| MetricSeriesSelection | 93 |
-| ICanonicalMetricSeries | 77 |
-| ChartDisplayMode | 75 |
-| MetricSelectionService | 69 |
-| MetricState | 60 |
-| ChartRenderPlanKind | 59 |
-| ChartRenderPlan | 57 |
-| ChartRenderPlanMetadataKeys | 54 |
-| ChartRenderDensityMode | 50 |
-| MainWindowViewModel | 47 |
-| ChartRenderAdapterResult | 46 |
-| IChartComputationStrategy | 46 |
+| MetricData | 192 |
+| Result | 181 |
+| ChartState | 171 |
+| ChartDataContext | 163 |
+| ChartProgramKind | 147 |
+| MetaData | 138 |
+| Context | 129 |
+| MetricSeriesSelection | 103 |
+| ChartProgramRequest | 91 |
+| MetricSelectionService | 81 |
+| ConsumerDeliveryContract | 80 |
+| ICanonicalMetricSeries | 79 |
+| ChartDisplayMode | 78 |
+| CapabilityRequest | 71 |
+| MetricState | 70 |
+| ChartRenderPlanKind | 66 |
+| ChartRenderPlan | 61 |
+| ChartRenderPlanMetadataKeys | 61 |
+| MainWindowViewModel | 59 |
+| ChartRenderDensityMode | 55 |
+| ConsumerKind | 55 |
+| CompositionKind | 53 |
+| ChartProgramDeliveryTargetResolver | 51 |
+| ChartHierarchyNodePlan | 49 |
+| IChartComputationStrategy | 49 |
+| ChartRenderAdapterResult | 48 |
 | StaTestHelper | 46 |
-| ChartHierarchyNodePlan | 44 |
-| RenderDensityPlan | 41 |
+| RenderDensityPlan | 45 |
+| ChartRenderPlanVocabularyMetadata | 44 |
+| ChartSeriesPlan | 44 |
+| ChartInteractionPlan | 41 |
+| MetricNameOption | 41 |
 | ChartControllerKeys | 40 |
-| ChartRenderPlanVocabularyMetadata | 40 |
-| ChartSeriesPlan | 40 |
-| MetricNameOption | 40 |
-| ChartInteractionPlan | 37 |
-| MetricSeriesRequest | 34 |
-| Program | 34 |
-| StrategyType | 34 |
+| ChartSurfaceHelper | 36 |
+| MetricSeriesRequest | 36 |
+| Program | 35 |
+| SeriesResult | 35 |
+| StrategyType | 35 |
+| ChartComputationResult | 34 |
 | Actions | 33 |
-| ChartSurfaceHelper | 33 |
-| ChartComputationResult | 32 |
-| SeriesResult | 32 |
-| UiState | 32 |
-| CanonicalMetricSeries | 31 |
-| IDistributionService | 30 |
-| TestDataBuilders | 29 |
-| DistributionMode | 28 |
-| IStrategyCutOverService | 28 |
 
 ------------------------------------------------------
 
@@ -243,40 +243,40 @@ graph TD
 | ChartControllerFactoryContext | 53 |
 | ChartControllerFactoryResult | 53 |
 | SyncfusionChartControllerFactoryResult | 53 |
+| WeekdayTrendChartControllerAdapterTests | 44 |
+| MainChartsEvidenceExportServiceTests | 42 |
 | ChartControllerFactoryTests | 40 |
-| WeekdayTrendChartControllerAdapter | 40 |
-| WeekdayTrendChartControllerAdapterTests | 40 |
+| DistributionChartControllerAdapterTests | 38 |
+| AnalyticalIntentContractsTests | 37 |
+| AnalyticalRenderPlanPipelineTests | 37 |
 | ChartRenderingOrchestrator | 37 |
-| DistributionChartControllerAdapterTests | 37 |
-| MainChartsEvidenceExportServiceTests | 37 |
-| AnalyticalRenderPlanPipelineTests | 36 |
-| AnalyticalIntentContractsTests | 34 |
+| DistributionBackendKey | 35 |
+| DistributionBackendQualification | 35 |
+| DistributionCapabilityContract | 35 |
+| DistributionChartRenderHost | 35 |
+| DistributionChartRenderRequest | 35 |
+| DistributionRenderingCapabilities | 35 |
+| DistributionRenderingContract | 35 |
+| DistributionRenderingQualification | 35 |
+| DistributionRenderingRoute | 35 |
+| DistributionRenderingRouteResolver | 35 |
+| DistributionRenderPlanBuilder | 35 |
+| DistributionRenderSurface | 35 |
 | BaseDistributionService | 34 |
-| ChartUpdateCoordinator | 33 |
-| DistributionChartControllerAdapter | 33 |
-| EvidenceDiagnosticsBuilder | 32 |
-| DistributionBackendKey | 31 |
-| DistributionBackendQualification | 31 |
-| DistributionChartRenderHost | 31 |
-| DistributionChartRenderRequest | 31 |
-| DistributionRenderingCapabilities | 31 |
-| DistributionRenderingContract | 31 |
-| DistributionRenderingQualification | 31 |
-| DistributionRenderingRoute | 31 |
-| DistributionRenderingRouteResolver | 31 |
-| DistributionRenderPlanBuilder | 31 |
-| DistributionRenderSurface | 31 |
+| EvidenceDiagnosticsBuilder | 33 |
+| WeekdayTrendChartControllerAdapter | 33 |
+| DistributionRenderingContractTests | 32 |
+| Phase22MovingAverageEndToEndTests | 32 |
+| DistributionChartControllerAdapter | 30 |
 | ChartRenderingOrchestratorTests | 29 |
 | TransformWorkflowCoordinatorTests | 29 |
 | TransformCoordinatorTests | 28 |
 | VNextDistributionRuntimePreservationTests | 28 |
 | MetricLoadCoordinatorTests | 27 |
+| BarPieRenderingContractTests | 26 |
 | BarPieRenderModelBuilder | 26 |
-| MainChartControllerAdapter | 26 |
-| StrategyCutOverServiceTests | 26 |
-| Actions | 25 |
-| SyncfusionSunburstChartControllerAdapterTests | 25 |
-| TransformDataPanelControllerAdapter | 25 |
+| ChartUpdateCoordinator | 26 |
+| ChartUpdateCoordinatorTests | 26 |
 
 ------------------------------------------------------
 

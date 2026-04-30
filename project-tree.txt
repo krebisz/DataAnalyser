@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-04-28 11:56:05
+Generated: 2026-04-30 21:19:57
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -12,8 +12,6 @@ DataAnalyser/
   .idea/
     .idea.DataAnalyser/
       .idea/
-        .gitignore
-        encodings.xml
         indexLayout.xml
         projectSettingsUpdater.xml
         vcs.xml
@@ -191,10 +189,12 @@ DataAnalyser/
         ChartDataSeriesPreparationHelper.cs
         ChartRenderingOrchestrator.cs
         ChartUpdateCoordinator.cs
+        ChartUpdateRequest.cs
         ChartYAxisDataBuilder.cs
         ICartesianMetricChartRenderInvoker.cs
         ITransformChartRenderInvoker.cs
         MetricLoadRequest.cs
+        PrimaryChartRenderRequest.cs
         StrategySelectionService.cs
         TransformChartRenderInvoker.cs
         WeekdayTrendChartUpdateCoordinator.cs
@@ -209,6 +209,7 @@ DataAnalyser/
           BarPieRenderingQualificationProbeResult.cs
         CartesianMetrics/
           CartesianMetricChartRenderingQualificationProbe.cs
+          CartesianMetricRenderPlanBuilder.cs
         Contracts/
           BarPie/
             BarPieRenderingContract.cs
@@ -478,6 +479,7 @@ DataAnalyser/
           BarPieRenderModelBuilder.cs
           BinaryMetricChartContextHelper.cs
           CartesianChartControllerAdapterBase.cs
+          CartesianMetricOverlaySeriesBuilder.cs
           ChartAxisModel.cs
           ChartComboItemHelper.cs
           ChartContextSelectionGuard.cs
@@ -503,6 +505,7 @@ DataAnalyser/
           DefaultTransformOperationProvider.cs
           DiffRatioChartControllerAdapter.cs
           DistributionChartControllerAdapter.cs
+          DistributionRenderInputBuilder.cs
           DistributionSessionMilestoneRecorder.cs
           IBarPieChartController.cs
           IBarPieChartControllerExtras.cs
@@ -546,8 +549,10 @@ DataAnalyser/
           RenderingHostLifecycleAdapterHelper.cs
           SubtypeSelectorManager.cs
           SyncfusionSunburstChartControllerAdapter.cs
+          SyncfusionSunburstRenderModelBuilder.cs
           TransformChartPresentationCoordinator.cs
           TransformDataPanelControllerAdapter.cs
+          TransformDataPanelControllerAdapterCompositionFactory.cs
           TransformDataResolutionCoordinator.cs
           TransformExecutionModels.cs
           TransformGridPresentationCoordinator.cs
@@ -563,6 +568,7 @@ DataAnalyser/
           UiChartRenderModel.cs
           VNextDataResolutionHelper.cs
           WeekdayTrendChartControllerAdapter.cs
+          WeekdayTrendComputationInvoker.cs
         Syncfusion/
           SunburstItem.cs
           SyncfusionChartsView.xaml
@@ -611,6 +617,7 @@ DataAnalyser/
           EvidenceDataResolutionHelper.cs
           EvidenceDiagnosticsBuilder.cs
           EvidenceDistributionParityEvaluator.cs
+          EvidenceExportConsumerContractBuilder.cs
           EvidenceExportModels.cs
           EvidenceMultiMetricParityEvaluator.cs
           EvidenceParityBuilder.cs
@@ -667,6 +674,7 @@ DataAnalyser/
         SharedMainWindowViewModelProvider.cs
         VNextChartProgramRequestPlanner.cs
         VNextChartRoutePolicy.cs
+        VNextMetricLoadRouter.cs
       Workspace/
         Coordination/
           WorkspaceLoadCoordinator.cs
@@ -694,6 +702,7 @@ DataAnalyser/
         AnalyticalRenderPlanPipeline.cs
         ChartProgramPlanner.cs
         ConfidenceAnnotationEvaluator.cs
+        ConsumerDeliveryEvidence.cs
         IMetricSeriesLoader.cs
         InterpretiveOverlayPlanner.cs
         IReasoningEngine.cs
@@ -736,6 +745,8 @@ DataAnalyser/
         OperationKernel.cs
         TimeSeriesAlignmentKernel.cs
       Rendering/
+        MovingAverage/
+          MovingAverageCapabilityContract.cs
         ChartBackendCandidateSet.cs
         ChartBackendCapabilities.cs
         ChartBackendSelector.cs
@@ -786,6 +797,7 @@ DataAnalyser/
         LegendToggleManagerTests.cs
         LiveChartsChartRendererTests.cs
         PieFacetLegendToggleManagerTests.cs
+        SyncfusionSunburstRenderingContractTests.cs
         TransformRenderingContractTests.cs
         TransformRenderingQualificationProbeTests.cs
         WeekdayTrendRenderingContractTests.cs
@@ -878,6 +890,7 @@ DataAnalyser/
           ChartVisibilityHelperTests.cs
           DiffRatioNormalizedSelectionAdapterTests.cs
           DistributionChartControllerAdapterTests.cs
+          Phase20BuilderInvokerTests.cs
           SubtypeSelectorManagerTests.cs
           SyncfusionSunburstChartControllerAdapterTests.cs
           TransformCoordinatorTests.cs
@@ -964,6 +977,7 @@ DataAnalyser/
       LegacyChartProgramProjectorTests.cs
       LegacyMetricViewGatewayTests.cs
       OperationKernelTests.cs
+      Phase22MovingAverageEndToEndTests.cs
       ReasoningEngineTests.cs
       ReasoningSessionCoordinatorTests.cs
       ReasoningSessionTransitionsTests.cs
@@ -975,19 +989,23 @@ DataAnalyser/
     README.md
     xunit.runner.json
   documents/
+    Temp/
+      Type Dependencies Diagram for ChartComputationResult and other elements-Current.md
+      Type Dependencies Diagram for ChartComputationResult and other elements-Original.md
+      Type Dependencies Diagram for ChartComputationResult and other elements-PreMigration.md
     AI_BOOTSTRAP_ENTRY.md
     Collaboration Protocol.md
     DataVisualiser_Migration_Plan_and_Guardrails.md
     DataVisualiser_Subsystem_Plan.md
     DataVisualiser-Architectural-Vocabulary.md
     MASTER_OPERATING_PROTOCOL.md
+    Prime_Directive_Formal_Coverage_Notes.md
     Project Bible.md
     Project Overview.md
     Project Philosophy.md
     Project Roadmap.md
     SYSTEM_MAP.md
-    TODO Enhancements.md
-    Type Dependencies Diagram for ChartComputationResult and other elements4.md
+    To Do Ideas.md
     Workspace Workflow.md
   images/
     Logo.png
