@@ -4,7 +4,8 @@
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `DataVisualiser-Architectural-Vocabulary.md`  
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions  
-**Last Updated:** 2026-04-26
+**Last Updated:** 2026-04-30
+**Phase 19 Closure Note:** VNext/legacy load routing is now delegated from `MetricLoadCoordinator` into `VNextMetricLoadRouter`, closing the remaining Phase 19 routing item.
 **Current Update:** Phase 7 is active. Migration Plan Phases 14–22 are complete. The VNext spine is proved end-to-end: a new MovingAverage capability enters through the target seams and is consumed by two independent consumers (chart + API) without touching old hubs or legacy bridges. The UseRenderPlanAdapter dual-path is retired; explicit CapabilityContracts are threaded across all chart families. The accepted architectural migration progress estimate is approximately 70–75% complete, with a working estimate of ~72% (updated from ~68% after Phases 19–22).
 **Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. New work must not be tracked against Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 rendering primer.
 

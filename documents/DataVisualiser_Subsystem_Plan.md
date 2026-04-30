@@ -42,7 +42,7 @@ Use this section as the default handoff entry point in a new conversation.
 Current state:
 
 - Pre-Phase-7 rendering primer is complete: VNext has render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts, and the active chart families now consume `ChartRenderPlan` through adapters.
-- Current automated lane: ~505 DataVisualiser source files, ~176 DataVisualiser test files, 989 DataVisualiser tests, and 15 DataFileReader tests. (Phase 6 closure baseline was 493 source files and 737 tests.)
+- Current automated lane: ~505 DataVisualiser source files, ~176 DataVisualiser test files, 995 DataVisualiser tests, and 15 DataFileReader tests. (Phase 6 closure baseline was 493 source files and 737 tests.)
 - Current architectural migration estimate: approximately 70–75% complete, working estimate ~72%, per the accepted architectural vocabulary progress snapshot (updated after Phases 19–22).
 - Phase 6.3 VNext widening is complete - all active chart families have VNext-compatible request/program support and live VNext routes for fresh family loads, with legacy retained as compatibility/fallback
 - Phase 7 is active — Migration Plan Phases 14–22 are complete; the VNext spine is proved end-to-end through a new MovingAverage capability, a TabularSummary chart backend/provider, and independent chart + API consumers.
@@ -169,7 +169,7 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 Current observed shape:
 
 - `~505` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparer, workspace load/milestone recorders, binary metric context helper, pre-Phase-7 VNext render-plan foundation, live render-plan adapter wiring, Phase 19–22 builders/invokers and capability spine additions; Phase 6 closure baseline was 493)
-- `989` DataVisualiser automated tests passing; `15` DataFileReader tests passing (Phase 6 closure baseline was 737 tests)
+- `995` DataVisualiser automated tests passing; `15` DataFileReader tests passing (Phase 6 closure baseline was 737 tests)
 - VNext-compatible request/program support across all current chart families, with live VNext routes and automatic legacy fallback/compatibility projection where still needed
 - VNext render-plan foundation exists and is now live-wired across the active chart families and tabs: `ChartRenderPlan`, neutral render buffers, density policy, time-bucket aggregation, backend capabilities, backend selector, and adapter dispatcher are covered by automated tests and adapter-backed delivery
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
@@ -215,7 +215,7 @@ Current major concentration points:
 Current read:
 
 - the VNext reasoning engine is live for all current chart families, proving request -> snapshot -> program -> delivery beyond scaffolding
-- VNext main-family route eligibility is centralized in `VNextChartRoutePolicy`, keeping routing and `SupportsOnlyMainChart` diagnostics explicit
+- VNext main-family route eligibility is centralized in `VNextChartRoutePolicy`, and VNext/legacy load routing is delegated out of `MetricLoadCoordinator` into `VNextMetricLoadRouter`, keeping routing, family runtime recording, fallback signaling, and `SupportsOnlyMainChart` diagnostics explicit
 - the evidence boundary is clean: DTOs, diagnostics, and export orchestration are separate concerns
 - evidence export now carries an explicit `ExportScope`; the Charts tab exports as `Charts`, and the Syncfusion tab uses the same `MainChartsEvidenceExportService` as `Syncfusion` instead of a stub service
 - tab switches are recorded as `TabSwitched` session milestones through the shared view-model context

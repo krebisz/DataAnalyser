@@ -226,7 +226,7 @@ public sealed class ChartUpdateCoordinatorTests
     }
 
     [Fact]
-    public async Task TransformChartRenderInvoker_ShouldUseRenderPlanAdapter_AndCaptureTransformDiagnostics()
+    public async Task TransformChartRenderInvoker_ShouldUseAdapterPath_AndCaptureTransformDiagnostics()
     {
         await StaTestHelper.RunAsync(async () =>
         {

@@ -197,7 +197,7 @@ Workspace State:
 - VNext: all chart families have VNext-compatible request/program support and live VNext routes where appropriate; legacy remains compatibility/fallback/projection; integration seams classified and bounded
 - Ownership-container focus: authority/provenance, reasoning/capability, process/execution, contract/boundary, consumer/interaction, terminal delivery, governance/evidence as applicable
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 989 DataVisualiser + 15 DataFileReader passing
+- Tests: 995 DataVisualiser + 15 DataFileReader passing
 - Unknowns: none
 ```
 

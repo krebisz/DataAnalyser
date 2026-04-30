@@ -1062,7 +1062,7 @@ Tests added:
 - OnChartTypeToggleRequested_ShouldToggleMode_AndRenderLastContext verifies WeekdayTrend capability/delivery metadata on the live adapter request
 - RenderAsync_ShouldForwardTransformCapabilityContract
 - TransformCapabilityContract_ShouldRejectProgramKindDrift
-- TransformChartRenderInvoker_ShouldUseRenderPlanAdapter_AndCaptureTransformDiagnostics verifies Transform DerivedSeries metadata
+- TransformChartRenderInvoker_ShouldUseAdapterPath_AndCaptureTransformDiagnostics verifies Transform DerivedSeries metadata
 
 Validation:
 - Phase 14 Distribution capability validation passed 197 focused Distribution/VNext/architecture tests after the reopened implementation correction
@@ -1389,7 +1389,7 @@ Tasks:
 - [x] Update RenderPlanBuilders_ShouldAttachVocabularyMetadata guardrail to point to CartesianMetricRenderPlanBuilder.
 - [x] Inspect MetricLoadCoordinator; confirm VNext/legacy route selection is a transitional bridge without a proven replacement path.
 - [x] Thread CartesianMetricCapabilityContract through CartesianMetricChartRenderRequest, CartesianMetricChartRenderInvoker, and the Main/Secondary invocation stages once the builder seam is stable.
-- [ ] Migrate MetricLoadCoordinator VNext/legacy routing to the target spine once the replacement path is proven.
+- [x] Migrate MetricLoadCoordinator VNext/legacy routing to the target spine once the replacement path is proven.
 
 Completion condition:
 
@@ -1404,7 +1404,7 @@ Phase 19 evidence:
 Hubs inspected:
 - ChartControllerFactory / ChartControllerFactoryContext — confirmed composition-only per Phase 6 audit; no non-coordination responsibilities found; no production changes required
 - ChartRenderingOrchestrator — confirmed routing-only; delegates to family pipelines; no render-plan construction authority; no production changes required
-- MetricLoadCoordinator — VNext/legacy route selection confirmed as transitional bridge; replacement path not yet proven; deferred
+- MetricLoadCoordinator — inspected; VNext/legacy route selection was a transitional bridge, and the proven replacement is now extracted into VNextMetricLoadRouter so MetricLoadCoordinator remains a load coordinator rather than the owner of VNext route policy and family runtime recording
 - ChartUpdateCoordinator — identified BuildChartRenderPlan and all private render-plan construction helpers as non-coordination render-plan authority
 
 Non-coordination responsibility migrated:
@@ -1424,13 +1424,18 @@ CartesianMetricCapabilityContract threaded (2026-04-29):
 - MainChartRenderInvocationStage passes contract.Delivery as renderDelivery to UpdateChartUsingStrategyAsync (display mode remains dynamically resolved; program request and capability intentionally not passed to preserve stacked/cumulative mode correctness)
 - SecondaryMetricChartRenderInvocationStage creates CartesianMetricCapabilityContract.Create(programKind) inline; passes contract.Delivery as renderDelivery
 - MainChartControllerAdapter.RenderMainChartAsync passes CartesianMetricCapabilityContract.Create(ChartProgramKind.Main) on the render request
-- 6 new contract tests added (Create delivery targets for all 4 kinds; invalid kind rejection; delivery kind mismatch rejection); 958 tests pass
+- 6 new contract tests added (Create delivery targets for all 4 kinds; invalid kind rejection; delivery kind mismatch rejection); initial contract-threading validation passed 958 tests
+
+MetricLoadCoordinator routing responsibility migrated:
+- VNextMetricLoadRouter now owns VNext main-family route eligibility, visible chart-family request planning, VNext load invocation, VNext timing, LastLoadRuntime updates, family runtime recording, and fallback-required signaling
+- MetricLoadCoordinator now delegates VNext routing through VNextMetricLoadRouter.TryLoadAsync and continues to own load sequencing, validation, legacy fallback invocation, callbacks, and UI loading-state cleanup
+- MetricLoadCoordinator_ShouldDelegateVNextRoutingToMetricLoadRouter guardrail verifies the coordinator no longer directly owns VNextChartRoutePolicy, VNextChartProgramRequestPlanner, or RecordVNextFamilyRuntimes
 
 Deferred:
-- MetricLoadCoordinator VNext/legacy routing — replacement path not yet proven
+- None for Phase 19. MetricLoadCoordinator VNext/legacy routing has been extracted into VNextMetricLoadRouter.
 
 Validation:
-- 958 tests pass; no regressions
+- 995 DataVisualiser tests and 15 DataFileReader tests pass; no regressions
 ```
 
 ---
@@ -1700,7 +1705,7 @@ Tests:
 - ArchitectureGuardrailTests: 4 new guardrails covering MovingAverage capability seam correctness
 
 Validation:
-- 989 tests pass; no regressions
+- 995 DataVisualiser tests and 15 DataFileReader tests pass after Phase 19 closure and runtime-fix realignment; no regressions
 - no old hubs touched; no legacy bridges required
 ```
 
@@ -1931,9 +1936,10 @@ Use this section during implementation.
 | 2026-04-29 | Phase 18 | Added SyncfusionSunburstCapabilityContract to complete contract carriage across all chart families; preserved HierarchyChart delivery distinction; deferred MainChartControllerAdapter to Phase 19. | `SyncfusionSunburstCapabilityContract`; `SyncfusionSunburstChartRenderRequest` optional contract field; `SyncfusionSunburstRenderPlanBuilder` updated; `SyncfusionSunburstChartControllerAdapter` passes contract; `SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift`; 952 tests pass. | Complete |
 | 2026-04-29 | Phase 19 (builder extraction) | Extracted CartesianMetricRenderPlanBuilder from ChartUpdateCoordinator; render-plan construction authority now lives in a dedicated builder; coordinator is coordination-only for this responsibility; guardrail updated. | `CartesianMetricRenderPlanBuilder`; `ChartUpdateCoordinator` calls builder; dead `ShouldUseStackedTotals` removed; `RenderPlanBuilders_ShouldAttachVocabularyMetadata` guardrail updated to new builder path; 952 tests pass. | Complete |
 | 2026-04-29 | Phase 19 (contract threading) | Threaded CartesianMetricCapabilityContract through the full Main and Secondary invocation chains; delivery authority is now explicit at every render boundary. | `CartesianMetricCapabilityContract`; `CartesianMetricChartRenderRequest`; `CartesianMetricChartRenderInvoker`; `ChartRenderingOrchestrator.RenderPrimaryChartAsync`; `MainChartRenderRequest`; `MainChartOrchestrationPipeline`; `IMainChartRenderInvocationStage`; `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `MainChartControllerAdapter`; 6 new contract tests; 958 tests pass. | Complete |
+| 2026-04-30 | Phase 19 (routing closure) | Closed the remaining MetricLoadCoordinator routing item by extracting VNext main-family routing into VNextMetricLoadRouter. | `VNextMetricLoadRouter`; `MetricLoadCoordinator` delegates through `TryLoadAsync`; `MetricLoadCoordinator_ShouldDelegateVNextRoutingToMetricLoadRouter`; 995 DataVisualiser tests and 15 DataFileReader tests pass. | Complete |
 | 2026-04-29 | Phase 20 | Thinned chart-family adapter layer: extracted SyncfusionSunburstRenderModelBuilder, CartesianMetricOverlaySeriesBuilder, DistributionRenderInputBuilder, WeekdayTrendComputationInvoker; adapters are now thin relays; 16 builder/invoker tests + 4 new guardrails; 975 tests pass. | `SyncfusionSunburstRenderModelBuilder`; `CartesianMetricOverlaySeriesBuilder`; `DistributionRenderInputBuilder`; `WeekdayTrendComputationInvoker`; `Phase20BuilderInvokerTests`; updated `ArchitectureGuardrailTests`; 975 tests pass. | Complete |
 | 2026-04-29 | Phase 21 | Classified integration seams; retired UseRenderPlanAdapter legacy dual-path; adapter path is now always-on in ChartUpdateCoordinator; three call sites and three tests cleaned up. | `ChartUpdateRequest` (UseRenderPlanAdapter removed); `ChartUpdateCoordinator` (single path); `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `TransformChartRenderInvoker`; `ChartUpdateCoordinatorTests`; 975 tests pass. | Complete |
-| 2026-04-29 | Phase 22 | Proved the spine end-to-end with MovingAverage: new capability, new TabularSummary chart backend/provider, and independent API consumer — no old hubs touched, no legacy bridges required; chart + API consumers proved independently. | `ChartProgramKind.MovingAverage`; `AnalyticalCapabilityKind.Smoothing`; `SeriesOperationKind.MovingAverage`; `OperationKernel` rolling mean; `ChartProgramPlanner` case; `ChartBackendCapabilities.TabularSummary`; `ConsumerProviderContracts.TabularSummaryChart`; `MovingAverageCapabilityContract`; `Phase22MovingAverageEndToEndTests` (14 tests); 4 architecture guardrails; 989 tests pass. | Complete |
+| 2026-04-29 | Phase 22 | Proved the spine end-to-end with MovingAverage: new capability, new TabularSummary chart backend/provider, and independent API consumer — no old hubs touched, no legacy bridges required; chart + API consumers proved independently. | `ChartProgramKind.MovingAverage`; `AnalyticalCapabilityKind.Smoothing`; `SeriesOperationKind.MovingAverage`; `OperationKernel` rolling mean; `ChartProgramPlanner` case; `ChartBackendCapabilities.TabularSummary`; `ConsumerProviderContracts.TabularSummaryChart`; `MovingAverageCapabilityContract`; `Phase22MovingAverageEndToEndTests` (14 tests); 4 architecture guardrails; 989 tests passed at phase closure; current lane is 995 DataVisualiser tests. | Complete |
 
 ---
 
