@@ -1355,7 +1355,7 @@ Tests added:
 
 Validation:
 - 952 tests passed at Phase 18 closure for the SyncfusionSunburst slice
-- MainChartControllerAdapter contract carriage was completed by Phase 19; current validation is 995 DataVisualiser tests and 15 DataFileReader tests passing
+- MainChartControllerAdapter contract carriage was completed by Phase 19; current validation is 996 DataVisualiser tests and 15 DataFileReader tests passing
 - all existing SyncfusionSunburst tests continue to pass without changes
 ```
 
@@ -1436,7 +1436,7 @@ Deferred:
 - None for Phase 19. MetricLoadCoordinator VNext/legacy routing has been extracted into VNextMetricLoadRouter.
 
 Validation:
-- 995 DataVisualiser tests and 15 DataFileReader tests pass; no regressions
+- 996 DataVisualiser tests and 15 DataFileReader tests pass; no regressions
 ```
 
 ---
@@ -1544,7 +1544,7 @@ Tests:
 - ArchitectureGuardrailTests: 4 new guardrails (SyncfusionSunburstAdapter_ShouldDelegateModelBuildingToBuilder, DistributionAdapter_ShouldDelegateDataPreparationToBuilder, WeekdayTrendAdapter_ShouldDelegateComputationToInvoker, MainChartAdapter_ShouldDelegateOverlayBuildingToBuilder)
 
 Validation:
-- 975 tests passed at Phase 20 closure; current validation is 995 DataVisualiser tests and 15 DataFileReader tests passing
+- 975 tests passed at Phase 20 closure; current validation is 996 DataVisualiser tests and 15 DataFileReader tests passing
 ```
 
 ---
@@ -1649,7 +1649,7 @@ Retired:
 - ChartUpdateCoordinatorTests updated (3 tests no longer set UseRenderPlanAdapter=true)
 
 Validation:
-- 975 tests passed at Phase 21 closure; current validation is 995 DataVisualiser tests and 15 DataFileReader tests passing
+- 975 tests passed at Phase 21 closure; current validation is 996 DataVisualiser tests and 15 DataFileReader tests passing
 ```
 
 ---
@@ -1707,7 +1707,7 @@ Tests:
 - ArchitectureGuardrailTests: 4 new guardrails covering MovingAverage capability seam correctness
 
 Validation:
-- 995 DataVisualiser tests and 15 DataFileReader tests pass after Phase 19 closure and runtime-fix realignment; no regressions
+- 996 DataVisualiser tests and 15 DataFileReader tests pass after Phase 23 composition cleanup; no regressions
 - no old hubs touched; no legacy bridges required
 ```
 
@@ -1741,15 +1741,15 @@ cleanup concern, not a failed Phase 20/21 behavior migration.
 
 Tasks:
 
-- [ ] Audit remaining chart-family adapters and builders for inline collaborator construction.
-- [ ] Classify each inline construction site as acceptable local default, bounded DI concern, or removable composition ownership.
-- [ ] Extract TransformDataPanelControllerAdapter coordinator construction into a factory/composition helper.
-- [ ] Keep Transform render, compute, selection, milestone, and grid delegation behavior unchanged.
-- [ ] Confirm the factory/helper does not own capability, provider, rendering, semantic, or evidence authority.
-- [ ] If BarPie has the same DI concern, extract or explicitly bound it with a named retirement condition.
-- [ ] Add tests or guardrails proving adapters delegate to factories/helpers and do not regain construction sprawl.
-- [ ] Run full DataVisualiser and DataFileReader tests.
-- [ ] Update Section 2/3 checklist scope notes if Phase 23 adds new completion evidence.
+- [x] Audit remaining chart-family adapters and builders for inline collaborator construction.
+- [x] Classify each inline construction site as acceptable local default, bounded DI concern, or removable composition ownership.
+- [x] Extract TransformDataPanelControllerAdapter coordinator construction into a factory/composition helper.
+- [x] Keep Transform render, compute, selection, milestone, and grid delegation behavior unchanged.
+- [x] Confirm the factory/helper does not own capability, provider, rendering, semantic, or evidence authority.
+- [x] If BarPie has the same DI concern, extract or explicitly bound it with a named retirement condition.
+- [x] Add tests or guardrails proving adapters delegate to factories/helpers and do not regain construction sprawl.
+- [x] Run full DataVisualiser and DataFileReader tests.
+- [x] Update Section 2/3 checklist scope notes if Phase 23 adds new completion evidence.
 
 Completion condition:
 
@@ -1762,7 +1762,27 @@ coordinator graph. Behavior and evidence output remain unchanged.
 Phase 23 evidence:
 
 ```text
-Not started.
+Audit result:
+- TransformDataPanelControllerAdapter was the only chart-family adapter still acting as
+  a multi-coordinator inline composition root.
+- BarPieChartControllerAdapter constructs one dedicated BarPieRenderModelBuilder and
+  BarPieRenderModelBuilder owns a local VNextSeriesLoadCoordinator fallback. This is
+  classified as an acceptable local default/bounded DI seam, not the same removable
+  multi-coordinator construction graph as Transform.
+
+Implementation:
+- TransformDataPanelControllerAdapterCompositionFactory added.
+- TransformDataPanelControllerAdapter now delegates coordinator graph construction to
+  TransformDataPanelControllerAdapterCompositionFactory.Create.
+- TransformDataPanelControllerAdapter still owns interaction flow and delegates render,
+  compute, selection, milestone, and grid behavior to the same focused coordinators.
+- The factory constructs only focused Transform collaborators and does not own capability,
+  provider, backend, semantic, rendering-contract, or evidence policy.
+
+Tests:
+- TransformAdapter_ShouldDelegateCoordinatorConstructionToCompositionFactory guardrail added.
+- Focused ArchitectureGuardrailTests and TransformDataPanelControllerAdapterTests passed 114 tests.
+- Full validation passed 996 DataVisualiser tests and 15 DataFileReader tests.
 ```
 
 ---
@@ -1772,8 +1792,8 @@ Not started.
 Status note:
 
 ```text
-The guardrail checklist below is checked for the completed Phase 1-22 migration scope.
-Phase 23 has its own open tasks above. Checked items remain ongoing
+The guardrail checklist below is checked for the completed Phase 1-23 migration scope.
+Checked items remain ongoing
 constraints for future phases; they are not permission to bypass these rules later.
 ```
 
@@ -1902,9 +1922,9 @@ constraints for future phases; they are not permission to bypass these rules lat
 Status note:
 
 ```text
-The completion checklist below is checked for the completed Phase 1-22 migration scope.
-Phase 23 is the active next open phase and must provide new evidence before these
-criteria are extended beyond the Phase 1-22 scope.
+The completion checklist below is checked for the completed Phase 1-23 migration scope.
+Future phases must provide new evidence before these criteria are extended beyond
+the Phase 1-23 scope.
 ```
 
 ## 3.1 Structural Completion
@@ -2011,7 +2031,8 @@ Use this section during implementation.
 | 2026-04-30 | Phase 19 (routing closure) | Closed the remaining MetricLoadCoordinator routing item by extracting VNext main-family routing into VNextMetricLoadRouter. | `VNextMetricLoadRouter`; `MetricLoadCoordinator` delegates through `TryLoadAsync`; `MetricLoadCoordinator_ShouldDelegateVNextRoutingToMetricLoadRouter`; 995 DataVisualiser tests and 15 DataFileReader tests pass. | Complete |
 | 2026-04-29 | Phase 20 | Thinned chart-family adapter layer: extracted SyncfusionSunburstRenderModelBuilder, CartesianMetricOverlaySeriesBuilder, DistributionRenderInputBuilder, WeekdayTrendComputationInvoker; adapters are now thin relays; 16 builder/invoker tests + 4 new guardrails; 975 tests pass. | `SyncfusionSunburstRenderModelBuilder`; `CartesianMetricOverlaySeriesBuilder`; `DistributionRenderInputBuilder`; `WeekdayTrendComputationInvoker`; `Phase20BuilderInvokerTests`; updated `ArchitectureGuardrailTests`; 975 tests pass. | Complete |
 | 2026-04-29 | Phase 21 | Classified integration seams; retired UseRenderPlanAdapter legacy dual-path; adapter path is now always-on in ChartUpdateCoordinator; three call sites and three tests cleaned up. | `ChartUpdateRequest` (UseRenderPlanAdapter removed); `ChartUpdateCoordinator` (single path); `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `TransformChartRenderInvoker`; `ChartUpdateCoordinatorTests`; 975 tests pass. | Complete |
-| 2026-04-29 | Phase 22 | Proved the spine end-to-end with MovingAverage: new capability, new TabularSummary chart backend/provider, and independent API consumer — no old hubs touched, no legacy bridges required; chart + API consumers proved independently. | `ChartProgramKind.MovingAverage`; `AnalyticalCapabilityKind.Smoothing`; `SeriesOperationKind.MovingAverage`; `OperationKernel` rolling mean; `ChartProgramPlanner` case; `ChartBackendCapabilities.TabularSummary`; `ConsumerProviderContracts.TabularSummaryChart`; `MovingAverageCapabilityContract`; `Phase22MovingAverageEndToEndTests` (14 tests); 4 architecture guardrails; 989 tests passed at phase closure; current lane is 995 DataVisualiser tests. | Complete |
+| 2026-04-29 | Phase 22 | Proved the spine end-to-end with MovingAverage: new capability, new TabularSummary chart backend/provider, and independent API consumer — no old hubs touched, no legacy bridges required; chart + API consumers proved independently. | `ChartProgramKind.MovingAverage`; `AnalyticalCapabilityKind.Smoothing`; `SeriesOperationKind.MovingAverage`; `OperationKernel` rolling mean; `ChartProgramPlanner` case; `ChartBackendCapabilities.TabularSummary`; `ConsumerProviderContracts.TabularSummaryChart`; `MovingAverageCapabilityContract`; `Phase22MovingAverageEndToEndTests` (14 tests); 4 architecture guardrails; 989 tests passed at phase closure; current lane is 996 DataVisualiser tests. | Complete |
+| 2026-04-30 | Phase 23 | Removed the remaining Transform adapter inline coordinator composition root while bounding smaller local DI defaults. | `TransformDataPanelControllerAdapterCompositionFactory`; `TransformDataPanelControllerAdapter` delegates construction through factory; `TransformAdapter_ShouldDelegateCoordinatorConstructionToCompositionFactory`; 996 DataVisualiser tests and 15 DataFileReader tests pass. | Complete |
 
 ---
 

@@ -24,7 +24,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private readonly TransformSelectionInteractionCoordinator _transformSelectionInteractionCoordinator;
     private readonly TransformSessionMilestoneRecorder _transformSessionMilestoneRecorder;
     private readonly TransformWorkflowCoordinator _transformWorkflowCoordinator;
-    private readonly MetricSeriesSelectionCache _selectionCache = new();
+    private readonly MetricSeriesSelectionCache _selectionCache;
     private readonly MainWindowViewModel _viewModel;
     private bool _isTransformSelectionPendingLoad;
     private bool _isUpdatingTransformSubtypeCombos;
@@ -36,19 +36,22 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _isInitializing = isInitializing ?? throw new ArgumentNullException(nameof(isInitializing));
         _beginUiBusyScope = beginUiBusyScope ?? throw new ArgumentNullException(nameof(beginUiBusyScope));
-        ArgumentNullException.ThrowIfNull(transformRenderingContract);
-        var computationService = transformComputationService ?? new TransformComputationService();
-        _transformDataResolutionCoordinator = new TransformDataResolutionCoordinator(_controller, _viewModel, metricSelectionService ?? throw new ArgumentNullException(nameof(metricSelectionService)), _selectionCache, vnextCoordinator);
-        _transformOperationExecutionCoordinator = new TransformOperationExecutionCoordinator(computationService);
-        _transformOperationStateCoordinator = new TransformOperationStateCoordinator();
-        _transformRenderCoordinator = new TransformRenderCoordinator(_controller, _viewModel.ChartState, transformRenderingContract);
-        _transformSelectionInteractionCoordinator = new TransformSelectionInteractionCoordinator();
-        _transformSessionMilestoneRecorder = new TransformSessionMilestoneRecorder(_viewModel);
-        _transformWorkflowCoordinator = new TransformWorkflowCoordinator(
-            _transformDataResolutionCoordinator,
-            _transformOperationExecutionCoordinator,
-            _transformRenderCoordinator,
-            _transformSessionMilestoneRecorder);
+        var composition = TransformDataPanelControllerAdapterCompositionFactory.Create(
+            _controller,
+            _viewModel,
+            metricSelectionService,
+            transformRenderingContract,
+            transformComputationService,
+            vnextCoordinator);
+
+        _selectionCache = composition.SelectionCache;
+        _transformDataResolutionCoordinator = composition.DataResolutionCoordinator;
+        _transformOperationExecutionCoordinator = composition.OperationExecutionCoordinator;
+        _transformOperationStateCoordinator = composition.OperationStateCoordinator;
+        _transformRenderCoordinator = composition.RenderCoordinator;
+        _transformSelectionInteractionCoordinator = composition.SelectionInteractionCoordinator;
+        _transformSessionMilestoneRecorder = composition.SessionMilestoneRecorder;
+        _transformWorkflowCoordinator = composition.WorkflowCoordinator;
     }
 
     public override void ClearCache()

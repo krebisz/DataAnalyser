@@ -1048,6 +1048,33 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void TransformAdapter_ShouldDelegateCoordinatorConstructionToCompositionFactory()
+    {
+        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapter.cs");
+        var factorySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapterCompositionFactory.cs");
+
+        Assert.Contains("TransformDataPanelControllerAdapterCompositionFactory.Create", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformDataResolutionCoordinator", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformOperationExecutionCoordinator", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformOperationStateCoordinator", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformRenderCoordinator", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformSelectionInteractionCoordinator", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformSessionMilestoneRecorder", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformWorkflowCoordinator", adapterSource, StringComparison.Ordinal);
+
+        Assert.Contains("new TransformDataResolutionCoordinator", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformOperationExecutionCoordinator", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformOperationStateCoordinator", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformRenderCoordinator", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformSelectionInteractionCoordinator", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformSessionMilestoneRecorder", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformWorkflowCoordinator", factorySource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConsumerProviderRegistry", factorySource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartBackendSelector", factorySource, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnalyticalIntentFactory", factorySource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void StrategyCutOverService_ShouldDelegateCmsDecisionLogicToEvaluator()
     {
         var serviceSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Strategies", "StrategyCutOverService.cs");

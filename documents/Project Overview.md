@@ -279,7 +279,7 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Recent shared seams added before Phase 7: `ParitySeriesComparer`, `WorkspaceLoadCoordinator`, `WorkspaceSessionMilestoneRecorder`, and `BinaryMetricChartContextHelper`
 - Pre-Phase-7 enabling infrastructure is complete and closed as a preservation baseline: `ChartRenderPlan`, neutral render buffers, `RenderDensityPolicy`, time-bucket render aggregation, backend capability descriptors, backend selection, and adapter dispatch now exist under VNext and are wired into live chart rendering across the active chart families/tabs
 - Known debt carried to Phase 7: `MainChartsView` host concentration (~1,440 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence, adapter pattern variation (accepted as domain variation)
-- 493 source files, 737 DataVisualiser tests, 15 DataFileReader tests (Phase 6 closure baseline; current lane is ~505 source files and 995 DataVisualiser tests after Phases 19–22 and Phase 19 routing closure)
+- 493 source files, 737 DataVisualiser tests, 15 DataFileReader tests (Phase 6 closure baseline; current lane is ~505 source files and 996 DataVisualiser tests after Phases 19–23)
 
 ---
 
