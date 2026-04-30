@@ -6,7 +6,7 @@
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, do-not-confuse distinctions, and migration-risk language  
 **Last Updated:** 2026-04-26
 
-**Historical numbering note:** This document preserves older subsystem phase numbering. For the current DataVisualiser migration sequence, use `DataVisualiser_Migration_Plan_and_Guardrails.md` as the active sequential plan and progress log. When phase numbers differ, the migration plan's Phase 1-17 sequence is authoritative for current execution.
+**Historical numbering note:** This document preserves older subsystem phase numbering. For the current DataVisualiser migration sequence, use `DataVisualiser_Migration_Plan_and_Guardrails.md` as the active sequential plan and progress log. When phase numbers differ, the migration plan's current Phase 1-22 sequence is authoritative for current execution.
 
 ---
 
@@ -42,10 +42,10 @@ Use this section as the default handoff entry point in a new conversation.
 Current state:
 
 - Pre-Phase-7 rendering primer is complete: VNext has render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts, and the active chart families now consume `ChartRenderPlan` through adapters.
-- Current automated lane: 493 DataVisualiser source files, 174 DataVisualiser test files, 737 DataVisualiser tests, and 15 DataFileReader tests.
-- Current architectural migration estimate: approximately 65–70% complete, working estimate ~68%, per the accepted architectural vocabulary progress snapshot.
+- Current automated lane: ~505 DataVisualiser source files, ~176 DataVisualiser test files, 989 DataVisualiser tests, and 15 DataFileReader tests. (Phase 6 closure baseline was 493 source files and 737 tests.)
+- Current architectural migration estimate: approximately 70–75% complete, working estimate ~72%, per the accepted architectural vocabulary progress snapshot (updated after Phases 19–22).
 - Phase 6.3 VNext widening is complete - all active chart families have VNext-compatible request/program support and live VNext routes for fresh family loads, with legacy retained as compatibility/fallback
-- Phase 7 entry gate is satisfied — exploratory and confidence capabilities remain the Phase 7 objective, and the render-plan delivery primer is now complete across the active chart families and tabs.
+- Phase 7 is active — Migration Plan Phases 14–22 are complete; the VNext spine is proved end-to-end through a new MovingAverage capability, a TabularSummary chart backend/provider, and independent chart + API consumers.
 - known debt: `MainChartsView` host concentration (~1,440 lines), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence
 
 Current defaults:
@@ -54,7 +54,7 @@ Current defaults:
 - scope is `DataVisualiser` only
 - posture is `Conservative-Pragmatic`
 - one iteration must have one primary objective
-- the default objective is now Phase 7 capability expansion; the pre-Phase-7 render-plan delivery primer is complete and VNext family widening (6.3) is closed
+- the default objective is Phase 7 capability expansion; Migration Plan Phases 14–22 are complete; the VNext spine is proved end-to-end
 - safely coupled slices are allowed only when they already share a real contract / host / route / responsibility pattern
 - validation must happen on every significant refactor
 - if live behavior changes, halt after automated validation and request targeted manual smoke before continuing
@@ -168,8 +168,8 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 Current observed shape:
 
-- `493` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparer, workspace load/milestone recorders, binary metric context helper, pre-Phase-7 VNext render-plan foundation, and live render-plan adapter wiring)
-- `737` DataVisualiser automated tests passing; `15` DataFileReader tests passing
+- `~505` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparer, workspace load/milestone recorders, binary metric context helper, pre-Phase-7 VNext render-plan foundation, live render-plan adapter wiring, Phase 19–22 builders/invokers and capability spine additions; Phase 6 closure baseline was 493)
+- `989` DataVisualiser automated tests passing; `15` DataFileReader tests passing (Phase 6 closure baseline was 737 tests)
 - VNext-compatible request/program support across all current chart families, with live VNext routes and automatic legacy fallback/compatibility projection where still needed
 - VNext render-plan foundation exists and is now live-wired across the active chart families and tabs: `ChartRenderPlan`, neutral render buffers, density policy, time-bucket aggregation, backend capabilities, backend selector, and adapter dispatcher are covered by automated tests and adapter-backed delivery
 - evidence/export boundary decomposed into standalone DTOs, diagnostics builder, and export orchestrator
@@ -278,6 +278,11 @@ Current read:
 - VNext workflow state now carries explicit `WorkflowPlanRequest` plans, and the bridge accepts explicit `ChartProgramRequest` input for non-live program projection
 - the remaining architectural noise is concentrated in the outliers listed above
 - low-level helper duplication is no longer the dominant problem; mixed host/orchestration/evidence/data-access responsibilities are
+- render-plan construction authority is now in `CartesianMetricRenderPlanBuilder`; `ChartUpdateCoordinator` is coordination-only for this responsibility
+- `CartesianMetricCapabilityContract` is threaded through the full Main and Secondary render chain; delivery authority is explicit at every render boundary
+- chart-family adapters are now thin relays: `SyncfusionSunburstRenderModelBuilder`, `CartesianMetricOverlaySeriesBuilder`, `DistributionRenderInputBuilder`, and `WeekdayTrendComputationInvoker` own the non-relay logic previously inline in adapters
+- `UseRenderPlanAdapter` legacy dual-path is retired; the adapter path in `ChartUpdateCoordinator` is now always-on and unconditional; integration seams classified and bounded with named retirement conditions
+- VNext spine proved end-to-end through MovingAverage: new capability, `TabularSummary` chart backend/provider, and two independent consumers (chart + API) added without touching old hubs or legacy bridges
 
 ---
 
@@ -288,19 +293,19 @@ This is a concise execution-plan view of the accepted architectural vocabulary p
 Current estimate:
 
 ```text
-Architectural migration: approximately 65–70% complete
-Working estimate: ~68%
+Architectural migration: approximately 70–75% complete
+Working estimate: ~72% (updated after Phases 19–22)
 ```
 
 | Area | Approx. completion | Execution-plan interpretation |
 |---|---:|---|
 | Vocabulary / conceptual model | 90% | Stable promoted concepts and target hierarchy are in place and should be treated as current grammar. |
-| VNext reasoning spine | 75% | `ReasoningEngine`, analytical intent, program planning, and session coordination exist and are materially usable. |
-| Contract / boundary model | 65% | Consumer/provider contracts and render-plan seams are emerging; enforcement still needs proof through bounded slices. |
+| VNext reasoning spine | 80% | End-to-end spine proved through MovingAverage: new capability enters through target seams and reaches two independent consumers. |
+| Contract / boundary model | 75% | Explicit CapabilityContracts threaded across all chart families; adapter layer thinned; UseRenderPlanAdapter dual-path retired. |
 | Rendering demotion | 60% | Render-plan delivery exists, but `Core.Rendering` remains structurally large and must stay terminal. |
-| Consumer / interaction separation | 55% | Better contracts exist, but UI/presentation remains a major remaining front. |
+| Consumer / interaction separation | 65% | TabularSummaryChart proves a non-LiveCharts chart consumer path, while ApiResponse proves a non-chart consumer path; UI/presentation still the main remaining front. |
 | Governance / evidence | 75% | Evidence, parity, and diagnostics infrastructure are strong but must remain observational. |
-| Legacy coexistence cleanup | 50–60% | Legacy/VNext coexistence remains managed debt while VNext becomes progressively more authoritative. |
+| Legacy coexistence cleanup | 50–60% | Legacy/VNext coexistence remains managed debt; integration seams classified and bounded with named retirement conditions. |
 
 Execution meaning:
 

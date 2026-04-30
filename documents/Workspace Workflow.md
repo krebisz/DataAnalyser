@@ -1,5 +1,5 @@
 # Workspace Workflow
-**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Fully Closed, Phase 7 Entry Gate Satisfied, Pre-Phase-7 Baseline Closed, Architectural Vocabulary Added
+**Updated:** April 2026 — Multi-Agent Aligned, Phase 6 Fully Closed, Phase 7 Active, Migration Plan Phases 14–22 Complete, Pre-Phase-7 Baseline Closed, Architectural Vocabulary Added
 
 This document is part of the core documentation set.
 See `MASTER_OPERATING_PROTOCOL.md` for governing authority.
@@ -192,12 +192,12 @@ Example:
 Workspace State:
 - Documents: MASTER_OPERATING_PROTOCOL, Project Bible, SYSTEM_MAP, Architectural Vocabulary, Roadmap, Execution Plan
 - Code snapshot: live codebase access
-- Phase: Phase 6 closed, Phase 7 entry gate satisfied
-- Forward posture: Phase 7 capability expansion; closed Phase 5/6/6.3 and pre-Phase-7 primer remain preservation baselines
-- VNext: all chart families have VNext-compatible request/program support and live VNext routes where appropriate; legacy remains compatibility/fallback/projection
+- Phase: Phase 6 closed, Phase 7 active (Migration Plan Phases 14–22 complete)
+- Forward posture: Phase 7 capability expansion; VNext spine proved end-to-end through MovingAverage; closed Phase 5/6/6.3 and pre-Phase-7 primer remain preservation baselines
+- VNext: all chart families have VNext-compatible request/program support and live VNext routes where appropriate; legacy remains compatibility/fallback/projection; integration seams classified and bounded
 - Ownership-container focus: authority/provenance, reasoning/capability, process/execution, contract/boundary, consumer/interaction, terminal delivery, governance/evidence as applicable
 - Parity: all 8 strategies passing (April 2026 exports)
-- Tests: 737 DataVisualiser + 15 DataFileReader passing
+- Tests: 989 DataVisualiser + 15 DataFileReader passing
 - Unknowns: none
 ```
 

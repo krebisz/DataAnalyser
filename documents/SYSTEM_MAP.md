@@ -119,8 +119,8 @@ This section records structural maturity only. It is not sequencing authority an
 Current accepted estimate:
 
 ```text
-Architectural migration: approximately 65–70% complete
-Working estimate: ~68%
+Architectural migration: approximately 70–75% complete
+Working estimate: ~72% (updated after Phases 19–22)
 ```
 
 Structural reading:
@@ -128,12 +128,12 @@ Structural reading:
 | Structural area | Approx. maturity | Structural meaning |
 |---|---:|---|
 | Vocabulary / conceptual model | 90% | Ownership containers and promoted concepts are stable enough to govern structural interpretation. |
-| VNext reasoning spine | 75% | Reasoning, analytical intent, program planning, and session coordination are materially present. |
-| Contract / boundary model | 65% | Consumer/provider and render-plan seams exist, but boundary enforcement remains the main structural proof point. |
+| VNext reasoning spine | 80% | End-to-end spine proved through MovingAverage; reasoning, intent, program planning, and delivery to independent consumers are materially validated. |
+| Contract / boundary model | 75% | CapabilityContracts threaded across all chart families; adapter dual-path retired; boundary enforcement materially strengthened. |
 | Rendering demotion | 60% | Rendering has a terminal-delivery path through render plans, but rendering infrastructure remains structurally large. |
-| Consumer / interaction separation | 55% | Consumers and interactions are better named, but UI/presentation remains heavy. |
+| Consumer / interaction separation | 65% | TabularSummaryChart proves non-chart consumer path; UI/presentation remains heavy. |
 | Governance / evidence | 75% | Evidence and parity structures are strong, but must remain observational. |
-| Legacy coexistence cleanup | 50–60% | Legacy remains compatibility/fallback/projection while VNext-native paths mature. |
+| Legacy coexistence cleanup | 50–60% | Legacy remains compatibility/fallback/projection; integration seams classified and bounded with named retirement conditions. |
 
 Structural consequence:
 

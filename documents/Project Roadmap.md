@@ -5,7 +5,7 @@
 **Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions  
 **Last Updated:** 2026-04-26
-**Current Update:** Phase 7 entry gate is satisfied. The pre-Phase-7 rendering primer is complete and is now a closed preservation baseline: VNext render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts live-wire the active chart families and tabs through `ChartRenderPlan` delivery. The accepted architectural migration progress estimate is approximately 65–70% complete, with a working estimate of ~68%. Phase 7 capability expansion now proceeds from the stabilized baseline and should be sequenced through the enhanced architecture containers: authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence.
+**Current Update:** Phase 7 is active. Migration Plan Phases 14–22 are complete. The VNext spine is proved end-to-end: a new MovingAverage capability enters through the target seams and is consumed by two independent consumers (chart + API) without touching old hubs or legacy bridges. The UseRenderPlanAdapter dual-path is retired; explicit CapabilityContracts are threaded across all chart families. The accepted architectural migration progress estimate is approximately 70–75% complete, with a working estimate of ~72% (updated from ~68% after Phases 19–22).
 **Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. New work must not be tracked against Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 rendering primer.
 
 ---
@@ -146,8 +146,8 @@ This section records the accepted high-level progress estimate for sequencing pu
 Current estimate:
 
 ```text
-Architectural migration: approximately 65–70% complete
-Working estimate: ~68%
+Architectural migration: approximately 70–75% complete
+Working estimate: ~72% (updated after Phases 19–22)
 ```
 
 Sequencing interpretation:
@@ -155,12 +155,12 @@ Sequencing interpretation:
 | Area | Approx. completion | Roadmap implication |
 |---|---:|---|
 | Vocabulary / conceptual model | 90% | Concept language is stable enough to govern Phase 7 work. |
-| VNext reasoning spine | 75% | Phase 7 may build on the reasoning-engine spine rather than restart it. |
-| Contract / boundary model | 65% | Boundary hardening remains a current Phase 7 sequencing priority. |
+| VNext reasoning spine | 80% | End-to-end spine proved through MovingAverage; Phase 7 may build on proven seams. |
+| Contract / boundary model | 75% | CapabilityContracts threaded; adapter dual-path retired; boundary enforcement materially strengthened. |
 | Rendering demotion | 60% | Render-plan delivery is real, but rendering must continue moving toward terminal infrastructure. |
-| Consumer / interaction separation | 55% | Consumer/interaction work remains a later Phase 7/Phase 8 transition concern. |
+| Consumer / interaction separation | 65% | TabularSummaryChart proves non-chart consumer path; UI/presentation remains a main Phase 7/Phase 8 front. |
 | Governance / evidence | 75% | Evidence is strong enough to support migration, but must remain observational. |
-| Legacy coexistence cleanup | 50–60% | Legacy remains managed compatibility/fallback/projection until VNext-native capability slices mature. |
+| Legacy coexistence cleanup | 50–60% | Legacy remains managed compatibility/fallback/projection; integration seams classified and bounded. |
 
 Roadmap consequence:
 
@@ -585,8 +585,8 @@ Generated evidence artifacts are closure proof, not foundational doctrine. Speci
 ---
 
 ### Phase 7 - Exploratory and Confidence Capability Expansion (Intentional)  
-**Status:** PLANNED / ENTRY GATE SATISFIED  
-**Entry Gate:** Phase 6 must restore enough hierarchy legibility that new power can be added without amplifying entropy — **satisfied** (Phase 6 closed April 2026)
+**Status:** OPEN / ACTIVE  
+**Entry Gate:** Phase 6 must restore enough hierarchy legibility that new power can be added without amplifying entropy — **satisfied** (Phase 6 closed April 2026); Migration Plan Phases 14–22 complete; VNext spine proved end-to-end
 
 **Purpose**
 Phase 7 increases interpretive power without eroding truth or reintroducing exception-driven structure.
@@ -876,7 +876,7 @@ The reasoning engine is the composition surface; new capabilities should strengt
 
 Remaining open phases:
 1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `CLOSED`
-2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `PLANNED / ENTRY GATE SATISFIED` (pre-Phase-7 rendering primer complete)
+2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `OPEN / ACTIVE` (Migration Plan Phases 14–22 complete; VNext spine proved end-to-end)
 3. `Phase 8 - Consumer, Interaction, UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
 
 Phase 6 sub-phase status:
@@ -904,9 +904,9 @@ Major next steps in sequence:
 - Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
 - Phase 5 is the completed bridge between what the system already does and what it is intended to become.
 - Phase 6 established a trustworthy hierarchy; it is fully closed. All active chart families have VNext-compatible request/program support and managed legacy fallback/compatibility.
-- Phase 7 remains the sanctioned home of exploration, confidence, and richer interpretive power. Its entry gate is satisfied; the render-plan primer is complete and now serves as the stabilized baseline for capability expansion.
+- Phase 7 is now active; the VNext spine is proved end-to-end through MovingAverage, and Phases 14–22 are complete.
 - Phase 7 should advance according to the forward sequencing model, without reopening any closed historical phase.
-- The accepted architectural migration estimate is approximately 65–70% complete, with a working estimate of ~68%.
+- The accepted architectural migration estimate is approximately 70–75% complete, with a working estimate of ~72% (updated after Phases 19–22).
 - The architectural vocabulary document supplies the concept grammar; this roadmap supplies the sequencing and closure discipline.
 - The reasoning engine is the center of the system. New capabilities should be built as reasoning-engine features that delivery surfaces consume.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.

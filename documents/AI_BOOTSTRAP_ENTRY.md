@@ -46,7 +46,7 @@ Unless newer authoritative documents explicitly replace this state, assume the f
 - Solution root: `C:\Development\POCs\DataAnalyser\`
 - Primary active subsystem: `DataVisualiser`
 - Current project direction: canonical data reasoning platform centered on a reasoning engine, not chart-specific architecture
-- Active roadmap state: **Phase 6 closed; Phase 7 entry gate satisfied; pre-Phase-7 render-plan primer closed as a preservation baseline**
+- Active roadmap state: **Phase 6 closed; Phase 7 active; Migration Plan Phases 14–22 complete; VNext spine proved end-to-end through MovingAverage**
 - Active execution posture: **Conservative-Pragmatic**
 - Default execution style:
   - one iteration must have one primary objective

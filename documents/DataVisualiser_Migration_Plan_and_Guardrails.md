@@ -85,7 +85,7 @@ Historical planning note:
 
 ```text
 DataVisualiser_Subsystem_Plan.md uses older subsystem phase numbering.
-This migration plan is the active sequential execution plan for the Phase 1-17 migration described here.
+This migration plan is the active sequential execution plan for the current Phase 1-22 migration described here.
 When phase numbers conflict, use this migration plan and its progress log as the authoritative current sequence.
 ```
 
@@ -1515,6 +1515,31 @@ No adapter owns capability, provider, rendering, or semantic decisions.
 BarPie is the reference pattern: thin adapter + dedicated builder + contract.
 ```
 
+Phase 20 evidence:
+
+```text
+Pre-implementation audit:
+- BarPie — confirmed relay-compliant; BarPieRenderModelBuilder already owns data preparation; no logic migration needed
+- SyncfusionSunburst — adapter owned full render model pipeline; extracted into SyncfusionSunburstRenderModelBuilder
+- Distribution — adapter owned BuildDistributionRenderInputAsync, ResolveSelectedDistributionSeries, BuildDistributionContext; extracted into DistributionRenderInputBuilder
+- WeekdayTrend — adapter owned ComputeWeekdayTrend and ResolveWeekdayTrendDataAsync; extracted into WeekdayTrendComputationInvoker
+- MainChartControllerAdapter — adapter owned BuildOverlaySeriesAsync and overlay lifecycle; extracted into CartesianMetricOverlaySeriesBuilder
+- TransformDataPanelControllerAdapter — adapter is inline composition root for coordinators; relay delegation already thin; construction refactor deferred (DI concern)
+
+Extracted builders and invokers:
+- SyncfusionSunburstRenderModelBuilder (DataVisualiser/UI/Charts/Presentation/)
+- CartesianMetricOverlaySeriesBuilder (DataVisualiser/UI/Charts/Presentation/)
+- DistributionRenderInputBuilder (DataVisualiser/UI/Charts/Presentation/)
+- WeekdayTrendComputationInvoker (DataVisualiser/UI/Charts/Presentation/)
+
+Tests:
+- Phase20BuilderInvokerTests: 16 builder/invoker unit tests
+- ArchitectureGuardrailTests: 4 new guardrails (SyncfusionSunburstAdapter_ShouldDelegateModelBuildingToBuilder, DistributionAdapter_ShouldDelegateDataPreparationToBuilder, WeekdayTrendAdapter_ShouldDelegateComputationToInvoker, MainChartAdapter_ShouldDelegateOverlayBuildingToBuilder)
+
+Validation:
+- 975 tests pass; no regressions
+```
+
 ---
 
 ## 1.22 Phase 21 — Classify and Bound Integration Seams
@@ -1542,7 +1567,7 @@ VNextDataResolutionHelper
   Role: Active decision helper orchestrating VNext-vs-legacy loading at the series level.
         Contains explicit fallback logic; no dedicated unit test coverage.
   Retirement condition: Retirable once ChartDataContext is no longer the primary UI model
-        and legacy fallback loading paths are confirmed dead. Blocked on Phase 22.
+        and legacy fallback loading paths are confirmed dead. Still blocked after Phase 22.
 
 LegacyChartProgramProjector
   Role: Projects VNext ChartProgram output back to legacy ChartDataContext for UI consumption.
@@ -1577,7 +1602,9 @@ dependency was never addressed in Phases 1-20: the legacy ChartDataContext model
 the primary data structure the UI consumes. As long as ChartDataContext flows through the
 UI, the format-gap projectors (LegacyChartProgramProjector, VNextMainChartIntegrationCoordinator)
 must exist. These are integration seams, not bridges to delete. True retirement requires
-the UI to speak VNext contracts natively end-to-end — which is what Phase 22 proves.
+the UI to speak VNext contracts natively end-to-end. Phase 22 proves that new capabilities
+can enter through the target spine without legacy bridges; it does not by itself retire the
+legacy UI model or the compatibility seams around it.
 ```
 
 Tasks:
@@ -1596,9 +1623,31 @@ Every named bridge is classified. The one retirable item (UseRenderPlanAdapter l
 is removed. All others carry an explicit, named retirement condition tied to Phase 22+.
 ```
 
+Phase 21 evidence:
+
+```text
+Bridge classification results:
+- VNextMainChartIntegrationCoordinator — permanent seam (IS the VNext spine); never retire
+- VNextSeriesLoadCoordinator — permanent seam (IS the VNext spine); never retire
+- VNextDataResolutionHelper — bounded; retirable once ChartDataContext is retired (Phase 22+)
+- LegacyChartProgramProjector — bounded; retirable once UI speaks VNext natively (Phase 22+)
+- LegacyMetricViewGateway — bounded; retirable once IMetricSeriesLoader replaced (Phase 22+)
+- Parity/evidence paths — bounded; retirable after VNext-only cut-over (Phase 22+)
+- ChartUpdateCoordinator UseRenderPlanAdapter=false branch — RETIRED (retirement condition met)
+
+Retired:
+- UseRenderPlanAdapter property removed from ChartUpdateRequest
+- ChartUpdateCoordinator if/else dual-path collapsed to single unconditional adapter path
+- UseRenderPlanAdapter=true removed from MainChartRenderInvocationStage, SecondaryMetricChartRenderInvocationStage, and TransformChartRenderInvoker
+- ChartUpdateCoordinatorTests updated (3 tests no longer set UseRenderPlanAdapter=true)
+
+Validation:
+- 975 tests pass; no regressions
+```
+
 ---
 
-## 1.23 Phase 22 — Prove the Spine End-to-End with a New Capability and Independent Consumer
+## 1.23 Phase 22 — Prove the Spine End-to-End with a New Capability and Independent Consumers
 
 Goal:
 
@@ -1624,6 +1673,35 @@ Completion condition:
 A new capability enters through the target spine and is consumed by two independent consumers
 without touching old hubs or legacy bridges.
 All Section 3 completion criteria are satisfied.
+```
+
+Phase 22 evidence:
+
+```text
+New capability: MovingAverage (rolling mean; not previously in the system)
+
+Spine additions (no old hubs modified):
+- ChartProgramKind.MovingAverage added to enum
+- AnalyticalCapabilityKind.Smoothing added to enum
+- SeriesOperationKind.MovingAverage added to enum
+- OperationKernel: rolling mean implementation
+- ChartProgramPlanner: MovingAverage case added
+- ChartBackendCapabilities.TabularSummary: new backend descriptor (BackendKey = "TabularSummaryChart", Cartesian only, no LiveCharts dependency)
+- ConsumerProviderContracts.TabularSummaryChart: new chart consumer/provider contract (supports MovingAverage only)
+- ConsumerProviderRegistry: TabularSummaryChart built-in consumer added
+- MovingAverageCapabilityContract: sealed record with ProgramRequest/Capability/Delivery; static Create factory; validates kind and delivery alignment
+
+Independent consumers proved:
+- Chart consumer: MovingAverageChart with MovingAverageCapabilityContract delivered through the independent TabularSummaryChart provider/backend (no LiveCharts dependency)
+- Non-chart consumer: ApiResponse through ConsumerDeliveryContract.Api without render-plan delivery
+
+Tests:
+- Phase22MovingAverageEndToEndTests: 14 tests covering full spine from intent to delivery to audit record
+- ArchitectureGuardrailTests: 4 new guardrails covering MovingAverage capability seam correctness
+
+Validation:
+- 989 tests pass; no regressions
+- no old hubs touched; no legacy bridges required
 ```
 
 ---
@@ -1855,7 +1933,7 @@ Use this section during implementation.
 | 2026-04-29 | Phase 19 (contract threading) | Threaded CartesianMetricCapabilityContract through the full Main and Secondary invocation chains; delivery authority is now explicit at every render boundary. | `CartesianMetricCapabilityContract`; `CartesianMetricChartRenderRequest`; `CartesianMetricChartRenderInvoker`; `ChartRenderingOrchestrator.RenderPrimaryChartAsync`; `MainChartRenderRequest`; `MainChartOrchestrationPipeline`; `IMainChartRenderInvocationStage`; `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `MainChartControllerAdapter`; 6 new contract tests; 958 tests pass. | Complete |
 | 2026-04-29 | Phase 20 | Thinned chart-family adapter layer: extracted SyncfusionSunburstRenderModelBuilder, CartesianMetricOverlaySeriesBuilder, DistributionRenderInputBuilder, WeekdayTrendComputationInvoker; adapters are now thin relays; 16 builder/invoker tests + 4 new guardrails; 975 tests pass. | `SyncfusionSunburstRenderModelBuilder`; `CartesianMetricOverlaySeriesBuilder`; `DistributionRenderInputBuilder`; `WeekdayTrendComputationInvoker`; `Phase20BuilderInvokerTests`; updated `ArchitectureGuardrailTests`; 975 tests pass. | Complete |
 | 2026-04-29 | Phase 21 | Classified integration seams; retired UseRenderPlanAdapter legacy dual-path; adapter path is now always-on in ChartUpdateCoordinator; three call sites and three tests cleaned up. | `ChartUpdateRequest` (UseRenderPlanAdapter removed); `ChartUpdateCoordinator` (single path); `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `TransformChartRenderInvoker`; `ChartUpdateCoordinatorTests`; 975 tests pass. | Complete |
-| 2026-04-29 | Phase 22 | Proved the spine end-to-end with MovingAverage: new capability, new TabularSummary backend, new TabularSummaryChart consumer — no old hubs touched, no legacy bridges required; chart + API consumers proved independently. | `ChartProgramKind.MovingAverage`; `AnalyticalCapabilityKind.Smoothing`; `SeriesOperationKind.MovingAverage`; `OperationKernel` rolling mean; `ChartProgramPlanner` case; `ChartBackendCapabilities.TabularSummary`; `ConsumerProviderContracts.TabularSummaryChart`; `MovingAverageCapabilityContract`; `Phase22MovingAverageEndToEndTests` (14 tests); 4 architecture guardrails; 989 tests pass. | Complete |
+| 2026-04-29 | Phase 22 | Proved the spine end-to-end with MovingAverage: new capability, new TabularSummary chart backend/provider, and independent API consumer — no old hubs touched, no legacy bridges required; chart + API consumers proved independently. | `ChartProgramKind.MovingAverage`; `AnalyticalCapabilityKind.Smoothing`; `SeriesOperationKind.MovingAverage`; `OperationKernel` rolling mean; `ChartProgramPlanner` case; `ChartBackendCapabilities.TabularSummary`; `ConsumerProviderContracts.TabularSummaryChart`; `MovingAverageCapabilityContract`; `Phase22MovingAverageEndToEndTests` (14 tests); 4 architecture guardrails; 989 tests pass. | Complete |
 
 ---
 

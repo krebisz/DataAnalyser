@@ -279,15 +279,15 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 - Recent shared seams added before Phase 7: `ParitySeriesComparer`, `WorkspaceLoadCoordinator`, `WorkspaceSessionMilestoneRecorder`, and `BinaryMetricChartContextHelper`
 - Pre-Phase-7 enabling infrastructure is complete and closed as a preservation baseline: `ChartRenderPlan`, neutral render buffers, `RenderDensityPolicy`, time-bucket render aggregation, backend capability descriptors, backend selection, and adapter dispatch now exist under VNext and are wired into live chart rendering across the active chart families/tabs
 - Known debt carried to Phase 7: `MainChartsView` host concentration (~1,440 lines, genuinely host-level), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence, adapter pattern variation (accepted as domain variation)
-- 493 source files, 737 DataVisualiser tests, 15 DataFileReader tests
+- 493 source files, 737 DataVisualiser tests, 15 DataFileReader tests (Phase 6 closure baseline; current lane is ~505 source files and 989 DataVisualiser tests after Phases 19–22)
 
 ---
 
 ### Phase 7 - Exploratory & Confidence Capability Expansion  
-**Planned / Entry Gate Satisfied**
+**Open / Active**
 
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
-- Phase 6 closure satisfies the entry gate: the hierarchy is now legible enough that new power can be added without amplifying entropy
+- Migration Plan Phases 14–22 are complete; the VNext spine is proved end-to-end through a new MovingAverage capability, TabularSummary backend, and independent chart + API consumers
 - Current active work is Phase 7 exploratory capability expansion on the closed `ChartProgram -> ChartRenderPlan -> backend adapter` preservation baseline
 - Later family or tab exceptions must be handled explicitly and must not silently reopen closed Phase 5/6/6.3 or pre-Phase-7 primer work
 - Phase 7 should advance through forward stages aligned to the enhanced containers: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence
@@ -332,8 +332,8 @@ The architectural vocabulary provides the shared language for this direction; th
 The accepted high-level architectural migration estimate is:
 
 ```text
-Architectural migration: approximately 65–70% complete
-Working estimate: ~68%
+Architectural migration: approximately 70–75% complete
+Working estimate: ~72% (updated after Phases 19–22)
 ```
 
 This estimate is descriptive, not a phase gate.
@@ -341,12 +341,12 @@ This estimate is descriptive, not a phase gate.
 | Area | Approx. completion | Descriptive meaning |
 |---|---:|---|
 | Vocabulary / conceptual model | 90% | The project now has stable architectural language for future work. |
-| VNext reasoning spine | 75% | The reasoning-engine-centered direction is materially present in code. |
-| Contract / boundary model | 65% | Consumer/provider and render-plan seams exist, but enforcement still needs further proof. |
+| VNext reasoning spine | 80% | End-to-end spine proved through MovingAverage; reasoning-engine-centered direction is materially validated. |
+| Contract / boundary model | 75% | CapabilityContracts threaded across all chart families; adapter dual-path retired; boundary enforcement materially strengthened. |
 | Rendering demotion | 60% | Rendering is moving toward terminal delivery, though rendering infrastructure remains large. |
-| Consumer / interaction separation | 55% | Consumers are becoming clearer, but UI/presentation remains structurally heavy. |
+| Consumer / interaction separation | 65% | TabularSummaryChart proves non-chart consumer path; UI/presentation remains structurally heavy. |
 | Governance / evidence | 75% | Evidence and parity infrastructure are strong, but must remain observational. |
-| Legacy coexistence cleanup | 50–60% | Legacy remains managed compatibility/fallback/projection while VNext matures. |
+| Legacy coexistence cleanup | 50–60% | Legacy remains managed compatibility/fallback/projection; integration seams classified and bounded. |
 
 In plain terms:
 
