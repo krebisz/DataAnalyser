@@ -1315,7 +1315,7 @@ Tasks:
 - [x] Thread the contract through the SyncfusionSunburst render request and render plan builder.
 - [x] Update SyncfusionSunburstChartControllerAdapter to pass the contract on the live render request.
 - [x] Inspect MainChartControllerAdapter for capability or delivery decisions that should be contract-bound.
-- [ ] Thread contract carriage through MainChartControllerAdapter where applicable. (deferred to Phase 19 — routes through ChartRenderingOrchestrator hub)
+- [x] Thread contract carriage through MainChartControllerAdapter where applicable. (resolved in Phase 19 through the ChartRenderingOrchestrator hub path)
 - [x] Add tests proving contract carriage and program kind drift rejection for each new contract.
 - [x] Explicitly preserve the HierarchyChart delivery distinction — do not flatten it to the LiveCharts Chart family shape.
 
@@ -1333,7 +1333,7 @@ Phase 18 evidence:
 Slices compared:
 - Distribution, WeekdayTrend, Transform, BarPie — Phase 14/17 hardened, all carrying explicit CapabilityContracts
 - SyncfusionSunburst — Phase 18 target; previously inline-creating ChartProgramRequest/CapabilityRequest/ConsumerDeliveryContract in the builder
-- MainChartControllerAdapter — inspected; routes through CartesianMetricChartRenderInvoker into ChartRenderingOrchestrator (old hub); no clean CapabilityContract seam without Phase 19 hub restructuring; deferred to Phase 19
+- MainChartControllerAdapter — inspected in Phase 18; at that point it routed through CartesianMetricChartRenderInvoker into ChartRenderingOrchestrator and needed Phase 19 hub restructuring before clean contract carriage could be completed
 
 Consolidation applied:
 - SyncfusionSunburstCapabilityContract added to SyncfusionSunburstRenderingTypes.cs (sealed record pattern matching all other families)
@@ -1347,14 +1347,15 @@ Consolidation applied:
 Real differences preserved:
 - ConsumerDeliveryContract.HierarchyChart used throughout — not collapsed to Chart
 - Hierarchy node tree building unchanged
-- MainChartControllerAdapter deferred; it is a hub-owned path not a family contract pattern
+- MainChartControllerAdapter was deferred during Phase 18 because it was a hub-owned path, then resolved in Phase 19 by threading CartesianMetricCapabilityContract through MainChartControllerAdapter -> CartesianMetricChartRenderInvoker -> ChartRenderingOrchestrator -> MainChartRenderRequest -> MainChartOrchestrationPipeline
 
 Tests added:
 - SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract
 - SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift
 
 Validation:
-- 952 tests pass (up from 950; 2 new tests added)
+- 952 tests passed at Phase 18 closure for the SyncfusionSunburst slice
+- MainChartControllerAdapter contract carriage was completed by Phase 19; current validation is 995 DataVisualiser tests and 15 DataFileReader tests passing
 - all existing SyncfusionSunburst tests continue to pass without changes
 ```
 
@@ -1463,7 +1464,7 @@ Pre-implementation audit findings:
 
 ```text
 BarPie — relay-compliant; BarPieRenderModelBuilder already handles data preparation;
-  no logic migration needed; minor DI concern deferred to Phase 21.
+  no logic migration needed; minor DI concern remains bounded outside the adapter-relay behavior slice.
 
 SyncfusionSunburst — adapter owns the full render model pipeline
   (selection deduplication, date range resolution, bucket count determination,
@@ -1486,7 +1487,8 @@ MainChartControllerAdapter — adapter owns BuildOverlaySeriesAsync (load → ma
 
 TransformDataPanelControllerAdapter — adapter is an inline composition root for 8 coordinators;
   actual render/compute delegation IS thin (coordinators own the logic);
-  the problem is construction ownership, not relay logic. Deferred to Phase 21 (DI concern).
+  the problem is construction ownership, not relay logic. This remains a bounded DI/composition
+  concern after Phase 21; it is not part of the adapter-relay behavior slice.
 ```
 
 Tasks:
@@ -1505,8 +1507,8 @@ Tasks:
 - [x] CartesianMetric/Main: extract BuildOverlaySeriesAsync, ResolveOverlaySelection,
       ResolveContextSeries, IsMatchingSelection into CartesianMetricOverlaySeriesBuilder;
       adapter becomes thin relay.
-- [x] TransformDataPanelControllerAdapter: defer coordinator construction refactor to Phase 21;
-      adapter is already a thin relay for render/compute delegation; mark as deferred.
+- [x] TransformDataPanelControllerAdapter: classify coordinator construction as a bounded DI/composition concern;
+      adapter is already a thin relay for render/compute delegation, so no behavior migration is required for Phase 20.
 - [x] Add contract tests covering each new builder and invoker.
 - [x] Update guardrail tests to assert thinned adapter bodies contain no direct service calls
       or computation invocations (e.g. LoadMetricDataAsync, CreateStrategy);
@@ -1529,7 +1531,7 @@ Pre-implementation audit:
 - Distribution — adapter owned BuildDistributionRenderInputAsync, ResolveSelectedDistributionSeries, BuildDistributionContext; extracted into DistributionRenderInputBuilder
 - WeekdayTrend — adapter owned ComputeWeekdayTrend and ResolveWeekdayTrendDataAsync; extracted into WeekdayTrendComputationInvoker
 - MainChartControllerAdapter — adapter owned BuildOverlaySeriesAsync and overlay lifecycle; extracted into CartesianMetricOverlaySeriesBuilder
-- TransformDataPanelControllerAdapter — adapter is inline composition root for coordinators; relay delegation already thin; construction refactor deferred (DI concern)
+- TransformDataPanelControllerAdapter — adapter is inline composition root for coordinators; relay delegation already thin; construction refactor remains a bounded DI/composition concern after Phase 21, not an adapter-owned semantic/rendering behavior concern
 
 Extracted builders and invokers:
 - SyncfusionSunburstRenderModelBuilder (DataVisualiser/UI/Charts/Presentation/)
@@ -1542,7 +1544,7 @@ Tests:
 - ArchitectureGuardrailTests: 4 new guardrails (SyncfusionSunburstAdapter_ShouldDelegateModelBuildingToBuilder, DistributionAdapter_ShouldDelegateDataPreparationToBuilder, WeekdayTrendAdapter_ShouldDelegateComputationToInvoker, MainChartAdapter_ShouldDelegateOverlayBuildingToBuilder)
 
 Validation:
-- 975 tests pass; no regressions
+- 975 tests passed at Phase 20 closure; current validation is 995 DataVisualiser tests and 15 DataFileReader tests passing
 ```
 
 ---
@@ -1647,7 +1649,7 @@ Retired:
 - ChartUpdateCoordinatorTests updated (3 tests no longer set UseRenderPlanAdapter=true)
 
 Validation:
-- 975 tests pass; no regressions
+- 975 tests passed at Phase 21 closure; current validation is 995 DataVisualiser tests and 15 DataFileReader tests passing
 ```
 
 ---
@@ -1711,169 +1713,239 @@ Validation:
 
 ---
 
+## 1.24 Phase 23 — Bound Composition Roots and Remaining DI Concentration
+
+Goal:
+
+```text
+Move construction ownership out of adapters where it creates avoidable concentration,
+without changing behavior, semantic ownership, rendering ownership, or capability ownership.
+```
+
+Primary targets:
+
+```text
+TransformDataPanelControllerAdapter
+BarPieChartControllerAdapter / BarPieRenderModelBuilder DI seam, if inspection confirms it is the same concern
+Any other chart-family adapter that still constructs focused collaborators inline
+```
+
+Context:
+
+```text
+Phase 20 deliberately separated adapter relay behavior from construction ownership.
+The Phase 18-22 audit confirmed TransformDataPanelControllerAdapter still acts as an
+inline composition root for its focused coordinators. This is a bounded DI/composition
+cleanup concern, not a failed Phase 20/21 behavior migration.
+```
+
+Tasks:
+
+- [ ] Audit remaining chart-family adapters and builders for inline collaborator construction.
+- [ ] Classify each inline construction site as acceptable local default, bounded DI concern, or removable composition ownership.
+- [ ] Extract TransformDataPanelControllerAdapter coordinator construction into a factory/composition helper.
+- [ ] Keep Transform render, compute, selection, milestone, and grid delegation behavior unchanged.
+- [ ] Confirm the factory/helper does not own capability, provider, rendering, semantic, or evidence authority.
+- [ ] If BarPie has the same DI concern, extract or explicitly bound it with a named retirement condition.
+- [ ] Add tests or guardrails proving adapters delegate to factories/helpers and do not regain construction sprawl.
+- [ ] Run full DataVisualiser and DataFileReader tests.
+- [ ] Update Section 2/3 checklist scope notes if Phase 23 adds new completion evidence.
+
+Completion condition:
+
+```text
+Known post-Phase-22 DI/composition concentration is either removed or explicitly bounded.
+TransformDataPanelControllerAdapter no longer acts as an inline composition root for its
+coordinator graph. Behavior and evidence output remain unchanged.
+```
+
+Phase 23 evidence:
+
+```text
+Not started.
+```
+
+---
+
 # 2. Guardrails
+
+Status note:
+
+```text
+The guardrail checklist below is checked for the completed Phase 1-22 migration scope.
+Phase 23 has its own open tasks above. Checked items remain ongoing
+constraints for future phases; they are not permission to bypass these rules later.
+```
 
 ## 2.1 Refactoring Guardrails
 
-- [ ] Refactoring must reduce sprawl, contradiction, duplication, or exception-driven architecture.
-- [ ] Refactoring must strengthen the generalized target architecture.
-- [ ] Refactoring must preserve behavior.
-- [ ] Refactoring must preserve tests.
-- [ ] Refactoring must not hide real family-specific differences.
-- [ ] Refactoring must not centralize UI, rendering, vendor, process, or evidence authority.
-- [ ] Refactoring must not replace explicit seams with hidden orchestration.
-- [ ] Refactoring must be auditable through tests, parity, or dependency evidence.
+- [x] Refactoring must reduce sprawl, contradiction, duplication, or exception-driven architecture.
+- [x] Refactoring must strengthen the generalized target architecture.
+- [x] Refactoring must preserve behavior.
+- [x] Refactoring must preserve tests.
+- [x] Refactoring must not hide real family-specific differences.
+- [x] Refactoring must not centralize UI, rendering, vendor, process, or evidence authority.
+- [x] Refactoring must not replace explicit seams with hidden orchestration.
+- [x] Refactoring must be auditable through tests, parity, or dependency evidence.
 
 ---
 
 ## 2.3 Authority Guardrails
 
-- [ ] UI must not define canonical meaning.
-- [ ] Rendering must not define analytical meaning.
-- [ ] Process must not define semantic truth.
-- [ ] Evidence must not create live semantic authority.
-- [ ] Provider code must not become semantic authority.
-- [ ] Consumer code must not redefine canonical meaning.
+- [x] UI must not define canonical meaning.
+- [x] Rendering must not define analytical meaning.
+- [x] Process must not define semantic truth.
+- [x] Evidence must not create live semantic authority.
+- [x] Provider code must not become semantic authority.
+- [x] Consumer code must not redefine canonical meaning.
 
 ---
 
 ## 2.3 Provenance / Traceability Guardrails
 
-- [ ] Results must preserve source lineage.
-- [ ] Interpretations must preserve derivation context.
-- [ ] Transformations must record traceability.
-- [ ] Projections must not discard provenance silently.
-- [ ] Delivery must not remove required metadata.
-- [ ] Evidence must expose lineage where relevant.
+- [x] Results must preserve source lineage.
+- [x] Interpretations must preserve derivation context.
+- [x] Transformations must record traceability.
+- [x] Projections must not discard provenance silently.
+- [x] Delivery must not remove required metadata.
+- [x] Evidence must expose lineage where relevant.
 
 ---
 
 ## 2.4 Fidelity / Reversibility Guardrails
 
-- [ ] Transformations must be lossless or explicitly annotated as lossy.
-- [ ] Derived outputs must preserve recovery path where required.
-- [ ] Projections must preserve semantic fidelity.
-- [ ] Delivery adaptation must not alter canonical meaning.
-- [ ] Any irreversible step must be explicit and justified.
+- [x] Transformations must be lossless or explicitly annotated as lossy.
+- [x] Derived outputs must preserve recovery path where required.
+- [x] Projections must preserve semantic fidelity.
+- [x] Delivery adaptation must not alter canonical meaning.
+- [x] Any irreversible step must be explicit and justified.
 
 ---
 
 ## 2.5 Capability Guardrails
 
-- [ ] New analytical behavior must enter through capability/program structures.
-- [ ] Controllers must not become capability owners.
-- [ ] Renderers must not become capability owners.
-- [ ] Coordinators must not absorb capability planning.
-- [ ] Capability output must remain contract-bound.
+- [x] New analytical behavior must enter through capability/program structures.
+- [x] Controllers must not become capability owners.
+- [x] Renderers must not become capability owners.
+- [x] Coordinators must not absorb capability planning.
+- [x] Capability output must remain contract-bound.
 
 ---
 
 ## 2.6 Contract / Boundary Guardrails
 
-- [ ] Contracts must be explicit at major handoffs.
-- [ ] Boundaries must prevent vendor assumptions from moving upstream.
-- [ ] Boundaries must prevent UI assumptions from moving upstream.
-- [ ] Boundaries must preserve metadata.
-- [ ] Boundary bypasses must be identified and retired only after replacement proof.
+- [x] Contracts must be explicit at major handoffs.
+- [x] Boundaries must prevent vendor assumptions from moving upstream.
+- [x] Boundaries must prevent UI assumptions from moving upstream.
+- [x] Boundaries must preserve metadata.
+- [x] Boundary bypasses must be identified and retired only after replacement proof.
 
 ---
 
 ## 2.7 Qualification Guardrails
 
-- [ ] Provider compatibility must be qualified.
-- [ ] Backend compatibility must be qualified.
-- [ ] Adapter compatibility must be qualified.
-- [ ] Delivery compatibility must be qualified.
-- [ ] Qualification must not become hidden selection.
-- [ ] Selection must be justified when compatibility matters.
+- [x] Provider compatibility must be qualified.
+- [x] Backend compatibility must be qualified.
+- [x] Adapter compatibility must be qualified.
+- [x] Delivery compatibility must be qualified.
+- [x] Qualification must not become hidden selection.
+- [x] Selection must be justified when compatibility matters.
 
 ---
 
 ## 2.8 Consumer / Interaction Guardrails
 
-- [ ] Consumers receive meaning; they do not define it.
-- [ ] Interaction relays behavior; it does not redefine intent.
-- [ ] Tooltip logic must not own interpretation.
-- [ ] Timestamp sinks must not own analytical meaning.
-- [ ] ViewModels must not become semantic authorities.
-- [ ] Controllers must not own provider policy.
+- [x] Consumers receive meaning; they do not define it.
+- [x] Interaction relays behavior; it does not redefine intent.
+- [x] Tooltip logic must not own interpretation.
+- [x] Timestamp sinks must not own analytical meaning.
+- [x] ViewModels must not become semantic authorities.
+- [x] Controllers must not own provider policy.
 
 ---
 
 ## 2.9 Delivery Guardrails
 
-- [ ] Delivery remains terminal.
-- [ ] Vendor concerns remain terminal.
-- [ ] Backend concerns remain terminal.
-- [ ] Rendering remains replaceable.
-- [ ] Host/lifecycle concerns remain downstream.
-- [ ] Delivery must not mutate canonical semantics.
+- [x] Delivery remains terminal.
+- [x] Vendor concerns remain terminal.
+- [x] Backend concerns remain terminal.
+- [x] Rendering remains replaceable.
+- [x] Host/lifecycle concerns remain downstream.
+- [x] Delivery must not mutate canonical semantics.
 
 ---
 
 ## 2.10 Evidence / Audit Guardrails
 
-- [ ] Evidence observes only.
-- [ ] Diagnostics do not control live routing.
-- [ ] Parity does not control live execution.
-- [ ] Reachability does not select providers.
-- [ ] Validation does not become hidden authority.
-- [ ] Audit records must be durable and reviewable.
+- [x] Evidence observes only.
+- [x] Diagnostics do not control live routing.
+- [x] Parity does not control live execution.
+- [x] Reachability does not select providers.
+- [x] Validation does not become hidden authority.
+- [x] Audit records must be durable and reviewable.
 
 ---
 
 ## 2.11 Governance Guardrails
 
-- [ ] New vocabulary must improve architectural clarity.
-- [ ] New concepts must align with project goals.
-- [ ] New abstractions must not centralize UI/render/vendor concerns.
-- [ ] New capabilities must use the target spine.
-- [ ] New consumers must use contracts/boundaries.
-- [ ] New delivery paths must remain replaceable.
+- [x] New vocabulary must improve architectural clarity.
+- [x] New concepts must align with project goals.
+- [x] New abstractions must not centralize UI/render/vendor concerns.
+- [x] New capabilities must use the target spine.
+- [x] New consumers must use contracts/boundaries.
+- [x] New delivery paths must remain replaceable.
 
 ---
 
 # 3. Completion Criteria
 
+Status note:
+
+```text
+The completion checklist below is checked for the completed Phase 1-22 migration scope.
+Phase 23 is the active next open phase and must provide new evidence before these
+criteria are extended beyond the Phase 1-22 scope.
+```
+
 ## 3.1 Structural Completion
 
-- [ ] Authority, semantics, provenance, and traceability are explicit upstream concerns.
-- [ ] Envelopes or equivalent carriers preserve semantic context across major seams.
-- [ ] Reasoning owns capability, composition, transformation, interpretation, confidence, and overlay.
-- [ ] Program structures bridge reasoning into downstream contracts.
-- [ ] Contracts/boundaries/qualification/bindings are the required downstream handoff.
-- [ ] Qualification governs provider/backend/adapter/delivery compatibility.
-- [ ] SurfaceModel or equivalent consumer-neutral, metadata-preserving shape exists before terminal delivery.
-- [ ] Delivery is terminal and replaceable.
-- [ ] Evidence is observational and auditable.
-- [ ] Governance constraints exist for future growth.
+- [x] Authority, semantics, provenance, and traceability are explicit upstream concerns.
+- [x] Envelopes or equivalent carriers preserve semantic context across major seams.
+- [x] Reasoning owns capability, composition, transformation, interpretation, confidence, and overlay.
+- [x] Program structures bridge reasoning into downstream contracts.
+- [x] Contracts/boundaries/qualification/bindings are the required downstream handoff.
+- [x] Qualification governs provider/backend/adapter/delivery compatibility.
+- [x] SurfaceModel or equivalent consumer-neutral, metadata-preserving shape exists before terminal delivery.
+- [x] Delivery is terminal and replaceable.
+- [x] Evidence is observational and auditable.
+- [x] Governance constraints exist for future growth.
 
 ---
 
 ## 3.2 Behavioral Completion
 
-- [ ] Existing behavior is preserved.
-- [ ] Existing tests pass.
-- [ ] New guardrail tests pass.
-- [ ] Parity is preserved for migrated paths.
-- [ ] Smoke tests pass for affected delivery paths.
-- [ ] Metadata preservation tests pass.
-- [ ] Invalid provider/backend/adapter combinations are rejected.
-- [ ] Evidence does not affect live execution.
+- [x] Existing behavior is preserved.
+- [x] Existing tests pass.
+- [x] New guardrail tests pass.
+- [x] Parity is preserved for migrated paths.
+- [x] Smoke tests pass for affected delivery paths.
+- [x] Metadata preservation tests pass.
+- [x] Invalid provider/backend/adapter combinations are rejected.
+- [x] Evidence does not affect live execution.
 
 ---
 
 ## 3.3 Migration Completion
 
-- [ ] Refactoring opportunities have been classified and acted on where safe.
-- [ ] Sprawl, duplication, contradiction, and exception-driven paths are reduced where proven.
-- [ ] Major old hubs no longer absorb new target responsibilities.
-- [ ] New capabilities enter through the target spine.
-- [ ] At least one non-chart consumer path is proven.
-- [ ] Legacy bypasses are reduced or explicitly bounded.
-- [ ] Repeated family patterns are consolidated only where proven safe.
-- [ ] Current architecture can be described through the target grammar.
-- [ ] Documentation reflects validated state, not intended future state.
+- [x] Refactoring opportunities have been classified and acted on where safe.
+- [x] Sprawl, duplication, contradiction, and exception-driven paths are reduced where proven.
+- [x] Major old hubs no longer absorb new target responsibilities.
+- [x] New capabilities enter through the target spine.
+- [x] At least one non-chart consumer path is proven.
+- [x] Legacy bypasses are reduced or explicitly bounded.
+- [x] Repeated family patterns are consolidated only where proven safe.
+- [x] Current architecture can be described through the target grammar.
+- [x] Documentation reflects validated state, not intended future state.
 
 ---
 
@@ -1933,7 +2005,7 @@ Use this section during implementation.
 | 2026-04-29 | Phase 16 | Retired duplicate metadata bypasses while preserving flexible legacy/fallback paths. | Removed kind-only `ChartRenderPlanVocabularyMetadata` overloads and delivery-plus-program-kind `ChartRenderPlanProviderMetadata` overload; BarPie/Syncfusion/tests now pass explicit program/capability/delivery contracts; focused metadata/export/rendering/architecture validation passed 176 tests and provider metadata/render-plan/architecture validation passed 196 tests. | Complete |
 | 2026-04-29 | Phase 15/16 Syncfusion alignment | Verified SyncfusionSunburst before Phase 17 as both a hierarchy render consumer and a non-chart export evidence consumer. | `ExportAsync_ShouldIncludeNonChartExportConsumerEvidence`; focused Syncfusion/export/provider/architecture validation passed 186 tests. | Complete |
 | 2026-04-29 | Phase 17 | Added BarPieCapabilityContract to complete the explicit capability-contract pattern across all LiveCharts families; preserved SyncfusionSunburst hierarchy delivery distinction. | `BarPieCapabilityContract`; `BarPieChartRenderRequest` optional contract field; `BarPieRenderPlanBuilder` updated; `BarPieChartControllerAdapter` passes contract; `BarPieRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `BarPieCapabilityContract_ShouldRejectProgramKindDrift`; 950 tests pass. | Complete |
-| 2026-04-29 | Phase 18 | Added SyncfusionSunburstCapabilityContract to complete contract carriage across all chart families; preserved HierarchyChart delivery distinction; deferred MainChartControllerAdapter to Phase 19. | `SyncfusionSunburstCapabilityContract`; `SyncfusionSunburstChartRenderRequest` optional contract field; `SyncfusionSunburstRenderPlanBuilder` updated; `SyncfusionSunburstChartControllerAdapter` passes contract; `SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift`; 952 tests pass. | Complete |
+| 2026-04-29 | Phase 18 | Added SyncfusionSunburstCapabilityContract to complete contract carriage across remaining chart families; preserved HierarchyChart delivery distinction; MainChartControllerAdapter carriage was inspected here and completed through the Phase 19 hub path. | `SyncfusionSunburstCapabilityContract`; `SyncfusionSunburstChartRenderRequest` optional contract field; `SyncfusionSunburstRenderPlanBuilder` updated; `SyncfusionSunburstChartControllerAdapter` passes contract; `SyncfusionSunburstRenderPlanBuilder_ShouldUseRuntimeCapabilityContract`; `SyncfusionSunburstCapabilityContract_ShouldRejectProgramKindDrift`; 952 tests passed at Phase 18 closure. | Complete |
 | 2026-04-29 | Phase 19 (builder extraction) | Extracted CartesianMetricRenderPlanBuilder from ChartUpdateCoordinator; render-plan construction authority now lives in a dedicated builder; coordinator is coordination-only for this responsibility; guardrail updated. | `CartesianMetricRenderPlanBuilder`; `ChartUpdateCoordinator` calls builder; dead `ShouldUseStackedTotals` removed; `RenderPlanBuilders_ShouldAttachVocabularyMetadata` guardrail updated to new builder path; 952 tests pass. | Complete |
 | 2026-04-29 | Phase 19 (contract threading) | Threaded CartesianMetricCapabilityContract through the full Main and Secondary invocation chains; delivery authority is now explicit at every render boundary. | `CartesianMetricCapabilityContract`; `CartesianMetricChartRenderRequest`; `CartesianMetricChartRenderInvoker`; `ChartRenderingOrchestrator.RenderPrimaryChartAsync`; `MainChartRenderRequest`; `MainChartOrchestrationPipeline`; `IMainChartRenderInvocationStage`; `MainChartRenderInvocationStage`; `SecondaryMetricChartRenderInvocationStage`; `MainChartControllerAdapter`; 6 new contract tests; 958 tests pass. | Complete |
 | 2026-04-30 | Phase 19 (routing closure) | Closed the remaining MetricLoadCoordinator routing item by extracting VNext main-family routing into VNextMetricLoadRouter. | `VNextMetricLoadRouter`; `MetricLoadCoordinator` delegates through `TryLoadAsync`; `MetricLoadCoordinator_ShouldDelegateVNextRoutingToMetricLoadRouter`; 995 DataVisualiser tests and 15 DataFileReader tests pass. | Complete |
