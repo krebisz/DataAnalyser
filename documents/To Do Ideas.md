@@ -121,3 +121,76 @@ Senke/Alluvial Maps
 -Sunburst Chart
 
 ```
+
+---
+
+## Current Architecture Intake Notes
+
+**Status:** Idea-shaping only  
+**Use:** Preserve the spirit of future analytical work without promoting these items into the active migration plan.  
+**Rule:** Do not implement from this section unless an item is later mapped to a bounded migration phase, user-value slice, or explicitly approved work bundle.
+
+### Assessment Legend
+
+| Field | Meaning |
+|---|---|
+| Suitability | `High` fits the current VNext/Operation Chain direction; `Medium` useful but needs sequencing; `Low` premature or mostly orthogonal now |
+| Difficulty | `Low` small bounded change; `Medium` needs design/test work; `High` broad or risky |
+
+### Suitability Snapshot
+
+| Idea | Suitability | Difficulty |
+|---|---:|---:|
+| Dynamic hot/cold line colouring | Medium | Medium |
+| Trend-based line colouring | High | Medium |
+| Hover through-lines | Medium | Medium |
+| Tooltip hover timing | Medium | Low |
+| Atypical point detection | High | Medium |
+| Ternary/multi-submetric transforms | High | Medium |
+| Multiple custom transforms | High | High |
+| Dynamic result sets | High | Medium |
+| Multiple derived result surfaces | High | High |
+| Trend terminology cleanup | Medium | Low |
+| Daily/hourly trend options | Medium | Medium |
+| Pivot-event closest readings | High | Medium |
+| Event-relative windows | High | Medium |
+| Custom modulo buckets | Medium | Medium |
+| Flexible bucket planning | High | Medium |
+| Distribution-shape comparison | High | Medium |
+| Rules-based chart options | Medium | High |
+| Disabled-option explanations | Medium | Medium |
+| Save/load inspection sessions | Medium | High |
+| DB insertion-name formatting | Low | Low |
+| Confidence model explanation | High | Medium |
+| Treemap | Low | High |
+| Venn diagram | Low | Medium |
+| Sankey/alluvial map | Medium | High |
+| Chord diagram | Low | High |
+| Sunburst chart | Low | Medium |
+| Scatter clusters | Medium | Medium |
+
+### Meaning-Oriented Buckets
+
+| Bucket | Suitable ideas |
+|---|---|
+| Computation | Ternary transforms; dynamic result sets; pivot readings; event-relative windows |
+| State | Atypical point detection; confidence model explanation; rules-based options |
+| Hierarchy | Flexible buckets; distribution-shape comparison; treemap/Sankey/chord/sunburst as future views |
+| Evaluation | Trend colouring; distribution comparison; confidence and anomaly handling |
+| Interpretation | Disabled-option explanations; confidence explanation; pivot/event summaries |
+| Delivery | Hover through-lines; tooltip timing; derived result surfaces; scatter clusters |
+
+### Near-Term Fit
+
+Best-aligned with the current Operation Chain / VNext consumption direction:
+
+- Atypical point detection
+- Multi-submetric transforms
+- Dynamic result sets
+- Pivot-event closest readings
+- Event-relative windows
+- Flexible bucket planning
+- Distribution-shape comparison
+- Confidence model explanation
+
+These have meaning beyond visualization because they help compute, classify, rank, explain, or preserve evidence.

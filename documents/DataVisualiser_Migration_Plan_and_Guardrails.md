@@ -436,22 +436,22 @@ candidate for VNext-native replacement
 
 Tasks:
 
-- [ ] Find all `ChartDataContext` references in production code.
-- [ ] Find all `ChartDataContext` references in tests and parity/evidence paths.
-- [ ] Classify each reference as:
-  - [ ] retirable now
-  - [ ] needs VNext-native equivalent
-  - [ ] needs consumer contract shape
-  - [ ] needs surface model shape
-  - [ ] test/parity/evidence only
-  - [ ] must remain temporarily
-- [ ] Identify every `LegacyChartProgramProjector` dependency.
-- [ ] Identify every `VNextDataResolutionHelper` dependency.
-- [ ] Identify every `LegacyMetricViewGateway` dependency.
-- [ ] Identify all parity/evidence paths still dependent on `ChartDataContext`.
-- [ ] Identify all UI/controller/adapter paths where `ChartDataContext` is still the primary consumed model.
-- [ ] Document target replacement shape for each dependency class.
-- [ ] Do not retire anything in this phase unless it is already proven dead and covered by tests.
+- [x] Find all `ChartDataContext` references in production code.
+- [x] Find all `ChartDataContext` references in tests and parity/evidence paths.
+- [x] Classify each reference as:
+  - [x] retirable now
+  - [x] needs VNext-native equivalent
+  - [x] needs consumer contract shape
+  - [x] needs surface model shape
+  - [x] test/parity/evidence only
+  - [x] must remain temporarily
+- [x] Identify every `LegacyChartProgramProjector` dependency.
+- [x] Identify every `VNextDataResolutionHelper` dependency.
+- [x] Identify every `LegacyMetricViewGateway` dependency.
+- [x] Identify all parity/evidence paths still dependent on `ChartDataContext`.
+- [x] Identify all UI/controller/adapter paths where `ChartDataContext` is still the primary consumed model.
+- [x] Document target replacement shape for each dependency class.
+- [x] Do not retire anything in this phase unless it is already proven dead and covered by tests.
 
 Completion condition:
 
@@ -467,6 +467,45 @@ Planned evidence:
 documents/DataVisualiser_ChartDataContext_Migration_Audit.md
 fresh reference search output
 focused guardrail tests if new static checks are added
+```
+
+Phase 24 evidence:
+
+```text
+Audit note:
+- documents/DataVisualiser_ChartDataContext_Migration_Audit.md
+
+Fresh reference counts:
+- production files referencing ChartDataContext: 77
+- test files referencing ChartDataContext: 52
+
+Bridge paths classified:
+- LegacyChartProgramProjector
+- VNextDataResolutionHelper
+- LegacyMetricViewGateway
+- VNextMetricLoadRouter
+
+Target replacement classes identified:
+- VNext-native UI consumption contract
+- consumer-neutral surface model
+- strategy input contract
+- evidence/parity snapshot input
+
+Tests added/updated:
+- ChartDataContextMigrationAudit_ShouldGateBridgeRetirement
+- CompactMigrationPlan_ShouldCarryForwardStructuralSpineAndConsumptionMigrationRules
+- CompactMigrationPlan_ShouldRetainTargetGrammarAndPostConvergenceDeferral
+- MigrationPlan_ShouldKeepChartDataContextAuditBeforeUiConsumptionContract
+- CompactMigrationPlan_ShouldNotRequireArchivedScaffoldAuditsByDefault
+
+Validation:
+- ArchitectureGuardrailTests passed 107 tests
+
+Implementation result:
+- no production behavior code changed in Phase 24
+- no ChartDataContext dependency was classified as retirable now
+- bridge retirement is gated on Phase 25 replacement contract plus parity, smoke, metadata, and provenance evidence
+- Phase 25 can start with contract definition, not bridge removal
 ```
 
 ## 4.2 Phase 25 — Define VNext-Native UI Consumption Contract
@@ -518,15 +557,15 @@ Delivery binding
 
 Tasks:
 
-- [ ] Define the VNext-native UI consumption shape.
-- [ ] Define how the shape preserves program, capability, delivery, provider, vocabulary, provenance, and evidence metadata.
-- [ ] Define how the shape supports chart consumers without becoming chart-only.
-- [ ] Define how the shape supports non-chart consumers without render-plan assumptions.
-- [ ] Define how interaction/toggle/tooltip concerns attach without owning semantic meaning.
-- [ ] Define how existing `ChartRenderPlan` participates or is wrapped as a consumer-neutral surface.
-- [ ] Define compatibility rules for existing chart-family adapters.
-- [ ] Add contract tests for metadata preservation and invalid drift.
-- [ ] Add guardrails preventing UI consumption contracts from importing concrete vendor/UI rendering types.
+- [x] Define the VNext-native UI consumption shape.
+- [x] Define how the shape preserves program, capability, delivery, provider, vocabulary, provenance, and evidence metadata.
+- [x] Define how the shape supports chart consumers without becoming chart-only.
+- [x] Define how the shape supports non-chart consumers without render-plan assumptions.
+- [x] Define how interaction/toggle/tooltip concerns attach without owning semantic meaning.
+- [x] Define how existing `ChartRenderPlan` participates or is wrapped as a consumer-neutral surface.
+- [x] Define compatibility rules for existing chart-family adapters.
+- [x] Add contract tests for metadata preservation and invalid drift.
+- [x] Add guardrails preventing UI consumption contracts from importing concrete vendor/UI rendering types.
 
 Completion condition:
 
@@ -542,6 +581,36 @@ contract metadata preservation tests
 vendor/UI import guardrails
 ```
 
+Phase 25 evidence:
+
+```text
+Production contracts added:
+- DataVisualiser/VNext/Contracts/VNextUiConsumptionContract.cs
+- DataVisualiser/VNext/Contracts/ConsumerSurfaceModel.cs
+
+Contract document:
+- documents/DataVisualiser_VNext_Native_UI_Consumption_Contract.md
+
+Metadata and drift tests:
+- VNextUiConsumptionContractTests.FromRenderPlan_ShouldPreserveProgramDeliveryProviderProvenanceAndSurfaceMetadata
+- VNextUiConsumptionContractTests.FromIntent_ShouldSupportNonChartConsumersWithoutRenderPlan
+- VNextUiConsumptionContractTests.Constructor_ShouldRejectProviderDeliveryDrift
+- VNextUiConsumptionContractTests.Constructor_ShouldRejectRenderSurfaceForNonRenderDelivery
+- VNextUiConsumptionContractTests.FromRenderPlan_ShouldRejectProgramDrift
+
+Architecture guardrail:
+- VNextUiConsumptionContract_ShouldRemainVendorAndUiNeutral
+
+Validation:
+- VNextUiConsumptionContractTests passed 5 tests
+- ArchitectureGuardrailTests passed 108 tests
+
+Implementation result:
+- `ChartDataContext` was not retired in Phase 25
+- UI/controller call sites were not rewired in Phase 25
+- the replacement contract now exists for Phase 26+ consumption paths and family migrations
+```
+
 ## 4.3 Phase 26 — Operation Chain Workbench MVP
 
 Goal:
@@ -552,35 +621,35 @@ Create a new tab/workbench that chains N operations over multiple input data ser
 
 Tasks:
 
-- [ ] Define `OperationChainRequest`.
-- [ ] Define `OperationChainStep`.
-- [ ] Define `OperationChainProgram`.
-- [ ] Define `OperationChainExecutionPlan`.
-- [ ] Define `OperationChainExecutor`.
-- [ ] Define `OperationChainResult`.
-- [ ] Define `DerivedDataset`.
-- [ ] Define `DerivedDatasetSurfaceModel` or equivalent consumer-neutral output shape.
-- [ ] Define `OperationChainEvidence`.
-- [ ] Define `OperationChainTrace`.
-- [ ] Support at least two input series.
-- [ ] Support an ordered list of operations.
-- [ ] Support at least one derived dataset output.
-- [ ] Support at least three initial operations from the existing operation kernel / transform capabilities.
-- [ ] Deliver output through the Phase 25 VNext-native UI consumption contract.
-- [ ] Display result in a simple tab surface.
-- [ ] Prefer table/export first and chart rendering second unless the existing contract path makes chart display equally safe.
-- [ ] Preserve source provenance for every input series.
-- [ ] Preserve operation traceability for every chain step.
-- [ ] Preserve transformation reversibility/lossiness metadata where applicable.
-- [ ] Emit evidence/export metadata for the derived dataset.
-- [ ] Avoid `ChartDataContext` as the primary semantic model.
-- [ ] Avoid controller/ViewModel-owned operation execution.
-- [ ] Avoid vendor-specific rendering dependency in the operation-chain core.
-- [ ] Add tests for operation-chain execution.
-- [ ] Add tests for metadata preservation.
-- [ ] Add tests for provenance preservation.
-- [ ] Add tests for operation trace/evidence output.
-- [ ] Add guardrails preventing the new tab from owning analytical authority.
+- [x] Define `OperationChainRequest`.
+- [x] Define `OperationChainStep`.
+- [x] Define `OperationChainProgram`.
+- [x] Define `OperationChainExecutionPlan`.
+- [x] Define `OperationChainExecutor`.
+- [x] Define `OperationChainResult`.
+- [x] Define `DerivedDataset`.
+- [x] Define `DerivedDatasetSurfaceModel` or equivalent consumer-neutral output shape.
+- [x] Define `OperationChainEvidence`.
+- [x] Define `OperationChainTrace`.
+- [x] Support at least two input series.
+- [x] Support an ordered list of operations.
+- [x] Support at least one derived dataset output.
+- [x] Support at least three initial operations from the existing operation kernel / transform capabilities.
+- [x] Deliver output through the Phase 25 VNext-native UI consumption contract.
+- [x] Display result in a simple tab surface.
+- [x] Prefer table/export first and chart rendering second unless the existing contract path makes chart display equally safe.
+- [x] Preserve source provenance for every input series.
+- [x] Preserve operation traceability for every chain step.
+- [x] Preserve transformation reversibility/lossiness metadata where applicable.
+- [x] Emit evidence/export metadata for the derived dataset.
+- [x] Avoid `ChartDataContext` as the primary semantic model.
+- [x] Avoid controller/ViewModel-owned operation execution.
+- [x] Avoid vendor-specific rendering dependency in the operation-chain core.
+- [x] Add tests for operation-chain execution.
+- [x] Add tests for metadata preservation.
+- [x] Add tests for provenance preservation.
+- [x] Add tests for operation trace/evidence output.
+- [x] Add guardrails preventing the new tab from owning analytical authority.
 
 Completion condition:
 
@@ -595,6 +664,42 @@ documents/DataVisualiser_Operation_Chain_Workbench_MVP_Audit.md
 operation-chain execution tests
 metadata/provenance/evidence tests
 UI consumption contract tests
+```
+
+Phase 26 evidence:
+
+```text
+Production contracts/core added:
+- DataVisualiser/VNext/Contracts/OperationChainContracts.cs
+- DataVisualiser/VNext/Application/OperationChainExecutor.cs
+
+UI surface added:
+- DataVisualiser/UI/OperationChain/OperationChainWorkbenchView.xaml
+- DataVisualiser/UI/OperationChain/OperationChainWorkbenchView.xaml.cs
+- DataVisualiser/MainWindow.xaml Operation Chain tab registration
+
+Audit note:
+- documents/DataVisualiser_Operation_Chain_Workbench_MVP_Audit.md
+
+Focused tests:
+- OperationChainExecutorTests.ExecuteAsync_ShouldChainMultipleOperationsAcrossWorkingDatasets
+- OperationChainExecutorTests.ExecuteAsync_ShouldPreserveProvenanceTraceEvidenceAndConsumptionContractMetadata
+- OperationChainExecutorTests.ExecuteAsync_ShouldRejectLoadedSnapshotsWithoutTwoInputSeries
+
+Architecture guardrails:
+- OperationChainWorkbench_ShouldKeepExecutionOutsideUiSurface
+- OperationChainCore_ShouldStayUiAndVendorNeutral
+
+Validation:
+- OperationChainExecutorTests passed 3 tests
+- ArchitectureGuardrailTests passed 110 tests
+
+Implementation result:
+- operation-chain core executes ordered VNext operation-kernel steps
+- derived outputs are delivered through VNextUiConsumptionContract
+- UI tab is display-only and table/export first
+- manual smoke testing is warranted before Phase 27 because a visible tab was added
+- manual smoke confirmed: Operation Chain tab visible; empty surface renders; Charts, Syncfusion, and Admin tab switching still works
 ```
 
 ## 4.4 Phase 27 — Migrate First Production Chart Family to VNext-Native Consumption
@@ -615,18 +720,18 @@ Use Phase 26 findings if the operation-chain MVP exposes better contract/surface
 
 Tasks:
 
-- [ ] Select one chart family and document selection reason.
-- [ ] Capture current behavior with focused tests before changing production code.
-- [ ] Route the selected family through the VNext-native UI consumption contract.
-- [ ] Preserve capability contract carriage.
-- [ ] Preserve provider metadata.
-- [ ] Preserve vocabulary metadata.
-- [ ] Preserve provenance / traceability metadata.
-- [ ] Preserve UI behavior and interaction behavior.
-- [ ] Preserve evidence/export behavior.
-- [ ] Confirm no old hub absorbs the new migration responsibility.
-- [ ] Confirm `ChartDataContext` dependency is removed or reduced for the selected family.
-- [ ] Run focused family tests and full test suite.
+- [x] Select one chart family and document selection reason.
+- [x] Capture current behavior with focused tests before changing production code.
+- [x] Route the selected family through the VNext-native UI consumption contract.
+- [x] Preserve capability contract carriage.
+- [x] Preserve provider metadata.
+- [x] Preserve vocabulary metadata.
+- [x] Preserve provenance / traceability metadata.
+- [x] Preserve UI behavior and interaction behavior.
+- [x] Preserve evidence/export behavior.
+- [x] Confirm no old hub absorbs the new migration responsibility.
+- [x] Confirm `ChartDataContext` dependency is removed or reduced for the selected family.
+- [x] Run focused family tests and full test suite.
 
 Completion condition:
 
@@ -644,6 +749,41 @@ metadata preservation tests
 UI behavior tests
 ```
 
+Phase 27 evidence:
+
+```text
+Selected family:
+- Distribution
+
+Audit note:
+- documents/DataVisualiser_First_VNext_Native_Family_Migration_Audit.md
+
+Production changes:
+- DistributionChartControllerAdapter now sends UseVNextNativeConsumption: true
+- DistributionRenderingContract builds and attaches VNextUiConsumptionContract metadata
+- DistributionRenderingContract uses direct service rendering when the native flag is true
+- Legacy ChartDataContext orchestrator path remains compatibility-only when the native flag is false
+
+Focused tests:
+- DistributionRenderingContractTests.DistributionVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata
+- DistributionRenderingContractTests.RenderAsync_WithVNextNativeConsumption_ShouldUseDirectServicePath
+- DistributionChartControllerAdapterTests.RenderAsync_ShouldPassDistributionCapabilityContract_ToRenderingContract
+- DistributionChartControllerAdapterTests.RenderAsync_ShouldPassVNextNativeConsumptionContract_ToRenderingContract
+
+Focused validation:
+- Distribution-focused test filter passed 63 tests
+- Architecture/evidence export focused filter passed 128 tests
+- DataVisualiser.Tests passed 1012 tests
+- DataFileReader.Tests passed 15 tests
+
+Manual smoke evidence:
+- 2026-05-01 export `documents/reachability-20260501-083930.json` confirmed Distribution visible
+- Distribution mode/settings/chart-type changes were recorded as session milestones
+- Distribution parity completed with weekly and hourly parity passed
+- latest Distribution render plan carried `ConsumptionContractSignature`, `SurfaceKind`, and `SurfaceId`
+- no recent UI smoke-check errors were recorded
+```
+
 ## 4.5 Phase 28 — Retire Corresponding Legacy Bridge for First Migrated Family
 
 Goal:
@@ -654,16 +794,16 @@ Remove or disable the legacy bridge path for the first migrated family only afte
 
 Tasks:
 
-- [ ] Identify the selected family's remaining legacy bridge path.
-- [ ] Confirm VNext-native replacement is used in production path.
-- [ ] Confirm parity evidence.
-- [ ] Confirm smoke evidence or UI behavior evidence.
-- [ ] Confirm metadata preservation.
-- [ ] Confirm semantic/provenance preservation.
-- [ ] Confirm evidence/export path still works.
-- [ ] Remove or disable only the selected family's retired bridge path.
-- [ ] Leave other family bridges untouched unless separately proven.
-- [ ] Run full validation.
+- [x] Identify the selected family's remaining legacy bridge path.
+- [x] Confirm VNext-native replacement is used in production path.
+- [x] Confirm parity evidence.
+- [x] Confirm smoke evidence or UI behavior evidence.
+- [x] Confirm metadata preservation.
+- [x] Confirm semantic/provenance preservation.
+- [x] Confirm evidence/export path still works.
+- [x] Remove or disable only the selected family's retired bridge path.
+- [x] Leave other family bridges untouched unless separately proven.
+- [x] Run full validation.
 
 Completion condition:
 
@@ -678,6 +818,39 @@ Planned evidence:
 documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md
 family bridge-retirement tests
 parity / smoke / metadata evidence
+```
+
+Phase 28 evidence:
+
+```text
+Retired bridge path:
+- DistributionRenderingContract -> ChartRenderingOrchestrator.RenderDistributionChartAsync
+
+Production changes:
+- DistributionRenderingContract no longer accepts/stores a ChartRenderingOrchestrator provider
+- DistributionRenderingContract no longer branches to RenderDistributionChartAsync for Cartesian Distribution rendering
+- DistributionChartControllerAdapter no longer passes a native-consumption compatibility switch
+- ChartControllerFactory no longer supplies the orchestrator provider to DistributionRenderingContract
+
+Evidence note:
+- documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md
+
+Focused tests:
+- DistributionRenderingContractTests.RenderAsync_AfterBridgeRetirement_ShouldUseDirectServicePath
+- ArchitectureGuardrailTests.DistributionFamilyBridgeRetirement_ShouldRemoveLegacyOrchestratorFallback
+- DistributionChartControllerAdapterTests.RenderAsync_ShouldPassVNextConsumptionContract_ToRenderingContract
+
+Focused validation:
+- Distribution-focused test filter passed 64 tests
+- ArchitectureGuardrailTests passed 111 tests
+
+Full validation:
+- DataVisualiser.Tests passed 1012 tests
+- DataFileReader.Tests passed 15 tests
+
+Manual evidence used:
+- documents/reachability-20260501-083930.json confirmed Distribution render/parity/metadata before retirement
+- documents/reachability-20260501-114754.json confirmed Distribution render/parity/metadata after bridge retirement
 ```
 
 ## 4.6 Phase 29 — Repeat Production Family Migration Slice-by-Slice
@@ -1695,11 +1868,11 @@ updated documentation
 | 2026-04-29 | 21 | Classified bridges; retired UseRenderPlanAdapter=false branch. | Single adapter render path; 975 tests at closure. | Complete |
 | 2026-04-29 | 22 | Proved new MovingAverage capability through chart and API consumers without old hubs. | MovingAverage; TabularSummary; API consumer; end-to-end tests. | Complete |
 | 2026-04-30 | 23 | Extracted Transform adapter composition factory and bounded DI concentration. | Composition factory guardrail; 996 DataVisualiser + 15 DataFileReader tests. | Complete |
-|  | 24 | Audit ChartDataContext migration path. | `documents/DataVisualiser_ChartDataContext_Migration_Audit.md`; reference classification. | Planned |
-|  | 25 | Define VNext-native UI consumption contract. | Contract specification; metadata preservation tests. | Planned |
-|  | 26 | Build Operation Chain Workbench MVP. | Operation-chain execution/provenance/evidence tests. | Planned |
-|  | 27 | Migrate first production chart family. | Family migration audit; UI/metadata/provenance tests. | Planned |
-|  | 28 | Retire first migrated family bridge. | Bridge-retirement note; parity/smoke/metadata/provenance evidence. | Planned |
+| 2026-04-30 | 24 | Audited ChartDataContext migration path and bridge-retirement gates. | `documents/DataVisualiser_ChartDataContext_Migration_Audit.md`; ArchitectureGuardrailTests 107 passed. | Complete |
+| 2026-04-30 | 25 | Added VNext-native UI consumption contract and neutral surface model. | `VNextUiConsumptionContractTests` 5 passed; ArchitectureGuardrailTests 108 passed. | Complete |
+| 2026-04-30 | 26 | Added Operation Chain core executor and display-only workbench tab. | OperationChainExecutorTests 3 passed; ArchitectureGuardrailTests 110 passed; manual smoke confirmed. | Complete |
+| 2026-04-30/2026-05-01 | 27 | Migrated Distribution to VNext-native consumption contract path. | Distribution 63 passed; architecture/evidence 128 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; manual smoke export `documents/reachability-20260501-083930.json` confirmed Distribution render/parity/metadata. | Complete |
+| 2026-05-01 | 28 | Retired Distribution legacy bridge path. | `documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md`; Distribution 64 passed; ArchitectureGuardrailTests 111 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; post-retirement smoke export confirmed. | Complete |
 |  | 29 | Repeat family migration slice-by-slice. | Family migration tracker. | Planned |
 |  | 30 | Elevate consumer-neutral surface model. | Surface convergence audit. | Planned |
 |  | 31 | Thin UI / interaction / state layer. | UI/state/interaction guardrails. | Planned |

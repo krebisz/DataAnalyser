@@ -44,7 +44,6 @@ public sealed class DistributionChartControllerAdapterTests
             var controller = new DistributionChartController();
             var distributionService = new StubDistributionService(CreateRangeResult());
             var renderingContract = new DistributionRenderingContract(
-                    () => null,
                     distributionService,
                     distributionService,
                     new DistributionPolarRenderingService(),
@@ -127,7 +126,6 @@ public sealed class DistributionChartControllerAdapterTests
             var controller = new DistributionChartController();
             var distributionService = new StubDistributionService(CreateRangeResult());
             var renderingContract = new DistributionRenderingContract(
-                    () => null,
                     distributionService,
                     distributionService,
                     new DistributionPolarRenderingService(),
@@ -209,7 +207,6 @@ public sealed class DistributionChartControllerAdapterTests
 
             var distributionService = new StubDistributionService(CreateRangeResult());
             var renderingContract = new DistributionRenderingContract(
-                    () => null,
                     distributionService,
                     distributionService,
                     new DistributionPolarRenderingService(),
@@ -316,6 +313,63 @@ public sealed class DistributionChartControllerAdapterTests
         });
     }
 
+    [Fact]
+    public async Task RenderAsync_ShouldPassVNextConsumptionContract_ToRenderingContract()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartState = new ChartState
+            {
+                    IsDistributionVisible = true,
+                    SelectedDistributionMode = DistributionMode.Weekly
+            };
+
+            var metricState = new MetricState();
+            var uiState = new UiState();
+            var metricService = new MetricSelectionService("TestConnection");
+            var viewModel = new MainWindowViewModel(chartState, metricState, uiState, metricService);
+            var controller = new DistributionChartController();
+            var renderingContract = new FakeDistributionRenderingContract();
+            var adapter = new DistributionChartControllerAdapter(
+                    controller,
+                    viewModel,
+                    () => false,
+                    () => NoOpScope.Instance,
+                    metricService,
+                    renderingContract,
+                    () => null);
+
+            var context = new ChartDataContext
+            {
+                    Data1 =
+                    [
+                            new MetricData
+                            {
+                                    NormalizedTimestamp = new DateTime(2026, 1, 1),
+                                    Value = 1m,
+                                    Unit = "kg"
+                            }
+                    ],
+                    DisplayName1 = "Weight",
+                    MetricType = "weight",
+                    PrimaryMetricType = "weight",
+                    From = new DateTime(2026, 1, 1),
+                    To = new DateTime(2026, 1, 7)
+            };
+
+            await adapter.RenderAsync(context);
+
+            var request = renderingContract.LastRenderRequest;
+            Assert.NotNull(request);
+            Assert.NotNull(request.ConsumptionContract);
+            Assert.Equal(ChartProgramKind.Distribution, request.ConsumptionContract.ProgramKind);
+            Assert.Equal(AnalyticalCapabilityKind.Distribution, request.ConsumptionContract.CapabilityKind);
+            Assert.Equal(CompositionKind.SingleSeries, request.ConsumptionContract.CompositionKind);
+            Assert.Equal(ConsumerKind.Chart, request.ConsumptionContract.Delivery.ConsumerKind);
+            Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, request.ConsumptionContract.SurfaceModel.Kind);
+        });
+    }
+
     private static DistributionRangeResult CreateRangeResult()
     {
         return new DistributionRangeResult(
@@ -380,20 +434,20 @@ public sealed class DistributionChartControllerAdapterTests
 
         public Task<ChartRenderAdapterResult> RenderAsync(DistributionChartRenderRequest request, DistributionChartRenderHost host)
         {
-            LastRenderRequest = request;
+            var plan = DistributionRenderPlanBuilder.Build(request);
+            var consumptionContract = request.ConsumptionContract
+                ?? DistributionVNextConsumptionContractBuilder.Build(request, plan);
+            var qualifiedPlan = DistributionVNextConsumptionContractBuilder.AttachMetadata(plan, consumptionContract);
+            LastRenderRequest = request with { ConsumptionContract = consumptionContract };
             return Task.FromResult(new ChartRenderAdapterResult(
                 DistributionBackendKey.LiveChartsWpfCartesian,
-                "test-distribution-plan",
+                qualifiedPlan.Id,
                 ChartRenderPlanKind.Cartesian,
                 ChartRenderDensityMode.FullFidelity,
                 0,
                 0,
                 0,
-                new Dictionary<string, string>
-                {
-                    ["ProgramKind"] = ChartProgramKind.Distribution.ToString(),
-                    ["Route"] = request.Route.ToString()
-                }));
+                qualifiedPlan.Metadata));
         }
 
         public void Clear(DistributionChartRenderHost host)

@@ -167,6 +167,54 @@ public sealed class DistributionRenderingContractTests
     }
 
     [Fact]
+    public void DistributionVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata()
+    {
+        var request = CreateRequest(DistributionRenderingRoute.Cartesian, DistributionMode.Weekly);
+        var plan = DistributionRenderPlanBuilder.Build(request);
+
+        var contract = DistributionVNextConsumptionContractBuilder.Build(request, plan);
+        var qualifiedPlan = DistributionVNextConsumptionContractBuilder.AttachMetadata(plan, contract);
+
+        Assert.Equal(ChartProgramKind.Distribution, contract.ProgramKind);
+        Assert.Equal(AnalyticalCapabilityKind.Distribution, contract.CapabilityKind);
+        Assert.Equal(CompositionKind.SingleSeries, contract.CompositionKind);
+        Assert.Equal(ConsumerKind.Chart, contract.Delivery.ConsumerKind);
+        Assert.Equal("DistributionChart", contract.Delivery.DeliveryTarget);
+        Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, contract.SurfaceModel.Kind);
+        Assert.Equal(plan.Id, contract.SurfaceModel.SurfaceId);
+        Assert.Equal("True", contract.Metadata["Distribution.NativeConsumption"]);
+        Assert.Equal(contract.Signature, qualifiedPlan.Metadata[DistributionVNextConsumptionContractBuilder.ConsumptionContractSignatureKey]);
+        Assert.Equal("ChartRenderPlan", qualifiedPlan.Metadata[DistributionVNextConsumptionContractBuilder.SurfaceKindKey]);
+    }
+
+    [Fact]
+    public async Task RenderAsync_AfterBridgeRetirement_ShouldUseDirectServicePath()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var service = new TrackingDistributionService();
+            var contract = new DistributionRenderingContract(
+                service,
+                service,
+                new DistributionPolarRenderingService());
+            var host = new DistributionChartRenderHost(
+                new CartesianChart(),
+                new PolarChart(),
+                new ChartState(),
+                () => null);
+
+            var result = await contract.RenderAsync(
+                CreateRequest(DistributionRenderingRoute.Cartesian, DistributionMode.Weekly),
+                host);
+
+            Assert.Equal(1, service.UpdateCallCount);
+            Assert.Equal(DistributionBackendKey.LiveChartsWpfCartesian, result.BackendKey);
+            Assert.Equal("ChartRenderPlan", result.Metadata[DistributionVNextConsumptionContractBuilder.SurfaceKindKey]);
+            Assert.True(result.Metadata.ContainsKey(DistributionVNextConsumptionContractBuilder.ConsumptionContractSignatureKey));
+        });
+    }
+
+    [Fact]
     public void DistributionCapabilityContract_ShouldRejectProgramKindDrift()
     {
         var programRequest = ChartProgramRequest.MainProgram();
@@ -180,7 +228,7 @@ public sealed class DistributionRenderingContractTests
     private static DistributionRenderingContract CreateContract()
     {
         var distributionService = new StubDistributionService();
-        return new DistributionRenderingContract(() => null, distributionService, distributionService, new DistributionPolarRenderingService());
+        return new DistributionRenderingContract(distributionService, distributionService, new DistributionPolarRenderingService());
     }
 
     private static DistributionChartRenderRequest CreateRequest(DistributionRenderingRoute route, DistributionMode mode)
@@ -206,6 +254,32 @@ public sealed class DistributionRenderingContractTests
     {
         public Task UpdateDistributionChartAsync(CartesianChart targetChart, IEnumerable<Shared.Models.MetricData> data, string displayName, DateTime from, DateTime to, double minHeight = 400, bool useFrequencyShading = true, int intervalCount = 10, DataFileReader.Canonical.ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
         {
+            return Task.CompletedTask;
+        }
+
+        public Task<Shared.Models.DistributionRangeResult?> ComputeSimpleRangeAsync(IEnumerable<Shared.Models.MetricData> data, string displayName, DateTime from, DateTime to, DataFileReader.Canonical.ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
+        {
+            return Task.FromResult<Shared.Models.DistributionRangeResult?>(null);
+        }
+
+        public void SetShadingStrategy(IIntervalShadingStrategy strategy)
+        {
+        }
+    }
+
+    private sealed class TrackingDistributionService : DataVisualiser.Core.Services.Abstractions.IDistributionService
+    {
+        public int UpdateCallCount { get; private set; }
+
+        public Task UpdateDistributionChartAsync(CartesianChart targetChart, IEnumerable<Shared.Models.MetricData> data, string displayName, DateTime from, DateTime to, double minHeight = 400, bool useFrequencyShading = true, int intervalCount = 10, DataFileReader.Canonical.ICanonicalMetricSeries? cmsSeries = null, bool enableParity = false)
+        {
+            UpdateCallCount++;
+            targetChart.Series.Clear();
+            targetChart.Series.Add(new LiveCharts.Wpf.LineSeries
+            {
+                Title = displayName,
+                Values = new LiveCharts.ChartValues<double> { 1d, 2d }
+            });
             return Task.CompletedTask;
         }
 

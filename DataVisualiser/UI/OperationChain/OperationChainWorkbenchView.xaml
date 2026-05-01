@@ -1,0 +1,74 @@
+<UserControl x:Class="DataVisualiser.UI.OperationChain.OperationChainWorkbenchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:DataVisualiser.UI">
+    <ui:WorkspaceTabHost>
+        <ui:WorkspaceTabHost.HeaderContent>
+            <Border Padding="10"
+                    Background="{DynamicResource ThemeControlPanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource ThemeOperationPanelBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <StackPanel>
+                    <TextBlock Text="Operation Chain"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource ThemeTextBrush}" />
+                    <TextBlock x:Name="SummaryText"
+                               Margin="0,4,0,0"
+                               Foreground="{DynamicResource ThemeSecondaryTextBrush}"
+                               Text="No operation-chain result is loaded." />
+                </StackPanel>
+            </Border>
+        </ui:WorkspaceTabHost.HeaderContent>
+
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <ItemsControl x:Name="TraceItems"
+                          Grid.Row="0"
+                          Margin="0,0,0,10">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,4"
+                                Padding="6"
+                                BorderBrush="{DynamicResource ThemeOperationPanelBorderBrush}"
+                                BorderThickness="1">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StepLabel}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource ThemeTextBrush}" />
+                                <TextBlock Text="{Binding Detail}"
+                                           Margin="8,0,0,0"
+                                           Foreground="{DynamicResource ThemeSecondaryTextBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <DataGrid x:Name="DatasetGrid"
+                      Grid.Row="1"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      HeadersVisibility="Column"
+                      MinHeight="220">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Dataset" Binding="{Binding Dataset}" Width="2*" />
+                    <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" Width="*" />
+                    <DataGridTextColumn Header="Raw" Binding="{Binding Raw}" Width="*" />
+                    <DataGridTextColumn Header="Smoothed" Binding="{Binding Smoothed}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock x:Name="EvidenceText"
+                       Grid.Row="2"
+                       Margin="0,10,0,0"
+                       Foreground="{DynamicResource ThemeSecondaryTextBrush}"
+                       TextWrapping="Wrap" />
+        </Grid>
+    </ui:WorkspaceTabHost>
+</UserControl>

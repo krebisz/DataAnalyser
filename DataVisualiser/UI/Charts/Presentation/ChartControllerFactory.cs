@@ -51,7 +51,6 @@ public sealed class ChartControllerFactory : IChartControllerFactory
         var mainAdapter = new MainChartControllerAdapter(context.MainChartController, context.ViewModel, context.IsInitializing, context.MetricSelectionService, cartesianMetricRenderingContract);
 
         var distributionRenderingContract = new DistributionRenderingContract(
-            context.GetChartRenderingOrchestrator,
             context.WeeklyDistributionService,
             context.HourlyDistributionService,
             context.DistributionPolarRenderingService,

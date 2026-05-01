@@ -25,7 +25,6 @@ public sealed class DistributionRenderingQualificationProbeTests
         {
             var service = new ProbeDistributionService();
             var contract = new DistributionRenderingContract(
-                () => null,
                 service,
                 service,
                 new DistributionPolarRenderingService(),
@@ -63,7 +62,6 @@ public sealed class DistributionRenderingQualificationProbeTests
         {
             var service = new ProbeDistributionService();
             var contract = new DistributionRenderingContract(
-                () => null,
                 service,
                 service,
                 new DistributionPolarRenderingService(),
