@@ -20,8 +20,8 @@ Track production chart-family migration through the VNext-native consumption con
 | Transform | Migrated and smoke confirmed | `TransformVNextConsumptionContractBuilder`; shared Cartesian consumption-contract factory; focused Transform tests; architecture guardrail; smoke export `documents/reachability-20260501-173257.json` | Fourth family slice. Existing render-invoker behavior is preserved; VNext consumption metadata is attached through the shared Cartesian update path after render-plan construction. |
 | SyncfusionSunburst | Migrated and smoke confirmed | `SyncfusionSunburstVNextConsumptionContractBuilder`; focused SyncfusionSunburst tests; architecture guardrail; smoke export `documents/reachability-20260501-175856.json` | Fifth family slice. Existing hierarchy render-plan path is preserved; VNext consumption metadata is attached before Syncfusion delivery. |
 | Main | Migrated and smoke confirmed | `CartesianMetricVNextConsumptionContractBuilder`; shared Cartesian consumption-contract factory; focused Main/Cartesian tests; architecture guardrail; smoke export `documents/reachability-20260501-180931.json` | Sixth family slice. Dynamic main display-mode resolution is preserved by building the VNext consumption contract from the concrete render plan. |
-| Normalized | Pending | Shared Cartesian secondary chart path | Shares broader secondary-metric rendering path. |
-| Difference/Ratio | Pending | Shared Cartesian secondary chart path; latent UI usage caveat | User noted Diff/Ratio is not currently wired as an active UI capability. |
+| Normalized | Migrated and smoke confirmed | `CartesianMetricVNextConsumptionContractBuilder`; shared secondary Cartesian consumption-contract factory; focused Normalized tests; architecture guardrail; smoke export `documents/reachability-20260501-182337.json` | Seventh family slice. Migrated together with Difference/Ratio because both share the same secondary Cartesian invocation stage. |
+| Difference/Ratio | Migrated; UI smoke not available | `CartesianMetricVNextConsumptionContractBuilder`; shared secondary Cartesian consumption-contract factory; focused Difference/Ratio tests; architecture guardrail | Migrated with Normalized in the same secondary Cartesian slice at user request. Diff/Ratio is not wired to the current UI, so manual smoke is not available; the latent render path carries VNext consumption metadata when invoked. |
 
 ## WeekdayTrend Slice
 
@@ -289,6 +289,54 @@ latest Main render plan carried ConsumptionContractSignature, SurfaceKind, and S
 render-plan vocabulary reported no missing vocabulary or provider plan kinds
 no recent UI smoke-check errors were recorded
 parity summary was unavailable because the final exported selection no longer had a reusable chart context
+```
+
+## Secondary Cartesian Slice
+
+Selected family:
+
+```text
+Normalized and Difference/Ratio
+```
+
+Selection reason:
+
+```text
+Normalized is the remaining active secondary Cartesian chart family.
+Difference/Ratio shares the same secondary render path, and the user requested it be migrated at the same time.
+Diff/Ratio UI usage remains caveated, but its latent render path now carries the same VNext consumption metadata when invoked.
+```
+
+Production changes:
+
+```text
+DataVisualiser/Core/Orchestration/SecondaryCharts/SecondaryMetricChartRenderInvocationStage.cs
+```
+
+Contract changes:
+
+```text
+SecondaryMetricChartRenderInvocationStage supplies a render-plan consumption-contract factory for Normalized, Difference, and Ratio routes.
+ChartUpdateCoordinator attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId before LiveCharts delivery.
+Diff/Ratio active UI usage remains caveated, but the shared latent render path now follows the same contract metadata handoff.
+```
+
+Focused tests:
+
+```text
+ChartRenderingOrchestratorTests.RenderNormalizedChartAsync_ShouldUseNormalizedCutOver_AndRenderTrackedSeries
+ChartRenderingOrchestratorTests.RenderDiffRatioChartAsync_ShouldUseRatioCutOver_WhenRatioModeSelected
+ChartRenderingOrchestratorTests.RenderDiffRatioChartAsync_ShouldUseDifferenceCutOver_AndCaptureRenderPlan_WhenDifferenceModeSelected
+ChartRenderingOrchestratorTests.RenderDiffRatioChartAsync_ShouldCaptureDifferenceAndRatioRenderPlans_WhenModeChanges
+ArchitectureGuardrailTests.SecondaryCartesianFamiliesMigration_ShouldUseVNextConsumptionContractMetadata
+```
+
+Smoke evidence:
+
+```text
+documents/reachability-20260501-182337.json confirmed Normalized rendered through LiveChartsWpf with ConsumptionContractSignature, SurfaceKind, and SurfaceId metadata.
+The export reported IsNormalizedVisible true, NormalizedParity passed, OverallPassed true, no recent UI smoke-check errors, and no missing render-plan vocabulary or provider plan kinds.
+Diff/Ratio manual UI smoke was not available because Diff/Ratio is not wired to the current UI; focused automated tests cover Difference and Ratio render-path metadata when invoked.
 ```
 
 ## Current Deferrals

@@ -955,10 +955,11 @@ Focused validation:
 - Transform-focused test filter passed 7 tests
 - SyncfusionSunburst-focused test filter passed 5 tests
 - Main-focused test filter passed 12 tests
-- ArchitectureGuardrailTests passed 116 tests
+- Secondary Cartesian focused test filter passed 5 tests
+- ArchitectureGuardrailTests passed 117 tests
 
 Full validation:
-- DataVisualiser.Tests passed 1026 tests
+- DataVisualiser.Tests passed 1027 tests
 - DataFileReader.Tests passed 15 tests
 
 Smoke evidence:
@@ -993,7 +994,18 @@ Pending before next family:
 - ChartUpdateCoordinatorTests.UpdateChartUsingStrategyAsync_WithConsumptionContractFactory_ShouldAttachVNextMetadata added
 - ArchitectureGuardrailTests.MainFamilyMigration_ShouldUseVNextConsumptionContractMetadata added
 - Main manual smoke confirmed by documents/reachability-20260501-180931.json
-- next Phase 29 family selection and migration slice
+- Normalized and Difference/Ratio selected as the next Phase 29 family slice because they share the same secondary Cartesian chart path and the user requested they move together
+- SecondaryMetricChartRenderInvocationStage supplies a render-plan consumption-contract factory for Normalized, Difference, and Ratio routes
+- ChartUpdateCoordinator attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId before LiveCharts delivery
+- Diff/Ratio active UI usage remains caveated, but the latent render path now carries VNext consumption metadata when invoked
+- ChartRenderingOrchestratorTests.RenderNormalizedChartAsync_ShouldUseNormalizedCutOver_AndRenderTrackedSeries extended for Normalized consumption metadata
+- ChartRenderingOrchestratorTests.RenderDiffRatioChartAsync_ShouldUseRatioCutOver_WhenRatioModeSelected extended for Ratio consumption metadata
+- ChartRenderingOrchestratorTests.RenderDiffRatioChartAsync_ShouldUseDifferenceCutOver_AndCaptureRenderPlan_WhenDifferenceModeSelected extended for Difference consumption metadata
+- ChartRenderingOrchestratorTests.RenderDiffRatioChartAsync_ShouldCaptureDifferenceAndRatioRenderPlans_WhenModeChanges extended for Difference/Ratio consumption metadata
+- ArchitectureGuardrailTests.SecondaryCartesianFamiliesMigration_ShouldUseVNextConsumptionContractMetadata added
+- Normalized manual smoke confirmed by documents/reachability-20260501-182337.json
+- documents/reachability-20260501-182337.json reported IsNormalizedVisible true, NormalizedParity passed, OverallPassed true, no recent UI smoke-check errors, and no missing render-plan vocabulary or provider plan kinds
+- Diff/Ratio manual UI smoke is not available because Diff/Ratio is not wired to the current UI; Difference and Ratio render-path metadata is covered by focused automated tests
 ```
 
 ## 4.7 Phase 30 — Elevate Consumer-Neutral Surface Model

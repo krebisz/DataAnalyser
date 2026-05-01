@@ -15,6 +15,7 @@ using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.Orchestration;
@@ -206,6 +207,10 @@ public sealed class ChartRenderingOrchestratorTests
                 Assert.True(chartTimestamps.ContainsKey(chart));
                 Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Normalized));
                 Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Normalized].BackendKey);
+                var metadata = chartState.RenderPlanDiagnostics[ChartProgramKind.Normalized].Metadata;
+                Assert.Equal("ChartRenderPlan", metadata[ChartRenderPlanConsumptionContractMetadata.SurfaceKindKey]);
+                Assert.True(metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey));
+                Assert.Equal("NormalizedChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
             }
             finally
             {
@@ -301,6 +306,10 @@ public sealed class ChartRenderingOrchestratorTests
                 Assert.True(chartTimestamps.ContainsKey(chart));
                 Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Ratio));
                 Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].BackendKey);
+                var metadata = chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].Metadata;
+                Assert.Equal("ChartRenderPlan", metadata[ChartRenderPlanConsumptionContractMetadata.SurfaceKindKey]);
+                Assert.True(metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey));
+                Assert.Equal("DiffRatioChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
             }
             finally
             {
@@ -351,6 +360,10 @@ public sealed class ChartRenderingOrchestratorTests
                 Assert.True(chartTimestamps.ContainsKey(chart));
                 Assert.True(chartState.RenderPlanDiagnostics.ContainsKey(ChartProgramKind.Difference));
                 Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Difference].BackendKey);
+                var metadata = chartState.RenderPlanDiagnostics[ChartProgramKind.Difference].Metadata;
+                Assert.Equal("ChartRenderPlan", metadata[ChartRenderPlanConsumptionContractMetadata.SurfaceKindKey]);
+                Assert.True(metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey));
+                Assert.Equal("DiffRatioChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
             }
             finally
             {
@@ -400,6 +413,8 @@ public sealed class ChartRenderingOrchestratorTests
                 Assert.Equal("Ratio", chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].Metadata["ProgramKind"]);
                 Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Difference].BackendKey);
                 Assert.Equal("LiveChartsWpf", chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].BackendKey);
+                Assert.True(chartState.RenderPlanDiagnostics[ChartProgramKind.Difference].Metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey));
+                Assert.True(chartState.RenderPlanDiagnostics[ChartProgramKind.Ratio].Metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey));
             }
             finally
             {

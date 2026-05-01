@@ -1754,6 +1754,32 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void SecondaryCartesianFamiliesMigration_ShouldUseVNextConsumptionContractMetadata()
+    {
+        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Contracts", "CartesianMetrics", "CartesianMetricChartRenderingContract.cs");
+        var invocationSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Orchestration", "SecondaryCharts", "SecondaryMetricChartRenderInvocationStage.cs");
+        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
+        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
+
+        Assert.Contains("CartesianMetricVNextConsumptionContractBuilder", contractSource, StringComparison.Ordinal);
+        Assert.Contains("VNextUiConsumptionContract", contractSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
+        Assert.Contains("RenderConsumptionContractFactory", invocationSource, StringComparison.Ordinal);
+        Assert.Contains("CartesianMetricVNextConsumptionContractBuilder.Build", invocationSource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramKind.Difference", invocationSource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramKind.Ratio", invocationSource, StringComparison.Ordinal);
+        Assert.Contains("ChartRenderPlanConsumptionContractMetadata.Attach", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("Normalized", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("Difference/Ratio", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("UI smoke not available", trackerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void VNextAnalyticalContracts_ShouldStaySplitByConcept()
     {
         var requiredFiles = new[]

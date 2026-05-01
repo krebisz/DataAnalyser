@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Rendering.CartesianMetrics;
+using DataVisualiser.VNext.Contracts;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Orchestration.SecondaryCharts;
@@ -50,7 +51,16 @@ public sealed class SecondaryMetricChartRenderInvocationStage : ISecondaryMetric
                 DisplayPrimarySubtype = context.DisplayPrimarySubtype,
                 DisplaySecondarySubtype = context.DisplaySecondarySubtype,
                 RenderProgramKind = programKind,
-                RenderDelivery = capabilityContract.Delivery
+                RenderDelivery = capabilityContract.Delivery,
+                RenderConsumptionContractFactory = renderPlan => CartesianMetricVNextConsumptionContractBuilder.Build(
+                    renderPlan,
+                    capabilityContract.Delivery,
+                    new Dictionary<string, string>
+                    {
+                        ["CartesianMetric.Route"] = request.Route.ToString(),
+                        ["CartesianMetric.IsOperationChart"] = plan.IsOperationChart.ToString(),
+                        ["CartesianMetric.OperationType"] = plan.OperationType
+                    })
             });
     }
 }
