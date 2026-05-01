@@ -923,6 +923,43 @@ Full validation:
 
 Pending before next family:
 - WeekdayTrend manual smoke confirmed by documents/reachability-20260501-154628.json
+- BarPie manual smoke test because a production chart-family render path now attaches VNext consumption metadata
+```
+
+Phase 29 current slice evidence:
+
+```text
+Active family slice:
+- BarPie
+
+Tracker:
+- documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md
+
+Production changes:
+- BarPieChartRenderRequest now carries optional VNextUiConsumptionContract
+- BarPieRenderingContract builds and attaches VNextUiConsumptionContract metadata
+- BarPieRenderingContract attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId before delivery
+- existing UiChartRenderPlanAdapter and renderer-surface behavior is preserved
+
+Bridge status:
+- no Distribution-style legacy orchestrator fallback was found in the BarPie rendering contract
+- no bridge retirement code removal was required for this family slice
+
+Focused tests:
+- BarPieRenderingContractTests.BarPieVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata
+- BarPieRenderingContractTests.RenderAsync_ShouldPreserveVocabularyMetadata
+- ArchitectureGuardrailTests.BarPieFamilyMigration_ShouldUseVNextConsumptionContractMetadata
+
+Focused validation:
+- BarPie-focused test filter passed 28 tests
+- ArchitectureGuardrailTests passed 113 tests
+
+Full validation:
+- DataVisualiser.Tests passed 1017 tests
+- DataFileReader.Tests passed 15 tests
+
+Pending before next family:
+- BarPie manual smoke confirmed by documents/reachability-20260501-170058.json
 - next Phase 29 family selection and migration slice
 ```
 
@@ -1911,7 +1948,7 @@ updated documentation
 | 2026-04-30 | 26 | Added Operation Chain core executor and display-only workbench tab. | OperationChainExecutorTests 3 passed; ArchitectureGuardrailTests 110 passed; manual smoke confirmed. | Complete |
 | 2026-04-30/2026-05-01 | 27 | Migrated Distribution to VNext-native consumption contract path. | Distribution 63 passed; architecture/evidence 128 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; manual smoke export `documents/reachability-20260501-083930.json` confirmed Distribution render/parity/metadata. | Complete |
 | 2026-05-01 | 28 | Retired Distribution legacy bridge path. | `documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md`; Distribution 64 passed; ArchitectureGuardrailTests 111 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; post-retirement smoke export confirmed. | Complete |
-| 2026-05-01 | 29 | Migrated WeekdayTrend through VNext-native consumption contract path. | `documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md`; WeekdayTrend 35 passed; ArchitectureGuardrailTests 112 passed; DataVisualiser 1015 passed; DataFileReader 15 passed; WeekdayTrend smoke export confirmed. | In progress |
+| 2026-05-01 | 29 | Migrated WeekdayTrend and BarPie through VNext-native consumption contract paths. | `documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md`; WeekdayTrend smoke confirmed; BarPie 28 passed; ArchitectureGuardrailTests 113 passed; DataVisualiser 1017 passed; DataFileReader 15 passed; BarPie smoke export confirmed. | In progress |
 |  | 30 | Elevate consumer-neutral surface model. | Surface convergence audit. | Planned |
 |  | 31 | Thin UI / interaction / state layer. | UI/state/interaction guardrails. | Planned |
 |  | 32 | Demote rendering / backend / vendor fully. | Delivery demotion audit. | Planned |

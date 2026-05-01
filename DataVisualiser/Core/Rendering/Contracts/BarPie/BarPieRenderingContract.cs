@@ -93,9 +93,12 @@ public sealed class BarPieRenderingContract : IBarPieRenderingContract
             throw new ArgumentNullException(nameof(host));
 
         var plan = BarPieRenderPlanBuilder.Build(request, host.RendererKind);
+        var consumptionContract = request.ConsumptionContract
+            ?? BarPieVNextConsumptionContractBuilder.Build(request, host.RendererKind, plan);
+        var qualifiedPlan = BarPieVNextConsumptionContractBuilder.AttachMetadata(plan, consumptionContract);
         return await _dispatcher.ApplyAsync(
             new UiChartRenderSurface(host.Surface, host.Renderer, host.RendererKind, request.Model),
-            plan);
+            qualifiedPlan);
     }
 
     public Task ClearAsync(BarPieChartRenderHost host)

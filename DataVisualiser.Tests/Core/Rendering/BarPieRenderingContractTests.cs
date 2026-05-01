@@ -108,6 +108,8 @@ public sealed class BarPieRenderingContractTests
         Assert.Equal("MultiSeries", result.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
         Assert.True(result.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
         Assert.True(result.Metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
+        Assert.Equal("ChartRenderPlan", result.Metadata[BarPieVNextConsumptionContractBuilder.SurfaceKindKey]);
+        Assert.True(result.Metadata.ContainsKey(BarPieVNextConsumptionContractBuilder.ConsumptionContractSignatureKey));
     }
 
     [Fact]
@@ -136,6 +138,47 @@ public sealed class BarPieRenderingContractTests
         Assert.Equal(AnalyticalCapabilityKind.Identity.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
         Assert.Equal(CompositionKind.MultiSeries.ToString(), plan.Metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
         Assert.Contains("Chart:BarPie:BarPieDiagnosticSurface", plan.Metadata[ChartRenderPlanMetadataKeys.IntentSignature], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BarPieVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata()
+    {
+        var request = new BarPieChartRenderRequest(
+            BarPieRenderingRoute.PieFacet,
+            new UiChartRenderModel
+            {
+                ChartName = "BarPie",
+                Title = "Buckets",
+                Series = [new ChartSeriesModel { Name = "Weight", Values = [1, 2] }],
+                Facets =
+                [
+                    new ChartFacetModel
+                    {
+                        Title = "Weight",
+                        Series = [new ChartSeriesModel { Name = "Fat", Values = [1] }]
+                    }
+                ]
+            },
+            BarPieCapabilityContract.Create());
+        var plan = BarPieRenderPlanBuilder.Build(request, ChartRendererKind.LiveCharts);
+
+        var contract = BarPieVNextConsumptionContractBuilder.Build(request, ChartRendererKind.LiveCharts, plan);
+        var qualifiedPlan = BarPieVNextConsumptionContractBuilder.AttachMetadata(plan, contract);
+
+        Assert.Equal(ChartProgramKind.BarPie, contract.ProgramKind);
+        Assert.Equal(AnalyticalCapabilityKind.Identity, contract.CapabilityKind);
+        Assert.Equal(CompositionKind.MultiSeries, contract.CompositionKind);
+        Assert.Equal(ConsumerKind.Chart, contract.Delivery.ConsumerKind);
+        Assert.Equal("BarPieChart", contract.Delivery.DeliveryTarget);
+        Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, contract.SurfaceModel.Kind);
+        Assert.Equal(plan.Id, contract.SurfaceModel.SurfaceId);
+        Assert.Equal("PieFacet", contract.Metadata["BarPie.Route"]);
+        Assert.Equal("LiveCharts", contract.Metadata["BarPie.RendererKind"]);
+        Assert.Equal("BarPie", contract.Metadata["BarPie.ChartName"]);
+        Assert.Equal("Buckets", contract.Metadata["BarPie.Title"]);
+        Assert.Equal(contract.Signature, qualifiedPlan.Metadata[BarPieVNextConsumptionContractBuilder.ConsumptionContractSignatureKey]);
+        Assert.Equal("ChartRenderPlan", qualifiedPlan.Metadata[BarPieVNextConsumptionContractBuilder.SurfaceKindKey]);
+        Assert.Equal(plan.Id, qualifiedPlan.Metadata[BarPieVNextConsumptionContractBuilder.SurfaceIdKey]);
     }
 
     [Fact]

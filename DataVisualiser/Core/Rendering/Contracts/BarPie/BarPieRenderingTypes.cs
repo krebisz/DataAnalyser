@@ -27,7 +27,8 @@ public enum BarPieRenderingQualification
 public sealed record BarPieChartRenderRequest(
     BarPieRenderingRoute Route,
     UiChartRenderModel Model,
-    BarPieCapabilityContract? CapabilityContract = null);
+    BarPieCapabilityContract? CapabilityContract = null,
+    VNextUiConsumptionContract? ConsumptionContract = null);
 
 public sealed record BarPieCapabilityContract
 {
@@ -69,6 +70,68 @@ public sealed record BarPieChartRenderHost(
     IChartRenderer Renderer,
     ChartRendererKind RendererKind,
     bool IsVisible);
+
+public static class BarPieVNextConsumptionContractBuilder
+{
+    public const string ConsumptionContractSignatureKey = "ConsumptionContractSignature";
+    public const string SurfaceKindKey = "SurfaceKind";
+    public const string SurfaceIdKey = "SurfaceId";
+
+    public static VNextUiConsumptionContract Build(
+        BarPieChartRenderRequest request,
+        ChartRendererKind rendererKind,
+        ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(plan);
+
+        var capabilityContract = request.CapabilityContract ?? BarPieCapabilityContract.Create();
+        var provider = ConsumerProviderContracts.LiveChartsWpf;
+
+        return new VNextUiConsumptionContract(
+            capabilityContract.ProgramRequest.Kind,
+            capabilityContract.Capability.CapabilityKind,
+            capabilityContract.Capability.CompositionKind,
+            capabilityContract.Delivery,
+            provider,
+            plan.SourceSignature,
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
+            ConsumerSurfaceModel.FromRenderPlan(plan),
+            metadata: new Dictionary<string, string>
+            {
+                ["BarPie.Route"] = request.Route.ToString(),
+                ["BarPie.RendererKind"] = rendererKind.ToString(),
+                ["BarPie.ChartName"] = request.Model.ChartName ?? string.Empty,
+                ["BarPie.Title"] = request.Model.Title ?? string.Empty
+            });
+    }
+
+    public static ChartRenderPlan AttachMetadata(
+        ChartRenderPlan plan,
+        VNextUiConsumptionContract consumptionContract)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(consumptionContract);
+
+        var metadata = new Dictionary<string, string>(plan.Metadata)
+        {
+            [ConsumptionContractSignatureKey] = consumptionContract.Signature,
+            [SurfaceKindKey] = consumptionContract.SurfaceModel.Kind.ToString(),
+            [SurfaceIdKey] = consumptionContract.SurfaceModel.SurfaceId
+        };
+
+        return plan with { Metadata = metadata };
+    }
+
+    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
+    {
+        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+            return value;
+
+        throw new InvalidOperationException($"Bar/Pie render plan is missing required metadata '{key}'.");
+    }
+}
 
 public static class BarPieRenderPlanBuilder
 {

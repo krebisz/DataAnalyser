@@ -1672,6 +1672,24 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
         Assert.Contains("ConsumptionContractSignature", contractSource, StringComparison.Ordinal);
         Assert.Contains("WeekdayTrend", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BarPieFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
+    {
+        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Contracts", "BarPie", "BarPieRenderingContract.cs");
+        var typesSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Contracts", "BarPie", "BarPieRenderingTypes.cs");
+        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
+
+        Assert.Contains("BarPieVNextConsumptionContractBuilder.Build", contractSource, StringComparison.Ordinal);
+        Assert.Contains("VNextUiConsumptionContract", typesSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", typesSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumptionContractSignature", typesSource, StringComparison.Ordinal);
+        Assert.Contains("BarPie", trackerSource, StringComparison.Ordinal);
         Assert.Contains("Migrated pending smoke", trackerSource, StringComparison.Ordinal);
     }
 
