@@ -19,7 +19,7 @@ Track production chart-family migration through the VNext-native consumption con
 | BarPie | Migrated and smoke confirmed | `BarPieVNextConsumptionContractBuilder`; focused BarPie tests; architecture guardrail; smoke export `documents/reachability-20260501-170058.json` | Third family slice. No equivalent legacy orchestrator bridge was found in its rendering contract, so bridge retirement is not a separate code removal for this family. |
 | Transform | Migrated and smoke confirmed | `TransformVNextConsumptionContractBuilder`; shared Cartesian consumption-contract factory; focused Transform tests; architecture guardrail; smoke export `documents/reachability-20260501-173257.json` | Fourth family slice. Existing render-invoker behavior is preserved; VNext consumption metadata is attached through the shared Cartesian update path after render-plan construction. |
 | SyncfusionSunburst | Migrated and smoke confirmed | `SyncfusionSunburstVNextConsumptionContractBuilder`; focused SyncfusionSunburst tests; architecture guardrail; smoke export `documents/reachability-20260501-175856.json` | Fifth family slice. Existing hierarchy render-plan path is preserved; VNext consumption metadata is attached before Syncfusion delivery. |
-| Main | Pending | Shared Cartesian primary chart path | Broader blast radius; defer until smaller families prove convergence. |
+| Main | Migrated and smoke confirmed | `CartesianMetricVNextConsumptionContractBuilder`; shared Cartesian consumption-contract factory; focused Main/Cartesian tests; architecture guardrail; smoke export `documents/reachability-20260501-180931.json` | Sixth family slice. Dynamic main display-mode resolution is preserved by building the VNext consumption contract from the concrete render plan. |
 | Normalized | Pending | Shared Cartesian secondary chart path | Shares broader secondary-metric rendering path. |
 | Difference/Ratio | Pending | Shared Cartesian secondary chart path; latent UI usage caveat | User noted Diff/Ratio is not currently wired as an active UI capability. |
 
@@ -235,6 +235,60 @@ latest SyncfusionSunburst render plan carried ConsumptionContractSignature, Surf
 render-plan vocabulary reported no missing vocabulary or provider plan kinds
 no recent UI smoke-check errors were recorded
 parity summary completed and passed
+```
+
+## Main Slice
+
+Selected family:
+
+```text
+Main
+```
+
+Selection reason:
+
+```text
+Main is the primary shared Cartesian path and the next remaining active production family after the dedicated family contracts were migrated and smoke confirmed.
+It has broader blast radius than previous slices, so the migration keeps dynamic display-mode resolution intact and attaches consumption metadata only after concrete render-plan construction.
+```
+
+Production changes:
+
+```text
+DataVisualiser/Core/Rendering/Contracts/CartesianMetrics/CartesianMetricChartRenderingContract.cs
+DataVisualiser/Core/Orchestration/MainChart/MainChartRenderInvocationStage.cs
+```
+
+Contract changes:
+
+```text
+CartesianMetricVNextConsumptionContractBuilder builds a VNextUiConsumptionContract from the concrete CartesianMetric render plan.
+MainChartRenderInvocationStage supplies a render-plan consumption-contract factory to the shared ChartUpdateCoordinator path.
+ChartUpdateCoordinator attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId before LiveCharts delivery.
+Main chart stacked/cumulative display-mode resolution remains render-plan driven rather than fixed by a static capability contract.
+```
+
+Focused tests:
+
+```text
+CartesianMetricChartRenderingContractTests.CartesianMetricVNextConsumptionContractBuilder_ShouldWrapMainRenderPlanAndPreserveMetadata
+CartesianMetricChartRenderingContractTests.CartesianMetricVNextConsumptionContractBuilder_ShouldRejectNonCartesianMetricProgramKind
+ChartUpdateCoordinatorTests.UpdateChartUsingStrategyAsync_WithConsumptionContractFactory_ShouldAttachVNextMetadata
+ArchitectureGuardrailTests.MainFamilyMigration_ShouldUseVNextConsumptionContractMetadata
+```
+
+Smoke evidence:
+
+```text
+documents/reachability-20260501-180931.json
+Main chart visible: true
+Main chart rendered successfully in regular and stacked modes
+latest Main render plan used LiveChartsWpf
+latest Main render plan reported stacked mode with one overlay
+latest Main render plan carried ConsumptionContractSignature, SurfaceKind, and SurfaceId
+render-plan vocabulary reported no missing vocabulary or provider plan kinds
+no recent UI smoke-check errors were recorded
+parity summary was unavailable because the final exported selection no longer had a reusable chart context
 ```
 
 ## Current Deferrals

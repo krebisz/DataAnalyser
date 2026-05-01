@@ -3,6 +3,7 @@ using System.Windows.Threading;
 using DataVisualiser.Core.Computation;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.CartesianMetrics;
 using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.Core.Rendering.Transform;
@@ -216,6 +217,55 @@ public sealed class ChartUpdateCoordinatorTests
                 Assert.NotNull(coordinator.LastRenderPlanAdapterResult);
                 var metadata = coordinator.LastRenderPlanAdapterResult!.Metadata;
                 Assert.Equal("CustomDiagnosticSurface", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public async Task UpdateChartUsingStrategyAsync_WithConsumptionContractFactory_ShouldAttachVNextMetadata()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var coordinator = new ChartUpdateCoordinator(
+                    new ChartComputationEngine(),
+                    new ChartRenderEngine(),
+                    tooltipManager,
+                    chartTimestamps,
+                    new CapturingNotificationService());
+
+                await coordinator.UpdateChartUsingStrategyAsync(
+                    chart,
+                    new StubStrategy(CreateSingleSeriesResult()),
+                    new ChartUpdateRequest
+                    {
+                        PrimaryLabel = "Primary",
+                        MetricType = "Weight",
+                        RenderProgramKind = ChartProgramKind.Main,
+                        RenderDelivery = ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
+                        RenderConsumptionContractFactory = plan => CartesianMetricVNextConsumptionContractBuilder.Build(
+                            plan,
+                            ConsumerDeliveryContract.Chart(ChartProgramKind.Main, "MainChart"),
+                            new Dictionary<string, string> { ["CartesianMetric.Route"] = "Main" })
+                    });
+                await FlushChartAsync(chart);
+
+                Assert.NotNull(coordinator.LastRenderPlanAdapterResult);
+                var metadata = coordinator.LastRenderPlanAdapterResult!.Metadata;
+                Assert.Equal("ChartRenderPlan", metadata[ChartRenderPlanConsumptionContractMetadata.SurfaceKindKey]);
+                Assert.True(metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey));
+                Assert.True(metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.SurfaceIdKey));
+                Assert.Equal("MainChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
             }
             finally
             {

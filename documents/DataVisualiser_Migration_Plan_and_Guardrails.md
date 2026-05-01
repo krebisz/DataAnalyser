@@ -954,10 +954,11 @@ Focused validation:
 - BarPie-focused test filter passed 28 tests
 - Transform-focused test filter passed 7 tests
 - SyncfusionSunburst-focused test filter passed 5 tests
-- ArchitectureGuardrailTests passed 115 tests
+- Main-focused test filter passed 12 tests
+- ArchitectureGuardrailTests passed 116 tests
 
 Full validation:
-- DataVisualiser.Tests passed 1022 tests
+- DataVisualiser.Tests passed 1026 tests
 - DataFileReader.Tests passed 15 tests
 
 Smoke evidence:
@@ -982,6 +983,16 @@ Pending before next family:
 - SyncfusionSunburstRenderingContractTests.RenderAsync_ShouldAttachVNextConsumptionMetadata added
 - ArchitectureGuardrailTests.SyncfusionSunburstFamilyMigration_ShouldUseVNextConsumptionContractMetadata added
 - SyncfusionSunburst manual smoke confirmed by documents/reachability-20260501-175856.json
+- Main selected as the next Phase 29 family because it is the remaining active primary shared Cartesian path
+- CartesianMetricVNextConsumptionContractBuilder builds a VNextUiConsumptionContract from the concrete CartesianMetric render plan
+- MainChartRenderInvocationStage supplies a render-plan consumption-contract factory to the shared ChartUpdateCoordinator path
+- ChartUpdateCoordinator attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId before LiveCharts delivery
+- Main chart stacked/cumulative display-mode resolution remains render-plan driven rather than fixed by a static capability contract
+- CartesianMetricChartRenderingContractTests.CartesianMetricVNextConsumptionContractBuilder_ShouldWrapMainRenderPlanAndPreserveMetadata added
+- CartesianMetricChartRenderingContractTests.CartesianMetricVNextConsumptionContractBuilder_ShouldRejectNonCartesianMetricProgramKind added
+- ChartUpdateCoordinatorTests.UpdateChartUsingStrategyAsync_WithConsumptionContractFactory_ShouldAttachVNextMetadata added
+- ArchitectureGuardrailTests.MainFamilyMigration_ShouldUseVNextConsumptionContractMetadata added
+- Main manual smoke confirmed by documents/reachability-20260501-180931.json
 - next Phase 29 family selection and migration slice
 ```
 

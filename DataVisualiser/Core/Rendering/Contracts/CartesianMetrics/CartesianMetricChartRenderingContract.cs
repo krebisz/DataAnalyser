@@ -4,6 +4,7 @@ using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.CartesianMetrics;
@@ -166,7 +167,68 @@ public sealed record CartesianMetricChartRenderRequest(
     bool IsStacked = false,
     bool IsCumulative = false,
     IReadOnlyList<SeriesResult>? OverlaySeries = null,
-    CartesianMetricCapabilityContract? CapabilityContract = null);
+    CartesianMetricCapabilityContract? CapabilityContract = null,
+    VNextUiConsumptionContract? ConsumptionContract = null);
+
+public static class CartesianMetricVNextConsumptionContractBuilder
+{
+    public static VNextUiConsumptionContract Build(
+        ChartRenderPlan plan,
+        ConsumerDeliveryContract? delivery = null,
+        IReadOnlyDictionary<string, string>? metadata = null)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        if (!CartesianMetricCapabilityContract.IsValidKind(plan.ProgramKind))
+            throw new ArgumentException($"CartesianMetric consumption contracts must use a valid CartesianMetric program kind. Got: {plan.ProgramKind}.", nameof(plan));
+
+        var programRequest = new ChartProgramRequest(plan.ProgramKind, plan.DisplayMode);
+        var capability = CapabilityRequest.FromProgramRequest(programRequest);
+        var resolvedDelivery = delivery ?? ChartProgramDeliveryTargetResolver.CreateDelivery(plan.ProgramKind);
+        var provider = ConsumerProviderContracts.LiveChartsWpf;
+
+        return new VNextUiConsumptionContract(
+            programRequest.Kind,
+            capability.CapabilityKind,
+            capability.CompositionKind,
+            resolvedDelivery,
+            provider,
+            plan.SourceSignature,
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
+            ConsumerSurfaceModel.FromRenderPlan(plan),
+            metadata: metadata);
+    }
+
+    public static VNextUiConsumptionContract Build(
+        CartesianMetricChartRenderRequest request,
+        ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(plan);
+
+        var capabilityContract = request.CapabilityContract;
+        var delivery = capabilityContract?.Delivery;
+        return Build(
+            plan,
+            delivery,
+            new Dictionary<string, string>
+            {
+                ["CartesianMetric.Route"] = request.Route.ToString(),
+                ["CartesianMetric.IsStacked"] = request.IsStacked.ToString(),
+                ["CartesianMetric.IsCumulative"] = request.IsCumulative.ToString(),
+                ["CartesianMetric.SelectedSeriesCount"] = (request.SelectedSeries?.Count ?? 0).ToString()
+            });
+    }
+
+    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
+    {
+        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+            return value;
+
+        throw new InvalidOperationException($"CartesianMetric render plan is missing required metadata '{key}'.");
+    }
+}
 
 /// <summary>
 ///     Binds rendering authority for a CartesianMetric chart kind.
@@ -206,6 +268,11 @@ public sealed record CartesianMetricCapabilityContract
     public ChartProgramRequest ProgramRequest { get; }
     public CapabilityRequest Capability { get; }
     public ConsumerDeliveryContract Delivery { get; }
+
+    public static bool IsValidKind(ChartProgramKind kind)
+    {
+        return ValidKinds.Contains(kind);
+    }
 
     public static CartesianMetricCapabilityContract Create(ChartProgramKind kind)
     {
