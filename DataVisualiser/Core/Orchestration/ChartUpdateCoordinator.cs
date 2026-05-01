@@ -116,6 +116,12 @@ public class ChartUpdateCoordinator
                         LastRenderPlanAdapterResult = null;
 
                         var renderPlan = CartesianMetricRenderPlanBuilder.Build(model, request.MetricType, request.IsCumulative, request.RenderProgramKind, _renderPlanProjector, request.RenderProgramRequest, request.RenderCapability, request.RenderDelivery);
+                        if (request.RenderConsumptionContractFactory != null)
+                        {
+                            var consumptionContract = request.RenderConsumptionContractFactory(renderPlan);
+                            renderPlan = ChartRenderPlanConsumptionContractMetadata.Attach(renderPlan, consumptionContract);
+                        }
+
                         LastRenderPlanAdapterResult = _renderPlanAdapterDispatcher.ApplyAsync(
                             new LiveChartsRenderSurface(targetChart, _chartRenderEngine, request.MinHeight),
                             renderPlan).AsTask().GetAwaiter().GetResult();

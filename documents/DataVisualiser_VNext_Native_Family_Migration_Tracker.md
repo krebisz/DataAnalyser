@@ -17,8 +17,8 @@ Track production chart-family migration through the VNext-native consumption con
 | Distribution | Migrated and bridge retired | `documents/DataVisualiser_First_VNext_Native_Family_Migration_Audit.md`; `documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md`; post-retirement smoke export `documents/reachability-20260501-114754.json` | First proven family. Legacy orchestrator fallback retired in Phase 28. |
 | WeekdayTrend | Migrated and smoke confirmed | `WeekdayTrendVNextConsumptionContractBuilder`; focused WeekdayTrend tests; architecture guardrail; smoke export `documents/reachability-20260501-154628.json` | Second family slice. No equivalent legacy orchestrator bridge was found in its rendering contract, so bridge retirement is not a separate code removal for this family. |
 | BarPie | Migrated and smoke confirmed | `BarPieVNextConsumptionContractBuilder`; focused BarPie tests; architecture guardrail; smoke export `documents/reachability-20260501-170058.json` | Third family slice. No equivalent legacy orchestrator bridge was found in its rendering contract, so bridge retirement is not a separate code removal for this family. |
-| Transform | Pending | Existing capability contract and render-plan path | Candidate after chart-family migration pattern is stable. |
-| SyncfusionSunburst | Pending | Existing hierarchy render-plan path | Vendor/hierarchy-specific; defer until more LiveCharts families prove the common shape. |
+| Transform | Migrated and smoke confirmed | `TransformVNextConsumptionContractBuilder`; shared Cartesian consumption-contract factory; focused Transform tests; architecture guardrail; smoke export `documents/reachability-20260501-173257.json` | Fourth family slice. Existing render-invoker behavior is preserved; VNext consumption metadata is attached through the shared Cartesian update path after render-plan construction. |
+| SyncfusionSunburst | Migrated and smoke confirmed | `SyncfusionSunburstVNextConsumptionContractBuilder`; focused SyncfusionSunburst tests; architecture guardrail; smoke export `documents/reachability-20260501-175856.json` | Fifth family slice. Existing hierarchy render-plan path is preserved; VNext consumption metadata is attached before Syncfusion delivery. |
 | Main | Pending | Shared Cartesian primary chart path | Broader blast radius; defer until smaller families prove convergence. |
 | Normalized | Pending | Shared Cartesian secondary chart path | Shares broader secondary-metric rendering path. |
 | Difference/Ratio | Pending | Shared Cartesian secondary chart path; latent UI usage caveat | User noted Diff/Ratio is not currently wired as an active UI capability. |
@@ -125,6 +125,116 @@ latest BarPie render plan carried ConsumptionContractSignature, SurfaceKind, and
 render-plan vocabulary reported no missing vocabulary or provider plan kinds
 no recent UI smoke-check errors were recorded
 parity summary was unavailable because no chart context / primary series was available for non-BarPie parity lanes
+```
+
+## Transform Slice
+
+Selected family:
+
+```text
+Transform
+```
+
+Selection reason:
+
+```text
+Transform had an existing capability contract and already flowed through the shared Cartesian render-plan adapter path.
+It was the next lowest-risk family after Distribution, WeekdayTrend, and BarPie because it could preserve the existing render invoker while adding VNext consumption metadata at the shared render-plan handoff.
+```
+
+Production changes:
+
+```text
+DataVisualiser/Core/Orchestration/ChartUpdateRequest.cs
+DataVisualiser/Core/Orchestration/ChartUpdateCoordinator.cs
+DataVisualiser/Core/Orchestration/TransformChartRenderInvoker.cs
+DataVisualiser/Core/Rendering/Contracts/Transform/TransformRenderingTypes.cs
+DataVisualiser/VNext/Contracts/ChartRenderPlanConsumptionContractMetadata.cs
+```
+
+Contract changes:
+
+```text
+TransformVNextConsumptionContractBuilder builds a VNextUiConsumptionContract from the Transform capability contract and concrete render plan.
+ChartUpdateRequest now accepts an optional render-plan consumption-contract factory.
+ChartUpdateCoordinator attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId when such a factory is supplied.
+TransformChartRenderInvoker supplies the Transform factory while preserving the existing Transform rendering behavior.
+```
+
+Focused tests:
+
+```text
+TransformRenderingContractTests.TransformVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata
+ChartUpdateCoordinatorTests.RenderTransformChartAsync_ShouldCaptureRenderPlanDiagnostics
+ArchitectureGuardrailTests.TransformFamilyMigration_ShouldUseVNextConsumptionContractMetadata
+```
+
+Smoke evidence:
+
+```text
+documents/reachability-20260501-173257.json
+Transform panel visible: true
+unary Transform operation rendered successfully: Log, 141 points
+binary Transform operation rendered successfully: Add, 139 points
+latest Transform render plan used LiveChartsWpf
+render-plan history included unary and binary Transform plans
+latest Transform render plan carried ConsumptionContractSignature, SurfaceKind, and SurfaceId
+render-plan vocabulary reported no missing vocabulary or provider plan kinds
+no recent UI smoke-check errors were recorded
+parity summary was unavailable because the final exported selection no longer had a reusable chart context
+```
+
+## SyncfusionSunburst Slice
+
+Selected family:
+
+```text
+SyncfusionSunburst
+```
+
+Selection reason:
+
+```text
+SyncfusionSunburst had a dedicated rendering contract, existing hierarchy render-plan builder, and focused tests.
+After four LiveCharts-backed family slices, it is the smallest remaining non-Cartesian family and can prove the same consumption-contract metadata shape across hierarchy delivery without touching shared Cartesian paths.
+```
+
+Production changes:
+
+```text
+DataVisualiser/Core/Rendering/Contracts/Syncfusion/SyncfusionSunburstRenderingContract.cs
+DataVisualiser/Core/Rendering/Contracts/Syncfusion/SyncfusionSunburstRenderingTypes.cs
+```
+
+Contract changes:
+
+```text
+SyncfusionSunburstChartRenderRequest now carries an optional VNextUiConsumptionContract.
+SyncfusionSunburstRenderingContract builds a VNextUiConsumptionContract when one is not supplied.
+SyncfusionSunburstRenderingContract attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId to the hierarchy render plan before delivery.
+SyncfusionSunburst rendering behavior still delegates to SyncfusionSunburstRenderPlanAdapter.
+```
+
+Focused tests:
+
+```text
+SyncfusionSunburstRenderingContractTests.SyncfusionSunburstVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata
+SyncfusionSunburstRenderingContractTests.RenderAsync_ShouldAttachVNextConsumptionMetadata
+ArchitectureGuardrailTests.SyncfusionSunburstFamilyMigration_ShouldUseVNextConsumptionContractMetadata
+```
+
+Smoke evidence:
+
+```text
+documents/reachability-20260501-175856.json
+Syncfusion export scope completed
+SyncfusionSunburst rendered successfully multiple times
+latest SyncfusionSunburst render plan used SyncfusionWpf.Hierarchy
+latest SyncfusionSunburst render plan included 3 rendered series, 16 hierarchy nodes, and 12 rendered points
+latest SyncfusionSunburst render plan carried ConsumptionContractSignature, SurfaceKind, and SurfaceId
+render-plan vocabulary reported no missing vocabulary or provider plan kinds
+no recent UI smoke-check errors were recorded
+parity summary completed and passed
 ```
 
 ## Current Deferrals

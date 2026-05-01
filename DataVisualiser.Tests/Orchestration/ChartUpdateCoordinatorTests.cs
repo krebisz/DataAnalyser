@@ -280,6 +280,9 @@ public sealed class ChartUpdateCoordinatorTests
                 Assert.Equal("DerivedSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
                 Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.IntentSignature));
                 Assert.True(metadata.ContainsKey(ChartRenderPlanMetadataKeys.ProvenanceSignature));
+                Assert.Equal("ChartRenderPlan", metadata[ChartRenderPlanConsumptionContractMetadata.SurfaceKindKey]);
+                Assert.True(metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey));
+                Assert.True(metadata.ContainsKey(ChartRenderPlanConsumptionContractMetadata.SurfaceIdKey));
             }
             finally
             {

@@ -1690,7 +1690,46 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", typesSource, StringComparison.Ordinal);
         Assert.Contains("ConsumptionContractSignature", typesSource, StringComparison.Ordinal);
         Assert.Contains("BarPie", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Migrated pending smoke", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TransformFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
+    {
+        var typesSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Contracts", "Transform", "TransformRenderingTypes.cs");
+        var invokerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Orchestration", "TransformChartRenderInvoker.cs");
+        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
+        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
+
+        Assert.Contains("TransformVNextConsumptionContractBuilder.Build", invokerSource, StringComparison.Ordinal);
+        Assert.Contains("VNextUiConsumptionContract", typesSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", typesSource, StringComparison.Ordinal);
+        Assert.Contains("RenderConsumptionContractFactory", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("ChartRenderPlanConsumptionContractMetadata.Attach", coordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("Transform", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionSunburstFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
+    {
+        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Contracts", "Syncfusion", "SyncfusionSunburstRenderingContract.cs");
+        var typesSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Contracts", "Syncfusion", "SyncfusionSunburstRenderingTypes.cs");
+        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
+
+        Assert.Contains("SyncfusionSunburstVNextConsumptionContractBuilder.Build", contractSource, StringComparison.Ordinal);
+        Assert.Contains("VNextUiConsumptionContract", typesSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", typesSource, StringComparison.Ordinal);
+        Assert.Contains("ChartRenderPlanConsumptionContractMetadata.Attach", contractSource, StringComparison.Ordinal);
+        Assert.Contains("SyncfusionSunburst", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
     }
 
     [Fact]

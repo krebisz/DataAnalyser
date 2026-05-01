@@ -6,6 +6,7 @@ using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts;
 using LiveCharts.Wpf;
 
@@ -107,6 +108,40 @@ public sealed class TransformRenderingContractTests
     }
 
     [Fact]
+    public void TransformVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata()
+    {
+        var request = new TransformChartRenderRequest(
+            TransformRenderingRoute.ResultCartesian,
+            new ChartDataContext(),
+            new StubStrategy(),
+            "Transform Result",
+            "log",
+            false,
+            CapabilityContract: TransformCapabilityContract.Create(
+                "Transform Result",
+                [SeriesOperationRequest.Logarithm(0, "transform::log", "Log(Weight - Fat (mass))")]));
+        var plan = CreateRenderPlan();
+
+        var contract = TransformVNextConsumptionContractBuilder.Build(request, plan);
+        var qualifiedPlan = ChartRenderPlanConsumptionContractMetadata.Attach(plan, contract);
+
+        Assert.Equal(ChartProgramKind.Transform, contract.ProgramKind);
+        Assert.Equal(AnalyticalCapabilityKind.Transform, contract.CapabilityKind);
+        Assert.Equal(CompositionKind.DerivedSeries, contract.CompositionKind);
+        Assert.Equal(ConsumerKind.Chart, contract.Delivery.ConsumerKind);
+        Assert.Equal("TransformChart", contract.Delivery.DeliveryTarget);
+        Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, contract.SurfaceModel.Kind);
+        Assert.Equal(plan.Id, contract.SurfaceModel.SurfaceId);
+        Assert.Equal("ResultCartesian", contract.Metadata["Transform.Route"]);
+        Assert.Equal("Transform Result", contract.Metadata["Transform.PrimaryLabel"]);
+        Assert.Equal("log", contract.Metadata["Transform.OperationType"]);
+        Assert.Equal("False", contract.Metadata["Transform.IsOperationChart"]);
+        Assert.Equal(contract.Signature, qualifiedPlan.Metadata[ChartRenderPlanConsumptionContractMetadata.ConsumptionContractSignatureKey]);
+        Assert.Equal("ChartRenderPlan", qualifiedPlan.Metadata[ChartRenderPlanConsumptionContractMetadata.SurfaceKindKey]);
+        Assert.Equal(plan.Id, qualifiedPlan.Metadata[ChartRenderPlanConsumptionContractMetadata.SurfaceIdKey]);
+    }
+
+    [Fact]
     public void TransformCapabilityContract_ShouldRejectProgramKindDrift()
     {
         var programRequest = ChartProgramRequest.WeekdayTrend();
@@ -138,5 +173,39 @@ public sealed class TransformRenderingContractTests
         {
             return null;
         }
+    }
+
+    private static ChartRenderPlan CreateRenderPlan()
+    {
+        var sourceSignature = "transform-source";
+        var metadata = new Dictionary<string, string>
+        {
+            [ChartRenderPlanMetadataKeys.IntentSignature] = "intent-transform",
+            [ChartRenderPlanMetadataKeys.ProvenanceSignature] = "provenance-transform",
+            [ChartRenderPlanMetadataKeys.ConsumerKind] = ConsumerKind.Chart.ToString(),
+            [ChartRenderPlanMetadataKeys.DeliveryTarget] = "TransformChart",
+            [ChartRenderPlanMetadataKeys.CapabilityKind] = AnalyticalCapabilityKind.Transform.ToString(),
+            [ChartRenderPlanMetadataKeys.CompositionKind] = CompositionKind.DerivedSeries.ToString()
+        };
+
+        return new ChartRenderPlan(
+            "transform-plan",
+            ChartProgramKind.Transform,
+            ChartRenderPlanKind.Cartesian,
+            ChartDisplayMode.Regular,
+            "Transform Result",
+            new DateTime(2024, 1, 1),
+            new DateTime(2024, 1, 2),
+            sourceSignature,
+            Array.Empty<ChartSeriesPlan>(),
+            Array.Empty<ChartHierarchyNodePlan>(),
+            RenderDensityPlan.FullFidelity(0),
+            new ChartInteractionPlan(
+                SupportsZoom: true,
+                SupportsPan: true,
+                SupportsTooltips: true,
+                SupportsSelection: false,
+                SupportsViewportRefinement: false),
+            metadata);
     }
 }

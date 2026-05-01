@@ -47,7 +47,8 @@ public sealed class TransformChartRenderInvoker : ITransformChartRenderInvoker
                 RenderProgramKind = ChartProgramKind.Transform,
                 RenderProgramRequest = request.CapabilityContract?.ProgramRequest,
                 RenderCapability = request.CapabilityContract?.Capability,
-                RenderDelivery = request.CapabilityContract?.Delivery
+                RenderDelivery = request.CapabilityContract?.Delivery,
+                RenderConsumptionContractFactory = plan => TransformVNextConsumptionContractBuilder.Build(request, plan)
             });
 
         if (_chartUpdateCoordinator.LastRenderPlanAdapterResult != null)

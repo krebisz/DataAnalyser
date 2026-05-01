@@ -1,3 +1,4 @@
+using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Rendering.Syncfusion;
@@ -19,6 +20,10 @@ public sealed class SyncfusionSunburstRenderingContract : ISyncfusionSunburstRen
         ArgumentNullException.ThrowIfNull(host);
 
         var plan = SyncfusionSunburstRenderPlanBuilder.Build(request);
+        var consumptionContract = request.ConsumptionContract
+            ?? SyncfusionSunburstVNextConsumptionContractBuilder.Build(request, plan);
+        plan = ChartRenderPlanConsumptionContractMetadata.Attach(plan, consumptionContract);
+
         return await _dispatcher.ApplyAsync(
             new SyncfusionSunburstRenderSurface(host.Target, host.IsVisible),
             plan);

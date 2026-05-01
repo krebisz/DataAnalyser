@@ -2,6 +2,7 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.UI.State;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 using LiveCharts.Wpf;
 
 namespace DataVisualiser.Core.Rendering.Transform;
@@ -69,6 +70,47 @@ public sealed record TransformCapabilityContract
             programRequest,
             CapabilityRequest.FromProgramRequest(programRequest),
             ChartProgramDeliveryTargetResolver.CreateDelivery(programRequest.Kind, "TransformChart"));
+    }
+}
+
+public static class TransformVNextConsumptionContractBuilder
+{
+    public static VNextUiConsumptionContract Build(
+        TransformChartRenderRequest request,
+        ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(plan);
+
+        var capabilityContract = request.CapabilityContract
+            ?? TransformCapabilityContract.Create(request.PrimaryLabel);
+        var provider = ConsumerProviderContracts.LiveChartsWpf;
+
+        return new VNextUiConsumptionContract(
+            capabilityContract.ProgramRequest.Kind,
+            capabilityContract.Capability.CapabilityKind,
+            capabilityContract.Capability.CompositionKind,
+            capabilityContract.Delivery,
+            provider,
+            plan.SourceSignature,
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
+            ConsumerSurfaceModel.FromRenderPlan(plan),
+            metadata: new Dictionary<string, string>
+            {
+                ["Transform.Route"] = request.Route.ToString(),
+                ["Transform.PrimaryLabel"] = request.PrimaryLabel,
+                ["Transform.OperationType"] = request.OperationType ?? string.Empty,
+                ["Transform.IsOperationChart"] = request.IsOperationChart.ToString()
+            });
+    }
+
+    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
+    {
+        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+            return value;
+
+        throw new InvalidOperationException($"Transform render plan is missing required metadata '{key}'.");
     }
 }
 

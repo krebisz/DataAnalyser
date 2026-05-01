@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.VNext.Contracts;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Core.Orchestration;
 
@@ -25,4 +26,5 @@ public sealed record ChartUpdateRequest
     public ChartProgramRequest? RenderProgramRequest { get; init; }
     public CapabilityRequest? RenderCapability { get; init; }
     public ConsumerDeliveryContract? RenderDelivery { get; init; }
+    public Func<ChartRenderPlan, VNextUiConsumptionContract>? RenderConsumptionContractFactory { get; init; }
 }

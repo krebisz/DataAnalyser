@@ -67,7 +67,8 @@ public sealed record SyncfusionSunburstChartRenderRequest(
     int SelectionCount,
     DateTime? From,
     DateTime? To,
-    SyncfusionSunburstCapabilityContract? CapabilityContract = null);
+    SyncfusionSunburstCapabilityContract? CapabilityContract = null,
+    VNextUiConsumptionContract? ConsumptionContract = null);
 
 public sealed record SyncfusionSunburstChartRenderHost(
     ISyncfusionSunburstRenderTarget Target,
@@ -76,6 +77,46 @@ public sealed record SyncfusionSunburstChartRenderHost(
 public sealed record SyncfusionSunburstRenderSurface(
     ISyncfusionSunburstRenderTarget Target,
     bool IsVisible);
+
+public static class SyncfusionSunburstVNextConsumptionContractBuilder
+{
+    public static VNextUiConsumptionContract Build(
+        SyncfusionSunburstChartRenderRequest request,
+        ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(plan);
+
+        var capabilityContract = request.CapabilityContract ?? SyncfusionSunburstCapabilityContract.Create();
+        var provider = ConsumerProviderContracts.SyncfusionSunburst;
+
+        return new VNextUiConsumptionContract(
+            capabilityContract.ProgramRequest.Kind,
+            capabilityContract.Capability.CapabilityKind,
+            capabilityContract.Capability.CompositionKind,
+            capabilityContract.Delivery,
+            provider,
+            plan.SourceSignature,
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
+            ConsumerSurfaceModel.FromRenderPlan(plan),
+            metadata: new Dictionary<string, string>
+            {
+                ["SyncfusionSunburst.Route"] = request.Route.ToString(),
+                ["SyncfusionSunburst.BucketCount"] = request.BucketCount.ToString(),
+                ["SyncfusionSunburst.SelectionCount"] = request.SelectionCount.ToString(),
+                ["SyncfusionSunburst.ItemCount"] = request.Items.Count.ToString()
+            });
+    }
+
+    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
+    {
+        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+            return value;
+
+        throw new InvalidOperationException($"SyncfusionSunburst render plan is missing required metadata '{key}'.");
+    }
+}
 
 public static class SyncfusionSunburstRenderPlanBuilder
 {

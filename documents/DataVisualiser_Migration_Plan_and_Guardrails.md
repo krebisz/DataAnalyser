@@ -952,14 +952,36 @@ Focused tests:
 
 Focused validation:
 - BarPie-focused test filter passed 28 tests
-- ArchitectureGuardrailTests passed 113 tests
+- Transform-focused test filter passed 7 tests
+- SyncfusionSunburst-focused test filter passed 5 tests
+- ArchitectureGuardrailTests passed 115 tests
 
 Full validation:
-- DataVisualiser.Tests passed 1017 tests
+- DataVisualiser.Tests passed 1022 tests
 - DataFileReader.Tests passed 15 tests
 
-Pending before next family:
+Smoke evidence:
 - BarPie manual smoke confirmed by documents/reachability-20260501-170058.json
+- Transform selected as the next Phase 29 family because it already has a capability contract and uses the shared Cartesian render-plan adapter path
+- TransformVNextConsumptionContractBuilder builds a VNextUiConsumptionContract from the Transform capability contract and concrete render plan
+- ChartUpdateRequest now accepts an optional render-plan consumption-contract factory for shared Cartesian paths
+- ChartUpdateCoordinator attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId when a render-plan consumption-contract factory is supplied
+- TransformChartRenderInvoker supplies the Transform consumption-contract factory while preserving existing rendering behavior
+- TransformRenderingContractTests.TransformVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata added
+- ChartUpdateCoordinatorTests.RenderTransformChartAsync_ShouldCaptureRenderPlanDiagnostics extended for Transform consumption metadata
+- ArchitectureGuardrailTests.TransformFamilyMigration_ShouldUseVNextConsumptionContractMetadata added
+
+Pending before next family:
+- Transform manual smoke confirmed by documents/reachability-20260501-173257.json
+- SyncfusionSunburst selected as the next Phase 29 family because four LiveCharts-backed slices have already proven the common shape and SyncfusionSunburst is the smallest remaining dedicated hierarchy contract
+- SyncfusionSunburstChartRenderRequest now carries optional VNextUiConsumptionContract
+- SyncfusionSunburstRenderingContract builds and attaches VNextUiConsumptionContract metadata
+- SyncfusionSunburstRenderingContract attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId before hierarchy delivery
+- existing SyncfusionSunburstRenderPlanAdapter rendering behavior is preserved
+- SyncfusionSunburstRenderingContractTests.SyncfusionSunburstVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata added
+- SyncfusionSunburstRenderingContractTests.RenderAsync_ShouldAttachVNextConsumptionMetadata added
+- ArchitectureGuardrailTests.SyncfusionSunburstFamilyMigration_ShouldUseVNextConsumptionContractMetadata added
+- SyncfusionSunburst manual smoke confirmed by documents/reachability-20260501-175856.json
 - next Phase 29 family selection and migration slice
 ```
 
