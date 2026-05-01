@@ -150,6 +150,61 @@ public sealed class WeekdayTrendRenderingContractTests
     }
 
     [Fact]
+    public void WeekdayTrendVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata()
+    {
+        var request = new WeekdayTrendChartRenderRequest(
+            WeekdayTrendRenderingRoute.Scatter,
+            CreateResult(),
+            new ChartState { WeekdayTrendChartMode = WeekdayTrendChartMode.Scatter },
+            "Weight:body_fat_mass",
+            WeekdayTrendCapabilityContract.Create());
+        var plan = WeekdayTrendRenderPlanBuilder.Build(request);
+
+        var contract = WeekdayTrendVNextConsumptionContractBuilder.Build(request, plan);
+        var qualifiedPlan = WeekdayTrendVNextConsumptionContractBuilder.AttachMetadata(plan, contract);
+
+        Assert.Equal(ChartProgramKind.WeekdayTrend, contract.ProgramKind);
+        Assert.Equal(AnalyticalCapabilityKind.TemporalTrend, contract.CapabilityKind);
+        Assert.Equal(CompositionKind.SingleSeries, contract.CompositionKind);
+        Assert.Equal(ConsumerKind.Chart, contract.Delivery.ConsumerKind);
+        Assert.Equal("WeekdayTrendChart", contract.Delivery.DeliveryTarget);
+        Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, contract.SurfaceModel.Kind);
+        Assert.Equal(plan.Id, contract.SurfaceModel.SurfaceId);
+        Assert.Equal("Scatter", contract.Metadata["WeekdayTrend.Route"]);
+        Assert.Equal("Scatter", contract.Metadata["WeekdayTrend.Mode"]);
+        Assert.Equal("Weight:body_fat_mass", contract.Metadata["WeekdayTrend.Selection"]);
+        Assert.Equal(contract.Signature, qualifiedPlan.Metadata[WeekdayTrendVNextConsumptionContractBuilder.ConsumptionContractSignatureKey]);
+        Assert.Equal("ChartRenderPlan", qualifiedPlan.Metadata[WeekdayTrendVNextConsumptionContractBuilder.SurfaceKindKey]);
+        Assert.Equal(plan.Id, qualifiedPlan.Metadata[WeekdayTrendVNextConsumptionContractBuilder.SurfaceIdKey]);
+    }
+
+    [Fact]
+    public void Render_ShouldAttachVNextConsumptionMetadata()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var chartState = new ChartState { WeekdayTrendChartMode = WeekdayTrendChartMode.Cartesian };
+            var contract = CreateContract();
+            var host = CreateHost(chartState);
+
+            var result = contract.Render(
+                new WeekdayTrendChartRenderRequest(
+                    WeekdayTrendRenderingRoute.Cartesian,
+                    CreateResult(),
+                    chartState,
+                    "Weight:body_fat_mass",
+                    WeekdayTrendCapabilityContract.Create()),
+                host);
+
+            Assert.Equal(WeekdayTrendBackendKey.LiveChartsWpfCartesian, result.BackendKey);
+            Assert.Equal("ChartRenderPlan", result.Metadata[WeekdayTrendVNextConsumptionContractBuilder.SurfaceKindKey]);
+            Assert.True(result.Metadata.ContainsKey(WeekdayTrendVNextConsumptionContractBuilder.ConsumptionContractSignatureKey));
+            Assert.Equal("WeekdayTrendChart", result.Metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
+            Assert.Equal("TemporalTrend", result.Metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
+        });
+    }
+
+    [Fact]
     public void WeekdayTrendCapabilityContract_ShouldRejectProgramKindDrift()
     {
         var programRequest = ChartProgramRequest.Distribution();

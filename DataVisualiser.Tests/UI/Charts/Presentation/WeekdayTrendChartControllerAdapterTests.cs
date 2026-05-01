@@ -105,6 +105,8 @@ public sealed class WeekdayTrendChartControllerAdapterTests
             Assert.Equal("WeekdayTrendChart", metadata[ChartRenderPlanMetadataKeys.DeliveryTarget]);
             Assert.Equal("TemporalTrend", metadata[ChartRenderPlanMetadataKeys.CapabilityKind]);
             Assert.Equal("SingleSeries", metadata[ChartRenderPlanMetadataKeys.CompositionKind]);
+            Assert.Equal("ChartRenderPlan", metadata[WeekdayTrendVNextConsumptionContractBuilder.SurfaceKindKey]);
+            Assert.True(metadata.ContainsKey(WeekdayTrendVNextConsumptionContractBuilder.ConsumptionContractSignatureKey));
 
             setup.Adapter.OnChartTypeToggleRequested(null, EventArgs.Empty);
 
@@ -244,7 +246,6 @@ public sealed class WeekdayTrendChartControllerAdapterTests
 
         public ChartRenderAdapterResult Render(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
         {
-            LastRenderRequest = request;
             var metadata = new Dictionary<string, string>
             {
                 ["ProgramKind"] = ChartProgramKind.WeekdayTrend.ToString(),
@@ -258,16 +259,34 @@ public sealed class WeekdayTrendChartControllerAdapterTests
                 request.CapabilityContract?.Delivery ?? ConsumerDeliveryContract.Chart(ChartProgramKind.WeekdayTrend, "WeekdayTrendChart"),
                 $"{request.SelectionDisplayKey}:{request.Route}",
                 overlayCount: 0);
+            var plan = new ChartRenderPlan(
+                "test-weekday-trend-plan",
+                ChartProgramKind.WeekdayTrend,
+                ChartRenderPlanKind.Cartesian,
+                ChartDisplayMode.Regular,
+                "Weekday Trend",
+                request.Result.From,
+                request.Result.To,
+                $"{request.SelectionDisplayKey}:{request.Route}",
+                Array.Empty<ChartSeriesPlan>(),
+                Array.Empty<ChartHierarchyNodePlan>(),
+                new RenderDensityPlan(ChartRenderDensityMode.FullFidelity, 0, 0, 0),
+                new ChartInteractionPlan(true, true, true, true, false),
+                metadata);
+            var consumptionContract = request.ConsumptionContract
+                ?? WeekdayTrendVNextConsumptionContractBuilder.Build(request, plan);
+            var qualifiedPlan = WeekdayTrendVNextConsumptionContractBuilder.AttachMetadata(plan, consumptionContract);
+            LastRenderRequest = request with { ConsumptionContract = consumptionContract };
 
             return new ChartRenderAdapterResult(
                 WeekdayTrendBackendKey.LiveChartsWpfCartesian,
-                "test-weekday-trend-plan",
+                qualifiedPlan.Id,
                 ChartRenderPlanKind.Cartesian,
                 ChartRenderDensityMode.FullFidelity,
                 0,
                 0,
                 0,
-                metadata);
+                qualifiedPlan.Metadata);
         }
 
         public void Clear(WeekdayTrendChartRenderHost host)

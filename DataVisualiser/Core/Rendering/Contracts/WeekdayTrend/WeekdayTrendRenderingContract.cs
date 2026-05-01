@@ -83,7 +83,12 @@ public sealed class WeekdayTrendRenderingContract : IWeekdayTrendRenderingContra
             throw new ArgumentNullException(nameof(host));
 
         var plan = WeekdayTrendRenderPlanBuilder.Build(request);
-        return _dispatcher.ApplyAsync(new WeekdayTrendRenderSurface(request, host), plan).AsTask().GetAwaiter().GetResult();
+        var consumptionContract = request.ConsumptionContract
+            ?? WeekdayTrendVNextConsumptionContractBuilder.Build(request, plan);
+        var qualifiedPlan = WeekdayTrendVNextConsumptionContractBuilder.AttachMetadata(plan, consumptionContract);
+        return _dispatcher.ApplyAsync(
+            new WeekdayTrendRenderSurface(request with { ConsumptionContract = consumptionContract }, host),
+            qualifiedPlan).AsTask().GetAwaiter().GetResult();
     }
 
     private void RenderCore(WeekdayTrendChartRenderRequest request, WeekdayTrendChartRenderHost host)
@@ -194,7 +199,8 @@ public sealed record WeekdayTrendChartRenderRequest(
     WeekdayTrendResult Result,
     ChartState ChartState,
     string SelectionDisplayKey = "<none>",
-    WeekdayTrendCapabilityContract? CapabilityContract = null);
+    WeekdayTrendCapabilityContract? CapabilityContract = null,
+    VNextUiConsumptionContract? ConsumptionContract = null);
 
 public sealed record WeekdayTrendCapabilityContract
 {
@@ -239,6 +245,66 @@ public sealed record WeekdayTrendChartRenderHost(
 public sealed record WeekdayTrendRenderSurface(
     WeekdayTrendChartRenderRequest Request,
     WeekdayTrendChartRenderHost Host);
+
+public static class WeekdayTrendVNextConsumptionContractBuilder
+{
+    public const string ConsumptionContractSignatureKey = "ConsumptionContractSignature";
+    public const string SurfaceKindKey = "SurfaceKind";
+    public const string SurfaceIdKey = "SurfaceId";
+
+    public static VNextUiConsumptionContract Build(
+        WeekdayTrendChartRenderRequest request,
+        ChartRenderPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(plan);
+
+        var capabilityContract = request.CapabilityContract ?? WeekdayTrendCapabilityContract.Create();
+        var provider = ConsumerProviderContracts.LiveChartsWpf;
+
+        return new VNextUiConsumptionContract(
+            capabilityContract.ProgramRequest.Kind,
+            capabilityContract.Capability.CapabilityKind,
+            capabilityContract.Capability.CompositionKind,
+            capabilityContract.Delivery,
+            provider,
+            plan.SourceSignature,
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
+            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
+            ConsumerSurfaceModel.FromRenderPlan(plan),
+            metadata: new Dictionary<string, string>
+            {
+                ["WeekdayTrend.Route"] = request.Route.ToString(),
+                ["WeekdayTrend.Mode"] = request.ChartState.WeekdayTrendChartMode.ToString(),
+                ["WeekdayTrend.Selection"] = request.SelectionDisplayKey
+            });
+    }
+
+    public static ChartRenderPlan AttachMetadata(
+        ChartRenderPlan plan,
+        VNextUiConsumptionContract consumptionContract)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(consumptionContract);
+
+        var metadata = new Dictionary<string, string>(plan.Metadata)
+        {
+            [ConsumptionContractSignatureKey] = consumptionContract.Signature,
+            [SurfaceKindKey] = consumptionContract.SurfaceModel.Kind.ToString(),
+            [SurfaceIdKey] = consumptionContract.SurfaceModel.SurfaceId
+        };
+
+        return plan with { Metadata = metadata };
+    }
+
+    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
+    {
+        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+            return value;
+
+        throw new InvalidOperationException($"WeekdayTrend render plan is missing required metadata '{key}'.");
+    }
+}
 
 public static class WeekdayTrendRenderPlanBuilder
 {

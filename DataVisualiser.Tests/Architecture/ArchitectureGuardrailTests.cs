@@ -1660,6 +1660,22 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void WeekdayTrendFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
+    {
+        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "Core", "Rendering", "Contracts", "WeekdayTrend", "WeekdayTrendRenderingContract.cs");
+        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
+
+        Assert.Contains("WeekdayTrendVNextConsumptionContractBuilder.Build", contractSource, StringComparison.Ordinal);
+        Assert.Contains("VNextUiConsumptionContract", contractSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumptionContractSignature", contractSource, StringComparison.Ordinal);
+        Assert.Contains("WeekdayTrend", trackerSource, StringComparison.Ordinal);
+        Assert.Contains("Migrated pending smoke", trackerSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void VNextAnalyticalContracts_ShouldStaySplitByConcept()
     {
         var requiredFiles = new[]

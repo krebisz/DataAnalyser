@@ -888,6 +888,44 @@ per-family migration tests
 per-family bridge retirement evidence
 ```
 
+Phase 29 current slice evidence:
+
+```text
+Active family slice:
+- WeekdayTrend
+
+Tracker:
+- documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md
+
+Production changes:
+- WeekdayTrendChartRenderRequest now carries optional VNextUiConsumptionContract
+- WeekdayTrendRenderingContract builds and attaches VNextUiConsumptionContract metadata
+- WeekdayTrendRenderingContract attaches ConsumptionContractSignature, SurfaceKind, and SurfaceId before delivery
+- existing WeekdayTrendChartUpdateCoordinator rendering behavior is preserved
+
+Bridge status:
+- no Distribution-style legacy orchestrator fallback was found in the WeekdayTrend rendering contract
+- no bridge retirement code removal was required for this family slice
+
+Focused tests:
+- WeekdayTrendRenderingContractTests.WeekdayTrendVNextConsumptionContractBuilder_ShouldWrapRenderPlanAndPreserveMetadata
+- WeekdayTrendRenderingContractTests.Render_ShouldAttachVNextConsumptionMetadata
+- WeekdayTrendChartControllerAdapterTests.OnChartTypeToggleRequested_ShouldToggleMode_AndRenderLastContext
+- ArchitectureGuardrailTests.WeekdayTrendFamilyMigration_ShouldUseVNextConsumptionContractMetadata
+
+Focused validation:
+- WeekdayTrend-focused test filter passed 35 tests
+- ArchitectureGuardrailTests passed 112 tests
+
+Full validation:
+- DataVisualiser.Tests passed 1015 tests
+- DataFileReader.Tests passed 15 tests
+
+Pending before next family:
+- WeekdayTrend manual smoke confirmed by documents/reachability-20260501-154628.json
+- next Phase 29 family selection and migration slice
+```
+
 ## 4.7 Phase 30 — Elevate Consumer-Neutral Surface Model
 
 Goal:
@@ -1873,7 +1911,7 @@ updated documentation
 | 2026-04-30 | 26 | Added Operation Chain core executor and display-only workbench tab. | OperationChainExecutorTests 3 passed; ArchitectureGuardrailTests 110 passed; manual smoke confirmed. | Complete |
 | 2026-04-30/2026-05-01 | 27 | Migrated Distribution to VNext-native consumption contract path. | Distribution 63 passed; architecture/evidence 128 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; manual smoke export `documents/reachability-20260501-083930.json` confirmed Distribution render/parity/metadata. | Complete |
 | 2026-05-01 | 28 | Retired Distribution legacy bridge path. | `documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md`; Distribution 64 passed; ArchitectureGuardrailTests 111 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; post-retirement smoke export confirmed. | Complete |
-|  | 29 | Repeat family migration slice-by-slice. | Family migration tracker. | Planned |
+| 2026-05-01 | 29 | Migrated WeekdayTrend through VNext-native consumption contract path. | `documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md`; WeekdayTrend 35 passed; ArchitectureGuardrailTests 112 passed; DataVisualiser 1015 passed; DataFileReader 15 passed; WeekdayTrend smoke export confirmed. | In progress |
 |  | 30 | Elevate consumer-neutral surface model. | Surface convergence audit. | Planned |
 |  | 31 | Thin UI / interaction / state layer. | UI/state/interaction guardrails. | Planned |
 |  | 32 | Demote rendering / backend / vendor fully. | Delivery demotion audit. | Planned |
