@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-04-30 21:19:57
+Generated: 2026-05-02 08:32:47
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -9,13 +9,6 @@ DataAnalyser/
       assessment.json
       assessment.md
     workflows/
-  .idea/
-    .idea.DataAnalyser/
-      .idea/
-        indexLayout.xml
-        projectSettingsUpdater.xml
-        vcs.xml
-        workspace.xml
   .vscode/
     launch.json
     settings.json
@@ -640,6 +633,10 @@ DataAnalyser/
         MetricSelectionComboReader.cs
         VNextMainChartIntegrationCoordinator.cs
         VNextSeriesLoadCoordinator.cs
+      OperationChain/
+        OperationChainWorkbenchPresenter.cs
+        OperationChainWorkbenchView.xaml
+        OperationChainWorkbenchView.xaml.cs
       State/
         ChartState.cs
         ChartVisibilityHelper.cs
@@ -709,6 +706,7 @@ DataAnalyser/
         LegacyChartProgramProjector.cs
         LegacyMetricViewGateway.cs
         MetricSelectionServiceSeriesLoader.cs
+        OperationChainExecutor.cs
         ReasoningEngine.cs
         ReasoningEngineFactory.cs
         ReasoningSessionCoordinator.cs
@@ -726,20 +724,25 @@ DataAnalyser/
         ChartProgramDeliveryTargetResolver.cs
         ChartProgramKind.cs
         ChartProgramRequest.cs
+        ChartRenderPlanConsumptionContractMetadata.cs
         ConfidenceAnnotation.cs
         ConsumerDeliveryContract.cs
         ConsumerProviderContract.cs
         ConsumerProviderContracts.cs
         ConsumerProviderRegistry.cs
+        ConsumerSurfaceModel.cs
         DataViewKind.cs
+        IAnalyticalCapabilityContract.cs
         InteractionRequest.cs
         MetricLoadSnapshot.cs
         MetricSelectionRequest.cs
         MetricSeriesRequest.cs
         MetricSeriesSnapshot.cs
+        OperationChainContracts.cs
         OverlayPlan.cs
         ProvenanceDescriptor.cs
         SeriesOperationRequest.cs
+        VNextUiConsumptionContract.cs
         WorkflowPlanRequest.cs
       Kernel/
         OperationKernel.cs
@@ -936,6 +939,8 @@ DataAnalyser/
         ReachabilityExportPathResolverTests.cs
         ReachabilityExportWriterTests.cs
         UiBusyScopeLeaseTests.cs
+      OperationChain/
+        OperationChainWorkbenchPresenterTests.cs
       Syncfusion/
         SyncfusionChartsViewCoordinatorTests.cs
         SyncfusionChartsViewLoadCoordinatorTests.cs
@@ -964,6 +969,7 @@ DataAnalyser/
       AnalyticalIntentFactoryTests.cs
       AnalyticalInterpretationBuilderTests.cs
       AnalyticalRenderPlanPipelineTests.cs
+      CapabilityContractConsolidationTests.cs
       ChartProgramDeliveryTargetResolverTests.cs
       ChartProgramPlannerTests.cs
       ChartRenderPlanAdapterTests.cs
@@ -976,6 +982,7 @@ DataAnalyser/
       InterpretiveOverlayPlannerTests.cs
       LegacyChartProgramProjectorTests.cs
       LegacyMetricViewGatewayTests.cs
+      OperationChainExecutorTests.cs
       OperationKernelTests.cs
       Phase22MovingAverageEndToEndTests.cs
       ReasoningEngineTests.cs
@@ -984,6 +991,7 @@ DataAnalyser/
       VNextDistributionRuntimePreservationTests.cs
       VNextMainChartIntegrationCoordinatorTests.cs
       VNextSeriesLoadCoordinatorTests.cs
+      VNextUiConsumptionContractTests.cs
     AssemblyInfo.cs
     DataVisualiser.Tests.csproj
     README.md
@@ -995,8 +1003,19 @@ DataAnalyser/
       Type Dependencies Diagram for ChartComputationResult and other elements-PreMigration.md
     AI_BOOTSTRAP_ENTRY.md
     Collaboration Protocol.md
+    DataVisualiser_Capability_Contract_Consolidation_Audit.md
+    DataVisualiser_ChartDataContext_Migration_Audit.md
+    DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md
+    DataVisualiser_First_Family_Legacy_Bridge_Retirement.md
+    DataVisualiser_First_VNext_Native_Family_Migration_Audit.md
     DataVisualiser_Migration_Plan_and_Guardrails.md
+    DataVisualiser_Operation_Chain_Workbench_MVP_Audit.md
+    DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md
+    DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md
     DataVisualiser_Subsystem_Plan.md
+    DataVisualiser_UI_Interaction_State_Consolidation_Audit.md
+    DataVisualiser_VNext_Native_Family_Migration_Tracker.md
+    DataVisualiser_VNext_Native_UI_Consumption_Contract.md
     DataVisualiser-Architectural-Vocabulary.md
     MASTER_OPERATING_PROTOCOL.md
     Prime_Directive_Formal_Coverage_Notes.md
@@ -1004,6 +1023,7 @@ DataAnalyser/
     Project Overview.md
     Project Philosophy.md
     Project Roadmap.md
+    reachability-20260502-062913.json
     SYSTEM_MAP.md
     To Do Ideas.md
     Workspace Workflow.md

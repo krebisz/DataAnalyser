@@ -34,7 +34,7 @@ public sealed record TransformChartRenderRequest(
     double MinHeight = 400.0,
     TransformCapabilityContract? CapabilityContract = null);
 
-public sealed record TransformCapabilityContract
+public sealed record TransformCapabilityContract : IAnalyticalCapabilityContract
 {
     public TransformCapabilityContract(
         ChartProgramRequest programRequest,

@@ -236,7 +236,7 @@ public static class CartesianMetricVNextConsumptionContractBuilder
 ///     Note: display mode is resolved dynamically per render; only Delivery is threaded
 ///     into the builder to preserve correct stacked/cumulative mode resolution.
 /// </summary>
-public sealed record CartesianMetricCapabilityContract
+public sealed record CartesianMetricCapabilityContract : IAnalyticalCapabilityContract
 {
     private static readonly IReadOnlySet<ChartProgramKind> ValidKinds = new HashSet<ChartProgramKind>
     {

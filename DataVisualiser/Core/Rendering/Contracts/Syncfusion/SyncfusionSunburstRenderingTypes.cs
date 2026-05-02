@@ -25,7 +25,7 @@ public interface ISyncfusionSunburstRenderTarget
     bool HasItems { get; }
 }
 
-public sealed record SyncfusionSunburstCapabilityContract
+public sealed record SyncfusionSunburstCapabilityContract : IAnalyticalCapabilityContract
 {
     public SyncfusionSunburstCapabilityContract(
         ChartProgramRequest programRequest,

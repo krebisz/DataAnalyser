@@ -1078,10 +1078,10 @@ Tasks:
 - [x] Confirm Operation Chain UI does not own operation execution.
 - [x] Move or remove only responsibilities already replaced by VNext-native consumption.
 - [x] Keep UI as display/state/interaction relay.
-- [ ] Keep interaction behavior non-authoritative.
-- [ ] Keep tooltip behavior explanatory, not semantic.
+- [x] Keep interaction behavior non-authoritative.
+- [x] Keep tooltip behavior explanatory, not semantic.
 - [x] Add guardrails preventing reintroduction of authority/provider/evidence policy into UI/state.
-- [ ] Run focused UI/interaction/state tests and full validation.
+- [x] Run focused UI/interaction/state tests and full validation.
 
 Completion condition:
 
@@ -1109,6 +1109,11 @@ Phase 31 current slice evidence:
 - architecture + Operation Chain UI validation passed 119 tests
 - DataVisualiser.Tests passed 1031 tests
 - DataFileReader.Tests passed 15 tests
+- Operation Chain manual smoke confirmed for the current empty display container: empty surface/grid renders, no crash, tab switching works
+- ArchitectureGuardrailTests.UiInteractionAndTooltipLayer_ShouldRemainTerminalAndNonAuthoritative added
+- focused tooltip/interaction guardrail validation passed 2 tests
+- DataVisualiser.Tests passed 1032 tests
+- DataFileReader.Tests passed 15 tests
 ```
 
 ## 4.9 Phase 32 — Demote Rendering / Backend / Vendor Fully
@@ -1121,16 +1126,16 @@ Make rendering, backend, vendor, host, and lifecycle concerns terminal and repla
 
 Tasks:
 
-- [ ] Confirm upstream contracts do not depend on concrete vendor-specific types.
-- [ ] Confirm rendering code does not own interpretation.
-- [ ] Confirm backend code does not define semantic policy.
-- [ ] Confirm vendor code does not define analytical meaning.
-- [ ] Confirm host/lifecycle code is terminal.
-- [ ] Confirm delivery qualification is explicit and tested.
-- [ ] Confirm at least one migrated path can switch or target a non-default backend where applicable.
-- [ ] Confirm Operation Chain output can be delivered without vendor-specific assumptions.
-- [ ] Remove or bound any remaining vendor assumptions leaking upstream.
-- [ ] Run vendor-boundary and delivery tests.
+- [x] Confirm upstream contracts do not depend on concrete vendor-specific types.
+- [x] Confirm rendering code does not own interpretation.
+- [x] Confirm backend code does not define semantic policy.
+- [x] Confirm vendor code does not define analytical meaning.
+- [x] Confirm host/lifecycle code is terminal.
+- [x] Confirm delivery qualification is explicit and tested.
+- [x] Confirm at least one migrated path can switch or target a non-default backend where applicable.
+- [x] Confirm Operation Chain output can be delivered without vendor-specific assumptions.
+- [x] Remove or bound any remaining vendor assumptions leaking upstream.
+- [x] Run vendor-boundary and delivery tests.
 
 Completion condition:
 
@@ -1146,6 +1151,24 @@ vendor-boundary tests
 delivery qualification tests
 ```
 
+Phase 32 evidence:
+
+```text
+- documents/DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md added
+- VNext contracts/application boundary confirmed free of concrete WPF, LiveCharts, Syncfusion, WebView, and UI controller dependencies
+- terminal render-plan adapters guarded against analytical intent, capability, evidence export, operation-chain execution, and reasoning-engine authority
+- ConsumerProviderContract.Supports remains the explicit consumer/program/render-plan qualification gate
+- VNextUiConsumptionContract rejects provider/render-plan-kind drift
+- non-default provider paths are documented through SyncfusionSunburst, TabularSummaryChart, EvidenceExport, and ApiResponse
+- Operation Chain output remains export-delivered without vendor-specific assumptions
+- existing core rendering contracts that still reference UI/state or LiveCharts are explicitly bounded as terminal-adjacent Phase 33+ consolidation targets
+- ArchitectureGuardrailTests.RenderingVendorDelivery_ShouldRemainTerminalAndReplaceable added
+- focused Phase 32 vendor/delivery guardrail validation passed 1 test
+- focused Phase 32 vendor/delivery suite passed 150 tests
+- DataVisualiser.Tests passed 1033 tests
+- DataFileReader.Tests passed 15 tests
+```
+
 ## 4.10 Phase 33 — Consolidate Capability / Contract Families
 
 Goal:
@@ -1156,17 +1179,17 @@ Prevent capability contracts and render-family contracts from becoming parallel 
 
 Tasks:
 
-- [ ] Compare all migrated family capability contracts.
-- [ ] Compare all migrated family delivery contracts.
-- [ ] Compare all migrated family render/surface requests.
-- [ ] Compare Operation Chain contracts against existing Transform / MovingAverage / derived-series patterns.
-- [ ] Identify repeated safe structure.
-- [ ] Identify real family-specific differences.
-- [ ] Extract only genuinely shared patterns.
-- [ ] Preserve explicit family differences.
-- [ ] Remove duplicated exception-driven paths.
-- [ ] Add tests proving shared shape does not flatten real family distinctions.
-- [ ] Run full validation.
+- [x] Compare all migrated family capability contracts.
+- [x] Compare all migrated family delivery contracts.
+- [x] Compare all migrated family render/surface requests.
+- [x] Compare Operation Chain contracts against existing Transform / MovingAverage / derived-series patterns.
+- [x] Identify repeated safe structure.
+- [x] Identify real family-specific differences.
+- [x] Extract only genuinely shared patterns.
+- [x] Preserve explicit family differences.
+- [x] Remove duplicated exception-driven paths.
+- [x] Add tests proving shared shape does not flatten real family distinctions.
+- [x] Run full validation.
 
 Completion condition:
 
@@ -1183,6 +1206,19 @@ family-difference preservation tests
 operation-chain contract comparison
 ```
 
+Phase 33 evidence:
+
+```text
+- documents/DataVisualiser_Capability_Contract_Consolidation_Audit.md added
+- IAnalyticalCapabilityContract added as the shared proven shape for ProgramRequest, Capability, and Delivery
+- Distribution, WeekdayTrend, BarPie, Transform, SyncfusionSunburst, CartesianMetric, and MovingAverage capability contracts implement IAnalyticalCapabilityContract
+- family-specific Create(...) factories, render requests, route/backend qualification records, Operation Chain contracts, and consumption-contract builders remain explicit
+- CapabilityContractConsolidationTests.CapabilityContracts_ShouldShareCommonContractShapeWithoutFlatteningFamilyDifferences added
+- focused capability consolidation validation passed 1 test
+- DataVisualiser.Tests passed 1034 tests
+- DataFileReader.Tests passed 15 tests
+```
+
 ## 4.11 Phase 34 — Retire Remaining Legacy Bypasses
 
 Goal:
@@ -1193,16 +1229,16 @@ Remove remaining legacy coexistence only after production paths have moved.
 
 Tasks:
 
-- [ ] List all remaining legacy bypasses.
-- [ ] Confirm target replacement for each bypass.
-- [ ] Confirm no production consumer still depends on each bypass.
-- [ ] Confirm parity evidence.
-- [ ] Confirm smoke/UI behavior evidence.
-- [ ] Confirm metadata preservation.
-- [ ] Confirm semantic/provenance preservation.
-- [ ] Retire one bypass at a time.
-- [ ] Keep parity/evidence paths only where they still provide active validation value.
-- [ ] Update documentation and progress log after each retirement.
+- [x] List all remaining legacy bypasses.
+- [x] Confirm target replacement for each listed bypass.
+- [x] Confirm no production consumer still depends on each retired bypass.
+- [x] Confirm parity evidence for each retired bypass.
+- [x] Confirm smoke/UI behavior evidence for each retired bypass.
+- [x] Confirm metadata preservation for each retired bypass.
+- [x] Confirm semantic/provenance preservation for each retired bypass.
+- [x] Retire one bypass at a time.
+- [x] Keep parity/evidence paths only where they still provide active validation value.
+- [x] Update documentation and progress log after each retirement.
 
 Completion condition:
 
@@ -1218,6 +1254,25 @@ bridge-retirement tests
 updated parity/evidence validation
 ```
 
+Phase 34 evidence:
+
+- `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`
+- retired `VNextSeriesLoadCoordinator` single-series `LegacyChartProgramProjector` detour
+- preserved main-chart `LegacyChartProgramProjector` bridge because `ProjectedContext` remains production-bound
+- preserved `VNextDataResolutionHelper`, `LegacyMetricViewGateway`, strategy cut-over, evidence parity, and terminal fallback paths with named retirement conditions
+- `ArchitectureGuardrailTests.RemainingLegacyBypassRetirement_ShouldRemoveSeriesLoadProjectorBypassOnly`
+- `VNextSeriesLoadCoordinatorTests`
+- focused Phase 34 validation passed: 11 tests
+- full validation passed: `DataVisualiser.Tests` 1035 tests; `DataFileReader.Tests` 15 tests
+- manual smoke export `documents/reachability-20260502-062913.json` confirmed selected-series Distribution, WeekdayTrend, Transform, SyncfusionSunburst, and Main render-plan history with no recent UI errors
+- export parity summary passed for WeeklyDistribution, HourlyDistribution, CombinedMetric, SingleMetric, MultiMetric, Normalized, WeekdayTrend, and Transform; parity warnings: 0
+
+Phase 34 status:
+
+One safe bypass was retired.
+Remaining named paths are not dead code and remain production-bound or validation-only with named retirement conditions.
+Do not force broad removal of those paths before their replacement conditions are met.
+
 ## 4.12 Phase 35 — Final Convergence Audit
 
 Goal:
@@ -1228,22 +1283,22 @@ Prove the target architecture, not merely implement it.
 
 Tasks:
 
-- [ ] Regenerate latest `project-tree.txt`.
-- [ ] Regenerate latest `codebase-index.md`.
-- [ ] Regenerate latest `dependency-summary.md`.
-- [ ] Regenerate latest `type-dependency-diagram.md`.
-- [ ] Reclassify dependency density.
-- [ ] Confirm no unbounded `ChartDataContext` production bridge remains.
-- [ ] Confirm UI consumes VNext-native contract/surface output.
-- [ ] Confirm Operation Chain consumes VNext-native contract/surface output.
+- [x] Regenerate latest `project-tree.txt`.
+- [x] Regenerate latest `codebase-index.md`.
+- [x] Regenerate latest `dependency-summary.md`.
+- [x] Regenerate latest `type-dependency-diagram.md`.
+- [x] Reclassify dependency density.
+- [x] Confirm no unbounded `ChartDataContext` production bridge remains.
+- [x] Confirm UI consumes VNext-native contract/surface output.
+- [x] Confirm Operation Chain consumes VNext-native contract/surface output.
 - [ ] Confirm legacy projectors are retired or validation-only.
-- [ ] Confirm rendering/vendor concerns are terminal.
-- [ ] Confirm evidence remains observational.
-- [ ] Confirm non-chart consumer path still works.
-- [ ] Confirm capability contracts are generalized where proven.
-- [ ] Confirm all tests pass.
-- [ ] Confirm parity/smoke/metadata/provenance evidence.
-- [ ] Update final completion criteria and progress log.
+- [x] Confirm rendering/vendor concerns are terminal.
+- [x] Confirm evidence remains observational.
+- [x] Confirm non-chart consumer path still works.
+- [x] Confirm capability contracts are generalized where proven.
+- [x] Confirm all tests pass.
+- [x] Confirm parity/smoke/metadata/provenance evidence.
+- [x] Update final completion criteria and progress log.
 
 Completion condition:
 
@@ -1260,6 +1315,27 @@ fresh generated baseline artifacts
 full test validation
 parity / smoke / metadata / provenance evidence
 ```
+
+Phase 35 evidence:
+
+- `documents/DataVisualiser_Final_Convergence_Audit.md`
+- regenerated `project-tree.txt`
+- regenerated `codebase-index.md`
+- regenerated `dependency-summary.md`
+- regenerated `type-dependency-diagram.md`
+- dependency density: 0.7389%
+- `ChartDataContext` remains a high incoming hub with 166 incoming textual references
+- target spine is substantially used by production families through capability contracts, `VNextUiConsumptionContract`, `ConsumerSurfaceModel`, render-plan metadata, and provider qualification
+- Operation Chain consumes VNext-native derived-dataset surface output in core, while the UI tab remains display-only / empty until a workflow supplies a result
+- final convergence is not fully closed because main-chart `LegacyChartProgramProjector`, `VNextDataResolutionHelper`, `LegacyMetricViewGateway`, and strategy cut-over remain bounded production compatibility paths
+- validation evidence: `DataVisualiser.Tests` 1035 passed; `DataFileReader.Tests` 15 passed
+- manual smoke evidence: `documents/reachability-20260502-062913.json`
+
+Phase 35 status:
+
+Convergence progress is proven.
+Final closure is blocked by bounded production bridges that are documented with retirement conditions.
+Do not begin Phase 36+ formalisation as completed convergence unless the project explicitly accepts those bridges as bounded compatibility or runs a dedicated bridge-removal track.
 
 ---
 
@@ -2026,11 +2102,11 @@ updated documentation
 | 2026-05-01 | 28 | Retired Distribution legacy bridge path. | `documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md`; Distribution 64 passed; ArchitectureGuardrailTests 111 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; post-retirement smoke export confirmed. | Complete |
 | 2026-05-01 | 29 | Migrated production chart families through VNext-native consumption contract paths. | `documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md`; Distribution bridge retired; WeekdayTrend, BarPie, Transform, SyncfusionSunburst, Main, and Normalized smoke confirmed; Difference/Ratio automated and UI-smoke unavailable. | Complete |
 | 2026-05-01 | 30 | Elevated consumer-neutral surface model. | `documents/DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md`; focused contract/guardrail validation 128 passed; DataVisualiser 1030 passed; DataFileReader 15 passed. | Complete |
-| 2026-05-01 | 31 | Started UI / interaction / state thinning with Operation Chain workbench presentation seam. | `documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md`; OperationChainWorkbenchPresenter; architecture + Operation Chain UI validation 119 passed; DataVisualiser 1031 passed; DataFileReader 15 passed. | In progress |
-|  | 32 | Demote rendering / backend / vendor fully. | Delivery demotion audit. | Planned |
-|  | 33 | Consolidate capability / contract families. | Consolidation audit. | Planned |
-|  | 34 | Retire remaining legacy bypasses. | Remaining bypass retirement audit. | Planned |
-|  | 35 | Final convergence audit. | Fresh generated artifacts; full evidence set. | Planned |
+| 2026-05-01/2026-05-02 | 31 | Thinned UI / interaction / state layer and bounded terminal tooltip behavior. | `documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md`; OperationChainWorkbenchPresenter; empty Operation Chain smoke confirmed; DataVisualiser 1032 passed; DataFileReader 15 passed. | Complete |
+| 2026-05-02 | 32 | Demoted rendering / backend / vendor boundaries and bounded terminal-adjacent deferrals. | `documents/DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md`; focused vendor/delivery suite 150 passed; DataVisualiser 1033 passed; DataFileReader 15 passed. | Complete |
+| 2026-05-02 | 33 | Consolidated shared capability-contract shape while preserving family differences. | `documents/DataVisualiser_Capability_Contract_Consolidation_Audit.md`; `IAnalyticalCapabilityContract`; DataVisualiser 1034 passed; DataFileReader 15 passed. | Complete |
+| 2026-05-02 | 34 | Retired one safe legacy bypass and bounded remaining production/validation paths. | `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`; focused Phase 34 validation 11 passed; DataVisualiser 1035 passed; DataFileReader 15 passed. | Partial |
+| 2026-05-02 | 35 | Audited final convergence and identified bounded bridge blockers. | `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated structural artifacts; density 0.7389%; DataVisualiser 1035 passed; DataFileReader 15 passed; smoke export confirmed. | Partial |
 |  | 36-47 | Post-convergence formalisation and bounded-generativity phases. | Coverage matrix, construction algebra, typed relations, evidence sufficiency, analytical fitness, bounded search, and scenario-hardening artifacts. | Planned |
 
 ---

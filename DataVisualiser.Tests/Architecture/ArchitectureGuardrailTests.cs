@@ -103,6 +103,26 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void RemainingLegacyBypassRetirement_ShouldRemoveSeriesLoadProjectorBypassOnly()
+    {
+        var seriesCoordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainHost", "VNextSeriesLoadCoordinator.cs");
+        var mainCoordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainHost", "VNextMainChartIntegrationCoordinator.cs");
+        var auditSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md");
+
+        Assert.DoesNotContain("LegacyChartProgramProjector", seriesCoordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProjectToChartContext", seriesCoordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("BuildMetricData(program)", seriesCoordinatorSource, StringComparison.Ordinal);
+
+        Assert.Contains("LegacyChartProgramProjector", mainCoordinatorSource, StringComparison.Ordinal);
+        Assert.Contains("Main-chart ChartDataContext projection", auditSource, StringComparison.Ordinal);
+        Assert.Contains("Retired Bypass: VNextSeriesLoadCoordinator Single-Series Projector Detour", auditSource, StringComparison.Ordinal);
+        Assert.Contains("validation-only", auditSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void DistributionCapabilitySlice_ShouldRemainOwnedByTargetSpine()
     {
         var capabilitySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "VNext", "Contracts", "CapabilityRequest.cs");
@@ -1640,6 +1660,113 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("LiveCharts", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("Syncfusion", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("IReasoningEngine", viewSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void UiInteractionAndTooltipLayer_ShouldRemainTerminalAndNonAuthoritative()
+    {
+        var interactionFiles = Directory
+            .EnumerateFiles(
+                SourceTreeTestHelper.GetRepositoryPath("DataVisualiser", "UI", "Charts", "Interaction"),
+                "*.cs",
+                SearchOption.TopDirectoryOnly)
+            .ToArray();
+        var forbiddenTokens = new[]
+        {
+            "AnalyticalIntent",
+            "CapabilityRequest",
+            "ConsumerProviderRegistry",
+            "VNextUiConsumptionContract",
+            "OperationChainExecutor",
+            "IReasoningEngine",
+            "ChartDataContextBuilder",
+            "MainChartsEvidenceExportService",
+            "EvidenceDiagnosticsBuilder",
+            "StrategyCutOverService",
+            "CreateStrategy("
+        };
+
+        foreach (var file in interactionFiles)
+        {
+            var source = SourceTreeTestHelper.ReadRepositoryFile(file);
+            foreach (var token in forbiddenTokens)
+                Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void RenderingVendorDelivery_ShouldRemainTerminalAndReplaceable()
+    {
+        var upstreamFiles = Directory
+            .EnumerateFiles(
+                SourceTreeTestHelper.GetRepositoryPath("DataVisualiser", "VNext"),
+                "*.cs",
+                SearchOption.AllDirectories)
+            .ToArray();
+        var forbiddenUpstreamTokens = new[]
+        {
+            "using LiveCharts",
+            "using Syncfusion",
+            "using System.Windows",
+            "DataVisualiser.UI",
+            "CartesianChart",
+            "UserControl",
+            "WebView"
+        };
+
+        foreach (var file in upstreamFiles)
+        {
+            var source = SourceTreeTestHelper.ReadRepositoryFile(file);
+            foreach (var token in forbiddenUpstreamTokens)
+                Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+        }
+
+        var terminalAdapterFiles = new[]
+        {
+            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "Adapters", "LiveChartsRenderPlanAdapter.cs"),
+            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "Syncfusion", "SyncfusionSunburstRenderPlanAdapter.cs"),
+            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "Distribution", "DistributionRenderPlanAdapter.cs"),
+            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "WeekdayTrend", "WeekdayTrendRenderPlanAdapter.cs")
+        };
+        var forbiddenTerminalAuthorityTokens = new[]
+        {
+            "AnalyticalIntent",
+            "CapabilityRequest",
+            "VNextUiConsumptionContract",
+            "OperationChainExecutor",
+            "IReasoningEngine",
+            "MainChartsEvidenceExportService",
+            "EvidenceDiagnosticsBuilder"
+        };
+
+        foreach (var source in terminalAdapterFiles)
+        {
+            Assert.Contains("ChartRenderPlan", source, StringComparison.Ordinal);
+            foreach (var token in forbiddenTerminalAuthorityTokens)
+                Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+        }
+
+        var providerContractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "Contracts", "ConsumerProviderContract.cs");
+        var providerContractsSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "Contracts", "ConsumerProviderContracts.cs");
+        var consumptionContractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "Contracts", "VNextUiConsumptionContract.cs");
+        var auditSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md");
+
+        Assert.Contains("Supports(ConsumerDeliveryContract delivery, ChartRenderPlanKind? planKind = null)", providerContractSource, StringComparison.Ordinal);
+        Assert.Contains("LiveChartsWpf", providerContractsSource, StringComparison.Ordinal);
+        Assert.Contains("SyncfusionSunburst", providerContractsSource, StringComparison.Ordinal);
+        Assert.Contains("TabularSummaryChart", providerContractsSource, StringComparison.Ordinal);
+        Assert.Contains("EvidenceExport", providerContractsSource, StringComparison.Ordinal);
+        Assert.Contains("ApiResponse", providerContractsSource, StringComparison.Ordinal);
+        Assert.Contains("provider.Supports(delivery, renderPlanKind)", consumptionContractSource, StringComparison.Ordinal);
+        Assert.Contains("Operation Chain output is delivered", auditSource, StringComparison.Ordinal);
+        Assert.Contains("ChartRenderModel and selected rendering contracts remain terminal-adjacent", auditSource, StringComparison.Ordinal);
+        Assert.Contains("Some core rendering contracts still reference UI presentation/state interfaces", auditSource, StringComparison.Ordinal);
+        Assert.Contains("Some core rendering contracts still reference LiveCharts", auditSource, StringComparison.Ordinal);
+        Assert.Contains("No attempt is made here to replace the WPF host", auditSource, StringComparison.Ordinal);
     }
 
     [Fact]

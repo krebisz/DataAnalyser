@@ -21,7 +21,6 @@ public sealed class VNextSeriesLoadCoordinator
 {
     private readonly Func<ReasoningSessionCoordinator> _coordinatorFactory;
     private readonly AnalyticalIntentFactory _intentFactory = new();
-    private readonly LegacyChartProgramProjector _projector = new();
 
     public VNextSeriesLoadCoordinator(MetricSelectionService metricSelectionService)
     {
@@ -64,13 +63,12 @@ public sealed class VNextSeriesLoadCoordinator
             var execution = await coordinator.ExecuteAsync(intent, cancellationToken);
             var snapshot = execution.Snapshot;
             var program = execution.Program;
-            var projectedContext = _projector.ProjectToChartContext(program);
 
             var seriesSnapshot = snapshot.Series.Count > 0 ? snapshot.Series[0] : null;
 
             return new VNextSeriesLoadResult(
                 Success: true,
-                Data: projectedContext.Data1,
+                Data: BuildMetricData(program),
                 CmsSeries: seriesSnapshot?.CanonicalSeries,
                 DisplayName: series.DisplayName,
                 RequestSignature: snapshot.Request.Signature,
@@ -98,6 +96,25 @@ public sealed class VNextSeriesLoadCoordinator
             ProgramKind: programKind,
             ProgramSourceSignature: null,
             FailureReason: failureReason);
+    }
+
+    private static IReadOnlyList<MetricData> BuildMetricData(ChartProgram program)
+    {
+        var primarySeries = program.Series.Count > 0 ? program.Series[0] : null;
+        if (primarySeries == null)
+            return Array.Empty<MetricData>();
+
+        var result = new List<MetricData>(Math.Min(program.Timeline.Count, primarySeries.RawValues.Count));
+        for (var index = 0; index < Math.Min(program.Timeline.Count, primarySeries.RawValues.Count); index++)
+        {
+            result.Add(new MetricData
+            {
+                NormalizedTimestamp = program.Timeline[index],
+                Value = double.IsNaN(primarySeries.RawValues[index]) ? null : Convert.ToDecimal(primarySeries.RawValues[index])
+            });
+        }
+
+        return result;
     }
 
 }

@@ -1,6 +1,6 @@
 ﻿# Codebase Index
 
-Generated: 2026-04-30 21:19:52  
+Generated: 2026-05-02 08:33:07  
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
@@ -17,11 +17,11 @@ This file is auto-generated.
 
 - DataFileReader: 83 symbols
 - DataFileReader.Tests: 6 symbols
-- DataVisualiser: 741 symbols
-- DataVisualiser.Tests: 188 symbols
+- DataVisualiser: 767 symbols
+- DataVisualiser.Tests: 192 symbols
 
 - nested: 10 symbols
-- top-level: 1008 symbols
+- top-level: 1038 symbols
 
 ------------------------------------------------------
 
@@ -154,7 +154,7 @@ This file is auto-generated.
 | DataVisualiser | class | WeekdayTrendChartUpdateCoordinator | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 9 | .\DataVisualiser\Core\Orchestration\WeekdayTrendChartUpdateCoordinator.cs |
 | DataVisualiser | interface | ICartesianMetricChartRenderInvoker | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\ICartesianMetricChartRenderInvoker.cs |
 | DataVisualiser | interface | ITransformChartRenderInvoker | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\ITransformChartRenderInvoker.cs |
-| DataVisualiser | record | ChartUpdateRequest | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\ChartUpdateRequest.cs |
+| DataVisualiser | record | ChartUpdateRequest | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\ChartUpdateRequest.cs |
 | DataVisualiser | record | MetricLoadRequest | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MetricLoadRequest.cs |
 | DataVisualiser | record | PrimaryChartRenderRequest | public | top-level |  | DataVisualiser.Core.Orchestration | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\PrimaryChartRenderRequest.cs |
 | DataVisualiser | class | DistributionChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\DistributionCharts\DistributionChartOrchestrationPipeline.cs |
@@ -167,7 +167,7 @@ This file is auto-generated.
 | DataVisualiser | record | DistributionChartPreparedData | public | top-level |  | DataVisualiser.Core.Orchestration.DistributionCharts | file-scoped | 12 | .\DataVisualiser\Core\Orchestration\DistributionCharts\DistributionChartOrchestrationRequest.cs |
 | DataVisualiser | class | MainChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartOrchestrationPipeline.cs |
 | DataVisualiser | class | MainChartPreparationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartPreparationStage.cs |
-| DataVisualiser | class | MainChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartRenderInvocationStage.cs |
+| DataVisualiser | class | MainChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartRenderInvocationStage.cs |
 | DataVisualiser | class | MainChartStrategySelectionStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartStrategySelectionStage.cs |
 | DataVisualiser | interface | IMainChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\MainChart\IMainChartOrchestrationPipeline.cs |
 | DataVisualiser | interface | IMainChartPreparationStage | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 10 | .\DataVisualiser\Core\Orchestration\MainChart\IMainChartOrchestrationPipeline.cs |
@@ -177,7 +177,7 @@ This file is auto-generated.
 | DataVisualiser | record | MainChartRenderRequest | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 15 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartPreparedData.cs |
 | DataVisualiser | record | MainChartStrategyPlan | public | top-level |  | DataVisualiser.Core.Orchestration.MainChart | file-scoped | 26 | .\DataVisualiser\Core\Orchestration\MainChart\MainChartPreparedData.cs |
 | DataVisualiser | class | SecondaryMetricChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 8 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartOrchestrationPipeline.cs |
-| DataVisualiser | class | SecondaryMetricChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartRenderInvocationStage.cs |
+| DataVisualiser | class | SecondaryMetricChartRenderInvocationStage | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 6 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartRenderInvocationStage.cs |
 | DataVisualiser | class | SecondaryMetricChartStrategySelectionStage | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartStrategySelectionStage.cs |
 | DataVisualiser | enum | SecondaryMetricChartRoute | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 5 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\SecondaryMetricChartRenderRequest.cs |
 | DataVisualiser | interface | ISecondaryMetricChartOrchestrationPipeline | public | top-level |  | DataVisualiser.Core.Orchestration.SecondaryCharts | file-scoped | 4 | .\DataVisualiser\Core\Orchestration\SecondaryCharts\ISecondaryMetricChartOrchestrationPipeline.cs |
@@ -196,47 +196,50 @@ This file is auto-generated.
 | DataVisualiser | class | BarPieRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingContract.cs |
 | DataVisualiser | class | BarPieRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingQualificationProbe.cs |
 | DataVisualiser | class | BarPieRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingRouteResolver.cs |
-| DataVisualiser | class | BarPieRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 72 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | class | BarPieRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 135 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | class | BarPieVNextConsumptionContractBuilder | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 73 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
 | DataVisualiser | enum | BarPieRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 20 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
 | DataVisualiser | enum | BarPieRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 14 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
 | DataVisualiser | interface | IBarPieRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\IBarPieRenderingContract.cs |
 | DataVisualiser | record | BarPieBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 4 | .\DataVisualiser\Core\Rendering\BarPie\BarPieBackendQualification.cs |
-| DataVisualiser | record | BarPieCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 31 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
-| DataVisualiser | record | BarPieChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 66 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | record | BarPieCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 32 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
+| DataVisualiser | record | BarPieChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 67 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
 | DataVisualiser | record | BarPieChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 26 | .\DataVisualiser\Core\Rendering\Contracts\BarPie\BarPieRenderingTypes.cs |
 | DataVisualiser | record | BarPieRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingCapabilities.cs |
 | DataVisualiser | record | BarPieRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.BarPie | file-scoped | 2 | .\DataVisualiser\Core\Rendering\BarPie\BarPieRenderingQualificationProbeResult.cs |
-| DataVisualiser | class | CartesianMetricChartRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 10 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | class | CartesianMetricChartRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 11 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
 | DataVisualiser | class | CartesianMetricChartRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 5 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingQualificationProbe.cs |
 | DataVisualiser | class | CartesianMetricRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 8 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricRenderPlanBuilder.cs |
-| DataVisualiser | enum | CartesianMetricBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 113 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
-| DataVisualiser | enum | CartesianMetricChartRoute | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 149 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
-| DataVisualiser | enum | CartesianMetricRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 142 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | class | CartesianMetricVNextConsumptionContractBuilder | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 172 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | enum | CartesianMetricBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 114 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | enum | CartesianMetricChartRoute | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 150 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | enum | CartesianMetricRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 143 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
 | DataVisualiser | interface | ICartesianMetricChartRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\ICartesianMetricChartRenderingContract.cs |
-| DataVisualiser | record | CartesianMetricBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 120 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
-| DataVisualiser | record | CartesianMetricCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 170 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
-| DataVisualiser | record | CartesianMetricChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 156 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 121 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 232 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 157 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
 | DataVisualiser | record | CartesianMetricChartRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 115 | .\DataVisualiser\Core\Rendering\CartesianMetrics\CartesianMetricChartRenderingQualificationProbe.cs |
-| DataVisualiser | record | CartesianMetricChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 160 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
-| DataVisualiser | record | CartesianMetricRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 132 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
-| DataVisualiser | class | DistributionBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 231 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 161 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | record | CartesianMetricRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.CartesianMetrics | file-scoped | 133 | .\DataVisualiser\Core\Rendering\Contracts\CartesianMetrics\CartesianMetricChartRenderingContract.cs |
+| DataVisualiser | class | DistributionBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 226 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
 | DataVisualiser | class | DistributionRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 17 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
 | DataVisualiser | class | DistributionRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingQualificationProbe.cs |
-| DataVisualiser | class | DistributionRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 273 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | class | DistributionRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 268 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
 | DataVisualiser | class | DistributionRenderPlanAdapter | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderPlanAdapter.cs |
-| DataVisualiser | class | DistributionRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 342 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
-| DataVisualiser | enum | DistributionRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 260 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
-| DataVisualiser | enum | DistributionRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 267 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | class | DistributionRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 399 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | class | DistributionVNextConsumptionContractBuilder | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 338 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | enum | DistributionRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 255 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | enum | DistributionRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 262 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
 | DataVisualiser | interface | IDistributionPolarProjectionInteraction | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionPolarProjectionInteraction.cs |
 | DataVisualiser | interface | IDistributionPolarProjectionInteractionFactory | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 10 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionPolarProjectionInteraction.cs |
 | DataVisualiser | interface | IDistributionRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\IDistributionRenderingContract.cs |
-| DataVisualiser | record | DistributionBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 238 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
-| DataVisualiser | record | DistributionCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 297 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
-| DataVisualiser | record | DistributionChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 332 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
-| DataVisualiser | record | DistributionChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 283 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
-| DataVisualiser | record | DistributionRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 250 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 233 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 293 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 328 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 278 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 245 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
 | DataVisualiser | record | DistributionRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 132 | .\DataVisualiser\Core\Rendering\Distribution\DistributionRenderingQualificationProbe.cs |
-| DataVisualiser | record | DistributionRenderSurface | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 338 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
+| DataVisualiser | record | DistributionRenderSurface | public | top-level |  | DataVisualiser.Core.Rendering.Distribution | file-scoped | 334 | .\DataVisualiser\Core\Rendering\Contracts\Distribution\DistributionRenderingContract.cs |
 | DataVisualiser | class | ChartRenderEngine | public | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 12 | .\DataVisualiser\Core\Rendering\Engines\ChartRenderEngine.cs |
 | DataVisualiser | class | DistributionPolarRenderingService | public | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 12 | .\DataVisualiser\Core\Rendering\Engines\DistributionPolarRenderingService.cs |
 | DataVisualiser | class | FrequencyRendererCore | internal | top-level |  | DataVisualiser.Core.Rendering.Engines | file-scoped | 9 | .\DataVisualiser\Core\Rendering\Engines\FrequencyRendererCore.cs |
@@ -262,17 +265,18 @@ This file is auto-generated.
 | DataVisualiser | class | WeeklyIntervalRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Shading\WeeklyIntervalRenderer.cs |
 | DataVisualiser | interface | IFrequencyShadingRenderer | public | top-level |  | DataVisualiser.Core.Rendering.Shading | file-scoped | 6 | .\DataVisualiser\Core\Rendering\Shading\IFrequencyShadingRenderer.cs |
 | DataVisualiser | class | SyncfusionSunburstBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
-| DataVisualiser | class | SyncfusionSunburstRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingContract.cs |
+| DataVisualiser | class | SyncfusionSunburstRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingContract.cs |
 | DataVisualiser | class | SyncfusionSunburstRenderPlanAdapter | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Syncfusion\SyncfusionSunburstRenderPlanAdapter.cs |
-| DataVisualiser | class | SyncfusionSunburstRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 79 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
+| DataVisualiser | class | SyncfusionSunburstRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 120 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
+| DataVisualiser | class | SyncfusionSunburstVNextConsumptionContractBuilder | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 80 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
 | DataVisualiser | enum | SyncfusionSunburstRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 10 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
 | DataVisualiser | interface | ISyncfusionSunburstRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\ISyncfusionSunburstRenderingContract.cs |
 | DataVisualiser | interface | ISyncfusionSunburstRenderTarget | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 20 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
 | DataVisualiser | record | SyncfusionSunburstCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 27 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
-| DataVisualiser | record | SyncfusionSunburstChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 71 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
+| DataVisualiser | record | SyncfusionSunburstChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 72 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
 | DataVisualiser | record | SyncfusionSunburstChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 62 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
 | DataVisualiser | record | SyncfusionSunburstItem | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 15 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
-| DataVisualiser | record | SyncfusionSunburstRenderSurface | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 75 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
+| DataVisualiser | record | SyncfusionSunburstRenderSurface | public | top-level |  | DataVisualiser.Core.Rendering.Syncfusion | file-scoped | 76 | .\DataVisualiser\Core\Rendering\Contracts\Syncfusion\SyncfusionSunburstRenderingTypes.cs |
 | DataVisualiser | class | ChartTooltipCumulativeFormatter | internal | top-level |  | DataVisualiser.Core.Rendering.Tooltip | file-scoped | 7 | .\DataVisualiser\Core\Rendering\Tooltip\ChartTooltipCumulativeFormatter.cs |
 | DataVisualiser | class | ChartTooltipFormattingHelper | internal | top-level |  | DataVisualiser.Core.Rendering.Tooltip | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Tooltip\ChartTooltipFormattingHelper.cs |
 | DataVisualiser | class | ChartTooltipPairFormatter | internal | top-level |  | DataVisualiser.Core.Rendering.Tooltip | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Tooltip\ChartTooltipPairFormatter.cs |
@@ -282,32 +286,34 @@ This file is auto-generated.
 | DataVisualiser | class | ChartTooltipValueFormatter | internal | top-level |  | DataVisualiser.Core.Rendering.Tooltip | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Tooltip\ChartTooltipValueFormatter.cs |
 | DataVisualiser | class | TransformRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingContract.cs |
 | DataVisualiser | class | TransformRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 5 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingQualificationProbe.cs |
-| DataVisualiser | enum | TransformBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 8 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
-| DataVisualiser | enum | TransformRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 18 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
-| DataVisualiser | enum | TransformRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 13 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | class | TransformVNextConsumptionContractBuilder | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 75 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | enum | TransformBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 9 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | enum | TransformRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 19 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | enum | TransformRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 14 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
 | DataVisualiser | interface | ITransformRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Contracts\Transform\ITransformRenderingContract.cs |
 | DataVisualiser | record | TransformBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\TransformBackendQualification.cs |
-| DataVisualiser | record | TransformCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 35 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
-| DataVisualiser | record | TransformChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 74 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
-| DataVisualiser | record | TransformChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 25 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | record | TransformCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 36 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | record | TransformChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 116 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
+| DataVisualiser | record | TransformChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 26 | .\DataVisualiser\Core\Rendering\Contracts\Transform\TransformRenderingTypes.cs |
 | DataVisualiser | record | TransformRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingCapabilities.cs |
 | DataVisualiser | record | TransformRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.Transform | file-scoped | 2 | .\DataVisualiser\Core\Rendering\Transform\TransformRenderingQualificationProbeResult.cs |
-| DataVisualiser | class | WeekdayTrendBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 139 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | class | WeekdayTrendBackendKey | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 144 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
 | DataVisualiser | class | WeekdayTrendRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 10 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
 | DataVisualiser | class | WeekdayTrendRenderingQualificationProbe | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 5 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingQualificationProbe.cs |
-| DataVisualiser | class | WeekdayTrendRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 178 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | class | WeekdayTrendRenderingRouteResolver | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 183 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
 | DataVisualiser | class | WeekdayTrendRenderPlanAdapter | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 4 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderPlanAdapter.cs |
-| DataVisualiser | class | WeekdayTrendRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 242 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
-| DataVisualiser | enum | WeekdayTrendRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 166 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
-| DataVisualiser | enum | WeekdayTrendRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 171 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | class | WeekdayTrendRenderPlanBuilder | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 308 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | class | WeekdayTrendVNextConsumptionContractBuilder | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 248 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | enum | WeekdayTrendRenderingQualification | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 171 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | enum | WeekdayTrendRenderingRoute | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 176 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
 | DataVisualiser | interface | IWeekdayTrendRenderingContract | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 4 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\IWeekdayTrendRenderingContract.cs |
-| DataVisualiser | record | WeekdayTrendBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 146 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
-| DataVisualiser | record | WeekdayTrendCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 198 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
-| DataVisualiser | record | WeekdayTrendChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 233 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
-| DataVisualiser | record | WeekdayTrendChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 191 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
-| DataVisualiser | record | WeekdayTrendRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 157 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendBackendQualification | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 151 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendCapabilityContract | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 204 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendChartRenderHost | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 239 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendChartRenderRequest | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 196 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendRenderingCapabilities | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 162 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
 | DataVisualiser | record | WeekdayTrendRenderingQualificationProbeResult | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 128 | .\DataVisualiser\Core\Rendering\WeekdayTrend\WeekdayTrendRenderingQualificationProbe.cs |
-| DataVisualiser | record | WeekdayTrendRenderSurface | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 238 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
+| DataVisualiser | record | WeekdayTrendRenderSurface | public | top-level |  | DataVisualiser.Core.Rendering.WeekdayTrend | file-scoped | 244 | .\DataVisualiser\Core\Rendering\Contracts\WeekdayTrend\WeekdayTrendRenderingContract.cs |
 | DataVisualiser | class | BaseDistributionService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 18 | .\DataVisualiser\Core\Services\BaseDistributionService.cs |
 | DataVisualiser | class | DataPreparationService | public | top-level |  | DataVisualiser.Core.Services | file-scoped | 8 | .\DataVisualiser\Core\Services\DataPreparationService.cs |
 | DataVisualiser | class | DistributionComputationHelper | internal | top-level |  | DataVisualiser.Core.Services | file-scoped | 6 | .\DataVisualiser\Core\Services\DistributionComputationHelper.cs |
@@ -573,14 +579,14 @@ This file is auto-generated.
 | DataVisualiser | interface | IWeekdayTrendChartControllerExtras | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 2 | .\DataVisualiser\UI\Charts\Presentation\IWeekdayTrendChartControllerExtras.cs |
 | DataVisualiser | interface | IWpfCartesianChartHost | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\IWpfCartesianChartHost.cs |
 | DataVisualiser | interface | IWpfChartPanelHost | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 4 | .\DataVisualiser\UI\Charts\Presentation\IWpfChartPanelHost.cs |
-| DataVisualiser | record | ChartControllerFactoryContext | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 176 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
-| DataVisualiser | record | ChartControllerFactoryResult | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 201 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
+| DataVisualiser | record | ChartControllerFactoryContext | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 175 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
+| DataVisualiser | record | ChartControllerFactoryResult | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 200 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
 | DataVisualiser | record | DistributionRenderInput | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 75 | .\DataVisualiser\UI\Charts\Presentation\DistributionRenderInputBuilder.cs |
 | DataVisualiser | record | struct | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 48 | .\DataVisualiser\UI\Charts\Presentation\RenderingHostLifecycleAdapterHelper.cs |
 | DataVisualiser | record | SunburstBucket | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 168 | .\DataVisualiser\UI\Charts\Presentation\SyncfusionSunburstRenderModelBuilder.cs |
 | DataVisualiser | record | SunburstBucketPlan | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 170 | .\DataVisualiser\UI\Charts\Presentation\SyncfusionSunburstRenderModelBuilder.cs |
 | DataVisualiser | record | SunburstSeriesTotals | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 166 | .\DataVisualiser\UI\Charts\Presentation\SyncfusionSunburstRenderModelBuilder.cs |
-| DataVisualiser | record | SyncfusionChartControllerFactoryResult | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 211 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
+| DataVisualiser | record | SyncfusionChartControllerFactoryResult | public | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 210 | .\DataVisualiser\UI\Charts\Presentation\ChartControllerFactory.cs |
 | DataVisualiser | record | SyncfusionSunburstRenderModel | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 172 | .\DataVisualiser\UI\Charts\Presentation\SyncfusionSunburstRenderModelBuilder.cs |
 | DataVisualiser | record | TransformDataPanelControllerAdapterComposition | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 57 | .\DataVisualiser\UI\Charts\Presentation\TransformDataPanelControllerAdapterCompositionFactory.cs |
 | DataVisualiser | record | TransformExecutionResult | internal | top-level |  | DataVisualiser.UI.Charts.Presentation | file-scoped | 16 | .\DataVisualiser\UI\Charts\Presentation\TransformExecutionModels.cs |
@@ -721,6 +727,11 @@ This file is auto-generated.
 | DataVisualiser | interface | IReachabilityExportPathResolver | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 2 | .\DataVisualiser\UI\MainHost\Export\IReachabilityExportPathResolver.cs |
 | DataVisualiser | record | ReachabilityEvidenceExportResult | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 2 | .\DataVisualiser\UI\MainHost\Export\ReachabilityEvidenceExportResult.cs |
 | DataVisualiser | record | Result | public | top-level |  | DataVisualiser.UI.MainHost.Export | file-scoped | 8 | .\DataVisualiser\UI\MainHost\Export\ReachabilityExportWriter.cs |
+| DataVisualiser | class | OperationChainWorkbenchPresenter | internal | top-level |  | DataVisualiser.UI.OperationChain | file-scoped | 4 | .\DataVisualiser\UI\OperationChain\OperationChainWorkbenchPresenter.cs |
+| DataVisualiser | class | OperationChainWorkbenchView | public | top-level |  | DataVisualiser.UI.OperationChain | file-scoped | 5 | .\DataVisualiser\UI\OperationChain\OperationChainWorkbenchView.xaml.cs |
+| DataVisualiser | record | OperationChainDatasetRow | internal | top-level |  | DataVisualiser.UI.OperationChain | file-scoped | 39 | .\DataVisualiser\UI\OperationChain\OperationChainWorkbenchPresenter.cs |
+| DataVisualiser | record | OperationChainTraceRow | internal | top-level |  | DataVisualiser.UI.OperationChain | file-scoped | 37 | .\DataVisualiser\UI\OperationChain\OperationChainWorkbenchPresenter.cs |
+| DataVisualiser | record | OperationChainWorkbenchPresentation | internal | top-level |  | DataVisualiser.UI.OperationChain | file-scoped | 31 | .\DataVisualiser\UI\OperationChain\OperationChainWorkbenchPresenter.cs |
 | DataVisualiser | class | ChartState | public | top-level |  | DataVisualiser.UI.State | file-scoped | 10 | .\DataVisualiser\UI\State\ChartState.cs |
 | DataVisualiser | class | ChartVisibilityHelper | public | top-level |  | DataVisualiser.UI.State | file-scoped | 4 | .\DataVisualiser\UI\State\ChartVisibilityHelper.cs |
 | DataVisualiser | class | DistributionModeCatalog | public | top-level |  | DataVisualiser.UI.State | file-scoped | 4 | .\DataVisualiser\UI\State\DistributionModeCatalog.cs |
@@ -768,6 +779,7 @@ This file is auto-generated.
 | DataVisualiser | class | LegacyChartProgramProjector | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 6 | .\DataVisualiser\VNext\Application\LegacyChartProgramProjector.cs |
 | DataVisualiser | class | LegacyMetricViewGateway | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\LegacyMetricViewGateway.cs |
 | DataVisualiser | class | MetricSelectionServiceSeriesLoader | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\MetricSelectionServiceSeriesLoader.cs |
+| DataVisualiser | class | OperationChainExecutor | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\OperationChainExecutor.cs |
 | DataVisualiser | class | ReasoningEngine | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\ReasoningEngine.cs |
 | DataVisualiser | class | ReasoningEngineFactory | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\ReasoningEngineFactory.cs |
 | DataVisualiser | class | ReasoningSessionCoordinator | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\ReasoningSessionCoordinator.cs |
@@ -779,6 +791,7 @@ This file is auto-generated.
 | DataVisualiser | record | ConsumerDeliveryEvidence | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\ConsumerDeliveryEvidence.cs |
 | DataVisualiser | record | LoadedMetricSeries | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 6 | .\DataVisualiser\VNext\Application\IMetricSeriesLoader.cs |
 | DataVisualiser | class | ChartProgramDeliveryTargetResolver | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\ChartProgramDeliveryTargetResolver.cs |
+| DataVisualiser | class | ChartRenderPlanConsumptionContractMetadata | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\ChartRenderPlanConsumptionContractMetadata.cs |
 | DataVisualiser | class | ConsumerProviderContracts | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\ConsumerProviderContracts.cs |
 | DataVisualiser | class | ConsumerProviderRegistry | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\ConsumerProviderRegistry.cs |
 | DataVisualiser | enum | AnalyticalAuthority | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 49 | .\DataVisualiser\VNext\Contracts\AnalyticalVocabulary.cs |
@@ -789,11 +802,13 @@ This file is auto-generated.
 | DataVisualiser | enum | ConfidenceAnnotationKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 68 | .\DataVisualiser\VNext\Contracts\AnalyticalVocabulary.cs |
 | DataVisualiser | enum | ConfidenceSeverity | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 75 | .\DataVisualiser\VNext\Contracts\AnalyticalVocabulary.cs |
 | DataVisualiser | enum | ConsumerKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\AnalyticalVocabulary.cs |
+| DataVisualiser | enum | ConsumerSurfaceModelKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\ConsumerSurfaceModel.cs |
 | DataVisualiser | enum | DataViewKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\DataViewKind.cs |
 | DataVisualiser | enum | InteractionKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 20 | .\DataVisualiser\VNext\Contracts\AnalyticalVocabulary.cs |
 | DataVisualiser | enum | OverlayKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 11 | .\DataVisualiser\VNext\Contracts\AnalyticalVocabulary.cs |
 | DataVisualiser | enum | ProvenanceTrustClass | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 57 | .\DataVisualiser\VNext\Contracts\AnalyticalVocabulary.cs |
 | DataVisualiser | enum | SeriesOperationKind | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\SeriesOperationRequest.cs |
+| DataVisualiser | interface | IAnalyticalCapabilityContract | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\IAnalyticalCapabilityContract.cs |
 | DataVisualiser | record | AnalyticalExecutionResult | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\AnalyticalExecutionResult.cs |
 | DataVisualiser | record | AnalyticalIntent | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\AnalyticalIntent.cs |
 | DataVisualiser | record | AnalyticalIntentSet | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\AnalyticalIntentSet.cs |
@@ -809,14 +824,25 @@ This file is auto-generated.
 | DataVisualiser | record | ConfidenceAnnotationSet | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 18 | .\DataVisualiser\VNext\Contracts\ConfidenceAnnotation.cs |
 | DataVisualiser | record | ConsumerDeliveryContract | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\ConsumerDeliveryContract.cs |
 | DataVisualiser | record | ConsumerProviderContract | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\ConsumerProviderContract.cs |
+| DataVisualiser | record | ConsumerSurfaceModel | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 14 | .\DataVisualiser\VNext\Contracts\ConsumerSurfaceModel.cs |
+| DataVisualiser | record | DerivedDataset | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 91 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
 | DataVisualiser | record | InteractionRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\InteractionRequest.cs |
 | DataVisualiser | record | MetricLoadSnapshot | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\MetricLoadSnapshot.cs |
 | DataVisualiser | record | MetricSelectionRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\MetricSelectionRequest.cs |
 | DataVisualiser | record | MetricSeriesRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\MetricSeriesRequest.cs |
 | DataVisualiser | record | MetricSeriesSnapshot | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 5 | .\DataVisualiser\VNext\Contracts\MetricSeriesSnapshot.cs |
+| DataVisualiser | record | OperationChainEvidence | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 119 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
+| DataVisualiser | record | OperationChainExecutionPlan | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 81 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
+| DataVisualiser | record | OperationChainProgram | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 74 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
+| DataVisualiser | record | OperationChainRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
+| DataVisualiser | record | OperationChainResult | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 128 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
+| DataVisualiser | record | OperationChainStep | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 39 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
+| DataVisualiser | record | OperationChainTrace | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 114 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
+| DataVisualiser | record | OperationChainTraceEntry | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 101 | .\DataVisualiser\VNext\Contracts\OperationChainContracts.cs |
 | DataVisualiser | record | OverlayPlan | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\OverlayPlan.cs |
 | DataVisualiser | record | ProvenanceDescriptor | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\ProvenanceDescriptor.cs |
 | DataVisualiser | record | SeriesOperationRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 14 | .\DataVisualiser\VNext\Contracts\SeriesOperationRequest.cs |
+| DataVisualiser | record | VNextUiConsumptionContract | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 4 | .\DataVisualiser\VNext\Contracts\VNextUiConsumptionContract.cs |
 | DataVisualiser | record | WorkflowPlanRequest | public | top-level |  | DataVisualiser.VNext.Contracts | file-scoped | 2 | .\DataVisualiser\VNext\Contracts\WorkflowPlanRequest.cs |
 | DataVisualiser | class | OperationKernel | public | top-level |  | DataVisualiser.VNext.Kernel | file-scoped | 4 | .\DataVisualiser\VNext\Kernel\OperationKernel.cs |
 | DataVisualiser | class | TimeSeriesAlignmentKernel | public | top-level |  | DataVisualiser.VNext.Kernel | file-scoped | 20 | .\DataVisualiser\VNext\Kernel\TimeSeriesAlignmentKernel.cs |
@@ -861,7 +887,7 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | SunburstTooltipConvertersTests | public | top-level |  | DataVisualiser.Tests.Converters | file-scoped | 5 | .\DataVisualiser.Tests\Converters\SunburstTooltipConvertersTests.cs |
 | DataVisualiser.Tests | class | BarPieRenderingContractTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 10 | .\DataVisualiser.Tests\Core\Rendering\BarPieRenderingContractTests.cs |
 | DataVisualiser.Tests | class | BarPieRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 8 | .\DataVisualiser.Tests\Core\Rendering\BarPieRenderingQualificationProbeTests.cs |
-| DataVisualiser.Tests | class | CartesianMetricChartRenderingContractTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 11 | .\DataVisualiser.Tests\Core\Rendering\CartesianMetricChartRenderingContractTests.cs |
+| DataVisualiser.Tests | class | CartesianMetricChartRenderingContractTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 12 | .\DataVisualiser.Tests\Core\Rendering\CartesianMetricChartRenderingContractTests.cs |
 | DataVisualiser.Tests | class | CartesianMetricChartRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 12 | .\DataVisualiser.Tests\Core\Rendering\CartesianMetricChartRenderingQualificationProbeTests.cs |
 | DataVisualiser.Tests | class | ChartRendererResolverTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 7 | .\DataVisualiser.Tests\Core\Rendering\ChartRendererResolverTests.cs |
 | DataVisualiser.Tests | class | ChartSeriesLabelFormatterTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 5 | .\DataVisualiser.Tests\Core\Rendering\ChartSeriesLabelFormatterTests.cs |
@@ -874,7 +900,7 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | LiveChartsChartRendererTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 13 | .\DataVisualiser.Tests\Core\Rendering\LiveChartsChartRendererTests.cs |
 | DataVisualiser.Tests | class | PieFacetLegendToggleManagerTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 10 | .\DataVisualiser.Tests\Core\Rendering\PieFacetLegendToggleManagerTests.cs |
 | DataVisualiser.Tests | class | SyncfusionSunburstRenderingContractTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 6 | .\DataVisualiser.Tests\Core\Rendering\SyncfusionSunburstRenderingContractTests.cs |
-| DataVisualiser.Tests | class | TransformRenderingContractTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 13 | .\DataVisualiser.Tests\Core\Rendering\TransformRenderingContractTests.cs |
+| DataVisualiser.Tests | class | TransformRenderingContractTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 14 | .\DataVisualiser.Tests\Core\Rendering\TransformRenderingContractTests.cs |
 | DataVisualiser.Tests | class | TransformRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 13 | .\DataVisualiser.Tests\Core\Rendering\TransformRenderingQualificationProbeTests.cs |
 | DataVisualiser.Tests | class | WeekdayTrendRenderingContractTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 13 | .\DataVisualiser.Tests\Core\Rendering\WeekdayTrendRenderingContractTests.cs |
 | DataVisualiser.Tests | class | WeekdayTrendRenderingQualificationProbeTests | public | top-level |  | DataVisualiser.Tests.Core.Rendering | file-scoped | 12 | .\DataVisualiser.Tests\Core\Rendering\WeekdayTrendRenderingQualificationProbeTests.cs |
@@ -899,8 +925,8 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | VNextTestStubs | public | top-level |  | DataVisualiser.Tests.Helpers.Infrastructure | file-scoped | 7 | .\DataVisualiser.Tests\Helpers\Infrastructure\VNextTestStubs.cs |
 | DataVisualiser.Tests | class | ChartCumulativeSeriesBuilderTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 6 | .\DataVisualiser.Tests\Orchestration\ChartCumulativeSeriesBuilderTests.cs |
 | DataVisualiser.Tests | class | ChartDataContextBuilderTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 7 | .\DataVisualiser.Tests\Orchestration\ChartDataContextBuilderTests.cs |
-| DataVisualiser.Tests | class | ChartRenderingOrchestratorTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 21 | .\DataVisualiser.Tests\Orchestration\ChartRenderingOrchestratorTests.cs |
-| DataVisualiser.Tests | class | ChartUpdateCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 20 | .\DataVisualiser.Tests\Orchestration\ChartUpdateCoordinatorTests.cs |
+| DataVisualiser.Tests | class | ChartRenderingOrchestratorTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 22 | .\DataVisualiser.Tests\Orchestration\ChartRenderingOrchestratorTests.cs |
+| DataVisualiser.Tests | class | ChartUpdateCoordinatorTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 21 | .\DataVisualiser.Tests\Orchestration\ChartUpdateCoordinatorTests.cs |
 | DataVisualiser.Tests | class | ChartYAxisDataBuilderTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 6 | .\DataVisualiser.Tests\Orchestration\ChartYAxisDataBuilderTests.cs |
 | DataVisualiser.Tests | class | DistributionChartOrchestrationPipelineTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 15 | .\DataVisualiser.Tests\Orchestration\DistributionChartOrchestrationPipelineTests.cs |
 | DataVisualiser.Tests | class | MainChartPreparationStageTests | public | top-level |  | DataVisualiser.Tests.Orchestration | file-scoped | 9 | .\DataVisualiser.Tests\Orchestration\MainChartPreparationStageTests.cs |
@@ -1006,6 +1032,7 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | ReachabilityExportPathResolverTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 6 | .\DataVisualiser.Tests\UI\MainHost\ReachabilityExportPathResolverTests.cs |
 | DataVisualiser.Tests | class | ReachabilityExportWriterTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 5 | .\DataVisualiser.Tests\UI\MainHost\ReachabilityExportWriterTests.cs |
 | DataVisualiser.Tests | class | UiBusyScopeLeaseTests | public | top-level |  | DataVisualiser.Tests.UI.MainHost | file-scoped | 4 | .\DataVisualiser.Tests\UI\MainHost\UiBusyScopeLeaseTests.cs |
+| DataVisualiser.Tests | class | OperationChainWorkbenchPresenterTests | public | top-level |  | DataVisualiser.Tests.UI.OperationChain | file-scoped | 5 | .\DataVisualiser.Tests\UI\OperationChain\OperationChainWorkbenchPresenterTests.cs |
 | DataVisualiser.Tests | class | SyncfusionChartsViewCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.Syncfusion | file-scoped | 8 | .\DataVisualiser.Tests\UI\Syncfusion\SyncfusionChartsViewCoordinatorTests.cs |
 | DataVisualiser.Tests | class | SyncfusionChartsViewLoadCoordinatorTests | public | top-level |  | DataVisualiser.Tests.UI.Syncfusion | file-scoped | 5 | .\DataVisualiser.Tests\UI\Syncfusion\SyncfusionChartsViewLoadCoordinatorTests.cs |
 | DataVisualiser.Tests | class | SyncfusionTooltipReflectionHelperTests | public | top-level |  | DataVisualiser.Tests.UI.Syncfusion | file-scoped | 4 | .\DataVisualiser.Tests\UI\Syncfusion\SyncfusionTooltipReflectionHelperTests.cs |
@@ -1025,6 +1052,7 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | AnalyticalIntentFactoryTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\AnalyticalIntentFactoryTests.cs |
 | DataVisualiser.Tests | class | AnalyticalInterpretationBuilderTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\AnalyticalInterpretationBuilderTests.cs |
 | DataVisualiser.Tests | class | AnalyticalRenderPlanPipelineTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 8 | .\DataVisualiser.Tests\VNext\AnalyticalRenderPlanPipelineTests.cs |
+| DataVisualiser.Tests | class | CapabilityContractConsolidationTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 11 | .\DataVisualiser.Tests\VNext\CapabilityContractConsolidationTests.cs |
 | DataVisualiser.Tests | class | ChartProgramDeliveryTargetResolverTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 4 | .\DataVisualiser.Tests\VNext\ChartProgramDeliveryTargetResolverTests.cs |
 | DataVisualiser.Tests | class | ChartProgramPlannerTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 7 | .\DataVisualiser.Tests\VNext\ChartProgramPlannerTests.cs |
 | DataVisualiser.Tests | class | ChartRenderPlanAdapterTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\ChartRenderPlanAdapterTests.cs |
@@ -1037,6 +1065,7 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | InterpretiveOverlayPlannerTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\InterpretiveOverlayPlannerTests.cs |
 | DataVisualiser.Tests | class | LegacyChartProgramProjectorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\LegacyChartProgramProjectorTests.cs |
 | DataVisualiser.Tests | class | LegacyMetricViewGatewayTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\LegacyMetricViewGatewayTests.cs |
+| DataVisualiser.Tests | class | OperationChainExecutorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\OperationChainExecutorTests.cs |
 | DataVisualiser.Tests | class | OperationKernelTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\OperationKernelTests.cs |
 | DataVisualiser.Tests | class | Phase22MovingAverageEndToEndTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 9 | .\DataVisualiser.Tests\VNext\Phase22MovingAverageEndToEndTests.cs |
 | DataVisualiser.Tests | class | ReasoningEngineTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 7 | .\DataVisualiser.Tests\VNext\ReasoningEngineTests.cs |
@@ -1045,6 +1074,7 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | VNextDistributionRuntimePreservationTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 18 | .\DataVisualiser.Tests\VNext\VNextDistributionRuntimePreservationTests.cs |
 | DataVisualiser.Tests | class | VNextMainChartIntegrationCoordinatorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 10 | .\DataVisualiser.Tests\VNext\VNextMainChartIntegrationCoordinatorTests.cs |
 | DataVisualiser.Tests | class | VNextSeriesLoadCoordinatorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 9 | .\DataVisualiser.Tests\VNext\VNextSeriesLoadCoordinatorTests.cs |
+| DataVisualiser.Tests | class | VNextUiConsumptionContractTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\VNextUiConsumptionContractTests.cs |
 
 ## Notes
 

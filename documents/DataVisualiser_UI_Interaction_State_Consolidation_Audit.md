@@ -51,6 +51,15 @@ The workbench view remains a display relay: it binds prepared presentation outpu
 ```text
 ArchitectureGuardrailTests.OperationChainWorkbench_ShouldKeepExecutionOutsideUiSurface now requires OperationChainWorkbenchPresenter and blocks projection logic in the view code-behind.
 OperationChainWorkbenchPresenterTests.Build_ShouldProjectResultToDisplayRowsWithoutExecutingOperations proves the projection is deterministic and independent of execution.
+ArchitectureGuardrailTests.UiInteractionAndTooltipLayer_ShouldRemainTerminalAndNonAuthoritative blocks analytical intent, capability, provider, evidence-export, execution, and strategy construction authority from tooltip/interaction code.
+```
+
+## Manual Smoke
+
+```text
+The Operation Chain tab is currently an empty display container because no workflow is wired to execute a chain and call DisplayResult.
+Manual smoke confirmed the empty Operation Chain surface/grid renders, does not crash, and remains navigable.
+Result summary, trace rows, dataset rows, and evidence text remain covered by OperationChainWorkbenchPresenterTests until a real UI workflow feeds OperationChainResult into the tab.
 ```
 
 ## Deferrals

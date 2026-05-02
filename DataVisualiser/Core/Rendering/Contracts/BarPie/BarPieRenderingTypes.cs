@@ -30,7 +30,7 @@ public sealed record BarPieChartRenderRequest(
     BarPieCapabilityContract? CapabilityContract = null,
     VNextUiConsumptionContract? ConsumptionContract = null);
 
-public sealed record BarPieCapabilityContract
+public sealed record BarPieCapabilityContract : IAnalyticalCapabilityContract
 {
     public BarPieCapabilityContract(
         ChartProgramRequest programRequest,

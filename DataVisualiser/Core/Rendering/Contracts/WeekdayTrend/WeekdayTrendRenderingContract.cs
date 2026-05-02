@@ -202,7 +202,7 @@ public sealed record WeekdayTrendChartRenderRequest(
     WeekdayTrendCapabilityContract? CapabilityContract = null,
     VNextUiConsumptionContract? ConsumptionContract = null);
 
-public sealed record WeekdayTrendCapabilityContract
+public sealed record WeekdayTrendCapabilityContract : IAnalyticalCapabilityContract
 {
     public WeekdayTrendCapabilityContract(
         ChartProgramRequest programRequest,

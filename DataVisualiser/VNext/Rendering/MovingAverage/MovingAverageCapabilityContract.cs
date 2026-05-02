@@ -2,7 +2,7 @@ using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.VNext.Rendering.MovingAverage;
 
-public sealed record MovingAverageCapabilityContract
+public sealed record MovingAverageCapabilityContract : IAnalyticalCapabilityContract
 {
     public MovingAverageCapabilityContract(
         ChartProgramRequest programRequest,

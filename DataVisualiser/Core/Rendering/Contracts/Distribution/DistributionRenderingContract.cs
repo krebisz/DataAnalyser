@@ -291,7 +291,7 @@ public sealed record DistributionChartRenderRequest(
     DistributionCapabilityContract? CapabilityContract = null,
     VNextUiConsumptionContract? ConsumptionContract = null);
 
-public sealed record DistributionCapabilityContract
+public sealed record DistributionCapabilityContract : IAnalyticalCapabilityContract
 {
     public DistributionCapabilityContract(
         ChartProgramRequest programRequest,
