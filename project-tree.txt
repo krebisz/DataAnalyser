@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-05-02 08:32:47
+Generated: 2026-05-02 09:25:17
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -704,7 +704,7 @@ DataAnalyser/
         InterpretiveOverlayPlanner.cs
         IReasoningEngine.cs
         LegacyChartProgramProjector.cs
-        LegacyMetricViewGateway.cs
+        MetricLoadSnapshotGateway.cs
         MetricSelectionServiceSeriesLoader.cs
         OperationChainExecutor.cs
         ReasoningEngine.cs
@@ -981,7 +981,7 @@ DataAnalyser/
       InterpretationDiagnosticsTests.cs
       InterpretiveOverlayPlannerTests.cs
       LegacyChartProgramProjectorTests.cs
-      LegacyMetricViewGatewayTests.cs
+      MetricLoadSnapshotGatewayTests.cs
       OperationChainExecutorTests.cs
       OperationKernelTests.cs
       Phase22MovingAverageEndToEndTests.cs
@@ -1006,6 +1006,7 @@ DataAnalyser/
     DataVisualiser_Capability_Contract_Consolidation_Audit.md
     DataVisualiser_ChartDataContext_Migration_Audit.md
     DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md
+    DataVisualiser_Final_Convergence_Audit.md
     DataVisualiser_First_Family_Legacy_Bridge_Retirement.md
     DataVisualiser_First_VNext_Native_Family_Migration_Audit.md
     DataVisualiser_Migration_Plan_and_Guardrails.md

@@ -45,10 +45,11 @@ internal sealed class VNextMetricLoadRouter
             EvidenceRuntimePath.VNextMain,
             vnextResult.Success ? null : vnextResult.FailureReason);
 
-        if (vnextResult.Success && vnextResult.ProjectedContext != null)
+        if (vnextResult.Success && vnextResult.Program != null && vnextResult.Snapshot != null && vnextResult.ProjectedContext != null)
         {
             RecordVNextFamilyRuntimes(vnextResults, request.Signature);
             var supportsOnlyMainChart = VNextChartRoutePolicy.SupportsOnlyMainChart(_chartState);
+            // Compatibility assignment remains until main-chart consumers no longer require ChartDataContext.
             _chartState.LastContext = vnextResult.ProjectedContext;
             _chartState.LastLoadRuntime = new LoadRuntimeState(
                 EvidenceRuntimePath.VNextMain,

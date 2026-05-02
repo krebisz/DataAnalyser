@@ -218,7 +218,7 @@ public sealed class AnalyticalRenderPlanPipelineTests
     {
         var loader = new StubMetricSeriesLoader();
         var pipeline = CreatePipeline(engine: new ReasoningEngine(
-            new LegacyMetricViewGateway(loader),
+            new MetricLoadSnapshotGateway(loader),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel())));
         var selection = CreateSelection(seriesCount: 1);
         var intentSet = AnalyticalIntentSet.FromIntents(
@@ -407,7 +407,7 @@ public sealed class AnalyticalRenderPlanPipelineTests
         IReasoningEngine? engine = null)
     {
         engine ??= new ReasoningEngine(
-            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new MetricLoadSnapshotGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
 
         return new AnalyticalRenderPlanPipeline(engine, densityPolicy, providerRegistry: providerRegistry);

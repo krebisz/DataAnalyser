@@ -10,7 +10,7 @@ public static class ReasoningEngineFactory
         ArgumentNullException.ThrowIfNull(metricSelectionService);
 
         var loader = new MetricSelectionServiceSeriesLoader(metricSelectionService);
-        var gateway = new LegacyMetricViewGateway(loader);
+        var gateway = new MetricLoadSnapshotGateway(loader);
         var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
         var engine = new ReasoningEngine(gateway, planner);
 

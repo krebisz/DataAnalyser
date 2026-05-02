@@ -1,6 +1,6 @@
 ﻿# Type Dependency Diagram
 
-Generated: 2026-05-02 08:32:47
+Generated: 2026-05-02 09:25:18
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.

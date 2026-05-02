@@ -52,7 +52,7 @@ Capability, contract, render-plan, metadata, delivery-binding, and evidence seam
 MovingAverage and TabularSummary prove that new capability and independent consumers can grow through the spine.
 Legacy bridges are classified and bounded, but not all are retired.
 The primary remaining convergence blocker is ChartDataContext as the dominant UI consumption model.
-LegacyChartProgramProjector, VNextDataResolutionHelper, LegacyMetricViewGateway, and parity/evidence bridge paths remain blocked by that UI consumption model.
+LegacyChartProgramProjector, VNextDataResolutionHelper, service-backed metric loading, and parity/evidence bridge paths remain blocked by that UI consumption model.
 The next migration track is consumption migration and convergence: move production UI consumption onto VNext-native contracts, reduce ChartDataContext dependency, retire bridge paths selectively, and consolidate only after repeated family slices prove the same shape.
 ```
 
@@ -81,7 +81,7 @@ Key carry-forward implications:
 ```text
 ChartDataContext remains the primary consumption-model blocker.
 ChartRenderPlan remains the strongest current consumer-neutral surface candidate.
-LegacyChartProgramProjector, VNextDataResolutionHelper, LegacyMetricViewGateway, and parity/evidence bridge paths remain transitional or validation-adjacent until replacement, parity, smoke, metadata, and provenance evidence exists.
+LegacyChartProgramProjector, VNextDataResolutionHelper, service-backed metric loading, and parity/evidence bridge paths remain transitional or validation-adjacent until replacement, parity, smoke, metadata, and provenance evidence exists.
 Evidence observes; it must not route live behavior.
 UI, adapters, renderers, evidence, and terminal delivery must not own analytical authority.
 ```
@@ -414,7 +414,7 @@ Context:
 
 ```text
 ChartDataContext is the primary remaining consumption-model blocker.
-LegacyChartProgramProjector, VNextDataResolutionHelper, LegacyMetricViewGateway, and parity/evidence bridge paths cannot be retired cleanly while UI consumption remains ChartDataContext-first.
+LegacyChartProgramProjector, VNextDataResolutionHelper, service-backed metric loading, and parity/evidence bridge paths cannot be retired cleanly while UI consumption remains ChartDataContext-first.
 ```
 
 Scaffold audit carry-forward classification detail:
@@ -1259,7 +1259,7 @@ Phase 34 evidence:
 - `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`
 - retired `VNextSeriesLoadCoordinator` single-series `LegacyChartProgramProjector` detour
 - preserved main-chart `LegacyChartProgramProjector` bridge because `ProjectedContext` remains production-bound
-- preserved `VNextDataResolutionHelper`, `LegacyMetricViewGateway`, strategy cut-over, evidence parity, and terminal fallback paths with named retirement conditions
+- preserved `VNextDataResolutionHelper`, service-backed metric loading, strategy cut-over, evidence parity, and terminal fallback paths with named retirement conditions
 - `ArchitectureGuardrailTests.RemainingLegacyBypassRetirement_ShouldRemoveSeriesLoadProjectorBypassOnly`
 - `VNextSeriesLoadCoordinatorTests`
 - focused Phase 34 validation passed: 11 tests
@@ -1327,8 +1327,14 @@ Phase 35 evidence:
 - `ChartDataContext` remains a high incoming hub with 166 incoming textual references
 - target spine is substantially used by production families through capability contracts, `VNextUiConsumptionContract`, `ConsumerSurfaceModel`, render-plan metadata, and provider qualification
 - Operation Chain consumes VNext-native derived-dataset surface output in core, while the UI tab remains display-only / empty until a workflow supplies a result
-- final convergence is not fully closed because main-chart `LegacyChartProgramProjector`, `VNextDataResolutionHelper`, `LegacyMetricViewGateway`, and strategy cut-over remain bounded production compatibility paths
-- validation evidence: `DataVisualiser.Tests` 1035 passed; `DataFileReader.Tests` 15 passed
+- final convergence is not fully closed because main-chart `LegacyChartProgramProjector`, `VNextDataResolutionHelper`, service-backed metric loading, and strategy cut-over remain bounded production compatibility paths
+- `LegacyMetricViewGateway` was retired as a legacy-named bridge type and replaced by `MetricLoadSnapshotGateway` without changing loader behavior
+- regenerated structural artifacts confirm `LegacyMetricViewGateway` has 0 production references and `MetricLoadSnapshotGateway` is the active VNext reasoning gateway
+- focused metric gateway retirement validation passed: 168 tests
+- main-chart projection bridge was reduced: `VNextMainChartLoadResult` now carries native `ChartProgram` and `MetricLoadSnapshot` beside compatibility `ProjectedContext`
+- validation evidence: `DataVisualiser.Tests` 1037 passed; `DataFileReader.Tests` 15 passed
+- focused main-chart projection reduction validation passed: 147 tests
+- manual smoke export `documents/reachability-20260502-120706.json` confirmed Main and Normalized render history with VNext main signatures and no recent UI errors; Diff/Ratio unavailable for manual smoke
 - manual smoke evidence: `documents/reachability-20260502-062913.json`
 
 Phase 35 status:
@@ -1809,7 +1815,7 @@ Unchecked consumption-migration guardrails must be satisfied before convergence 
 - [ ] Legacy bridge retirement must follow proven replacement, parity, smoke, metadata, and provenance evidence.
 - [ ] Family migration must preserve real family differences.
 - [ ] Generalization must wait until at least two migrated families prove the same shape.
-- [ ] `LegacyChartProgramProjector`, `VNextDataResolutionHelper`, and `LegacyMetricViewGateway` must not be removed until their named retirement conditions are met.
+- [ ] `LegacyChartProgramProjector`, `VNextDataResolutionHelper`, and service-backed metric loading must not be removed until their named retirement conditions are met.
 - [ ] Operation Chain must use the VNext-native UI consumption contract defined in Phase 25.
 - [ ] Operation Chain must not use `ChartDataContext` as its primary semantic model.
 - [ ] Operation Chain UI must not own analytical operation execution.
@@ -2019,7 +2025,8 @@ Consumption migration / convergence criteria remain open.
 - [ ] Production UI consumes VNext-native contract/surface output for migrated paths.
 - [ ] `LegacyChartProgramProjector` usage is retired or validation-only with named retirement condition.
 - [ ] `VNextDataResolutionHelper` bridge logic is retired or validation-only with named retirement condition.
-- [ ] `LegacyMetricViewGateway` is retired or explicitly bounded by provider replacement condition.
+- [x] `LegacyMetricViewGateway` is retired as a legacy-named bridge type.
+- [ ] Service-backed metric loading is retired or explicitly bounded by provider replacement condition.
 - [ ] Operation Chain Workbench consumes VNext-native contract/surface output without `ChartDataContext` as primary semantic model.
 - [ ] At least one production chart family has fully migrated away from `ChartDataContext`-primary consumption.
 - [ ] All production chart families are migrated or explicitly deferred with named blocker.
@@ -2106,7 +2113,7 @@ updated documentation
 | 2026-05-02 | 32 | Demoted rendering / backend / vendor boundaries and bounded terminal-adjacent deferrals. | `documents/DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md`; focused vendor/delivery suite 150 passed; DataVisualiser 1033 passed; DataFileReader 15 passed. | Complete |
 | 2026-05-02 | 33 | Consolidated shared capability-contract shape while preserving family differences. | `documents/DataVisualiser_Capability_Contract_Consolidation_Audit.md`; `IAnalyticalCapabilityContract`; DataVisualiser 1034 passed; DataFileReader 15 passed. | Complete |
 | 2026-05-02 | 34 | Retired one safe legacy bypass and bounded remaining production/validation paths. | `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`; focused Phase 34 validation 11 passed; DataVisualiser 1035 passed; DataFileReader 15 passed. | Partial |
-| 2026-05-02 | 35 | Audited final convergence and identified bounded bridge blockers. | `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated structural artifacts; density 0.7389%; DataVisualiser 1035 passed; DataFileReader 15 passed; smoke export confirmed. | Partial |
+| 2026-05-02 | 35 | Audited final convergence, retired the legacy-named metric gateway bridge, and reduced main-chart projection dependence. | `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated structural artifacts; density 0.7389%; metric gateway validation 168 passed; main projection validation 147 passed; DataVisualiser 1037 passed; DataFileReader 15 passed; smoke exports confirmed. | Partial |
 |  | 36-47 | Post-convergence formalisation and bounded-generativity phases. | Coverage matrix, construction algebra, typed relations, evidence sufficiency, analytical fitness, bounded search, and scenario-hardening artifacts. | Planned |
 
 ---

@@ -4,12 +4,12 @@ using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.Tests.VNext;
 
-public sealed class LegacyMetricViewGatewayTests
+public sealed class MetricLoadSnapshotGatewayTests
 {
     [Fact]
     public async Task LoadAsync_ShouldMaterializeAllRequestedSeries()
     {
-        var gateway = new LegacyMetricViewGateway(new StubMetricSeriesLoader());
+        var gateway = new MetricLoadSnapshotGateway(new StubMetricSeriesLoader());
         var request = new MetricSelectionRequest(
             "Weight",
             [new MetricSeriesRequest("Weight", "morning"), new MetricSeriesRequest("Weight", "evening")],

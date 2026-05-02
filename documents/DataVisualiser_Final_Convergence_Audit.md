@@ -18,6 +18,9 @@ Current generated structural readings:
 - type dependency diagram: 7575 direct textual type-reference edges
 - dependency density: 0.7389%
 - project dependency shape unchanged: `DataVisualiser` depends on `DataFileReader`; `DataVisualiser.Tests` depends on `DataVisualiser`; `DataFileReader.Tests` depends on `DataFileReader`
+- `LegacyMetricViewGateway` production references: 0
+- `MetricLoadSnapshotGateway` production references: 3
+- main-chart VNext result carries native `ChartProgram` and `MetricLoadSnapshot` before compatibility projection
 
 ## Convergence Result
 
@@ -30,7 +33,7 @@ Final closure remains blocked by bounded production bridges that still carry com
 - `ChartDataContext`
 - main-chart `LegacyChartProgramProjector`
 - selected-series `VNextDataResolutionHelper` legacy fallback
-- `LegacyMetricViewGateway`
+- service-backed metric loading through `MetricLoadSnapshotGateway`
 - strategy cut-over compatibility
 
 These are documented and gated. They are not unbounded architectural authority, but they are also not retired or validation-only.
@@ -57,9 +60,10 @@ Reading:
 | Bridge | Current classification | Closure condition |
 | --- | --- | --- |
 | `ChartDataContext` | bounded production compatibility model | retire as primary UI/rendering state carrier only after production consumers receive equivalent VNext-native input or surface output |
-| `LegacyChartProgramProjector` | partly retired; still production-bound for main chart integration | remove after `VNextMainChartLoadResult.ProjectedContext` is no longer required |
+| `LegacyChartProgramProjector` | partly retired; still production-bound for main chart integration | remove after `VNextMainChartLoadResult.ProjectedContext` is no longer required; native `Program` and `Snapshot` are now available beside it |
 | `VNextDataResolutionHelper` | production selected-series VNext-first bridge with legacy fallback | retire per family after fallback-free parity, smoke, metadata, and provenance evidence |
-| `LegacyMetricViewGateway` | production loader adapter into VNext reasoning | replace when reasoning can load through a native non-legacy metric gateway |
+| `LegacyMetricViewGateway` | retired as a legacy-named production bridge type | completed by replacement with `MetricLoadSnapshotGateway` |
+| `MetricLoadSnapshotGateway` with `MetricSelectionServiceSeriesLoader` | production service-backed loader adapter into VNext reasoning | replace when reasoning can load through a native non-service-backed metric loader |
 | strategy cut-over / `CreateLegacyStrategy` | production compatibility and evidence parity support | reduce after native strategy input contracts cover live paths and parity remains evidence-only |
 | evidence parity builders | validation-only | keep while they provide active audit value |
 | terminal rendering fallbacks | terminal delivery compatibility | keep while qualified as terminal fallback and not semantic authority |
@@ -114,9 +118,16 @@ This is expected before Phase 36+ formal coverage and bounded-generativity work.
 
 Automated validation:
 
-- `DataVisualiser.Tests`: 1035 passed
+- `DataVisualiser.Tests`: 1037 passed
 - `DataFileReader.Tests`: 15 passed
 - focused Phase 34 validation: 11 passed
+- focused metric gateway retirement validation: 168 passed
+- focused main-chart projection reduction validation: 147 passed
+- main-chart projection reduction smoke: `documents/reachability-20260502-120706.json`
+  - no recent UI errors
+  - VNext Main request/snapshot/program/projected-context signatures present and aligned
+  - Main and Normalized render-plan history present
+  - Diff/Ratio unavailable for manual smoke
 
 Manual smoke evidence:
 
@@ -131,10 +142,9 @@ Manual smoke evidence:
 
 Phase 35 proves convergence progress, not final closure.
 
-The architecture can now be described through the target grammar for the migrated production paths. It still relies on bounded compatibility bridges for main-chart projection, selected-series fallback, metric loading, and strategy cut-over.
+The architecture can now be described through the target grammar for the migrated production paths. It still relies on bounded compatibility bridges for main-chart projection, selected-series fallback, service-backed metric loading, and strategy cut-over.
 
 Next implementation should not begin Phase 36+ formal-algebra work until the project accepts one of these positions:
 
 - treat the remaining bridges as acceptable bounded compatibility for now, and proceed to post-convergence exploratory work with that caveat
-- run a dedicated bridge-removal track to eliminate `ProjectedContext`, selected-series fallback, and legacy metric gateway dependencies before declaring final convergence complete
-
+- run a dedicated bridge-removal track to eliminate `ProjectedContext`, selected-series fallback, and service-backed metric loader dependencies before declaring final convergence complete

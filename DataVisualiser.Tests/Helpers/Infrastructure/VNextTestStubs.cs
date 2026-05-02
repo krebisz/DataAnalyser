@@ -10,7 +10,7 @@ public static class VNextTestStubs
     public static ReasoningSessionCoordinator CreateSessionCoordinator()
     {
         var loader = new StubMetricSeriesLoader();
-        var gateway = new LegacyMetricViewGateway(loader);
+        var gateway = new MetricLoadSnapshotGateway(loader);
         var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
         var engine = new ReasoningEngine(gateway, planner);
         return new ReasoningSessionCoordinator(engine);

@@ -184,7 +184,7 @@ public sealed class Phase22MovingAverageEndToEndTests
         // Builds the full pipeline using only VNext types — no ChartUpdateCoordinator,
         // no ChartDataContext, no LegacyChartProgramProjector involved.
         var loader = new StubMetricSeriesLoader();
-        var gateway = new LegacyMetricViewGateway(loader);
+        var gateway = new MetricLoadSnapshotGateway(loader);
         var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
         var engine = new ReasoningEngine(gateway, planner);
         var pipeline = new AnalyticalRenderPlanPipeline(engine);
@@ -210,7 +210,7 @@ public sealed class Phase22MovingAverageEndToEndTests
     private static AnalyticalRenderPlanPipeline CreatePipeline()
     {
         var engine = new ReasoningEngine(
-            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new MetricLoadSnapshotGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
         return new AnalyticalRenderPlanPipeline(engine);
     }

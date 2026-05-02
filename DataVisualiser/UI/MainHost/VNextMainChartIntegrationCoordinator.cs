@@ -9,6 +9,8 @@ namespace DataVisualiser.UI.MainHost;
 
 public sealed record VNextMainChartLoadResult(
     bool Success,
+    ChartProgram? Program,
+    MetricLoadSnapshot? Snapshot,
     ChartDataContext? ProjectedContext,
     string? RequestSignature,
     string? SnapshotSignature,
@@ -68,6 +70,8 @@ public sealed class VNextMainChartIntegrationCoordinator
 
             return new VNextMainChartLoadResult(
                 Success: true,
+                Program: program,
+                Snapshot: snapshot,
                 ProjectedContext: projectedContext,
                 RequestSignature: snapshot.Request.Signature,
                 SnapshotSignature: snapshot.Signature,
@@ -80,6 +84,8 @@ public sealed class VNextMainChartIntegrationCoordinator
         {
             return new VNextMainChartLoadResult(
                 Success: false,
+                Program: null,
+                Snapshot: null,
                 ProjectedContext: null,
                 RequestSignature: request.Signature,
                 SnapshotSignature: null,
@@ -120,6 +126,8 @@ public sealed class VNextMainChartIntegrationCoordinator
                     var projectedContext = _projector.ProjectToChartContext(execution.Program);
                     return new VNextMainChartLoadResult(
                         Success: true,
+                        Program: execution.Program,
+                        Snapshot: execution.Snapshot,
                         ProjectedContext: projectedContext,
                         RequestSignature: execution.Snapshot.Request.Signature,
                         SnapshotSignature: execution.Snapshot.Signature,
@@ -135,6 +143,8 @@ public sealed class VNextMainChartIntegrationCoordinator
             return programRequests
                 .Select(programRequest => new VNextMainChartLoadResult(
                     Success: false,
+                    Program: null,
+                    Snapshot: null,
                     ProjectedContext: null,
                     RequestSignature: request.Signature,
                     SnapshotSignature: null,

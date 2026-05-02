@@ -119,7 +119,43 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("LegacyChartProgramProjector", mainCoordinatorSource, StringComparison.Ordinal);
         Assert.Contains("Main-chart ChartDataContext projection", auditSource, StringComparison.Ordinal);
         Assert.Contains("Retired Bypass: VNextSeriesLoadCoordinator Single-Series Projector Detour", auditSource, StringComparison.Ordinal);
+        Assert.Contains("Retired Bypass: LegacyMetricViewGateway Type", auditSource, StringComparison.Ordinal);
+        Assert.Contains("MetricLoadSnapshotGateway", auditSource, StringComparison.Ordinal);
         Assert.Contains("validation-only", auditSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VNextReasoning_ShouldNotUseLegacyNamedMetricGateway()
+    {
+        var matches = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            ["DataVisualiser"],
+            ["LegacyMetricViewGateway"]);
+        var finalAuditSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_Final_Convergence_Audit.md");
+
+        Assert.Empty(matches);
+        Assert.Contains("MetricLoadSnapshotGateway", finalAuditSource, StringComparison.Ordinal);
+        Assert.Contains("service-backed metric loading", finalAuditSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VNextMainChartLoadResult_ShouldCarryNativeProgramAndSnapshotBeforeProjectedContext()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainHost", "VNextMainChartIntegrationCoordinator.cs");
+        var routerSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "ViewModels", "VNextMetricLoadRouter.cs");
+        var finalAuditSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_Final_Convergence_Audit.md");
+
+        Assert.Contains("ChartProgram? Program", source, StringComparison.Ordinal);
+        Assert.Contains("MetricLoadSnapshot? Snapshot", source, StringComparison.Ordinal);
+        Assert.Contains("Program: program", source, StringComparison.Ordinal);
+        Assert.Contains("Snapshot: snapshot", source, StringComparison.Ordinal);
+        Assert.Contains("vnextResult.Program != null", routerSource, StringComparison.Ordinal);
+        Assert.Contains("vnextResult.Snapshot != null", routerSource, StringComparison.Ordinal);
+        Assert.Contains("Compatibility assignment remains", routerSource, StringComparison.Ordinal);
+        Assert.Contains("main-chart VNext result carries native `ChartProgram` and `MetricLoadSnapshot`", finalAuditSource, StringComparison.Ordinal);
     }
 
     [Fact]

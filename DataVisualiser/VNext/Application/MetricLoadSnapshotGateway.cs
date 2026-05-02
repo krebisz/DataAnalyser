@@ -2,11 +2,11 @@ using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.VNext.Application;
 
-public sealed class LegacyMetricViewGateway
+public sealed class MetricLoadSnapshotGateway
 {
     private readonly IMetricSeriesLoader _loader;
 
-    public LegacyMetricViewGateway(IMetricSeriesLoader loader)
+    public MetricLoadSnapshotGateway(IMetricSeriesLoader loader)
     {
         _loader = loader ?? throw new ArgumentNullException(nameof(loader));
     }

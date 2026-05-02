@@ -11,7 +11,7 @@ public sealed class ReasoningEngineTests
     public async Task LoadAsync_ThenBuildMainProgram_ShouldStayOnSingleRequestSignature()
     {
         var engine = new ReasoningEngine(
-            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new MetricLoadSnapshotGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
 
         var request = new MetricSelectionRequest(
@@ -33,7 +33,7 @@ public sealed class ReasoningEngineTests
     public async Task BuildProgram_ShouldUseExplicitProgramRequest()
     {
         var engine = new ReasoningEngine(
-            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new MetricLoadSnapshotGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
 
         var request = new MetricSelectionRequest(
@@ -54,7 +54,7 @@ public sealed class ReasoningEngineTests
     public async Task BuildProgram_Transform_ShouldPreserveSnapshotSignatureAndBuildMultipleSeries()
     {
         var engine = new ReasoningEngine(
-            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new MetricLoadSnapshotGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
 
         var request = new MetricSelectionRequest(
@@ -84,7 +84,7 @@ public sealed class ReasoningEngineTests
     public async Task ExecuteAsync_ShouldLoadAndBuildProgramFromAnalyticalIntent()
     {
         var engine = new ReasoningEngine(
-            new LegacyMetricViewGateway(new StubMetricSeriesLoader()),
+            new MetricLoadSnapshotGateway(new StubMetricSeriesLoader()),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
         var request = new MetricSelectionRequest(
             "Weight",
@@ -111,7 +111,7 @@ public sealed class ReasoningEngineTests
     {
         var loader = new StubMetricSeriesLoader();
         var engine = new ReasoningEngine(
-            new LegacyMetricViewGateway(loader),
+            new MetricLoadSnapshotGateway(loader),
             new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel()));
         var request = new MetricSelectionRequest(
             "Weight",

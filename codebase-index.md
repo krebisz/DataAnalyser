@@ -1,6 +1,6 @@
 ﻿# Codebase Index
 
-Generated: 2026-05-02 08:33:07  
+Generated: 2026-05-02 09:25:42  
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
@@ -777,7 +777,7 @@ This file is auto-generated.
 | DataVisualiser | class | ConfidenceAnnotationEvaluator | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\ConfidenceAnnotationEvaluator.cs |
 | DataVisualiser | class | InterpretiveOverlayPlanner | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\InterpretiveOverlayPlanner.cs |
 | DataVisualiser | class | LegacyChartProgramProjector | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 6 | .\DataVisualiser\VNext\Application\LegacyChartProgramProjector.cs |
-| DataVisualiser | class | LegacyMetricViewGateway | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\LegacyMetricViewGateway.cs |
+| DataVisualiser | class | MetricLoadSnapshotGateway | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\MetricLoadSnapshotGateway.cs |
 | DataVisualiser | class | MetricSelectionServiceSeriesLoader | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\MetricSelectionServiceSeriesLoader.cs |
 | DataVisualiser | class | OperationChainExecutor | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 5 | .\DataVisualiser\VNext\Application\OperationChainExecutor.cs |
 | DataVisualiser | class | ReasoningEngine | public | top-level |  | DataVisualiser.VNext.Application | file-scoped | 4 | .\DataVisualiser\VNext\Application\ReasoningEngine.cs |
@@ -1064,7 +1064,7 @@ This file is auto-generated.
 | DataVisualiser.Tests | class | InterpretationDiagnosticsTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 8 | .\DataVisualiser.Tests\VNext\InterpretationDiagnosticsTests.cs |
 | DataVisualiser.Tests | class | InterpretiveOverlayPlannerTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\InterpretiveOverlayPlannerTests.cs |
 | DataVisualiser.Tests | class | LegacyChartProgramProjectorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 5 | .\DataVisualiser.Tests\VNext\LegacyChartProgramProjectorTests.cs |
-| DataVisualiser.Tests | class | LegacyMetricViewGatewayTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\LegacyMetricViewGatewayTests.cs |
+| DataVisualiser.Tests | class | MetricLoadSnapshotGatewayTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\MetricLoadSnapshotGatewayTests.cs |
 | DataVisualiser.Tests | class | OperationChainExecutorTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\OperationChainExecutorTests.cs |
 | DataVisualiser.Tests | class | OperationKernelTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 6 | .\DataVisualiser.Tests\VNext\OperationKernelTests.cs |
 | DataVisualiser.Tests | class | Phase22MovingAverageEndToEndTests | public | top-level |  | DataVisualiser.Tests.VNext | file-scoped | 9 | .\DataVisualiser.Tests\VNext\Phase22MovingAverageEndToEndTests.cs |

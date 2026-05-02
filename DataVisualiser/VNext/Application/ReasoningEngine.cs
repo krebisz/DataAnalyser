@@ -4,10 +4,10 @@ namespace DataVisualiser.VNext.Application;
 
 public sealed class ReasoningEngine : IReasoningEngine
 {
-    private readonly LegacyMetricViewGateway _gateway;
+    private readonly MetricLoadSnapshotGateway _gateway;
     private readonly ChartProgramPlanner _planner;
 
-    public ReasoningEngine(LegacyMetricViewGateway gateway, ChartProgramPlanner planner)
+    public ReasoningEngine(MetricLoadSnapshotGateway gateway, ChartProgramPlanner planner)
     {
         _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
         _planner = planner ?? throw new ArgumentNullException(nameof(planner));

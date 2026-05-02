@@ -22,7 +22,11 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
         var result = await coordinator.LoadMainChartAsync(request, MainChartDisplayMode.Regular);
 
         Assert.True(result.Success);
+        Assert.NotNull(result.Program);
+        Assert.NotNull(result.Snapshot);
         Assert.NotNull(result.ProjectedContext);
+        Assert.Equal(ChartProgramKind.Main, result.Program!.Kind);
+        Assert.Equal(request.Signature, result.Snapshot!.Signature);
         Assert.Equal(2, result.ProjectedContext!.ActualSeriesCount);
         Assert.NotNull(result.ProjectedContext.Data1);
         Assert.NotNull(result.ProjectedContext.Data2);
@@ -40,6 +44,8 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
         var result = await coordinator.LoadMainChartAsync(request, MainChartDisplayMode.Regular);
 
         Assert.True(result.Success);
+        Assert.NotNull(result.Program);
+        Assert.NotNull(result.Snapshot);
         Assert.NotNull(result.RequestSignature);
         Assert.NotNull(result.SnapshotSignature);
         Assert.NotNull(result.ProgramSourceSignature);
@@ -51,6 +57,8 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
         Assert.Equal(result.RequestSignature, result.ProgramSourceSignature);
         // Projected context carries the source signature
         Assert.Equal(result.ProgramSourceSignature, result.ProjectedContextSignature);
+        Assert.Equal(result.ProgramSourceSignature, result.Program!.SourceSignature);
+        Assert.Equal(result.SnapshotSignature, result.Snapshot!.Signature);
     }
 
     [Fact]
@@ -81,6 +89,9 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
 
         Assert.True(result.Success);
         Assert.Equal(ChartProgramKind.Transform, result.ProgramKind);
+        Assert.NotNull(result.Program);
+        Assert.NotNull(result.Snapshot);
+        Assert.Equal(ChartProgramKind.Transform, result.Program!.Kind);
         Assert.NotNull(result.ProjectedContext);
         Assert.Equal(2, result.ProjectedContext!.ActualSeriesCount);
         Assert.Equal("Weight transform", result.ProjectedContext.MetricType);
@@ -106,6 +117,8 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
         Assert.All(results, result =>
         {
             Assert.True(result.Success);
+            Assert.NotNull(result.Program);
+            Assert.NotNull(result.Snapshot);
             Assert.NotNull(result.ProjectedContext);
             Assert.Equal(result.RequestSignature, result.SnapshotSignature);
             Assert.Equal(result.ProgramSourceSignature, result.ProjectedContextSignature);
@@ -131,6 +144,8 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
         Assert.All(results, result =>
         {
             Assert.False(result.Success);
+            Assert.Null(result.Program);
+            Assert.Null(result.Snapshot);
             Assert.Null(result.ProjectedContext);
             Assert.Equal(request.Signature, result.RequestSignature);
             Assert.Contains("Factory failure", result.FailureReason);
@@ -161,6 +176,8 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
         var result = await coordinator.LoadMainChartAsync(request, MainChartDisplayMode.Regular);
 
         Assert.False(result.Success);
+        Assert.Null(result.Program);
+        Assert.Null(result.Snapshot);
         Assert.Null(result.ProjectedContext);
         Assert.NotNull(result.FailureReason);
         Assert.Equal(request.Signature, result.RequestSignature);
@@ -240,7 +257,7 @@ public sealed class VNextMainChartIntegrationCoordinatorTests
 
     private static ReasoningSessionCoordinator CreateStubSessionCoordinator(IMetricSeriesLoader loader)
     {
-        var gateway = new LegacyMetricViewGateway(loader);
+        var gateway = new MetricLoadSnapshotGateway(loader);
         var planner = new ChartProgramPlanner(new TimeSeriesAlignmentKernel(), new OperationKernel());
         var engine = new ReasoningEngine(gateway, planner);
         return new ReasoningSessionCoordinator(engine);
