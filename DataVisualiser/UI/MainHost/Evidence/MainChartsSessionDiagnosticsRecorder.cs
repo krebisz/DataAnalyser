@@ -1,7 +1,7 @@
 using System.Windows;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
-using DataVisualiser.UI.Workspace.Diagnostics;
+using DataVisualiser.UI.Workspace;
 
 namespace DataVisualiser.UI.MainHost.Evidence;
 

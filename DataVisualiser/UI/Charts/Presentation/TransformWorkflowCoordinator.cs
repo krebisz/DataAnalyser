@@ -3,13 +3,13 @@ using DataVisualiser.Core.Orchestration;
 namespace DataVisualiser.UI.Charts.Presentation;
 
 internal sealed class TransformWorkflowCoordinator(
-    TransformDataResolutionCoordinator transformDataResolutionCoordinator,
-    TransformOperationExecutionCoordinator transformOperationExecutionCoordinator,
+    TransformDataResolver transformDataResolutionCoordinator,
+    TransformOperationExecutor transformOperationExecutionCoordinator,
     TransformRenderCoordinator transformRenderCoordinator,
     TransformSessionMilestoneRecorder transformSessionMilestoneRecorder)
 {
-    private readonly TransformDataResolutionCoordinator _transformDataResolutionCoordinator = transformDataResolutionCoordinator ?? throw new ArgumentNullException(nameof(transformDataResolutionCoordinator));
-    private readonly TransformOperationExecutionCoordinator _transformOperationExecutionCoordinator = transformOperationExecutionCoordinator ?? throw new ArgumentNullException(nameof(transformOperationExecutionCoordinator));
+    private readonly TransformDataResolver _transformDataResolutionCoordinator = transformDataResolutionCoordinator ?? throw new ArgumentNullException(nameof(transformDataResolutionCoordinator));
+    private readonly TransformOperationExecutor _transformOperationExecutionCoordinator = transformOperationExecutionCoordinator ?? throw new ArgumentNullException(nameof(transformOperationExecutionCoordinator));
     private readonly TransformRenderCoordinator _transformRenderCoordinator = transformRenderCoordinator ?? throw new ArgumentNullException(nameof(transformRenderCoordinator));
     private readonly TransformSessionMilestoneRecorder _transformSessionMilestoneRecorder = transformSessionMilestoneRecorder ?? throw new ArgumentNullException(nameof(transformSessionMilestoneRecorder));
 

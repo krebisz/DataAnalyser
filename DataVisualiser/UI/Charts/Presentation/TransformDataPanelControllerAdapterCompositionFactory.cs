@@ -23,13 +23,13 @@ internal static class TransformDataPanelControllerAdapterCompositionFactory
 
         var selectionCache = new MetricSeriesSelectionCache();
         var computationService = transformComputationService ?? new TransformComputationService();
-        var dataResolutionCoordinator = new TransformDataResolutionCoordinator(
+        var dataResolutionCoordinator = new TransformDataResolver(
             controller,
             viewModel,
             metricSelectionService,
             selectionCache,
             vnextCoordinator);
-        var operationExecutionCoordinator = new TransformOperationExecutionCoordinator(computationService);
+        var operationExecutionCoordinator = new TransformOperationExecutor(computationService);
         var operationStateCoordinator = new TransformOperationStateCoordinator();
         var renderCoordinator = new TransformRenderCoordinator(
             controller,
@@ -57,8 +57,8 @@ internal static class TransformDataPanelControllerAdapterCompositionFactory
 
 internal sealed record TransformDataPanelControllerAdapterComposition(
     MetricSeriesSelectionCache SelectionCache,
-    TransformDataResolutionCoordinator DataResolutionCoordinator,
-    TransformOperationExecutionCoordinator OperationExecutionCoordinator,
+    TransformDataResolver DataResolutionCoordinator,
+    TransformOperationExecutor OperationExecutionCoordinator,
     TransformOperationStateCoordinator OperationStateCoordinator,
     TransformRenderCoordinator RenderCoordinator,
     TransformSelectionInteractionCoordinator SelectionInteractionCoordinator,

@@ -5,7 +5,7 @@ using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
-public class SubtypeSelectorManager
+public class SubtypeSelector
 {
     /// <summary>
     ///     List of dynamically-added ComboBoxes for additional subtypes.
@@ -17,7 +17,7 @@ public class SubtypeSelectorManager
     private readonly Panel _parentPanel;
     private int _selectionChangedSuppressionDepth;
 
-    public SubtypeSelectorManager(Panel parentPanel, ComboBox primaryCombo)
+    public SubtypeSelector(Panel parentPanel, ComboBox primaryCombo)
     {
         _parentPanel = parentPanel;
         PrimaryCombo = primaryCombo;
@@ -339,10 +339,10 @@ public class SubtypeSelectorManager
 
     private sealed class SelectionChangedSuppressionScope : IDisposable
     {
-        private readonly SubtypeSelectorManager _owner;
+        private readonly SubtypeSelector _owner;
         private bool _disposed;
 
-        public SelectionChangedSuppressionScope(SubtypeSelectorManager owner)
+        public SelectionChangedSuppressionScope(SubtypeSelector owner)
         {
             _owner = owner;
         }

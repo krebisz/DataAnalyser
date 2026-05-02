@@ -7,12 +7,12 @@ using DataVisualiser.VNext.Kernel;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
-internal sealed class TransformOperationExecutionCoordinator
+internal sealed class TransformOperationExecutor
 {
     private readonly OperationKernel _operationKernel;
     private readonly TransformComputationService _transformComputationService;
 
-    public TransformOperationExecutionCoordinator(
+    public TransformOperationExecutor(
         TransformComputationService transformComputationService,
         OperationKernel? operationKernel = null)
     {
@@ -23,7 +23,7 @@ internal sealed class TransformOperationExecutionCoordinator
     public bool CanExecute(ChartDataContext context, TransformSelectionResolution selection, string? operationTag)
     {
         if (string.IsNullOrWhiteSpace(operationTag))
-            return TransformDataResolutionCoordinator.CanRenderPrimarySelection(context);
+            return TransformDataResolver.CanRenderPrimarySelection(context);
 
         var operation = TransformOperationRegistry.GetOperation(operationTag);
         if (operation == null)
@@ -31,7 +31,7 @@ internal sealed class TransformOperationExecutionCoordinator
 
         return operation.Arity switch
         {
-            1 => TransformDataResolutionCoordinator.CanRenderPrimarySelection(context),
+            1 => TransformDataResolver.CanRenderPrimarySelection(context),
             2 => selection.HasAvailableSecondaryInput,
             _ => false
         };

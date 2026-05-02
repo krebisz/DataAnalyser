@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-05-02 09:25:17
+Generated: 2026-05-02 14:22:45
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -9,6 +9,15 @@ DataAnalyser/
       assessment.json
       assessment.md
     workflows/
+  .idea/
+    .idea.DataAnalyser/
+      .idea/
+        .gitignore
+        encodings.xml
+        indexLayout.xml
+        projectSettingsUpdater.xml
+        vcs.xml
+        workspace.xml
   .vscode/
     launch.json
     settings.json
@@ -1001,6 +1010,7 @@ DataAnalyser/
       Type Dependencies Diagram for ChartComputationResult and other elements-Current.md
       Type Dependencies Diagram for ChartComputationResult and other elements-Original.md
       Type Dependencies Diagram for ChartComputationResult and other elements-PreMigration.md
+      Type Dependencies Diagram for ChartComputationResult and other elements-Previous.md
     AI_BOOTSTRAP_ENTRY.md
     Collaboration Protocol.md
     DataVisualiser_Capability_Contract_Consolidation_Audit.md
@@ -1024,7 +1034,6 @@ DataAnalyser/
     Project Overview.md
     Project Philosophy.md
     Project Roadmap.md
-    reachability-20260502-062913.json
     SYSTEM_MAP.md
     To Do Ideas.md
     Workspace Workflow.md

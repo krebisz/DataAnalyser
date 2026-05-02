@@ -5,14 +5,14 @@ using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.Tests.ViewModels;
 
-public sealed class VNextChartProgramRequestPlannerTests
+public sealed class ChartProgramRequestPlannerTests
 {
     [Fact]
     public void BuildMainFamilyRequests_ShouldReturnMainRequestForMainOnly()
     {
         var state = new ChartState { IsMainVisible = true };
 
-        var requests = VNextChartProgramRequestPlanner.BuildMainFamilyRequests(state);
+        var requests = ChartProgramRequestPlanner.BuildMainFamilyRequests(state);
 
         Assert.Single(requests);
         Assert.Equal(ChartProgramKind.Main, requests[0].Kind);
@@ -27,7 +27,7 @@ public sealed class VNextChartProgramRequestPlannerTests
             MainChartDisplayMode = MainChartDisplayMode.Stacked
         };
 
-        var requests = VNextChartProgramRequestPlanner.BuildMainFamilyRequests(state);
+        var requests = ChartProgramRequestPlanner.BuildMainFamilyRequests(state);
 
         Assert.Equal(ChartDisplayMode.Stacked, requests[0].DisplayMode);
     }
@@ -41,7 +41,7 @@ public sealed class VNextChartProgramRequestPlannerTests
             IsNormalizedVisible = true
         };
 
-        var requests = VNextChartProgramRequestPlanner.BuildMainFamilyRequests(state);
+        var requests = ChartProgramRequestPlanner.BuildMainFamilyRequests(state);
 
         Assert.Equal([ChartProgramKind.Main, ChartProgramKind.Normalized], requests.Select(request => request.Kind));
     }
@@ -58,7 +58,7 @@ public sealed class VNextChartProgramRequestPlannerTests
             IsDiffRatioDifferenceMode = differenceMode
         };
 
-        var requests = VNextChartProgramRequestPlanner.BuildMainFamilyRequests(state);
+        var requests = ChartProgramRequestPlanner.BuildMainFamilyRequests(state);
 
         Assert.Equal([ChartProgramKind.Main, expectedKind], requests.Select(request => request.Kind));
     }
@@ -79,7 +79,7 @@ public sealed class VNextChartProgramRequestPlannerTests
         };
         var transformOperation = SeriesOperationRequest.Normalize(0, "normalized", "Normalized");
 
-        var requests = VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(
+        var requests = ChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(
             state,
             [transformOperation],
             "Custom Transform");
@@ -110,7 +110,7 @@ public sealed class VNextChartProgramRequestPlannerTests
             IsTransformPanelVisible = true
         };
 
-        var requests = VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(state);
+        var requests = ChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(state);
 
         Assert.DoesNotContain(requests, request => request.Kind == ChartProgramKind.Transform);
     }
@@ -126,6 +126,6 @@ public sealed class VNextChartProgramRequestPlannerTests
     [InlineData(ChartProgramKind.BarPie, EvidenceRuntimePath.VNextBarPie)]
     public void ResolveRuntimePath_ShouldMapKnownProgramKinds(ChartProgramKind programKind, EvidenceRuntimePath expectedPath)
     {
-        Assert.Equal(expectedPath, VNextChartProgramRequestPlanner.ResolveRuntimePath(programKind));
+        Assert.Equal(expectedPath, ChartProgramRequestPlanner.ResolveRuntimePath(programKind));
     }
 }

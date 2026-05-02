@@ -1,7 +1,7 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
-using DataVisualiser.UI.Workspace.Coordination;
+using DataVisualiser.UI.Workspace;
 
 namespace DataVisualiser.UI.MainHost.Coordination;
 

@@ -9,19 +9,19 @@ using Moq;
 namespace DataVisualiser.Tests.Services;
 
 /// <summary>
-///     Unit tests for StrategySelectionService.
+///     Unit tests for StrategySelector.
 ///     Tests strategy selection logic for single, combined, and multi-metric scenarios.
 /// </summary>
-public sealed class StrategySelectionServiceTests
+public sealed class StrategySelectorTests
 {
     private const string ConnectionString = "TestConnectionString";
     private readonly Mock<IStrategyCutOverService> _mockCutOverService;
-    private readonly StrategySelectionService _service;
+    private readonly StrategySelector _service;
 
-    public StrategySelectionServiceTests()
+    public StrategySelectorTests()
     {
         _mockCutOverService = new Mock<IStrategyCutOverService>();
-        _service = new StrategySelectionService(_mockCutOverService.Object, ConnectionString);
+        _service = new StrategySelector(_mockCutOverService.Object, ConnectionString);
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public sealed class StrategySelectionServiceTests
                 }
             ]
         };
-        var service = new StrategySelectionService(_mockCutOverService.Object, queries);
+        var service = new StrategySelector(_mockCutOverService.Object, queries);
         var series = new List<IEnumerable<MetricData>>();
         var labels = new List<string>();
         var selectedSubtypes = new List<string?>

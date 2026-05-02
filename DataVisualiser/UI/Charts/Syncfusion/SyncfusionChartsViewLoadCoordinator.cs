@@ -1,5 +1,5 @@
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Workspace.Coordination;
+using DataVisualiser.UI.Workspace;
 
 namespace DataVisualiser.UI.Charts.Syncfusion;
 

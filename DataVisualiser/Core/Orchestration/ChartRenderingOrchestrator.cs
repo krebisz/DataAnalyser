@@ -261,7 +261,7 @@ public sealed class ChartRenderingOrchestrator
     {
         var preparationStage = new MainChartPreparationStage(metricSelectionService, _connectionString);
         var strategySelectionStage = new MainChartStrategySelectionStage(
-            new StrategySelectionService(_strategyCutOverService, _connectionString ?? string.Empty));
+            new StrategySelector(_strategyCutOverService, _connectionString ?? string.Empty));
         var renderInvocationStage = new MainChartRenderInvocationStage(_chartUpdateCoordinator);
 
         return new MainChartOrchestrationPipeline(preparationStage, strategySelectionStage, renderInvocationStage);

@@ -17,8 +17,8 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
     private readonly Func<IDisposable> _beginUiBusyScope;
     private readonly ITransformDataPanelController _controller;
     private readonly Func<bool> _isInitializing;
-    private readonly TransformDataResolutionCoordinator _transformDataResolutionCoordinator;
-    private readonly TransformOperationExecutionCoordinator _transformOperationExecutionCoordinator;
+    private readonly TransformDataResolver _transformDataResolutionCoordinator;
+    private readonly TransformOperationExecutor _transformOperationExecutionCoordinator;
     private readonly TransformOperationStateCoordinator _transformOperationStateCoordinator;
     private readonly TransformRenderCoordinator _transformRenderCoordinator;
     private readonly TransformSelectionInteractionCoordinator _transformSelectionInteractionCoordinator;
@@ -110,7 +110,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         _isUpdatingTransformSubtypeCombos = true;
         try
         {
-            TransformSubtypeSelectionCoordinator.ResetSelectionControls(_controller);
+            TransformSubtypeSelector.ResetSelectionControls(_controller);
         }
         finally
         {
@@ -131,13 +131,13 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
 
     public void UpdateTransformSubtypeOptions()
     {
-        if (!TransformSubtypeSelectionCoordinator.CanUpdateSubtypeOptions(_controller, _isTransformSelectionPendingLoad))
+        if (!TransformSubtypeSelector.CanUpdateSubtypeOptions(_controller, _isTransformSelectionPendingLoad))
             return;
 
         _isUpdatingTransformSubtypeCombos = true;
         try
         {
-            TransformSubtypeSelectionCoordinator.ApplySubtypeOptions(
+            TransformSubtypeSelector.ApplySubtypeOptions(
                 _controller,
                 _viewModel.ChartState,
                 _viewModel.MetricState.SelectedSeries,

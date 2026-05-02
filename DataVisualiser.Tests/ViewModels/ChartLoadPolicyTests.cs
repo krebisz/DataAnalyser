@@ -3,15 +3,15 @@ using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.Tests.ViewModels;
 
-public sealed class VNextChartRoutePolicyTests
+public sealed class ChartLoadPolicyTests
 {
     [Fact]
     public void ShouldUseMainFamilyPath_ShouldAllowMainOnly()
     {
         var state = new ChartState { IsMainVisible = true };
 
-        Assert.True(VNextChartRoutePolicy.ShouldUseMainFamilyPath(state));
-        Assert.True(VNextChartRoutePolicy.SupportsOnlyMainChart(state));
+        Assert.True(ChartLoadPolicy.ShouldUseMainFamilyPath(state));
+        Assert.True(ChartLoadPolicy.SupportsOnlyMainChart(state));
     }
 
     [Theory]
@@ -22,8 +22,8 @@ public sealed class VNextChartRoutePolicyTests
         var state = new ChartState { IsMainVisible = true };
         typeof(ChartState).GetProperty(visibleProperty)!.SetValue(state, true);
 
-        Assert.True(VNextChartRoutePolicy.ShouldUseMainFamilyPath(state));
-        Assert.False(VNextChartRoutePolicy.SupportsOnlyMainChart(state));
+        Assert.True(ChartLoadPolicy.ShouldUseMainFamilyPath(state));
+        Assert.False(ChartLoadPolicy.SupportsOnlyMainChart(state));
     }
 
     [Theory]
@@ -35,7 +35,7 @@ public sealed class VNextChartRoutePolicyTests
         var state = new ChartState { IsMainVisible = true };
         typeof(ChartState).GetProperty(visibleProperty)!.SetValue(state, true);
 
-        Assert.True(VNextChartRoutePolicy.ShouldUseMainFamilyPath(state));
+        Assert.True(ChartLoadPolicy.ShouldUseMainFamilyPath(state));
     }
 
     [Fact]
@@ -47,6 +47,6 @@ public sealed class VNextChartRoutePolicyTests
             IsTransformPanelVisible = true
         };
 
-        Assert.False(VNextChartRoutePolicy.ShouldUseMainFamilyPath(state));
+        Assert.False(ChartLoadPolicy.ShouldUseMainFamilyPath(state));
     }
 }

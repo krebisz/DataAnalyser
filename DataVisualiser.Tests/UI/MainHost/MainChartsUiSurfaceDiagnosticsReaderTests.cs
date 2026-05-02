@@ -38,7 +38,7 @@ public sealed class MainChartsUiSurfaceDiagnosticsReaderTests
             metricCombo.Items.Add(metricOption);
             metricCombo.SelectedItem = metricOption;
 
-            var selectorManager = new SubtypeSelectorManager(panel, primarySubtypeCombo);
+            var selectorManager = new SubtypeSelector(panel, primarySubtypeCombo);
             selectorManager.ReplacePrimaryItems(subtypeOptions, metricOption, preserveSelection: false);
             selectorManager.SetPrimaryMetricType(metricOption);
             var dynamicCombo = selectorManager.AddSubtypeCombo(subtypeOptions, metricOption);

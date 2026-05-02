@@ -5,7 +5,7 @@ using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
-internal static class TransformSubtypeSelectionCoordinator
+internal static class TransformSubtypeSelector
 {
     public static bool CanUpdateSubtypeOptions(ITransformDataPanelController controller, bool isTransformSelectionPendingLoad)
     {

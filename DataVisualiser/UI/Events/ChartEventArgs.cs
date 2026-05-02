@@ -10,13 +10,13 @@ public class ChartUpdateRequestedEventArgs : EventArgs
     public bool ShowTransformPanel { get; set; }
     public bool ShowBarPie { get; set; }
     public bool ShowSyncfusionSunburst { get; set; }
-
-    // NEW: whether charts should be rendered
     public bool ShouldRenderCharts { get; set; }
-
-    // NEW: indicates if this is just a visibility toggle (no data reload needed)
     public bool IsVisibilityOnlyToggle { get; set; }
-
-    // NEW: which chart was toggled (null if not a single-chart toggle)
     public string? ToggledChartName { get; set; }
+}
+
+public class ChartVisibilityChangedEventArgs : EventArgs
+{
+    public string ChartName { get; set; } = "";
+    public bool IsVisible { get; set; }
 }

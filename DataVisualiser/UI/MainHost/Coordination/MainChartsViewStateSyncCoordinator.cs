@@ -65,7 +65,7 @@ internal sealed class MainChartsViewStateSyncCoordinator
     }
 
     internal static void ApplySubtypeSelections(
-        SubtypeSelectorManager selectorManager,
+        SubtypeSelector selectorManager,
         ComboBox primaryCombo,
         IReadOnlyList<MetricNameOption> subtypeList,
         IReadOnlyList<MetricSeriesSelection> selections,

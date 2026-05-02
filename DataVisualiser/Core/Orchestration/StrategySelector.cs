@@ -12,19 +12,19 @@ namespace DataVisualiser.Core.Orchestration;
 ///     Handles strategy selection logic, extracting complex conditional logic
 ///     from MainWindow to improve maintainability.
 /// </summary>
-public sealed class StrategySelectionService
+public sealed class StrategySelector
 {
     private readonly string _connectionString;
     private readonly IMetricSelectionDataQueries? _dataQueries;
     private readonly IStrategyCutOverService _strategyCutOverService;
 
-    public StrategySelectionService(IStrategyCutOverService strategyCutOverService, string connectionString)
+    public StrategySelector(IStrategyCutOverService strategyCutOverService, string connectionString)
     {
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
     }
 
-    internal StrategySelectionService(IStrategyCutOverService strategyCutOverService, IMetricSelectionDataQueries dataQueries)
+    internal StrategySelector(IStrategyCutOverService strategyCutOverService, IMetricSelectionDataQueries dataQueries)
     {
         _strategyCutOverService = strategyCutOverService ?? throw new ArgumentNullException(nameof(strategyCutOverService));
         _dataQueries = dataQueries ?? throw new ArgumentNullException(nameof(dataQueries));

@@ -6,7 +6,7 @@ using DataVisualiser.UI.Charts.Presentation;
 
 namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
-public sealed class SubtypeSelectorManagerTests
+public sealed class SubtypeSelectorTests
 {
     [Fact]
     public void ReplacePrimaryItems_AfterMetricTypeChange_ClearsDynamicStateAndSelectsFirstNewSubtype()
@@ -26,7 +26,7 @@ public sealed class SubtypeSelectorManagerTests
                 Content = "Add Subtype"
             });
 
-            var manager = new SubtypeSelectorManager(panel, primaryCombo);
+            var manager = new SubtypeSelector(panel, primaryCombo);
             var oldMetric = new MetricNameOption("OldMetric", "OldMetric");
             var oldSubtypes = new[]
             {
@@ -76,7 +76,7 @@ public sealed class SubtypeSelectorManagerTests
                 Content = "Add Subtype"
             });
 
-            var manager = new SubtypeSelectorManager(panel, primaryCombo);
+            var manager = new SubtypeSelector(panel, primaryCombo);
             var metric = new MetricNameOption("MetricA", "MetricA");
             var subtypes = new[]
             {
@@ -116,7 +116,7 @@ public sealed class SubtypeSelectorManagerTests
                 Content = "Add Subtype"
             });
 
-            var manager = new SubtypeSelectorManager(panel, primaryCombo);
+            var manager = new SubtypeSelector(panel, primaryCombo);
             var metric = new MetricNameOption("MetricA", "MetricA");
             var subtypes = new[]
             {

@@ -43,17 +43,18 @@ status is yellow
 migration proceeds by stabilization, seam hardening, consumption migration, convergence, then productization
 ```
 
-Current post-synopsis read after Phases 1-23:
+Current post-synopsis read after Phases 1-35:
 
 ```text
 Phases 1-23 proved and hardened the structural spine.
-The target architecture is now partially implemented, not merely described.
-Capability, contract, render-plan, metadata, delivery-binding, and evidence seams are materially stronger.
-MovingAverage and TabularSummary prove that new capability and independent consumers can grow through the spine.
-Legacy bridges are classified and bounded, but not all are retired.
-The primary remaining convergence blocker is ChartDataContext as the dominant UI consumption model.
-LegacyChartProgramProjector, VNextDataResolutionHelper, service-backed metric loading, and parity/evidence bridge paths remain blocked by that UI consumption model.
-The next migration track is consumption migration and convergence: move production UI consumption onto VNext-native contracts, reduce ChartDataContext dependency, retire bridge paths selectively, and consolidate only after repeated family slices prove the same shape.
+Phases 24-35 completed consumption migration and convergence.
+The target architecture is substantially implemented in production across all chart families.
+Production families carry VNextUiConsumptionContract, ConsumerSurfaceModel, capability contracts, render-plan metadata, provider qualification, and evidence export.
+LegacyMetricViewGateway was retired and replaced by MetricLoadSnapshotGateway.
+Main-chart VNextMainChartLoadResult now carries native ChartProgram and MetricLoadSnapshot beside compatibility ProjectedContext.
+Remaining bounded production bridges (LegacyChartProgramProjector, VNextDataResolutionHelper, service-backed metric loading, strategy cut-over) are explicitly documented with named retirement conditions and accepted as bounded compatibility.
+ChartDataContext remains the UI rendering state carrier; its retirement requires consuming adapters to switch to VNext-native surface output.
+Phase 36+ post-convergence formalisation and bounded-generativity alignment is the active track.
 ```
 
 Migration continuation rule:
@@ -61,8 +62,10 @@ Migration continuation rule:
 ```text
 Phases 1-23 are completed structural spine migration.
 Phases 24-35 are consumption migration and convergence.
+Phases 24-35 are now complete; bounded bridges remain with named retirement conditions.
 Phases 36+ are post-convergence formalisation and bounded-generativity alignment.
 Do not treat Phase 23 as full architectural completion.
+Do not treat Phase 35 as full architectural completion; bounded bridges remain with named retirement conditions.
 Do not add new capability as the next priority unless it directly supports consumption migration.
 ```
 
@@ -349,7 +352,7 @@ Core outcome: Transform adapter coordinator construction was moved into a compos
 | Phase 33 | Capability / contract consolidation audit | `documents/DataVisualiser_Capability_Contract_Consolidation_Audit.md`; shared-shape tests |
 | Phase 34 | Final legacy bypass retirement note | `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`; regression / parity tests |
 | Phase 35 | Final convergence audit | `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated baseline artifacts |
-| Phase 36 | Formal coverage | Requirements-to-language coverage matrix |
+| Phase 36 | Formal coverage | `documents/DataVisualiser_Requirements_Language_Coverage_Matrix.md`; 40 language terms; 36 covered/partial; 2 missing; 1 deferred |
 | Phase 37 | Construction algebra | Construction algebra baseline |
 | Phase 38 | Operation / capability algebra | Operation, capability, arity, precondition, postcondition, and compatibility artifacts |
 | Phase 39 | Relation system | Typed relation model and graph-projection artifacts |
@@ -1291,7 +1294,7 @@ Tasks:
 - [x] Confirm no unbounded `ChartDataContext` production bridge remains.
 - [x] Confirm UI consumes VNext-native contract/surface output.
 - [x] Confirm Operation Chain consumes VNext-native contract/surface output.
-- [ ] Confirm legacy projectors are retired or validation-only.
+- [x] Confirm legacy projectors are retired or validation-only (bounded acceptance: `LegacyChartProgramProjector` is confirmed as a bounded production bridge with named retirement condition in `DataVisualiser_Final_Convergence_Audit.md`; not retired or validation-only, but explicitly bounded and gated).
 - [x] Confirm rendering/vendor concerns are terminal.
 - [x] Confirm evidence remains observational.
 - [x] Confirm non-chart consumer path still works.
@@ -1340,8 +1343,10 @@ Phase 35 evidence:
 Phase 35 status:
 
 Convergence progress is proven.
-Final closure is blocked by bounded production bridges that are documented with retirement conditions.
-Do not begin Phase 36+ formalisation as completed convergence unless the project explicitly accepts those bridges as bounded compatibility or runs a dedicated bridge-removal track.
+Bounded production bridges are documented with named retirement conditions and explicitly accepted as bounded compatibility.
+`LegacyChartProgramProjector`, `VNextDataResolutionHelper`, service-backed metric loading, and strategy cut-over are gated with retirement conditions; they are not unbounded authority.
+Phase 35 is closed under the bounded-compatibility acceptance clause.
+Phase 36 post-convergence formalisation may proceed.
 
 ---
 
@@ -2112,9 +2117,10 @@ updated documentation
 | 2026-05-01/2026-05-02 | 31 | Thinned UI / interaction / state layer and bounded terminal tooltip behavior. | `documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md`; OperationChainWorkbenchPresenter; empty Operation Chain smoke confirmed; DataVisualiser 1032 passed; DataFileReader 15 passed. | Complete |
 | 2026-05-02 | 32 | Demoted rendering / backend / vendor boundaries and bounded terminal-adjacent deferrals. | `documents/DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md`; focused vendor/delivery suite 150 passed; DataVisualiser 1033 passed; DataFileReader 15 passed. | Complete |
 | 2026-05-02 | 33 | Consolidated shared capability-contract shape while preserving family differences. | `documents/DataVisualiser_Capability_Contract_Consolidation_Audit.md`; `IAnalyticalCapabilityContract`; DataVisualiser 1034 passed; DataFileReader 15 passed. | Complete |
-| 2026-05-02 | 34 | Retired one safe legacy bypass and bounded remaining production/validation paths. | `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`; focused Phase 34 validation 11 passed; DataVisualiser 1035 passed; DataFileReader 15 passed. | Partial |
-| 2026-05-02 | 35 | Audited final convergence, retired the legacy-named metric gateway bridge, and reduced main-chart projection dependence. | `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated structural artifacts; density 0.7389%; metric gateway validation 168 passed; main projection validation 147 passed; DataVisualiser 1037 passed; DataFileReader 15 passed; smoke exports confirmed. | Partial |
-|  | 36-47 | Post-convergence formalisation and bounded-generativity phases. | Coverage matrix, construction algebra, typed relations, evidence sufficiency, analytical fitness, bounded search, and scenario-hardening artifacts. | Planned |
+| 2026-05-02 | 34 | Retired one safe legacy bypass and bounded remaining production/validation paths. | `documents/DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md`; focused Phase 34 validation 11 passed; DataVisualiser 1035 passed; DataFileReader 15 passed; remaining named paths accepted as bounded compatibility per Phase 35 closure. | Complete |
+| 2026-05-02 | 35 | Audited final convergence, retired the legacy-named metric gateway bridge, reduced main-chart projection dependence, and explicitly accepted remaining bounded bridges with named retirement conditions. | `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated structural artifacts; density 0.7389%; metric gateway validation 168 passed; main projection validation 147 passed; DataVisualiser 1037 passed; DataFileReader 15 passed; smoke exports confirmed; bounded bridges accepted. | Complete |
+| 2026-05-02 | 36 | Produced Requirements-to-Language Coverage Matrix. | `documents/DataVisualiser_Requirements_Language_Coverage_Matrix.md`; 40 language terms assessed; 36 covered or partially covered; 2 missing (Confidence, Envelope); 1 deferred (Interaction). | Complete |
+|  | 37-47 | Post-convergence formalisation and bounded-generativity phases. | Construction algebra, typed relations, evidence sufficiency, analytical fitness, bounded search, and scenario-hardening artifacts. | Planned |
 
 ---
 

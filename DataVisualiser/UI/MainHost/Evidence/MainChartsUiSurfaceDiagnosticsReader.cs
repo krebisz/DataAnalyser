@@ -7,11 +7,11 @@ namespace DataVisualiser.UI.MainHost.Evidence;
 
 internal sealed class MainChartsUiSurfaceDiagnosticsReader
 {
-    private readonly SubtypeSelectorManager _selectorManager;
+    private readonly SubtypeSelector _selectorManager;
     private readonly MainChartsSessionDiagnosticsRecorder _sessionDiagnosticsRecorder;
 
     public MainChartsUiSurfaceDiagnosticsReader(
-        SubtypeSelectorManager selectorManager,
+        SubtypeSelector selectorManager,
         MainChartsSessionDiagnosticsRecorder sessionDiagnosticsRecorder)
     {
         _selectorManager = selectorManager ?? throw new ArgumentNullException(nameof(selectorManager));

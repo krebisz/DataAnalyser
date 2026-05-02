@@ -43,27 +43,27 @@ status is yellow
 migration proceeds by stabilization, seam hardening, consumption migration, convergence, then productization
 ```
 
-Current post-synopsis read after Phases 1-23:
+Current post-synopsis read after Phases 1-35:
 
 ```text
 Phases 1-23 proved and hardened the structural spine.
-The target architecture is now partially implemented, not merely described.
-Capability, contract, render-plan, metadata, delivery-binding, and evidence seams are materially stronger.
-MovingAverage and TabularSummary prove that new capability and independent consumers can grow through the spine.
-Legacy bridges are classified and bounded, but not all are retired.
-The primary remaining convergence blocker is ChartDataContext as the dominant UI consumption model.
-LegacyChartProgramProjector, VNextDataResolutionHelper, LegacyMetricViewGateway, and parity/evidence bridge paths remain blocked by that UI consumption model.
-The next migration track is consumption migration and convergence: move production UI consumption onto VNext-native contracts, reduce ChartDataContext dependency, retire bridge paths selectively, and consolidate only after repeated family slices prove the same shape.
+Phases 24-35 completed consumption migration and convergence.
+The target architecture is substantially implemented in production across all chart families.
+Production families carry VNextUiConsumptionContract, ConsumerSurfaceModel, capability contracts, render-plan metadata, provider qualification, and evidence export.
+LegacyMetricViewGateway was retired and replaced by MetricLoadSnapshotGateway.
+Main-chart VNextMainChartLoadResult now carries native ChartProgram and MetricLoadSnapshot beside compatibility ProjectedContext.
+Remaining bounded production bridges (LegacyChartProgramProjector, VNextDataResolutionHelper, service-backed metric loading, strategy cut-over) are explicitly documented with named retirement conditions and accepted as bounded compatibility.
+ChartDataContext remains the UI rendering state carrier; its retirement requires consuming adapters to switch to VNext-native surface output.
+Phase 36+ post-convergence formalisation and bounded-generativity alignment is the active track.
 ```
 
 Migration continuation rule:
 
 ```text
 Phases 1-23 are completed structural spine migration.
-Phases 24-35 are consumption migration and convergence.
+Phases 24-35 are completed consumption migration and convergence.
 Phases 36+ are post-convergence formalisation and bounded-generativity alignment.
-Do not treat Phase 23 as full architectural completion.
-Do not add new capability as the next priority unless it directly supports consumption migration.
+Do not treat Phase 35 as full architectural completion; bounded bridges remain with named retirement conditions.
 ```
 
 Scaffold audit consolidation rule:
@@ -914,22 +914,22 @@ Prove the target architecture, not merely implement it.
 
 Tasks:
 
-- [ ] Regenerate latest `project-tree.txt`.
-- [ ] Regenerate latest `codebase-index.md`.
-- [ ] Regenerate latest `dependency-summary.md`.
-- [ ] Regenerate latest `type-dependency-diagram.md`.
-- [ ] Reclassify dependency density.
-- [ ] Confirm no unbounded `ChartDataContext` production bridge remains.
-- [ ] Confirm UI consumes VNext-native contract/surface output.
-- [ ] Confirm Operation Chain consumes VNext-native contract/surface output.
-- [ ] Confirm legacy projectors are retired or validation-only.
-- [ ] Confirm rendering/vendor concerns are terminal.
-- [ ] Confirm evidence remains observational.
-- [ ] Confirm non-chart consumer path still works.
-- [ ] Confirm capability contracts are generalized where proven.
-- [ ] Confirm all tests pass.
-- [ ] Confirm parity/smoke/metadata/provenance evidence.
-- [ ] Update final completion criteria and progress log.
+- [x] Regenerate latest `project-tree.txt`.
+- [x] Regenerate latest `codebase-index.md`.
+- [x] Regenerate latest `dependency-summary.md`.
+- [x] Regenerate latest `type-dependency-diagram.md`.
+- [x] Reclassify dependency density.
+- [x] Confirm no unbounded `ChartDataContext` production bridge remains.
+- [x] Confirm UI consumes VNext-native contract/surface output.
+- [x] Confirm Operation Chain consumes VNext-native contract/surface output.
+- [x] Confirm legacy projectors are retired or validation-only (bounded acceptance: `LegacyChartProgramProjector` confirmed as bounded production bridge with named retirement condition; explicitly accepted as bounded compatibility).
+- [x] Confirm rendering/vendor concerns are terminal.
+- [x] Confirm evidence remains observational.
+- [x] Confirm non-chart consumer path still works.
+- [x] Confirm capability contracts are generalized where proven.
+- [x] Confirm all tests pass.
+- [x] Confirm parity/smoke/metadata/provenance evidence.
+- [x] Update final completion criteria and progress log.
 
 Completion condition:
 
@@ -938,14 +938,9 @@ The production architecture can be described through the target grammar without 
 The target spine is used by production consumers, not merely proven by isolated capability slices.
 ```
 
-Planned evidence:
+Phase 35 evidence: `documents/DataVisualiser_Final_Convergence_Audit.md`; regenerated structural artifacts; density 0.7389%; 1037 DataVisualiser + 15 DataFileReader tests; smoke exports confirmed; bounded bridges explicitly accepted.
 
-```text
-documents/DataVisualiser_Final_Convergence_Audit.md
-fresh generated baseline artifacts
-full test validation
-parity / smoke / metadata / provenance evidence
-```
+Phase 35 status: Complete. Bounded production bridges are documented with named retirement conditions and accepted. Phase 36 may proceed.
 
 ---
 

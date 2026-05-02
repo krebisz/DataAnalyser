@@ -3,7 +3,6 @@ using DataVisualiser.VNext.Application;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Kernel;
 using DataVisualiser.VNext.Rendering;
-using DataVisualiser.VNext.Rendering.MovingAverage;
 
 namespace DataVisualiser.Tests.VNext;
 

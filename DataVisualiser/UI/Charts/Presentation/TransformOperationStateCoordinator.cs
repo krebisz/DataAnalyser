@@ -11,7 +11,7 @@ internal sealed class TransformOperationStateCoordinator
         ChartDataContext? context,
         bool isSelectionPendingLoad,
         Func<ChartDataContext, TransformSelectionResolution> selectionResolver,
-        TransformOperationExecutionCoordinator executionCoordinator)
+        TransformOperationExecutor executionCoordinator)
     {
         ArgumentNullException.ThrowIfNull(controller);
         ArgumentNullException.ThrowIfNull(selectionResolver);
@@ -26,7 +26,7 @@ internal sealed class TransformOperationStateCoordinator
         var operationTag = GetSelectedOperationTag(controller);
         if (string.IsNullOrWhiteSpace(operationTag))
         {
-            controller.TransformComputeButton.IsEnabled = TransformDataResolutionCoordinator.CanRenderPrimarySelection(context);
+            controller.TransformComputeButton.IsEnabled = TransformDataResolver.CanRenderPrimarySelection(context);
             return;
         }
 

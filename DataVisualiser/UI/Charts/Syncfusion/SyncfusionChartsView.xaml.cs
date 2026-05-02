@@ -20,7 +20,7 @@ using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.MainHost.Export;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
-using DataVisualiser.UI.Workspace.Diagnostics;
+using DataVisualiser.UI.Workspace;
 
 using DataVisualiser.UI.Charts.Presentation;
 namespace DataVisualiser.UI.Charts.Syncfusion;
@@ -47,7 +47,7 @@ public partial class SyncfusionChartsView : UserControl
     private bool _isApplyingSelectionSync;
     private MainChartsViewEventBinder? _viewModelEventBinder;
     private MetricSelectionService _metricSelectionService = null!;
-    private SubtypeSelectorManager _selectorManager = null!;
+    private SubtypeSelector _selectorManager = null!;
     private List<MetricNameOption>? _subtypeList;
     private readonly SemaphoreSlim _chartRenderGate = new(1, 1);
     private int _uiBusyDepth;
@@ -226,7 +226,7 @@ public partial class SyncfusionChartsView : UserControl
 
     private void InitializeSubtypeSelector()
     {
-        _selectorManager = new SubtypeSelectorManager(TopControlMetricSubtypePanel, SubtypeCombo);
+        _selectorManager = new SubtypeSelector(TopControlMetricSubtypePanel, SubtypeCombo);
         _selectorManager.SubtypeSelectionChanged += (s, e) => OnAnySubtypeSelectionChanged(s, null);
     }
 

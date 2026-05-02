@@ -1,6 +1,6 @@
 ﻿# Codebase Index
 
-Generated: 2026-05-02 09:25:42  
+Generated: 2026-05-02 14:23:10  
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
@@ -616,7 +616,7 @@ This file is auto-generated.
 | DataVisualiser | class | WeekdayTrendAverageToggleEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 2 | .\DataVisualiser\UI\Events\WeekdayTrendAverageToggleEventArgs.cs |
 | DataVisualiser | class | WeekdayTrendDayToggleEventArgs | public | top-level |  | DataVisualiser.UI.Events | file-scoped | 2 | .\DataVisualiser\UI\Events\WeekdayTrendDayToggleEventArgs.cs |
 | DataVisualiser | class | MetricSelectionComboReader | internal | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 5 | .\DataVisualiser\UI\MainHost\MetricSelectionComboReader.cs |
-| DataVisualiser | class | VNextMainChartIntegrationCoordinator | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 19 | .\DataVisualiser\UI\MainHost\VNextMainChartIntegrationCoordinator.cs |
+| DataVisualiser | class | VNextMainChartIntegrationCoordinator | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 21 | .\DataVisualiser\UI\MainHost\VNextMainChartIntegrationCoordinator.cs |
 | DataVisualiser | class | VNextSeriesLoadCoordinator | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 19 | .\DataVisualiser\UI\MainHost\VNextSeriesLoadCoordinator.cs |
 | DataVisualiser | record | VNextMainChartLoadResult | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 9 | .\DataVisualiser\UI\MainHost\VNextMainChartIntegrationCoordinator.cs |
 | DataVisualiser | record | VNextSeriesLoadResult | public | top-level |  | DataVisualiser.UI.MainHost | file-scoped | 8 | .\DataVisualiser\UI\MainHost\VNextSeriesLoadCoordinator.cs |
@@ -763,7 +763,7 @@ This file is auto-generated.
 | DataVisualiser | class | VNextMetricLoadRouter | internal | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 9 | .\DataVisualiser\UI\ViewModels\VNextMetricLoadRouter.cs |
 | DataVisualiser | interface | IMainChartsViewEventSource | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\IMainChartsViewEventSource.cs |
 | DataVisualiser | record | SharedMainWindowViewModelContext | public | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 5 | .\DataVisualiser\UI\ViewModels\SharedMainWindowViewModelProvider.cs |
-| DataVisualiser | record | VNextMetricLoadRoutingResult | internal | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 109 | .\DataVisualiser\UI\ViewModels\VNextMetricLoadRouter.cs |
+| DataVisualiser | record | VNextMetricLoadRoutingResult | internal | top-level |  | DataVisualiser.UI.ViewModels | file-scoped | 110 | .\DataVisualiser\UI\ViewModels\VNextMetricLoadRouter.cs |
 | DataVisualiser | class | WorkspaceLoadCoordinator | public | top-level |  | DataVisualiser.UI.Workspace.Coordination | file-scoped | 2 | .\DataVisualiser\UI\Workspace\Coordination\WorkspaceLoadCoordinator.cs |
 | DataVisualiser | record | ClearActions | public | top-level |  | DataVisualiser.UI.Workspace.Coordination | file-scoped | 22 | .\DataVisualiser\UI\Workspace\Coordination\WorkspaceLoadCoordinator.cs |
 | DataVisualiser | record | LoadExecutionActions | public | top-level |  | DataVisualiser.UI.Workspace.Coordination | file-scoped | 15 | .\DataVisualiser\UI\Workspace\Coordination\WorkspaceLoadCoordinator.cs |

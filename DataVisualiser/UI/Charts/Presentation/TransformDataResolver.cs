@@ -12,7 +12,7 @@ using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
-internal sealed class TransformDataResolutionCoordinator
+internal sealed class TransformDataResolver
 {
     private readonly ITransformDataPanelController _controller;
     private readonly MetricSelectionService _metricSelectionService;
@@ -20,7 +20,7 @@ internal sealed class TransformDataResolutionCoordinator
     private readonly VNextSeriesLoadCoordinator _vnextCoordinator;
     private readonly MainWindowViewModel _viewModel;
 
-    public TransformDataResolutionCoordinator(
+    public TransformDataResolver(
         ITransformDataPanelController controller,
         MainWindowViewModel viewModel,
         MetricSelectionService metricSelectionService,

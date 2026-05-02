@@ -5,7 +5,7 @@ using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.UI.ViewModels;
 
-internal static class VNextChartProgramRequestPlanner
+internal static class ChartProgramRequestPlanner
 {
     public static IReadOnlyList<ChartProgramRequest> BuildMainFamilyRequests(ChartState chartState)
     {

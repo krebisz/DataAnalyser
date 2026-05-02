@@ -163,7 +163,7 @@ public sealed class ArchitectureGuardrailTests
     {
         var capabilitySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "VNext", "Contracts", "CapabilityRequest.cs");
         var intentFactorySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "VNext", "Application", "AnalyticalIntentFactory.cs");
-        var plannerSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "ViewModels", "VNextChartProgramRequestPlanner.cs");
+        var plannerSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "ViewModels", "ChartProgramRequestPlanner.cs");
         var renderingContractSource = SourceTreeTestHelper.ReadRepositoryFile(
             "DataVisualiser",
             "Core",
@@ -297,12 +297,12 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("VNextMetricLoadRouter", coordinatorSource, StringComparison.Ordinal);
         Assert.Contains("TryLoadAsync", coordinatorSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("VNextChartRoutePolicy.ShouldUseMainFamilyPath", coordinatorSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests", coordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartLoadPolicy.ShouldUseMainFamilyPath", coordinatorSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartProgramRequestPlanner.BuildVisibleChartFamilyRequests", coordinatorSource, StringComparison.Ordinal);
         Assert.DoesNotContain("RecordVNextFamilyRuntimes", coordinatorSource, StringComparison.Ordinal);
 
-        Assert.Contains("VNextChartRoutePolicy.ShouldUseMainFamilyPath", routerSource, StringComparison.Ordinal);
-        Assert.Contains("VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests", routerSource, StringComparison.Ordinal);
+        Assert.Contains("ChartLoadPolicy.ShouldUseMainFamilyPath", routerSource, StringComparison.Ordinal);
+        Assert.Contains("ChartProgramRequestPlanner.BuildVisibleChartFamilyRequests", routerSource, StringComparison.Ordinal);
         Assert.Contains("RecordVNextFamilyRuntimes", routerSource, StringComparison.Ordinal);
     }
 
@@ -506,13 +506,7 @@ public sealed class ArchitectureGuardrailTests
         {
             Path.Combine("DataVisualiser", "VNext", "Rendering", "ChartRenderPlan.cs"),
             Path.Combine("DataVisualiser", "Core", "Rendering", "Contracts", "ChartRenderModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "UiChartRenderModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartSeriesModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartFacetModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartAxisModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartLegendModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartOverlayModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartInteractionModel.cs")
+            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "UiChartRenderModel.cs")
         };
         var forbiddenTokens = new[]
         {
@@ -540,13 +534,7 @@ public sealed class ArchitectureGuardrailTests
     {
         var guardedFiles = new[]
         {
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "UiChartRenderModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartSeriesModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartFacetModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartAxisModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartLegendModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartOverlayModel.cs"),
-            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "ChartInteractionModel.cs")
+            Path.Combine("DataVisualiser", "UI", "Charts", "Presentation", "UiChartRenderModel.cs")
         };
         var forbiddenTokens = new[]
         {
@@ -1054,7 +1042,7 @@ public sealed class ArchitectureGuardrailTests
     public void TransformExecutionCoordinator_ShouldDelegateTransformComputationToSharedService()
     {
         var workflowSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformWorkflowCoordinator.cs");
-        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformOperationExecutionCoordinator.cs");
+        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformOperationExecutor.cs");
 
         Assert.Contains("_transformOperationExecutionCoordinator.Execute", workflowSource, StringComparison.Ordinal);
         Assert.Contains("_transformComputationService.ComputeUnaryTransform", coordinatorSource, StringComparison.Ordinal);
@@ -1074,8 +1062,8 @@ public sealed class ArchitectureGuardrailTests
             Directory.EnumerateFiles(presentationDirectory, "*.cs", SearchOption.AllDirectories)
                 .Select(File.ReadAllText));
 
-        Assert.Contains("TransformDataResolutionCoordinator", source, StringComparison.Ordinal);
-        Assert.Contains("TransformOperationExecutionCoordinator", source, StringComparison.Ordinal);
+        Assert.Contains("TransformDataResolver", source, StringComparison.Ordinal);
+        Assert.Contains("TransformOperationExecutor", source, StringComparison.Ordinal);
         Assert.Contains("TransformOperationStateCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("TransformRenderCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("TransformSelectionInteractionCoordinator", source, StringComparison.Ordinal);
@@ -1089,8 +1077,8 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("_transformWorkflowCoordinator.ExecuteOperationAsync", source, StringComparison.Ordinal);
         Assert.Contains("_transformWorkflowCoordinator.RenderPrimarySelectionAsync", source, StringComparison.Ordinal);
         Assert.Contains("_transformWorkflowCoordinator.RefreshFromSelectionAsync", source, StringComparison.Ordinal);
-        Assert.Contains("TransformSubtypeSelectionCoordinator.ApplySubtypeOptions", source, StringComparison.Ordinal);
-        Assert.Contains("TransformSubtypeSelectionCoordinator.ResetSelectionControls", source, StringComparison.Ordinal);
+        Assert.Contains("TransformSubtypeSelector.ApplySubtypeOptions", source, StringComparison.Ordinal);
+        Assert.Contains("TransformSubtypeSelector.ResetSelectionControls", source, StringComparison.Ordinal);
         Assert.DoesNotContain("TransformGridPresentationCoordinator.PopulateInputGrids", source, StringComparison.Ordinal);
         Assert.DoesNotContain("TransformGridPresentationCoordinator.PopulateResultGrid", source, StringComparison.Ordinal);
         Assert.DoesNotContain("TransformChartPresentationCoordinator.RenderResultsAsync", source, StringComparison.Ordinal);
@@ -1120,16 +1108,16 @@ public sealed class ArchitectureGuardrailTests
         var factorySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformDataPanelControllerAdapterCompositionFactory.cs");
 
         Assert.Contains("TransformDataPanelControllerAdapterCompositionFactory.Create", adapterSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("new TransformDataResolutionCoordinator", adapterSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("new TransformOperationExecutionCoordinator", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformDataResolver", adapterSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new TransformOperationExecutor", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("new TransformOperationStateCoordinator", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("new TransformRenderCoordinator", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("new TransformSelectionInteractionCoordinator", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("new TransformSessionMilestoneRecorder", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("new TransformWorkflowCoordinator", adapterSource, StringComparison.Ordinal);
 
-        Assert.Contains("new TransformDataResolutionCoordinator", factorySource, StringComparison.Ordinal);
-        Assert.Contains("new TransformOperationExecutionCoordinator", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformDataResolver", factorySource, StringComparison.Ordinal);
+        Assert.Contains("new TransformOperationExecutor", factorySource, StringComparison.Ordinal);
         Assert.Contains("new TransformOperationStateCoordinator", factorySource, StringComparison.Ordinal);
         Assert.Contains("new TransformRenderCoordinator", factorySource, StringComparison.Ordinal);
         Assert.Contains("new TransformSelectionInteractionCoordinator", factorySource, StringComparison.Ordinal);
@@ -1202,7 +1190,7 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TransformOperationStateCoordinator.cs");
 
-        Assert.Contains("TransformDataResolutionCoordinator.CanRenderPrimarySelection", source, StringComparison.Ordinal);
+        Assert.Contains("TransformDataResolver.CanRenderPrimarySelection", source, StringComparison.Ordinal);
         Assert.Contains("executionCoordinator.CanExecute", source, StringComparison.Ordinal);
     }
 
@@ -2275,7 +2263,7 @@ public sealed class ArchitectureGuardrailTests
     public void MovingAverageCapability_ShouldNotReferenceOldHubs()
     {
         var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            Path.Combine("DataVisualiser", "VNext", "Rendering", "MovingAverage", "MovingAverageCapabilityContract.cs"));
+            Path.Combine("DataVisualiser", "VNext", "Rendering", "MovingAverageCapabilityContract.cs"));
 
         Assert.DoesNotContain("ChartDataContext", contractSource, StringComparison.Ordinal);
         Assert.DoesNotContain("ChartUpdateCoordinator", contractSource, StringComparison.Ordinal);
@@ -2287,7 +2275,7 @@ public sealed class ArchitectureGuardrailTests
     public void MovingAverageCapability_ShouldExpressItselfThroughVNextSpine()
     {
         var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            Path.Combine("DataVisualiser", "VNext", "Rendering", "MovingAverage", "MovingAverageCapabilityContract.cs"));
+            Path.Combine("DataVisualiser", "VNext", "Rendering", "MovingAverageCapabilityContract.cs"));
 
         Assert.Contains("ChartProgramKind.MovingAverage", contractSource, StringComparison.Ordinal);
         Assert.Contains("CapabilityRequest", contractSource, StringComparison.Ordinal);

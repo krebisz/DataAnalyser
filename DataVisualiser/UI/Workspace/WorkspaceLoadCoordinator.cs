@@ -1,4 +1,4 @@
-namespace DataVisualiser.UI.Workspace.Coordination;
+namespace DataVisualiser.UI.Workspace;
 
 public sealed class WorkspaceLoadCoordinator
 {

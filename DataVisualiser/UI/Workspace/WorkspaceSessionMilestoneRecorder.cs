@@ -1,7 +1,7 @@
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.ViewModels;
 
-namespace DataVisualiser.UI.Workspace.Diagnostics;
+namespace DataVisualiser.UI.Workspace;
 
 internal sealed class WorkspaceSessionMilestoneRecorder
 {

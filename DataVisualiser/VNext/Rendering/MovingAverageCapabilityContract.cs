@@ -1,6 +1,6 @@
 using DataVisualiser.VNext.Contracts;
 
-namespace DataVisualiser.VNext.Rendering.MovingAverage;
+namespace DataVisualiser.VNext.Rendering;
 
 public sealed record MovingAverageCapabilityContract : IAnalyticalCapabilityContract
 {

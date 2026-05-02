@@ -91,7 +91,7 @@ public partial class MainChartsView : UserControl
     private MainChartsViewEventBinder? _viewModelEventBinder;
 
     private MetricSelectionService _metricSelectionService = null!;
-    private SubtypeSelectorManager _selectorManager = null!;
+    private SubtypeSelector _selectorManager = null!;
     private IStrategyCutOverService? _strategyCutOverService;
     private List<MetricNameOption>? _subtypeList;
     private ChartTooltipManager? _tooltipManager;
@@ -1053,7 +1053,7 @@ public partial class MainChartsView : UserControl
 
     private void InitializeSubtypeSelector()
     {
-        _selectorManager = new SubtypeSelectorManager(TopControlMetricSubtypePanel, SubtypeCombo);
+        _selectorManager = new SubtypeSelector(TopControlMetricSubtypePanel, SubtypeCombo);
         _uiSurfaceDiagnosticsReader = new MainChartsUiSurfaceDiagnosticsReader(_selectorManager, _sessionDiagnosticsRecorder);
 
         _selectorManager.SubtypeSelectionChanged += (s, e) =>

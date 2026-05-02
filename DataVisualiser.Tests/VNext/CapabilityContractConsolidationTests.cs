@@ -5,7 +5,7 @@ using DataVisualiser.Core.Rendering.Syncfusion;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Rendering.WeekdayTrend;
 using DataVisualiser.VNext.Contracts;
-using DataVisualiser.VNext.Rendering.MovingAverage;
+using DataVisualiser.VNext.Rendering;
 
 namespace DataVisualiser.Tests.VNext;
 

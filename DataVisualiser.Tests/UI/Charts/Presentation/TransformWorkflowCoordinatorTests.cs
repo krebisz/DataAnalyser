@@ -128,8 +128,8 @@ public sealed class TransformWorkflowCoordinatorTests
         var chartUpdateCoordinator = new ChartUpdateCoordinator(computationEngine, renderEngine, tooltipManager, chartState.ChartTimestamps, new CapturingNotificationService());
         var renderingContract = new TransformRenderingContract(new TransformChartRenderInvoker(chartUpdateCoordinator));
 
-        var resolutionCoordinator = new TransformDataResolutionCoordinator(controller, viewModel, metricService, new MetricSeriesSelectionCache());
-        var executionCoordinator = new TransformOperationExecutionCoordinator(new TransformComputationService());
+        var resolutionCoordinator = new TransformDataResolver(controller, viewModel, metricService, new MetricSeriesSelectionCache());
+        var executionCoordinator = new TransformOperationExecutor(new TransformComputationService());
         var renderCoordinator = new TransformRenderCoordinator(controller, chartState, renderingContract);
         var milestoneRecorder = new TransformSessionMilestoneRecorder(viewModel);
 

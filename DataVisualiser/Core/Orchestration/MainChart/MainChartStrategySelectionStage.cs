@@ -4,9 +4,9 @@ namespace DataVisualiser.Core.Orchestration.MainChart;
 
 public sealed class MainChartStrategySelectionStage : IMainChartStrategySelectionStage
 {
-    private readonly StrategySelectionService _strategySelectionService;
+    private readonly StrategySelector _strategySelectionService;
 
-    public MainChartStrategySelectionStage(StrategySelectionService strategySelectionService)
+    public MainChartStrategySelectionStage(StrategySelector strategySelectionService)
     {
         _strategySelectionService = strategySelectionService ?? throw new ArgumentNullException(nameof(strategySelectionService));
     }

@@ -28,7 +28,7 @@ public sealed class TransformCoordinatorTests
         {
             var controller = new FakeTransformDataPanelController();
             var coordinator = new TransformOperationStateCoordinator();
-            var executionCoordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+            var executionCoordinator = new TransformOperationExecutor(new DataVisualiser.Core.Transforms.TransformComputationService());
             var context = CreatePrimaryOnlyContext();
 
             coordinator.UpdateComputeButtonState(
@@ -62,7 +62,7 @@ public sealed class TransformCoordinatorTests
     [Fact]
     public void OperationExecutionCoordinator_CanExecuteBinary_WhenSecondarySelectionExistsOutsideLoadedContext()
     {
-        var coordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+        var coordinator = new TransformOperationExecutor(new DataVisualiser.Core.Transforms.TransformComputationService());
         var context = CreatePrimaryOnlyContext();
         var selection = new TransformSelectionResolution(
             new MetricSeriesSelection("MetricA", "SubA"),
@@ -77,7 +77,7 @@ public sealed class TransformCoordinatorTests
     [Fact]
     public void OperationExecutionCoordinator_ExecuteWithoutOperation_ProjectsPrimaryData()
     {
-        var coordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+        var coordinator = new TransformOperationExecutor(new DataVisualiser.Core.Transforms.TransformComputationService());
         var primary = CreatePrimaryData();
         var context = CreatePrimaryOnlyContext();
         var resolution = new TransformResolutionResult(
@@ -100,7 +100,7 @@ public sealed class TransformCoordinatorTests
     [InlineData("Sqrt", 1d, 1.4142135623730951d)]
     public void OperationExecutionCoordinator_ExecuteUnarySupportedByVNext_ReturnsExpectedResults(string operation, double first, double second)
     {
-        var coordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+        var coordinator = new TransformOperationExecutor(new DataVisualiser.Core.Transforms.TransformComputationService());
         var primary = CreatePrimaryData();
         var context = CreatePrimaryOnlyContext();
         var resolution = new TransformResolutionResult(
@@ -123,7 +123,7 @@ public sealed class TransformCoordinatorTests
     [InlineData("Divide", 0.3333333333333333d, 0.5d)]
     public void OperationExecutionCoordinator_ExecuteBinarySupportedByVNext_ReturnsExpectedResults(string operation, double first, double second)
     {
-        var coordinator = new TransformOperationExecutionCoordinator(new DataVisualiser.Core.Transforms.TransformComputationService());
+        var coordinator = new TransformOperationExecutor(new DataVisualiser.Core.Transforms.TransformComputationService());
         var primary = CreatePrimaryData();
         var secondary = new List<MetricData>
         {
@@ -202,7 +202,7 @@ public sealed class TransformCoordinatorTests
         });
     }
 
-    private static TransformDataResolutionCoordinator CreateResolutionCoordinator(
+    private static TransformDataResolver CreateResolutionCoordinator(
         out MainWindowViewModel viewModel,
         out ITransformDataPanelController controller,
         out ChartTooltipManager tooltipManager,
@@ -225,7 +225,7 @@ public sealed class TransformCoordinatorTests
         tooltipManager = new ChartTooltipManager(window);
         _ = new ChartUpdateCoordinator(computationEngine, renderEngine, tooltipManager, chartState.ChartTimestamps, new CapturingNotificationService());
 
-        return new TransformDataResolutionCoordinator(controller, viewModel, metricService, new MetricSeriesSelectionCache());
+        return new TransformDataResolver(controller, viewModel, metricService, new MetricSeriesSelectionCache());
     }
 
     private static ChartDataContext CreatePrimaryOnlyContext()

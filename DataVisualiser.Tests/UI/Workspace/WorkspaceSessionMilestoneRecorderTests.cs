@@ -7,7 +7,7 @@ using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
-using DataVisualiser.UI.Workspace.Diagnostics;
+using DataVisualiser.UI.Workspace;
 
 namespace DataVisualiser.Tests.UI.Workspace;
 

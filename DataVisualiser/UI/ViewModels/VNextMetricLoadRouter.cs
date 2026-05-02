@@ -27,13 +27,13 @@ internal sealed class VNextMetricLoadRouter
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(totalStopwatch);
 
-        if (!VNextChartRoutePolicy.ShouldUseMainFamilyPath(_chartState))
+        if (!ChartLoadPolicy.ShouldUseMainFamilyPath(_chartState))
             return VNextMetricLoadRoutingResult.NotRouted();
 
         var vnextStopwatch = Stopwatch.StartNew();
         var vnextResults = await _vnextMainChartIntegrationCoordinator.LoadProgramsAsync(
             request,
-            VNextChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(_chartState));
+            ChartProgramRequestPlanner.BuildVisibleChartFamilyRequests(_chartState));
         vnextStopwatch.Stop();
 
         var vnextResult = vnextResults.FirstOrDefault(result => result.ProgramKind == ChartProgramKind.Main) ??
@@ -48,7 +48,7 @@ internal sealed class VNextMetricLoadRouter
         if (vnextResult.Success && vnextResult.Program != null && vnextResult.Snapshot != null && vnextResult.ProjectedContext != null)
         {
             RecordVNextFamilyRuntimes(vnextResults, request.Signature);
-            var supportsOnlyMainChart = VNextChartRoutePolicy.SupportsOnlyMainChart(_chartState);
+            var supportsOnlyMainChart = ChartLoadPolicy.SupportsOnlyMainChart(_chartState);
             // Compatibility assignment remains until main-chart consumers no longer require ChartDataContext.
             _chartState.LastContext = vnextResult.ProjectedContext;
             _chartState.LastLoadRuntime = new LoadRuntimeState(
@@ -96,7 +96,7 @@ internal sealed class VNextMetricLoadRouter
             _chartState.SetFamilyRuntime(
                 programKind,
                 new LoadRuntimeState(
-                    VNextChartProgramRequestPlanner.ResolveRuntimePath(programKind),
+                    ChartProgramRequestPlanner.ResolveRuntimePath(programKind),
                     result.RequestSignature ?? fallbackRequestSignature,
                     result.SnapshotSignature,
                     result.ProgramKind,
