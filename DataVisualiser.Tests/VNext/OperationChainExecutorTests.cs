@@ -52,6 +52,10 @@ public sealed class OperationChainExecutorTests
         Assert.Equal("2", result.ConsumptionContract.Metadata["OperationChain.OutputCount"]);
         Assert.Equal(result.Plan.Signature, result.ConsumptionContract.Metadata["OperationChain.PlanSignature"]);
         Assert.Equal(result.Trace.Signature, result.ConsumptionContract.Metadata["OperationChain.TraceSignature"]);
+        Assert.Equal("2", result.ConsumptionContract.Metadata["Surface.DatasetCount"]);
+        Assert.Equal("difference|normalized-diff", result.ConsumptionContract.Metadata["Surface.DatasetIds"]);
+        Assert.Contains("Difference", result.ConsumptionContract.Metadata["Surface.OperationSignatures"]);
+        Assert.Null(result.ConsumptionContract.SurfaceModel.RenderPlanKind);
         Assert.Equal("True", result.DerivedDatasets[0].Metadata["Reversible"]);
         Assert.Equal("ScaleNormalized", result.DerivedDatasets[1].Metadata["Lossiness"]);
         Assert.Contains("Weight:morning", result.DerivedDatasets[0].SourceSeriesSignatures);

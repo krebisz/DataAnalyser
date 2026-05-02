@@ -18,14 +18,20 @@ public sealed record ConsumerSurfaceModel
         ConsumerSurfaceModelKind kind,
         string surfaceId,
         bool requiresRenderPlan,
-        IReadOnlyDictionary<string, string>? metadata = null)
+        IReadOnlyDictionary<string, string>? metadata = null,
+        ChartRenderPlanKind? renderPlanKind = null)
     {
         if (string.IsNullOrWhiteSpace(surfaceId))
             throw new ArgumentException("Surface id cannot be null or empty.", nameof(surfaceId));
+        if (kind == ConsumerSurfaceModelKind.ChartRenderPlan && renderPlanKind == null)
+            throw new ArgumentException("Chart render-plan surfaces must declare their render-plan kind.", nameof(renderPlanKind));
+        if (kind != ConsumerSurfaceModelKind.ChartRenderPlan && renderPlanKind != null)
+            throw new ArgumentException("Only chart render-plan surfaces can declare a render-plan kind.", nameof(renderPlanKind));
 
         Kind = kind;
         SurfaceId = surfaceId;
         RequiresRenderPlan = requiresRenderPlan;
+        RenderPlanKind = renderPlanKind;
         Metadata = metadata == null
             ? new Dictionary<string, string>()
             : new Dictionary<string, string>(metadata);
@@ -34,6 +40,7 @@ public sealed record ConsumerSurfaceModel
     public ConsumerSurfaceModelKind Kind { get; }
     public string SurfaceId { get; }
     public bool RequiresRenderPlan { get; }
+    public ChartRenderPlanKind? RenderPlanKind { get; }
     public IReadOnlyDictionary<string, string> Metadata { get; }
 
     public static ConsumerSurfaceModel None { get; } = new(
@@ -47,16 +54,17 @@ public sealed record ConsumerSurfaceModel
 
         var metadata = new Dictionary<string, string>(renderPlan.Metadata)
         {
-            ["Surface.PlanKind"] = renderPlan.PlanKind.ToString(),
-            ["Surface.DisplayMode"] = renderPlan.DisplayMode.ToString(),
-            ["Surface.Title"] = renderPlan.Title
+            ["PlanKind"] = renderPlan.PlanKind.ToString(),
+            ["DisplayMode"] = renderPlan.DisplayMode.ToString(),
+            ["Title"] = renderPlan.Title
         };
 
         return new ConsumerSurfaceModel(
             ConsumerSurfaceModelKind.ChartRenderPlan,
             renderPlan.Id,
             requiresRenderPlan: true,
-            metadata);
+            metadata,
+            renderPlan.PlanKind);
     }
 
     public static ConsumerSurfaceModel FromDerivedDatasets(IReadOnlyList<DerivedDataset> datasets)

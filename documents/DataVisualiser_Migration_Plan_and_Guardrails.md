@@ -1018,17 +1018,17 @@ Make the surface output shape explicit and consumer-neutral before terminal deli
 
 Tasks:
 
-- [ ] Compare the VNext-native consumption shapes produced by migrated families.
-- [ ] Include Phase 26 operation-chain output in the comparison.
-- [ ] Identify common consumer-neutral surface elements.
-- [ ] Identify family-specific extensions that must remain explicit.
-- [ ] Define or refine `SurfaceModel` / equivalent output shape.
-- [ ] Ensure the surface shape preserves program, capability, provider, vocabulary, provenance, and delivery metadata.
-- [ ] Ensure the surface shape does not import concrete vendor/UI rendering types.
-- [ ] Ensure delivery adapters consume surface output rather than upstream internals.
-- [ ] Add tests proving surface output can support at least one chart consumer and one non-chart consumer.
-- [ ] Add tests proving surface output can support derived datasets from Operation Chain.
-- [ ] Update guardrails to treat the surface model as the required pre-delivery seam where applicable.
+- [x] Compare the VNext-native consumption shapes produced by migrated families.
+- [x] Include Phase 26 operation-chain output in the comparison.
+- [x] Identify common consumer-neutral surface elements.
+- [x] Identify family-specific extensions that must remain explicit.
+- [x] Define or refine `SurfaceModel` / equivalent output shape.
+- [x] Ensure the surface shape preserves program, capability, provider, vocabulary, provenance, and delivery metadata.
+- [x] Ensure the surface shape does not import concrete vendor/UI rendering types.
+- [x] Ensure delivery adapters consume surface output rather than upstream internals.
+- [x] Add tests proving surface output can support at least one chart consumer and one non-chart consumer.
+- [x] Add tests proving surface output can support derived datasets from Operation Chain.
+- [x] Update guardrails to treat the surface model as the required pre-delivery seam where applicable.
 
 Completion condition:
 
@@ -1045,6 +1045,23 @@ chart + non-chart surface consumption tests
 derived-dataset surface tests
 ```
 
+Phase 30 evidence:
+
+```text
+- documents/DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md added
+- ConsumerSurfaceModel now exposes RenderPlanKind for chart render-plan surfaces
+- VNextUiConsumptionContract rejects providers that do not support the surface render-plan kind
+- render-plan surface metadata now flows as Surface.PlanKind / Surface.DisplayMode / Surface.Title rather than double-prefixed Surface.Surface.* keys
+- Operation Chain derived datasets remain non-render-plan ConsumerSurfaceModelKind.DerivedDataset surfaces
+- VNextUiConsumptionContractTests.FromRenderPlan_ShouldRejectProviderPlanKindDrift added
+- VNextUiConsumptionContractTests.SurfaceModel_ShouldExposeCommonShapeForChartAndDerivedDatasetConsumers added
+- OperationChainExecutorTests.ExecuteAsync_ShouldPreserveProvenanceTraceEvidenceAndConsumptionContractMetadata extended for derived surface metadata
+- ArchitectureGuardrailTests.ConsumerNeutralSurfaceModel_ShouldRemainRequiredPreDeliverySeam added
+- focused Phase 30 contract/guardrail validation passed 128 tests
+- DataVisualiser.Tests passed 1030 tests
+- DataFileReader.Tests passed 15 tests
+```
+
 ## 4.8 Phase 31 — Thin UI / Interaction / State Layer
 
 Goal:
@@ -1055,15 +1072,15 @@ Move UI toward receiving already-authoritative, already-qualified output.
 
 Tasks:
 
-- [ ] Identify UI/state responsibilities still carrying semantic or provider policy.
-- [ ] Identify interaction responsibilities that should become contract-mediated.
-- [ ] Identify ViewModel/state dependencies that still require `ChartDataContext`.
-- [ ] Confirm Operation Chain UI does not own operation execution.
-- [ ] Move or remove only responsibilities already replaced by VNext-native consumption.
-- [ ] Keep UI as display/state/interaction relay.
+- [x] Identify UI/state responsibilities still carrying semantic or provider policy.
+- [x] Identify interaction responsibilities that should become contract-mediated.
+- [x] Identify ViewModel/state dependencies that still require `ChartDataContext`.
+- [x] Confirm Operation Chain UI does not own operation execution.
+- [x] Move or remove only responsibilities already replaced by VNext-native consumption.
+- [x] Keep UI as display/state/interaction relay.
 - [ ] Keep interaction behavior non-authoritative.
 - [ ] Keep tooltip behavior explanatory, not semantic.
-- [ ] Add guardrails preventing reintroduction of authority/provider/evidence policy into UI/state.
+- [x] Add guardrails preventing reintroduction of authority/provider/evidence policy into UI/state.
 - [ ] Run focused UI/interaction/state tests and full validation.
 
 Completion condition:
@@ -1078,6 +1095,20 @@ Planned evidence:
 documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md
 UI/state/interaction guardrail tests
 operation-chain UI guardrails
+```
+
+Phase 31 current slice evidence:
+
+```text
+- documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md added
+- OperationChainWorkbenchPresenter added as the display projection seam for OperationChainResult
+- OperationChainWorkbenchView now binds prepared presentation output and no longer maps trace/dataset rows directly
+- OperationChainWorkbenchPresenterTests.Build_ShouldProjectResultToDisplayRowsWithoutExecutingOperations added
+- ArchitectureGuardrailTests.OperationChainWorkbench_ShouldKeepExecutionOutsideUiSurface extended to require presenter use and block projection logic in the view
+- focused Operation Chain UI validation passed 2 tests
+- architecture + Operation Chain UI validation passed 119 tests
+- DataVisualiser.Tests passed 1031 tests
+- DataFileReader.Tests passed 15 tests
 ```
 
 ## 4.9 Phase 32 — Demote Rendering / Backend / Vendor Fully
@@ -1993,9 +2024,9 @@ updated documentation
 | 2026-04-30 | 26 | Added Operation Chain core executor and display-only workbench tab. | OperationChainExecutorTests 3 passed; ArchitectureGuardrailTests 110 passed; manual smoke confirmed. | Complete |
 | 2026-04-30/2026-05-01 | 27 | Migrated Distribution to VNext-native consumption contract path. | Distribution 63 passed; architecture/evidence 128 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; manual smoke export `documents/reachability-20260501-083930.json` confirmed Distribution render/parity/metadata. | Complete |
 | 2026-05-01 | 28 | Retired Distribution legacy bridge path. | `documents/DataVisualiser_First_Family_Legacy_Bridge_Retirement.md`; Distribution 64 passed; ArchitectureGuardrailTests 111 passed; DataVisualiser 1012 passed; DataFileReader 15 passed; post-retirement smoke export confirmed. | Complete |
-| 2026-05-01 | 29 | Migrated WeekdayTrend and BarPie through VNext-native consumption contract paths. | `documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md`; WeekdayTrend smoke confirmed; BarPie 28 passed; ArchitectureGuardrailTests 113 passed; DataVisualiser 1017 passed; DataFileReader 15 passed; BarPie smoke export confirmed. | In progress |
-|  | 30 | Elevate consumer-neutral surface model. | Surface convergence audit. | Planned |
-|  | 31 | Thin UI / interaction / state layer. | UI/state/interaction guardrails. | Planned |
+| 2026-05-01 | 29 | Migrated production chart families through VNext-native consumption contract paths. | `documents/DataVisualiser_VNext_Native_Family_Migration_Tracker.md`; Distribution bridge retired; WeekdayTrend, BarPie, Transform, SyncfusionSunburst, Main, and Normalized smoke confirmed; Difference/Ratio automated and UI-smoke unavailable. | Complete |
+| 2026-05-01 | 30 | Elevated consumer-neutral surface model. | `documents/DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md`; focused contract/guardrail validation 128 passed; DataVisualiser 1030 passed; DataFileReader 15 passed. | Complete |
+| 2026-05-01 | 31 | Started UI / interaction / state thinning with Operation Chain workbench presentation seam. | `documents/DataVisualiser_UI_Interaction_State_Consolidation_Audit.md`; OperationChainWorkbenchPresenter; architecture + Operation Chain UI validation 119 passed; DataVisualiser 1031 passed; DataFileReader 15 passed. | In progress |
 |  | 32 | Demote rendering / backend / vendor fully. | Delivery demotion audit. | Planned |
 |  | 33 | Consolidate capability / contract families. | Consolidation audit. | Planned |
 |  | 34 | Retire remaining legacy bypasses. | Remaining bypass retirement audit. | Planned |

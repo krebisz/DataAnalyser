@@ -39,6 +39,7 @@ public sealed class VNextUiConsumptionContractTests
         Assert.Equal(intent.Provenance.Signature, contract.ProvenanceSignature);
         Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, contract.SurfaceModel.Kind);
         Assert.Equal(renderPlan.Id, contract.SurfaceModel.SurfaceId);
+        Assert.Equal(ChartRenderPlanKind.Cartesian, contract.SurfaceModel.RenderPlanKind);
         Assert.Single(contract.Overlays);
         Assert.Single(contract.Interactions);
         Assert.Equal("Distribution", contract.Metadata["ProgramKind"]);
@@ -50,7 +51,7 @@ public sealed class VNextUiConsumptionContractTests
         Assert.Equal("PrimaryChart", contract.Metadata["Delivery.DeliveryRole"]);
         Assert.Equal("BuiltInChartRenderer", contract.Metadata["Provider.ProviderRole"]);
         Assert.Equal("ChartRenderPlan", contract.Metadata["SurfaceKind"]);
-        Assert.Equal(ChartRenderPlanKind.Cartesian.ToString(), contract.Metadata["Surface.Surface.PlanKind"]);
+        Assert.Equal(ChartRenderPlanKind.Cartesian.ToString(), contract.Metadata["Surface.PlanKind"]);
         Assert.Equal("UiConsumption", contract.Metadata["ContractRole"]);
     }
 
@@ -89,6 +90,67 @@ public sealed class VNextUiConsumptionContractTests
                 ConsumerProviderContracts.LiveChartsWpf));
 
         Assert.Contains("Provider must support", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FromRenderPlan_ShouldRejectProviderPlanKindDrift()
+    {
+        var selection = CreateSelection();
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.Distribution(),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Distribution, "DistributionChart"));
+        var renderPlan = CreateRenderPlan(intent);
+        var provider = new ConsumerProviderContract(
+            "HierarchyOnlyChartProvider",
+            "Hierarchy Only Chart Provider",
+            ConsumerKind.Chart,
+            new HashSet<ChartProgramKind> { ChartProgramKind.Distribution },
+            new HashSet<ChartRenderPlanKind> { ChartRenderPlanKind.Hierarchy });
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            VNextUiConsumptionContract.FromRenderPlan(
+                intent,
+                provider,
+                renderPlan));
+
+        Assert.Contains("render-plan kind", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SurfaceModel_ShouldExposeCommonShapeForChartAndDerivedDatasetConsumers()
+    {
+        var selection = CreateSelection();
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.MainProgram());
+        var renderPlan = CreateRenderPlan(intent);
+        var chartSurface = ConsumerSurfaceModel.FromRenderPlan(renderPlan);
+        var derivedSurface = ConsumerSurfaceModel.FromDerivedDatasets(
+        [
+            new DerivedDataset(
+                "sum",
+                "Total",
+                [selection.From, selection.To],
+                [1d, 2d],
+                [1d, 2d],
+                ["Weight:negative"],
+                "Sum:sum:0,1:",
+                new Dictionary<string, string> { ["StepIndex"] = "0" })
+        ]);
+
+        Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, chartSurface.Kind);
+        Assert.Equal(renderPlan.Id, chartSurface.SurfaceId);
+        Assert.True(chartSurface.RequiresRenderPlan);
+        Assert.Equal(ChartRenderPlanKind.Cartesian, chartSurface.RenderPlanKind);
+        Assert.Equal("Weight", chartSurface.Metadata["Title"]);
+
+        Assert.Equal(ConsumerSurfaceModelKind.DerivedDataset, derivedSurface.Kind);
+        Assert.Equal("sum", derivedSurface.SurfaceId);
+        Assert.False(derivedSurface.RequiresRenderPlan);
+        Assert.Null(derivedSurface.RenderPlanKind);
+        Assert.Equal("1", derivedSurface.Metadata["DatasetCount"]);
+        Assert.Equal("sum", derivedSurface.Metadata["DatasetIds"]);
     }
 
     [Fact]

@@ -26,6 +26,8 @@ public sealed record VNextUiConsumptionContract
             throw new ArgumentException("Delivery program kind must match the consumption contract program kind.", nameof(delivery));
         if (!provider.Supports(delivery))
             throw new ArgumentException("Provider must support the delivery contract.", nameof(provider));
+        if (surfaceModel.RenderPlanKind is { } renderPlanKind && !provider.Supports(delivery, renderPlanKind))
+            throw new ArgumentException("Provider must support the surface render-plan kind.", nameof(provider));
         if (surfaceModel.RequiresRenderPlan && !delivery.RequiresRenderPlan)
             throw new ArgumentException("A render-plan surface cannot be attached to a non-render-plan delivery.", nameof(surfaceModel));
         if (string.IsNullOrWhiteSpace(sourceSignature))

@@ -1604,6 +1604,27 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void ConsumerNeutralSurfaceModel_ShouldRemainRequiredPreDeliverySeam()
+    {
+        var surfaceSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "Contracts", "ConsumerSurfaceModel.cs");
+        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "Contracts", "VNextUiConsumptionContract.cs");
+        var operationChainSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "VNext", "Application", "OperationChainExecutor.cs");
+        var auditSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "documents", "DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md");
+
+        Assert.Contains("ChartRenderPlanKind? RenderPlanKind", surfaceSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
+        Assert.Contains("ConsumerSurfaceModel.FromDerivedDatasets", operationChainSource, StringComparison.Ordinal);
+        Assert.Contains("provider.Supports(delivery, renderPlanKind)", contractSource, StringComparison.Ordinal);
+        Assert.Contains("Chart render-plan surface", auditSource, StringComparison.Ordinal);
+        Assert.Contains("Derived dataset surface", auditSource, StringComparison.Ordinal);
+        Assert.Contains("No new mega-object", auditSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void OperationChainWorkbench_ShouldKeepExecutionOutsideUiSurface()
     {
         var viewSource = SourceTreeTestHelper.ReadRepositoryFile(
@@ -1612,7 +1633,9 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("OperationChainWorkbenchView", mainWindowSource, StringComparison.Ordinal);
         Assert.Contains("DisplayResult(OperationChainResult result)", viewSource, StringComparison.Ordinal);
+        Assert.Contains("OperationChainWorkbenchPresenter.Build(result)", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("OperationChainExecutor", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain(".Select(", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("ChartDataContext", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("LiveCharts", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("Syncfusion", viewSource, StringComparison.Ordinal);
