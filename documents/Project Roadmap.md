@@ -1,13 +1,14 @@
 # PROJECT ROADMAP
-**Status:** Sequencing and Execution Authority  
-**Scope:** Phase ordering, execution dependencies, closure criteria, and evolutionary gating  
+**Status:** Long-Term Sequencing and Evolution Authority  
+**Scope:** Phase ordering, execution dependencies, closure criteria, evolutionary gating, and long-term progression before and after target architecture implementation  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, and `DataVisualiser-Architectural-Vocabulary.md`  
-**Operational Execution Source:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion (consolidates the former `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`)  
+**Operational Execution Sources:** current implementation plans and subsystem plans provide execution detail only; they do not redefine this roadmap's long-term sequencing doctrine  
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions  
 **Last Updated:** 2026-04-30
-**Phase 19 Closure Note:** VNext/legacy load routing is now delegated from `MetricLoadCoordinator` into `VNextMetricLoadRouter`, closing the remaining Phase 19 routing item.
-**Current Update:** Phase 7 is active. Migration Plan Phases 14–22 are complete. The VNext spine is proved end-to-end: a new MovingAverage capability enters through the target seams and is consumed by two independent consumers (chart + API) without touching old hubs or legacy bridges. The UseRenderPlanAdapter dual-path is retired; explicit CapabilityContracts are threaded across all chart families. The accepted architectural migration progress estimate is approximately 70–75% complete, with a working estimate of ~72% (updated from ~68% after Phases 19–22).
-**Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. New work must not be tracked against Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 rendering primer.
+**Role Realigned:** 2026-05-04
+**Historical Phase 19 Closure Note:** VNext/legacy load routing is now delegated from `MetricLoadCoordinator` into `VNextMetricLoadRouter`, closing the remaining Phase 19 routing item.
+**Historical Update:** Phase 7 was active at the time of the April 2026 update. Migration Plan Phases 14–22 are complete. The VNext spine is proved end-to-end: a new MovingAverage capability enters through the target seams and is consumed by two independent consumers (chart + API) without touching old hubs or legacy bridges. The UseRenderPlanAdapter dual-path is retired; explicit CapabilityContracts are threaded across all chart families. The accepted architectural migration progress estimate is approximately 70–75% complete, with a working estimate of ~72% (updated from ~68% after Phases 19–22).
+**Historical Change Note:** Phase 6 is fully closed — all sub-phases (`6.1`–`6.7`) closed, including `6.3` VNext family widening. All active chart families now have VNext-compatible request/program support and live VNext routes where appropriate, with legacy retained as compatibility/fallback/projection. New work must not be tracked against Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 rendering primer.
 
 ---
 
@@ -27,12 +28,30 @@ It answers:
 It does not define semantic law or canonical architectural vocabulary.  
 It defines order, discipline, gating, and closure.
 
+This roadmap continues after the target architecture implementation is substantially complete.
+
+It exists to sequence:
+
+```text
+canonical foundation
+-> architectural legibility
+-> target architecture convergence
+-> formal coverage
+-> construction algebra
+-> bounded generativity
+-> scenario hardening
+-> governed long-term evolution
+```
+
+The active implementation plan may change more frequently than this roadmap. The roadmap should absorb only durable sequencing lessons, not transient implementation detail.
+
 If a conflict exists:
 1. `Project Bible.md` wins on architectural law.
 2. `SYSTEM_MAP.md` wins on structural direction.
-3. `DataVisualiser-Architectural-Vocabulary.md` wins on canonical architectural grammar, promoted concepts, ownership containers, and do-not-confuse distinctions.
-4. This roadmap wins on sequencing and closure discipline.
-5. `DataVisualiser_Subsystem_Plan.md` operationalizes Phase 7 exploratory capability expansion and forward-stage migration permitted by this roadmap (consolidates the former consolidation plan and rehaul execution plan).
+3. `DataVisualiser-Architectural-Vocabulary.md` wins on canonical architectural grammar, promoted concepts, ownership containers, bounded-generativity language, and do-not-confuse distinctions.
+4. This roadmap wins on long-term sequencing, evolutionary gates, and closure discipline.
+5. Operational implementation plans win only on current task order, local execution state, and immediate evidence requirements.
+6. `DataVisualiser_Subsystem_Plan.md` is supporting subsystem context unless a future version is explicitly promoted as an active operational plan.
 
 ---
 
@@ -64,6 +83,11 @@ This roadmap is governed by the following rules:
 21. Broad family-pattern consolidation should wait until authority, intent, contract, and consumer seams are sufficiently stable.
 22. Architectural vocabulary must remain stable during phase work: capability must not collapse into feature, consumer into presentation, interaction into event wiring, composition into builder plumbing, overlay into rendering, provenance into diagnostics, or authority into orchestration.
 23. Projection and translation components may translate across explicit boundaries, but must not become semantic authorities or hidden policy centers.
+24. Target architecture implementation is not the final product state; it is the structural precondition for safe long-term generativity.
+25. Formal coverage must precede construction-algebra expansion: a requirement should be speakable in the architectural grammar before being absorbed into core construction.
+26. Construction algebra must grow from inventory and evidence, not from abstract desire alone.
+27. Bounded generativity is valid only when semantic authority, provenance, traceability, determinism, reversibility, evidence discipline, and boundary clarity are preserved.
+28. Current pressure points should be reduced, contained, or formally governed before broad new abstraction layers are introduced.
 
 ---
 
@@ -101,6 +125,17 @@ The architecture rehaul established that the project is not yet structurally rea
 7. Rendering and chart surfaces are important delivery instruments, but they are still terminal infrastructure. Future architectural cleanup should continue moving composition, shaping, and delivery contracts upward so that presentation becomes increasingly replaceable without semantic or orchestration redesign.
 8. The enhanced architecture should be treated as a forward-only migration direction for active and future work: authority and intent first, then reasoning capability, then contract/boundary hardening, then projection/translation discipline, then consumer/interaction separation, then terminal delivery demotion, then governance/evidence isolation and broader consolidation.
 9. The architectural vocabulary document provides the canonical grammar for interpreting those containers; this roadmap only sequences work against that grammar.
+
+Post-target-architecture reconciliation:
+
+1. Target architecture convergence is not the end of the roadmap.
+2. Once the target spine is materially real, the roadmap shifts from structural migration toward formal coverage, construction algebra, bounded generativity, and scenario hardening.
+3. Formal language and implementation must remain mutually intelligible:
+   - requirements must map into the architectural grammar without semantic loss
+   - implemented constructions must not expose ungoverned language gaps
+   - abstractions must not grow faster than evidence
+4. The system's long-term direction is not ordinary feature expansion; it is governed analytical generation over explicit truth, provenance, capability, contract, surface, delivery, and evidence seams.
+5. Pressure reduction remains valid after convergence when old hubs, bridge seams, or state carriers threaten the target grammar.
 
 Therefore, architecture rehaul was not a side quest, and hierarchy legibility (Phase 6) was not cosmetic cleanup.  
 That bridge is now crossed: the hierarchy is trustworthy, true outliers are obvious, and future capability can land without creating new exception-driven structure. The reasoning engine is the composition center going forward.
@@ -140,15 +175,18 @@ Forward work should be tracked against Phase 7, Phase 8, later consolidation pha
 
 ---
 
-## 4.5 Architectural Migration Progress Status
+## 4.5 Historical Architectural Migration Progress Status
 
 This section records the accepted high-level progress estimate for sequencing purposes only. The architectural vocabulary document remains the canonical grammar source, and the subsystem plan applies the estimate to active execution.
 
-Current estimate:
+Historical estimate retained for context:
 
 ```text
-Architectural migration: approximately 70–75% complete
-Working estimate: ~72% (updated after Phases 19–22)
+Architectural migration at this snapshot: approximately 70–75%
+Working estimate at this snapshot: ~72% (updated after Phases 19–22)
+
+This estimate is not the current roadmap endpoint.
+The roadmap continues beyond target architecture convergence into formal coverage, construction algebra, bounded generativity, and scenario hardening.
 ```
 
 Sequencing interpretation:
@@ -167,8 +205,10 @@ Roadmap consequence:
 
 - do not reopen Phase 5, Phase 6, Phase 6.3, or the pre-Phase-7 render-plan primer
 - do not start another broad decomposition campaign by default
-- prioritize Phase 7 slices that prove contract/boundary enforcement, provider/consumer separation, and reasoning-engine capability growth
-- treat provider/consumer boundary verification as an early Phase 7 audit concern
+- prioritize capability slices that prove contract/boundary enforcement, provider/consumer separation, and reasoning-engine capability growth
+- treat provider/consumer boundary verification as an early audit concern
+- after target architecture convergence, use coverage, construction inventory, and pressure-point classification before formal runtime expansion
+- do not treat increased architectural vocabulary in code as proof that structural risk has decreased
 
 
 ---
@@ -811,6 +851,114 @@ The following Phase 7 capability areas are active/future work only; they do not 
 6. Where practical, Phase 8 should continue demoting chart/UI surfaces from major subsystem status toward thin, replaceable consumer layers over reasoning-engine and consumer-agnostic delivery contracts.
 7. Interaction semantics are explicit, contract-mediated, and not hidden inside event wiring or controller convenience.
 
+---
+
+### Phase 9 - Post-Target Architecture Recalibration  
+**Status:** PLANNED / CONTINUING GATE
+
+**Entry Gate**
+- Target architecture convergence is materially implemented.
+- Remaining bridges, hubs, state carriers, and density pressure are named.
+- The architectural vocabulary remains the governing grammar.
+
+**Objective**
+- Rebaseline the system after target architecture convergence.
+- Classify whether remaining density is necessary target grammar, transitional bridge density, UI/state gravity, delivery/vendor gravity, evidence support density, scaffolding debt, or accidental coupling.
+- Prevent formal post-architecture work from layering new abstractions on top of unresolved pressure.
+
+**Closure Condition**
+1. Current structural density is classified.
+2. Current construction set is inventoried.
+3. Remaining pressure points are classified as reducible, containable, bounded, deferred, or requiring formal language.
+4. The next phase is justified by evidence, not by architectural ambition alone.
+
+---
+
+### Phase 10 - Formal Coverage and Construction-Algebra Foundation  
+**Status:** PLANNED / BLOCKED BY PHASE 9
+
+**Objective**
+- Test whether requirements, implemented constructions, and planned future capabilities can be expressed through the architectural grammar without semantic loss.
+- Establish only the minimum construction algebra justified by current evidence.
+
+**Scope**
+- requirements-to-language coverage
+- construction inventory
+- collapsed concern triage
+- ambiguity triage
+- minimal construction algebra
+- operation / capability rules where proven
+- typed relations where hidden relation ambiguity creates risk
+
+**Closure Condition**
+1. Coverage gaps are classified as implement now, express through existing construct, defer, guardrail only, or reject as premature.
+2. Construction algebra is minimal, justified, and does not become a new pseudo-core.
+3. New formal constructs have clear owner, boundary, input/output shape, evidence path, and non-goals.
+
+---
+
+### Phase 11 - Bounded Generativity and Derived Analytical Construction  
+**Status:** PLANNED / BLOCKED BY PHASE 10
+
+**Objective**
+- Enable governed generation of derived analytical constructions without weakening truth, provenance, determinism, reversibility, or boundary clarity.
+
+**Scope**
+- operation / capability algebra
+- multiplicity / derived dataset model
+- evidence sufficiency / promotion rules
+- semantic interpretation and confidence
+- analytical fitness
+- bounded search / computational planning
+
+**Closure Condition**
+1. Derived datasets have stable identity, provenance, traceability, and lossiness/reversibility metadata.
+2. Evidence is sufficient to promote, retain, quarantine, or reject generated constructions.
+3. Validity, usefulness, meaning, explanation, computability, and evidence remain distinct.
+4. Generative capability remains bounded and reviewable.
+
+---
+
+### Phase 12 - Multi-Consumer Productization and Scenario Hardening  
+**Status:** PLANNED / BLOCKED BY PHASE 11
+
+**Objective**
+- Prove that bounded generativity can serve real scenarios and multiple consumers without collapsing back into chart-specific architecture or a replacement mega-object.
+
+**Candidate Scenarios**
+- Operation Chain Workbench
+- analytical workbench
+- dashboard runtime
+- personal analytics system
+- evidence platform
+- legacy migration framework
+- AI-assisted architecture governance platform
+
+**Closure Condition**
+1. At least one bounded scenario proves formal coverage, construction rules, evidence sufficiency, and consumer output.
+2. At least two consumer types can receive generated analytical output through explicit contracts.
+3. Scenario hardening improves coherence rather than adding unmanaged feature sprawl.
+
+---
+
+### Phase 13 - Governed Evolution and Emergence Review  
+**Status:** LONG-TERM / RECURRING
+
+**Objective**
+- Keep the project capable of growth without losing architectural meaning.
+
+**Scope**
+- language growth review
+- construction growth review
+- scenario promotion / quarantine
+- drift detection
+- evidence review
+- AI-assisted extension governance
+- new project seeding from proven architectural patterns
+
+**Closure Condition**
+- This phase does not close permanently.
+- It repeats when a new scenario, new language family, new construction model, or new consumer class threatens to exceed the current grammar or evidence model.
 
 ---
 
@@ -834,7 +982,6 @@ This policy exists because backend plurality is a deliberate architectural learn
 
 ---
 
----
 
 ## 7. Handling Evolving Requirements (Explicit Policy)
 
@@ -856,29 +1003,47 @@ This policy protects both long-term trust and long-term extensibility.
 
 ---
 
----
 
 ## 8. Current Critical Path (Authoritative)
 
-1. Preserve the qualified seams produced by the completed Phase 5 rehaul and Phase 6 reconciliation.
-2. Begin Phase 7 exploratory capability expansion as reasoning-engine features that delivery surfaces consume, not as chart-specific additions.
-3. Sequence active and future work through the Phase 7 forward sequencing model: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence concerns.
-4. Verify the provider/consumer boundary early enough to prove that the new contract layer is enforceable architecture, not renamed delivery routing.
-5. Keep residual debt explicit and bounded rather than allowing silent structural drift.
-6. Revalidate future closure claims with present evidence and repository-visible artifacts.
-7. Introduce further generalization only when the codebase has earned it through repeated real slices.
+1. Preserve the qualified seams produced by the completed rehaul, legibility, and target-spine convergence work.
+2. Treat the reasoning engine as the composition surface; new capabilities should strengthen its generality rather than bind power to specific delivery surfaces.
+3. Keep residual debt explicit and bounded rather than allowing silent structural drift.
+4. Revalidate future closure claims with present evidence and repository-visible artifacts.
+5. Introduce further generalization only when the codebase has earned it through repeated real slices.
+6. After target architecture convergence, rebaseline the system before formal runtime expansion.
+7. Classify current density, construction inventory, collapsed concerns, and ambiguity pressure before construction algebra is implemented.
+8. Reduce or contain current pressure points where local cleanup is still productive.
+9. Move into formal coverage and construction algebra only when pressure evidence proves local cleanup is insufficient or the missing formal model is necessary.
+10. Advance bounded generativity through explicit truth, provenance, capability, contract, surface, delivery, and evidence seams.
+11. Harden real scenarios only after the formal model has enough evidence to constrain them.
 
-Phase 7 is now structurally ready to proceed.
-The reasoning engine is the composition surface; new capabilities should strengthen its generality rather than binding power to specific delivery surfaces.
+Current long-term direction:
+
+```text
+target architecture convergence
+-> post-target recalibration
+-> formal coverage / construction algebra
+-> bounded generativity
+-> multi-consumer scenario hardening
+-> governed evolution
+```
 
 ---
 
 ## 8.5 Open Phase Summary
 
-Remaining open phases:
+Historical phase status:
 1. `Phase 6 - Architectural Legibility and Concern Reconciliation`: `CLOSED`
-2. `Phase 7 - Exploratory and Confidence Capability Expansion`: `OPEN / ACTIVE` (Migration Plan Phases 14–22 complete; VNext spine proved end-to-end)
-3. `Phase 8 - Consumer, Interaction, UI, State, and Integration Consolidation`: `PLANNED / BLOCKED`
+2. `Phase 7 - Exploratory and Confidence Capability Expansion`: historically `OPEN / ACTIVE`; later target-architecture convergence work has superseded this as the sole active framing
+3. `Phase 8 - Consumer, Interaction, UI, State, and Integration Consolidation`: `PLANNED / BLOCKED` until capability and contract seams are mature enough
+
+Long-term roadmap phases:
+1. `Phase 9 - Post-Target Architecture Recalibration`: planned / continuing gate
+2. `Phase 10 - Formal Coverage and Construction-Algebra Foundation`: planned / blocked by Phase 9
+3. `Phase 11 - Bounded Generativity and Derived Analytical Construction`: planned / blocked by Phase 10
+4. `Phase 12 - Multi-Consumer Productization and Scenario Hardening`: planned / blocked by Phase 11
+5. `Phase 13 - Governed Evolution and Emergence Review`: long-term / recurring
 
 Phase 6 sub-phase status:
 - `Phase 6.1` - irreducible operation consolidation: **CLOSED**
@@ -901,6 +1066,13 @@ Major next steps in sequence:
 
 ## 9. Summary
 
+Current roadmap interpretation:
+
+```text
+The roadmap is no longer only a migration-completion document.
+It is the long-term sequencing document for the project after target architecture convergence.
+```
+
 - Early phases built truthful foundations.
 - Middle phases built CMS-capable behavior, but some closure claims now require revalidation.
 - Phase 5 is the completed bridge between what the system already does and what it is intended to become.
@@ -911,6 +1083,8 @@ Major next steps in sequence:
 - The architectural vocabulary document supplies the concept grammar; this roadmap supplies the sequencing and closure discipline.
 - The reasoning engine is the center of the system. New capabilities should be built as reasoning-engine features that delivery surfaces consume.
 - Multi-backend rendering support is not incidental. It is part of the deliberate architectural learning process.
+- Target architecture convergence is a major milestone, not the end-state.
+- After convergence, the roadmap continues through recalibration, formal coverage, construction algebra, bounded generativity, scenario hardening, and governed evolution.
 - Closure means present truth, present evidence, and present structural safety.
 
 This roadmap defines how the project grows without lying to itself, and without losing the flexibility it is explicitly trying to earn.

@@ -1,20 +1,21 @@
 # DATAVISUALISER SUBSYSTEM PLAN
-**Status:** Active Architectural Execution Plan  
-**Scope:** `DataVisualiser` hierarchy repair, boundary clarification, entropy reduction, subsystem consolidation, and VNext activation — **Phase 6 closed April 2026**
+**Status:** Historical / Supporting Subsystem Context  
+**Scope:** `DataVisualiser` hierarchy repair, boundary clarification, entropy reduction, subsystem consolidation, VNext activation, and supporting subsystem context for the current migration plan — **Phase 6 closed April 2026; later migration sequencing now lives in the migration plan**
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `DataVisualiser-Architectural-Vocabulary.md`, `Project Roadmap.md`, and `Project Overview.md`  
 **Supersedes:** `DataVisualiser_Consolidation_Plan.md` and `ARCHITECTURE_REHAUL_CONSOLIDATED_EXECUTION_PLAN.md`  
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, do-not-confuse distinctions, and migration-risk language  
 **Last Updated:** 2026-04-26
+**Role Realigned:** 2026-05-04
 
-**Historical numbering note:** This document preserves older subsystem phase numbering. For the current DataVisualiser migration sequence, use `DataVisualiser_Migration_Plan_and_Guardrails.md` as the active sequential plan and progress log. When phase numbers differ, the migration plan's current Phase 1-22 sequence is authoritative for current execution.
+**Historical numbering note:** This document preserves older subsystem phase numbering as historical/supporting context. For the current `DataVisualiser` migration sequence, use `DataVisualiser_Migration_Plan_and_Guardrails_RECALIBRATED_LEAN_v2.md` / the current `DataVisualiser_Migration_Plan_and_Guardrails.md` as the active sequential plan and progress log. When phase numbers or active-state claims differ, the migration plan is authoritative for current execution.
 
 ---
 
 ## 1. Purpose
 
-This document is the single active execution plan for `DataVisualiser` architectural work.
+This document is a supporting subsystem context and historical execution record for `DataVisualiser` architectural work.
 
-It uses `DataVisualiser-Architectural-Vocabulary.md` as the canonical conceptual grammar for ownership containers, promoted concepts, and do-not-confuse distinctions. This document applies that grammar to active subsystem execution; it does not redefine it.
+It uses `DataVisualiser-Architectural-Vocabulary.md` as the canonical conceptual grammar for ownership containers, promoted concepts, and do-not-confuse distinctions. This document applies that grammar to subsystem-level interpretation; it does not redefine the grammar and no longer owns active sequencing.
 
 It consolidates:
 - The completed Phase 5 architecture rehaul (historical execution record)
@@ -33,19 +34,42 @@ The reasoning engine is the center of the system. Charts and future consumers ar
 
 The target direction should now be read through the enhanced architecture vocabulary: authority and provenance remain upstream; reasoning grows through capability and composition; contracts and boundaries form the downstream fan-out seam; projection/translation moves across explicit seams without becoming authority; consumers and interactions are first-class but non-authoritative; rendering remains terminal delivery infrastructure.
 
+### Current Role Calibration
+
+```text
+This document is no longer the active implementation plan.
+
+It remains useful for:
+- subsystem history
+- durable architectural intent
+- capability preservation
+- target module buckets
+- historical outlier context
+- legacy/VNext migration background
+- supporting interpretation of subsystem decisions
+
+Active sequencing, phase status, current pressure points, finite iteration rules, and next implementation steps now belong to the migration plan.
+```
+
+When this document says "current", "active", or "Phase 7", interpret those statements as historical unless they are still confirmed by the current migration plan.
+
 ---
 
-## 1.5 START HERE - Handoff and Execution Defaults
+## 1.5 START HERE - Historical Handoff and Supporting Defaults
 
-Use this section as the default handoff entry point in a new conversation.
+Use this section as historical handoff context only. For active execution, start from the current migration plan.
 
-Current state:
+Historical current-state snapshot:
+
+```text
+This snapshot is retained for context. It may contain stale counts, estimates, and phase labels. The active migration plan owns current state.
+```
 
 - Pre-Phase-7 rendering primer is complete: VNext has render-plan, density-policy, render-buffer, backend-capability, and adapter-dispatch contracts, and the active chart families now consume `ChartRenderPlan` through adapters.
 - Current automated lane: ~505 DataVisualiser source files, ~176 DataVisualiser test files, 996 DataVisualiser tests, and 15 DataFileReader tests. (Phase 6 closure baseline was 493 source files and 737 tests.)
-- Current architectural migration estimate: approximately 70–75% complete, working estimate ~72%, per the accepted architectural vocabulary progress snapshot (updated after Phases 19–22).
+- Historical architectural migration estimate at the time of this snapshot: approximately 70–75%, working estimate ~72%, per the then-accepted architectural vocabulary progress snapshot. This is not the current active estimate.
 - Phase 6.3 VNext widening is complete - all active chart families have VNext-compatible request/program support and live VNext routes for fresh family loads, with legacy retained as compatibility/fallback
-- Phase 7 is active — Migration Plan Phases 14–22 are complete; the VNext spine is proved end-to-end through a new MovingAverage capability, a TabularSummary chart backend/provider, and independent chart + API consumers.
+- Historical note: Phase 7 was previously treated as active after Migration Plan Phases 14–22. Current active sequencing now belongs to the recalibrated migration plan.
 - known debt: `MainChartsView` host concentration (~1,440 lines), `SyncfusionChartsView` parallel-host concentration (~859 lines), managed legacy/VNext coexistence
 
 Current defaults:
@@ -54,7 +78,7 @@ Current defaults:
 - scope is `DataVisualiser` only
 - posture is `Conservative-Pragmatic`
 - one iteration must have one primary objective
-- the default objective is Phase 7 capability expansion; Migration Plan Phases 14–22 are complete; the VNext spine is proved end-to-end
+- the historical default objective was Phase 7 capability expansion; current default objective must be taken from the active migration plan
 - safely coupled slices are allowed only when they already share a real contract / host / route / responsibility pattern
 - validation must happen on every significant refactor
 - if live behavior changes, halt after automated validation and request targeted manual smoke before continuing
@@ -77,7 +101,8 @@ Authority order:
 3. `DataVisualiser-Architectural-Vocabulary.md`
 4. `Project Roadmap.md`
 5. `Project Overview.md`
-6. this document
+6. current `DataVisualiser_Migration_Plan_and_Guardrails.md`
+7. this document
 
 Default validation commands:
 
@@ -164,9 +189,13 @@ Capability retirement rule: a capability may be removed only if explicitly retir
 
 ---
 
-## 5. Current Shape Snapshot (April 2026)
+## 5. Historical Shape Snapshot (April 2026)
 
-Current observed shape:
+Historical observed shape:
+
+```text
+Retained for trend/context only. Use the active migration plan and latest generated artifacts for current counts, density, and pressure points.
+```
 
 - `~505` C# source files (Phase 6.6 audit baseline + VNext widening coordinators, milestone recorder, cleanup consolidation, shared tab-host extraction, route/capability seams, admin workflow extraction, strategy parity validation extraction, tooltip formatting split, shared UI-busy lease, parity-series comparer, workspace load/milestone recorders, binary metric context helper, pre-Phase-7 VNext render-plan foundation, live render-plan adapter wiring, Phase 19–22 builders/invokers and capability spine additions; Phase 6 closure baseline was 493)
 - `996` DataVisualiser automated tests passing; `15` DataFileReader tests passing (Phase 6 closure baseline was 737 tests)
@@ -212,7 +241,7 @@ Current major concentration points:
 - `UI/Charts/Presentation/BarPieChartControllerAdapter.cs` (~199 lines)
 - `UI/Charts/Presentation/BarPieRenderModelBuilder.cs` (~292 lines)
 
-Current read:
+Historical read:
 
 - the VNext reasoning engine is live for all current chart families, proving request -> snapshot -> program -> delivery beyond scaffolding
 - VNext main-family route eligibility is centralized in `VNextChartRoutePolicy`, and VNext/legacy load routing is delegated out of `MetricLoadCoordinator` into `VNextMetricLoadRouter`, keeping routing, family runtime recording, fallback signaling, and `SupportsOnlyMainChart` diagnostics explicit
@@ -286,15 +315,18 @@ Current read:
 
 ---
 
-## 5.5 Architectural Migration Progress Snapshot
+## 5.5 Historical Architectural Migration Progress Snapshot
 
 This is a concise execution-plan view of the accepted architectural vocabulary progress snapshot.
 
-Current estimate:
+Historical estimate retained for context:
 
 ```text
-Architectural migration: approximately 70–75% complete
-Working estimate: ~72% (updated after Phases 19–22)
+Architectural migration at this snapshot: approximately 70–75%
+Working estimate at this snapshot: ~72% (updated after Phases 19–22)
+
+This estimate is not authoritative for current execution.
+Use the active migration plan and latest generated artifacts for current status.
 ```
 
 | Area | Approx. completion | Execution-plan interpretation |
@@ -472,9 +504,11 @@ These are accepted as known debt, not open work:
 
 ---
 
-## 7. Primary Mandate
+## 7. Historical Primary Mandate
 
-Phase 6 established a trustworthy hierarchy. The primary mandate is now Phase 7 exploratory capability expansion.
+Phase 6 established a trustworthy hierarchy. At the time of this document's earlier active use, the primary mandate was Phase 7 exploratory capability expansion.
+
+Current active mandate now belongs to the recalibrated migration plan.
 
 **Phase 7 — Exploratory capability expansion:**
 - add interpretive overlays, confidence-aware views, and programmable multi-result composition as reasoning-engine capabilities
@@ -523,6 +557,11 @@ Pre-Phase-7 rendering-primer note:
 ---
 
 ## 8.5 Enhanced Architecture Migration Phasing
+
+```text
+This section is retained as conceptual subsystem background.
+It does not supersede the recalibrated migration plan's current phase sequence.
+```
 
 The enhanced architecture should not be treated as a single refactor phase. It is better understood as a forward-only, multi-cycle migration direction that can be advanced through bounded slices.
 
@@ -631,9 +670,9 @@ All consolidation work should follow this cycle:
 
 ---
 
-## 10. Trackable Phase Plan
+## 10. Historical Trackable Phase Plan
 
-The trackable phase plan should be read after the enhanced module buckets and migration phasing above. Section 8 defines the target containers; Section 8.5 defines the multi-cycle migration direction; this section records completed and active execution tracks.
+The trackable phase plan should be read after the enhanced module buckets and migration phasing above. Section 8 defines the target containers; Section 8.5 defines the multi-cycle migration direction; this section records completed and formerly active execution tracks. It is not the current execution sequence.
 
 ### 10.1 Phase A — Re-Baseline (COMPLETED)
 
@@ -724,9 +763,9 @@ Completed live slices:
 3. Density/backend diagnostics now flow through the evidence export path.
 4. Phase 7 capability work may proceed now that the primer is closed.
 
-## 11. Current Priority Outliers
+## 11. Historical Priority Outliers
 
-Read these through the enhanced ownership lens: each outlier should be classified by whether it violates authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, or governance/evidence ownership.
+Read these through the enhanced ownership lens and validate against the active migration plan before treating them as current: each outlier should be classified by whether it violates authority/provenance, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, or governance/evidence ownership.
 
 Also audit the new provider/consumer boundary types to verify whether they enforce real boundary behavior rather than merely renaming delivery routing.
 
@@ -826,7 +865,7 @@ Already banked (do not reopen casually):
 - VNext reasoning engine is proven live for the first chart family with full signature-chain diagnostics
 - no regression in rendering, parity, export, theme, orchestration, or flexibility behavior
 
-**Phase 7 criteria (active):**
+**Historical Phase 7 criteria (superseded as active execution criteria):**
 - new exploratory capabilities are reasoning-engine features, not chart-specific additions
 - confidence and provenance are integral to new results, not optional decorations
 - the reasoning engine's generality increases with each capability — programs become more consumer-agnostic
@@ -1032,6 +1071,39 @@ compression_rules:
   - only completed work moves into iteration_record
   - only current blockers and next steps belong in reload_packet
 ```
+
+
+---
+
+## 16. Current Use Summary
+
+```text
+Use this document as supporting subsystem background.
+
+Do not use it as the active phase plan.
+
+For current execution:
+  use DataVisualiser_Migration_Plan_and_Guardrails.md
+
+For conceptual grammar:
+  use DataVisualiser-Architectural-Vocabulary.md
+
+For binding canonical law:
+  use Project Bible.md
+```
+
+Retained value:
+
+```text
+historical subsystem progression
+capability preservation baseline
+target module buckets
+legibility-cycle discipline
+old outlier and migration context
+programmable chart-platform direction
+conversation-branch persistence schemas
+```
+
 
 ---
 

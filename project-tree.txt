@@ -1,5 +1,5 @@
 ﻿Project Tree Snapshot
-Generated: 2026-05-02 14:22:45
+Generated: 2026-05-04 12:28:40
 Root: C:\Development\POCs\DataAnalyser
 
 DataAnalyser/
@@ -12,8 +12,6 @@ DataAnalyser/
   .idea/
     .idea.DataAnalyser/
       .idea/
-        .gitignore
-        encodings.xml
         indexLayout.xml
         projectSettingsUpdater.xml
         vcs.xml
@@ -197,7 +195,7 @@ DataAnalyser/
         ITransformChartRenderInvoker.cs
         MetricLoadRequest.cs
         PrimaryChartRenderRequest.cs
-        StrategySelectionService.cs
+        StrategySelector.cs
         TransformChartRenderInvoker.cs
         WeekdayTrendChartUpdateCoordinator.cs
       Rendering/
@@ -482,24 +480,14 @@ DataAnalyser/
           BinaryMetricChartContextHelper.cs
           CartesianChartControllerAdapterBase.cs
           CartesianMetricOverlaySeriesBuilder.cs
-          ChartAxisModel.cs
           ChartComboItemHelper.cs
           ChartContextSelectionGuard.cs
           ChartControllerAdapterBase.cs
           ChartControllerFactory.cs
           ChartControllerKeys.cs
           ChartControllerRegistry.cs
-          ChartFacetModel.cs
-          ChartInteractionModel.cs
-          ChartLegendItemModel.cs
-          ChartLegendModel.cs
-          ChartLegendPlacement.cs
-          ChartOverlayModel.cs
           ChartPanelSurface.cs
-          ChartRendererKind.cs
           ChartRendererResolver.cs
-          ChartSeriesModel.cs
-          ChartSeriesType.cs
           ChartSubtypeComboHelper.cs
           ChartSurfaceFactory.cs
           ChartSurfaceHelper.cs
@@ -549,23 +537,23 @@ DataAnalyser/
           NormalizedChartControllerAdapter.cs
           PieFacetLegendToggleManager.cs
           RenderingHostLifecycleAdapterHelper.cs
-          SubtypeSelectorManager.cs
+          SubtypeSelector.cs
           SyncfusionSunburstChartControllerAdapter.cs
           SyncfusionSunburstRenderModelBuilder.cs
           TransformChartPresentationCoordinator.cs
           TransformDataPanelControllerAdapter.cs
           TransformDataPanelControllerAdapterCompositionFactory.cs
-          TransformDataResolutionCoordinator.cs
+          TransformDataResolver.cs
           TransformExecutionModels.cs
           TransformGridPresentationCoordinator.cs
-          TransformOperationExecutionCoordinator.cs
+          TransformOperationExecutor.cs
           TransformOperationOptions.cs
           TransformOperationStateCoordinator.cs
           TransformRenderCoordinator.cs
           TransformSelectionInteractionCoordinator.cs
           TransformSeriesOperationRequestMapper.cs
           TransformSessionMilestoneRecorder.cs
-          TransformSubtypeSelectionCoordinator.cs
+          TransformSubtypeSelector.cs
           TransformWorkflowCoordinator.cs
           UiChartRenderModel.cs
           VNextDataResolutionHelper.cs
@@ -583,14 +571,9 @@ DataAnalyser/
         MultiplyConverter.cs
         NormalizationModeConverter.cs
       Events/
-        ChartUpdateRequestedEventArgs.cs
-        ChartVisibilityChangedEventArgs.cs
-        DataLoadedEventArgs.cs
-        DateRangeLoadedEventArgs.cs
-        MetricTypesLoadedEventArgs.cs
-        SubtypesLoadedEventArgs.cs
-        WeekdayTrendAverageToggleEventArgs.cs
-        WeekdayTrendDayToggleEventArgs.cs
+        ChartEventArgs.cs
+        WeekdayTrendEventArgs.cs
+        WorkspaceLoadEventArgs.cs
       MainHost/
         Coordination/
           ChartHostDateRangeCoordinator.cs
@@ -667,6 +650,8 @@ DataAnalyser/
       ViewModels/
         AsyncRelayCommand.cs
         BusyStateTracker.cs
+        ChartLoadPolicy.cs
+        ChartProgramRequestPlanner.cs
         ChartVisibilityController.cs
         IMainChartsViewEventSource.cs
         MainWindowViewModel.ChartVisibility.cs
@@ -678,14 +663,10 @@ DataAnalyser/
         MetricLoadCoordinator.cs
         RelayCommand.cs
         SharedMainWindowViewModelProvider.cs
-        VNextChartProgramRequestPlanner.cs
-        VNextChartRoutePolicy.cs
         VNextMetricLoadRouter.cs
       Workspace/
-        Coordination/
-          WorkspaceLoadCoordinator.cs
-        Diagnostics/
-          WorkspaceSessionMilestoneRecorder.cs
+        WorkspaceLoadCoordinator.cs
+        WorkspaceSessionMilestoneRecorder.cs
       ChartPresentationSpine.cs
       ChartRenderingContextAdapter.cs
       ChartTabHost.xaml
@@ -757,8 +738,6 @@ DataAnalyser/
         OperationKernel.cs
         TimeSeriesAlignmentKernel.cs
       Rendering/
-        MovingAverage/
-          MovingAverageCapabilityContract.cs
         ChartBackendCandidateSet.cs
         ChartBackendCapabilities.cs
         ChartBackendSelector.cs
@@ -770,6 +749,7 @@ DataAnalyser/
         ChartRenderPlanProjector.cs
         ChartRenderPlanProviderMetadata.cs
         ChartRenderPlanVocabularyMetadata.cs
+        MovingAverageCapabilityContract.cs
         RenderDensityPolicy.cs
         TimeBucketRenderAggregationKernel.cs
       State/
@@ -862,7 +842,7 @@ DataAnalyser/
       DistributionRangeResultBuilderTests.cs
       FrequencyShadingCalculatorTests.cs
       MetricSelectionServiceTests.cs
-      StrategySelectionServiceTests.cs
+      StrategySelectorTests.cs
       TimeBucketAggregationHelperTests.cs
       TransformComputationServiceTests.cs
     Strategies/
@@ -903,7 +883,7 @@ DataAnalyser/
           DiffRatioNormalizedSelectionAdapterTests.cs
           DistributionChartControllerAdapterTests.cs
           Phase20BuilderInvokerTests.cs
-          SubtypeSelectorManagerTests.cs
+          SubtypeSelectorTests.cs
           SyncfusionSunburstChartControllerAdapterTests.cs
           TransformCoordinatorTests.cs
           TransformDataPanelControllerAdapterTests.cs
@@ -965,14 +945,14 @@ DataAnalyser/
     ViewModels/
       AsyncRelayCommandTests.cs
       BusyStateTrackerTests.cs
+      ChartLoadPolicyTests.cs
+      ChartProgramRequestPlannerTests.cs
       ChartVisibilityControllerTests.cs
       DataLoadValidatorTests.cs
       MainWindowViewModelBusyStateTests.cs
       MainWindowViewModelSelectionBatchTests.cs
       MetricLoadCoordinatorTests.cs
       UiStateTests.cs
-      VNextChartProgramRequestPlannerTests.cs
-      VNextChartRoutePolicyTests.cs
     VNext/
       AnalyticalIntentContractsTests.cs
       AnalyticalIntentFactoryTests.cs
@@ -1012,22 +992,39 @@ DataAnalyser/
       Type Dependencies Diagram for ChartComputationResult and other elements-PreMigration.md
       Type Dependencies Diagram for ChartComputationResult and other elements-Previous.md
     AI_BOOTSTRAP_ENTRY.md
+    Architectural Migration Post Synopsis.txt
     Collaboration Protocol.md
+    DataVisualiser_Authority_Provenance_Fidelity_Audit.md
     DataVisualiser_Capability_Contract_Consolidation_Audit.md
     DataVisualiser_ChartDataContext_Migration_Audit.md
+    DataVisualiser_Consumer_Interaction_Containment_Audit.md
     DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md
+    DataVisualiser_Contract_Boundary_Qualification_Audit.md
+    DataVisualiser_Dependency_Density_Audit.md
+    DataVisualiser_Distribution_Capability_Slice_Audit.md
+    DataVisualiser_Evidence_Observability_Audit.md
     DataVisualiser_Final_Convergence_Audit.md
     DataVisualiser_First_Family_Legacy_Bridge_Retirement.md
     DataVisualiser_First_VNext_Native_Family_Migration_Audit.md
+    DataVisualiser_Governance_Constraints_Audit.md
+    DataVisualiser_Integration_Hub_Containment_Audit.md
     DataVisualiser_Migration_Plan_and_Guardrails.md
     DataVisualiser_Operation_Chain_Workbench_MVP_Audit.md
+    DataVisualiser_Post_Architecture_Implementation_Notes.md
+    DataVisualiser_Projection_Translation_Containment_Audit.md
+    DataVisualiser_Refactoring_Opportunity_Audit.md
     DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md
     DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md
+    DataVisualiser_Requirements_Language_Coverage_Matrix.md
     DataVisualiser_Subsystem_Plan.md
+    DataVisualiser_Surface_Model_Seam_Audit.md
+    DataVisualiser_Terminal_Delivery_Boundary_Audit.md
     DataVisualiser_UI_Interaction_State_Consolidation_Audit.md
     DataVisualiser_VNext_Native_Family_Migration_Tracker.md
     DataVisualiser_VNext_Native_UI_Consumption_Contract.md
     DataVisualiser-Architectural-Vocabulary.md
+    DataVisualiser-Architectural-Vocabulary_CLEAN_FOUNDATIONAL.md
+    DataVisualiser-Architectural-Vocabulary_FOUNDATIONAL_REPAIRED_PHASE46_ABSTRACT.md
     MASTER_OPERATING_PROTOCOL.md
     Prime_Directive_Formal_Coverage_Notes.md
     Project Bible.md
@@ -1036,6 +1033,16 @@ DataAnalyser/
     Project Roadmap.md
     SYSTEM_MAP.md
     To Do Ideas.md
+    TODO Enhancements.md
+    Type Dependencies Diagram for ChartComputationResult and other elements.md
+    Type Dependencies Diagram for ChartComputationResult and other elements1.md
+    Type Dependencies Diagram for ChartComputationResult and other elements2.md
+    Type Dependencies Diagram for ChartComputationResult and other elements3.md
+    Type Dependencies Diagram for ChartComputationResult and other elements4.md
+    Type Dependencies Diagram for ChartComputationResult and other elements5.md
+    Type Dependencies Diagram for ChartComputationResult and other elementsSimplified.md
+    Type Dependencies Diagram.md
+    type-dependency-diagram.md
     Workspace Workflow.md
   images/
     Logo.png

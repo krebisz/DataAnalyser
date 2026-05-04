@@ -1,9 +1,9 @@
-﻿# SYSTEM MAP
+# SYSTEM MAP
 **Status:** Canonical (Structural)  
 **Scope:** Conceptual architecture, execution boundaries, rendering boundaries, and data-flow constraints  
 **Authority:** Subordinate only to `Project Bible.md`
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership-container language, and do-not-confuse distinctions used by this structural map
-**Last Updated:** 2026-04-26
+**Last Updated:** 2026-05-04
 
 ---
 
@@ -150,6 +150,265 @@ or do they merely rename delivery routing?
 ```
 
 ---
+
+
+### 2.7 Current Generated Structural Snapshot — 2026-05-04 (Descriptive)
+
+This section overlays the current generated artifacts onto the structural map. It is descriptive evidence only. It does not redefine the allowed architecture, reopen historical phases, or authorize implementation work.
+
+Generated artifact set:
+
+```text
+project-tree.txt                  Generated 2026-05-04 12:28:40
+codebase-index.md                 Generated 2026-05-04 12:28:51
+type-dependency-diagram.md        Generated 2026-05-04 12:28:56
+dependency-summary.md             Generated 2026-05-04 12:29:28
+external coding-tool diagram      supplementary visual dependency view
+```
+
+Current declared symbol shape:
+
+| Area | Current reading |
+|---|---:|
+| DataFileReader symbols | 83 |
+| DataFileReader.Tests symbols | 6 |
+| DataVisualiser symbols | 767 |
+| DataVisualiser.Tests symbols | 192 |
+| Top-level symbols | 1038 |
+| Nested symbols | 10 |
+| Declared type symbols | 1013 |
+| Direct textual type-reference edges | 7587 |
+| Dependency-density reading | 0.7401% |
+
+Project-level dependency shape:
+
+```text
+DataVisualiser -> DataFileReader
+DataVisualiser.Tests -> DataVisualiser
+DataFileReader.Tests -> DataFileReader
+```
+
+Structural interpretation:
+
+- the repository remains a two-subsystem solution: ingestion/canonicalization in `DataFileReader`, analysis/visualization/consumer delivery in `DataVisualiser`
+- `DataVisualiser` is still the dominant structural mass
+- the target vocabulary is now materially represented in production code, not merely in documents or tests
+- the structure is more semantically explicit than the older map, but also denser
+- density is classification evidence only; it is not, by itself, proof of architectural breach
+
+Current structural status:
+
+```text
+Status: yellow / bounded-converged, not green / fully closed.
+```
+
+The previous maturity estimates in this map remain historical structural readings. The current generated artifacts supersede them for present-state interpretation.
+
+---
+
+### 2.8 Current Container-to-Code Reading — 2026-05-04 (Descriptive)
+
+The current tree shows the enhanced containers as materially present, but unevenly distributed.
+
+| Structural container | Current representative areas / types | Current reading |
+|---|---|---|
+| Authority / Provenance | `MetricSelectionRequest`, `MetricLoadSnapshot`, `MetricSeriesSnapshot`, `ProvenanceDescriptor`, DataFileReader canonical types | Authority carriers exist and remain upstream-facing. |
+| Reasoning / Capability | `AnalyticalIntent`, `ChartProgram`, `ChartProgramPlanner`, `ReasoningSessionCoordinator`, `OperationKernel`, `OperationChainExecutor`, capability contracts | Reasoning spine is materially implemented. |
+| Process / Execution | `MetricLoadCoordinator`, `VNextMetricLoadRouter`, `VNextMainChartIntegrationCoordinator`, `VNextSeriesLoadCoordinator`, `ChartUpdateCoordinator`, workflow/load coordinators | Execution remains broad and still carries migration/coexistence pressure. |
+| Contract / Boundary | `ConsumerDeliveryContract`, `ConsumerProviderContract`, `VNextUiConsumptionContract`, `ConsumerSurfaceModel`, rendering contracts | Boundary contracts are now explicit production structures. |
+| Projection / Translation | `LegacyChartProgramProjector`, `ChartRenderPlanProjector`, VNext consumption-contract builders, render-plan builders | Translation is explicit, but some projection remains compatibility-bound. |
+| Consumer / Interaction | UI controllers/adapters, `OperationChainWorkbenchPresenter`, chart interaction helpers, tooltip helpers, selection/event binders | Consumer layer is better decomposed but still heavy. |
+| Terminal Delivery | LiveCharts adapters/renderers, Syncfusion rendering contracts/adapters, WPF chart surfaces, ECharts placeholder surface | Delivery remains terminal but structurally large. |
+| Governance / Evidence | evidence export services/builders, reachability export, parity harnesses, architecture tests | Evidence is broad and useful; it must remain observational. |
+
+Binding consequence:
+
+```text
+A type living in a downstream namespace or host must not be treated as authoritative merely because the current graph shows it as highly connected.
+```
+
+---
+
+### 2.9 Current Dependency Pressure Map — 2026-05-04 (Descriptive)
+
+The current dependency diagram identifies the following highest incoming hubs:
+
+```text
+MetricData: 194
+Result: 193
+MetaData: 188
+ChartState: 175
+ChartDataContext: 169
+ChartProgramKind: 166
+Context: 131
+CompositionKind: 120
+MetricSeriesSelection: 104
+ChartProgramRequest: 101
+ConsumerDeliveryContract: 99
+ChartRenderPlan: 96
+ChartRenderPlanMetadataKeys: 95
+ChartDisplayMode: 87
+MetricSelectionService: 81
+CapabilityRequest: 80
+ICanonicalMetricSeries: 80
+ChartRenderPlanKind: 75
+VNextUiConsumptionContract: 74
+MetricState: 70
+ConsumerProviderContracts: 67
+ConsumerSurfaceModel: 64
+IAnalyticalCapabilityContract: 63
+```
+
+Structural classification:
+
+- `MetricData`, `MetaData`, `MetricSeriesSelection`, `ChartProgramKind`, `ChartDisplayMode`, `CompositionKind`, `CapabilityRequest`, `ChartProgramRequest`, `ConsumerDeliveryContract`, `ChartRenderPlan`, `VNextUiConsumptionContract`, `ConsumerSurfaceModel`, and `IAnalyticalCapabilityContract` may be legitimate high-use carriers or contracts
+- `ChartState`, `ChartDataContext`, `MetricState`, and `MetricSelectionService` remain structural pressure points because they are close to UI state, compatibility context, service loading, and migration coexistence
+- high incoming references to target-spine vocabulary are expected only while those types remain bounded carriers, not policy owners
+
+The current dependency diagram identifies the following highest outgoing sources:
+
+```text
+MainChartsView: 103
+SyncfusionChartsView: 55
+ChartControllerFactory: 53
+ChartControllerFactoryContext: 53
+ChartControllerFactoryResult: 53
+SyncfusionChartControllerFactoryResult: 53
+ChartRenderingOrchestrator: 37
+BaseDistributionService: 34
+EvidenceDiagnosticsBuilder: 33
+WeekdayTrendChartControllerAdapter: 33
+```
+
+Structural classification:
+
+- `MainChartsView` and `SyncfusionChartsView` are host-gravity points
+- `ChartControllerFactory*` types remain composition fan-out points
+- `ChartRenderingOrchestrator` remains a cross-family coordination risk
+- `BaseDistributionService` and family adapters remain places where behavior preservation, rendering, strategy compatibility, and family-specific meaning can become too tightly coupled
+- `EvidenceDiagnosticsBuilder` must remain observational and must not become runtime policy
+
+Binding rule:
+
+```text
+Dense carriers are not violations.
+Dense hosts, factories, orchestrators, adapters, and evidence builders are inspection targets.
+```
+
+---
+
+### 2.10 Current VNext / Surface / Operation Chain Position — 2026-05-04 (Descriptive)
+
+The current project tree confirms that VNext is no longer only a theoretical or test-side spine. It contains application, contract, kernel, rendering, and state areas, including:
+
+```text
+VNext/Application
+VNext/Contracts
+VNext/Kernel
+VNext/Rendering
+VNext/State
+```
+
+Important current VNext structures include:
+
+```text
+AnalyticalIntentFactory
+AnalyticalRenderPlanPipeline
+ChartProgramPlanner
+ConsumerDeliveryEvidence
+MetricLoadSnapshotGateway
+OperationChainExecutor
+ReasoningSessionCoordinator
+AnalyticalIntent
+ChartProgram
+ConsumerDeliveryContract
+ConsumerProviderContract
+ConsumerSurfaceModel
+IAnalyticalCapabilityContract
+InteractionRequest
+OperationChainContracts
+OverlayPlan
+ProvenanceDescriptor
+VNextUiConsumptionContract
+ChartRenderPlan
+ChartRenderDeliveryBinding
+ChartRenderPlanProjector
+RenderDensityPolicy
+TimeBucketRenderAggregationKernel
+```
+
+Operation Chain now has both contract/executor and UI workbench representation:
+
+```text
+VNext/Application/OperationChainExecutor.cs
+VNext/Contracts/OperationChainContracts.cs
+UI/OperationChain/OperationChainWorkbenchPresenter.cs
+UI/OperationChain/OperationChainWorkbenchView.xaml(.cs)
+```
+
+Structural consequence:
+
+- VNext contracts and surface models are active structural boundaries
+- Operation Chain is the current bounded pressure test for multi-step derived analytical construction
+- Operation Chain must not force semantics into UI, `ChartDataContext`, controller adapters, or generic state bags
+- `ConsumerSurfaceModel`, `VNextUiConsumptionContract`, and `ChartRenderPlan` must not become replacement mega-objects
+
+---
+
+### 2.11 Current Rendering / Vendor Shape — 2026-05-04 (Descriptive)
+
+The current dependency summary and project tree confirm that `DataVisualiser` still carries concrete rendering dependencies:
+
+```text
+LiveCharts.Core
+LiveCharts.Wpf.Core
+LiveChartsCore
+LiveChartsCore.SkiaSharpView
+LiveChartsCore.SkiaSharpView.WPF
+Syncfusion.Licensing
+Syncfusion.SfSunburstChart.WPF
+```
+
+Structural reading:
+
+- LiveCharts and Syncfusion remain concrete terminal delivery dependencies
+- Syncfusion remains the hierarchy/sunburst delivery family
+- LiveCharts remains the primary cartesian/faceted chart delivery family
+- ECharts remains present as a presentation placeholder seam under `UI/Charts/Presentation/ECharts`
+
+Binding constraints remain unchanged:
+
+```text
+Concrete rendering packages may exist at terminal delivery edges.
+They must not define analytical meaning.
+They must not leak into upstream VNext contracts or canonical/authority layers.
+They must not become the center of analytical output shape.
+```
+
+---
+
+### 2.12 Current Structural Risk Register — 2026-05-04 (Descriptive)
+
+The generated artifacts update the active structural risk register as follows:
+
+| Risk | Current structural meaning |
+|---|---|
+| `ChartDataContext` | Still a dominant UI/rendering-state and compatibility carrier. It remains the primary context-first gravitational object. |
+| `ChartState` / `MetricState` | Still central state carriers. They are allowed to carry state, but not semantic authority. |
+| `MainChartsView` | Still the largest outgoing dependency source; host-gravity remains high. |
+| `SyncfusionChartsView` | Still a significant host-gravity point for hierarchy delivery. |
+| `ChartControllerFactory*` | Still central composition/fan-out infrastructure. Must remain composition only. |
+| `ChartRenderingOrchestrator` | Still cross-family coordination. Must not regain family policy or authority. |
+| Family rendering contracts/builders | Target vocabulary is repeated across families; consolidation is only safe where real shared shape is proven. |
+| Evidence builders/services | Useful as governance sidecars; must not control live routing or semantic decisions. |
+| Operation Chain | Structurally present as a bounded pressure test; not yet proof that broad construction algebra should be pushed into runtime. |
+
+Structural posture:
+
+```text
+The system is more target-shaped than before, but not structurally lighter.
+The next structural question is containment and responsibility reduction, not more vocabulary.
+```
 
 ## 3. Layer Definitions (Authoritative)
 
@@ -768,5 +1027,51 @@ flowchart LR
 ```
 
 ---
+
+
+---
+
+## Appendix C. Current Artifact Evidence Overlay — 2026-05-04
+
+This appendix records the evidence basis for the current generated-state update.
+
+```text
+codebase-index.md
+- DataFileReader: 83 symbols
+- DataFileReader.Tests: 6 symbols
+- DataVisualiser: 767 symbols
+- DataVisualiser.Tests: 192 symbols
+- top-level symbols: 1038
+- nested symbols: 10
+
+dependency-summary.md
+- DataVisualiser depends on DataFileReader
+- DataVisualiser.Tests depends on DataVisualiser
+- DataFileReader.Tests depends on DataFileReader
+- DataVisualiser carries LiveCharts and Syncfusion terminal rendering packages
+
+type-dependency-diagram.md
+- declared type symbols: 1013
+- direct type-reference edges: 7587
+- dependency-density reading: 0.7401%
+- top incoming hubs include ChartState, ChartDataContext, ChartProgramKind, ChartProgramRequest, ConsumerDeliveryContract, ChartRenderPlan, VNextUiConsumptionContract, ConsumerSurfaceModel, and IAnalyticalCapabilityContract
+- top outgoing sources include MainChartsView, SyncfusionChartsView, ChartControllerFactory*, ChartRenderingOrchestrator, BaseDistributionService, and EvidenceDiagnosticsBuilder
+
+project-tree.txt
+- confirms current VNext, OperationChain, rendering-contract, evidence, workspace, and UI coordination structures
+
+Type Dependencies Diagram for ChartComputationResult and other elements-Current.md
+- treated as supplementary visual evidence only
+- confirms the same broad pressure clusters around ChartDataContext, ChartState, controller factories, rendering contracts, VNext contracts, Operation Chain, and terminal delivery structures
+```
+
+Artifact interpretation rule:
+
+```text
+Generated artifacts describe structure.
+They do not decide architectural legitimacy by themselves.
+Architectural legitimacy is still decided by this map, the Project Bible, and the architectural vocabulary.
+```
+
 
 **End of SYSTEM MAP**

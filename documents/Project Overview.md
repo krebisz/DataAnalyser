@@ -2,7 +2,7 @@
 **Status:** Descriptive  
 **Scope:** System intent, current capabilities, and evolutionary direction  
 **Authority:** Subordinate to `Project Bible.md`, `SYSTEM_MAP.md`, `DataVisualiser-Architectural-Vocabulary.md`, and `Project Roadmap.md`  
-**Active Subsystem Execution Reference:** `DataVisualiser_Subsystem_Plan.md` for Phase 7 exploratory capability expansion and forward-stage enhanced architecture migration
+**Execution References:** current implementation/migration plans provide active task order and implementation state; `DataVisualiser_Subsystem_Plan.md` remains supporting subsystem context
 **Architectural Grammar Reference:** `DataVisualiser-Architectural-Vocabulary.md` for promoted concepts, ownership containers, target hierarchy, and do-not-confuse distinctions
 
 ---
@@ -18,6 +18,16 @@ This document provides a descriptive overview of the project:
 - what constraints govern that evolution
 
 It does not define architectural law, canonical vocabulary, or sequencing authority.
+
+Current alignment note:
+
+```text
+This overview is descriptive.
+It should not be used as the active implementation plan or progress log.
+The roadmap governs long-term sequencing.
+The architectural vocabulary governs target grammar.
+The current implementation/migration plan governs local execution state.
+```
 
 If a conflict exists, higher-authority and governing reference documents prevail.
 
@@ -70,6 +80,8 @@ At present, the system:
 - increasingly exposes downstream-safe derived and interpretive result shaping through explicit orchestration and rendering seams
 - emits tab-scoped reachability/evidence exports from both the Charts and Syncfusion surfaces through the shared evidence service
 - has a closed pre-Phase-7 VNext render-plan preservation baseline for backend-neutral render intent, render buffers, density policy, and adapter dispatch across the active chart families/tabs
+- has materially implemented target-spine structures, including VNext-native consumption contracts, consumer-neutral surface models, capability contracts, Operation Chain, derived dataset, evidence, and trace structures
+- still retains active legacy/UI/state pressure points such as `ChartDataContext`, `MainChartsView`, `ChartControllerFactory*`, and related rendering/state hubs
 - now has a formal architectural vocabulary for describing ownership, capability, composition, consumers, interaction, overlays, boundaries, and evidence without relying on ad hoc interpretation
 
 Canonical semantics form the foundation for all trusted meaning and for all computation that claims canonical comparability.
@@ -284,16 +296,16 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 ---
 
 ### Phase 7 - Exploratory & Confidence Capability Expansion  
-**Open / Active**
+**Historical / Superseded as Current Active Framing**
 
 - Interpretive overlays, confidence-aware views, structural exploration, and programmable multi-result composition remain intended
-- Migration Plan Phases 14–22 are complete; the VNext spine is proved end-to-end through a new MovingAverage capability, TabularSummary backend, and independent chart + API consumers
-- Current active work is Phase 7 exploratory capability expansion on the closed `ChartProgram -> ChartRenderPlan -> backend adapter` preservation baseline
+- Migration Plan Phases 14–22 were completed during the earlier target-spine expansion period; the VNext spine was proved end-to-end through a MovingAverage capability, TabularSummary backend, and independent chart + API consumers
+- The earlier active framing of Phase 7 as exploratory capability expansion has been superseded by post-target recalibration work
 - Later family or tab exceptions must be handled explicitly and must not silently reopen closed Phase 5/6/6.3 or pre-Phase-7 primer work
-- Phase 7 should advance through forward stages aligned to the enhanced containers: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence
+- Future exploratory capability work should still align to the enhanced containers: authority/intent, reasoning/capability, process/execution, contract/boundary, projection/translation, consumer/interaction, terminal delivery, and governance/evidence
 - the architectural vocabulary document provides the canonical grammar for interpreting these containers and promoted concepts
-- Known debt inherited from Phase 6 is documented and bounded
-- New progress should be tracked against Phase 7 or later forward stages, not against closed Phase 5/6/6.3 or the closed pre-Phase-7 primer
+- Known debt inherited from Phase 6 and later convergence work remains documented and bounded
+- New progress should be tracked against the current migration/implementation plan or later roadmap phases, not against closed Phase 5/6/6.3 or the closed pre-Phase-7 primer
 
 ---
 
@@ -309,6 +321,16 @@ Sequencing authority remains the roadmap; where older descriptive claims drifted
 ## 8.5 Forward Architecture Direction (Descriptive)
 
 The enhanced architecture direction is forward-only. It does not reopen closed Phase 5, Phase 6, Phase 6.3, or the closed pre-Phase-7 render-plan primer.
+
+Current post-target direction adds an explicit recalibration gate before broad new capability or formal runtime expansion:
+
+```text
+rebaseline current density
+inventory existing constructions
+triage coverage gaps
+reduce or contain pressure points where useful
+then introduce minimal construction algebra only where justified
+```
 
 Future work should broadly progress through:
 
@@ -329,14 +351,23 @@ The architectural vocabulary provides the shared language for this direction; th
 
 ## 8.6 Architectural Migration Progress Snapshot
 
-The accepted high-level architectural migration estimate is:
+The previous high-level architectural migration estimate was:
 
 ```text
 Architectural migration: approximately 70–75% complete
 Working estimate: ~72% (updated after Phases 19–22)
 ```
 
-This estimate is descriptive, not a phase gate.
+This estimate is retained as historical context only.
+
+Current descriptive reading:
+
+```text
+The target architecture is materially real.
+The old mesh has not disappeared.
+The project is in post-target recalibration territory.
+Current status is better described as substantial convergence with remaining pressure points than as a simple percentage.
+```
 
 | Area | Approx. completion | Descriptive meaning |
 |---|---:|---|
@@ -388,6 +419,22 @@ Capability expansion:
 
 These directions represent intent, not immediate commitment.
 
+Post-target direction also includes:
+
+- requirements-to-language coverage
+- construction inventory
+- construction algebra
+- operation / capability algebra
+- typed relations
+- multiplicity / derived datasets
+- evidence sufficiency
+- semantic interpretation and confidence
+- analytical fitness
+- bounded search
+- multi-consumer output
+- governance and emergence review
+- scenario hardening
+
 All future work must respect canonical boundaries, architectural vocabulary, enhanced container ownership, and phase discipline.
 
 Exploratory and confidence-related capabilities are no longer treated as informal future ideas.
@@ -423,9 +470,10 @@ The system exists to support reasoning, not replace it.
 - Exploration is supported without semantic erosion
 - Charts are the current dominant client, not the final definition of the platform
 - The broader direction is a reasoning environment that can serve multiple qualified consumers uniformly
-- The architectural migration is currently estimated at approximately 65–70% complete, with a working estimate of ~68%
-- The architecture rehaul and legibility reconciliation are complete; the pre-Phase-7 render-plan delivery primer is complete and closed as a preservation baseline, and the current critical work is Phase 7 exploratory capability expansion
+- Earlier migration estimates are retained as historical context only; the current descriptive state is substantial target-architecture convergence with remaining pressure points
+- The architecture rehaul, legibility reconciliation, pre-Phase-7 render-plan delivery primer, and later target-spine convergence work are complete enough to shift the current focus toward post-target recalibration, pressure classification, and bounded formalisation
 - Evolution is intentional and evidence-bound
+- Long-term evolution now points toward bounded generativity: analytical construction growth governed by semantic authority, provenance, evidence, and boundary clarity
 
 This overview describes the system as it exists today and the direction it is deliberately moving toward. It should not be used to reopen or re-track progress against closed historical phases, nor should it replace the architectural vocabulary source for precise concept ownership.
 

@@ -1,6 +1,6 @@
 ﻿# Type Dependency Diagram
 
-Generated: 2026-05-02 14:23:21
+Generated: 2026-05-04 12:28:56
 Root: C:\Development\POCs\DataAnalyser
 
 This file is auto-generated.
@@ -12,8 +12,8 @@ No compiler binding. No inference. No semantic interpretation.
 ## Summary
 
 - Declared type symbols: 1013
-- Direct type-reference edges: 7582
-- Dependency-density reading: 0.7396%
+- Direct type-reference edges: 7587
+- Dependency-density reading: 0.7401%
 - Private declarations included: False
 
 ------------------------------------------------------
@@ -192,9 +192,9 @@ graph TD
 |------|---------------------|
 | MetricData | 194 |
 | Result | 193 |
-| MetaData | 178 |
+| MetaData | 188 |
 | ChartState | 175 |
-| ChartDataContext | 166 |
+| ChartDataContext | 169 |
 | ChartProgramKind | 166 |
 | Context | 131 |
 | CompositionKind | 120 |
@@ -227,8 +227,8 @@ graph TD
 | ChartRenderPlanVocabularyMetadata | 48 |
 | SeriesOperationRequest | 47 |
 | StaTestHelper | 46 |
+| MetricNameOption | 43 |
 | MetricSelectionRequest | 42 |
-| MetricNameOption | 41 |
 | ChartControllerKeys | 40 |
 
 ------------------------------------------------------
