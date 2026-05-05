@@ -90,29 +90,18 @@ public sealed class OperationChainExecutor
         }
 
         var trace = new OperationChainTrace(traceEntries);
-        var intent = AnalyticalIntent.FromRequests(
-            request.Selection,
-            ChartProgramRequest.Transform(
-                request.Title,
-                request.Steps.Select(step => step.Operation).ToArray()),
-            request.Delivery,
-            ProvenanceDescriptor.Derived(snapshot.Signature),
-            new CapabilityRequest(
-                AnalyticalCapabilityKind.Transform,
-                CompositionKind.DerivedSeries,
-                request.Steps.Select(step => step.Operation).ToArray()));
-        var provider = _providerRegistry.Resolve(request.Delivery);
         var surfaceModel = ConsumerSurfaceModel.FromDerivedDatasets(datasets);
-        var contract = VNextUiConsumptionContract.FromIntent(
-            intent,
-            provider,
-            surfaceModel,
-            new Dictionary<string, string>
-            {
-                ["OperationChain.PlanSignature"] = plan.Signature,
-                ["OperationChain.TraceSignature"] = trace.Signature,
-                ["OperationChain.OutputCount"] = datasets.Count.ToString()
-            });
+        var contracts = request.Deliveries
+            .Select(delivery => BuildConsumptionContract(
+                request,
+                snapshot.Signature,
+                plan.Signature,
+                trace.Signature,
+                datasets.Count,
+                surfaceModel,
+                delivery))
+            .ToArray();
+        var contract = contracts[0];
         var evidence = new OperationChainEvidence(
             snapshot.Signature,
             plan.Signature,
@@ -125,7 +114,10 @@ public sealed class OperationChainExecutor
                 ["ConsumerKind"] = contract.Delivery.ConsumerKind.ToString(),
                 ["DeliveryTarget"] = contract.Delivery.DeliveryTarget,
                 ["ProviderKey"] = contract.Provider.ProviderKey,
-                ["SurfaceKind"] = contract.SurfaceModel.Kind.ToString()
+                ["SurfaceKind"] = contract.SurfaceModel.Kind.ToString(),
+                [ConstructionMetadataKeys.OperationChainPlanningStatus] = request.Planning.Status.ToString(),
+                [ConstructionMetadataKeys.OperationChainConsumerContractCount] = contracts.Length.ToString(),
+                [ConstructionMetadataKeys.OperationChainConsumerKinds] = string.Join("|", contracts.Select(item => item.Delivery.ConsumerKind))
             });
 
         return new OperationChainResult(
@@ -134,7 +126,50 @@ public sealed class OperationChainExecutor
             datasets,
             trace,
             evidence,
-            contract);
+            contract)
+        {
+            ConsumptionContracts = contracts
+        };
+    }
+
+    private VNextUiConsumptionContract BuildConsumptionContract(
+        OperationChainRequest request,
+        string snapshotSignature,
+        string planSignature,
+        string traceSignature,
+        int outputCount,
+        ConsumerSurfaceModel surfaceModel,
+        ConsumerDeliveryContract delivery)
+    {
+        var intent = AnalyticalIntent.FromRequests(
+            request.Selection,
+            ChartProgramRequest.Transform(
+                request.Title,
+                request.Steps.Select(step => step.Operation).ToArray()),
+            delivery,
+            ProvenanceDescriptor.Derived(snapshotSignature),
+            new CapabilityRequest(
+                AnalyticalCapabilityKind.Transform,
+                CompositionKind.DerivedSeries,
+                request.Steps.Select(step => step.Operation).ToArray()));
+        var provider = _providerRegistry.Resolve(delivery);
+        return VNextUiConsumptionContract.FromIntent(
+            intent,
+            provider,
+            surfaceModel,
+            new Dictionary<string, string>
+            {
+                [ConstructionMetadataKeys.OperationChainPlanSignature] = planSignature,
+                [ConstructionMetadataKeys.OperationChainTraceSignature] = traceSignature,
+                [ConstructionMetadataKeys.OperationChainOutputCount] = outputCount.ToString(),
+                [ConstructionMetadataKeys.OperationChainPlanningStatus] = request.Planning.Status.ToString(),
+                [ConstructionMetadataKeys.OperationChainPlanningReplaySignature] = request.Planning.ReplaySignature,
+                [ConstructionMetadataKeys.OperationChainPlanningStepCount] = request.Planning.StepCount.ToString(),
+                [ConstructionMetadataKeys.OperationChainPlanningInputReferenceCount] = request.Planning.InputReferenceCount.ToString(),
+                [ConstructionMetadataKeys.OperationChainPlanningWorkingSetSize] = request.Planning.WorkingSetSize.ToString(),
+                [ConstructionMetadataKeys.OperationChainConsumerContractCount] = request.Deliveries.Count.ToString(),
+                [ConstructionMetadataKeys.OperationChainConsumerKinds] = string.Join("|", request.Deliveries.Select(item => item.ConsumerKind))
+            });
     }
 
     private static string ResolveSeriesSignature(IReadOnlyList<AlignedMetricSeries> series, int inputIndex)
@@ -157,14 +192,14 @@ public sealed class OperationChainExecutor
     {
         var metadata = new Dictionary<string, string>
         {
-            ["StepIndex"] = stepIndex.ToString(),
-            ["OperationKind"] = step.Operation.Kind.ToString(),
-            ["OperationId"] = step.Operation.Id,
-            ["OperationLabel"] = step.Operation.Label,
-            ["InputIndexes"] = string.Join(",", step.Operation.InputIndexes),
-            ["SourceSeriesSignatures"] = string.Join("|", sourceSignatures),
-            ["Reversible"] = step.Reversible.ToString(),
-            ["Lossiness"] = step.Lossiness
+            [ConstructionMetadataKeys.StepIndex] = stepIndex.ToString(),
+            [ConstructionMetadataKeys.OperationKind] = step.Operation.Kind.ToString(),
+            [ConstructionMetadataKeys.OperationId] = step.Operation.Id,
+            [ConstructionMetadataKeys.OperationLabel] = step.Operation.Label,
+            [ConstructionMetadataKeys.InputIndexes] = string.Join(",", step.Operation.InputIndexes),
+            [ConstructionMetadataKeys.SourceSeriesSignatures] = string.Join("|", sourceSignatures),
+            [ConstructionMetadataKeys.Reversible] = step.Reversible.ToString(),
+            [ConstructionMetadataKeys.Lossiness] = step.Lossiness
         };
 
         foreach (var pair in step.Metadata)

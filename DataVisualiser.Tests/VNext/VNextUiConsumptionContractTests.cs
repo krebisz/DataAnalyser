@@ -194,6 +194,95 @@ public sealed class VNextUiConsumptionContractTests
         Assert.Contains("Render plan program kind", ex.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ChartRenderPlanConsumptionContractBuilder_ShouldBuildContractFromCapabilityProviderAndPlan()
+    {
+        var selection = CreateSelection();
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.Distribution(),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Distribution, "DistributionChart"));
+        var plan = CreateRenderPlan(intent);
+        var capabilityContract = new TestCapabilityContract(
+            intent.ProgramRequest,
+            intent.Capability,
+            intent.Delivery);
+
+        var contract = ChartRenderPlanConsumptionContractBuilder.Build(
+            plan,
+            capabilityContract,
+            ConsumerProviderContracts.LiveChartsWpf,
+            new Dictionary<string, string> { ["Slice"] = "ContractBoundary" },
+            "Distribution");
+
+        Assert.Equal(intent.ProgramRequest.Kind, contract.ProgramKind);
+        Assert.Equal(intent.Capability.CapabilityKind, contract.CapabilityKind);
+        Assert.Equal(intent.Capability.CompositionKind, contract.CompositionKind);
+        Assert.Equal(intent.Delivery, contract.Delivery);
+        Assert.Equal(ConsumerProviderContracts.LiveChartsWpf, contract.Provider);
+        Assert.Equal(plan.SourceSignature, contract.SourceSignature);
+        Assert.Equal(intent.Signature, contract.IntentSignature);
+        Assert.Equal(intent.Provenance.Signature, contract.ProvenanceSignature);
+        Assert.Equal(ConsumerSurfaceModelKind.ChartRenderPlan, contract.SurfaceModel.Kind);
+        Assert.Equal(plan.Id, contract.SurfaceModel.SurfaceId);
+        Assert.Equal("ContractBoundary", contract.Metadata["Slice"]);
+    }
+
+    [Fact]
+    public void ChartRenderPlanConsumptionContractBuilder_ShouldRejectProgramKindMismatch()
+    {
+        var selection = CreateSelection();
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.Distribution(),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Distribution, "DistributionChart"));
+        var plan = CreateRenderPlan(
+            AnalyticalIntent.FromRequests(selection, ChartProgramRequest.MainProgram()));
+        var capabilityContract = new TestCapabilityContract(
+            intent.ProgramRequest,
+            intent.Capability,
+            intent.Delivery);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChartRenderPlanConsumptionContractBuilder.Build(
+                plan,
+                capabilityContract,
+                ConsumerProviderContracts.LiveChartsWpf));
+
+        Assert.Contains("program kind", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartRenderPlanConsumptionContractBuilder_ShouldRequireIntentAndProvenanceMetadata()
+    {
+        var selection = CreateSelection();
+        var intent = AnalyticalIntent.FromRequests(
+            selection,
+            ChartProgramRequest.Distribution(),
+            ConsumerDeliveryContract.Chart(ChartProgramKind.Distribution, "DistributionChart"));
+        var plan = CreateRenderPlan(intent) with
+        {
+            Metadata = new Dictionary<string, string>
+            {
+                [ChartRenderPlanMetadataKeys.IntentSignature] = intent.Signature
+            }
+        };
+        var capabilityContract = new TestCapabilityContract(
+            intent.ProgramRequest,
+            intent.Capability,
+            intent.Delivery);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ChartRenderPlanConsumptionContractBuilder.Build(
+                plan,
+                capabilityContract,
+                ConsumerProviderContracts.LiveChartsWpf,
+                ownerName: "Distribution"));
+
+        Assert.Contains("Distribution render plan", ex.Message, StringComparison.Ordinal);
+        Assert.Contains(ChartRenderPlanMetadataKeys.ProvenanceSignature, ex.Message, StringComparison.Ordinal);
+    }
+
     private static MetricSelectionRequest CreateSelection() =>
         new(
             "Weight",
@@ -232,4 +321,9 @@ public sealed class VNextUiConsumptionContractTests
                 [ChartRenderPlanMetadataKeys.ProviderKey] = ConsumerProviderContracts.LiveChartsWpf.ProviderKey,
                 [ChartRenderPlanMetadataKeys.ProviderSignature] = ConsumerProviderContracts.LiveChartsWpf.Signature
             });
+
+    private sealed record TestCapabilityContract(
+        ChartProgramRequest ProgramRequest,
+        CapabilityRequest Capability,
+        ConsumerDeliveryContract Delivery) : IAnalyticalCapabilityContract;
 }

@@ -86,31 +86,18 @@ public static class TransformVNextConsumptionContractBuilder
             ?? TransformCapabilityContract.Create(request.PrimaryLabel);
         var provider = ConsumerProviderContracts.LiveChartsWpf;
 
-        return new VNextUiConsumptionContract(
-            capabilityContract.ProgramRequest.Kind,
-            capabilityContract.Capability.CapabilityKind,
-            capabilityContract.Capability.CompositionKind,
-            capabilityContract.Delivery,
+        return ChartRenderPlanConsumptionContractBuilder.Build(
+            plan,
+            capabilityContract,
             provider,
-            plan.SourceSignature,
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
-            ConsumerSurfaceModel.FromRenderPlan(plan),
-            metadata: new Dictionary<string, string>
+            new Dictionary<string, string>
             {
                 ["Transform.Route"] = request.Route.ToString(),
                 ["Transform.PrimaryLabel"] = request.PrimaryLabel,
                 ["Transform.OperationType"] = request.OperationType ?? string.Empty,
                 ["Transform.IsOperationChart"] = request.IsOperationChart.ToString()
-            });
-    }
-
-    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
-    {
-        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
-            return value;
-
-        throw new InvalidOperationException($"Transform render plan is missing required metadata '{key}'.");
+            },
+            "Transform");
     }
 }
 

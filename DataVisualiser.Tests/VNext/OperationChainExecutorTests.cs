@@ -47,19 +47,49 @@ public sealed class OperationChainExecutorTests
         Assert.Equal(result.Trace.Signature, result.Evidence.TraceSignature);
         Assert.Equal(result.ConsumptionContract.Signature, result.Evidence.ContractSignature);
         Assert.Equal(ConsumerKind.Export, result.ConsumptionContract.Delivery.ConsumerKind);
+        Assert.Same(result.ConsumptionContract, result.ConsumptionContracts[0]);
         Assert.Equal("OperationChainWorkbench", result.ConsumptionContract.Delivery.DeliveryTarget);
         Assert.Equal(ConsumerSurfaceModelKind.DerivedDataset, result.ConsumptionContract.SurfaceModel.Kind);
-        Assert.Equal("2", result.ConsumptionContract.Metadata["OperationChain.OutputCount"]);
-        Assert.Equal(result.Plan.Signature, result.ConsumptionContract.Metadata["OperationChain.PlanSignature"]);
-        Assert.Equal(result.Trace.Signature, result.ConsumptionContract.Metadata["OperationChain.TraceSignature"]);
-        Assert.Equal("2", result.ConsumptionContract.Metadata["Surface.DatasetCount"]);
-        Assert.Equal("difference|normalized-diff", result.ConsumptionContract.Metadata["Surface.DatasetIds"]);
-        Assert.Contains("Difference", result.ConsumptionContract.Metadata["Surface.OperationSignatures"]);
+        Assert.Equal("2", result.ConsumptionContract.Metadata[ConstructionMetadataKeys.OperationChainOutputCount]);
+        Assert.Equal(result.Plan.Signature, result.ConsumptionContract.Metadata[ConstructionMetadataKeys.OperationChainPlanSignature]);
+        Assert.Equal(result.Trace.Signature, result.ConsumptionContract.Metadata[ConstructionMetadataKeys.OperationChainTraceSignature]);
+        Assert.Equal(OperationChainPlanningStatus.WithinBudget.ToString(), result.ConsumptionContract.Metadata[ConstructionMetadataKeys.OperationChainPlanningStatus]);
+        Assert.Equal(request.Planning.ReplaySignature, result.ConsumptionContract.Metadata[ConstructionMetadataKeys.OperationChainPlanningReplaySignature]);
+        Assert.Equal("1", result.ConsumptionContract.Metadata[ConstructionMetadataKeys.OperationChainConsumerContractCount]);
+        Assert.Equal("2", result.ConsumptionContract.Metadata[$"Surface.{ConstructionMetadataKeys.DatasetCount}"]);
+        Assert.Equal("difference|normalized-diff", result.ConsumptionContract.Metadata[$"Surface.{ConstructionMetadataKeys.DatasetIds}"]);
+        Assert.Contains("Difference", result.ConsumptionContract.Metadata[$"Surface.{ConstructionMetadataKeys.OperationSignatures}"]);
         Assert.Null(result.ConsumptionContract.SurfaceModel.RenderPlanKind);
-        Assert.Equal("True", result.DerivedDatasets[0].Metadata["Reversible"]);
-        Assert.Equal("ScaleNormalized", result.DerivedDatasets[1].Metadata["Lossiness"]);
+        Assert.Equal("True", result.DerivedDatasets[0].Metadata[ConstructionMetadataKeys.Reversible]);
+        Assert.Equal("ScaleNormalized", result.DerivedDatasets[1].Metadata[ConstructionMetadataKeys.Lossiness]);
         Assert.Contains("Weight:morning", result.DerivedDatasets[0].SourceSeriesSignatures);
         Assert.Equal("DerivedDataset", result.Evidence.Metadata["SurfaceKind"]);
+        Assert.Equal(ConstructionEvidenceStatus.Retained, result.Evidence.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldServeOneDerivedOutputThroughMultipleConsumerContracts()
+    {
+        var executor = CreateExecutor();
+        var request = new OperationChainRequest(
+            CreateSelection(),
+            [OperationChainStep.Lossless(SeriesOperationRequest.Sum([0, 1], "Total"))],
+            ConsumerDeliveryContract.Export(ChartProgramKind.Transform, "OperationChainWorkbench"),
+            "Derived Workbench",
+            [ConsumerDeliveryContract.Api(ChartProgramKind.Transform, "OperationChainApi")]);
+
+        var result = await executor.ExecuteAsync(request);
+
+        Assert.Equal(2, result.ConsumptionContracts.Count);
+        Assert.Equal([ConsumerKind.Export, ConsumerKind.Api], result.ConsumptionContracts.Select(contract => contract.Delivery.ConsumerKind).ToArray());
+        Assert.All(result.ConsumptionContracts, contract =>
+        {
+            Assert.Same(result.ConsumptionContract.SurfaceModel, contract.SurfaceModel);
+            Assert.Equal(ConsumerSurfaceModelKind.DerivedDataset, contract.SurfaceModel.Kind);
+            Assert.Equal("2", contract.Metadata[ConstructionMetadataKeys.OperationChainConsumerContractCount]);
+            Assert.Equal("Export|Api", contract.Metadata[ConstructionMetadataKeys.OperationChainConsumerKinds]);
+        });
+        Assert.Equal("2", result.Evidence.Metadata[ConstructionMetadataKeys.OperationChainConsumerContractCount]);
     }
 
     [Fact]

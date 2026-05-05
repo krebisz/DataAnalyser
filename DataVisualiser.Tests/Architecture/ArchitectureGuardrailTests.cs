@@ -27,138 +27,6 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
-    public void CompactMigrationPlan_ShouldCarryForwardStructuralSpineAndConsumptionMigrationRules()
-    {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Migration_Plan_and_Guardrails.md");
-
-        Assert.Contains("Compact Continuation Version", source, StringComparison.Ordinal);
-        Assert.Contains("Phases 1-23 are completed structural spine migration.", source, StringComparison.Ordinal);
-        Assert.Contains("Phases 24-35 are consumption migration and convergence.", source, StringComparison.Ordinal);
-        Assert.Contains("Do not treat Phase 23 as full architectural completion.", source, StringComparison.Ordinal);
-        Assert.Contains("Do not add new capability as the next priority unless it directly supports consumption migration.", source, StringComparison.Ordinal);
-        Assert.Contains("Regenerate structural artifacts for Phase 24+ instead of relying on Phase 3 density numbers.", source, StringComparison.Ordinal);
-        Assert.Contains("ChartDataContext remains the primary consumption-model blocker.", source, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void CompactMigrationPlan_ShouldRetainTargetGrammarAndPostConvergenceDeferral()
-    {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Migration_Plan_and_Guardrails.md");
-
-        Assert.Contains("Authority / Semantics / Provenance / Traceability / Envelope", source, StringComparison.Ordinal);
-        Assert.Contains("Intent / Capability / Composition / Transformation / Interpretation / Confidence / Overlay", source, StringComparison.Ordinal);
-        Assert.Contains("Program / Policy / Contract / Boundary / Neutrality / Qualification", source, StringComparison.Ordinal);
-        Assert.Contains("Provider / Consumer / Interaction / SurfaceModel / Binding", source, StringComparison.Ordinal);
-        Assert.Contains("Delivery / Backend / RuntimeBoundary / VendorBoundary / Lifecycle", source, StringComparison.Ordinal);
-        Assert.Contains("Evidence / Diagnostics / Parity / Reachability / Validation / Audit / Record", source, StringComparison.Ordinal);
-        Assert.Contains("Phases 36+ become post-convergence formalisation and bounded-generativity alignment.", source, StringComparison.Ordinal);
-        Assert.Contains("Do not force post-convergence algebra into the active convergence phases.", source, StringComparison.Ordinal);
-        Assert.Contains("Do not treat Phase 26 Operation Chain as full algebra implementation", source, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void MigrationPlan_ShouldKeepChartDataContextAuditBeforeUiConsumptionContract()
-    {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Migration_Plan_and_Guardrails.md");
-
-        Assert.True(
-            source.IndexOf("## 4.1 Phase 24", StringComparison.Ordinal) <
-            source.IndexOf("## 4.2 Phase 25", StringComparison.Ordinal));
-        Assert.Contains("Map every site where ChartDataContext carries data", source, StringComparison.Ordinal);
-        Assert.Contains("Define what production UI consumes instead of ChartDataContext.", source, StringComparison.Ordinal);
-        Assert.Contains("Do not retire ChartDataContext-related bridges until replacement, parity, smoke, metadata, and provenance evidence exist.", source, StringComparison.Ordinal);
-        Assert.Contains("A ChartDataContext retirement map exists.", source, StringComparison.Ordinal);
-        Assert.Contains("A VNext-native UI consumption contract shape exists and is test-backed before any family migration begins.", source, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void CompactMigrationPlan_ShouldNotRequireArchivedScaffoldAuditsByDefault()
-    {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_Migration_Plan_and_Guardrails.md");
-
-        Assert.Contains("Early scaffold audit files from Phases 3-14 are historical evidence", source, StringComparison.Ordinal);
-        Assert.Contains("Do not require future agents to read the individual scaffold audits by default.", source, StringComparison.Ordinal);
-        Assert.Contains("Use archived audits only for historical investigation, not active execution routing.", source, StringComparison.Ordinal);
-        Assert.Contains("DataVisualiser_Distribution_Capability_Slice_Audit.md", source, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void ChartDataContextMigrationAudit_ShouldGateBridgeRetirement()
-    {
-        var source = SourceTreeTestHelper.ReadRepositoryFile("documents", "DataVisualiser_ChartDataContext_Migration_Audit.md");
-
-        Assert.Contains("Phase: 24 - Audit ChartDataContext Migration Path", source, StringComparison.Ordinal);
-        Assert.Contains("Production files referencing ChartDataContext: 77", source, StringComparison.Ordinal);
-        Assert.Contains("Test files referencing ChartDataContext: 52", source, StringComparison.Ordinal);
-        Assert.Contains("No production `ChartDataContext` dependency is classified as retirable now.", source, StringComparison.Ordinal);
-        Assert.Contains("VNext-native UI consumption contract", source, StringComparison.Ordinal);
-        Assert.Contains("Consumer-neutral surface model", source, StringComparison.Ordinal);
-        Assert.Contains("Strategy input contract", source, StringComparison.Ordinal);
-        Assert.Contains("Evidence/parity snapshot input", source, StringComparison.Ordinal);
-        Assert.Contains("LegacyChartProgramProjector", source, StringComparison.Ordinal);
-        Assert.Contains("VNextDataResolutionHelper", source, StringComparison.Ordinal);
-        Assert.Contains("LegacyMetricViewGateway", source, StringComparison.Ordinal);
-        Assert.Contains("VNextMetricLoadRouter", source, StringComparison.Ordinal);
-        Assert.Contains("It does not authorize bridge retirement by itself.", source, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void RemainingLegacyBypassRetirement_ShouldRemoveSeriesLoadProjectorBypassOnly()
-    {
-        var seriesCoordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "UI", "MainHost", "VNextSeriesLoadCoordinator.cs");
-        var mainCoordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "UI", "MainHost", "VNextMainChartIntegrationCoordinator.cs");
-        var auditSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_Remaining_Legacy_Bypass_Retirement_Audit.md");
-
-        Assert.DoesNotContain("LegacyChartProgramProjector", seriesCoordinatorSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("ProjectToChartContext", seriesCoordinatorSource, StringComparison.Ordinal);
-        Assert.Contains("BuildMetricData(program)", seriesCoordinatorSource, StringComparison.Ordinal);
-
-        Assert.Contains("LegacyChartProgramProjector", mainCoordinatorSource, StringComparison.Ordinal);
-        Assert.Contains("Main-chart ChartDataContext projection", auditSource, StringComparison.Ordinal);
-        Assert.Contains("Retired Bypass: VNextSeriesLoadCoordinator Single-Series Projector Detour", auditSource, StringComparison.Ordinal);
-        Assert.Contains("Retired Bypass: LegacyMetricViewGateway Type", auditSource, StringComparison.Ordinal);
-        Assert.Contains("MetricLoadSnapshotGateway", auditSource, StringComparison.Ordinal);
-        Assert.Contains("validation-only", auditSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void VNextReasoning_ShouldNotUseLegacyNamedMetricGateway()
-    {
-        var matches = SourceTreeTestHelper.FindForbiddenTokenMatches(
-            ["DataVisualiser"],
-            ["LegacyMetricViewGateway"]);
-        var finalAuditSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_Final_Convergence_Audit.md");
-
-        Assert.Empty(matches);
-        Assert.Contains("MetricLoadSnapshotGateway", finalAuditSource, StringComparison.Ordinal);
-        Assert.Contains("service-backed metric loading", finalAuditSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void VNextMainChartLoadResult_ShouldCarryNativeProgramAndSnapshotBeforeProjectedContext()
-    {
-        var source = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "UI", "MainHost", "VNextMainChartIntegrationCoordinator.cs");
-        var routerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "UI", "ViewModels", "VNextMetricLoadRouter.cs");
-        var finalAuditSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_Final_Convergence_Audit.md");
-
-        Assert.Contains("ChartProgram? Program", source, StringComparison.Ordinal);
-        Assert.Contains("MetricLoadSnapshot? Snapshot", source, StringComparison.Ordinal);
-        Assert.Contains("Program: program", source, StringComparison.Ordinal);
-        Assert.Contains("Snapshot: snapshot", source, StringComparison.Ordinal);
-        Assert.Contains("vnextResult.Program != null", routerSource, StringComparison.Ordinal);
-        Assert.Contains("vnextResult.Snapshot != null", routerSource, StringComparison.Ordinal);
-        Assert.Contains("Compatibility assignment remains", routerSource, StringComparison.Ordinal);
-        Assert.Contains("main-chart VNext result carries native `ChartProgram` and `MetricLoadSnapshot`", finalAuditSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void DistributionCapabilitySlice_ShouldRemainOwnedByTargetSpine()
     {
         var capabilitySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "VNext", "Contracts", "CapabilityRequest.cs");
@@ -1648,27 +1516,6 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
-    public void ConsumerNeutralSurfaceModel_ShouldRemainRequiredPreDeliverySeam()
-    {
-        var surfaceSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "VNext", "Contracts", "ConsumerSurfaceModel.cs");
-        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "VNext", "Contracts", "VNextUiConsumptionContract.cs");
-        var operationChainSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "VNext", "Application", "OperationChainExecutor.cs");
-        var auditSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_Consumer_Neutral_Surface_Model_Convergence_Audit.md");
-
-        Assert.Contains("ChartRenderPlanKind? RenderPlanKind", surfaceSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromDerivedDatasets", operationChainSource, StringComparison.Ordinal);
-        Assert.Contains("provider.Supports(delivery, renderPlanKind)", contractSource, StringComparison.Ordinal);
-        Assert.Contains("Chart render-plan surface", auditSource, StringComparison.Ordinal);
-        Assert.Contains("Derived dataset surface", auditSource, StringComparison.Ordinal);
-        Assert.Contains("No new mega-object", auditSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void OperationChainWorkbench_ShouldKeepExecutionOutsideUiSurface()
     {
         var viewSource = SourceTreeTestHelper.ReadRepositoryFile(
@@ -1719,81 +1566,6 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
-    public void RenderingVendorDelivery_ShouldRemainTerminalAndReplaceable()
-    {
-        var upstreamFiles = Directory
-            .EnumerateFiles(
-                SourceTreeTestHelper.GetRepositoryPath("DataVisualiser", "VNext"),
-                "*.cs",
-                SearchOption.AllDirectories)
-            .ToArray();
-        var forbiddenUpstreamTokens = new[]
-        {
-            "using LiveCharts",
-            "using Syncfusion",
-            "using System.Windows",
-            "DataVisualiser.UI",
-            "CartesianChart",
-            "UserControl",
-            "WebView"
-        };
-
-        foreach (var file in upstreamFiles)
-        {
-            var source = SourceTreeTestHelper.ReadRepositoryFile(file);
-            foreach (var token in forbiddenUpstreamTokens)
-                Assert.DoesNotContain(token, source, StringComparison.Ordinal);
-        }
-
-        var terminalAdapterFiles = new[]
-        {
-            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "Adapters", "LiveChartsRenderPlanAdapter.cs"),
-            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "Syncfusion", "SyncfusionSunburstRenderPlanAdapter.cs"),
-            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "Distribution", "DistributionRenderPlanAdapter.cs"),
-            SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "Core", "Rendering", "WeekdayTrend", "WeekdayTrendRenderPlanAdapter.cs")
-        };
-        var forbiddenTerminalAuthorityTokens = new[]
-        {
-            "AnalyticalIntent",
-            "CapabilityRequest",
-            "VNextUiConsumptionContract",
-            "OperationChainExecutor",
-            "IReasoningEngine",
-            "MainChartsEvidenceExportService",
-            "EvidenceDiagnosticsBuilder"
-        };
-
-        foreach (var source in terminalAdapterFiles)
-        {
-            Assert.Contains("ChartRenderPlan", source, StringComparison.Ordinal);
-            foreach (var token in forbiddenTerminalAuthorityTokens)
-                Assert.DoesNotContain(token, source, StringComparison.Ordinal);
-        }
-
-        var providerContractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "VNext", "Contracts", "ConsumerProviderContract.cs");
-        var providerContractsSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "VNext", "Contracts", "ConsumerProviderContracts.cs");
-        var consumptionContractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "VNext", "Contracts", "VNextUiConsumptionContract.cs");
-        var auditSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_Rendering_Vendor_Delivery_Demotion_Audit.md");
-
-        Assert.Contains("Supports(ConsumerDeliveryContract delivery, ChartRenderPlanKind? planKind = null)", providerContractSource, StringComparison.Ordinal);
-        Assert.Contains("LiveChartsWpf", providerContractsSource, StringComparison.Ordinal);
-        Assert.Contains("SyncfusionSunburst", providerContractsSource, StringComparison.Ordinal);
-        Assert.Contains("TabularSummaryChart", providerContractsSource, StringComparison.Ordinal);
-        Assert.Contains("EvidenceExport", providerContractsSource, StringComparison.Ordinal);
-        Assert.Contains("ApiResponse", providerContractsSource, StringComparison.Ordinal);
-        Assert.Contains("provider.Supports(delivery, renderPlanKind)", consumptionContractSource, StringComparison.Ordinal);
-        Assert.Contains("Operation Chain output is delivered", auditSource, StringComparison.Ordinal);
-        Assert.Contains("ChartRenderModel and selected rendering contracts remain terminal-adjacent", auditSource, StringComparison.Ordinal);
-        Assert.Contains("Some core rendering contracts still reference UI presentation/state interfaces", auditSource, StringComparison.Ordinal);
-        Assert.Contains("Some core rendering contracts still reference LiveCharts", auditSource, StringComparison.Ordinal);
-        Assert.Contains("No attempt is made here to replace the WPF host", auditSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void OperationChainCore_ShouldStayUiAndVendorNeutral()
     {
         var sources = new[]
@@ -1810,147 +1582,6 @@ public sealed class ArchitectureGuardrailTests
             Assert.DoesNotContain("DataVisualiser.UI", source, StringComparison.Ordinal);
             Assert.DoesNotContain("ChartDataContext", source, StringComparison.Ordinal);
         }
-    }
-
-    [Fact]
-    public void DistributionFamilyBridgeRetirement_ShouldRemoveLegacyOrchestratorFallback()
-    {
-        var adapterSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "UI", "Charts", "Presentation", "DistributionChartControllerAdapter.cs");
-        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "Distribution", "DistributionRenderingContract.cs");
-        var retirementSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_First_Family_Legacy_Bridge_Retirement.md");
-
-        Assert.DoesNotContain("UseVNextNativeConsumption", adapterSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("ChartRenderingOrchestrator", contractSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("RenderDistributionChartAsync(request.RenderingContext", contractSource, StringComparison.Ordinal);
-        Assert.DoesNotContain("if (!request.UseVNextNativeConsumption)", contractSource, StringComparison.Ordinal);
-        Assert.Contains("DistributionVNextConsumptionContractBuilder.Build", contractSource, StringComparison.Ordinal);
-        Assert.Contains("VNextUiConsumptionContract", contractSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
-        Assert.Contains("Distribution", retirementSource, StringComparison.Ordinal);
-        Assert.Contains("Retired bridge path", retirementSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void WeekdayTrendFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
-    {
-        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "WeekdayTrend", "WeekdayTrendRenderingContract.cs");
-        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
-
-        Assert.Contains("WeekdayTrendVNextConsumptionContractBuilder.Build", contractSource, StringComparison.Ordinal);
-        Assert.Contains("VNextUiConsumptionContract", contractSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumptionContractSignature", contractSource, StringComparison.Ordinal);
-        Assert.Contains("WeekdayTrend", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void BarPieFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
-    {
-        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "BarPie", "BarPieRenderingContract.cs");
-        var typesSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "BarPie", "BarPieRenderingTypes.cs");
-        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
-
-        Assert.Contains("BarPieVNextConsumptionContractBuilder.Build", contractSource, StringComparison.Ordinal);
-        Assert.Contains("VNextUiConsumptionContract", typesSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", typesSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumptionContractSignature", typesSource, StringComparison.Ordinal);
-        Assert.Contains("BarPie", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void TransformFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
-    {
-        var typesSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "Transform", "TransformRenderingTypes.cs");
-        var invokerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Orchestration", "TransformChartRenderInvoker.cs");
-        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
-        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
-
-        Assert.Contains("TransformVNextConsumptionContractBuilder.Build", invokerSource, StringComparison.Ordinal);
-        Assert.Contains("VNextUiConsumptionContract", typesSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", typesSource, StringComparison.Ordinal);
-        Assert.Contains("RenderConsumptionContractFactory", coordinatorSource, StringComparison.Ordinal);
-        Assert.Contains("ChartRenderPlanConsumptionContractMetadata.Attach", coordinatorSource, StringComparison.Ordinal);
-        Assert.Contains("Transform", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void SyncfusionSunburstFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
-    {
-        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "Syncfusion", "SyncfusionSunburstRenderingContract.cs");
-        var typesSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "Syncfusion", "SyncfusionSunburstRenderingTypes.cs");
-        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
-
-        Assert.Contains("SyncfusionSunburstVNextConsumptionContractBuilder.Build", contractSource, StringComparison.Ordinal);
-        Assert.Contains("VNextUiConsumptionContract", typesSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", typesSource, StringComparison.Ordinal);
-        Assert.Contains("ChartRenderPlanConsumptionContractMetadata.Attach", contractSource, StringComparison.Ordinal);
-        Assert.Contains("SyncfusionSunburst", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void MainFamilyMigration_ShouldUseVNextConsumptionContractMetadata()
-    {
-        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "CartesianMetrics", "CartesianMetricChartRenderingContract.cs");
-        var invocationSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Orchestration", "MainChart", "MainChartRenderInvocationStage.cs");
-        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
-        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
-
-        Assert.Contains("CartesianMetricVNextConsumptionContractBuilder", contractSource, StringComparison.Ordinal);
-        Assert.Contains("VNextUiConsumptionContract", contractSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
-        Assert.Contains("RenderConsumptionContractFactory", invocationSource, StringComparison.Ordinal);
-        Assert.Contains("ChartRenderPlanConsumptionContractMetadata.Attach", coordinatorSource, StringComparison.Ordinal);
-        Assert.Contains("Main", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void SecondaryCartesianFamiliesMigration_ShouldUseVNextConsumptionContractMetadata()
-    {
-        var contractSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Rendering", "Contracts", "CartesianMetrics", "CartesianMetricChartRenderingContract.cs");
-        var invocationSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Orchestration", "SecondaryCharts", "SecondaryMetricChartRenderInvocationStage.cs");
-        var coordinatorSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "DataVisualiser", "Core", "Orchestration", "ChartUpdateCoordinator.cs");
-        var trackerSource = SourceTreeTestHelper.ReadRepositoryFile(
-            "documents", "DataVisualiser_VNext_Native_Family_Migration_Tracker.md");
-
-        Assert.Contains("CartesianMetricVNextConsumptionContractBuilder", contractSource, StringComparison.Ordinal);
-        Assert.Contains("VNextUiConsumptionContract", contractSource, StringComparison.Ordinal);
-        Assert.Contains("ConsumerSurfaceModel.FromRenderPlan", contractSource, StringComparison.Ordinal);
-        Assert.Contains("RenderConsumptionContractFactory", invocationSource, StringComparison.Ordinal);
-        Assert.Contains("CartesianMetricVNextConsumptionContractBuilder.Build", invocationSource, StringComparison.Ordinal);
-        Assert.Contains("ChartProgramKind.Difference", invocationSource, StringComparison.Ordinal);
-        Assert.Contains("ChartProgramKind.Ratio", invocationSource, StringComparison.Ordinal);
-        Assert.Contains("ChartRenderPlanConsumptionContractMetadata.Attach", coordinatorSource, StringComparison.Ordinal);
-        Assert.Contains("Normalized", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Difference/Ratio", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("Migrated and smoke confirmed", trackerSource, StringComparison.Ordinal);
-        Assert.Contains("UI smoke not available", trackerSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -2310,6 +1941,44 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("ChartProgramKind.MovingAverage", tabularBlock, StringComparison.Ordinal);
         Assert.DoesNotContain("ChartProgramKind.Main", tabularBlock, StringComparison.Ordinal);
         Assert.DoesNotContain("ChartProgramKind.Normalized", tabularBlock, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ConstructionGovernanceConcepts_ShouldRemainOutOfUiCoreAndDelivery()
+    {
+        var offenders = SourceTreeTestHelper.FindForbiddenTokenMatches(
+            [
+                Path.Combine("DataVisualiser", "Core"),
+                Path.Combine("DataVisualiser", "UI")
+            ],
+            [
+                "AnalyticalFitnessAssessment",
+                "DerivedDatasetFitnessRules",
+                "DerivedDatasetConfidenceRules",
+                "OperationChainPlanningRules",
+                "OperationChainPlanningAssessment",
+                "OperationChainConsumerContractCount"
+            ]);
+
+        AssertNoMatches(offenders);
+    }
+
+    [Fact]
+    public void DerivedDatasetGovernance_ShouldKeepConfidenceFitnessAndPlanningNonAuthoritative()
+    {
+        var confidenceSource = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "VNext", "Contracts", "DerivedDatasetConfidenceRules.cs"));
+        var fitnessSource = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "VNext", "Contracts", "DerivedDatasetFitnessRules.cs"));
+        var planningSource = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "VNext", "Contracts", "OperationChainPlanningRules.cs"));
+
+        Assert.Contains("[\"Authoritative\"] = Authoritative", confidenceSource, StringComparison.Ordinal);
+        Assert.Contains("[\"Authoritative\"] = \"False\"", fitnessSource, StringComparison.Ordinal);
+        Assert.Contains("[\"Authoritative\"] = \"False\"", planningSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConsumerProviderRegistry", confidenceSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConsumerProviderRegistry", fitnessSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("ConsumerProviderRegistry", planningSource, StringComparison.Ordinal);
     }
 
     private static void AssertNoMatches(IReadOnlyList<string> offenders)

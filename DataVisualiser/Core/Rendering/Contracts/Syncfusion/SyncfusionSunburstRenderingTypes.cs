@@ -90,31 +90,18 @@ public static class SyncfusionSunburstVNextConsumptionContractBuilder
         var capabilityContract = request.CapabilityContract ?? SyncfusionSunburstCapabilityContract.Create();
         var provider = ConsumerProviderContracts.SyncfusionSunburst;
 
-        return new VNextUiConsumptionContract(
-            capabilityContract.ProgramRequest.Kind,
-            capabilityContract.Capability.CapabilityKind,
-            capabilityContract.Capability.CompositionKind,
-            capabilityContract.Delivery,
+        return ChartRenderPlanConsumptionContractBuilder.Build(
+            plan,
+            capabilityContract,
             provider,
-            plan.SourceSignature,
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
-            ConsumerSurfaceModel.FromRenderPlan(plan),
-            metadata: new Dictionary<string, string>
+            new Dictionary<string, string>
             {
                 ["SyncfusionSunburst.Route"] = request.Route.ToString(),
                 ["SyncfusionSunburst.BucketCount"] = request.BucketCount.ToString(),
                 ["SyncfusionSunburst.SelectionCount"] = request.SelectionCount.ToString(),
                 ["SyncfusionSunburst.ItemCount"] = request.Items.Count.ToString()
-            });
-    }
-
-    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
-    {
-        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
-            return value;
-
-        throw new InvalidOperationException($"SyncfusionSunburst render plan is missing required metadata '{key}'.");
+            },
+            "SyncfusionSunburst");
     }
 }
 

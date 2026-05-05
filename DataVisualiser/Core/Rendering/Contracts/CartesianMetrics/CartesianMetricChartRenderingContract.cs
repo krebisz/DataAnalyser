@@ -187,17 +187,12 @@ public static class CartesianMetricVNextConsumptionContractBuilder
         var resolvedDelivery = delivery ?? ChartProgramDeliveryTargetResolver.CreateDelivery(plan.ProgramKind);
         var provider = ConsumerProviderContracts.LiveChartsWpf;
 
-        return new VNextUiConsumptionContract(
-            programRequest.Kind,
-            capability.CapabilityKind,
-            capability.CompositionKind,
-            resolvedDelivery,
+        return ChartRenderPlanConsumptionContractBuilder.Build(
+            plan,
+            new CartesianMetricCapabilityContract(programRequest, capability, resolvedDelivery),
             provider,
-            plan.SourceSignature,
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
-            ConsumerSurfaceModel.FromRenderPlan(plan),
-            metadata: metadata);
+            metadata,
+            "CartesianMetric");
     }
 
     public static VNextUiConsumptionContract Build(
@@ -221,13 +216,6 @@ public static class CartesianMetricVNextConsumptionContractBuilder
             });
     }
 
-    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
-    {
-        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
-            return value;
-
-        throw new InvalidOperationException($"CartesianMetric render plan is missing required metadata '{key}'.");
-    }
 }
 
 /// <summary>

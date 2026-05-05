@@ -20,8 +20,7 @@ public sealed record SeriesOperationRequest
         string id,
         string label)
     {
-        if (inputIndexes == null || inputIndexes.Count == 0)
-            throw new ArgumentException("At least one input index is required.", nameof(inputIndexes));
+        SeriesOperationRules.Validate(kind, inputIndexes);
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("Operation id cannot be null or empty.", nameof(id));
         if (string.IsNullOrWhiteSpace(label))

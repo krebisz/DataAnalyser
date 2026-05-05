@@ -262,22 +262,17 @@ public static class WeekdayTrendVNextConsumptionContractBuilder
         var capabilityContract = request.CapabilityContract ?? WeekdayTrendCapabilityContract.Create();
         var provider = ConsumerProviderContracts.LiveChartsWpf;
 
-        return new VNextUiConsumptionContract(
-            capabilityContract.ProgramRequest.Kind,
-            capabilityContract.Capability.CapabilityKind,
-            capabilityContract.Capability.CompositionKind,
-            capabilityContract.Delivery,
+        return ChartRenderPlanConsumptionContractBuilder.Build(
+            plan,
+            capabilityContract,
             provider,
-            plan.SourceSignature,
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.IntentSignature),
-            ReadRequiredMetadata(plan, ChartRenderPlanMetadataKeys.ProvenanceSignature),
-            ConsumerSurfaceModel.FromRenderPlan(plan),
-            metadata: new Dictionary<string, string>
+            new Dictionary<string, string>
             {
                 ["WeekdayTrend.Route"] = request.Route.ToString(),
                 ["WeekdayTrend.Mode"] = request.ChartState.WeekdayTrendChartMode.ToString(),
                 ["WeekdayTrend.Selection"] = request.SelectionDisplayKey
-            });
+            },
+            "WeekdayTrend");
     }
 
     public static ChartRenderPlan AttachMetadata(
@@ -287,22 +282,7 @@ public static class WeekdayTrendVNextConsumptionContractBuilder
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(consumptionContract);
 
-        var metadata = new Dictionary<string, string>(plan.Metadata)
-        {
-            [ConsumptionContractSignatureKey] = consumptionContract.Signature,
-            [SurfaceKindKey] = consumptionContract.SurfaceModel.Kind.ToString(),
-            [SurfaceIdKey] = consumptionContract.SurfaceModel.SurfaceId
-        };
-
-        return plan with { Metadata = metadata };
-    }
-
-    private static string ReadRequiredMetadata(ChartRenderPlan plan, string key)
-    {
-        if (plan.Metadata.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
-            return value;
-
-        throw new InvalidOperationException($"WeekdayTrend render plan is missing required metadata '{key}'.");
+        return ChartRenderPlanConsumptionContractMetadata.Attach(plan, consumptionContract);
     }
 }
 

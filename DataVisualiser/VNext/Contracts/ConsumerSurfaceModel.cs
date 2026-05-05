@@ -75,9 +75,9 @@ public sealed record ConsumerSurfaceModel
 
         var metadata = new Dictionary<string, string>
         {
-            ["DatasetCount"] = datasets.Count.ToString(),
-            ["DatasetIds"] = string.Join("|", datasets.Select(dataset => dataset.Id)),
-            ["OperationSignatures"] = string.Join("|", datasets.Select(dataset => dataset.OperationSignature))
+            [ConstructionMetadataKeys.DatasetCount] = datasets.Count.ToString(),
+            [ConstructionMetadataKeys.DatasetIds] = string.Join("|", datasets.Select(dataset => dataset.Id)),
+            [ConstructionMetadataKeys.OperationSignatures] = string.Join("|", datasets.Select(dataset => dataset.OperationSignature))
         };
 
         return new ConsumerSurfaceModel(
