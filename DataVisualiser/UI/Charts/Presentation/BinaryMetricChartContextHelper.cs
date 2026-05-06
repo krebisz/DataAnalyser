@@ -72,7 +72,7 @@ internal static class BinaryMetricChartContextHelper
                 loadRuntime.SnapshotSignature,
                 programKind,
                 loadRuntime.ProgramSourceSignature,
-                EvidenceDiagnosticsBuilder.BuildContextSignature(familyContext),
+                LoadedChartDataSnapshot.FromContext(familyContext).ContextSignature,
                 null,
                 false));
     }

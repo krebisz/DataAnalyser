@@ -54,7 +54,7 @@ internal sealed class DistributionSessionMilestoneRecorder
     private void RecordMilestone(string kind, string note)
     {
         var chartState = _viewModel.ChartState;
-        var context = chartState.LastContext;
+        var loadedData = chartState.LastLoadedData;
 
         chartState.RecordSessionMilestone(new SessionMilestoneSnapshot
         {
@@ -65,8 +65,8 @@ internal sealed class DistributionSessionMilestoneRecorder
             SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
             SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
             RuntimePath = chartState.GetFamilyRuntime(VNext.Contracts.ChartProgramKind.Distribution)?.RuntimePath ?? chartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = context?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(context),
+            LoadedSeriesCount = loadedData.ActualSeriesCount,
+            ContextSignature = loadedData.ContextSignature,
             Note = note
         });
     }

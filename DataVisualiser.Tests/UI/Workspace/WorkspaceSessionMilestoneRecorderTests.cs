@@ -43,7 +43,7 @@ public sealed class WorkspaceSessionMilestoneRecorderTests
         Assert.Equal(["Weight:body_fat_mass", "Weight:fat_free_mass"], milestone.SelectedDisplayKeys);
         Assert.Equal(EvidenceRuntimePath.VNextMain, milestone.RuntimePath);
         Assert.Equal(2, milestone.LoadedSeriesCount);
-        Assert.Equal(EvidenceDiagnosticsBuilder.BuildContextSignature(viewModel.ChartState.LastContext), milestone.ContextSignature);
+        Assert.Equal(viewModel.ChartState.LastLoadedData.ContextSignature, milestone.ContextSignature);
         Assert.Equal("loaded", milestone.Note);
     }
 

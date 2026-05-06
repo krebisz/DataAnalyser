@@ -270,30 +270,36 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 - [x] Stage 14 — Validate generative multi-consumer output slice
 - [x] Stage 15 — Perform governance / emergence review
 - [x] Stage 16 — Harden one bounded scenario
-- [ ] Stage 17 — Protect loaded-state split
-- [ ] Stage 18 — Generalize series resolution
-- [ ] Stage 19 — Cut over Distribution family input
+- [x] Stage 17 — Protect loaded-state split
+- [x] Stage 18 — Generalize series resolution
+- [x] Stage 19 — Cut over Distribution family input
 - [ ] Stage 20 — Cut over Weekday Trend family input
 - [ ] Stage 21 — Align Transform input with Operation Chain concepts
-- [ ] Stage 22 — Reassess main / Cartesian cutover readiness
-- [ ] Stage 23 — Retire proven bridge pieces only
+- [ ] Stage 22 — Cut over Main / Cartesian rendering inputs
+- [ ] Stage 23 — Retire ChartDataContext as shared state carrier
+- [ ] Stage 24 — Retire legacy projection / compatibility paths
+- [ ] Stage 25 — Simplify orchestration and composition hubs
+- [ ] Stage 26 — Productize bounded Operation Chain / Transform convergence
+- [ ] Stage 27 — Complete terminal delivery and evidence separation
+- [ ] Stage 28 — Final bridge retirement pass
+- [ ] Stage 29 — Final vocabulary / architecture closure review
 
 Active-slice tracker:
 
-- [x] Not started
-- [ ] Active
+- [ ] Not started
+- [x] Active
 - [ ] Complete
 - [ ] Blocked
 
 | Field | Value |
 |---|---|
-| Active stage | Stage 17 next |
-| Active pressure point / construction concern | ChartDataContext loaded-state gravity |
-| Blueprint layer(s) | Consumer Model; Evidence / Diagnostics; Projection / Translation |
-| Ownership zone(s) | Emits / Observes |
+| Active stage | Stage 20 next |
+| Active pressure point / construction concern | Weekday Trend family input still resolves through ChartDataContext |
+| Blueprint layer(s) | Canonical Source / Input; Projection / Translation; Evidence / Diagnostics |
+| Ownership zone(s) | Emits / Governs / Observes |
 | Slice charter file | Inline only |
-| Required evidence | `DataVisualiser.Tests` 1053 passed; `DataFileReader.Tests` 15 passed |
-| Stop condition | LoadedChartDataSnapshot starts becoming a replacement mega-object |
+| Required evidence | `DataVisualiser.Tests` 1059 passed; `DataFileReader.Tests` 15 passed; Distribution smoke/export evidence `reachability-20260506-162251.json` verified |
+| Stop condition | Weekday Trend input cutover moves chart route policy, toggles, or computation behavior into the shared resolution shape |
 
 ---
 
@@ -1164,13 +1170,15 @@ Stop if the scenario requires broader platform concerns that belong to DataAnaly
 
 ---
 
-## Bridge-Shrinkage Track
+## Architecture / Vocabulary Migration Closure Track
 
 Purpose:
 
 ```text
-Reduce active legacy/bridge pressure without losing functionality,
-flexibility, or higher-level architectural generalisation.
+Complete the DataVisualiser architectural and vocabulary migration by moving
+live behavior onto the target spine, retiring compatibility bridges only after
+replacement evidence, and preserving functionality, flexibility, and higher-level
+generalisation.
 ```
 
 Track rule:
@@ -1179,6 +1187,8 @@ Track rule:
 Bridge shrinkage is preferred over bridge removal.
 Run old and new shapes in parallel until parity, tests, and smoke evidence
 prove that exact bridge pieces can be retired.
+The track is complete only when residual bridges are either removed or explicitly
+classified as terminal adapters rather than architectural migration debt.
 ```
 
 Generalisation rule:
@@ -1199,8 +1209,14 @@ Priority order:
 3. Cut over Distribution family input.
 4. Cut over Weekday Trend family input.
 5. Align Transform input with Operation Chain concepts.
-6. Reassess main / Cartesian cutover readiness.
-7. Retire proven bridge pieces only.
+6. Cut over Main / Cartesian rendering inputs.
+7. Retire ChartDataContext as shared state carrier.
+8. Retire legacy projection / compatibility paths.
+9. Simplify orchestration and composition hubs.
+10. Productize bounded Operation Chain / Transform convergence.
+11. Complete terminal delivery and evidence separation.
+12. Final bridge retirement pass.
+13. Final vocabulary / architecture closure review.
 ```
 
 Manual smoke rule:
@@ -1225,11 +1241,11 @@ milestones, and evidence.
 
 Tasks:
 
-- [ ] Confirm LastLoadedData is updated when LastContext is assigned or cleared.
-- [ ] Move remaining non-render loaded-state reads away from LastContext where safe.
-- [ ] Add guardrails that prevent LoadedChartDataSnapshot from gaining render payloads, vendor concerns, or semantic authority.
-- [ ] Preserve ChartDataContext for existing live renderers.
-- [ ] Preserve diagnostic export contents and signatures.
+- [x] Confirm LastLoadedData is updated when LastContext is assigned or cleared.
+- [x] Move remaining non-render loaded-state reads away from LastContext where safe.
+- [x] Add guardrails that prevent LoadedChartDataSnapshot from gaining render payloads, vendor concerns, or semantic authority.
+- [x] Preserve ChartDataContext for existing live renderers.
+- [x] Preserve diagnostic export contents and signatures.
 
 Completion condition:
 
@@ -1265,12 +1281,12 @@ resolution behavior across chart families.
 
 Tasks:
 
-- [ ] Introduce a small series-resolution request/result shape if current code proves it useful.
-- [ ] Preserve VNext-first and legacy-fallback behavior.
-- [ ] Preserve cache behavior and runtime evidence.
-- [ ] Adapt VNextDataResolutionHelper or successor to consume the new request shape.
-- [ ] Keep selection, date range, table name, provenance, and fallback reason visible.
-- [ ] Do not move UI controls, combo boxes, or vendor types into the resolution shape.
+- [x] Introduce a small series-resolution request/result shape if current code proves it useful.
+- [x] Preserve VNext-first and legacy-fallback behavior.
+- [x] Preserve cache behavior and runtime evidence.
+- [x] Adapt VNextDataResolutionHelper or successor to consume the new request shape.
+- [x] Keep selection, date range, table name, provenance, and fallback reason visible.
+- [x] Do not move UI controls, combo boxes, or vendor types into the resolution shape.
 
 Completion condition:
 
@@ -1283,6 +1299,7 @@ Evidence:
 
 ```text
 Focused resolution-helper tests and existing family tests.
+`DataVisualiser.Tests` 1058 passed; `DataFileReader.Tests` 15 passed.
 ```
 
 Stop condition:
@@ -1305,12 +1322,12 @@ shared upstream meaning and reusable resolution seam.
 
 Tasks:
 
-- [ ] Use the generalized series-resolution seam in DistributionRenderInputBuilder.
-- [ ] Keep DistributionRenderInput terminal and non-semantic.
-- [ ] Preserve Distribution capability contract, consumption contract, render-plan metadata, and qualification behavior.
-- [ ] Preserve Cartesian/Polar mode behavior and distribution settings.
-- [ ] Avoid moving Distribution semantics into the adapter.
-- [ ] Run manual smoke tests if live render behavior changes.
+- [x] Use the generalized series-resolution seam in DistributionRenderInputBuilder.
+- [x] Keep DistributionRenderInput terminal and non-semantic.
+- [x] Preserve Distribution capability contract, consumption contract, render-plan metadata, and qualification behavior.
+- [x] Preserve Cartesian/Polar mode behavior and distribution settings.
+- [x] Avoid moving Distribution semantics into the adapter.
+- [x] Run manual smoke tests if live render behavior changes.
 
 Completion condition:
 
@@ -1323,6 +1340,8 @@ Evidence:
 
 ```text
 Distribution tests, architecture guardrails, full tests, and manual smoke/export logs if live rendering changed.
+Automated evidence: `DataVisualiser.Tests` 1059 passed; `DataFileReader.Tests` 15 passed.
+Manual smoke/export evidence: `documents/reachability-20260506-162251.json` verified.
 ```
 
 Stop condition:
@@ -1411,77 +1430,309 @@ or formalize broad algebra beyond the bounded scenario.
 
 ---
 
-## Stage 22 — Main / Cartesian Cutover Readiness Review
+## Stage 22 — Main / Cartesian Rendering Input Cutover
 
 Goal:
 
 ```text
-Decide whether main / Cartesian rendering is ready for a practical cutover slice
-after smaller families prove the bridge-shrinkage pattern.
+Move Main / Cartesian rendering inputs onto explicit target-shaped request/input
+models after smaller families prove the pattern.
 ```
 
 Tasks:
 
 - [ ] Review remaining ChartDataContext use in MainChart, Cartesian, normalized, diff/ratio, and orchestration paths.
-- [ ] Compare risk against Distribution and Weekday Trend results.
-- [ ] Identify the smallest behavior-preserving main / Cartesian slice.
-- [ ] Defer if risk remains too high.
-- [ ] Do not start broad MainChartsView, ChartRenderingOrchestrator, or ChartUpdateCoordinator rewrites.
+- [ ] Define one explicit Main / Cartesian render input shape if existing request models are insufficient.
+- [ ] Preserve main chart, stacked mode, overlays, normalized view, and diff/ratio behavior where currently reachable.
+- [ ] Preserve ChartRenderPlan, VNextUiConsumptionContract, capability contract, and metadata handoff.
+- [ ] Keep UI controls and vendor types out of upstream render input models.
+- [ ] Run manual smoke tests for main chart, stacked overlays, normalized chart, distribution/weekday regression, export, reload, and selection changes.
 
 Completion condition:
 
 ```text
-Main / Cartesian cutover is either explicitly scoped for the next slice or explicitly deferred with evidence.
+Main / Cartesian rendering can consume target-shaped input without depending on
+ChartDataContext as its shared state source.
 ```
 
 Evidence:
 
 ```text
-Inline readiness notes in this plan and focused dependency/test evidence.
+Focused Main / Cartesian tests, full tests, architecture guardrails, and manual smoke/export logs.
 ```
 
 Stop condition:
 
 ```text
-Stop if readiness review turns into broad cosmetic refactoring or a multi-family rewrite.
+Stop if the cutover requires a broad MainChartsView rewrite or changes user-visible
+chart semantics outside the selected slice.
 ```
 
 ---
 
-## Stage 23 — Proven Bridge Retirement
+## Stage 23 — Retire ChartDataContext as Shared State Carrier
 
 Goal:
 
 ```text
-Remove only bridge pieces that have already been replaced, proven, and smoke-tested
-without reducing capability or flexibility.
+Remove ChartDataContext from shared application state once live render families
+consume explicit inputs and LoadedChartDataSnapshot owns loaded-state facts.
 ```
 
 Tasks:
 
-- [ ] Select exactly one replaced bridge/helper/path.
-- [ ] Confirm replacement coverage through tests and, where applicable, manual smoke/export logs.
-- [ ] Remove only the replaced bridge piece.
-- [ ] Preserve fallback where parity is incomplete.
-- [ ] Update guardrails if the bridge removal closes a known pressure point.
+- [ ] Replace ChartState.LastContext with explicit render/session handoff where all consumers have migrated.
+- [ ] Keep ChartDataContext only as a local terminal adapter shape if still required by a legacy renderer.
+- [ ] Remove diagnostics, evidence, milestone, and selection dependencies on ChartDataContext.
+- [ ] Remove nullable LastContext fallbacks that create empty ChartDataContext instances for control flow.
+- [ ] Add guardrails preventing ChartDataContext from re-entering UI state, evidence, or VNext contracts.
+- [ ] Run full manual smoke tests before removing shared-state access.
 
 Completion condition:
 
 ```text
-One obsolete bridge piece is retired without behavior loss or architectural regression.
+ChartDataContext is no longer a shared UI/application state carrier.
 ```
 
 Evidence:
 
 ```text
-Focused tests, full tests, and manual smoke/export logs where live behavior changed.
+Full tests, architecture guardrails, manual smoke/export logs, and dependency search showing no shared-state use.
 ```
 
 Stop condition:
 
 ```text
-Stop if removal would reduce capability, remove latent-but-wanted behavior,
-or require bulk bridge deletion.
+Stop if removal would reduce functionality, remove latent-but-wanted behavior,
+or force ChartDataContext to be replaced by another mega-object.
+```
+
+---
+
+## Stage 24 — Retire Legacy Projection / Compatibility Paths
+
+Goal:
+
+```text
+Retire compatibility projection paths once their live consumers use target-spine
+contracts, render inputs, and consumer-neutral surfaces directly.
+```
+
+Tasks:
+
+- [ ] Inventory active use of LegacyChartProgramProjector, compatibility projected contexts, LegacyMetricViewGateway, and VNextDataResolutionHelper bridge behavior.
+- [ ] Remove or terminally contain one proven obsolete projection path at a time.
+- [ ] Preserve provenance, source signatures, metadata, fidelity/loss notes, and fallback behavior where still needed.
+- [ ] Prove replacement through tests before removal.
+- [ ] Add guardrails that prevent projection from creating analytical meaning.
+
+Completion condition:
+
+```text
+Legacy projection paths are removed or explicitly classified as terminal adapters,
+not architecture-migration bridges.
+```
+
+Evidence:
+
+```text
+Focused bridge-retirement tests, dependency search, full tests, and manual smoke/export logs where live behavior changed.
+```
+
+Stop condition:
+
+```text
+Stop if projection removal would erase provenance, remove fallback flexibility,
+or reintroduce legacy truth through another route.
+```
+
+---
+
+## Stage 25 — Simplify Orchestration and Composition Hubs
+
+Goal:
+
+```text
+Reduce residual orchestration/factory/coordinator sprawl after live paths have
+explicit inputs and bridge retirement evidence.
+```
+
+Tasks:
+
+- [ ] Inspect MetricLoadCoordinator, ChartRenderingOrchestrator, ChartUpdateCoordinator, ChartControllerFactory, MainChartsView, and SyncfusionChartsView.
+- [ ] Remove or split only responsibilities made obsolete by completed cutovers.
+- [ ] Keep orchestration as process coordination, not semantic authority, provider policy, or evidence control.
+- [ ] Preserve composition-root behavior and controller lifecycle behavior.
+- [ ] Avoid cosmetic refactoring and broad file churn.
+
+Completion condition:
+
+```text
+Major orchestration hubs no longer coordinate both target-spine and retired legacy responsibilities.
+```
+
+Evidence:
+
+```text
+Architecture guardrails, focused orchestration/controller tests, full tests, and manual smoke where live behavior changed.
+```
+
+Stop condition:
+
+```text
+Stop if simplification requires behavior redesign, broad UI rewrites, or unrelated cleanup.
+```
+
+---
+
+## Stage 26 — Productize Bounded Operation Chain / Transform Convergence
+
+Goal:
+
+```text
+Turn the proven Operation Chain / Transform alignment into concrete user value
+without destabilizing existing Transform behavior or introducing premature formal algebra.
+```
+
+Tasks:
+
+- [ ] Select one small existing Transform capability or Operation Chain capability that can be exposed or reused safely.
+- [ ] Keep capability, composition, construction, confidence, fitness, and planning upstream of UI/rendering.
+- [ ] Preserve current Transform tab behavior.
+- [ ] Add user-facing behavior only if it can be tested and manually smoked.
+- [ ] Keep Diff/Ratio latent unless deliberately wired and smoke-tested.
+
+Completion condition:
+
+```text
+At least one bounded Operation Chain / Transform convergence slice produces practical user value through the target spine.
+```
+
+Evidence:
+
+```text
+Operation Chain tests, Transform tests, full tests, and manual smoke/export logs if UI behavior changes.
+```
+
+Stop condition:
+
+```text
+Stop if productization becomes a broad Operation Chain UI redesign or formal algebra expansion.
+```
+
+---
+
+## Stage 27 — Terminal Delivery and Evidence Separation
+
+Goal:
+
+```text
+Complete separation between terminal delivery, consumer surfaces, and observational evidence.
+```
+
+Tasks:
+
+- [ ] Verify delivery/vendor concerns remain terminal and replaceable.
+- [ ] Verify evidence/export observes behavior without routing live behavior.
+- [ ] Verify VNextUiConsumptionContract and ConsumerSurfaceModel remain UI/vendor neutral.
+- [ ] Verify render-plan metadata and consumption-contract metadata are preserved.
+- [ ] Add or update guardrails where separation is not enforceable by current tests.
+
+Completion condition:
+
+```text
+Delivery, consumer, projection, and evidence boundaries are explicit and enforced.
+```
+
+Evidence:
+
+```text
+Architecture guardrails, export evidence, full tests, and manual smoke/export logs.
+```
+
+Stop condition:
+
+```text
+Stop if evidence starts controlling runtime routing or delivery starts defining semantic truth.
+```
+
+---
+
+## Stage 28 — Final Bridge Retirement Pass
+
+Goal:
+
+```text
+Remove remaining bridge code that is demonstrably obsolete after cutover, while
+preserving terminal adapters and intentional fallback paths.
+```
+
+Tasks:
+
+- [ ] Inventory remaining bridge-labeled or compatibility-labeled paths.
+- [ ] Classify each as remove, terminal adapter, intentional fallback, or defer with reason.
+- [ ] Remove only paths with replacement evidence.
+- [ ] Preserve fallback where capability/flexibility would otherwise be reduced.
+- [ ] Run full tests and required manual smoke tests after each removal bundle.
+
+Completion condition:
+
+```text
+No active migration bridge remains without an explicit retained-purpose classification.
+```
+
+Evidence:
+
+```text
+Dependency search, architecture guardrails, full tests, and manual smoke/export logs where live behavior changed.
+```
+
+Stop condition:
+
+```text
+Stop if bridge retirement becomes bulk deletion or reduces capability/flexibility.
+```
+
+---
+
+## Stage 29 — Final Vocabulary / Architecture Closure Review
+
+Goal:
+
+```text
+Decide whether DataVisualiser has reached target architecture status, and record
+remaining intentional exceptions if any.
+```
+
+Tasks:
+
+- [ ] Verify every live path maps to the implementation chain.
+- [ ] Verify every remaining exception is terminal, intentional, and documented inline in code/tests or this plan.
+- [ ] Verify no mega-object replaced ChartDataContext.
+- [ ] Verify canonical authority remains upstream.
+- [ ] Verify capability, composition, construction, confidence, fitness, planning, contracts, consumer surfaces, projection, delivery, and evidence remain distinct.
+- [ ] Verify full automated tests pass.
+- [ ] Verify required manual smoke/export tests pass.
+- [ ] Mark architecture status green only if no active migration bridge remains.
+
+Completion condition:
+
+```text
+The DataVisualiser architectural and vocabulary migration is complete, or the
+remaining gap list is explicit, bounded, and no longer part of migration debt.
+```
+
+Evidence:
+
+```text
+Full tests, architecture guardrails, dependency search, manual smoke/export logs, and final checklist updates in this plan.
+```
+
+Stop condition:
+
+```text
+Stop if any remaining bridge, legacy path, or vocabulary collapse cannot be
+classified as removed, terminal adapter, intentional fallback, or explicit future product work.
 ```
 
 ---
@@ -1584,7 +1835,7 @@ It must be traceable from observed pressure or requirement to vocabulary term, p
 
 # Completion Definition
 
-The next-stage migration is complete when:
+The DataVisualiser architectural and vocabulary migration is complete when:
 
 ```text
 working baseline is confirmed
@@ -1607,6 +1858,15 @@ LoadedChartDataSnapshot remains a loaded-state read model, not a ChartDataContex
 shared series resolution exists before family-specific input cutovers expand
 family render inputs remain thin terminal shapes rather than semantic owners
 bridge retirement occurs only after replacement, parity, tests, and smoke evidence where applicable
+Distribution, Weekday Trend, Transform, Main / Cartesian, normalized, and reachable diff/ratio paths are either target-spine consumers or explicitly terminal adapters
+ChartDataContext is no longer a shared UI/application state carrier
+legacy projection / compatibility paths are removed or explicitly terminal and non-authoritative
+orchestration hubs no longer coordinate both retired legacy behavior and target-spine behavior
+Operation Chain / Transform convergence has produced at least one bounded practical user-value slice or is explicitly classified as future product work
+terminal delivery remains replaceable and downstream
+evidence/export remains observational
+no active migration bridge remains unclassified
+architecture status is green only after Stage 29 closure evidence passes
 ```
 
 No closure claim is valid unless supported by:
@@ -1622,6 +1882,8 @@ projection / translation non-authority check
 architectural-leverage ranking record
 updated documentation
 guardrail checks
+manual smoke/export logs for every live UI/render behavior changed during the closure track
+final dependency search for ChartDataContext, LegacyChartProgramProjector, LegacyMetricViewGateway, compatibility projected contexts, and bridge-labeled paths
 ```
 
 ---

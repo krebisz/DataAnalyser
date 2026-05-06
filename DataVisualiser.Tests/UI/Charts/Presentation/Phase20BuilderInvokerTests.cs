@@ -142,7 +142,9 @@ public sealed class Phase20BuilderInvokerTests
             new MetricSeriesSelection("Weight", "fat"),
             data,
             null,
-            "Fat Mass");
+            "Fat Mass",
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 7));
         var ctx = new ChartDataContext
         {
             MetricType = "Weight",
@@ -158,6 +160,32 @@ public sealed class Phase20BuilderInvokerTests
         Assert.Equal("Weight", result.PrimaryMetricType);
         Assert.Equal(new DateTime(2026, 1, 1), result.From);
         Assert.Equal(new DateTime(2026, 1, 7), result.To);
+    }
+
+    [Fact]
+    public async Task DistributionBuilder_BuildAsync_WithRequest_UsesSharedResolutionRequest()
+    {
+        var builder = CreateDistributionBuilder(out _);
+        var selection = new MetricSeriesSelection("Weight", "fat");
+        var ctx = new ChartDataContext
+        {
+            Data1 = [new MetricData { NormalizedTimestamp = new DateTime(2026, 1, 1), Value = 10m }],
+            DisplayName1 = "Weight - fat",
+            MetricType = "Weight",
+            PrimaryMetricType = "Weight",
+            PrimarySubtype = "fat",
+            From = new DateTime(2026, 1, 1),
+            To = new DateTime(2026, 1, 7)
+        };
+
+        var request = builder.CreateRequest(ctx, selection);
+        var result = await builder.BuildAsync(request);
+
+        Assert.NotNull(result);
+        Assert.Same(ctx.Data1, result.Data);
+        Assert.Equal(new DateTime(2026, 1, 1), result.From);
+        Assert.Equal(new DateTime(2026, 1, 7), result.To);
+        Assert.Equal("Weight - fat", result.DisplayName);
     }
 
     // ─── WeekdayTrendComputationInvoker ─────────────────────────────────────

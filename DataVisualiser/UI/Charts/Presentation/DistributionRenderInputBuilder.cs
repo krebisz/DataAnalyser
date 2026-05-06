@@ -28,26 +28,41 @@ internal sealed class DistributionRenderInputBuilder
 
     public async Task<DistributionRenderInput?> BuildAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
-        var (data, cmsSeries) = await ResolveDistributionDataAsync(ctx, selectedSeries);
-        if (data == null || (data.Count == 0 && cmsSeries == null))
-            return null;
-
-        var displayName = ResolveDistributionDisplayName(ctx, selectedSeries);
-        return new DistributionRenderInput(selectedSeries, data, cmsSeries, displayName);
+        return await BuildAsync(CreateRequest(ctx, selectedSeries));
     }
 
-    private Task<(IReadOnlyList<MetricData>? Data, ICanonicalMetricSeries? Cms)> ResolveDistributionDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    public async Task<DistributionRenderInput?> BuildAsync(DistributionRenderInputRequest request)
+    {
+        var resolution = await VNextDataResolutionHelper.ResolveSeriesDataAsync(request.SeriesResolution);
+        if (resolution.Data == null || (resolution.Data.Count == 0 && resolution.Cms == null))
+            return null;
+
+        return new DistributionRenderInput(
+            request.SelectedSeries,
+            resolution.Data,
+            resolution.Cms,
+            request.DisplayName,
+            request.From,
+            request.To);
+    }
+
+    public DistributionRenderInputRequest CreateRequest(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
     {
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        return VNextDataResolutionHelper.ResolveSeriesDataAsync(
-            ctx, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
-            ChartProgramKind.Distribution, EvidenceRuntimePath.VNextDistribution,
-            runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.Distribution, runtime),
-            async (sel, from, to, table) =>
-            {
-                var (cms, _, data, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(sel, null, from, to, table);
-                return (data.ToList(), cms);
-            });
+        return new DistributionRenderInputRequest(
+            selectedSeries,
+            SeriesResolutionRequest.FromContext(
+                ctx, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
+                ChartProgramKind.Distribution, EvidenceRuntimePath.VNextDistribution,
+                runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.Distribution, runtime),
+                async (sel, from, to, table) =>
+                {
+                    var (cms, _, data, _) = await _metricSelectionService.LoadMetricDataWithCmsAsync(sel, null, from, to, table);
+                    return (data.ToList(), cms);
+                }),
+            ResolveDistributionDisplayName(ctx, selectedSeries),
+            ctx.From,
+            ctx.To);
     }
 
     private static string ResolveDistributionDisplayName(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
@@ -67,14 +82,23 @@ internal sealed class DistributionRenderInputBuilder
             PrimarySubtype = renderInput.SelectedSeries?.Subtype,
             DisplayPrimaryMetricType = renderInput.SelectedSeries?.DisplayMetricType ?? ctx.DisplayPrimaryMetricType,
             DisplayPrimarySubtype = renderInput.SelectedSeries?.DisplaySubtype ?? ctx.DisplayPrimarySubtype,
-            From = ctx.From,
-            To = ctx.To
+            From = renderInput.From,
+            To = renderInput.To
         };
     }
 }
+
+internal sealed record DistributionRenderInputRequest(
+    MetricSeriesSelection? SelectedSeries,
+    SeriesResolutionRequest SeriesResolution,
+    string DisplayName,
+    DateTime From,
+    DateTime To);
 
 internal sealed record DistributionRenderInput(
     MetricSeriesSelection? SelectedSeries,
     IReadOnlyList<MetricData> Data,
     ICanonicalMetricSeries? CmsSeries,
-    string DisplayName);
+    string DisplayName,
+    DateTime From,
+    DateTime To);

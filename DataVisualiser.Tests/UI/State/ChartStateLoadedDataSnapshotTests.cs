@@ -1,6 +1,5 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 
 namespace DataVisualiser.Tests.UI.State;
@@ -39,7 +38,7 @@ public sealed class ChartStateLoadedDataSnapshotTests
         Assert.Equal(1, state.LastLoadedData.Data1Count);
         Assert.Equal(2, state.LastLoadedData.Data2Count);
         Assert.Equal(
-            EvidenceDiagnosticsBuilder.BuildContextSignature(context),
+            "Weight:Morning|Steps:Evening::2026-01-01T00:00:00.0000000->2026-01-02T00:00:00.0000000::series=2",
             state.LastLoadedData.ContextSignature);
     }
 

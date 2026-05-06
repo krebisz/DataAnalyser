@@ -1981,6 +1981,32 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("ConsumerProviderRegistry", planningSource, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void LoadedChartDataSnapshot_ShouldRemainLoadedStateReadModelOnly()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            Path.Combine("DataVisualiser", "UI", "State", "LoadedChartDataSnapshot.cs"));
+
+        var forbiddenTokens = new[]
+        {
+            "ChartRenderPlan",
+            "VNextUiConsumptionContract",
+            "ConsumerProvider",
+            "ConsumerSurfaceModel",
+            "LiveCharts",
+            "CartesianChart",
+            "PolarChart",
+            "SeriesResult",
+            "Overlay",
+            "CapabilityRequest",
+            "AnalyticalIntent",
+            "EvidenceDiagnosticsBuilder"
+        };
+
+        foreach (var token in forbiddenTokens)
+            Assert.DoesNotContain(token, source, StringComparison.Ordinal);
+    }
+
     private static void AssertNoMatches(IReadOnlyList<string> offenders)
     {
         if (offenders.Count == 0)
