@@ -9,11 +9,54 @@ using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Charts.Controllers;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
 public sealed class DiffRatioNormalizedSelectionAdapterTests
 {
+    [Fact]
+    public async Task DiffRatioCreateRenderInputAsync_ShouldReturnExplicitDifferenceInput()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var setup = CreateDiffRatioAdapter();
+            setup.ChartState.IsDiffRatioDifferenceMode = true;
+            setup.ChartState.SelectedDiffRatioPrimarySeries = new MetricSeriesSelection("weight", "avg");
+            setup.ChartState.SelectedDiffRatioSecondarySeries = new MetricSeriesSelection("steps", "(All)");
+            var context = CreateComparisonContext();
+
+            var input = await setup.Adapter.CreateRenderInputAsync(context);
+
+            Assert.NotNull(input);
+            Assert.Same(context.Data1, input.PrimaryData);
+            Assert.Same(context.Data2, input.SecondaryData);
+            Assert.Equal(ChartProgramKind.Difference, input.ProgramKind);
+            Assert.Equal(ChartProgramKind.Difference, input.CapabilityContract.ProgramRequest.Kind);
+            Assert.Equal("Weight", input.Context.DisplayName1);
+            Assert.Equal("Steps", input.Context.DisplayName2);
+        });
+    }
+
+    [Fact]
+    public async Task DiffRatioCreateRenderInputAsync_ShouldReturnExplicitRatioInput()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var setup = CreateDiffRatioAdapter();
+            setup.ChartState.IsDiffRatioDifferenceMode = false;
+            setup.ChartState.SelectedDiffRatioPrimarySeries = new MetricSeriesSelection("weight", "avg");
+            setup.ChartState.SelectedDiffRatioSecondarySeries = new MetricSeriesSelection("steps", "(All)");
+            var context = CreateComparisonContext();
+
+            var input = await setup.Adapter.CreateRenderInputAsync(context);
+
+            Assert.NotNull(input);
+            Assert.Equal(ChartProgramKind.Ratio, input.ProgramKind);
+            Assert.Equal(ChartProgramKind.Ratio, input.CapabilityContract.ProgramRequest.Kind);
+        });
+    }
+
     [Fact]
     public void DiffRatioUpdateSubtypeOptions_ShouldPopulatePrimaryAndSecondaryCombos()
     {
@@ -149,6 +192,29 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
             Assert.Equal("Weight", request.Context.DisplayName2);
             Assert.Equal(secondary.MetricType, request.Context.PrimaryMetricType);
             Assert.Equal(primary.MetricType, request.Context.SecondaryMetricType);
+        });
+    }
+
+    [Fact]
+    public async Task NormalizedCreateRenderInputAsync_ShouldReturnExplicitNormalizedInput()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var setup = CreateNormalizedAdapter();
+            var primary = new MetricSeriesSelection("weight", "avg");
+            var secondary = new MetricSeriesSelection("steps", "(All)");
+            setup.ChartState.SelectedNormalizedPrimarySeries = primary;
+            setup.ChartState.SelectedNormalizedSecondarySeries = secondary;
+            var context = CreateComparisonContext();
+
+            var input = await setup.Adapter.CreateRenderInputAsync(context);
+
+            Assert.NotNull(input);
+            Assert.Same(context.Data1, input.PrimaryData);
+            Assert.Same(context.Data2, input.SecondaryData);
+            Assert.Equal(ChartProgramKind.Normalized, input.CapabilityContract.ProgramRequest.Kind);
+            Assert.Equal("Weight", input.Context.DisplayName1);
+            Assert.Equal("Steps", input.Context.DisplayName2);
         });
     }
 

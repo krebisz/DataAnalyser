@@ -148,13 +148,16 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
 
     private async Task RenderDiffRatioAsync(ChartDataContext ctx)
     {
-        var (primaryData, secondaryData, diffRatioContext) = await ResolveDiffRatioDataAsync(ctx);
-        if (primaryData == null || secondaryData == null)
+        var input = await CreateRenderInputAsync(ctx);
+        if (input == null)
             return;
 
-        UpdateDiffRatioPanelTitle(diffRatioContext);
+        UpdateDiffRatioPanelTitle(input.Context);
         await _renderingContract.RenderAsync(
-            new CartesianMetricChartRenderRequest(RenderingRoute, diffRatioContext),
+            new CartesianMetricChartRenderRequest(
+                RenderingRoute,
+                input.Context,
+                CapabilityContract: input.CapabilityContract),
             CreateRenderHost());
         BinaryMetricChartContextHelper.RecordRenderedVNextFamilyRuntime(
             _viewModel.ChartState,
@@ -162,7 +165,25 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
                 ? DataVisualiser.VNext.Contracts.ChartProgramKind.Difference
                 : DataVisualiser.VNext.Contracts.ChartProgramKind.Ratio,
             DataVisualiser.UI.MainHost.Evidence.EvidenceRuntimePath.VNextDiffRatio,
-            diffRatioContext);
+            input.Context);
+    }
+
+    public async Task<DiffRatioCartesianMetricRenderInput?> CreateRenderInputAsync(ChartDataContext ctx)
+    {
+        var (primaryData, secondaryData, diffRatioContext) = await ResolveDiffRatioDataAsync(ctx);
+        if (primaryData == null || secondaryData == null)
+            return null;
+
+        var kind = _viewModel.ChartState.IsDiffRatioDifferenceMode
+            ? DataVisualiser.VNext.Contracts.ChartProgramKind.Difference
+            : DataVisualiser.VNext.Contracts.ChartProgramKind.Ratio;
+
+        return new DiffRatioCartesianMetricRenderInput(
+            diffRatioContext,
+            primaryData,
+            secondaryData,
+            kind,
+            CartesianMetricCapabilityContract.Create(kind));
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveDiffRatioDataAsync(ChartDataContext ctx)
@@ -272,3 +293,10 @@ public sealed class DiffRatioChartControllerAdapter : CartesianChartControllerAd
         return new CartesianMetricChartRenderHost(_controller.Chart, _viewModel.ChartState);
     }
 }
+
+public sealed record DiffRatioCartesianMetricRenderInput(
+    ChartDataContext Context,
+    IReadOnlyList<MetricData> PrimaryData,
+    IReadOnlyList<MetricData> SecondaryData,
+    DataVisualiser.VNext.Contracts.ChartProgramKind ProgramKind,
+    CartesianMetricCapabilityContract CapabilityContract);

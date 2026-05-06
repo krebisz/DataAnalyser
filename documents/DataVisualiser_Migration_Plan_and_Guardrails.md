@@ -275,7 +275,7 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 - [x] Stage 19 — Cut over Distribution family input
 - [x] Stage 20 — Cut over Weekday Trend family input
 - [x] Stage 21 — Align Transform input with Operation Chain concepts
-- [ ] Stage 22 — Cut over Main / Cartesian rendering inputs
+- [x] Stage 22 — Cut over Main / Cartesian rendering inputs
 - [ ] Stage 23 — Retire ChartDataContext as shared state carrier
 - [ ] Stage 24 — Retire legacy projection / compatibility paths
 - [ ] Stage 25 — Simplify orchestration and composition hubs
@@ -287,18 +287,18 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 Active-slice tracker:
 
 - [ ] Not started
-- [x] Active
-- [ ] Complete
+- [ ] Active
+- [x] Complete
 - [ ] Blocked
 
 | Field | Value |
 |---|---|
-| Active stage | Stage 22 next |
-| Active pressure point / construction concern | Main / Cartesian rendering still depends on ChartDataContext as shared state source |
+| Active stage | Stage 23 next |
+| Active pressure point / construction concern | ChartDataContext still remains as a shared state carrier after explicit Main / Cartesian input seams |
 | Blueprint layer(s) | Canonical Source / Input; Projection / Translation; Evidence / Diagnostics |
 | Ownership zone(s) | Emits / Governs / Observes |
 | Slice charter file | Inline only |
-| Required evidence | `DataVisualiser.Tests` 1064 passed; `DataFileReader.Tests` 15 passed; Transform smoke/export evidence `reachability-20260506-172616.json` and `reachability-20260506-173634.json` verified |
+| Required evidence | Stage 22 complete: `DataVisualiser.Tests` 1069 passed; `DataFileReader.Tests` 15 passed; focused Main / Cartesian tests 46 passed; manual smoke/export evidence `reachability-20260506-181329.json` verified; Diff/Ratio excluded from manual smoke because it is not UI-reachable |
 | Stop condition | Main / Cartesian cutover requires a broad MainChartsView rewrite or changes user-visible chart semantics outside the selected slice |
 
 ---
@@ -1445,12 +1445,12 @@ models after smaller families prove the pattern.
 
 Tasks:
 
-- [ ] Review remaining ChartDataContext use in MainChart, Cartesian, normalized, diff/ratio, and orchestration paths.
-- [ ] Define one explicit Main / Cartesian render input shape if existing request models are insufficient.
-- [ ] Preserve main chart, stacked mode, overlays, normalized view, and diff/ratio behavior where currently reachable.
-- [ ] Preserve ChartRenderPlan, VNextUiConsumptionContract, capability contract, and metadata handoff.
-- [ ] Keep UI controls and vendor types out of upstream render input models.
-- [ ] Run manual smoke tests for main chart, stacked overlays, normalized chart, distribution/weekday regression, export, reload, and selection changes.
+- [x] Review remaining ChartDataContext use in MainChart, Cartesian, normalized, diff/ratio, and orchestration paths.
+- [x] Define one explicit Main / Cartesian render input shape if existing request models are insufficient.
+- [x] Preserve main chart, stacked mode, overlays, normalized view, and diff/ratio behavior where currently reachable.
+- [x] Preserve ChartRenderPlan, VNextUiConsumptionContract, capability contract, and metadata handoff.
+- [x] Keep UI controls and vendor types out of upstream render input models.
+- [x] Run manual smoke tests for main chart, stacked overlays, normalized chart, distribution/weekday regression, export, reload, and selection changes.
 
 Completion condition:
 
@@ -1462,7 +1462,7 @@ ChartDataContext as its shared state source.
 Evidence:
 
 ```text
-Focused Main / Cartesian tests, full tests, architecture guardrails, and manual smoke/export logs.
+Focused Main / Cartesian tests, full tests, and manual smoke/export log `reachability-20260506-181329.json`; Diff/Ratio is covered by automated tests only because it is not UI-reachable.
 ```
 
 Stop condition:

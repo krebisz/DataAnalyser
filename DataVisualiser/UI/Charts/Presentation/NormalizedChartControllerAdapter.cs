@@ -140,19 +140,35 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
 
     private async Task RenderNormalizedAsync(ChartDataContext ctx)
     {
-        var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
-        if (primaryData == null || secondaryData == null)
+        var input = await CreateRenderInputAsync(ctx);
+        if (input == null)
             return;
 
-        UpdateNormalizedPanelTitle(normalizedContext);
+        UpdateNormalizedPanelTitle(input.Context);
         await _renderingContract.RenderAsync(
-            new CartesianMetricChartRenderRequest(RenderingRoute, normalizedContext),
+            new CartesianMetricChartRenderRequest(
+                RenderingRoute,
+                input.Context,
+                CapabilityContract: input.CapabilityContract),
             CreateRenderHost());
         BinaryMetricChartContextHelper.RecordRenderedVNextFamilyRuntime(
             _viewModel.ChartState,
             DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized,
             DataVisualiser.UI.MainHost.Evidence.EvidenceRuntimePath.VNextNormalized,
-            normalizedContext);
+            input.Context);
+    }
+
+    public async Task<NormalizedCartesianMetricRenderInput?> CreateRenderInputAsync(ChartDataContext ctx)
+    {
+        var (primaryData, secondaryData, normalizedContext) = await ResolveNormalizedDataAsync(ctx);
+        if (primaryData == null || secondaryData == null)
+            return null;
+
+        return new NormalizedCartesianMetricRenderInput(
+            normalizedContext,
+            primaryData,
+            secondaryData,
+            CartesianMetricCapabilityContract.Create(DataVisualiser.VNext.Contracts.ChartProgramKind.Normalized));
     }
 
     private async Task<(IReadOnlyList<MetricData>? Primary, IReadOnlyList<MetricData>? Secondary, ChartDataContext Context)> ResolveNormalizedDataAsync(ChartDataContext ctx)
@@ -273,3 +289,9 @@ public sealed class NormalizedChartControllerAdapter : CartesianChartControllerA
         return new CartesianMetricChartRenderHost(_controller.Chart, _viewModel.ChartState);
     }
 }
+
+public sealed record NormalizedCartesianMetricRenderInput(
+    ChartDataContext Context,
+    IReadOnlyList<MetricData> PrimaryData,
+    IReadOnlyList<MetricData> SecondaryData,
+    CartesianMetricCapabilityContract CapabilityContract);

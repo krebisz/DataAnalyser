@@ -165,8 +165,17 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
 
     private async Task RenderMainChartAsync(ChartDataContext ctx)
     {
-        if (ctx.Data1 == null)
+        var input = await CreateRenderInputAsync(ctx);
+        if (input == null)
             return;
+
+        await RenderMainChartAsync(input);
+    }
+
+    public async Task<MainCartesianMetricRenderInput?> CreateRenderInputAsync(ChartDataContext ctx)
+    {
+        if (ctx.Data1 == null)
+            return null;
 
         var mode = _viewModel.ChartState.MainChartDisplayMode;
         var selections = GetStackedSelections();
@@ -174,16 +183,28 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
         var isCumulative = mode == MainChartDisplayMode.Summed;
         var overlaySeries = canStack ? await _overlayBuilder.BuildAsync(ctx, selections) : null;
 
+        return new MainCartesianMetricRenderInput(
+            ctx,
+            _viewModel.MetricState.SelectedSeries,
+            _viewModel.MetricState.ResolutionTableName,
+            canStack,
+            isCumulative,
+            overlaySeries,
+            CartesianMetricCapabilityContract.Create(ChartProgramKind.Main));
+    }
+
+    private async Task RenderMainChartAsync(MainCartesianMetricRenderInput input)
+    {
         await _renderingContract.RenderAsync(
             new CartesianMetricChartRenderRequest(
                 RenderingRoute,
-                ctx,
-                _viewModel.MetricState.SelectedSeries,
-                _viewModel.MetricState.ResolutionTableName,
-                canStack,
-                isCumulative,
-                overlaySeries,
-                CapabilityContract: CartesianMetricCapabilityContract.Create(ChartProgramKind.Main)),
+                input.Context,
+                input.SelectedSeries,
+                input.ResolutionTableName,
+                input.IsStacked,
+                input.IsCumulative,
+                input.OverlaySeries,
+                CapabilityContract: input.CapabilityContract),
             CreateRenderHost());
     }
 
@@ -228,3 +249,12 @@ public sealed class MainChartControllerAdapter : CartesianChartControllerAdapter
         });
     }
 }
+
+public sealed record MainCartesianMetricRenderInput(
+    ChartDataContext Context,
+    IReadOnlyList<MetricSeriesSelection>? SelectedSeries,
+    string? ResolutionTableName,
+    bool IsStacked,
+    bool IsCumulative,
+    IReadOnlyList<SeriesResult>? OverlaySeries,
+    CartesianMetricCapabilityContract CapabilityContract);
