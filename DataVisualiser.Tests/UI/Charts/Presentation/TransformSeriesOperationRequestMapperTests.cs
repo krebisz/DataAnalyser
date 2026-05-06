@@ -54,4 +54,34 @@ public sealed class TransformSeriesOperationRequestMapperTests
         Assert.False(mapped);
         Assert.Null(request);
     }
+
+    [Theory]
+    [InlineData(null, SeriesOperationKind.Identity, SeriesOperationRules.Lossless, true)]
+    [InlineData("Log", SeriesOperationKind.Logarithm, SeriesOperationRules.Lossless, false)]
+    [InlineData("Add", SeriesOperationKind.Sum, SeriesOperationRules.Lossless, false)]
+    public void TryCreateOperationChainStep_ShouldExposeTransformOperationAsBoundedOperationChainStep(
+        string? operationTag,
+        SeriesOperationKind expectedKind,
+        string expectedLossiness,
+        bool expectedReversible)
+    {
+        var mapped = TransformSeriesOperationRequestMapper.TryCreateOperationChainStep(operationTag, "Fat", "Muscle", out var step);
+
+        Assert.True(mapped);
+        Assert.NotNull(step);
+        Assert.Equal(expectedKind, step!.Operation.Kind);
+        Assert.Equal(expectedLossiness, step.Lossiness);
+        Assert.Equal(expectedReversible, step.Reversible);
+        Assert.Equal("TransformTab", step.Metadata["Source"]);
+        Assert.Equal(operationTag ?? string.Empty, step.Metadata["OperationTag"]);
+    }
+
+    [Fact]
+    public void TryCreateOperationChainStep_ShouldRejectUnsupportedOperations()
+    {
+        var mapped = TransformSeriesOperationRequestMapper.TryCreateOperationChainStep("Custom", "Fat", "Muscle", out var step);
+
+        Assert.False(mapped);
+        Assert.Null(step);
+    }
 }

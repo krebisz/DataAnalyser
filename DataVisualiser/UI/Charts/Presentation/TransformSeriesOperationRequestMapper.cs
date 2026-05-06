@@ -32,4 +32,29 @@ internal static class TransformSeriesOperationRequestMapper
 
         return request != null;
     }
+
+    public static bool TryCreateOperationChainStep(
+        string? operationTag,
+        string primaryLabel,
+        string? secondaryLabel,
+        out OperationChainStep? step)
+    {
+        step = null;
+
+        if (!TryCreate(operationTag, primaryLabel, secondaryLabel, out var request) || request == null)
+            return false;
+
+        var metadata = new Dictionary<string, string>
+        {
+            ["Source"] = "TransformTab",
+            ["OperationTag"] = operationTag ?? string.Empty
+        };
+
+        step = new OperationChainStep(
+            request,
+            reversible: request.Kind == SeriesOperationKind.Identity,
+            SeriesOperationRules.DefaultLossiness(request.Kind),
+            metadata);
+        return true;
+    }
 }

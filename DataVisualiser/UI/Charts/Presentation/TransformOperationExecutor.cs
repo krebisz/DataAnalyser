@@ -68,13 +68,13 @@ internal sealed class TransformOperationExecutor
     {
         var primaryLabel = resolution.Context.DisplayName1 ?? resolution.Context.PrimarySubtype ?? "Primary";
         var secondaryLabel = resolution.Context.DisplayName2 ?? resolution.Context.SecondarySubtype ?? "Secondary";
-        if (!TransformSeriesOperationRequestMapper.TryCreate(operationTag, primaryLabel, secondaryLabel, out var request) || request == null)
+        if (!TransformSeriesOperationRequestMapper.TryCreateOperationChainStep(operationTag, primaryLabel, secondaryLabel, out var step) || step == null)
             return null;
 
         return operationArity switch
         {
-            1 => TryExecuteUnaryWithVNext(resolution, request, operationTag),
-            2 => TryExecuteBinaryWithVNext(resolution, request, operationTag),
+            1 => TryExecuteUnaryWithVNext(resolution, step.Operation, operationTag),
+            2 => TryExecuteBinaryWithVNext(resolution, step.Operation, operationTag),
             _ => null
         };
     }

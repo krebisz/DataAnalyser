@@ -274,7 +274,7 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 - [x] Stage 18 — Generalize series resolution
 - [x] Stage 19 — Cut over Distribution family input
 - [x] Stage 20 — Cut over Weekday Trend family input
-- [ ] Stage 21 — Align Transform input with Operation Chain concepts
+- [x] Stage 21 — Align Transform input with Operation Chain concepts
 - [ ] Stage 22 — Cut over Main / Cartesian rendering inputs
 - [ ] Stage 23 — Retire ChartDataContext as shared state carrier
 - [ ] Stage 24 — Retire legacy projection / compatibility paths
@@ -293,13 +293,13 @@ Active-slice tracker:
 
 | Field | Value |
 |---|---|
-| Active stage | Stage 21 next |
-| Active pressure point / construction concern | Transform input alignment with Operation Chain concepts |
+| Active stage | Stage 22 next |
+| Active pressure point / construction concern | Main / Cartesian rendering still depends on ChartDataContext as shared state source |
 | Blueprint layer(s) | Canonical Source / Input; Projection / Translation; Evidence / Diagnostics |
 | Ownership zone(s) | Emits / Governs / Observes |
 | Slice charter file | Inline only |
-| Required evidence | `DataVisualiser.Tests` 1060 passed; `DataFileReader.Tests` 15 passed; Weekday Trend smoke/export evidence `reachability-20260506-170749.json` verified |
-| Stop condition | Transform alignment starts formalizing broad algebra or changing Operation Chain behavior beyond the bounded input shape |
+| Required evidence | `DataVisualiser.Tests` 1064 passed; `DataFileReader.Tests` 15 passed; Transform smoke/export evidence `reachability-20260506-172616.json` and `reachability-20260506-173634.json` verified |
+| Stop condition | Main / Cartesian cutover requires a broad MainChartsView rewrite or changes user-visible chart semantics outside the selected slice |
 
 ---
 
@@ -1404,12 +1404,12 @@ prematurely replacing the existing Transform UI or reducing latent capability.
 
 Tasks:
 
-- [ ] Inspect TransformDataResolver, TransformOperationExecutor, and Operation Chain contracts together.
-- [ ] Identify one small compatibility-preserving alignment slice.
-- [ ] Reuse operation rules, derived dataset rules, confidence, fitness, or planning concepts only where directly useful.
-- [ ] Preserve existing Transform tab behavior.
-- [ ] Do not introduce formal algebra beyond the already proven Operation Chain shapes.
-- [ ] Run manual smoke tests if live Transform behavior changes.
+- [x] Inspect TransformDataResolver, TransformOperationExecutor, and Operation Chain contracts together.
+- [x] Identify one small compatibility-preserving alignment slice.
+- [x] Reuse operation rules, derived dataset rules, confidence, fitness, or planning concepts only where directly useful.
+- [x] Preserve existing Transform tab behavior.
+- [x] Do not introduce formal algebra beyond the already proven Operation Chain shapes.
+- [x] Run manual smoke tests if live Transform behavior changes.
 
 Completion condition:
 
@@ -1421,6 +1421,8 @@ Evidence:
 
 ```text
 Transform tests, Operation Chain tests, full tests, and manual smoke/export logs if live Transform behavior changed.
+Automated evidence: `DataVisualiser.Tests` 1064 passed; `DataFileReader.Tests` 15 passed.
+Manual smoke/export evidence: `documents/reachability-20260506-172616.json` and `documents/reachability-20260506-173634.json` verified.
 ```
 
 Stop condition:
