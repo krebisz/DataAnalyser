@@ -28,6 +28,7 @@ public sealed class EvidenceDiagnosticsBuilder
     {
         var selectedSeries = metricState.SelectedSeries.ToList();
         var ctx = chartState.LastContext;
+        var loadedData = chartState.LastLoadedData;
         var uiSurface = _getUiSurfaceDiagnostics?.Invoke() ?? new UiSurfaceDiagnosticsSnapshot();
         uiSurface.Subtypes.PrimaryOptionsMatchSelectedMetric = await DeterminePrimaryOptionsMatchSelectedMetricAsync(metricState, uiSurface.Subtypes);
         var reusableContext = ChartContextSelectionGuard.IsCompatibleWithCurrentSelection(
@@ -84,29 +85,29 @@ public sealed class EvidenceDiagnosticsBuilder
             },
             LoadedContext = new LoadedContextDiagnosticsSnapshot
             {
-                Present = ctx != null,
                 ReusableForCurrentSelection = reusableContext,
-                LoadRequestSignature = ctx?.LoadRequestSignature,
-                MetricType = ctx?.MetricType,
-                PrimaryMetricType = ctx?.PrimaryMetricType,
-                SecondaryMetricType = ctx?.SecondaryMetricType,
-                PrimarySubtype = ctx?.PrimarySubtype,
-                SecondarySubtype = ctx?.SecondarySubtype,
-                DisplayName1 = ctx?.DisplayName1,
-                DisplayName2 = ctx?.DisplayName2,
-                ActualSeriesCount = ctx?.ActualSeriesCount ?? 0,
-                Data1Count = ctx?.Data1?.Count() ?? 0,
-                Data2Count = ctx?.Data2?.Count() ?? 0,
-                CmsSeriesCount = ctx?.CmsSeries?.Count ?? 0,
-                From = ctx?.From,
-                To = ctx?.To
+                Present = loadedData.Present,
+                LoadRequestSignature = loadedData.LoadRequestSignature,
+                MetricType = loadedData.MetricType,
+                PrimaryMetricType = loadedData.PrimaryMetricType,
+                SecondaryMetricType = loadedData.SecondaryMetricType,
+                PrimarySubtype = loadedData.PrimarySubtype,
+                SecondarySubtype = loadedData.SecondarySubtype,
+                DisplayName1 = loadedData.DisplayName1,
+                DisplayName2 = loadedData.DisplayName2,
+                ActualSeriesCount = loadedData.ActualSeriesCount,
+                Data1Count = loadedData.Data1Count,
+                Data2Count = loadedData.Data2Count,
+                CmsSeriesCount = loadedData.CmsSeriesCount,
+                From = loadedData.From,
+                To = loadedData.To
             },
             MainChartPipeline = new MainChartPipelineDiagnosticsSnapshot
             {
                 ExpectedSeriesFromSelection = selectedSeries.Count(series => series.QuerySubtype != null),
                 ExpectedBaseSeriesLoad = Math.Min(2, selectedSeries.Count(series => series.QuerySubtype != null)),
                 ExpectedAdditionalSeriesLoad = Math.Max(0, selectedSeries.Count(series => series.QuerySubtype != null) - 2),
-                ContextActualSeriesCount = ctx?.ActualSeriesCount ?? 0,
+                ContextActualSeriesCount = loadedData.ActualSeriesCount,
                 MultiMetricRequested = selectedSeries.Count(series => series.QuerySubtype != null) >= 3,
                 ContextLikelyStaleForSelection = selectedSeries.Count > 0 && !reusableContext
             },
@@ -133,9 +134,9 @@ public sealed class EvidenceDiagnosticsBuilder
                         ? uiSurface.Subtypes.ActiveComboCount == selectedSeries.Count
                         : null,
                 LoadedSeriesCountMatchesSelection =
-                    ctx == null || expectedSeriesCount == 0
+                    !loadedData.Present || expectedSeriesCount == 0
                         ? null
-                        : ctx.ActualSeriesCount == expectedSeriesCount,
+                        : loadedData.ActualSeriesCount == expectedSeriesCount,
                 PrimarySubtypeOptionsMatchSelectedMetric = uiSurface.Subtypes.PrimaryOptionsMatchSelectedMetric,
                 DateRangeMatchesExpectedDefaultWindow = uiSurface.DateRange.MatchesExpectedDefaultWindow,
                 RecentErrorCount = recentErrorCount,
@@ -269,15 +270,7 @@ public sealed class EvidenceDiagnosticsBuilder
 
     internal static string? BuildContextSignature(ChartDataContext? context)
     {
-        if (context == null)
-            return null;
-
-        var metricType = context.PrimaryMetricType ?? context.MetricType ?? "<none>";
-        var secondaryMetricType = context.SecondaryMetricType ?? "<none>";
-        var primarySubtype = context.PrimarySubtype ?? "<none>";
-        var secondarySubtype = context.SecondarySubtype ?? "<none>";
-
-        return $"{metricType}:{primarySubtype}|{secondaryMetricType}:{secondarySubtype}::{context.From:O}->{context.To:O}::series={context.ActualSeriesCount}";
+        return LoadedChartDataSnapshot.FromContext(context).ContextSignature;
     }
 
     internal static string? BuildReachabilitySignature(StrategyReachabilityRecord? latestRecord)

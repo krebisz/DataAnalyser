@@ -30,8 +30,8 @@ internal sealed class TransformSessionMilestoneRecorder
             SelectedSeriesCount = selectedSeries.Count,
             SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
             RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
+            LoadedSeriesCount = _viewModel.ChartState.LastLoadedData.ActualSeriesCount,
+            ContextSignature = _viewModel.ChartState.LastLoadedData.ContextSignature,
             Operation = string.IsNullOrWhiteSpace(execution.OperationTag) ? null : execution.OperationTag,
             OperationArity = execution.OperationArity,
             PrimarySeriesDisplayKey = primarySelection?.DisplayKey ?? BuildSeriesDisplayKey(context.PrimaryMetricType ?? context.MetricType, context.PrimarySubtype),
@@ -44,7 +44,7 @@ internal sealed class TransformSessionMilestoneRecorder
     public void RecordToggle()
     {
         var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
-        var context = _viewModel.ChartState.LastContext;
+        var loadedData = _viewModel.ChartState.LastLoadedData;
         var isVisible = _viewModel.ChartState.IsTransformPanelVisible;
 
         _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
@@ -56,8 +56,8 @@ internal sealed class TransformSessionMilestoneRecorder
             SelectedSeriesCount = selectedSeries.Count,
             SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
             RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = context?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(context),
+            LoadedSeriesCount = loadedData.ActualSeriesCount,
+            ContextSignature = loadedData.ContextSignature,
             Note = isVisible ? "Transform panel visible." : "Transform panel hidden."
         });
     }

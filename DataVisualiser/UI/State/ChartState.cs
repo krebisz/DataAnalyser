@@ -17,6 +17,7 @@ public class ChartState
     private readonly List<InterpretationResultDiagnosticsSnapshot> _interpretationDiagnostics = new();
     private readonly List<PerformanceTimingSnapshot> _performanceTimings = new();
     private readonly List<SessionMilestoneSnapshot> _sessionMilestones = new();
+    private ChartDataContext? _lastContext;
     private const int MaxRenderPlanHistory = 100;
     private const int MaxInterpretationDiagnostics = 100;
     private const int MaxSessionMilestones = 50;
@@ -70,8 +71,18 @@ public class ChartState
     public MetricSeriesSelection? SelectedTransformPrimarySeries { get; set; }
     public MetricSeriesSelection? SelectedTransformSecondarySeries { get; set; }
 
-    // Chart data from last load
-    public ChartDataContext? LastContext { get; set; }
+    // Compatibility bridge for legacy renderers. New loaded-state consumers should prefer LastLoadedData.
+    public ChartDataContext? LastContext
+    {
+        get => _lastContext;
+        set
+        {
+            _lastContext = value;
+            LastLoadedData = LoadedChartDataSnapshot.FromContext(value);
+        }
+    }
+
+    public LoadedChartDataSnapshot LastLoadedData { get; private set; } = LoadedChartDataSnapshot.Empty;
     public LoadRuntimeState? LastLoadRuntime { get; set; }
 
     public LoadRuntimeState? GetFamilyRuntime(ChartProgramKind kind) =>

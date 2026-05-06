@@ -75,8 +75,8 @@ internal sealed class AdminSessionMilestoneRecorder(Func<SharedMainWindowViewMod
             SelectedSeriesCount = context.MetricState.SelectedSeries.Count,
             SelectedDisplayKeys = context.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
             RuntimePath = context.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = context.ChartState.LastContext?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(context.ChartState.LastContext),
+            LoadedSeriesCount = context.ChartState.LastLoadedData.ActualSeriesCount,
+            ContextSignature = context.ChartState.LastLoadedData.ContextSignature,
             Note = note
         });
     }

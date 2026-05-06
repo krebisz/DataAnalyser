@@ -23,8 +23,8 @@ internal sealed class WorkspaceSessionMilestoneRecorder
             SelectedSeriesCount = _viewModel.MetricState.SelectedSeries.Count,
             SelectedDisplayKeys = _viewModel.MetricState.SelectedSeries.Select(series => series.DisplayKey).ToList(),
             RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = _viewModel.ChartState.LastContext?.ActualSeriesCount ?? 0,
-            ContextSignature = EvidenceDiagnosticsBuilder.BuildContextSignature(_viewModel.ChartState.LastContext),
+            LoadedSeriesCount = _viewModel.ChartState.LastLoadedData.ActualSeriesCount,
+            ContextSignature = _viewModel.ChartState.LastLoadedData.ContextSignature,
             Note = note
         });
     }

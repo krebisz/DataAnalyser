@@ -357,15 +357,16 @@ public sealed class MetricLoadCoordinator
         // NEW: delegate context construction to the builder
         var ctxBuilder = new ChartDataContextBuilder();
 
-        _chartState.LastContext = ctxBuilder.Build(primarySelection, secondarySelection, data1, data2, request.From, request.To, primaryCms, secondaryCms);
-        _chartState.LastContext.LoadRequestSignature = request.Signature;
+        var loadedContext = ctxBuilder.Build(primarySelection, secondarySelection, data1, data2, request.From, request.To, primaryCms, secondaryCms);
+        loadedContext.LoadRequestSignature = request.Signature;
+        _chartState.LastContext = loadedContext;
         _chartState.LastLoadRuntime = new LoadRuntimeState(
             EvidenceRuntimePath.Legacy,
             request.Signature,
             null,
             null,
             null,
-            EvidenceDiagnosticsBuilder.BuildContextSignature(_chartState.LastContext),
+            _chartState.LastLoadedData.ContextSignature,
             null,
             false);
 
