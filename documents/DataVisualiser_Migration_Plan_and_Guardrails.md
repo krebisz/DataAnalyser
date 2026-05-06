@@ -273,7 +273,7 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 - [x] Stage 17 — Protect loaded-state split
 - [x] Stage 18 — Generalize series resolution
 - [x] Stage 19 — Cut over Distribution family input
-- [ ] Stage 20 — Cut over Weekday Trend family input
+- [x] Stage 20 — Cut over Weekday Trend family input
 - [ ] Stage 21 — Align Transform input with Operation Chain concepts
 - [ ] Stage 22 — Cut over Main / Cartesian rendering inputs
 - [ ] Stage 23 — Retire ChartDataContext as shared state carrier
@@ -293,13 +293,13 @@ Active-slice tracker:
 
 | Field | Value |
 |---|---|
-| Active stage | Stage 20 next |
-| Active pressure point / construction concern | Weekday Trend family input still resolves through ChartDataContext |
+| Active stage | Stage 21 next |
+| Active pressure point / construction concern | Transform input alignment with Operation Chain concepts |
 | Blueprint layer(s) | Canonical Source / Input; Projection / Translation; Evidence / Diagnostics |
 | Ownership zone(s) | Emits / Governs / Observes |
 | Slice charter file | Inline only |
-| Required evidence | `DataVisualiser.Tests` 1059 passed; `DataFileReader.Tests` 15 passed; Distribution smoke/export evidence `reachability-20260506-162251.json` verified |
-| Stop condition | Weekday Trend input cutover moves chart route policy, toggles, or computation behavior into the shared resolution shape |
+| Required evidence | `DataVisualiser.Tests` 1060 passed; `DataFileReader.Tests` 15 passed; Weekday Trend smoke/export evidence `reachability-20260506-170749.json` verified |
+| Stop condition | Transform alignment starts formalizing broad algebra or changing Operation Chain behavior beyond the bounded input shape |
 
 ---
 
@@ -1363,12 +1363,12 @@ Move Weekday Trend onto the shared resolution seam after Distribution proves the
 
 Tasks:
 
-- [ ] Replace direct ChartDataContext resolution pressure in WeekdayTrendComputationInvoker where safe.
-- [ ] Preserve Cartesian, Polar, and Scatter route behavior.
-- [ ] Preserve weekday toggles, average toggles, and average-window behavior.
-- [ ] Preserve Weekday Trend capability contract and consumption contract.
-- [ ] Keep computation concerns separate from rendering concerns.
-- [ ] Run manual smoke tests if live render behavior changes.
+- [x] Replace direct ChartDataContext resolution pressure in WeekdayTrendComputationInvoker where safe.
+- [x] Preserve Cartesian, Polar, and Scatter route behavior.
+- [x] Preserve weekday toggles, average toggles, and average-window behavior.
+- [x] Preserve Weekday Trend capability contract and consumption contract.
+- [x] Keep computation concerns separate from rendering concerns.
+- [x] Run manual smoke tests if live render behavior changes.
 
 Completion condition:
 
@@ -1381,6 +1381,8 @@ Evidence:
 
 ```text
 Weekday Trend tests, architecture guardrails, full tests, and manual smoke/export logs if live rendering changed.
+Automated evidence: `DataVisualiser.Tests` 1060 passed; `DataFileReader.Tests` 15 passed.
+Manual smoke/export evidence: `documents/reachability-20260506-170749.json` verified.
 ```
 
 Stop condition:

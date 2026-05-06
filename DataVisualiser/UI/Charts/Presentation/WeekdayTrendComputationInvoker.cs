@@ -36,42 +36,55 @@ internal sealed class WeekdayTrendComputationInvoker
 
     public async Task<WeekdayTrendResult?> ComputeAsync(ChartDataContext sourceCtx, MetricSeriesSelection? selectedSeries, string displayName)
     {
-        var data = await ResolveDataAsync(sourceCtx, selectedSeries);
-        if (data == null || data.Count == 0)
+        return await ComputeAsync(CreateRequest(sourceCtx, selectedSeries, displayName));
+    }
+
+    public async Task<WeekdayTrendResult?> ComputeAsync(WeekdayTrendComputationRequest request)
+    {
+        var resolution = await VNextDataResolutionHelper.ResolveSeriesDataAsync(request.SeriesResolution);
+        if (resolution.Data == null || resolution.Data.Count == 0)
             return null;
 
-        var trendContext = BuildTrendContext(sourceCtx, selectedSeries, data, displayName);
+        var trendContext = BuildTrendContext(request, resolution.Data);
         return ComputeFromContext(trendContext);
     }
 
-    private async Task<IReadOnlyList<MetricData>?> ResolveDataAsync(ChartDataContext ctx, MetricSeriesSelection? selectedSeries)
+    public WeekdayTrendComputationRequest CreateRequest(ChartDataContext ctx, MetricSeriesSelection? selectedSeries, string displayName)
     {
         var tableName = _viewModel.MetricState.ResolutionTableName ?? DataAccessDefaults.DefaultTableName;
-        var (data, _) = await VNextDataResolutionHelper.ResolveSeriesDataAsync(
-            ctx, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
-            ChartProgramKind.WeekdayTrend, EvidenceRuntimePath.VNextWeekdayTrend,
-            runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.WeekdayTrend, runtime),
-            async (sel, from, to, table) =>
-            {
-                var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(sel.MetricType, sel.QuerySubtype, null, from, to, table);
-                return ((IReadOnlyList<MetricData>)primary.ToList(), (ICanonicalMetricSeries?)null);
-            });
-        return data;
+        return new WeekdayTrendComputationRequest(
+            selectedSeries,
+            SeriesResolutionRequest.FromContext(
+                ctx, selectedSeries, _selectionCache, tableName, _vnextCoordinator,
+                ChartProgramKind.WeekdayTrend, EvidenceRuntimePath.VNextWeekdayTrend,
+                runtime => _viewModel.ChartState.SetFamilyRuntime(ChartProgramKind.WeekdayTrend, runtime),
+                async (sel, from, to, table) =>
+                {
+                    var (primary, _) = await _metricSelectionService.LoadMetricDataAsync(sel.MetricType, sel.QuerySubtype, null, from, to, table);
+                    return ((IReadOnlyList<MetricData>)primary.ToList(), (ICanonicalMetricSeries?)null);
+                }),
+            displayName,
+            ctx.From,
+            ctx.To,
+            ctx.MetricType,
+            ctx.PrimaryMetricType,
+            ctx.DisplayPrimaryMetricType,
+            ctx.DisplayPrimarySubtype);
     }
 
-    private static ChartDataContext BuildTrendContext(ChartDataContext sourceCtx, MetricSeriesSelection? selectedSeries, IReadOnlyList<MetricData> data, string displayName)
+    private static ChartDataContext BuildTrendContext(WeekdayTrendComputationRequest request, IReadOnlyList<MetricData> data)
     {
         return new ChartDataContext
         {
             Data1 = data,
-            DisplayName1 = displayName,
-            MetricType = selectedSeries?.MetricType ?? sourceCtx.MetricType,
-            PrimaryMetricType = selectedSeries?.MetricType ?? sourceCtx.PrimaryMetricType,
-            PrimarySubtype = selectedSeries?.Subtype,
-            DisplayPrimaryMetricType = selectedSeries?.DisplayMetricType ?? sourceCtx.DisplayPrimaryMetricType,
-            DisplayPrimarySubtype = selectedSeries?.DisplaySubtype ?? sourceCtx.DisplayPrimarySubtype,
-            From = sourceCtx.From,
-            To = sourceCtx.To
+            DisplayName1 = request.DisplayName,
+            MetricType = request.SelectedSeries?.MetricType ?? request.MetricType,
+            PrimaryMetricType = request.SelectedSeries?.MetricType ?? request.PrimaryMetricType,
+            PrimarySubtype = request.SelectedSeries?.Subtype,
+            DisplayPrimaryMetricType = request.SelectedSeries?.DisplayMetricType ?? request.DisplayPrimaryMetricType,
+            DisplayPrimarySubtype = request.SelectedSeries?.DisplaySubtype ?? request.DisplayPrimarySubtype,
+            From = request.From,
+            To = request.To
         };
     }
 
@@ -95,3 +108,14 @@ internal sealed class WeekdayTrendComputationInvoker
         return strategy is IWeekdayTrendResultProvider provider ? provider.ExtendedResult : null;
     }
 }
+
+internal sealed record WeekdayTrendComputationRequest(
+    MetricSeriesSelection? SelectedSeries,
+    SeriesResolutionRequest SeriesResolution,
+    string DisplayName,
+    DateTime From,
+    DateTime To,
+    string? MetricType,
+    string? PrimaryMetricType,
+    string? DisplayPrimaryMetricType,
+    string? DisplayPrimarySubtype);

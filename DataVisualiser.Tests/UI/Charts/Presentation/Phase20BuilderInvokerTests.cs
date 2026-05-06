@@ -225,6 +225,33 @@ public sealed class Phase20BuilderInvokerTests
         Assert.Same(expected, result);
     }
 
+    [Fact]
+    public async Task WeekdayTrendInvoker_ComputeAsync_WithRequest_UsesSharedResolutionRequest()
+    {
+        var expected = new WeekdayTrendResult { From = new DateTime(2026, 1, 1), To = new DateTime(2026, 1, 7) };
+        var invoker = CreateWeekdayTrendInvoker(expected, out var cutOverService);
+        var selection = new MetricSeriesSelection("Weight", "fat");
+        var ctx = new ChartDataContext
+        {
+            Data1 = [new MetricData { NormalizedTimestamp = new DateTime(2026, 1, 1), Value = 5m }],
+            MetricType = "Weight",
+            PrimaryMetricType = "Weight",
+            PrimarySubtype = "fat",
+            From = new DateTime(2026, 1, 1),
+            To = new DateTime(2026, 1, 7)
+        };
+
+        var request = invoker.CreateRequest(ctx, selection, "Weight - fat");
+        var result = await invoker.ComputeAsync(request);
+
+        Assert.Same(expected, result);
+        Assert.NotNull(cutOverService.LastContext);
+        Assert.Same(ctx.Data1, cutOverService.LastContext.Data1);
+        Assert.Equal("Weight - fat", cutOverService.LastContext.DisplayName1);
+        Assert.Equal(new DateTime(2026, 1, 1), cutOverService.LastContext.From);
+        Assert.Equal(new DateTime(2026, 1, 7), cutOverService.LastContext.To);
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────────
 
     private static SyncfusionSunburstRenderModelBuilder CreateSunburstBuilder(out MainWindowViewModel viewModel, FakeMetricQueries queries)
@@ -251,10 +278,16 @@ public sealed class Phase20BuilderInvokerTests
 
     private static WeekdayTrendComputationInvoker CreateWeekdayTrendInvoker(WeekdayTrendResult? result)
     {
+        return CreateWeekdayTrendInvoker(result, out _);
+    }
+
+    private static WeekdayTrendComputationInvoker CreateWeekdayTrendInvoker(WeekdayTrendResult? result, out FakeStrategyCutOverService cutOverService)
+    {
         var metricService = new MetricSelectionService("Server=(localdb)\\MSSQLLocalDB;Database=Fake;Trusted_Connection=True;");
         var viewModel = new MainWindowViewModel(new ChartState(), new MetricState(), new UiState(), metricService);
-        var cutOverService = new FakeStrategyCutOverService(result);
-        return new WeekdayTrendComputationInvoker(viewModel, metricService, () => cutOverService);
+        var service = new FakeStrategyCutOverService(result);
+        cutOverService = service;
+        return new WeekdayTrendComputationInvoker(viewModel, metricService, () => service);
     }
 
     private static async Task<T> WithCmsDisabledAsync<T>(Func<Task<T>> action)
@@ -305,11 +338,15 @@ public sealed class Phase20BuilderInvokerTests
     private sealed class FakeStrategyCutOverService : IStrategyCutOverService
     {
         private readonly WeekdayTrendResult? _result;
+        public ChartDataContext? LastContext { get; private set; }
 
         public FakeStrategyCutOverService(WeekdayTrendResult? result) => _result = result;
 
         public IChartComputationStrategy CreateStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
-            => new FakeWeekdayTrendStrategy(_result);
+        {
+            LastContext = ctx;
+            return new FakeWeekdayTrendStrategy(_result);
+        }
 
         public IChartComputationStrategy CreateCmsStrategy(StrategyType strategyType, ChartDataContext ctx, StrategyCreationParameters parameters)
             => throw new NotSupportedException();
