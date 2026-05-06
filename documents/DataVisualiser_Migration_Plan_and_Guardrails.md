@@ -59,6 +59,8 @@ Status is yellow, not green.
 Consumer/surface/contract vocabulary is present in code.
 Structural density increased after cleanup.
 ChartDataContext remains a major UI/rendering-state carrier.
+LoadedChartDataSnapshot now carries loaded-state diagnostics/milestone facts
+beside ChartDataContext, reducing but not eliminating ChartDataContext gravity.
 MainChartsView, SyncfusionChartsView, ChartControllerFactory*,
 ChartRenderingOrchestrator, MetricLoadCoordinator, and repeated family
 contract/builder/route/qualification patterns remain pressure points.
@@ -268,23 +270,30 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 - [x] Stage 14 — Validate generative multi-consumer output slice
 - [x] Stage 15 — Perform governance / emergence review
 - [x] Stage 16 — Harden one bounded scenario
+- [ ] Stage 17 — Protect loaded-state split
+- [ ] Stage 18 — Generalize series resolution
+- [ ] Stage 19 — Cut over Distribution family input
+- [ ] Stage 20 — Cut over Weekday Trend family input
+- [ ] Stage 21 — Align Transform input with Operation Chain concepts
+- [ ] Stage 22 — Reassess main / Cartesian cutover readiness
+- [ ] Stage 23 — Retire proven bridge pieces only
 
 Active-slice tracker:
 
-- [ ] Not started
+- [x] Not started
 - [ ] Active
-- [x] Complete
+- [ ] Complete
 - [ ] Blocked
 
 | Field | Value |
 |---|---|
-| Active stage | Stage 16 complete; plan implementation pass complete |
-| Active pressure point / construction concern | Operation Chain Workbench scenario hardening |
-| Blueprint layer(s) | Reasoning / Capability; Construction Algebra; Contract / Boundary; Consumer Model; Evidence / Diagnostics; Governance / Control Plane |
-| Ownership zone(s) | Governs / Emits / Observes |
+| Active stage | Stage 17 next |
+| Active pressure point / construction concern | ChartDataContext loaded-state gravity |
+| Blueprint layer(s) | Consumer Model; Evidence / Diagnostics; Projection / Translation |
+| Ownership zone(s) | Emits / Observes |
 | Slice charter file | Inline only |
-| Required evidence | `DataVisualiser.Tests` 1051 passed; `DataFileReader.Tests` 15 passed |
-| Stop condition | Scenario requires broader platform concerns outside DataVisualiser |
+| Required evidence | `DataVisualiser.Tests` 1053 passed; `DataFileReader.Tests` 15 passed |
+| Stop condition | LoadedChartDataSnapshot starts becoming a replacement mega-object |
 
 ---
 
@@ -1127,13 +1136,13 @@ AI-assisted architecture governance platform
 
 Tasks:
 
-- [ ] Select one scenario.
-- [ ] Define scenario boundaries.
-- [ ] Validate formal coverage against the expanded responsibility lattice.
-- [ ] Validate construction rules.
-- [ ] Validate evidence sufficiency.
-- [ ] Validate consumer output.
-- [ ] Validate governance review.
+- [x] Select one scenario.
+- [x] Define scenario boundaries.
+- [x] Validate formal coverage against the expanded responsibility lattice.
+- [x] Validate construction rules.
+- [x] Validate evidence sufficiency.
+- [x] Validate consumer output.
+- [x] Validate governance review.
 
 Completion condition:
 
@@ -1144,13 +1153,335 @@ One scenario proves bounded generativity without weakening architectural coheren
 Evidence:
 
 ```text
-DataVisualiser_Scenario_Hardening.md
+Inline only: Operation Chain Workbench scenario tests, governance tests, full test suite.
 ```
 
 Stop condition:
 
 ```text
 Stop if the scenario requires broader platform concerns that belong to DataAnalyser rather than DataVisualiser.
+```
+
+---
+
+## Bridge-Shrinkage Track
+
+Purpose:
+
+```text
+Reduce active legacy/bridge pressure without losing functionality,
+flexibility, or higher-level architectural generalisation.
+```
+
+Track rule:
+
+```text
+Bridge shrinkage is preferred over bridge removal.
+Run old and new shapes in parallel until parity, tests, and smoke evidence
+prove that exact bridge pieces can be retired.
+```
+
+Generalisation rule:
+
+```text
+Shared meaning stays upstream in VNext contracts and architectural vocabulary.
+Shared loaded facts stay in LoadedChartDataSnapshot.
+Shared data access should become a reusable series-resolution request/result.
+Family render inputs must remain thin, terminal, and non-semantic.
+No new universal object may replace ChartDataContext.
+```
+
+Priority order:
+
+```text
+1. Protect loaded-state split.
+2. Generalize series resolution.
+3. Cut over Distribution family input.
+4. Cut over Weekday Trend family input.
+5. Align Transform input with Operation Chain concepts.
+6. Reassess main / Cartesian cutover readiness.
+7. Retire proven bridge pieces only.
+```
+
+Manual smoke rule:
+
+```text
+Manual smoke tests are required when a slice changes live UI/render/reload/export
+behavior. Contract-only, diagnostic-only, or read-model-only slices may close on
+automated tests unless the implementation touches live chart rendering paths.
+```
+
+---
+
+## Stage 17 — Protect Loaded-State Split
+
+Goal:
+
+```text
+Keep ChartDataContext as a bounded legacy render bridge while preserving
+LoadedChartDataSnapshot as the shared loaded-state read model for diagnostics,
+milestones, and evidence.
+```
+
+Tasks:
+
+- [ ] Confirm LastLoadedData is updated when LastContext is assigned or cleared.
+- [ ] Move remaining non-render loaded-state reads away from LastContext where safe.
+- [ ] Add guardrails that prevent LoadedChartDataSnapshot from gaining render payloads, vendor concerns, or semantic authority.
+- [ ] Preserve ChartDataContext for existing live renderers.
+- [ ] Preserve diagnostic export contents and signatures.
+
+Completion condition:
+
+```text
+Loaded-state evidence reads no longer depend directly on the broad render bridge,
+and ChartDataContext remains a compatibility bridge rather than the only source
+of loaded-state truth.
+```
+
+Evidence:
+
+```text
+Inline only: focused tests, full test suite, and export/manual smoke only if live export behavior changes.
+```
+
+Stop condition:
+
+```text
+Stop if LoadedChartDataSnapshot starts absorbing render data, family-specific payloads,
+provider policy, or canonical semantic meaning.
+```
+
+---
+
+## Stage 18 — Generalize Series Resolution
+
+Goal:
+
+```text
+Separate reusable series resolution from ChartDataContext without fragmenting
+resolution behavior across chart families.
+```
+
+Tasks:
+
+- [ ] Introduce a small series-resolution request/result shape if current code proves it useful.
+- [ ] Preserve VNext-first and legacy-fallback behavior.
+- [ ] Preserve cache behavior and runtime evidence.
+- [ ] Adapt VNextDataResolutionHelper or successor to consume the new request shape.
+- [ ] Keep selection, date range, table name, provenance, and fallback reason visible.
+- [ ] Do not move UI controls, combo boxes, or vendor types into the resolution shape.
+
+Completion condition:
+
+```text
+Distribution, Weekday Trend, and Transform can share one resolution seam without
+requiring ChartDataContext as the resolution input.
+```
+
+Evidence:
+
+```text
+Focused resolution-helper tests and existing family tests.
+```
+
+Stop condition:
+
+```text
+Stop if resolution starts selecting analytical meaning, rendering provider, chart family policy,
+or UI state through hidden branching.
+```
+
+---
+
+## Stage 19 — Distribution Family Input Cutover
+
+Goal:
+
+```text
+Move Distribution toward thin family-specific render input while preserving the
+shared upstream meaning and reusable resolution seam.
+```
+
+Tasks:
+
+- [ ] Use the generalized series-resolution seam in DistributionRenderInputBuilder.
+- [ ] Keep DistributionRenderInput terminal and non-semantic.
+- [ ] Preserve Distribution capability contract, consumption contract, render-plan metadata, and qualification behavior.
+- [ ] Preserve Cartesian/Polar mode behavior and distribution settings.
+- [ ] Avoid moving Distribution semantics into the adapter.
+- [ ] Run manual smoke tests if live render behavior changes.
+
+Completion condition:
+
+```text
+Distribution rendering no longer depends on ChartDataContext for data resolution,
+while runtime behavior, evidence, and render-plan contracts remain intact.
+```
+
+Evidence:
+
+```text
+Distribution tests, architecture guardrails, full tests, and manual smoke/export logs if live rendering changed.
+```
+
+Stop condition:
+
+```text
+Stop if DistributionRenderInput starts becoming a new semantic model or if
+Distribution loses VNext/legacy fallback flexibility.
+```
+
+---
+
+## Stage 20 — Weekday Trend Family Input Cutover
+
+Goal:
+
+```text
+Move Weekday Trend onto the shared resolution seam after Distribution proves the pattern.
+```
+
+Tasks:
+
+- [ ] Replace direct ChartDataContext resolution pressure in WeekdayTrendComputationInvoker where safe.
+- [ ] Preserve Cartesian, Polar, and Scatter route behavior.
+- [ ] Preserve weekday toggles, average toggles, and average-window behavior.
+- [ ] Preserve Weekday Trend capability contract and consumption contract.
+- [ ] Keep computation concerns separate from rendering concerns.
+- [ ] Run manual smoke tests if live render behavior changes.
+
+Completion condition:
+
+```text
+Weekday Trend consumes resolved series input through the shared seam while preserving
+all existing chart behavior and contract metadata.
+```
+
+Evidence:
+
+```text
+Weekday Trend tests, architecture guardrails, full tests, and manual smoke/export logs if live rendering changed.
+```
+
+Stop condition:
+
+```text
+Stop if Weekday Trend cutover requires broader main-chart or platform-level behavior.
+```
+
+---
+
+## Stage 21 — Transform / Operation Chain Alignment
+
+Goal:
+
+```text
+Align Transform input and operation behavior with Operation Chain concepts without
+prematurely replacing the existing Transform UI or reducing latent capability.
+```
+
+Tasks:
+
+- [ ] Inspect TransformDataResolver, TransformOperationExecutor, and Operation Chain contracts together.
+- [ ] Identify one small compatibility-preserving alignment slice.
+- [ ] Reuse operation rules, derived dataset rules, confidence, fitness, or planning concepts only where directly useful.
+- [ ] Preserve existing Transform tab behavior.
+- [ ] Do not introduce formal algebra beyond the already proven Operation Chain shapes.
+- [ ] Run manual smoke tests if live Transform behavior changes.
+
+Completion condition:
+
+```text
+Transform becomes more compatible with Operation Chain concepts without losing current UI behavior or flexibility.
+```
+
+Evidence:
+
+```text
+Transform tests, Operation Chain tests, full tests, and manual smoke/export logs if live Transform behavior changed.
+```
+
+Stop condition:
+
+```text
+Stop if the slice attempts to redesign Transform, wire a full Operation Chain UI,
+or formalize broad algebra beyond the bounded scenario.
+```
+
+---
+
+## Stage 22 — Main / Cartesian Cutover Readiness Review
+
+Goal:
+
+```text
+Decide whether main / Cartesian rendering is ready for a practical cutover slice
+after smaller families prove the bridge-shrinkage pattern.
+```
+
+Tasks:
+
+- [ ] Review remaining ChartDataContext use in MainChart, Cartesian, normalized, diff/ratio, and orchestration paths.
+- [ ] Compare risk against Distribution and Weekday Trend results.
+- [ ] Identify the smallest behavior-preserving main / Cartesian slice.
+- [ ] Defer if risk remains too high.
+- [ ] Do not start broad MainChartsView, ChartRenderingOrchestrator, or ChartUpdateCoordinator rewrites.
+
+Completion condition:
+
+```text
+Main / Cartesian cutover is either explicitly scoped for the next slice or explicitly deferred with evidence.
+```
+
+Evidence:
+
+```text
+Inline readiness notes in this plan and focused dependency/test evidence.
+```
+
+Stop condition:
+
+```text
+Stop if readiness review turns into broad cosmetic refactoring or a multi-family rewrite.
+```
+
+---
+
+## Stage 23 — Proven Bridge Retirement
+
+Goal:
+
+```text
+Remove only bridge pieces that have already been replaced, proven, and smoke-tested
+without reducing capability or flexibility.
+```
+
+Tasks:
+
+- [ ] Select exactly one replaced bridge/helper/path.
+- [ ] Confirm replacement coverage through tests and, where applicable, manual smoke/export logs.
+- [ ] Remove only the replaced bridge piece.
+- [ ] Preserve fallback where parity is incomplete.
+- [ ] Update guardrails if the bridge removal closes a known pressure point.
+
+Completion condition:
+
+```text
+One obsolete bridge piece is retired without behavior loss or architectural regression.
+```
+
+Evidence:
+
+```text
+Focused tests, full tests, and manual smoke/export logs where live behavior changed.
+```
+
+Stop condition:
+
+```text
+Stop if removal would reduce capability, remove latent-but-wanted behavior,
+or require bulk bridge deletion.
 ```
 
 ---
@@ -1271,6 +1602,11 @@ canonical authority remains upstream
 implementation slices map cleanly to the expanded target architecture blueprint
 Projection / Translation remains explicit, non-authoritative, and loss/provenance-aware
 implementation decisions preserve derivational traceability from vocabulary to code slice
+bridge shrinkage proceeds without capability or flexibility loss
+LoadedChartDataSnapshot remains a loaded-state read model, not a ChartDataContext replacement
+shared series resolution exists before family-specific input cutovers expand
+family render inputs remain thin terminal shapes rather than semantic owners
+bridge retirement occurs only after replacement, parity, tests, and smoke evidence where applicable
 ```
 
 No closure claim is valid unless supported by:

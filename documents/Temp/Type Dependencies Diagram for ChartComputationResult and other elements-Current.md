@@ -17,6 +17,7 @@ Actions(Actions)
 AdminCountsLoadResult(AdminCountsLoadResult)
 AdminEditableHealthMetricsCountEntry(AdminEditableHealthMetricsCountEntry)
 AdminMetricsManagerCoordinator(AdminMetricsManagerCoordinator)
+AdminMetricsManagerView(AdminMetricsManagerView)
 AdminRowsChangedEventArgs(AdminRowsChangedEventArgs)
 AdminSaveResult(AdminSaveResult)
 AdminSessionMilestoneRecorder(AdminSessionMilestoneRecorder)
@@ -27,6 +28,8 @@ AnalyticalAuthority(AnalyticalAuthority)
 AnalyticalCapabilityKind(AnalyticalCapabilityKind)
 AnalyticalConsumerDeliveryResult(AnalyticalConsumerDeliveryResult)
 AnalyticalExecutionResult(AnalyticalExecutionResult)
+AnalyticalFitnessAssessment(AnalyticalFitnessAssessment)
+AnalyticalFitnessStatus(AnalyticalFitnessStatus)
 AnalyticalIntent(AnalyticalIntent)
 AnalyticalIntentFactory(AnalyticalIntentFactory)
 AnalyticalIntentSet(AnalyticalIntentSet)
@@ -148,6 +151,7 @@ ChartRenderPlan(ChartRenderPlan)
 ChartRenderPlanAdapterDispatcher(ChartRenderPlanAdapterDispatcher)
 ChartRenderPlanAdapterQualification(ChartRenderPlanAdapterQualification)
 ChartRenderPlanAdapterQualificationRules(ChartRenderPlanAdapterQualificationRules)
+ChartRenderPlanConsumptionContractBuilder(ChartRenderPlanConsumptionContractBuilder)
 ChartRenderPlanConsumptionContractMetadata(ChartRenderPlanConsumptionContractMetadata)
 ChartRenderPlanKind(ChartRenderPlanKind)
 ChartRenderPlanMetadataKeys(ChartRenderPlanMetadataKeys)
@@ -213,6 +217,10 @@ ConfidenceAnnotationEvaluator(ConfidenceAnnotationEvaluator)
 ConfidenceAnnotationKind(ConfidenceAnnotationKind)
 ConfidenceAnnotationSet(ConfidenceAnnotationSet)
 ConfidenceSeverity(ConfidenceSeverity)
+ConstructionEvidenceStatus(ConstructionEvidenceStatus)
+ConstructionMetadataKeys(ConstructionMetadataKeys)
+ConstructionRelation(ConstructionRelation)
+ConstructionRelationKind(ConstructionRelationKind)
 ConsumerDeliveryContract(ConsumerDeliveryContract)
 ConsumerDeliveryEvidence(ConsumerDeliveryEvidence)
 ConsumerDeliveryEvidenceSnapshot(ConsumerDeliveryEvidenceSnapshot)
@@ -240,7 +248,11 @@ DateRangeResult(DateRangeResult)
 DateRangeUiDiagnosticsSnapshot(DateRangeUiDiagnosticsSnapshot)
 DefaultTransformOperationProvider(DefaultTransformOperationProvider)
 DerivedDataset(DerivedDataset)
+DerivedDatasetConfidenceRules(DerivedDatasetConfidenceRules)
+DerivedDatasetFitnessRules(DerivedDatasetFitnessRules)
+DerivedDatasetRules(DerivedDatasetRules)
 DiagnosticsSnapshot(DiagnosticsSnapshot)
+DiffRatioChartController(DiffRatioChartController)
 DiffRatioChartControllerAdapter(DiffRatioChartControllerAdapter)
 DifferenceStrategy(DifferenceStrategy)
 DifferenceStrategyFactory(DifferenceStrategyFactory)
@@ -248,6 +260,7 @@ DistributionAxisCoordinator(DistributionAxisCoordinator)
 DistributionBackendKey(DistributionBackendKey)
 DistributionBackendQualification(DistributionBackendQualification)
 DistributionCapabilityContract(DistributionCapabilityContract)
+DistributionChartController(DistributionChartController)
 DistributionChartControllerAdapter(DistributionChartControllerAdapter)
 DistributionChartOrchestrationPipeline(DistributionChartOrchestrationPipeline)
 DistributionChartOrchestrationRequest(DistributionChartOrchestrationRequest)
@@ -428,6 +441,7 @@ LoadState(LoadState)
 LoadValidationInput(LoadValidationInput)
 LoadValidationInput(LoadValidationInput)
 LoadValidationInput(LoadValidationInput)
+LoadedChartDataSnapshot(LoadedChartDataSnapshot)
 LoadedContextDiagnosticsSnapshot(LoadedContextDiagnosticsSnapshot)
 LoadedMetricSeries(LoadedMetricSeries)
 MainChartController(MainChartController)
@@ -464,6 +478,7 @@ MainChartsViewThemeCoordinator(MainChartsViewThemeCoordinator)
 MainChartsViewToggleStateCoordinator(MainChartsViewToggleStateCoordinator)
 MainChartsViewToggleStateEvaluator(MainChartsViewToggleStateEvaluator)
 MainChartsViewZoomResetCoordinator(MainChartsViewZoomResetCoordinator)
+MainWindow(MainWindow)
 MainWindowViewModel(MainWindowViewModel)
 MathHelper(MathHelper)
 MessageBoxUserNotificationService(MessageBoxUserNotificationService)
@@ -508,6 +523,10 @@ OperationChainDatasetRow(OperationChainDatasetRow)
 OperationChainEvidence(OperationChainEvidence)
 OperationChainExecutionPlan(OperationChainExecutionPlan)
 OperationChainExecutor(OperationChainExecutor)
+OperationChainPlanningAssessment(OperationChainPlanningAssessment)
+OperationChainPlanningBudget(OperationChainPlanningBudget)
+OperationChainPlanningRules(OperationChainPlanningRules)
+OperationChainPlanningStatus(OperationChainPlanningStatus)
 OperationChainProgram(OperationChainProgram)
 OperationChainRequest(OperationChainRequest)
 OperationChainResult(OperationChainResult)
@@ -517,6 +536,7 @@ OperationChainTraceEntry(OperationChainTraceEntry)
 OperationChainTraceRow(OperationChainTraceRow)
 OperationChainWorkbenchPresentation(OperationChainWorkbenchPresentation)
 OperationChainWorkbenchPresenter(OperationChainWorkbenchPresenter)
+OperationChainWorkbenchView(OperationChainWorkbenchView)
 OperationKernel(OperationKernel)
 OverlayKind(OverlayKind)
 OverlayPlan(OverlayPlan)
@@ -583,6 +603,7 @@ SelectionStateBatchScope(SelectionStateBatchScope)
 SeriesAlignmentHelper(SeriesAlignmentHelper)
 SeriesOperationKind(SeriesOperationKind)
 SeriesOperationRequest(SeriesOperationRequest)
+SeriesOperationRules(SeriesOperationRules)
 SeriesResult(SeriesResult)
 SeriesSelectionDiagnosticsSnapshot(SeriesSelectionDiagnosticsSnapshot)
 SessionMilestoneSnapshot(SessionMilestoneSnapshot)
@@ -632,6 +653,7 @@ SyncfusionChartsViewCoordinator(SyncfusionChartsViewCoordinator)
 SyncfusionChartsViewLoadCoordinator(SyncfusionChartsViewLoadCoordinator)
 SyncfusionSunburstBackendKey(SyncfusionSunburstBackendKey)
 SyncfusionSunburstCapabilityContract(SyncfusionSunburstCapabilityContract)
+SyncfusionSunburstChartController(SyncfusionSunburstChartController)
 SyncfusionSunburstChartControllerAdapter(SyncfusionSunburstChartControllerAdapter)
 SyncfusionSunburstChartRenderHost(SyncfusionSunburstChartRenderHost)
 SyncfusionSunburstChartRenderRequest(SyncfusionSunburstChartRenderRequest)
@@ -819,22 +841,29 @@ AdminMetricsManagerCoordinator  -->  AdminEditableHealthMetricsCountEntry
 AdminMetricsManagerCoordinator  -->  AdminRowsChangedEventArgs 
 AdminMetricsManagerCoordinator  -->  AdminSaveResult 
 AdminMetricsManagerCoordinator  -->  AdminSessionMilestoneRecorder 
-AdminMetricsManagerCoordinator  -..->  AdminSessionMilestoneRecorder 
 AdminMetricsManagerCoordinator  --*  AdminSessionMilestoneRecorder 
-AdminMetricsManagerCoordinator  -..->  IAdminMetricsRepository 
-AdminMetricsManagerCoordinator  -->  IAdminMetricsRepository 
+AdminMetricsManagerCoordinator  -..->  AdminSessionMilestoneRecorder 
 AdminMetricsManagerCoordinator  --*  IAdminMetricsRepository 
+AdminMetricsManagerCoordinator  -->  IAdminMetricsRepository 
+AdminMetricsManagerCoordinator  -..->  IAdminMetricsRepository 
+AdminCountsLoadResult  ---  AdminMetricsManagerView 
+AdminMetricsManagerCoordinator  ---  AdminMetricsManagerView 
+AdminMetricsManagerCoordinator  ---  AdminMetricsManagerView 
+AdminRowsChangedEventArgs  ---  AdminMetricsManagerView 
+AdminSaveResult  ---  AdminMetricsManagerView 
+AdminSessionMilestoneRecorder  ---  AdminMetricsManagerView 
+AdminMetricsManagerView  -->  DataFetcher 
+DataFetcherAdminMetricsRepository  ---  AdminMetricsManagerView 
 AdminRowsChangedEventArgs  -->  AdminRowsChangedEventArgs 
 AdminRowsChangedEventArgs  -->  AdminRowsChangedEventArgs 
 AdminSaveResult  -->  AdminSaveResult 
 AdminSaveResult  -->  AdminSaveResult 
-ChartDataContext  ---  AdminSessionMilestoneRecorder 
 ChartState  ---  AdminSessionMilestoneRecorder 
-EvidenceDiagnosticsBuilder  ---  AdminSessionMilestoneRecorder 
 LoadRuntimeState  ---  AdminSessionMilestoneRecorder 
+LoadedChartDataSnapshot  ---  AdminSessionMilestoneRecorder 
 MetricSeriesSelection  ---  AdminSessionMilestoneRecorder 
 MetricState  ---  AdminSessionMilestoneRecorder 
-SessionMilestoneSnapshot  ---  AdminSessionMilestoneRecorder 
+AdminSessionMilestoneRecorder  -->  SessionMilestoneSnapshot 
 SharedMainWindowViewModelContext  ---  AdminSessionMilestoneRecorder 
 SharedMainWindowViewModelContext  ---  AdminSessionMilestoneRecorder 
 SharedMainWindowViewModelProvider  ---  AdminSessionMilestoneRecorder 
@@ -849,44 +878,48 @@ AnalyticalConsumerDeliveryResult  -->  AnalyticalConsumerDeliveryResult
 AnalyticalConsumerDeliveryResult  -->  AnalyticalConsumerDeliveryResult 
 AnalyticalExecutionResult  ---  AnalyticalConsumerDeliveryResult 
 AnalyticalExecutionResult  ---  AnalyticalConsumerDeliveryResult 
-AnalyticalConsumerDeliveryResult  --*  ConsumerDeliveryEvidence 
 AnalyticalConsumerDeliveryResult  -->  ConsumerDeliveryEvidence 
+AnalyticalConsumerDeliveryResult  --*  ConsumerDeliveryEvidence 
 AnalyticalExecutionResult  -->  AnalyticalExecutionResult 
 AnalyticalExecutionResult  -->  AnalyticalExecutionResult 
 AnalyticalExecutionResult  --*  AnalyticalIntent 
 AnalyticalExecutionResult  -->  AnalyticalIntent 
 AnalyticalExecutionResult  -->  AnalyticalIntent 
 AnalyticalExecutionResult  -->  ChartProgram 
-AnalyticalExecutionResult  -->  ChartProgram 
 AnalyticalExecutionResult  --*  ChartProgram 
+AnalyticalExecutionResult  -->  ChartProgram 
 AnalyticalExecutionResult  -->  ChartProgramRequest 
-AnalyticalExecutionResult  -->  MetricLoadSnapshot 
 AnalyticalExecutionResult  --*  MetricLoadSnapshot 
+AnalyticalExecutionResult  -->  MetricLoadSnapshot 
 AnalyticalExecutionResult  -->  MetricLoadSnapshot 
 AnalyticalExecutionResult  -->  MetricSelectionRequest 
 AnalyticalExecutionResult  -->  ProvenanceDescriptor 
 AnalyticalExecutionResult  -->  ProvenanceDescriptor 
+AnalyticalFitnessAssessment  -->  AnalyticalFitnessAssessment 
+AnalyticalFitnessAssessment  -->  AnalyticalFitnessAssessment 
+AnalyticalFitnessAssessment  -->  AnalyticalFitnessStatus 
+AnalyticalFitnessAssessment  --*  AnalyticalFitnessStatus 
 AnalyticalIntent  -->  AnalyticalIntent 
 AnalyticalIntent  -->  AnalyticalIntent 
-AnalyticalIntent  -->  CapabilityRequest 
-AnalyticalIntent  -->  CapabilityRequest 
 AnalyticalIntent  --*  CapabilityRequest 
+AnalyticalIntent  -->  CapabilityRequest 
+AnalyticalIntent  -->  CapabilityRequest 
 AnalyticalIntent  -->  ChartProgramDeliveryTargetResolver 
 AnalyticalIntent  -->  ChartProgramRequest 
 AnalyticalIntent  --*  ChartProgramRequest 
 AnalyticalIntent  -->  ChartProgramRequest 
 AnalyticalIntent  -->  ConsumerDeliveryContract 
-AnalyticalIntent  --*  ConsumerDeliveryContract 
 AnalyticalIntent  -->  ConsumerDeliveryContract 
-AnalyticalIntent  -->  InteractionRequest 
+AnalyticalIntent  --*  ConsumerDeliveryContract 
 AnalyticalIntent  --*  InteractionRequest 
-AnalyticalIntent  -->  MetricSelectionRequest 
+AnalyticalIntent  -->  InteractionRequest 
 AnalyticalIntent  -->  MetricSelectionRequest 
 AnalyticalIntent  --*  MetricSelectionRequest 
-AnalyticalIntent  -->  OverlayPlan 
+AnalyticalIntent  -->  MetricSelectionRequest 
 AnalyticalIntent  --*  OverlayPlan 
-AnalyticalIntent  --*  ProvenanceDescriptor 
+AnalyticalIntent  -->  OverlayPlan 
 AnalyticalIntent  -->  ProvenanceDescriptor 
+AnalyticalIntent  --*  ProvenanceDescriptor 
 AnalyticalIntent  -->  ProvenanceDescriptor 
 AnalyticalIntent  ---  AnalyticalIntentFactory 
 AnalyticalIntent  ---  AnalyticalIntentFactory 
@@ -902,8 +935,8 @@ MetricSelectionRequest  ---  AnalyticalIntentFactory
 OverlayPlan  ---  AnalyticalIntentFactory 
 ProvenanceDescriptor  ---  AnalyticalIntentFactory 
 SeriesOperationRequest  ---  AnalyticalIntentFactory 
-AnalyticalIntentSet  -->  AnalyticalIntent 
 AnalyticalIntentSet  --*  AnalyticalIntent 
+AnalyticalIntentSet  -->  AnalyticalIntent 
 AnalyticalIntentSet  -->  AnalyticalIntentSet 
 AnalyticalIntentSet  -->  AnalyticalIntentSet 
 AnalyticalIntentSet  -->  ChartProgramKind 
@@ -922,41 +955,41 @@ ChartProgram  ---  AnalyticalInterpretationBuilder
 ChartProgram  ---  AnalyticalInterpretationBuilder 
 ChartSeriesProgram  ---  AnalyticalInterpretationBuilder 
 ConfidenceAnnotation  ---  AnalyticalInterpretationBuilder 
-AnalyticalInterpretationBuilder  -->  ConfidenceAnnotationEvaluator 
 AnalyticalInterpretationBuilder  -..->  ConfidenceAnnotationEvaluator 
 AnalyticalInterpretationBuilder  --*  ConfidenceAnnotationEvaluator 
+AnalyticalInterpretationBuilder  -->  ConfidenceAnnotationEvaluator 
 ConfidenceAnnotationSet  ---  AnalyticalInterpretationBuilder 
 ConfidenceSeverity  ---  AnalyticalInterpretationBuilder 
+AnalyticalInterpretationBuilder  -..->  InterpretiveOverlayPlanner 
 AnalyticalInterpretationBuilder  -->  InterpretiveOverlayPlanner 
 AnalyticalInterpretationBuilder  --*  InterpretiveOverlayPlanner 
-AnalyticalInterpretationBuilder  -..->  InterpretiveOverlayPlanner 
 OverlayPlan  ---  AnalyticalInterpretationBuilder 
 AnalyticalInterpretationOptions  -->  AnalyticalInterpretationOptions 
 AnalyticalInterpretationOptions  -->  AnalyticalInterpretationOptions 
-AnalyticalInterpretationResult  --*  AnalyticalExecutionResult 
 AnalyticalInterpretationResult  -->  AnalyticalExecutionResult 
+AnalyticalInterpretationResult  --*  AnalyticalExecutionResult 
 AnalyticalInterpretationResult  -->  AnalyticalExecutionResult 
 AnalyticalInterpretationResult  -->  AnalyticalInterpretationResult 
 AnalyticalInterpretationResult  -->  AnalyticalInterpretationResult 
 AnalyticalInterpretationResult  --*  ConfidenceAnnotationSet 
 AnalyticalInterpretationResult  -->  ConfidenceAnnotationSet 
 AnalyticalInterpretationResult  -->  ConfidenceAnnotationSet 
-AnalyticalInterpretationResult  --*  OverlayPlan 
 AnalyticalInterpretationResult  -->  OverlayPlan 
+AnalyticalInterpretationResult  --*  OverlayPlan 
 AnalyticalInterpretationSetResult  --*  AnalyticalInterpretationResult 
 AnalyticalInterpretationSetResult  -->  AnalyticalInterpretationResult 
 AnalyticalInterpretationSetResult  -->  AnalyticalInterpretationSetResult 
 AnalyticalInterpretationSetResult  -->  AnalyticalInterpretationSetResult 
-AnalyticalInterpretationSetResult  -->  AnalyticalResultSet 
 AnalyticalInterpretationSetResult  --*  AnalyticalResultSet 
+AnalyticalInterpretationSetResult  -->  AnalyticalResultSet 
 AnalyticalInterpretationSetResult  -->  AnalyticalResultSet 
 AnalyticalRenderPlanPipeline  -->  AnalyticalConsumerDeliveryResult 
 AnalyticalExecutionResult  ---  AnalyticalRenderPlanPipeline 
 AnalyticalIntent  ---  AnalyticalRenderPlanPipeline 
 AnalyticalIntentSet  ---  AnalyticalRenderPlanPipeline 
-AnalyticalRenderPlanPipeline  --*  AnalyticalInterpretationBuilder 
-AnalyticalRenderPlanPipeline  -..->  AnalyticalInterpretationBuilder 
 AnalyticalRenderPlanPipeline  -->  AnalyticalInterpretationBuilder 
+AnalyticalRenderPlanPipeline  -..->  AnalyticalInterpretationBuilder 
+AnalyticalRenderPlanPipeline  --*  AnalyticalInterpretationBuilder 
 AnalyticalInterpretationOptions  ---  AnalyticalRenderPlanPipeline 
 AnalyticalInterpretationResult  ---  AnalyticalRenderPlanPipeline 
 AnalyticalInterpretationSetResult  ---  AnalyticalRenderPlanPipeline 
@@ -981,8 +1014,8 @@ ConsumerProviderRegistry  ---  AnalyticalRenderPlanPipeline
 ConsumerProviderRegistry  ---  AnalyticalRenderPlanPipeline 
 ConsumerProviderRegistry  ---  AnalyticalRenderPlanPipeline 
 AnalyticalRenderPlanPipeline  -->  IReasoningEngine 
-AnalyticalRenderPlanPipeline  --*  IReasoningEngine 
 AnalyticalRenderPlanPipeline  -..->  IReasoningEngine 
+AnalyticalRenderPlanPipeline  --*  IReasoningEngine 
 RenderDensityPolicy  ---  AnalyticalRenderPlanPipeline 
 RenderDensityPolicy  ---  AnalyticalRenderPlanPipeline 
 RenderDensityPolicy  ---  AnalyticalRenderPlanPipeline 
@@ -997,24 +1030,24 @@ AnalyticalRenderPlanSetResult  -->  AnalyticalRenderPlanSetResult
 AnalyticalResultSet  ---  AnalyticalRenderPlanSetResult 
 AnalyticalResultSet  ---  AnalyticalRenderPlanSetResult 
 ChartRenderPlan  ---  AnalyticalRenderPlanSetResult 
-AnalyticalResultSet  -->  AnalyticalExecutionResult 
 AnalyticalResultSet  --*  AnalyticalExecutionResult 
+AnalyticalResultSet  -->  AnalyticalExecutionResult 
 AnalyticalResultSet  -->  AnalyticalIntent 
 AnalyticalResultSet  -->  AnalyticalResultSet 
 AnalyticalResultSet  -->  AnalyticalResultSet 
 AnalyticalResultSet  -->  ChartProgram 
 AnalyticalResultSet  -->  ChartProgramKind 
 AnalyticalResultSet  -->  MetricSelectionRequest 
-AnalyticalResultSet  -->  MetricSelectionRequest 
 AnalyticalResultSet  --*  MetricSelectionRequest 
+AnalyticalResultSet  -->  MetricSelectionRequest 
 AppTheme  ---  App 
 AppThemeService  ---  App 
 AppThemeChangedEventArgs  -->  AppTheme 
-AppThemeChangedEventArgs  -->  AppTheme 
 AppThemeChangedEventArgs  --*  AppTheme 
+AppThemeChangedEventArgs  -->  AppTheme 
+AppThemeService  -->  AppTheme 
+AppThemeService  -->  AppTheme 
 AppThemeService  --*  AppTheme 
-AppThemeService  -->  AppTheme 
-AppThemeService  -->  AppTheme 
 AppThemeService  -->  AppThemeChangedEventArgs 
 AppThemeService  -->  AppThemeService 
 AxisModel  -->  AxisModel 
@@ -1046,8 +1079,8 @@ ConsumerDeliveryContract  ---  BarPieCapabilityContract
 ConsumerDeliveryContract  ---  BarPieCapabilityContract 
 IAnalyticalCapabilityContract  ---  BarPieCapabilityContract 
 BarPieChartController  -->  ChartPanelController 
-BarPieChartController  -..->  ChartPanelController 
 BarPieChartController  -->  ChartPanelController 
+BarPieChartController  -..->  ChartPanelController 
 ChartUiDefaults  ---  BarPieChartController 
 IBarPieChartController  ---  BarPieChartController 
 BarPieChartController  -..-|>  IChartPanelControllerHost 
@@ -1069,9 +1102,9 @@ BarPieChartControllerAdapter  -->  ChartControllerKeys
 ChartDataContext  ---  BarPieChartControllerAdapter 
 ChartProgramKind  ---  BarPieChartControllerAdapter 
 ChartState  ---  BarPieChartControllerAdapter 
-BarPieChartControllerAdapter  -..->  IBarPieChartController 
-BarPieChartControllerAdapter  --*  IBarPieChartController 
 BarPieChartControllerAdapter  -->  IBarPieChartController 
+BarPieChartControllerAdapter  --*  IBarPieChartController 
+BarPieChartControllerAdapter  -..->  IBarPieChartController 
 BarPieChartControllerAdapter  -..-|>  IBarPieChartControllerExtras 
 IBarPieRenderingContract  ---  BarPieChartControllerAdapter 
 IBarPieRenderingContract  ---  BarPieChartControllerAdapter 
@@ -1079,13 +1112,13 @@ IBarPieRenderingContract  ---  BarPieChartControllerAdapter
 BarPieChartControllerAdapter  -..-|>  IChartController 
 BarPieChartControllerAdapter  -->  IChartPanelControllerHost 
 BarPieChartControllerAdapter  -..->  IChartRenderer 
-BarPieChartControllerAdapter  -..->  IChartRendererResolver 
-BarPieChartControllerAdapter  -->  IChartRendererResolver 
 BarPieChartControllerAdapter  --*  IChartRendererResolver 
+BarPieChartControllerAdapter  -->  IChartRendererResolver 
+BarPieChartControllerAdapter  -..->  IChartRendererResolver 
 BarPieChartControllerAdapter  -..->  IChartSurface 
+BarPieChartControllerAdapter  --*  IChartSurfaceFactory 
 BarPieChartControllerAdapter  -..->  IChartSurfaceFactory 
 BarPieChartControllerAdapter  -->  IChartSurfaceFactory 
-BarPieChartControllerAdapter  --*  IChartSurfaceFactory 
 BarPieChartControllerAdapter  -..-|>  IWpfChartPanelHost 
 MainWindowViewModel  ---  BarPieChartControllerAdapter 
 MainWindowViewModel  ---  BarPieChartControllerAdapter 
@@ -1223,14 +1256,12 @@ MetricSeriesSelection  ---  BarPieSeriesValues
 MetricSeriesSelection  ---  BarPieSeriesValues 
 BarPieVNextConsumptionContractBuilder  -->  BarPieCapabilityContract 
 BarPieVNextConsumptionContractBuilder  -->  BarPieChartRenderRequest 
-CapabilityRequest  ---  BarPieVNextConsumptionContractBuilder 
-ChartProgramRequest  ---  BarPieVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  BarPieVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  BarPieVNextConsumptionContractBuilder 
-ChartRenderPlanMetadataKeys  ---  BarPieVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractBuilder  ---  BarPieVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractMetadata  ---  BarPieVNextConsumptionContractBuilder 
 ChartRendererKind  ---  BarPieVNextConsumptionContractBuilder 
 ConsumerProviderContracts  ---  BarPieVNextConsumptionContractBuilder 
-ConsumerSurfaceModel  ---  BarPieVNextConsumptionContractBuilder 
 UiChartRenderModel  ---  BarPieVNextConsumptionContractBuilder 
 VNextUiConsumptionContract  ---  BarPieVNextConsumptionContractBuilder 
 VNextUiConsumptionContract  ---  BarPieVNextConsumptionContractBuilder 
@@ -1331,15 +1362,15 @@ UiState  ---  BusyStateTracker
 UiState  ---  BusyStateTracker 
 UiState  ---  BusyStateTracker 
 CapabilityRequest  -->  AnalyticalCapabilityKind 
-CapabilityRequest  --*  AnalyticalCapabilityKind 
 CapabilityRequest  -->  AnalyticalCapabilityKind 
+CapabilityRequest  --*  AnalyticalCapabilityKind 
 CapabilityRequest  -->  CapabilityRequest 
 CapabilityRequest  -->  CapabilityRequest 
 CapabilityRequest  -->  ChartDisplayMode 
 CapabilityRequest  -->  ChartProgramKind 
 CapabilityRequest  -->  ChartProgramRequest 
-CapabilityRequest  -->  CompositionKind 
 CapabilityRequest  --*  CompositionKind 
+CapabilityRequest  -->  CompositionKind 
 CapabilityRequest  -->  CompositionKind 
 CapabilityRequest  --*  SeriesOperationRequest 
 CapabilityRequest  -->  SeriesOperationRequest 
@@ -1356,10 +1387,10 @@ CartesianMetricBackendQualification  --*  CartesianMetricBackendKey
 CartesianMetricBackendQualification  -->  CartesianMetricBackendKey 
 CartesianMetricBackendQualification  -->  CartesianMetricBackendQualification 
 CartesianMetricBackendQualification  -->  CartesianMetricBackendQualification 
-CartesianMetricBackendQualification  -->  CartesianMetricChartRoute 
 CartesianMetricBackendQualification  --*  CartesianMetricChartRoute 
-CartesianMetricBackendQualification  --*  CartesianMetricRenderingQualification 
+CartesianMetricBackendQualification  -->  CartesianMetricChartRoute 
 CartesianMetricBackendQualification  -->  CartesianMetricRenderingQualification 
+CartesianMetricBackendQualification  --*  CartesianMetricRenderingQualification 
 CapabilityRequest  ---  CartesianMetricCapabilityContract 
 CapabilityRequest  ---  CartesianMetricCapabilityContract 
 CapabilityRequest  ---  CartesianMetricCapabilityContract 
@@ -1394,8 +1425,8 @@ CartesianMetricChartRenderRequest  -->  CartesianMetricCapabilityContract
 CartesianMetricChartRenderRequest  --*  CartesianMetricCapabilityContract 
 CartesianMetricChartRenderRequest  -->  CartesianMetricChartRenderRequest 
 CartesianMetricChartRenderRequest  -->  CartesianMetricChartRenderRequest 
-CartesianMetricChartRenderRequest  -->  CartesianMetricChartRoute 
 CartesianMetricChartRenderRequest  --*  CartesianMetricChartRoute 
+CartesianMetricChartRenderRequest  -->  CartesianMetricChartRoute 
 ChartDataContext  ---  CartesianMetricChartRenderRequest 
 ChartDataContext  ---  CartesianMetricChartRenderRequest 
 MetricSeriesSelection  ---  CartesianMetricChartRenderRequest 
@@ -1460,34 +1491,33 @@ CartesianMetricRenderPlanBuilder  -->  LiveChartsRenderPlanAdapter
 SeriesResult  ---  CartesianMetricRenderPlanBuilder 
 CartesianMetricRenderingCapabilities  -->  CartesianMetricRenderingCapabilities 
 CartesianMetricRenderingCapabilities  -->  CartesianMetricRenderingCapabilities 
-CartesianMetricRenderingCapabilities  --*  CartesianMetricRenderingQualification 
 CartesianMetricRenderingCapabilities  -->  CartesianMetricRenderingQualification 
+CartesianMetricRenderingCapabilities  --*  CartesianMetricRenderingQualification 
 CapabilityRequest  ---  CartesianMetricVNextConsumptionContractBuilder 
 CartesianMetricVNextConsumptionContractBuilder  -->  CartesianMetricCapabilityContract 
 CartesianMetricVNextConsumptionContractBuilder  -->  CartesianMetricChartRenderRequest 
 ChartProgramDeliveryTargetResolver  ---  CartesianMetricVNextConsumptionContractBuilder 
 ChartProgramRequest  ---  CartesianMetricVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  CartesianMetricVNextConsumptionContractBuilder 
-ChartRenderPlanMetadataKeys  ---  CartesianMetricVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractBuilder  ---  CartesianMetricVNextConsumptionContractBuilder 
 ConsumerDeliveryContract  ---  CartesianMetricVNextConsumptionContractBuilder 
 ConsumerProviderContracts  ---  CartesianMetricVNextConsumptionContractBuilder 
-ConsumerSurfaceModel  ---  CartesianMetricVNextConsumptionContractBuilder 
 VNextUiConsumptionContract  ---  CartesianMetricVNextConsumptionContractBuilder 
 VNextUiConsumptionContract  ---  CartesianMetricVNextConsumptionContractBuilder 
 ChangeActions  -->  ChangeActions 
 ChangeActions  -->  ChangeActions 
 ChartDataContext  ---  ChangeActions 
 ChartBackendCandidateSet  -->  ChartBackendCandidateSet 
-ChartBackendCandidateSet  -->  ChartBackendCapabilities 
-ChartBackendCandidateSet  -->  ChartBackendCapabilities 
 ChartBackendCandidateSet  --*  ChartBackendCapabilities 
+ChartBackendCandidateSet  -->  ChartBackendCapabilities 
+ChartBackendCandidateSet  -->  ChartBackendCapabilities 
 ChartBackendCandidateSet  -->  ChartRenderPlan 
 ChartBackendCandidateSet  -->  ChartRenderPlanAdapterQualificationRules 
 ChartBackendCandidateSet  -->  ChartRenderPlanKind 
 ChartBackendCapabilities  -->  ChartBackendCapabilities 
 ChartBackendCapabilities  -->  ChartBackendCapabilities 
-ChartBackendCapabilities  -->  ChartRenderPlanKind 
 ChartBackendCapabilities  --*  ChartRenderPlanKind 
+ChartBackendCapabilities  -->  ChartRenderPlanKind 
 ChartBackendSelector  -->  ChartBackendCandidateSet 
 ChartBackendSelector  -->  ChartBackendCapabilities 
 ChartBackendSelector  -->  ChartBackendCapabilities 
@@ -1511,9 +1541,9 @@ ChartDataContext  ---  ChartControllerAdapterBase
 ChartPanelController  ---  ChartControllerAdapterBase 
 ChartState  ---  ChartControllerAdapterBase 
 ChartControllerAdapterBase  -..-|>  IChartController 
-ChartControllerAdapterBase  -->  IChartPanelControllerHost 
 ChartControllerAdapterBase  -..->  IChartPanelControllerHost 
 ChartControllerAdapterBase  --*  IChartPanelControllerHost 
+ChartControllerAdapterBase  -->  IChartPanelControllerHost 
 ChartControllerAdapterBase  -..-|>  IWpfChartPanelHost 
 ChartControllerFactory  -->  BarPieChartControllerAdapter 
 BarPieRenderingContract  ---  ChartControllerFactory 
@@ -1558,29 +1588,29 @@ ChartUpdateCoordinator  ---  ChartControllerFactoryContext
 ChartUpdateCoordinator  ---  ChartControllerFactoryContext 
 DistributionPolarRenderingService  ---  ChartControllerFactoryContext 
 DistributionPolarRenderingService  ---  ChartControllerFactoryContext 
-ChartControllerFactoryContext  --*  IBarPieChartController 
 ChartControllerFactoryContext  -->  IBarPieChartController 
-ChartControllerFactoryContext  -->  IChartRendererResolver 
+ChartControllerFactoryContext  --*  IBarPieChartController 
 ChartControllerFactoryContext  --*  IChartRendererResolver 
+ChartControllerFactoryContext  -->  IChartRendererResolver 
 ChartControllerFactoryContext  -->  IChartSurfaceFactory 
 ChartControllerFactoryContext  --*  IChartSurfaceFactory 
-ChartControllerFactoryContext  -->  IDiffRatioChartController 
 ChartControllerFactoryContext  --*  IDiffRatioChartController 
-ChartControllerFactoryContext  --*  IDistributionChartController 
+ChartControllerFactoryContext  -->  IDiffRatioChartController 
 ChartControllerFactoryContext  -->  IDistributionChartController 
+ChartControllerFactoryContext  --*  IDistributionChartController 
 IDistributionService  ---  ChartControllerFactoryContext 
 IDistributionService  ---  ChartControllerFactoryContext 
-ChartControllerFactoryContext  -->  IMainChartController 
 ChartControllerFactoryContext  --*  IMainChartController 
-ChartControllerFactoryContext  --*  INormalizedChartController 
+ChartControllerFactoryContext  -->  IMainChartController 
 ChartControllerFactoryContext  -->  INormalizedChartController 
+ChartControllerFactoryContext  --*  INormalizedChartController 
 IStrategyCutOverService  ---  ChartControllerFactoryContext 
-ChartControllerFactoryContext  -->  ISyncfusionSunburstChartController 
 ChartControllerFactoryContext  --*  ISyncfusionSunburstChartController 
-ChartControllerFactoryContext  -->  ITransformDataPanelController 
+ChartControllerFactoryContext  -->  ISyncfusionSunburstChartController 
 ChartControllerFactoryContext  --*  ITransformDataPanelController 
-ChartControllerFactoryContext  -->  IWeekdayTrendChartController 
+ChartControllerFactoryContext  -->  ITransformDataPanelController 
 ChartControllerFactoryContext  --*  IWeekdayTrendChartController 
+ChartControllerFactoryContext  -->  IWeekdayTrendChartController 
 MainWindowViewModel  ---  ChartControllerFactoryContext 
 MainWindowViewModel  ---  ChartControllerFactoryContext 
 MetricSelectionService  ---  ChartControllerFactoryContext 
@@ -1591,20 +1621,20 @@ ChartControllerFactoryResult  --*  BarPieChartControllerAdapter
 ChartControllerFactoryResult  -->  BarPieChartControllerAdapter 
 ChartControllerFactoryResult  -->  ChartControllerFactoryResult 
 ChartControllerFactoryResult  -->  ChartControllerFactoryResult 
-ChartControllerFactoryResult  --*  DiffRatioChartControllerAdapter 
 ChartControllerFactoryResult  -->  DiffRatioChartControllerAdapter 
+ChartControllerFactoryResult  --*  DiffRatioChartControllerAdapter 
 ChartControllerFactoryResult  -->  DistributionChartControllerAdapter 
 ChartControllerFactoryResult  --*  DistributionChartControllerAdapter 
-ChartControllerFactoryResult  --*  IChartControllerRegistry 
 ChartControllerFactoryResult  -->  IChartControllerRegistry 
+ChartControllerFactoryResult  --*  IChartControllerRegistry 
 ChartControllerFactoryResult  --*  MainChartControllerAdapter 
 ChartControllerFactoryResult  -->  MainChartControllerAdapter 
 ChartControllerFactoryResult  --*  NormalizedChartControllerAdapter 
 ChartControllerFactoryResult  -->  NormalizedChartControllerAdapter 
 ChartControllerFactoryResult  -->  TransformDataPanelControllerAdapter 
 ChartControllerFactoryResult  --*  TransformDataPanelControllerAdapter 
-ChartControllerFactoryResult  --*  WeekdayTrendChartControllerAdapter 
 ChartControllerFactoryResult  -->  WeekdayTrendChartControllerAdapter 
+ChartControllerFactoryResult  --*  WeekdayTrendChartControllerAdapter 
 ChartControllerRegistry  -->  IChartController 
 ChartControllerRegistry  -->  IChartController 
 ChartControllerRegistry  -..-|>  IChartControllerRegistry 
@@ -1627,8 +1657,8 @@ MetricData  ---  ChartHelper
 ChartHelper  -->  TransformChartAxisCalculator 
 ChartHelper  -->  TransformChartAxisLayout 
 ChartHierarchyNodePlan  -->  ChartHierarchyNodePlan 
-ChartHierarchyNodePlan  --*  ChartHierarchyNodePlan 
 ChartHierarchyNodePlan  -->  ChartHierarchyNodePlan 
+ChartHierarchyNodePlan  --*  ChartHierarchyNodePlan 
 ChartHostDateRangeCoordinator  -->  Actions 
 MetricNameOption  ---  ChartHostMetricSelectionCoordinator 
 ChartHostMetricSelectionCoordinator  -->  MetricTypeSelectionChangedActions 
@@ -1654,19 +1684,19 @@ IChartRenderingContext  ---  ChartPanelController
 IChartRenderingContext  ---  ChartPanelController 
 IChartRenderingContext  ---  ChartPanelController 
 ChartPanelController  -->  UiDefaults 
-ChartPanelSurface  -..->  IChartPanelHost 
 ChartPanelSurface  --*  IChartPanelHost 
+ChartPanelSurface  -..->  IChartPanelHost 
 ChartPanelSurface  -->  IChartPanelHost 
 ChartPanelSurface  -..-|>  IChartSurface 
 ChartPanelSurface  -..-|>  ITrackedCartesianChartSurface 
 ChartPanelSurface  -..-|>  ITrackedChartContentSurface 
 ChartPresentationSpine  -->  MainWindowViewModel 
-ChartProgram  -->  ChartDisplayMode 
 ChartProgram  --*  ChartDisplayMode 
+ChartProgram  -->  ChartDisplayMode 
 ChartProgram  -->  ChartProgram 
 ChartProgram  -->  ChartProgram 
-ChartProgram  --*  ChartProgramKind 
 ChartProgram  -->  ChartProgramKind 
+ChartProgram  --*  ChartProgramKind 
 ChartProgram  --*  ChartSeriesProgram 
 ChartProgramDeliveryTargetResolver  -->  ChartProgramKind 
 ChartProgramDeliveryTargetResolver  -->  ConsumerDeliveryContract 
@@ -1689,16 +1719,16 @@ SeriesOperationRequest  ---  ChartProgramPlanner
 TimeSeriesAlignmentKernel  ---  ChartProgramPlanner 
 TimeSeriesAlignmentKernel  ---  ChartProgramPlanner 
 TimeSeriesAlignmentKernel  ---  ChartProgramPlanner 
+ChartProgramRequest  -->  ChartDisplayMode 
 ChartProgramRequest  --*  ChartDisplayMode 
 ChartProgramRequest  -->  ChartDisplayMode 
-ChartProgramRequest  -->  ChartDisplayMode 
+ChartProgramRequest  -->  ChartProgramKind 
+ChartProgramRequest  -->  ChartProgramKind 
 ChartProgramRequest  --*  ChartProgramKind 
-ChartProgramRequest  -->  ChartProgramKind 
-ChartProgramRequest  -->  ChartProgramKind 
 ChartProgramRequest  -->  ChartProgramRequest 
 ChartProgramRequest  -->  ChartProgramRequest 
-ChartProgramRequest  --*  SeriesOperationRequest 
 ChartProgramRequest  -->  SeriesOperationRequest 
+ChartProgramRequest  --*  SeriesOperationRequest 
 ChartProgramKind  ---  ChartProgramRequestPlanner 
 ChartProgramRequest  ---  ChartProgramRequestPlanner 
 ChartState  ---  ChartProgramRequestPlanner 
@@ -1710,8 +1740,8 @@ ChartRenderAdapterResult  -->  ChartRenderAdapterResult
 ChartRenderAdapterResult  -->  ChartRenderAdapterResult 
 ChartRenderAdapterResult  --*  ChartRenderDensityMode 
 ChartRenderAdapterResult  -->  ChartRenderDensityMode 
-ChartRenderAdapterResult  -->  ChartRenderPlanKind 
 ChartRenderAdapterResult  --*  ChartRenderPlanKind 
+ChartRenderAdapterResult  -->  ChartRenderPlanKind 
 ChartRenderDeliveryBinding  -->  ChartBackendCandidateSet 
 ChartRenderDeliveryBinding  -->  ChartBackendCapabilities 
 ChartRenderDeliveryBinding  --*  ChartBackendCapabilities 
@@ -1757,15 +1787,15 @@ ChartRenderPlan  -->  ChartRenderPlan
 ChartRenderPlan  -->  ChartRenderPlan 
 ChartRenderPlan  --*  ChartRenderPlanKind 
 ChartRenderPlan  -->  ChartRenderPlanKind 
-ChartRenderPlan  -->  ChartSeriesPlan 
 ChartRenderPlan  --*  ChartSeriesPlan 
-ChartRenderPlan  --*  RenderDensityPlan 
+ChartRenderPlan  -->  ChartSeriesPlan 
 ChartRenderPlan  -->  RenderDensityPlan 
+ChartRenderPlan  --*  RenderDensityPlan 
 ChartRenderPlanAdapterDispatcher  -->  ChartRenderAdapterResult 
 ChartRenderPlanAdapterDispatcher  -->  ChartRenderPlan 
 ChartRenderPlanAdapterDispatcher  -->  ChartRenderPlanMetadataKeys 
-ChartRenderPlanAdapterDispatcher  --*  IChartRenderPlanAdapter 
 ChartRenderPlanAdapterDispatcher  -->  IChartRenderPlanAdapter 
+ChartRenderPlanAdapterDispatcher  --*  IChartRenderPlanAdapter 
 ChartRenderPlanAdapterQualification  -->  ChartRenderPlanAdapterQualification 
 ChartRenderPlanAdapterQualification  -->  ChartRenderPlanAdapterQualification 
 ChartRenderPlanAdapterQualificationRules  -->  ChartBackendCapabilities 
@@ -1773,6 +1803,15 @@ ChartRenderPlanAdapterQualificationRules  -->  ChartRenderPlan
 ChartRenderPlanAdapterQualificationRules  -->  ChartRenderPlanAdapterQualification 
 ChartRenderPlanAdapterQualificationRules  -->  ChartRenderPlanAdapterQualification 
 ChartRenderPlanAdapterQualificationRules  -->  ChartRenderPlanMetadataKeys 
+ChartRenderPlanConsumptionContractBuilder  -->  CapabilityRequest 
+ChartRenderPlanConsumptionContractBuilder  -->  ChartProgramRequest 
+ChartRenderPlan  ---  ChartRenderPlanConsumptionContractBuilder 
+ChartRenderPlanMetadataKeys  ---  ChartRenderPlanConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractBuilder  -->  ConsumerProviderContract 
+ChartRenderPlanConsumptionContractBuilder  -->  ConsumerSurfaceModel 
+ChartRenderPlanConsumptionContractBuilder  -->  IAnalyticalCapabilityContract 
+ChartRenderPlanConsumptionContractBuilder  -->  VNextUiConsumptionContract 
+ChartRenderPlanConsumptionContractBuilder  -->  VNextUiConsumptionContract 
 ChartRenderPlan  ---  ChartRenderPlanConsumptionContractMetadata 
 ChartRenderPlan  ---  ChartRenderPlanConsumptionContractMetadata 
 ChartRenderPlanConsumptionContractMetadata  -->  ConsumerSurfaceModel 
@@ -1781,8 +1820,8 @@ AnalyticalExecutionResult  ---  ChartRenderPlanProjector
 AnalyticalIntent  ---  ChartRenderPlanProjector 
 CapabilityRequest  ---  ChartRenderPlanProjector 
 ChartRenderPlanProjector  -->  ChartHierarchyNodePlan 
-ChartRenderPlanProjector  -->  ChartInteractionPlan 
 ChartRenderPlanProjector  -..->  ChartInteractionPlan 
+ChartRenderPlanProjector  -->  ChartInteractionPlan 
 ChartProgram  ---  ChartRenderPlanProjector 
 ChartRenderPlanProjector  -->  ChartRenderDensityMode 
 ChartRenderPlanProjector  -->  ChartRenderPlan 
@@ -1798,8 +1837,8 @@ ProvenanceDescriptor  ---  ChartRenderPlanProjector
 ChartRenderPlanProjector  -->  RenderDataBuffer 
 ChartRenderPlanProjector  -->  RenderDensityPlan 
 ChartRenderPlanProjector  -->  TimeBucketRenderAggregationKernel 
-ChartRenderPlanProjector  -..->  TimeBucketRenderAggregationKernel 
 ChartRenderPlanProjector  --*  TimeBucketRenderAggregationKernel 
+ChartRenderPlanProjector  -..->  TimeBucketRenderAggregationKernel 
 ChartProgramKind  ---  ChartRenderPlanProviderMetadata 
 ChartRenderPlanProviderMetadata  -->  ChartRenderPlanKind 
 ChartRenderPlanProviderMetadata  -->  ChartRenderPlanKind 
@@ -1818,10 +1857,10 @@ ChartRendererResolver  -->  ChartRendererKind
 ChartRendererResolver  --*  ChartRendererKind 
 ChartRendererResolver  -->  ChartRendererKind 
 ChartRendererResolver  -->  EChartsChartRenderer 
-ChartRendererResolver  --*  IChartRenderer 
-ChartRendererResolver  -->  IChartRenderer 
-ChartRendererResolver  -->  IChartRenderer 
 ChartRendererResolver  -..->  IChartRenderer 
+ChartRendererResolver  -->  IChartRenderer 
+ChartRendererResolver  -->  IChartRenderer 
+ChartRendererResolver  --*  IChartRenderer 
 ChartRendererResolver  -..-|>  IChartRendererResolver 
 ChartRendererResolver  -->  LiveChartsChartRenderer 
 ChartDataContext  ---  ChartRenderingContextAdapter 
@@ -1888,14 +1927,15 @@ ChartSeriesModel  -->  ChartSeriesType
 ChartSeriesModel  -->  ChartSeriesType 
 ChartSeriesPlan  -->  ChartSeriesPlan 
 ChartSeriesPlan  -->  ChartSeriesPlan 
-ChartSeriesPlan  -->  RenderDataBuffer 
 ChartSeriesPlan  --*  RenderDataBuffer 
+ChartSeriesPlan  -->  RenderDataBuffer 
 ChartSeriesProgram  -->  ChartSeriesProgram 
 ChartSeriesProgram  -->  ChartSeriesProgram 
 SeriesResult  ---  ChartStackingTooltipState 
 SeriesResult  ---  ChartStackingTooltipState 
 AnalyticalExecutionResult  ---  ChartState 
 AnalyticalInterpretationResult  ---  ChartState 
+ChartDataContext  ---  ChartState 
 ChartDataContext  ---  ChartState 
 ChartDataContext  ---  ChartState 
 ChartProgram  ---  ChartState 
@@ -1912,6 +1952,8 @@ EvidenceRuntimePath  ---  ChartState
 InterpretationResultDiagnosticsSnapshot  ---  ChartState 
 ChartState  -->  LoadRuntimeState 
 ChartState  -->  LoadRuntimeState 
+ChartState  -->  LoadedChartDataSnapshot 
+ChartState  -->  LoadedChartDataSnapshot 
 ChartState  -->  MainChartDisplayMode 
 ChartState  -->  MainChartDisplayMode 
 MetricSeriesSelection  ---  ChartState 
@@ -1934,18 +1976,18 @@ ChartSurfaceFactory  -->  ChartPanelSurface
 ChartSurfaceFactory  -->  ChartRendererKind 
 ChartSurfaceFactory  -->  EChartsWebViewSurface 
 ChartSurfaceFactory  -->  IChartPanelHost 
-ChartSurfaceFactory  --*  IChartRendererResolver 
 ChartSurfaceFactory  -..->  IChartRendererResolver 
 ChartSurfaceFactory  -->  IChartRendererResolver 
+ChartSurfaceFactory  --*  IChartRendererResolver 
 ChartSurfaceFactory  -->  IChartSurface 
 ChartSurfaceFactory  -->  IChartSurface 
 ChartSurfaceFactory  -..-|>  IChartSurfaceFactory 
 ChartHelper  ---  ChartSurfaceHelper 
 ChartState  ---  ChartSurfaceHelper 
 ChartSurfaceHelper  -->  ChartUiHelper 
-ChartTabHost  -->  MetricSelectionPanel 
-ChartTabHost  -->  MetricSelectionPanel 
 ChartTabHost  -..->  MetricSelectionPanel 
+ChartTabHost  -->  MetricSelectionPanel 
+ChartTabHost  -->  MetricSelectionPanel 
 ChartStackingTooltipState  ---  ChartTooltipCumulativeFormatter 
 ChartTooltipCumulativeFormatter  -->  ChartTooltipSeriesFilter 
 ChartTooltipCumulativeFormatter  -->  ChartTooltipSeriesTitleParser 
@@ -2065,20 +2107,20 @@ UnitResolutionService  ---  CmsBucketDistributionStrategy
 MetricData  ---  CmsConversionHelper 
 CmsConversionHelper  ---  CmsDataService 
 DataAccessDefaults  ---  CmsDataService 
-CmsDataService  -..->  DataFetcher 
 CmsDataService  -->  DataFetcher 
+CmsDataService  -..->  DataFetcher 
 MetricData  ---  CmsDataService 
 SamplingMode  ---  CmsDataService 
 CmsExecutionResult  -->  ParitySeries 
-CmsHourlyDistributionStrategy  -->  CmsBucketDistributionStrategy 
 CmsHourlyDistributionStrategy  -..-|>  CmsBucketDistributionStrategy 
+CmsHourlyDistributionStrategy  -->  CmsBucketDistributionStrategy 
 HourlyFrequencyRenderer  ---  CmsHourlyDistributionStrategy 
 CmsHourlyDistributionStrategy  -..-|>  IChartComputationStrategy 
 IUnitResolutionService  ---  CmsHourlyDistributionStrategy 
 CmsPoint  -->  CmsPoint 
 CmsPoint  -->  CmsPoint 
-CmsWeeklyDistributionStrategy  -->  CmsBucketDistributionStrategy 
 CmsWeeklyDistributionStrategy  -..-|>  CmsBucketDistributionStrategy 
+CmsWeeklyDistributionStrategy  -->  CmsBucketDistributionStrategy 
 CmsWeeklyDistributionStrategy  -..-|>  IChartComputationStrategy 
 IUnitResolutionService  ---  CmsWeeklyDistributionStrategy 
 WeeklyFrequencyRenderer  ---  CmsWeeklyDistributionStrategy 
@@ -2116,8 +2158,8 @@ CombinedMetricStrategy  ---  CombinedMetricStrategyFactory
 CombinedMetricStrategyFactory  -..-|>  IStrategyFactory 
 MetricData  ---  CombinedMetricStrategyFactory 
 StrategyCreationParameters  ---  CombinedMetricStrategyFactory 
-CombinedMetricStrategyFactory  -->  StrategyFactoryBase 
 CombinedMetricStrategyFactory  -..-|>  StrategyFactoryBase 
+CombinedMetricStrategyFactory  -->  StrategyFactoryBase 
 ConfidenceAnnotation  -->  ConfidenceAnnotation 
 ConfidenceAnnotation  -->  ConfidenceAnnotation 
 ConfidenceAnnotation  --*  ConfidenceAnnotationKind 
@@ -2140,14 +2182,19 @@ ConfidenceAnnotationSet  -->  ConfidenceAnnotation
 ConfidenceAnnotationSet  -->  ConfidenceAnnotationSet 
 ConfidenceAnnotationSet  -->  ConfidenceAnnotationSet 
 ConfidenceAnnotationSet  -->  ConfidenceSeverity 
+ConstructionRelation  -->  ConstructionRelation 
+ConstructionRelation  -->  ConstructionRelation 
+ConstructionRelation  -->  ConstructionRelationKind 
+ConstructionRelation  --*  ConstructionRelationKind 
+ConstructionRelation  -->  ConstructionRelationKind 
+ConsumerDeliveryContract  -->  ChartProgramKind 
 ConsumerDeliveryContract  -->  ChartProgramKind 
 ConsumerDeliveryContract  --*  ChartProgramKind 
-ConsumerDeliveryContract  -->  ChartProgramKind 
 ConsumerDeliveryContract  -->  ConsumerDeliveryContract 
 ConsumerDeliveryContract  -->  ConsumerDeliveryContract 
-ConsumerDeliveryContract  -->  ConsumerKind 
-ConsumerDeliveryContract  -->  ConsumerKind 
 ConsumerDeliveryContract  --*  ConsumerKind 
+ConsumerDeliveryContract  -->  ConsumerKind 
+ConsumerDeliveryContract  -->  ConsumerKind 
 AnalyticalCapabilityKind  ---  ConsumerDeliveryEvidence 
 AnalyticalCapabilityKind  ---  ConsumerDeliveryEvidence 
 AnalyticalCapabilityKind  ---  ConsumerDeliveryEvidence 
@@ -2190,18 +2237,19 @@ ConsumerProviderContracts  -->  ConsumerProviderContract
 ChartRenderPlanKind  ---  ConsumerProviderRegistry 
 ConsumerProviderRegistry  -->  ConsumerDeliveryContract 
 ConsumerProviderRegistry  -->  ConsumerProviderContract 
-ConsumerProviderRegistry  --*  ConsumerProviderContract 
 ConsumerProviderRegistry  -->  ConsumerProviderContract 
+ConsumerProviderRegistry  --*  ConsumerProviderContract 
 ConsumerProviderRegistry  -->  ConsumerProviderContracts 
 ConsumerProviderRegistry  -->  ConsumerProviderRegistry 
 ChartRenderPlan  ---  ConsumerSurfaceModel 
 ChartRenderPlanKind  ---  ConsumerSurfaceModel 
 ChartRenderPlanKind  ---  ConsumerSurfaceModel 
+ConsumerSurfaceModel  -->  ConstructionMetadataKeys 
 ConsumerSurfaceModel  -->  ConsumerSurfaceModel 
 ConsumerSurfaceModel  -->  ConsumerSurfaceModel 
+ConsumerSurfaceModel  -->  ConsumerSurfaceModelKind 
 ConsumerSurfaceModel  -->  ConsumerSurfaceModelKind 
 ConsumerSurfaceModel  --*  ConsumerSurfaceModelKind 
-ConsumerSurfaceModel  -->  ConsumerSurfaceModelKind 
 ConsumerSurfaceModel  -->  DerivedDataset 
 ChartTooltipManager  ---  Context 
 ChartTooltipManager  ---  Context 
@@ -2212,10 +2260,10 @@ DataFetcher  -->  DataFetcherAdminQueries
 DataFetcher  -..->  DataFetcherAdminQueries 
 DataFetcher  -->  DataFetcherDateRangeQueries 
 DataFetcher  -..->  DataFetcherDateRangeQueries 
-DataFetcher  -..->  DataFetcherMetricCatalogQueries 
 DataFetcher  -->  DataFetcherMetricCatalogQueries 
-DataFetcher  -->  DataFetcherMetricDataQueries 
+DataFetcher  -..->  DataFetcherMetricCatalogQueries 
 DataFetcher  -..->  DataFetcherMetricDataQueries 
+DataFetcher  -->  DataFetcherMetricDataQueries 
 HealthMetricsCountEntry  ---  DataFetcher 
 DataFetcher  -..-|>  IMetricSelectionDataQueries 
 MetricData  ---  DataFetcher 
@@ -2236,13 +2284,13 @@ DataFetcherDateRangeQueries  -->  DataFetcherQueryGroup
 DateRangeResult  ---  DataFetcherDateRangeQueries 
 SqlQueryBuilder  ---  DataFetcherDateRangeQueries 
 DataAccessDefaults  ---  DataFetcherMetricCatalogQueries 
-DataFetcherMetricCatalogQueries  -..-|>  DataFetcherQueryGroup 
 DataFetcherMetricCatalogQueries  -->  DataFetcherQueryGroup 
+DataFetcherMetricCatalogQueries  -..-|>  DataFetcherQueryGroup 
 MetricNameOption  ---  DataFetcherMetricCatalogQueries 
 SqlQueryBuilder  ---  DataFetcherMetricCatalogQueries 
 DataAccessDefaults  ---  DataFetcherMetricDataQueries 
-DataFetcherMetricDataQueries  -->  DataFetcherQueryGroup 
 DataFetcherMetricDataQueries  -..-|>  DataFetcherQueryGroup 
+DataFetcherMetricDataQueries  -->  DataFetcherQueryGroup 
 MetricData  ---  DataFetcherMetricDataQueries 
 DataFetcherMetricDataQueries  -->  QueryMode 
 DataFetcherMetricDataQueries  -->  QueryMode 
@@ -2257,8 +2305,29 @@ CmsConversionHelper  ---  DataPreparationService
 DataPreparationService  -..-|>  IDataPreparationService 
 MetricData  ---  DataPreparationService 
 DefaultTransformOperationProvider  -..-|>  ITransformOperationProvider 
+DerivedDataset  -->  AnalyticalFitnessAssessment 
+DerivedDataset  -->  AnalyticalFitnessAssessment 
+DerivedDataset  -->  ConfidenceAnnotationSet 
+DerivedDataset  -->  ConfidenceAnnotationSet 
+DerivedDataset  -->  ConstructionRelation 
+DerivedDataset  --*  ConstructionRelation 
+DerivedDataset  -->  ConstructionRelationKind 
 DerivedDataset  -->  DerivedDataset 
 DerivedDataset  -->  DerivedDataset 
+DerivedDataset  -->  DerivedDatasetConfidenceRules 
+DerivedDataset  -->  DerivedDatasetFitnessRules 
+DerivedDataset  -->  DerivedDatasetRules 
+DerivedDatasetConfidenceRules  -->  ConfidenceAnnotation 
+DerivedDatasetConfidenceRules  -->  ConfidenceAnnotationKind 
+DerivedDatasetConfidenceRules  -->  ConfidenceAnnotationSet 
+DerivedDatasetConfidenceRules  -->  ConfidenceAnnotationSet 
+DerivedDatasetConfidenceRules  -->  ConfidenceSeverity 
+DerivedDatasetConfidenceRules  -->  ConstructionMetadataKeys 
+DerivedDatasetFitnessRules  -->  AnalyticalFitnessAssessment 
+DerivedDatasetFitnessRules  -->  AnalyticalFitnessAssessment 
+DerivedDatasetFitnessRules  -->  AnalyticalFitnessStatus 
+DerivedDatasetFitnessRules  -->  ConfidenceAnnotationSet 
+DerivedDatasetFitnessRules  -->  ConstructionMetadataKeys 
 DiagnosticsSnapshot  -->  ConsumerDeliveryEvidenceSnapshot 
 DiagnosticsSnapshot  -->  EvidenceRuntimePath 
 DiagnosticsSnapshot  -->  EvidenceRuntimePath 
@@ -2284,6 +2353,15 @@ DiagnosticsSnapshot  -->  UiSurfaceDiagnosticsSnapshot
 DiagnosticsSnapshot  -->  UiSurfaceDiagnosticsSnapshot 
 DiagnosticsSnapshot  -->  VNextDiagnosticsSnapshot 
 DiagnosticsSnapshot  -->  VNextDiagnosticsSnapshot 
+ChartPanelController  ---  DiffRatioChartController 
+ChartPanelController  ---  DiffRatioChartController 
+ChartPanelController  ---  DiffRatioChartController 
+ChartUiDefaults  ---  DiffRatioChartController 
+ICartesianChartControllerHost  ---  DiffRatioChartController 
+IChartPanelControllerHost  ---  DiffRatioChartController 
+IDiffRatioChartController  ---  DiffRatioChartController 
+LegendToggleManager  ---  DiffRatioChartController 
+LegendToggleManager  ---  DiffRatioChartController 
 DiffRatioChartControllerAdapter  -->  BinaryMetricChartContextHelper 
 DiffRatioChartControllerAdapter  -..-|>  CartesianChartControllerAdapterBase 
 DiffRatioChartControllerAdapter  -->  CartesianChartControllerAdapterBase 
@@ -2306,8 +2384,8 @@ ICartesianMetricChartRenderingContract  ---  DiffRatioChartControllerAdapter
 ICartesianMetricChartRenderingContract  ---  DiffRatioChartControllerAdapter 
 DiffRatioChartControllerAdapter  -..-|>  IChartController 
 DiffRatioChartControllerAdapter  -->  IChartPanelControllerHost 
-DiffRatioChartControllerAdapter  --*  IDiffRatioChartController 
 DiffRatioChartControllerAdapter  -..->  IDiffRatioChartController 
+DiffRatioChartControllerAdapter  --*  IDiffRatioChartController 
 DiffRatioChartControllerAdapter  -->  IDiffRatioChartController 
 DiffRatioChartControllerAdapter  -..-|>  IDiffRatioChartControllerExtras 
 DiffRatioChartControllerAdapter  -..-|>  IWpfCartesianChartHost 
@@ -2321,8 +2399,8 @@ MetricSelectionService  ---  DiffRatioChartControllerAdapter
 MetricSeriesSelection  ---  DiffRatioChartControllerAdapter 
 MetricSeriesSelection  ---  DiffRatioChartControllerAdapter 
 DiffRatioChartControllerAdapter  -->  MetricSeriesSelectionAdapterHelper 
-DiffRatioChartControllerAdapter  -->  MetricSeriesSelectionCache 
 DiffRatioChartControllerAdapter  -..->  MetricSeriesSelectionCache 
+DiffRatioChartControllerAdapter  -->  MetricSeriesSelectionCache 
 MetricState  ---  DiffRatioChartControllerAdapter 
 DiffRatioChartControllerAdapter  -->  RenderingHostLifecycleAdapterHelper 
 ChartComputationResult  ---  DifferenceStrategy 
@@ -2358,8 +2436,8 @@ DistributionDefaults  ---  DistributionAxisCoordinator
 MathHelper  ---  DistributionAxisCoordinator 
 DistributionBackendQualification  -->  DistributionBackendQualification 
 DistributionBackendQualification  -->  DistributionBackendQualification 
-DistributionBackendQualification  --*  DistributionRenderingQualification 
 DistributionBackendQualification  -->  DistributionRenderingQualification 
+DistributionBackendQualification  --*  DistributionRenderingQualification 
 DistributionBackendQualification  --*  DistributionRenderingRoute 
 CapabilityRequest  ---  DistributionCapabilityContract 
 CapabilityRequest  ---  DistributionCapabilityContract 
@@ -2375,8 +2453,15 @@ ConsumerDeliveryContract  ---  DistributionCapabilityContract
 DistributionCapabilityContract  -->  DistributionCapabilityContract 
 DistributionCapabilityContract  -->  DistributionCapabilityContract 
 IAnalyticalCapabilityContract  ---  DistributionCapabilityContract 
-DistributionChartControllerAdapter  -..-|>  CartesianChartControllerAdapterBase 
+ChartPanelController  ---  DistributionChartController 
+ChartPanelController  ---  DistributionChartController 
+ChartPanelController  ---  DistributionChartController 
+ChartUiDefaults  ---  DistributionChartController 
+ICartesianChartControllerHost  ---  DistributionChartController 
+IChartPanelControllerHost  ---  DistributionChartController 
+IDistributionChartController  ---  DistributionChartController 
 DistributionChartControllerAdapter  -->  CartesianChartControllerAdapterBase 
+DistributionChartControllerAdapter  -..-|>  CartesianChartControllerAdapterBase 
 DistributionChartControllerAdapter  -->  ChartComboItemHelper 
 DistributionChartControllerAdapter  -..-|>  ChartControllerAdapterBase 
 DistributionChartControllerAdapter  -->  ChartControllerKeys 
@@ -2399,15 +2484,15 @@ DistributionChartControllerAdapter  -->  DistributionRenderInputBuilder
 DistributionRenderingRoute  ---  DistributionChartControllerAdapter 
 DistributionRenderingRoute  ---  DistributionChartControllerAdapter 
 DistributionRenderingRouteResolver  ---  DistributionChartControllerAdapter 
-DistributionChartControllerAdapter  -->  DistributionSessionMilestoneRecorder 
 DistributionChartControllerAdapter  -..->  DistributionSessionMilestoneRecorder 
+DistributionChartControllerAdapter  -->  DistributionSessionMilestoneRecorder 
 DistributionChartControllerAdapter  -->  ICartesianChartControllerHost 
 DistributionChartControllerAdapter  -..-|>  ICartesianChartSurface 
 DistributionChartControllerAdapter  -..-|>  IChartController 
 DistributionChartControllerAdapter  -->  IChartPanelControllerHost 
 DistributionChartControllerAdapter  --*  IDistributionChartController 
-DistributionChartControllerAdapter  -->  IDistributionChartController 
 DistributionChartControllerAdapter  -..->  IDistributionChartController 
+DistributionChartControllerAdapter  -->  IDistributionChartController 
 DistributionChartControllerAdapter  -..-|>  IDistributionChartControllerExtras 
 IDistributionRenderingContract  ---  DistributionChartControllerAdapter 
 IDistributionRenderingContract  ---  DistributionChartControllerAdapter 
@@ -2432,9 +2517,9 @@ ChartHelper  ---  DistributionChartOrchestrationPipeline
 ChartState  ---  DistributionChartOrchestrationPipeline 
 DistributionChartOrchestrationPipeline  -->  DistributionChartOrchestrationRequest 
 DistributionChartOrchestrationPipeline  -..-|>  IDistributionChartOrchestrationPipeline 
-DistributionChartOrchestrationPipeline  -->  IDistributionChartPreparationStage 
-DistributionChartOrchestrationPipeline  --*  IDistributionChartPreparationStage 
 DistributionChartOrchestrationPipeline  -..->  IDistributionChartPreparationStage 
+DistributionChartOrchestrationPipeline  --*  IDistributionChartPreparationStage 
+DistributionChartOrchestrationPipeline  -->  IDistributionChartPreparationStage 
 DistributionChartOrchestrationPipeline  -..->  IDistributionChartRenderInvocationStage 
 DistributionChartOrchestrationPipeline  --*  IDistributionChartRenderInvocationStage 
 DistributionChartOrchestrationPipeline  -->  IDistributionChartRenderInvocationStage 
@@ -2487,8 +2572,8 @@ DistributionMode  ---  DistributionChartRenderRequest
 DistributionMode  ---  DistributionChartRenderRequest 
 DistributionModeSettings  ---  DistributionChartRenderRequest 
 DistributionModeSettings  ---  DistributionChartRenderRequest 
-DistributionChartRenderRequest  --*  DistributionRenderingRoute 
 DistributionChartRenderRequest  -->  DistributionRenderingRoute 
+DistributionChartRenderRequest  --*  DistributionRenderingRoute 
 MetricData  ---  DistributionChartRenderRequest 
 VNextUiConsumptionContract  ---  DistributionChartRenderRequest 
 VNextUiConsumptionContract  ---  DistributionChartRenderRequest 
@@ -2587,10 +2672,10 @@ DistributionModeSettings  ---  DistributionRenderPlanBuilder
 DistributionRenderPlanAdapter  ---  DistributionRenderPlanBuilder 
 DistributionRenderPlanBuilder  -->  DistributionRenderingRoute 
 RenderDensityPlan  ---  DistributionRenderPlanBuilder 
-DistributionRenderSurface  --*  DistributionChartRenderHost 
 DistributionRenderSurface  -->  DistributionChartRenderHost 
-DistributionRenderSurface  --*  DistributionChartRenderRequest 
+DistributionRenderSurface  --*  DistributionChartRenderHost 
 DistributionRenderSurface  -->  DistributionChartRenderRequest 
+DistributionRenderSurface  --*  DistributionChartRenderRequest 
 DistributionRenderSurface  -->  DistributionRenderSurface 
 DistributionRenderSurface  -->  DistributionRenderSurface 
 DistributionRenderingCapabilities  -->  DistributionRenderingCapabilities 
@@ -2622,9 +2707,9 @@ DistributionRenderingContract  -->  DistributionRenderingQualification
 DistributionRenderingContract  -->  DistributionRenderingRoute 
 DistributionRenderingContract  -->  DistributionVNextConsumptionContractBuilder 
 DistributionRenderingContract  -->  IDistributionPolarProjectionInteraction 
-DistributionRenderingContract  -..->  IDistributionPolarProjectionInteractionFactory 
-DistributionRenderingContract  --*  IDistributionPolarProjectionInteractionFactory 
 DistributionRenderingContract  -->  IDistributionPolarProjectionInteractionFactory 
+DistributionRenderingContract  --*  IDistributionPolarProjectionInteractionFactory 
+DistributionRenderingContract  -..->  IDistributionPolarProjectionInteractionFactory 
 DistributionRenderingContract  -..-|>  IDistributionRenderingContract 
 IDistributionService  ---  DistributionRenderingContract 
 IDistributionService  ---  DistributionRenderingContract 
@@ -2656,13 +2741,11 @@ MainWindowViewModel  ---  DistributionSessionMilestoneRecorder
 MetricSeriesSelection  ---  DistributionSessionMilestoneRecorder 
 MetricState  ---  DistributionSessionMilestoneRecorder 
 SessionMilestoneSnapshot  ---  DistributionSessionMilestoneRecorder 
-CapabilityRequest  ---  DistributionVNextConsumptionContractBuilder 
-ChartProgramRequest  ---  DistributionVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  DistributionVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  DistributionVNextConsumptionContractBuilder 
-ChartRenderPlanMetadataKeys  ---  DistributionVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractBuilder  ---  DistributionVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractMetadata  ---  DistributionVNextConsumptionContractBuilder 
 ConsumerProviderContracts  ---  DistributionVNextConsumptionContractBuilder 
-ConsumerSurfaceModel  ---  DistributionVNextConsumptionContractBuilder 
 DistributionVNextConsumptionContractBuilder  -->  DistributionCapabilityContract 
 DistributionVNextConsumptionContractBuilder  -->  DistributionChartRenderRequest 
 VNextUiConsumptionContract  ---  DistributionVNextConsumptionContractBuilder 
@@ -2702,6 +2785,7 @@ EvidenceDiagnosticsBuilder  -->  InterpretationDiagnosticsSnapshot
 EvidenceDiagnosticsBuilder  -->  InterpretationDiagnosticsSnapshot 
 EvidenceDiagnosticsBuilder  -->  InterpretationResultDiagnosticsSnapshot 
 LoadRuntimeState  ---  EvidenceDiagnosticsBuilder 
+LoadedChartDataSnapshot  ---  EvidenceDiagnosticsBuilder 
 EvidenceDiagnosticsBuilder  -->  LoadedContextDiagnosticsSnapshot 
 EvidenceDiagnosticsBuilder  -->  MainChartPipelineDiagnosticsSnapshot 
 MetricNameOption  ---  EvidenceDiagnosticsBuilder 
@@ -2724,8 +2808,8 @@ EvidenceDiagnosticsBuilder  -->  SubtypeComboDiagnosticsSnapshot
 EvidenceDiagnosticsBuilder  -->  SubtypeUiDiagnosticsSnapshot 
 EvidenceDiagnosticsBuilder  -->  TransitionDiagnosticsSnapshot 
 EvidenceDiagnosticsBuilder  -->  TransitionDiagnosticsSnapshot 
-EvidenceDiagnosticsBuilder  -->  UiSurfaceDiagnosticsSnapshot 
 EvidenceDiagnosticsBuilder  --*  UiSurfaceDiagnosticsSnapshot 
+EvidenceDiagnosticsBuilder  -->  UiSurfaceDiagnosticsSnapshot 
 EvidenceDiagnosticsBuilder  -->  VNextDiagnosticsSnapshot 
 EvidenceDiagnosticsBuilder  -->  VNextDiagnosticsSnapshot 
 ChartDataContext  ---  EvidenceDistributionParityEvaluator 
@@ -2776,15 +2860,15 @@ ChartState  ---  EvidenceParityBuilder
 EvidenceParityBuilder  -->  CombinedMetricParitySnapshot 
 EvidenceParityBuilder  -->  CombinedMetricParitySnapshot 
 EvidenceParityBuilder  -->  EvidenceDataResolutionHelper 
-EvidenceParityBuilder  -->  EvidenceDistributionParityEvaluator 
 EvidenceParityBuilder  -..->  EvidenceDistributionParityEvaluator 
-EvidenceParityBuilder  -..->  EvidenceMultiMetricParityEvaluator 
+EvidenceParityBuilder  -->  EvidenceDistributionParityEvaluator 
 EvidenceParityBuilder  -->  EvidenceMultiMetricParityEvaluator 
+EvidenceParityBuilder  -..->  EvidenceMultiMetricParityEvaluator 
 EvidenceParityBuilder  -->  EvidenceParityBundle 
 EvidenceParityBuilder  -->  EvidenceParitySummaryBuilder 
 EvidenceParityBuilder  -->  EvidenceStrategyParityExecutor 
-EvidenceParityBuilder  -->  EvidenceTransformParityEvaluator 
 EvidenceParityBuilder  -..->  EvidenceTransformParityEvaluator 
+EvidenceParityBuilder  -->  EvidenceTransformParityEvaluator 
 IStrategyCutOverService  ---  EvidenceParityBuilder 
 IStrategyCutOverService  ---  EvidenceParityBuilder 
 IStrategyCutOverService  ---  EvidenceParityBuilder 
@@ -2794,18 +2878,18 @@ EvidenceParityBuilder  -->  SimpleParitySnapshot
 EvidenceParityBuilder  -->  SimpleParitySnapshot 
 StrategyCreationParameters  ---  EvidenceParityBuilder 
 StrategyType  ---  EvidenceParityBuilder 
-EvidenceParityBundle  --*  CombinedMetricParitySnapshot 
 EvidenceParityBundle  -->  CombinedMetricParitySnapshot 
+EvidenceParityBundle  --*  CombinedMetricParitySnapshot 
 EvidenceParityBundle  -->  DistributionParitySnapshot 
 EvidenceParityBundle  --*  DistributionParitySnapshot 
 EvidenceParityBundle  -->  EvidenceParityBundle 
 EvidenceParityBundle  -->  EvidenceParityBundle 
-EvidenceParityBundle  -->  ParitySummarySnapshot 
 EvidenceParityBundle  --*  ParitySummarySnapshot 
+EvidenceParityBundle  -->  ParitySummarySnapshot 
 EvidenceParityBundle  --*  SimpleParitySnapshot 
 EvidenceParityBundle  -->  SimpleParitySnapshot 
-EvidenceParityBundle  --*  TransformParitySnapshot 
 EvidenceParityBundle  -->  TransformParitySnapshot 
+EvidenceParityBundle  --*  TransformParitySnapshot 
 EvidenceParitySummaryBuilder  -->  CombinedMetricParitySnapshot 
 EvidenceParitySummaryBuilder  -->  DistributionParitySnapshot 
 EvidenceParitySummaryBuilder  -->  ParityResultSnapshot 
@@ -2861,8 +2945,8 @@ IIntervalShadingStrategy  ---  FrequencyShadingCalculator
 IIntervalShadingStrategy  ---  FrequencyShadingCalculator 
 IIntervalShadingStrategy  ---  FrequencyShadingCalculator 
 IntervalShadingContext  ---  FrequencyShadingCalculator 
-FrequencyShadingData  -->  FrequencyShadingData 
 FrequencyShadingData  -..->  FrequencyShadingData 
+FrequencyShadingData  -->  FrequencyShadingData 
 FrequencyShadingData  -->  FrequencyShadingData 
 FrequencyShadingDefaults  ---  FrequencyShadingRenderer 
 FrequencyShadingRenderer  -..-|>  IFrequencyShadingRenderer 
@@ -2883,8 +2967,8 @@ StrategyType  ---  HourlyDistributionConfiguration
 StrategyType  ---  HourlyDistributionConfiguration 
 HourlyDistributionParityHarness  -..-|>  BucketDistributionParityHarness 
 HourlyDistributionParityHarness  -..-|>  IStrategyParityHarness 
-HourlyDistributionService  -->  BaseDistributionService 
 HourlyDistributionService  -..-|>  BaseDistributionService 
+HourlyDistributionService  -->  BaseDistributionService 
 BucketDistributionResult  ---  HourlyDistributionService 
 BucketDistributionResult  ---  HourlyDistributionService 
 BucketDistributionStrategy  ---  HourlyDistributionService 
@@ -3194,11 +3278,14 @@ LoadValidationInput  -->  LoadValidationInput
 LoadValidationInput  -->  LoadValidationInput 
 LoadValidationInput  -->  LoadValidationInput 
 LoadValidationInput  -->  LoadValidationInput 
+ChartDataContext  ---  LoadedChartDataSnapshot 
+LoadedChartDataSnapshot  -->  LoadedChartDataSnapshot 
+LoadedChartDataSnapshot  -->  LoadedChartDataSnapshot 
 LoadedMetricSeries  -->  LoadedMetricSeries 
 LoadedMetricSeries  -->  LoadedMetricSeries 
 MetricData  ---  LoadedMetricSeries 
-MainChartController  -->  ChartPanelController 
 MainChartController  -..->  ChartPanelController 
+MainChartController  -->  ChartPanelController 
 MainChartController  -->  ChartPanelController 
 ChartUiDefaults  ---  MainChartController 
 MainChartController  -..-|>  ICartesianChartControllerHost 
@@ -3220,20 +3307,20 @@ ChartDataContext  ---  MainChartControllerAdapter
 ChartProgramKind  ---  MainChartControllerAdapter 
 ChartState  ---  MainChartControllerAdapter 
 MainChartControllerAdapter  -->  ChartSubtypeComboHelper 
-EvidenceDiagnosticsBuilder  ---  MainChartControllerAdapter 
 MainChartControllerAdapter  -->  ICartesianChartControllerHost 
 MainChartControllerAdapter  -..-|>  ICartesianChartSurface 
 ICartesianMetricChartRenderingContract  ---  MainChartControllerAdapter 
 ICartesianMetricChartRenderingContract  ---  MainChartControllerAdapter 
 ICartesianMetricChartRenderingContract  ---  MainChartControllerAdapter 
 MainChartControllerAdapter  -..-|>  IChartController 
-MainChartControllerAdapter  -->  IMainChartController 
-MainChartControllerAdapter  --*  IMainChartController 
 MainChartControllerAdapter  -..->  IMainChartController 
+MainChartControllerAdapter  --*  IMainChartController 
+MainChartControllerAdapter  -->  IMainChartController 
 MainChartControllerAdapter  -..-|>  IMainChartControllerExtras 
 MainChartControllerAdapter  -..-|>  IWpfCartesianChartHost 
 MainChartControllerAdapter  -..-|>  IWpfChartPanelHost 
 LoadRuntimeState  ---  MainChartControllerAdapter 
+LoadedChartDataSnapshot  ---  MainChartControllerAdapter 
 MainChartDisplayMode  ---  MainChartControllerAdapter 
 MainWindowViewModel  ---  MainChartControllerAdapter 
 MainWindowViewModel  ---  MainChartControllerAdapter 
@@ -3245,12 +3332,12 @@ MetricState  ---  MainChartControllerAdapter
 MainChartControllerAdapter  -->  RenderingHostLifecycleAdapterHelper 
 SessionMilestoneSnapshot  ---  MainChartControllerAdapter 
 MainChartOrchestrationPipeline  -..-|>  IMainChartOrchestrationPipeline 
+MainChartOrchestrationPipeline  --*  IMainChartPreparationStage 
 MainChartOrchestrationPipeline  -..->  IMainChartPreparationStage 
 MainChartOrchestrationPipeline  -->  IMainChartPreparationStage 
-MainChartOrchestrationPipeline  --*  IMainChartPreparationStage 
-MainChartOrchestrationPipeline  -..->  IMainChartRenderInvocationStage 
 MainChartOrchestrationPipeline  -->  IMainChartRenderInvocationStage 
 MainChartOrchestrationPipeline  --*  IMainChartRenderInvocationStage 
+MainChartOrchestrationPipeline  -..->  IMainChartRenderInvocationStage 
 MainChartOrchestrationPipeline  -->  IMainChartStrategySelectionStage 
 MainChartOrchestrationPipeline  --*  IMainChartStrategySelectionStage 
 MainChartOrchestrationPipeline  -..->  IMainChartStrategySelectionStage 
@@ -3344,9 +3431,9 @@ WorkspaceSessionMilestoneRecorder  ---  MainChartsSessionDiagnosticsRecorder
 WorkspaceSessionMilestoneRecorder  ---  MainChartsSessionDiagnosticsRecorder 
 MainChartsUiSurfaceDiagnosticsReader  -->  DateRangeUiDiagnosticsSnapshot 
 ITransformDataPanelController  ---  MainChartsUiSurfaceDiagnosticsReader 
-MainChartsUiSurfaceDiagnosticsReader  -->  MainChartsSessionDiagnosticsRecorder 
 MainChartsUiSurfaceDiagnosticsReader  -..->  MainChartsSessionDiagnosticsRecorder 
 MainChartsUiSurfaceDiagnosticsReader  --*  MainChartsSessionDiagnosticsRecorder 
+MainChartsUiSurfaceDiagnosticsReader  -->  MainChartsSessionDiagnosticsRecorder 
 MetricNameOption  ---  MainChartsUiSurfaceDiagnosticsReader 
 MainChartsUiSurfaceDiagnosticsReader  -->  MetricSelectionComboReader 
 MainChartsUiSurfaceDiagnosticsReader  -->  MetricTypeUiDiagnosticsSnapshot 
@@ -3405,8 +3492,8 @@ ChartRenderingOrchestrator  ---  MainChartsView
 ChartState  ---  MainChartsView 
 ChartState  ---  MainChartsView 
 ChartSurfaceFactory  ---  MainChartsView 
-MainChartsView  -..->  ChartTabHost 
 MainChartsView  -->  ChartTabHost 
+MainChartsView  -..->  ChartTabHost 
 ChartTooltipManager  ---  MainChartsView 
 ChartTooltipManager  ---  MainChartsView 
 ChartUiHelper  ---  MainChartsView 
@@ -3418,6 +3505,10 @@ ClearActions  ---  MainChartsView
 Context  ---  MainChartsView 
 DataLoadedEventArgs  ---  MainChartsView 
 DateRangeLoadedEventArgs  ---  MainChartsView 
+DiffRatioChartController  ---  MainChartsView 
+DiffRatioChartController  ---  MainChartsView 
+DistributionChartController  ---  MainChartsView 
+DistributionChartController  ---  MainChartsView 
 DistributionPolarRenderingService  ---  MainChartsView 
 ErrorEventArgs  ---  MainChartsView 
 Handlers  ---  MainChartsView 
@@ -3594,9 +3685,9 @@ ChartVisibilityChangedEventArgs  ---  MainChartsViewEventBinder
 DataLoadedEventArgs  ---  MainChartsViewEventBinder 
 DateRangeLoadedEventArgs  ---  MainChartsViewEventBinder 
 ErrorEventArgs  ---  MainChartsViewEventBinder 
-MainChartsViewEventBinder  -->  Handlers 
 MainChartsViewEventBinder  -..->  Handlers 
 MainChartsViewEventBinder  --*  Handlers 
+MainChartsViewEventBinder  -->  Handlers 
 IMainChartsViewEventSource  ---  MainChartsViewEventBinder 
 IMainChartsViewEventSource  ---  MainChartsViewEventBinder 
 IMainChartsViewEventSource  ---  MainChartsViewEventBinder 
@@ -3607,15 +3698,15 @@ ChartState  ---  MainChartsViewEvidenceExportCoordinator
 MetricState  ---  MainChartsViewEvidenceExportCoordinator 
 ReachabilityEvidenceExportResult  ---  MainChartsViewEvidenceExportCoordinator 
 ChartControllerKeys  ---  MainChartsViewLoadCoordinator 
-MainChartsViewLoadCoordinator  -->  ClearActions 
 ClearActions  ---  MainChartsViewLoadCoordinator 
+MainChartsViewLoadCoordinator  -->  ClearActions 
 MainChartsViewLoadCoordinator  -->  LoadExecutionActions 
 LoadExecutionActions  ---  MainChartsViewLoadCoordinator 
 MainChartsViewLoadCoordinator  -->  LoadValidationInput 
 LoadValidationInput  ---  MainChartsViewLoadCoordinator 
 MetricSeriesSelection  ---  MainChartsViewLoadCoordinator 
-ValidationActions  ---  MainChartsViewLoadCoordinator 
 MainChartsViewLoadCoordinator  -->  ValidationActions 
+ValidationActions  ---  MainChartsViewLoadCoordinator 
 WorkspaceLoadCoordinator  ---  MainChartsViewLoadCoordinator 
 WorkspaceLoadCoordinator  ---  MainChartsViewLoadCoordinator 
 MainChartsViewRegistryCoordinator  -->  Actions 
@@ -3655,9 +3746,20 @@ IChartController  ---  MainChartsViewZoomResetCoordinator
 IWpfChartPanelHost  ---  MainChartsViewZoomResetCoordinator 
 MainChartsViewZoomResetCoordinator  -->  Result 
 MainChartsViewZoomResetCoordinator  -->  Result 
+MainWindow  -->  AdminMetricsManagerView 
+ChartState  ---  MainWindow 
+MainChartsView  ---  MainWindow 
+MainChartsView  ---  MainWindow 
+MetricSeriesSelection  ---  MainWindow 
+MetricState  ---  MainWindow 
+MainWindow  -->  OperationChainWorkbenchView 
+SessionMilestoneSnapshot  ---  MainWindow 
+SharedMainWindowViewModelContext  ---  MainWindow 
+SharedMainWindowViewModelProvider  ---  MainWindow 
+SyncfusionChartsView  ---  MainWindow 
 MainWindowViewModel  -->  AsyncRelayCommand 
-MainWindowViewModel  -->  BusyStateTracker 
 MainWindowViewModel  -..->  BusyStateTracker 
+MainWindowViewModel  -->  BusyStateTracker 
 ChartDataContext  ---  MainWindowViewModel 
 ChartState  ---  MainWindowViewModel 
 ChartState  ---  MainWindowViewModel 
@@ -3725,9 +3827,9 @@ DataLoadValidator  ---  MetricLoadCoordinator
 DataLoadValidator  ---  MetricLoadCoordinator 
 DateRangeLoadedEventArgs  ---  MetricLoadCoordinator 
 ErrorEventArgs  ---  MetricLoadCoordinator 
-EvidenceDiagnosticsBuilder  ---  MetricLoadCoordinator 
 EvidenceRuntimePath  ---  MetricLoadCoordinator 
 LoadRuntimeState  ---  MetricLoadCoordinator 
+LoadedChartDataSnapshot  ---  MetricLoadCoordinator 
 MetricData  ---  MetricLoadCoordinator 
 MetricDataValidationHelper  ---  MetricLoadCoordinator 
 MetricLoadCoordinator  -->  MetricLoadCoordinator 
@@ -3746,8 +3848,8 @@ UiState  ---  MetricLoadCoordinator
 UiState  ---  MetricLoadCoordinator 
 VNextMainChartIntegrationCoordinator  ---  MetricLoadCoordinator 
 VNextMainChartIntegrationCoordinator  ---  MetricLoadCoordinator 
-MetricLoadCoordinator  -..->  VNextMetricLoadRouter 
 MetricLoadCoordinator  -->  VNextMetricLoadRouter 
+MetricLoadCoordinator  -..->  VNextMetricLoadRouter 
 MetricLoadCoordinator  -->  VNextMetricLoadRoutingResult 
 MetricLoadRequest  -->  MetricLoadRequest 
 MetricLoadRequest  -->  MetricLoadRequest 
@@ -3777,8 +3879,8 @@ MetricSelectionRequest  --*  DataViewKind
 MetricSelectionRequest  -->  DataViewKind 
 MetricSelectionRequest  -->  MetricSelectionRequest 
 MetricSelectionRequest  -->  MetricSelectionRequest 
-MetricSelectionRequest  --*  MetricSeriesRequest 
 MetricSelectionRequest  -->  MetricSeriesRequest 
+MetricSelectionRequest  --*  MetricSeriesRequest 
 CmsDataService  ---  MetricSelectionService 
 CmsDataService  ---  MetricSelectionService 
 CmsDataService  ---  MetricSelectionService 
@@ -3875,9 +3977,9 @@ StrategyCreationParameters  ---  MultiMetricStrategyFactory
 MultiMetricStrategyFactory  -->  StrategyFactoryBase 
 MultiMetricStrategyFactory  -..-|>  StrategyFactoryBase 
 NormalizationMode  ---  NormalizationModeConverter 
-NormalizedChartController  -->  ChartPanelController 
-NormalizedChartController  -->  ChartPanelController 
 NormalizedChartController  -..->  ChartPanelController 
+NormalizedChartController  -->  ChartPanelController 
+NormalizedChartController  -->  ChartPanelController 
 ChartUiDefaults  ---  NormalizedChartController 
 NormalizedChartController  -..-|>  ICartesianChartControllerHost 
 NormalizedChartController  -..-|>  IChartPanelControllerHost 
@@ -3885,8 +3987,8 @@ INormalizedChartController  ---  NormalizedChartController
 LegendToggleManager  ---  NormalizedChartController 
 LegendToggleManager  ---  NormalizedChartController 
 NormalizedChartControllerAdapter  -->  BinaryMetricChartContextHelper 
-NormalizedChartControllerAdapter  -->  CartesianChartControllerAdapterBase 
 NormalizedChartControllerAdapter  -..-|>  CartesianChartControllerAdapterBase 
+NormalizedChartControllerAdapter  -->  CartesianChartControllerAdapterBase 
 CartesianMetricChartRenderHost  ---  NormalizedChartControllerAdapter 
 CartesianMetricChartRenderHost  ---  NormalizedChartControllerAdapter 
 CartesianMetricChartRenderRequest  ---  NormalizedChartControllerAdapter 
@@ -3905,9 +4007,9 @@ ICartesianMetricChartRenderingContract  ---  NormalizedChartControllerAdapter
 ICartesianMetricChartRenderingContract  ---  NormalizedChartControllerAdapter 
 NormalizedChartControllerAdapter  -..-|>  IChartController 
 NormalizedChartControllerAdapter  -->  IChartPanelControllerHost 
+NormalizedChartControllerAdapter  --*  INormalizedChartController 
 NormalizedChartControllerAdapter  -..->  INormalizedChartController 
 NormalizedChartControllerAdapter  -->  INormalizedChartController 
-NormalizedChartControllerAdapter  --*  INormalizedChartController 
 NormalizedChartControllerAdapter  -..-|>  IWpfCartesianChartHost 
 NormalizedChartControllerAdapter  -..-|>  IWpfChartPanelHost 
 MainWindowViewModel  ---  NormalizedChartControllerAdapter 
@@ -3963,15 +4065,18 @@ NullStrategyReachabilityProbe  -..->  NullStrategyReachabilityProbe
 NullStrategyReachabilityProbe  -->  StrategyReachabilityRecord 
 OperationChainDatasetRow  -->  OperationChainDatasetRow 
 OperationChainDatasetRow  -->  OperationChainDatasetRow 
+OperationChainEvidence  --*  ConstructionEvidenceStatus 
+OperationChainEvidence  -->  ConstructionEvidenceStatus 
+OperationChainEvidence  -->  ConstructionEvidenceStatus 
 OperationChainEvidence  -->  OperationChainEvidence 
 OperationChainEvidence  -->  OperationChainEvidence 
 OperationChainExecutionPlan  -->  OperationChainExecutionPlan 
 OperationChainExecutionPlan  -->  OperationChainExecutionPlan 
-OperationChainExecutionPlan  -->  OperationChainProgram 
 OperationChainExecutionPlan  -->  OperationChainProgram 
 OperationChainExecutionPlan  --*  OperationChainProgram 
-OperationChainExecutionPlan  --*  SeriesOperationRequest 
+OperationChainExecutionPlan  -->  OperationChainProgram 
 OperationChainExecutionPlan  -->  SeriesOperationRequest 
+OperationChainExecutionPlan  --*  SeriesOperationRequest 
 AlignedMetricSeries  ---  OperationChainExecutor 
 AlignedSeriesBundle  ---  OperationChainExecutor 
 AnalyticalCapabilityKind  ---  OperationChainExecutor 
@@ -3980,6 +4085,7 @@ CapabilityRequest  ---  OperationChainExecutor
 ChartProgramRequest  ---  OperationChainExecutor 
 ChartSeriesProgram  ---  OperationChainExecutor 
 CompositionKind  ---  OperationChainExecutor 
+ConstructionMetadataKeys  ---  OperationChainExecutor 
 ConsumerDeliveryContract  ---  OperationChainExecutor 
 ConsumerProviderContract  ---  OperationChainExecutor 
 ConsumerProviderRegistry  ---  OperationChainExecutor 
@@ -3987,14 +4093,15 @@ ConsumerProviderRegistry  ---  OperationChainExecutor
 ConsumerProviderRegistry  ---  OperationChainExecutor 
 ConsumerSurfaceModel  ---  OperationChainExecutor 
 DerivedDataset  ---  OperationChainExecutor 
-OperationChainExecutor  -..->  IReasoningEngine 
 OperationChainExecutor  --*  IReasoningEngine 
+OperationChainExecutor  -..->  IReasoningEngine 
 OperationChainExecutor  -->  IReasoningEngine 
 MetricLoadSnapshot  ---  OperationChainExecutor 
 MetricSelectionRequest  ---  OperationChainExecutor 
 MetricSeriesRequest  ---  OperationChainExecutor 
 OperationChainEvidence  ---  OperationChainExecutor 
 OperationChainExecutionPlan  ---  OperationChainExecutor 
+OperationChainPlanningAssessment  ---  OperationChainExecutor 
 OperationChainProgram  ---  OperationChainExecutor 
 OperationChainRequest  ---  OperationChainExecutor 
 OperationChainResult  ---  OperationChainExecutor 
@@ -4010,42 +4117,61 @@ TimeSeriesAlignmentKernel  ---  OperationChainExecutor
 TimeSeriesAlignmentKernel  ---  OperationChainExecutor 
 TimeSeriesAlignmentKernel  ---  OperationChainExecutor 
 VNextUiConsumptionContract  ---  OperationChainExecutor 
-OperationChainProgram  --*  ConsumerDeliveryContract 
+VNextUiConsumptionContract  ---  OperationChainExecutor 
+OperationChainPlanningAssessment  -->  OperationChainPlanningAssessment 
+OperationChainPlanningAssessment  -->  OperationChainPlanningAssessment 
+OperationChainPlanningAssessment  --*  OperationChainPlanningStatus 
+OperationChainPlanningAssessment  -->  OperationChainPlanningStatus 
+OperationChainPlanningBudget  -->  OperationChainPlanningBudget 
+OperationChainPlanningBudget  -->  OperationChainPlanningBudget 
+OperationChainPlanningRules  -->  MetricSelectionRequest 
+OperationChainPlanningRules  -->  OperationChainPlanningAssessment 
+OperationChainPlanningRules  -->  OperationChainPlanningAssessment 
+OperationChainPlanningRules  -->  OperationChainPlanningBudget 
+OperationChainPlanningRules  -->  OperationChainPlanningStatus 
+OperationChainPlanningRules  -->  OperationChainStep 
+OperationChainPlanningRules  -->  SeriesOperationRequest 
 OperationChainProgram  -->  ConsumerDeliveryContract 
+OperationChainProgram  --*  ConsumerDeliveryContract 
 OperationChainProgram  -->  MetricSelectionRequest 
 OperationChainProgram  --*  MetricSelectionRequest 
 OperationChainProgram  -->  OperationChainProgram 
 OperationChainProgram  -->  OperationChainProgram 
 OperationChainProgram  --*  OperationChainStep 
 OperationChainRequest  -->  ChartProgramKind 
+OperationChainRequest  -->  ConsumerDeliveryContract 
+OperationChainRequest  -->  ConsumerDeliveryContract 
 OperationChainRequest  --*  ConsumerDeliveryContract 
-OperationChainRequest  -->  ConsumerDeliveryContract 
-OperationChainRequest  -->  ConsumerDeliveryContract 
 OperationChainRequest  -->  MetricSelectionRequest 
 OperationChainRequest  --*  MetricSelectionRequest 
 OperationChainRequest  -->  MetricSelectionRequest 
+OperationChainRequest  -->  OperationChainPlanningAssessment 
+OperationChainRequest  -->  OperationChainPlanningAssessment 
+OperationChainRequest  -->  OperationChainPlanningRules 
 OperationChainRequest  -->  OperationChainRequest 
 OperationChainRequest  -->  OperationChainRequest 
-OperationChainRequest  --*  OperationChainStep 
 OperationChainRequest  -->  OperationChainStep 
+OperationChainRequest  --*  OperationChainStep 
 OperationChainResult  --*  DerivedDataset 
 OperationChainResult  --*  OperationChainEvidence 
 OperationChainResult  -->  OperationChainEvidence 
 OperationChainResult  -->  OperationChainExecutionPlan 
 OperationChainResult  --*  OperationChainExecutionPlan 
-OperationChainResult  --*  OperationChainRequest 
 OperationChainResult  -->  OperationChainRequest 
+OperationChainResult  --*  OperationChainRequest 
 OperationChainResult  -->  OperationChainResult 
 OperationChainResult  -->  OperationChainResult 
-OperationChainResult  --*  OperationChainTrace 
 OperationChainResult  -->  OperationChainTrace 
-OperationChainResult  --*  VNextUiConsumptionContract 
+OperationChainResult  --*  OperationChainTrace 
 OperationChainResult  -->  VNextUiConsumptionContract 
+OperationChainResult  -->  VNextUiConsumptionContract 
+OperationChainResult  --*  VNextUiConsumptionContract 
 OperationChainStep  -->  OperationChainStep 
 OperationChainStep  -->  OperationChainStep 
-OperationChainStep  -->  SeriesOperationRequest 
-OperationChainStep  -->  SeriesOperationRequest 
 OperationChainStep  --*  SeriesOperationRequest 
+OperationChainStep  -->  SeriesOperationRequest 
+OperationChainStep  -->  SeriesOperationRequest 
+OperationChainStep  -->  SeriesOperationRules 
 OperationChainTrace  -->  OperationChainTrace 
 OperationChainTrace  -->  OperationChainTrace 
 OperationChainTrace  --*  OperationChainTraceEntry 
@@ -4070,6 +4196,9 @@ OperationChainTraceEntry  ---  OperationChainWorkbenchPresenter
 OperationChainWorkbenchPresenter  -->  OperationChainTraceRow 
 OperationChainWorkbenchPresenter  -->  OperationChainWorkbenchPresentation 
 OperationChainWorkbenchPresenter  -->  OperationChainWorkbenchPresentation 
+OperationChainWorkbenchView  -->  OperationChainResult 
+OperationChainWorkbenchPresentation  ---  OperationChainWorkbenchView 
+OperationChainWorkbenchPresenter  ---  OperationChainWorkbenchView 
 OperationKernel  -->  AlignedMetricSeries 
 OperationKernel  -->  AlignedMetricSeries 
 OperationKernel  -->  AlignedSeriesBundle 
@@ -4133,8 +4262,8 @@ ProvenanceDescriptor  -->  AnalyticalAuthority
 ProvenanceDescriptor  -->  MetricSelectionRequest 
 ProvenanceDescriptor  -->  ProvenanceDescriptor 
 ProvenanceDescriptor  -->  ProvenanceDescriptor 
-ProvenanceDescriptor  -->  ProvenanceTrustClass 
 ProvenanceDescriptor  --*  ProvenanceTrustClass 
+ProvenanceDescriptor  -->  ProvenanceTrustClass 
 RadiusModel  -->  DistributionPolarRenderingService 
 DistributionRangeResult  ---  RadiusModel 
 RadiusModel  -->  RadiusModel 
@@ -4166,8 +4295,8 @@ RatioStrategyFactory  -..-|>  IStrategyFactory
 MetricData  ---  RatioStrategyFactory 
 RatioStrategy  ---  RatioStrategyFactory 
 StrategyCreationParameters  ---  RatioStrategyFactory 
-RatioStrategyFactory  -..-|>  StrategyFactoryBase 
 RatioStrategyFactory  -->  StrategyFactoryBase 
+RatioStrategyFactory  -..-|>  StrategyFactoryBase 
 ReachabilityEvidenceExportResult  -->  ReachabilityEvidenceExportResult 
 ReachabilityEvidenceExportResult  -->  ReachabilityEvidenceExportResult 
 ReachabilityExportPathResolver  -..-|>  IReachabilityExportPathResolver 
@@ -4180,9 +4309,9 @@ AnalyticalResultSet  ---  ReasoningEngine
 ChartDisplayMode  ---  ReasoningEngine 
 ChartProgram  ---  ReasoningEngine 
 ChartProgram  ---  ReasoningEngine 
-ReasoningEngine  -..->  ChartProgramPlanner 
 ReasoningEngine  -->  ChartProgramPlanner 
 ReasoningEngine  --*  ChartProgramPlanner 
+ReasoningEngine  -..->  ChartProgramPlanner 
 ChartProgramRequest  ---  ReasoningEngine 
 ReasoningEngine  -..-|>  IReasoningEngine 
 MetricLoadSnapshot  ---  ReasoningEngine 
@@ -4207,9 +4336,9 @@ ChartDisplayMode  ---  ReasoningSessionCoordinator
 ChartProgram  ---  ReasoningSessionCoordinator 
 ChartProgram  ---  ReasoningSessionCoordinator 
 ChartProgramRequest  ---  ReasoningSessionCoordinator 
+ReasoningSessionCoordinator  -->  IReasoningEngine 
 ReasoningSessionCoordinator  --*  IReasoningEngine 
 ReasoningSessionCoordinator  -..->  IReasoningEngine 
-ReasoningSessionCoordinator  -->  IReasoningEngine 
 LoadState  ---  ReasoningSessionCoordinator 
 MetricLoadSnapshot  ---  ReasoningSessionCoordinator 
 MetricSelectionRequest  ---  ReasoningSessionCoordinator 
@@ -4223,17 +4352,17 @@ SelectionState  ---  ReasoningSessionCoordinator
 SeriesOperationRequest  ---  ReasoningSessionCoordinator 
 WorkflowPlanRequest  ---  ReasoningSessionCoordinator 
 WorkflowState  ---  ReasoningSessionCoordinator 
+ReasoningSessionState  -->  LoadState 
+ReasoningSessionState  -->  LoadState 
 ReasoningSessionState  --*  LoadState 
-ReasoningSessionState  -->  LoadState 
-ReasoningSessionState  -->  LoadState 
+ReasoningSessionState  -->  PresentationState 
 ReasoningSessionState  --*  PresentationState 
 ReasoningSessionState  -->  PresentationState 
-ReasoningSessionState  -->  PresentationState 
 ReasoningSessionState  -->  ReasoningSessionState 
 ReasoningSessionState  -->  ReasoningSessionState 
-ReasoningSessionState  -->  SelectionState 
 ReasoningSessionState  -->  SelectionState 
 ReasoningSessionState  --*  SelectionState 
+ReasoningSessionState  -->  SelectionState 
 ReasoningSessionState  --*  WorkflowState 
 ReasoningSessionState  -->  WorkflowState 
 ReasoningSessionState  -->  WorkflowState 
@@ -4255,8 +4384,8 @@ RenderDataBuffer  --*  RenderDataPoint
 RenderDataPoint  -->  RenderDataPoint 
 RenderDataPoint  -->  RenderDataPoint 
 RenderDensityPlan  -->  ChartRenderDensityMode 
-RenderDensityPlan  --*  ChartRenderDensityMode 
 RenderDensityPlan  -->  ChartRenderDensityMode 
+RenderDensityPlan  --*  ChartRenderDensityMode 
 RenderDensityPlan  -->  ChartViewport 
 RenderDensityPlan  --*  ChartViewport 
 RenderDensityPlan  -->  RenderDensityPlan 
@@ -4268,9 +4397,9 @@ ChartSeriesProgram  ---  RenderDensityPolicy
 RenderDensityPolicy  -->  ChartViewport 
 RenderDensityPolicy  -->  RenderDensityPlan 
 RenderDensityPolicy  -->  RenderDensityPlan 
-RenderDensityPolicy  --*  RenderDensityPolicyOptions 
-RenderDensityPolicy  -->  RenderDensityPolicyOptions 
 RenderDensityPolicy  -..->  RenderDensityPolicyOptions 
+RenderDensityPolicy  -->  RenderDensityPolicyOptions 
+RenderDensityPolicy  --*  RenderDensityPolicyOptions 
 RenderDensityPolicyOptions  -->  RenderDensityPolicyOptions 
 RenderDensityPolicyOptions  -->  RenderDensityPolicyOptions 
 RenderPlanHistorySnapshot  -..-|>  RenderPlanDiagnosticsSnapshot 
@@ -4303,12 +4432,12 @@ ChartDataContext  ---  SecondaryMetricChartOrchestrationPipeline
 ChartHelper  ---  SecondaryMetricChartOrchestrationPipeline 
 ChartState  ---  SecondaryMetricChartOrchestrationPipeline 
 SecondaryMetricChartOrchestrationPipeline  -..-|>  ISecondaryMetricChartOrchestrationPipeline 
-SecondaryMetricChartOrchestrationPipeline  -->  ISecondaryMetricChartRenderInvocationStage 
-SecondaryMetricChartOrchestrationPipeline  --*  ISecondaryMetricChartRenderInvocationStage 
 SecondaryMetricChartOrchestrationPipeline  -..->  ISecondaryMetricChartRenderInvocationStage 
+SecondaryMetricChartOrchestrationPipeline  --*  ISecondaryMetricChartRenderInvocationStage 
+SecondaryMetricChartOrchestrationPipeline  -->  ISecondaryMetricChartRenderInvocationStage 
+SecondaryMetricChartOrchestrationPipeline  --*  ISecondaryMetricChartStrategySelectionStage 
 SecondaryMetricChartOrchestrationPipeline  -..->  ISecondaryMetricChartStrategySelectionStage 
 SecondaryMetricChartOrchestrationPipeline  -->  ISecondaryMetricChartStrategySelectionStage 
-SecondaryMetricChartOrchestrationPipeline  --*  ISecondaryMetricChartStrategySelectionStage 
 IUserNotificationService  ---  SecondaryMetricChartOrchestrationPipeline 
 IUserNotificationService  ---  SecondaryMetricChartOrchestrationPipeline 
 IUserNotificationService  ---  SecondaryMetricChartOrchestrationPipeline 
@@ -4331,8 +4460,8 @@ ChartState  ---  SecondaryMetricChartRenderRequest
 ChartState  ---  SecondaryMetricChartRenderRequest 
 SecondaryMetricChartRenderRequest  -->  SecondaryMetricChartRenderRequest 
 SecondaryMetricChartRenderRequest  -->  SecondaryMetricChartRenderRequest 
-SecondaryMetricChartRenderRequest  -->  SecondaryMetricChartRoute 
 SecondaryMetricChartRenderRequest  --*  SecondaryMetricChartRoute 
+SecondaryMetricChartRenderRequest  -->  SecondaryMetricChartRoute 
 IChartComputationStrategy  ---  SecondaryMetricChartStrategyPlan 
 IChartComputationStrategy  ---  SecondaryMetricChartStrategyPlan 
 SecondaryMetricChartStrategyPlan  -->  SecondaryMetricChartStrategyPlan 
@@ -4349,9 +4478,9 @@ SecondaryMetricChartStrategySelectionStage  -->  SecondaryMetricChartStrategyPla
 SecondaryMetricChartStrategySelectionStage  -->  SecondaryMetricChartStrategyPlan 
 StrategyCreationParameters  ---  SecondaryMetricChartStrategySelectionStage 
 StrategyType  ---  SecondaryMetricChartStrategySelectionStage 
+SelectionChangedSuppressionScope  -->  SubtypeSelector 
 SelectionChangedSuppressionScope  -..->  SubtypeSelector 
 SelectionChangedSuppressionScope  --*  SubtypeSelector 
-SelectionChangedSuppressionScope  -->  SubtypeSelector 
 SelectionDiagnosticsSnapshot  -->  SeriesSelectionDiagnosticsSnapshot 
 MetricSelectionRequest  ---  SelectionState 
 MetricSelectionRequest  ---  SelectionState 
@@ -4359,19 +4488,21 @@ MetricSeriesRequest  ---  SelectionState
 MetricSeriesRequest  ---  SelectionState 
 SelectionState  -->  SelectionState 
 SelectionState  -->  SelectionState 
-SelectionStateBatchScope  -->  MainWindowViewModel 
-SelectionStateBatchScope  --*  MainWindowViewModel 
 SelectionStateBatchScope  -..->  MainWindowViewModel 
+SelectionStateBatchScope  --*  MainWindowViewModel 
+SelectionStateBatchScope  -->  MainWindowViewModel 
+SeriesOperationRequest  -->  SeriesOperationKind 
+SeriesOperationRequest  -->  SeriesOperationKind 
 SeriesOperationRequest  --*  SeriesOperationKind 
-SeriesOperationRequest  -->  SeriesOperationKind 
-SeriesOperationRequest  -->  SeriesOperationKind 
 SeriesOperationRequest  -->  SeriesOperationRequest 
 SeriesOperationRequest  -->  SeriesOperationRequest 
+SeriesOperationRequest  -->  SeriesOperationRules 
+SeriesOperationRules  -->  SeriesOperationKind 
 SessionMilestoneSnapshot  -->  EvidenceRuntimePath 
 ChartState  ---  SharedMainWindowViewModelContext 
 ChartState  ---  SharedMainWindowViewModelContext 
-SharedMainWindowViewModelContext  --*  MainWindowViewModel 
 SharedMainWindowViewModelContext  -->  MainWindowViewModel 
+SharedMainWindowViewModelContext  --*  MainWindowViewModel 
 MetricSelectionService  ---  SharedMainWindowViewModelContext 
 MetricSelectionService  ---  SharedMainWindowViewModelContext 
 MetricState  ---  SharedMainWindowViewModelContext 
@@ -4385,8 +4516,8 @@ SharedMainWindowViewModelProvider  -->  MainWindowViewModel
 MetricSelectionService  ---  SharedMainWindowViewModelProvider 
 MetricState  ---  SharedMainWindowViewModelProvider 
 SharedMainWindowViewModelProvider  -->  SharedMainWindowViewModelContext 
-SharedMainWindowViewModelProvider  -..->  SharedMainWindowViewModelContext 
 SharedMainWindowViewModelProvider  -->  SharedMainWindowViewModelContext 
+SharedMainWindowViewModelProvider  -..->  SharedMainWindowViewModelContext 
 UiState  ---  SharedMainWindowViewModelProvider 
 SimpleChartTooltip  -->  ChartInteractionVisualHelper 
 ChartStackingTooltipState  ---  SimpleChartTooltip 
@@ -4472,8 +4603,8 @@ StrategyCmsDecision  ---  StrategyCutOverService
 StrategyCmsDecisionEvaluator  ---  StrategyCutOverService 
 StrategyCmsDecisionEvaluator  ---  StrategyCutOverService 
 StrategyCreationParameters  ---  StrategyCutOverService 
-StrategyCutOverService  -->  StrategyParityValidationService 
 StrategyCutOverService  -..->  StrategyParityValidationService 
+StrategyCutOverService  -->  StrategyParityValidationService 
 StrategyReachabilityRecord  ---  StrategyCutOverService 
 StrategyType  ---  StrategyCutOverService 
 WeekdayTrendStrategyFactory  ---  StrategyCutOverService 
@@ -4654,8 +4785,10 @@ SyncfusionChartControllerFactoryResult  ---  SyncfusionChartsView
 SyncfusionChartsView  -..->  SyncfusionChartsView 
 SyncfusionChartsView  -..->  SyncfusionChartsViewCoordinator 
 SyncfusionChartsView  -->  SyncfusionChartsViewCoordinator 
-SyncfusionChartsView  -->  SyncfusionChartsViewLoadCoordinator 
 SyncfusionChartsView  -..->  SyncfusionChartsViewLoadCoordinator 
+SyncfusionChartsView  -->  SyncfusionChartsViewLoadCoordinator 
+SyncfusionSunburstChartController  ---  SyncfusionChartsView 
+SyncfusionSunburstChartController  ---  SyncfusionChartsView 
 UiBusyScopeLease  ---  SyncfusionChartsView 
 UiState  ---  SyncfusionChartsView 
 UiState  ---  SyncfusionChartsView 
@@ -4666,8 +4799,8 @@ ChartDataContext  ---  SyncfusionChartsViewCoordinator
 ChartUpdateRequestedEventArgs  ---  SyncfusionChartsViewCoordinator 
 ClearActions  ---  SyncfusionChartsViewLoadCoordinator 
 SyncfusionChartsViewLoadCoordinator  -->  ClearActions 
-SyncfusionChartsViewLoadCoordinator  -->  LoadExecutionActions 
 LoadExecutionActions  ---  SyncfusionChartsViewLoadCoordinator 
+SyncfusionChartsViewLoadCoordinator  -->  LoadExecutionActions 
 LoadValidationInput  ---  SyncfusionChartsViewLoadCoordinator 
 SyncfusionChartsViewLoadCoordinator  -->  LoadValidationInput 
 MetricSeriesSelection  ---  SyncfusionChartsViewLoadCoordinator 
@@ -4688,8 +4821,28 @@ ConsumerDeliveryContract  ---  SyncfusionSunburstCapabilityContract
 IAnalyticalCapabilityContract  ---  SyncfusionSunburstCapabilityContract 
 SyncfusionSunburstCapabilityContract  -->  SyncfusionSunburstCapabilityContract 
 SyncfusionSunburstCapabilityContract  -->  SyncfusionSunburstCapabilityContract 
-SyncfusionSunburstChartControllerAdapter  -..-|>  ChartControllerAdapterBase 
+BucketBreakdownItem  ---  SyncfusionSunburstChartController 
+BucketTooltipContext  ---  SyncfusionSunburstChartController 
+ChartPanelController  ---  SyncfusionSunburstChartController 
+ChartPanelController  ---  SyncfusionSunburstChartController 
+ChartPanelController  ---  SyncfusionSunburstChartController 
+ChartUiDefaults  ---  SyncfusionSunburstChartController 
+ColourPalette  ---  SyncfusionSunburstChartController 
+IChartPanelControllerHost  ---  SyncfusionSunburstChartController 
+IChartPanelScaffold  ---  SyncfusionSunburstChartController 
+IChartRenderingContext  ---  SyncfusionSunburstChartController 
+IChartRenderingContext  ---  SyncfusionSunburstChartController 
+ISyncfusionSunburstChartController  ---  SyncfusionSunburstChartController 
+ISyncfusionSunburstRenderTarget  ---  SyncfusionSunburstChartController 
+MathHelper  ---  SyncfusionSunburstChartController 
+SunburstItem  ---  SyncfusionSunburstChartController 
+SyncfusionSunburstItem  ---  SyncfusionSunburstChartController 
+SyncfusionSunburstTooltipLine  ---  SyncfusionSunburstChartController 
+SyncfusionSunburstTooltipModel  ---  SyncfusionSunburstChartController 
+SyncfusionSunburstTooltipModel  ---  SyncfusionSunburstChartController 
+SyncfusionTooltipReflectionHelper  ---  SyncfusionSunburstChartController 
 SyncfusionSunburstChartControllerAdapter  -->  ChartControllerAdapterBase 
+SyncfusionSunburstChartControllerAdapter  -..-|>  ChartControllerAdapterBase 
 SyncfusionSunburstChartControllerAdapter  -->  ChartControllerKeys 
 ChartDataContext  ---  SyncfusionSunburstChartControllerAdapter 
 ChartProgramKind  ---  SyncfusionSunburstChartControllerAdapter 
@@ -4710,8 +4863,8 @@ SyncfusionSunburstChartRenderHost  ---  SyncfusionSunburstChartControllerAdapter
 SyncfusionSunburstChartRenderHost  ---  SyncfusionSunburstChartControllerAdapter 
 SyncfusionSunburstChartRenderRequest  ---  SyncfusionSunburstChartControllerAdapter 
 SyncfusionSunburstChartControllerAdapter  -->  SyncfusionSunburstRenderModel 
-SyncfusionSunburstChartControllerAdapter  -->  SyncfusionSunburstRenderModelBuilder 
 SyncfusionSunburstChartControllerAdapter  -..->  SyncfusionSunburstRenderModelBuilder 
+SyncfusionSunburstChartControllerAdapter  -->  SyncfusionSunburstRenderModelBuilder 
 SyncfusionSunburstRenderingContract  ---  SyncfusionSunburstChartControllerAdapter 
 SyncfusionSunburstRenderingRoute  ---  SyncfusionSunburstChartControllerAdapter 
 SyncfusionSunburstRenderingRoute  ---  SyncfusionSunburstChartControllerAdapter 
@@ -4719,13 +4872,13 @@ SyncfusionSunburstChartRenderHost  -->  ISyncfusionSunburstRenderTarget
 SyncfusionSunburstChartRenderHost  --*  ISyncfusionSunburstRenderTarget 
 SyncfusionSunburstChartRenderHost  -->  SyncfusionSunburstChartRenderHost 
 SyncfusionSunburstChartRenderHost  -->  SyncfusionSunburstChartRenderHost 
-SyncfusionSunburstChartRenderRequest  --*  SyncfusionSunburstCapabilityContract 
 SyncfusionSunburstChartRenderRequest  -->  SyncfusionSunburstCapabilityContract 
+SyncfusionSunburstChartRenderRequest  --*  SyncfusionSunburstCapabilityContract 
 SyncfusionSunburstChartRenderRequest  -->  SyncfusionSunburstChartRenderRequest 
 SyncfusionSunburstChartRenderRequest  -->  SyncfusionSunburstChartRenderRequest 
 SyncfusionSunburstChartRenderRequest  --*  SyncfusionSunburstItem 
-SyncfusionSunburstChartRenderRequest  -->  SyncfusionSunburstRenderingRoute 
 SyncfusionSunburstChartRenderRequest  --*  SyncfusionSunburstRenderingRoute 
+SyncfusionSunburstChartRenderRequest  -->  SyncfusionSunburstRenderingRoute 
 VNextUiConsumptionContract  ---  SyncfusionSunburstChartRenderRequest 
 VNextUiConsumptionContract  ---  SyncfusionSunburstChartRenderRequest 
 SyncfusionSunburstItem  -->  SyncfusionSunburstItem 
@@ -4797,18 +4950,15 @@ SyncfusionSunburstRenderingContract  -->  SyncfusionSunburstChartRenderRequest
 SyncfusionSunburstRenderingContract  -->  SyncfusionSunburstItem 
 SyncfusionSunburstRenderPlanAdapter  ---  SyncfusionSunburstRenderingContract 
 SyncfusionSunburstRenderingContract  -->  SyncfusionSunburstRenderPlanBuilder 
-SyncfusionSunburstRenderingContract  --*  SyncfusionSunburstRenderSurface 
 SyncfusionSunburstRenderingContract  -->  SyncfusionSunburstRenderSurface 
+SyncfusionSunburstRenderingContract  --*  SyncfusionSunburstRenderSurface 
 SyncfusionSunburstRenderingContract  -->  SyncfusionSunburstRenderingRoute 
 SyncfusionSunburstRenderingContract  -->  SyncfusionSunburstVNextConsumptionContractBuilder 
-SyncfusionSunburstTooltipModel  -->  SyncfusionSunburstTooltipLine 
 SyncfusionSunburstTooltipModel  --*  SyncfusionSunburstTooltipLine 
-CapabilityRequest  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
-ChartProgramRequest  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
+SyncfusionSunburstTooltipModel  -->  SyncfusionSunburstTooltipLine 
 ChartRenderPlan  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
-ChartRenderPlanMetadataKeys  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractBuilder  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
 ConsumerProviderContracts  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
-ConsumerSurfaceModel  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
 SyncfusionSunburstVNextConsumptionContractBuilder  -->  SyncfusionSunburstCapabilityContract 
 SyncfusionSunburstVNextConsumptionContractBuilder  -->  SyncfusionSunburstChartRenderRequest 
 VNextUiConsumptionContract  ---  SyncfusionSunburstVNextConsumptionContractBuilder 
@@ -4887,9 +5037,9 @@ TransformChartRenderInvoker  -->  ChartDataContext
 ChartProgramKind  ---  TransformChartRenderInvoker 
 ChartRenderAdapterResult  ---  TransformChartRenderInvoker 
 ChartState  ---  TransformChartRenderInvoker 
-TransformChartRenderInvoker  -..->  ChartUpdateCoordinator 
-TransformChartRenderInvoker  -->  ChartUpdateCoordinator 
 TransformChartRenderInvoker  --*  ChartUpdateCoordinator 
+TransformChartRenderInvoker  -->  ChartUpdateCoordinator 
+TransformChartRenderInvoker  -..->  ChartUpdateCoordinator 
 TransformChartRenderInvoker  -->  ChartUpdateRequest 
 TransformChartRenderInvoker  -..-|>  ITransformChartRenderInvoker 
 TransformCapabilityContract  ---  TransformChartRenderInvoker 
@@ -4929,17 +5079,17 @@ ITransformOperationProvider  ---  TransformDataPanelController
 LegendToggleManager  ---  TransformDataPanelController 
 LegendToggleManager  ---  TransformDataPanelController 
 TransformOperationOptions  ---  TransformDataPanelController 
-TransformDataPanelControllerAdapter  -->  CartesianChartControllerAdapterBase 
 TransformDataPanelControllerAdapter  -..-|>  CartesianChartControllerAdapterBase 
+TransformDataPanelControllerAdapter  -->  CartesianChartControllerAdapterBase 
 TransformDataPanelControllerAdapter  -..-|>  ChartControllerAdapterBase 
 TransformDataPanelControllerAdapter  -->  ChartControllerKeys 
 ChartDataContext  ---  TransformDataPanelControllerAdapter 
 ChartState  ---  TransformDataPanelControllerAdapter 
 TransformDataPanelControllerAdapter  -..-|>  ICartesianChartSurface 
 TransformDataPanelControllerAdapter  -..-|>  IChartController 
-TransformDataPanelControllerAdapter  -->  ITransformDataPanelController 
 TransformDataPanelControllerAdapter  -..->  ITransformDataPanelController 
 TransformDataPanelControllerAdapter  --*  ITransformDataPanelController 
+TransformDataPanelControllerAdapter  -->  ITransformDataPanelController 
 TransformDataPanelControllerAdapter  -..-|>  ITransformPanelControllerExtras 
 ITransformRenderingContract  ---  TransformDataPanelControllerAdapter 
 TransformDataPanelControllerAdapter  -..-|>  IWpfCartesianChartHost 
@@ -4948,8 +5098,8 @@ MainWindowViewModel  ---  TransformDataPanelControllerAdapter
 MainWindowViewModel  ---  TransformDataPanelControllerAdapter 
 MainWindowViewModel  ---  TransformDataPanelControllerAdapter 
 MetricSelectionService  ---  TransformDataPanelControllerAdapter 
-TransformDataPanelControllerAdapter  -..->  MetricSeriesSelectionCache 
 TransformDataPanelControllerAdapter  -->  MetricSeriesSelectionCache 
+TransformDataPanelControllerAdapter  -..->  MetricSeriesSelectionCache 
 MetricState  ---  TransformDataPanelControllerAdapter 
 TransformComputationService  ---  TransformDataPanelControllerAdapter 
 TransformDataPanelControllerAdapter  -->  TransformDataPanelControllerAdapterComposition 
@@ -4963,33 +5113,33 @@ TransformDataPanelControllerAdapter  -..->  TransformOperationStateCoordinator
 TransformDataPanelControllerAdapter  -..->  TransformRenderCoordinator 
 TransformDataPanelControllerAdapter  -->  TransformRenderCoordinator 
 TransformDataPanelControllerAdapter  -->  TransformResolutionResult 
-TransformDataPanelControllerAdapter  -..->  TransformSelectionInteractionCoordinator 
 TransformDataPanelControllerAdapter  -->  TransformSelectionInteractionCoordinator 
+TransformDataPanelControllerAdapter  -..->  TransformSelectionInteractionCoordinator 
 TransformDataPanelControllerAdapter  -->  TransformSelectionResolution 
-TransformDataPanelControllerAdapter  -->  TransformSessionMilestoneRecorder 
 TransformDataPanelControllerAdapter  -..->  TransformSessionMilestoneRecorder 
+TransformDataPanelControllerAdapter  -->  TransformSessionMilestoneRecorder 
 TransformDataPanelControllerAdapter  -->  TransformSubtypeSelector 
-TransformDataPanelControllerAdapter  -..->  TransformWorkflowCoordinator 
 TransformDataPanelControllerAdapter  -->  TransformWorkflowCoordinator 
+TransformDataPanelControllerAdapter  -..->  TransformWorkflowCoordinator 
 VNextSeriesLoadCoordinator  ---  TransformDataPanelControllerAdapter 
-TransformDataPanelControllerAdapterComposition  --*  MetricSeriesSelectionCache 
 TransformDataPanelControllerAdapterComposition  -->  MetricSeriesSelectionCache 
+TransformDataPanelControllerAdapterComposition  --*  MetricSeriesSelectionCache 
 TransformDataPanelControllerAdapterComposition  -->  TransformDataPanelControllerAdapterComposition 
 TransformDataPanelControllerAdapterComposition  -->  TransformDataPanelControllerAdapterComposition 
 TransformDataPanelControllerAdapterComposition  -->  TransformDataResolver 
 TransformDataPanelControllerAdapterComposition  --*  TransformDataResolver 
 TransformDataPanelControllerAdapterComposition  --*  TransformOperationExecutor 
 TransformDataPanelControllerAdapterComposition  -->  TransformOperationExecutor 
-TransformDataPanelControllerAdapterComposition  --*  TransformOperationStateCoordinator 
 TransformDataPanelControllerAdapterComposition  -->  TransformOperationStateCoordinator 
-TransformDataPanelControllerAdapterComposition  --*  TransformRenderCoordinator 
+TransformDataPanelControllerAdapterComposition  --*  TransformOperationStateCoordinator 
 TransformDataPanelControllerAdapterComposition  -->  TransformRenderCoordinator 
-TransformDataPanelControllerAdapterComposition  -->  TransformSelectionInteractionCoordinator 
+TransformDataPanelControllerAdapterComposition  --*  TransformRenderCoordinator 
 TransformDataPanelControllerAdapterComposition  --*  TransformSelectionInteractionCoordinator 
+TransformDataPanelControllerAdapterComposition  -->  TransformSelectionInteractionCoordinator 
 TransformDataPanelControllerAdapterComposition  -->  TransformSessionMilestoneRecorder 
 TransformDataPanelControllerAdapterComposition  --*  TransformSessionMilestoneRecorder 
-TransformDataPanelControllerAdapterComposition  -->  TransformWorkflowCoordinator 
 TransformDataPanelControllerAdapterComposition  --*  TransformWorkflowCoordinator 
+TransformDataPanelControllerAdapterComposition  -->  TransformWorkflowCoordinator 
 TransformDataPanelControllerAdapterCompositionFactory  -->  ITransformDataPanelController 
 ITransformRenderingContract  ---  TransformDataPanelControllerAdapterCompositionFactory 
 MainWindowViewModel  ---  TransformDataPanelControllerAdapterCompositionFactory 
@@ -5026,9 +5176,9 @@ ChartProgramKind  ---  TransformDataResolver
 ChartState  ---  TransformDataResolver 
 DataAccessDefaults  ---  TransformDataResolver 
 EvidenceRuntimePath  ---  TransformDataResolver 
+TransformDataResolver  -->  ITransformDataPanelController 
 TransformDataResolver  -..->  ITransformDataPanelController 
 TransformDataResolver  --*  ITransformDataPanelController 
-TransformDataResolver  -->  ITransformDataPanelController 
 MainWindowViewModel  ---  TransformDataResolver 
 MainWindowViewModel  ---  TransformDataResolver 
 MainWindowViewModel  ---  TransformDataResolver 
@@ -5039,8 +5189,8 @@ MetricSelectionService  ---  TransformDataResolver
 MetricSeriesSelection  ---  TransformDataResolver 
 MetricSeriesSelection  ---  TransformDataResolver 
 TransformDataResolver  -..->  MetricSeriesSelectionCache 
-TransformDataResolver  --*  MetricSeriesSelectionCache 
 TransformDataResolver  -->  MetricSeriesSelectionCache 
+TransformDataResolver  --*  MetricSeriesSelectionCache 
 MetricState  ---  TransformDataResolver 
 TransformDataResolver  -->  TransformGridPresentationCoordinator 
 TransformDataResolver  -->  TransformResolutionResult 
@@ -5117,8 +5267,8 @@ ChartDataContext  ---  TransformRenderCoordinator
 ChartState  ---  TransformRenderCoordinator 
 ChartState  ---  TransformRenderCoordinator 
 TransformRenderCoordinator  -..->  ITransformDataPanelController 
-TransformRenderCoordinator  --*  ITransformDataPanelController 
 TransformRenderCoordinator  -->  ITransformDataPanelController 
+TransformRenderCoordinator  --*  ITransformDataPanelController 
 TransformRenderCoordinator  -->  ITransformLayoutCapabilities 
 ITransformRenderingContract  ---  TransformRenderCoordinator 
 ITransformRenderingContract  ---  TransformRenderCoordinator 
@@ -5163,8 +5313,8 @@ ChartDataContext  ---  TransformResolutionResult
 MetricData  ---  TransformResolutionResult 
 TransformResolutionResult  -->  TransformResolutionResult 
 TransformResolutionResult  -->  TransformResolutionResult 
-TransformResolutionResult  --*  TransformSelectionResolution 
 TransformResolutionResult  -->  TransformSelectionResolution 
+TransformResolutionResult  --*  TransformSelectionResolution 
 ChartComputationResult  ---  TransformResultStrategy 
 ChartComputationResult  ---  TransformResultStrategy 
 IChartComputationStrategy  ---  TransformResultStrategy 
@@ -5192,8 +5342,8 @@ TransformSelectionResolution  -->  TransformSelectionResolution
 SeriesOperationRequest  ---  TransformSeriesOperationRequestMapper 
 ChartDataContext  ---  TransformSessionMilestoneRecorder 
 ChartState  ---  TransformSessionMilestoneRecorder 
-EvidenceDiagnosticsBuilder  ---  TransformSessionMilestoneRecorder 
 LoadRuntimeState  ---  TransformSessionMilestoneRecorder 
+LoadedChartDataSnapshot  ---  TransformSessionMilestoneRecorder 
 MainWindowViewModel  ---  TransformSessionMilestoneRecorder 
 MainWindowViewModel  ---  TransformSessionMilestoneRecorder 
 MainWindowViewModel  ---  TransformSessionMilestoneRecorder 
@@ -5207,12 +5357,9 @@ ChartState  ---  TransformSubtypeSelector
 TransformSubtypeSelector  -->  ChartSubtypeComboHelper 
 TransformSubtypeSelector  -->  ITransformDataPanelController 
 MetricSeriesSelection  ---  TransformSubtypeSelector 
-CapabilityRequest  ---  TransformVNextConsumptionContractBuilder 
-ChartProgramRequest  ---  TransformVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  TransformVNextConsumptionContractBuilder 
-ChartRenderPlanMetadataKeys  ---  TransformVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractBuilder  ---  TransformVNextConsumptionContractBuilder 
 ConsumerProviderContracts  ---  TransformVNextConsumptionContractBuilder 
-ConsumerSurfaceModel  ---  TransformVNextConsumptionContractBuilder 
 TransformVNextConsumptionContractBuilder  -->  TransformCapabilityContract 
 TransformVNextConsumptionContractBuilder  -->  TransformChartRenderRequest 
 VNextUiConsumptionContract  ---  TransformVNextConsumptionContractBuilder 
@@ -5225,13 +5372,13 @@ TransformWorkflowCoordinator  -->  TransformExecutionResult
 TransformWorkflowCoordinator  --*  TransformOperationExecutor 
 TransformWorkflowCoordinator  -->  TransformOperationExecutor 
 TransformWorkflowCoordinator  -..->  TransformOperationExecutor 
-TransformWorkflowCoordinator  -..->  TransformRenderCoordinator 
 TransformWorkflowCoordinator  --*  TransformRenderCoordinator 
+TransformWorkflowCoordinator  -..->  TransformRenderCoordinator 
 TransformWorkflowCoordinator  -->  TransformRenderCoordinator 
 TransformWorkflowCoordinator  -->  TransformResolutionResult 
-TransformWorkflowCoordinator  --*  TransformSessionMilestoneRecorder 
-TransformWorkflowCoordinator  -->  TransformSessionMilestoneRecorder 
 TransformWorkflowCoordinator  -..->  TransformSessionMilestoneRecorder 
+TransformWorkflowCoordinator  -->  TransformSessionMilestoneRecorder 
+TransformWorkflowCoordinator  --*  TransformSessionMilestoneRecorder 
 UiChartRenderModel  -->  ChartAxisModel 
 UiChartRenderModel  -->  ChartFacetModel 
 UiChartRenderModel  -->  ChartInteractionModel 
@@ -5360,30 +5507,30 @@ ChartProgramKind  ---  VNextSeriesLoadResult
 MetricData  ---  VNextSeriesLoadResult 
 VNextSeriesLoadResult  -->  VNextSeriesLoadResult 
 VNextSeriesLoadResult  -->  VNextSeriesLoadResult 
-VNextUiConsumptionContract  -->  AnalyticalCapabilityKind 
 VNextUiConsumptionContract  --*  AnalyticalCapabilityKind 
+VNextUiConsumptionContract  -->  AnalyticalCapabilityKind 
 VNextUiConsumptionContract  -->  AnalyticalCapabilityKind 
 VNextUiConsumptionContract  -->  AnalyticalIntent 
 VNextUiConsumptionContract  -->  CapabilityRequest 
+VNextUiConsumptionContract  -->  ChartProgramKind 
+VNextUiConsumptionContract  -->  ChartProgramKind 
 VNextUiConsumptionContract  --*  ChartProgramKind 
-VNextUiConsumptionContract  -->  ChartProgramKind 
-VNextUiConsumptionContract  -->  ChartProgramKind 
 VNextUiConsumptionContract  -->  ChartProgramRequest 
 ChartRenderPlan  ---  VNextUiConsumptionContract 
 VNextUiConsumptionContract  -->  CompositionKind 
 VNextUiConsumptionContract  --*  CompositionKind 
 VNextUiConsumptionContract  -->  CompositionKind 
-VNextUiConsumptionContract  -->  ConsumerDeliveryContract 
 VNextUiConsumptionContract  --*  ConsumerDeliveryContract 
+VNextUiConsumptionContract  -->  ConsumerDeliveryContract 
 VNextUiConsumptionContract  -->  ConsumerDeliveryContract 
 VNextUiConsumptionContract  -->  ConsumerProviderContract 
 VNextUiConsumptionContract  --*  ConsumerProviderContract 
 VNextUiConsumptionContract  -->  ConsumerProviderContract 
+VNextUiConsumptionContract  -->  ConsumerSurfaceModel 
 VNextUiConsumptionContract  --*  ConsumerSurfaceModel 
 VNextUiConsumptionContract  -->  ConsumerSurfaceModel 
-VNextUiConsumptionContract  -->  ConsumerSurfaceModel 
-VNextUiConsumptionContract  --*  InteractionRequest 
 VNextUiConsumptionContract  -->  InteractionRequest 
+VNextUiConsumptionContract  --*  InteractionRequest 
 VNextUiConsumptionContract  -->  MetricSelectionRequest 
 VNextUiConsumptionContract  --*  OverlayPlan 
 VNextUiConsumptionContract  -->  OverlayPlan 
@@ -5400,8 +5547,8 @@ WeekdayTrendBackendQualification  -->  WeekdayTrendBackendQualification
 WeekdayTrendBackendQualification  -->  WeekdayTrendBackendQualification 
 WeekdayTrendBackendQualification  -->  WeekdayTrendRenderingQualification 
 WeekdayTrendBackendQualification  --*  WeekdayTrendRenderingQualification 
-WeekdayTrendBackendQualification  -->  WeekdayTrendRenderingRoute 
 WeekdayTrendBackendQualification  --*  WeekdayTrendRenderingRoute 
+WeekdayTrendBackendQualification  -->  WeekdayTrendRenderingRoute 
 CapabilityRequest  ---  WeekdayTrendCapabilityContract 
 CapabilityRequest  ---  WeekdayTrendCapabilityContract 
 CapabilityRequest  ---  WeekdayTrendCapabilityContract 
@@ -5417,8 +5564,8 @@ IAnalyticalCapabilityContract  ---  WeekdayTrendCapabilityContract
 WeekdayTrendCapabilityContract  -->  WeekdayTrendCapabilityContract 
 WeekdayTrendCapabilityContract  -->  WeekdayTrendCapabilityContract 
 WeekdayTrendChartController  -->  ChartPanelController 
-WeekdayTrendChartController  -..->  ChartPanelController 
 WeekdayTrendChartController  -->  ChartPanelController 
+WeekdayTrendChartController  -..->  ChartPanelController 
 ChartUiDefaults  ---  WeekdayTrendChartController 
 WeekdayTrendChartController  -..-|>  ICartesianChartControllerHost 
 WeekdayTrendChartController  -..-|>  IChartPanelControllerHost 
@@ -5428,8 +5575,8 @@ LegendToggleManager  ---  WeekdayTrendChartController
 RenderingDefaults  ---  WeekdayTrendChartController 
 WeekdayTrendAverageToggleEventArgs  ---  WeekdayTrendChartController 
 WeekdayTrendDayToggleEventArgs  ---  WeekdayTrendChartController 
-WeekdayTrendChartControllerAdapter  -->  CartesianChartControllerAdapterBase 
 WeekdayTrendChartControllerAdapter  -..-|>  CartesianChartControllerAdapterBase 
+WeekdayTrendChartControllerAdapter  -->  CartesianChartControllerAdapterBase 
 WeekdayTrendChartControllerAdapter  -->  ChartComboItemHelper 
 WeekdayTrendChartControllerAdapter  -..-|>  ChartControllerAdapterBase 
 WeekdayTrendChartControllerAdapter  -->  ChartControllerKeys 
@@ -5442,9 +5589,9 @@ WeekdayTrendChartControllerAdapter  -->  ICartesianChartControllerHost
 WeekdayTrendChartControllerAdapter  -..-|>  ICartesianChartSurface 
 WeekdayTrendChartControllerAdapter  -..-|>  IChartController 
 IStrategyCutOverService  ---  WeekdayTrendChartControllerAdapter 
-WeekdayTrendChartControllerAdapter  --*  IWeekdayTrendChartController 
-WeekdayTrendChartControllerAdapter  -..->  IWeekdayTrendChartController 
 WeekdayTrendChartControllerAdapter  -->  IWeekdayTrendChartController 
+WeekdayTrendChartControllerAdapter  -..->  IWeekdayTrendChartController 
+WeekdayTrendChartControllerAdapter  --*  IWeekdayTrendChartController 
 WeekdayTrendChartControllerAdapter  -..-|>  IWeekdayTrendChartControllerExtras 
 IWeekdayTrendRenderingContract  ---  WeekdayTrendChartControllerAdapter 
 IWeekdayTrendRenderingContract  ---  WeekdayTrendChartControllerAdapter 
@@ -5470,8 +5617,8 @@ WeekdayTrendChartMode  ---  WeekdayTrendChartControllerAdapter
 WeekdayTrendChartRenderHost  ---  WeekdayTrendChartControllerAdapter 
 WeekdayTrendChartRenderHost  ---  WeekdayTrendChartControllerAdapter 
 WeekdayTrendChartRenderRequest  ---  WeekdayTrendChartControllerAdapter 
-WeekdayTrendChartControllerAdapter  -..->  WeekdayTrendComputationInvoker 
 WeekdayTrendChartControllerAdapter  -->  WeekdayTrendComputationInvoker 
+WeekdayTrendChartControllerAdapter  -..->  WeekdayTrendComputationInvoker 
 WeekdayTrendDayToggleEventArgs  ---  WeekdayTrendChartControllerAdapter 
 WeekdayTrendRenderingRoute  ---  WeekdayTrendChartControllerAdapter 
 WeekdayTrendRenderingRoute  ---  WeekdayTrendChartControllerAdapter 
@@ -5578,16 +5725,16 @@ WeekdayTrendRenderPlanAdapter  ---  WeekdayTrendRenderPlanBuilder
 WeekdayTrendRenderPlanBuilder  -->  WeekdayTrendRenderingRoute 
 WeekdayTrendResult  ---  WeekdayTrendRenderPlanBuilder 
 WeekdayTrendSeries  ---  WeekdayTrendRenderPlanBuilder 
-WeekdayTrendRenderSurface  -->  WeekdayTrendChartRenderHost 
 WeekdayTrendRenderSurface  --*  WeekdayTrendChartRenderHost 
+WeekdayTrendRenderSurface  -->  WeekdayTrendChartRenderHost 
 WeekdayTrendRenderSurface  --*  WeekdayTrendChartRenderRequest 
 WeekdayTrendRenderSurface  -->  WeekdayTrendChartRenderRequest 
 WeekdayTrendRenderSurface  -->  WeekdayTrendRenderSurface 
 WeekdayTrendRenderSurface  -->  WeekdayTrendRenderSurface 
 WeekdayTrendRenderingCapabilities  -->  WeekdayTrendRenderingCapabilities 
 WeekdayTrendRenderingCapabilities  -->  WeekdayTrendRenderingCapabilities 
-WeekdayTrendRenderingCapabilities  --*  WeekdayTrendRenderingQualification 
 WeekdayTrendRenderingCapabilities  -->  WeekdayTrendRenderingQualification 
+WeekdayTrendRenderingCapabilities  --*  WeekdayTrendRenderingQualification 
 ChartRenderAdapterResult  ---  WeekdayTrendRenderingContract 
 ChartRenderAdapterResult  ---  WeekdayTrendRenderingContract 
 ChartRenderPlanAdapterDispatcher  ---  WeekdayTrendRenderingContract 
@@ -5653,14 +5800,12 @@ MetricData  ---  WeekdayTrendStrategyFactory
 StrategyCreationParameters  ---  WeekdayTrendStrategyFactory 
 WeekdayTrendStrategyFactory  -..-|>  StrategyFactoryBase 
 WeekdayTrendComputationStrategy  ---  WeekdayTrendStrategyFactory 
-CapabilityRequest  ---  WeekdayTrendVNextConsumptionContractBuilder 
-ChartProgramRequest  ---  WeekdayTrendVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  WeekdayTrendVNextConsumptionContractBuilder 
 ChartRenderPlan  ---  WeekdayTrendVNextConsumptionContractBuilder 
-ChartRenderPlanMetadataKeys  ---  WeekdayTrendVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractBuilder  ---  WeekdayTrendVNextConsumptionContractBuilder 
+ChartRenderPlanConsumptionContractMetadata  ---  WeekdayTrendVNextConsumptionContractBuilder 
 ChartState  ---  WeekdayTrendVNextConsumptionContractBuilder 
 ConsumerProviderContracts  ---  WeekdayTrendVNextConsumptionContractBuilder 
-ConsumerSurfaceModel  ---  WeekdayTrendVNextConsumptionContractBuilder 
 VNextUiConsumptionContract  ---  WeekdayTrendVNextConsumptionContractBuilder 
 VNextUiConsumptionContract  ---  WeekdayTrendVNextConsumptionContractBuilder 
 WeekdayTrendVNextConsumptionContractBuilder  -->  WeekdayTrendCapabilityContract 
@@ -5689,8 +5834,8 @@ IUserNotificationService  ---  WeeklyDistributionService
 WeeklyDistributionConfiguration  ---  WeeklyDistributionService 
 WeeklyDistributionStrategy  ---  WeeklyDistributionService 
 WeeklyIntervalRenderer  ---  WeeklyDistributionService 
-WeeklyDistributionStrategy  -..-|>  BucketDistributionStrategy 
 WeeklyDistributionStrategy  -->  BucketDistributionStrategy 
+WeeklyDistributionStrategy  -..-|>  BucketDistributionStrategy 
 WeeklyDistributionStrategy  -..-|>  IChartComputationStrategy 
 IUnitResolutionService  ---  WeeklyDistributionStrategy 
 MetricData  ---  WeeklyDistributionStrategy 
@@ -5726,13 +5871,12 @@ WorkspaceLoadCoordinator  -->  ClearActions
 WorkspaceLoadCoordinator  -->  LoadExecutionActions 
 WorkspaceLoadCoordinator  -->  LoadValidationInput 
 WorkspaceLoadCoordinator  -->  ValidationActions 
-ChartDataContext  ---  WorkspaceSessionMilestoneRecorder 
 ChartState  ---  WorkspaceSessionMilestoneRecorder 
-EvidenceDiagnosticsBuilder  ---  WorkspaceSessionMilestoneRecorder 
 LoadRuntimeState  ---  WorkspaceSessionMilestoneRecorder 
+LoadedChartDataSnapshot  ---  WorkspaceSessionMilestoneRecorder 
 MainWindowViewModel  ---  WorkspaceSessionMilestoneRecorder 
 MainWindowViewModel  ---  WorkspaceSessionMilestoneRecorder 
 MainWindowViewModel  ---  WorkspaceSessionMilestoneRecorder 
 MetricSeriesSelection  ---  WorkspaceSessionMilestoneRecorder 
 MetricState  ---  WorkspaceSessionMilestoneRecorder 
-SessionMilestoneSnapshot  ---  WorkspaceSessionMilestoneRecorder 
+WorkspaceSessionMilestoneRecorder  -->  SessionMilestoneSnapshot 
