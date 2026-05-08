@@ -276,9 +276,10 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 - [x] Stage 20 — Cut over Weekday Trend family input
 - [x] Stage 21 — Align Transform input with Operation Chain concepts
 - [x] Stage 22 — Cut over Main / Cartesian rendering inputs
-- [ ] Stage 23 — Retire ChartDataContext as shared state carrier
+- [ ] Stage 23 — Retire ChartDataContext as shared state carrier (paused after first slice)
 - [ ] Stage 24 — Retire legacy projection / compatibility paths
 - [ ] Stage 25 — Simplify orchestration and composition hubs
+- [ ] Pivot A — Bounded behavior expansion through target architecture
 - [ ] Stage 26 — Productize bounded Operation Chain / Transform convergence
 - [ ] Stage 27 — Complete terminal delivery and evidence separation
 - [ ] Stage 28 — Final bridge retirement pass
@@ -293,13 +294,24 @@ Active-slice tracker:
 
 | Field | Value |
 |---|---|
-| Active stage | Stage 23 active |
-| Active pressure point / construction concern | ChartDataContext still remains as a shared state carrier; toggle enablement now reads LoadedChartDataSnapshot |
-| Blueprint layer(s) | Canonical Source / Input; Projection / Translation; Evidence / Diagnostics |
-| Ownership zone(s) | Emits / Governs / Observes |
+| Active stage | Pivot A next |
+| Active pressure point / construction concern | Architectural refit is paused after Stage 23 first slice; next work should add bounded user-visible behavior through the target architecture |
+| Blueprint layer(s) | Canonical Source / Input; Reasoning / Capability; Transformation / Projection; Consumer Surface; Evidence / Diagnostics |
+| Ownership zone(s) | Emits / Governs / Transforms / Delivers / Observes |
 | Slice charter file | Inline only |
-| Required evidence | Stage 23 active: toggle enablement cut over from `LastContext` to `LastLoadedData`; empty MainCharts/CMS fallback contexts removed; focused coordination/architecture tests 128 passed; `DataVisualiser.Tests` 1071 passed; `DataFileReader.Tests` 15 passed |
-| Stop condition | Main / Cartesian cutover requires a broad MainChartsView rewrite or changes user-visible chart semantics outside the selected slice |
+| Required evidence | Stage 23 first slice complete: toggle enablement cut over from `LastContext` to `LastLoadedData`; empty MainCharts/CMS fallback contexts removed; focused coordination/architecture tests 128 passed; `DataVisualiser.Tests` 1071 passed; `DataFileReader.Tests` 15 passed; manual stress export `reachability-20260508-163428.json` verified |
+| Stop condition | Behavior expansion requires bypassing canonical meaning, provenance, capability contracts, consumer-neutral output, or the existing target-spine boundaries |
+
+## Current Pivot Note — 2026-05-08
+
+```text
+Pause the bridge-removal/refit track after the completed Stage 23 first slice.
+Begin one bounded behavior-expansion slice that delivers practical user value
+through the target architecture. Do not reopen broad theory, do not create a
+new mega-object, and do not add UI-first behavior. After the behavior slice is
+implemented, tested, and manually smoked, realign Stages 23-29 against the new
+code state before resuming closure work.
+```
 
 ---
 
@@ -1509,6 +1521,50 @@ Stop condition:
 ```text
 Stop if removal would reduce functionality, remove latent-but-wanted behavior,
 or force ChartDataContext to be replaced by another mega-object.
+```
+
+---
+
+## Pivot A — Bounded Behavior Expansion Through Target Architecture
+
+Goal:
+
+```text
+Use the stabilized target-spine work to add one small, practical behavior slice
+that creates user value while strengthening canonical meaning, capability,
+composition, consumer-neutral output, and evidence boundaries.
+```
+
+Tasks:
+
+- [ ] Select one bounded behavior slice, preferably Operation Chain / Transform / computational workflow adjacent.
+- [ ] Define the behavior upstream of UI/rendering through existing canonical input, capability, composition, and output concepts.
+- [ ] Preserve provenance, traceability, compatibility qualification, and diagnostic export.
+- [ ] Keep UI changes terminal and thin; consumers receive meaning but do not define it.
+- [ ] Add focused automated tests for capability/composition/output behavior and any affected UI coordination.
+- [ ] Run manual smoke/export tests if live UI behavior changes.
+- [ ] Reassess and realign Stages 23-29 after the behavior slice lands.
+
+Completion condition:
+
+```text
+One bounded behavior slice is usable, tested, manually smoked if needed, and
+implemented through the target architecture rather than beside it.
+```
+
+Evidence:
+
+```text
+Focused behavior tests, full test suites, export/manual smoke logs if UI changed,
+and a post-slice realignment of remaining closure stages.
+```
+
+Stop condition:
+
+```text
+Stop if the behavior requires UI-first semantics, new ChartDataContext coupling,
+vendor-specific capability definitions, broad formal algebra, or a new shared
+mega-object.
 ```
 
 ---
