@@ -1,33 +1,33 @@
-using DataVisualiser.Core.Orchestration;
+using DataVisualiser.UI.State;
 
 namespace DataVisualiser.UI.MainHost.Coordination;
 
 public static class MainChartsViewToggleStateEvaluator
 {
-    public static bool HasRenderableLoadedContext(ChartDataContext? context)
+    public static bool HasRenderableLoadedData(LoadedChartDataSnapshot snapshot)
     {
-        return context?.Data1 != null && context.Data1.Any();
+        return snapshot.Present && snapshot.Data1Count > 0;
     }
 
-    public static bool HasLoadedSecondaryData(ChartDataContext? context)
+    public static bool HasLoadedSecondaryData(LoadedChartDataSnapshot snapshot)
     {
-        return context?.Data2 != null && context.Data2.Any();
+        return snapshot.Present && snapshot.Data2Count > 0;
     }
 
-    public static bool CanTogglePrimaryCharts(ChartDataContext? context)
+    public static bool CanTogglePrimaryCharts(LoadedChartDataSnapshot snapshot)
     {
-        return HasRenderableLoadedContext(context);
+        return HasRenderableLoadedData(snapshot);
     }
 
-    public static bool CanToggleSecondaryCharts(ChartDataContext? context)
+    public static bool CanToggleSecondaryCharts(LoadedChartDataSnapshot snapshot)
     {
-        return HasLoadedSecondaryData(context);
+        return HasLoadedSecondaryData(snapshot);
     }
 
-    public static bool CanUseStackedDisplay(ChartDataContext? context, int selectedSubtypeCount)
+    public static bool CanUseStackedDisplay(LoadedChartDataSnapshot snapshot, int selectedSubtypeCount)
     {
-        return HasRenderableLoadedContext(context)
-            ? HasLoadedSecondaryData(context)
+        return HasRenderableLoadedData(snapshot)
+            ? HasLoadedSecondaryData(snapshot)
             : selectedSubtypeCount >= 2;
     }
 }

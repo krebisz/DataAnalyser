@@ -775,6 +775,10 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("MainChartsViewToggleStateCoordinator", source, StringComparison.Ordinal);
         Assert.Contains("_toggleStateCoordinator.UpdatePrimaryChartToggles", primaryMethodBody, StringComparison.Ordinal);
         Assert.Contains("_toggleStateCoordinator.UpdateSecondaryChartToggles", secondaryMethodBody, StringComparison.Ordinal);
+        Assert.Contains("ChartState.LastLoadedData", primaryMethodBody, StringComparison.Ordinal);
+        Assert.Contains("ChartState.LastLoadedData", secondaryMethodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartState.LastContext", primaryMethodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("ChartState.LastContext", secondaryMethodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("HasLoadedData()", primaryMethodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("HasLoadedData()", secondaryMethodBody, StringComparison.Ordinal);
     }
@@ -790,6 +794,8 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("_cmsToggleCoordinator.HandleStrategyToggleChangedAsync", ExtractMethodBody(source, "private async void OnCmsStrategyToggled"), StringComparison.Ordinal);
         Assert.DoesNotContain("CmsConfiguration.UseCmsData =", ExtractMethodBody(source, "private async void OnCmsToggleChanged"), StringComparison.Ordinal);
         Assert.DoesNotContain("CmsConfiguration.UseCmsForSingleMetric =", ExtractMethodBody(source, "private async void OnCmsStrategyToggled"), StringComparison.Ordinal);
+        Assert.DoesNotContain("context ?? new ChartDataContext()", SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainHost", "Coordination", "MainChartsViewCmsToggleCoordinator.cs"), StringComparison.Ordinal);
     }
 
     [Fact]

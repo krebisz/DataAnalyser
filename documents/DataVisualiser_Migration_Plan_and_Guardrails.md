@@ -287,18 +287,18 @@ Use this as the visible implementation checklist. Only one stage and one slice s
 Active-slice tracker:
 
 - [ ] Not started
-- [ ] Active
-- [x] Complete
+- [x] Active
+- [ ] Complete
 - [ ] Blocked
 
 | Field | Value |
 |---|---|
-| Active stage | Stage 23 next |
-| Active pressure point / construction concern | ChartDataContext still remains as a shared state carrier after explicit Main / Cartesian input seams |
+| Active stage | Stage 23 active |
+| Active pressure point / construction concern | ChartDataContext still remains as a shared state carrier; toggle enablement now reads LoadedChartDataSnapshot |
 | Blueprint layer(s) | Canonical Source / Input; Projection / Translation; Evidence / Diagnostics |
 | Ownership zone(s) | Emits / Governs / Observes |
 | Slice charter file | Inline only |
-| Required evidence | Stage 22 complete: `DataVisualiser.Tests` 1069 passed; `DataFileReader.Tests` 15 passed; focused Main / Cartesian tests 46 passed; manual smoke/export evidence `reachability-20260506-181329.json` verified; Diff/Ratio excluded from manual smoke because it is not UI-reachable |
+| Required evidence | Stage 23 active: toggle enablement cut over from `LastContext` to `LastLoadedData`; empty MainCharts/CMS fallback contexts removed; focused coordination/architecture tests 128 passed; `DataVisualiser.Tests` 1071 passed; `DataFileReader.Tests` 15 passed |
 | Stop condition | Main / Cartesian cutover requires a broad MainChartsView rewrite or changes user-visible chart semantics outside the selected slice |
 
 ---

@@ -66,8 +66,8 @@ public sealed class MainChartsViewCmsToggleCoordinator
         CmsConfiguration.UseCmsData = isEnabled;
         actions.UpdateToggleEnablement(isEnabled);
 
-        if (isBarPieVisible)
-            await actions.RenderChartAsync(ChartControllerKeys.BarPie, context ?? new ChartDataContext());
+        if (isBarPieVisible && context != null)
+            await actions.RenderChartAsync(ChartControllerKeys.BarPie, context);
     }
 
     public async Task HandleStrategyToggleChangedAsync(bool isInitializing, StrategyToggleInput input, bool isBarPieVisible, ChartDataContext? context, ChangeActions actions)
@@ -86,8 +86,8 @@ public sealed class MainChartsViewCmsToggleCoordinator
         CmsConfiguration.UseCmsForHourlyDistribution = input.UseHourlyDistribution;
         CmsConfiguration.UseCmsForBarPie = input.UseBarPie;
 
-        if (isBarPieVisible)
-            await actions.RenderChartAsync(ChartControllerKeys.BarPie, context ?? new ChartDataContext());
+        if (isBarPieVisible && context != null)
+            await actions.RenderChartAsync(ChartControllerKeys.BarPie, context);
     }
 
     private static void UpdateEnablement(bool enabled, SyncActions actions)

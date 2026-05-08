@@ -305,7 +305,7 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void UpdateSecondaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
-        _toggleStateCoordinator.UpdateSecondaryChartToggles(_viewModel.ChartState.LastContext, CreateToggleStateActions());
+        _toggleStateCoordinator.UpdateSecondaryChartToggles(_viewModel.ChartState.LastLoadedData, CreateToggleStateActions());
     }
 
     /// <summary>
@@ -314,7 +314,7 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void UpdatePrimaryDataRequiredButtonStates(int selectedSubtypeCount)
     {
-        _toggleStateCoordinator.UpdatePrimaryChartToggles(_viewModel.ChartState.LastContext, selectedSubtypeCount, CreateToggleStateActions());
+        _toggleStateCoordinator.UpdatePrimaryChartToggles(_viewModel.ChartState.LastLoadedData, selectedSubtypeCount, CreateToggleStateActions());
     }
 
     private void OnFromDateChanged(object sender, SelectionChangedEventArgs e)
@@ -1042,7 +1042,7 @@ public partial class MainChartsView : UserControl
         _viewModel.CompleteInitialization();
 
         _viewModel.SetNormalizationMode(NormalizationMode.PercentageOfMax);
-        _viewModel.ChartState.LastContext = new ChartDataContext();
+        _viewModel.ChartState.LastContext = null;
         _viewModel.ChartState.LastLoadRuntime = null;
 
         SyncMainDisplayModeSelection();
@@ -1134,7 +1134,7 @@ public partial class MainChartsView : UserControl
                 () => _viewModel.MetricState.SelectedMetricType = null,
                 () =>
                 {
-                    _viewModel.ChartState.LastContext = new ChartDataContext();
+                    _viewModel.ChartState.LastContext = null;
                     _viewModel.ChartState.LastLoadRuntime = null;
                 },
                 ResetDateRangeToDefault,
@@ -1469,7 +1469,7 @@ public partial class MainChartsView : UserControl
             selections => _viewModel.SetSelectedSeries(selections),
             () =>
             {
-                _viewModel.ChartState.LastContext = new ChartDataContext();
+                _viewModel.ChartState.LastContext = null;
                 _viewModel.ChartState.LastLoadRuntime = null;
             },
             UpdatePrimaryDataRequiredButtonStates,

@@ -16,7 +16,7 @@ public sealed class MainChartsViewToggleStateCoordinatorTests
         var controllers = CreateControllers();
 
         coordinator.UpdatePrimaryChartToggles(
-            CreateContext(includeSecondary: true),
+            CreateSnapshot(includeSecondary: true),
             selectedSubtypeCount: 2,
             CreateActions(controllers));
 
@@ -36,7 +36,7 @@ public sealed class MainChartsViewToggleStateCoordinatorTests
         var calls = new List<string>();
 
         coordinator.UpdateSecondaryChartToggles(
-            CreateContext(includeSecondary: false),
+            CreateSnapshot(includeSecondary: false),
             new MainChartsViewToggleStateCoordinator.Actions(
                 key => controllers[key],
                 key => calls.Add($"clear:{key}"),
@@ -58,7 +58,7 @@ public sealed class MainChartsViewToggleStateCoordinatorTests
         var calls = new List<string>();
 
         coordinator.UpdateSecondaryChartToggles(
-            CreateContext(includeSecondary: true),
+            CreateSnapshot(includeSecondary: true),
             new MainChartsViewToggleStateCoordinator.Actions(
                 key => controllers[key],
                 key => calls.Add($"clear:{key}"),
@@ -93,13 +93,13 @@ public sealed class MainChartsViewToggleStateCoordinatorTests
         };
     }
 
-    private static ChartDataContext CreateContext(bool includeSecondary)
+    private static LoadedChartDataSnapshot CreateSnapshot(bool includeSecondary)
     {
-        return new ChartDataContext
+        return LoadedChartDataSnapshot.FromContext(new ChartDataContext
         {
             Data1 = [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 1m }],
             Data2 = includeSecondary ? [new MetricData { NormalizedTimestamp = DateTime.Today, Value = 2m }] : null
-        };
+        });
     }
 
     private class FakeChartController : IChartController

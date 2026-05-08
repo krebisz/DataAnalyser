@@ -90,6 +90,37 @@ public sealed class MainChartsViewCmsToggleCoordinatorTests
     }
 
     [Fact]
+    public async Task HandleCmsToggleChangedAsync_ShouldNotRenderBarPieWithEmptyFallbackContext()
+    {
+        var original = CaptureConfiguration();
+        try
+        {
+            var coordinator = new MainChartsViewCmsToggleCoordinator();
+            var calls = new List<string>();
+
+            await coordinator.HandleCmsToggleChangedAsync(
+                isInitializing: false,
+                isEnabled: true,
+                isBarPieVisible: true,
+                context: null,
+                new MainChartsViewCmsToggleCoordinator.ChangeActions(
+                    enabled => calls.Add($"enabled:{enabled}"),
+                    (key, _) =>
+                    {
+                        calls.Add($"render:{key}");
+                        return Task.CompletedTask;
+                    }));
+
+            Assert.True(CmsConfiguration.UseCmsData);
+            Assert.Equal(["enabled:True"], calls);
+        }
+        finally
+        {
+            RestoreConfiguration(original);
+        }
+    }
+
+    [Fact]
     public async Task HandleStrategyToggleChangedAsync_ShouldUpdateStrategyFlagsWithoutRenderWhenHidden()
     {
         var original = CaptureConfiguration();
@@ -119,6 +150,37 @@ public sealed class MainChartsViewCmsToggleCoordinatorTests
             Assert.False(CmsConfiguration.UseCmsForWeekdayTrend);
             Assert.True(CmsConfiguration.UseCmsForHourlyDistribution);
             Assert.False(CmsConfiguration.UseCmsForBarPie);
+            Assert.Empty(calls);
+        }
+        finally
+        {
+            RestoreConfiguration(original);
+        }
+    }
+
+    [Fact]
+    public async Task HandleStrategyToggleChangedAsync_ShouldNotRenderBarPieWithEmptyFallbackContext()
+    {
+        var original = CaptureConfiguration();
+        try
+        {
+            var coordinator = new MainChartsViewCmsToggleCoordinator();
+            var calls = new List<string>();
+
+            await coordinator.HandleStrategyToggleChangedAsync(
+                isInitializing: false,
+                new MainChartsViewCmsToggleCoordinator.StrategyToggleInput(true, false, true, false, true, false, true, false),
+                isBarPieVisible: true,
+                context: null,
+                new MainChartsViewCmsToggleCoordinator.ChangeActions(
+                    _ => calls.Add("enabled"),
+                    (key, _) =>
+                    {
+                        calls.Add($"render:{key}");
+                        return Task.CompletedTask;
+                    }));
+
+            Assert.True(CmsConfiguration.UseCmsForSingleMetric);
             Assert.Empty(calls);
         }
         finally

@@ -1,6 +1,5 @@
-using DataVisualiser.Core.Orchestration;
-
 using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.UI.State;
 namespace DataVisualiser.UI.MainHost.Coordination;
 
 public sealed class MainChartsViewToggleStateCoordinator
@@ -11,27 +10,27 @@ public sealed class MainChartsViewToggleStateCoordinator
         Action SetNormalizedHidden,
         Action SetDiffRatioHidden);
 
-    public void UpdatePrimaryChartToggles(ChartDataContext? context, int selectedSubtypeCount, Actions actions)
+    public void UpdatePrimaryChartToggles(LoadedChartDataSnapshot snapshot, int selectedSubtypeCount, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(actions);
 
-        var canToggle = MainChartsViewToggleStateEvaluator.CanTogglePrimaryCharts(context);
+        var canToggle = MainChartsViewToggleStateEvaluator.CanTogglePrimaryCharts(snapshot);
 
         var mainController = actions.ResolveController(ChartControllerKeys.Main);
         mainController.SetToggleEnabled(canToggle);
-        UpdateMainChartStackedAvailability(context, selectedSubtypeCount, mainController);
+        UpdateMainChartStackedAvailability(snapshot, selectedSubtypeCount, mainController);
         actions.ResolveController(ChartControllerKeys.WeeklyTrend).SetToggleEnabled(canToggle);
         actions.ResolveController(ChartControllerKeys.Distribution).SetToggleEnabled(canToggle);
         actions.ResolveController(ChartControllerKeys.Transform).SetToggleEnabled(canToggle);
         actions.ResolveController(ChartControllerKeys.BarPie).SetToggleEnabled(canToggle);
     }
 
-    public void UpdateSecondaryChartToggles(ChartDataContext? context, Actions actions)
+    public void UpdateSecondaryChartToggles(LoadedChartDataSnapshot snapshot, Actions actions)
     {
         ArgumentNullException.ThrowIfNull(actions);
 
-        var hasSecondaryData = MainChartsViewToggleStateEvaluator.HasLoadedSecondaryData(context);
-        var canToggle = MainChartsViewToggleStateEvaluator.CanToggleSecondaryCharts(context);
+        var hasSecondaryData = MainChartsViewToggleStateEvaluator.HasLoadedSecondaryData(snapshot);
+        var canToggle = MainChartsViewToggleStateEvaluator.CanToggleSecondaryCharts(snapshot);
 
         if (!hasSecondaryData)
         {
@@ -45,9 +44,9 @@ public sealed class MainChartsViewToggleStateCoordinator
         actions.ResolveController(ChartControllerKeys.DiffRatio).SetToggleEnabled(canToggle);
     }
 
-    private static void UpdateMainChartStackedAvailability(ChartDataContext? context, int selectedSubtypeCount, IChartController controller)
+    private static void UpdateMainChartStackedAvailability(LoadedChartDataSnapshot snapshot, int selectedSubtypeCount, IChartController controller)
     {
-        var canStack = MainChartsViewToggleStateEvaluator.CanUseStackedDisplay(context, selectedSubtypeCount);
+        var canStack = MainChartsViewToggleStateEvaluator.CanUseStackedDisplay(snapshot, selectedSubtypeCount);
         if (controller is IMainChartControllerExtras extras)
             extras.SetStackedAvailability(canStack);
     }
