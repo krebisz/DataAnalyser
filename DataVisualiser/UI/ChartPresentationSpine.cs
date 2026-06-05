@@ -4,7 +4,7 @@ namespace DataVisualiser.UI;
 
 /// <summary>
 ///     Thin entry points for the interactive presentation pipeline documented in
-///     <c>documents/DATAVISUALISER_PIPELINE_SPINE.md</c>. All behavior stays in
+///     <c>documents/AI_REENTRY_HANDOFF.md</c> (Section 3). All behavior stays in
 ///     <see cref="MainWindowViewModel" /> and coordinators; this type only names the spine.
 /// </summary>
 public static class ChartPresentationSpine

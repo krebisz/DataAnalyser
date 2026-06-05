@@ -294,12 +294,12 @@ Active-slice tracker:
 
 | Field | Value |
 |---|---|
-| Active stage | Pivot A next |
-| Active pressure point / construction concern | Architectural refit is paused after Stage 23 first slice; next work should add bounded user-visible behavior through the target architecture |
+| Active stage | Pivot A active |
+| Active pressure point / construction concern | Operation Chain now begins behavior expansion by loading independent metric/submetric inputs into grids through the target metric snapshot path |
 | Blueprint layer(s) | Canonical Source / Input; Reasoning / Capability; Transformation / Projection; Consumer Surface; Evidence / Diagnostics |
 | Ownership zone(s) | Emits / Governs / Transforms / Delivers / Observes |
 | Slice charter file | Inline only |
-| Required evidence | Stage 23 first slice complete: toggle enablement cut over from `LastContext` to `LastLoadedData`; empty MainCharts/CMS fallback contexts removed; focused coordination/architecture tests 128 passed; `DataVisualiser.Tests` 1071 passed; `DataFileReader.Tests` 15 passed; manual stress export `reachability-20260508-163428.json` verified |
+| Required evidence | Pivot A active: Operation Chain input grids implemented through `MetricSelectionRequest` / `MetricLoadSnapshotGateway`; input date range refresh follows selected metric/submetric inputs; focused Operation Chain / architecture tests 114 passed; `DataVisualiser.Tests` 1074 passed; `DataFileReader.Tests` 15 passed; manual smoke pending |
 | Stop condition | Behavior expansion requires bypassing canonical meaning, provenance, capability contracts, consumer-neutral output, or the existing target-spine boundaries |
 
 ## Current Pivot Note — 2026-05-08
@@ -1537,11 +1537,11 @@ composition, consumer-neutral output, and evidence boundaries.
 
 Tasks:
 
-- [ ] Select one bounded behavior slice, preferably Operation Chain / Transform / computational workflow adjacent.
-- [ ] Define the behavior upstream of UI/rendering through existing canonical input, capability, composition, and output concepts.
-- [ ] Preserve provenance, traceability, compatibility qualification, and diagnostic export.
-- [ ] Keep UI changes terminal and thin; consumers receive meaning but do not define it.
-- [ ] Add focused automated tests for capability/composition/output behavior and any affected UI coordination.
+- [x] Select one bounded behavior slice, preferably Operation Chain / Transform / computational workflow adjacent.
+- [x] Define the behavior upstream of UI/rendering through existing canonical input, capability, composition, and output concepts.
+- [x] Preserve provenance, traceability, compatibility qualification, and diagnostic export.
+- [x] Keep UI changes terminal and thin; consumers receive meaning but do not define it.
+- [x] Add focused automated tests for capability/composition/output behavior and any affected UI coordination.
 - [ ] Run manual smoke/export tests if live UI behavior changes.
 - [ ] Reassess and realign Stages 23-29 after the behavior slice lands.
 
