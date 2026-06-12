@@ -33,25 +33,18 @@ public static class SamsungHealthCsvParser
                 return metrics;
             }
 
-            // First line contains metric type identifier
-            var metricTypeIdentifier = lines[0].Split(',')[0];
-            var metricType = ExtractMetricTypeFromIdentifier(metricTypeIdentifier, filePath);
-            var metricIdentifierForFields = ExtractMetricIdentifierForCsvFields(metricTypeIdentifier, filePath);
+            var layout = DetectCsvLayout(lines, filePath);
 
-            // Second line contains column headers
-            var headers = ParseCsvLine(lines[1]);
-
-            // Process data rows (starting from line 3, index 2)
-            for (var i = 2; i < lines.Count; i++)
+            for (var i = layout.DataStartIndex; i < lines.Count; i++)
             {
                 var values = ParseCsvLine(lines[i]);
 
                 // Normalize values to match header count
                 // If more values than headers: truncate to header count
                 // If fewer values than headers: pad with empty strings
-                var normalizedValues = NormalizeCsvRow(values, headers.Count);
+                var normalizedValues = NormalizeCsvRow(values, layout.Headers.Count);
 
-                var rowMetrics = ParseCsvRow(headers, normalizedValues, filePath, metricType, metricIdentifierForFields);
+                var rowMetrics = ParseCsvRow(layout.Headers, normalizedValues, filePath, layout.MetricType, layout.MetricIdentifierForFields);
                 metrics.AddRange(rowMetrics);
             }
         }
@@ -62,6 +55,44 @@ public static class SamsungHealthCsvParser
 
         return metrics;
     }
+
+    private static CsvLayout DetectCsvLayout(IReadOnlyList<string> lines, string filePath)
+    {
+        var firstLineValues = ParseCsvLine(lines[0]);
+        var firstCell = firstLineValues.FirstOrDefault() ?? string.Empty;
+        var hasVendorIdentifier = firstLineValues.Count == 1 &&
+                                  firstCell.Contains("com.samsung", StringComparison.OrdinalIgnoreCase);
+
+        if (hasVendorIdentifier)
+        {
+            return new CsvLayout(
+                ExtractMetricTypeFromIdentifier(firstCell, filePath),
+                ExtractMetricIdentifierForCsvFields(firstCell, filePath),
+                ParseCsvLine(lines[1]),
+                DataStartIndex: 2);
+        }
+
+        if (firstLineValues.Count > 1)
+        {
+            return new CsvLayout(
+                ExtractMetricTypeFromFileName(filePath),
+                ExtractMetricIdentifierForCsvFields(string.Empty, filePath),
+                firstLineValues,
+                DataStartIndex: 1);
+        }
+
+        return new CsvLayout(
+            ExtractMetricTypeFromIdentifier(firstCell, filePath),
+            ExtractMetricIdentifierForCsvFields(firstCell, filePath),
+            ParseCsvLine(lines[1]),
+            DataStartIndex: 2);
+    }
+
+    private sealed record CsvLayout(
+        string MetricType,
+        string MetricIdentifierForFields,
+        List<string> Headers,
+        int DataStartIndex);
 
     /// <summary>
     ///     Normalizes CSV row values to match header count
@@ -127,7 +158,15 @@ public static class SamsungHealthCsvParser
             return SamsungHealthParser.ToPascalCase(metricPart);
         }
 
-        // Fallback to extracting from file path
+        return ExtractMetricTypeFromFileName(filePath);
+    }
+
+    private static string ExtractMetricTypeFromFileName(string filePath)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(filePath);
+        if (!string.IsNullOrWhiteSpace(fileName))
+            return SamsungHealthParser.ToPascalCase(fileName);
+
         return SamsungHealthParser.ExtractMetricType(filePath);
     }
 
