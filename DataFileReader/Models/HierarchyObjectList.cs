@@ -5,6 +5,10 @@ namespace DataFileReader.Models;
 
 public class HierarchyObjectList
 {
+    private const string DuplicateKeySeparator = "\u001F";
+    private readonly HashSet<string> _duplicateKeys = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _pathToId = new(StringComparer.Ordinal);
+
     public HierarchyObjectList()
     {
         HierarchyObjects = new List<HierarchyObject>();
@@ -40,14 +44,12 @@ public class HierarchyObjectList
 
 
         if (classID == "Container")
-            foreach (var child in jToken.Children<JProperty>())
-            {
-                var childName = child.Name; // This is the property name
-                hierarchyObject.Value += $"{childName}; ";
-            }
+            hierarchyObject.Value = string.Concat(jToken.Children<JProperty>().Select(child => $"{child.Name}; "));
         else if (classID == "Array")
-            for (var i = 0; i < jToken.Children().Count(); i++)
-                hierarchyObject.Value += $"{hierarchyObject.Name}[{i}]; ";
+        {
+            var childCount = jToken is JArray array ? array.Count : jToken.Children().Count();
+            hierarchyObject.Value = string.Concat(Enumerable.Range(0, childCount).Select(i => $"{hierarchyObject.Name}[{i}]; "));
+        }
         else
             hierarchyObject.Value = jToken.ToString();
 
@@ -56,7 +58,12 @@ public class HierarchyObjectList
         hierarchyObject.GenerateMetaDataID();
 
         if (!isDuplicate(hierarchyObject))
+        {
             HierarchyObjects.Add(hierarchyObject);
+            if (!_pathToId.ContainsKey(hierarchyObject.Path))
+                _pathToId[hierarchyObject.Path] = hierarchyObject.ID;
+            _duplicateKeys.Add(CreateDuplicateKey(hierarchyObject));
+        }
     }
 
     private static string ExtractNameFromPath(string path)
@@ -73,6 +80,9 @@ public class HierarchyObjectList
         var parentPath = GetParentPath(path);
         if (string.IsNullOrEmpty(parentPath))
             return null;
+
+        if (_pathToId.TryGetValue(parentPath, out var parentId))
+            return parentId;
 
         return HierarchyObjects.FirstOrDefault(h => h.Path == parentPath)?.ID;
     }
@@ -133,6 +143,20 @@ public class HierarchyObjectList
     public bool isDuplicate(HierarchyObject hierarchyObject)
     {
         //return HierarchyObjects.Any(h => h.MetaDataID == hierarchyObject.MetaDataID && h.Name == hierarchyObject.Name && h.ParentID == hierarchyObject.ParentID);
+        var key = CreateDuplicateKey(hierarchyObject);
+        if (_duplicateKeys.Contains(key))
+            return true;
+
         return HierarchyObjects.Any(h => h.MetaDataID == hierarchyObject.MetaDataID && h.Name == hierarchyObject.Name && h.ParentID == hierarchyObject.ParentID && hierarchyObject.Path == h.Path);
+    }
+
+    private static string CreateDuplicateKey(HierarchyObject hierarchyObject)
+    {
+        return string.Join(
+            DuplicateKeySeparator,
+            hierarchyObject.MetaDataID?.ToString() ?? string.Empty,
+            hierarchyObject.Name,
+            hierarchyObject.ParentID?.ToString() ?? string.Empty,
+            hierarchyObject.Path);
     }
 }

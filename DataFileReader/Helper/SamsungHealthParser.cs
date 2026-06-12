@@ -8,14 +8,6 @@ namespace DataFileReader.Helper;
 public static class SamsungHealthParser
 {
     /// <summary>
-    ///     Detects if a file path belongs to Samsung Health
-    /// </summary>
-    public static bool IsSamsungHealthFile(string filePath)
-    {
-        return filePath.Contains("Samsung Health", StringComparison.OrdinalIgnoreCase) || filePath.Contains("com.samsung", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
     ///     Extracts metric type from file path
     ///     Example: "com.samsung.shealth.tracker.heart_rate" -> "HeartRate"
     /// </summary>

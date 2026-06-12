@@ -15,6 +15,7 @@ public class MetaDataList
     public MetaDataList(HierarchyObjectList HierarchyObjectList)
     {
         MetaDataObjects = new List<MetaData>();
+        var elementNames = new HashSet<string>(StringComparer.Ordinal);
 
         HierarchyObjectList.GenerateMetaIDs();
         HierarchyRefValCalculator.AssignStructuralReferenceValues(HierarchyObjectList.HierarchyObjects);
@@ -46,9 +47,7 @@ public class MetaDataList
             }
             else
             {
-                var existingElement = ElementsList.FirstOrDefault(x => x == metaData.Name);
-
-                if (existingElement is null)
+                if (elementNames.Add(metaData.Name))
                     ElementsList.Add(metaData.Name);
             }
         }
@@ -65,11 +64,14 @@ public class MetaDataList
     {
         var flattenedData = new DataTable();
 
+        var columnsByName = new Dictionary<string, DataColumn>(StringComparer.Ordinal);
+
         if (ElementsList != null && ElementsList.Count > 0)
             for (var i = 0; i < ElementsList.Count; i++)
             {
                 var column = new DataColumn(ElementsList.ElementAt(i), typeof(string));
                 flattenedData.Columns.Add(column);
+                columnsByName[column.ColumnName] = column;
             }
 
         var dataFields = new string[flattenedData.Columns.Count];
@@ -78,11 +80,10 @@ public class MetaDataList
         //HIERARCHYOBJECTS SHOULD BE GUARANTEED TO BE SORTED BEFORE THE FOLLOWING:
         foreach (var hierarchyObject in hierarchyObjects)
         {
-            var flattenedDataRow = flattenedData.NewRow();
-
             if (hierarchyObject.ClassID == "Element")
             {
-                var flattenedDataColumn = flattenedData.Columns.Cast<DataColumn>().SingleOrDefault(col => col.ColumnName == hierarchyObject.Name);
+                var flattenedDataRow = flattenedData.NewRow();
+                columnsByName.TryGetValue(hierarchyObject.Name, out var flattenedDataColumn);
 
                 if (flattenedDataColumn != null)
                     flattenedDataRow[flattenedDataColumn] = hierarchyObject.Value;

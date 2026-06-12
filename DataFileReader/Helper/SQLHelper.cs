@@ -208,7 +208,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
                     [MetricSubtype] NVARCHAR(200) NULL,
                     [SourceFile] NVARCHAR(500) NULL,
                     [NormalizedTimestamp] DATETIME2 NULL,
-                    [RawTimestamp] NVARCHAR(100) NULL,
+                    [RawTimestamp] NVARCHAR(256) NULL,
                     [Value] DECIMAL(18,4) NULL,
                     [Unit] NVARCHAR(50) NULL,
                     [MetaDataId] UNIQUEIDENTIFIER NULL,
@@ -259,6 +259,7 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
             if (!string.IsNullOrEmpty(connectionString))
             {
                 EnsureMetricSubtypeColumnExists(connectionString);
+                EnsureRawTimestampColumnSize(connectionString);
                 // Create smaller-resolution HealthMetrics tables if they don't exist
                 EnsureHealthMetricsResolutionTablesExist(connectionString);
                 // Optimize indexes for existing tables (will skip if table was just created with optimized indexes)
@@ -700,6 +701,37 @@ IF OBJECT_ID(N'[dbo].[HealthMetricsMetaData]', N'U') IS NOT NULL DROP TABLE [dbo
         {
             Console.WriteLine($"Error ensuring MetricSubtype column exists: {ex.Message}");
             // Don't throw - this is a migration step that might fail if column already exists
+        }
+    }
+
+    private static void EnsureRawTimestampColumnSize(string connectionString)
+    {
+        try
+        {
+            using var sqlConnection = new SqlConnection(connectionString);
+            sqlConnection.Open();
+
+            var sql = @"
+                IF EXISTS (
+                    SELECT 1
+                    FROM sys.columns
+                    WHERE object_id = OBJECT_ID(N'[dbo].[HealthMetrics]')
+                      AND name = 'RawTimestamp'
+                      AND system_type_id = TYPE_ID(N'nvarchar')
+                      AND max_length <> -1
+                      AND max_length < 512
+                )
+                BEGIN
+                    ALTER TABLE [dbo].[HealthMetrics]
+                    ALTER COLUMN [RawTimestamp] NVARCHAR(256) NULL;
+                END";
+
+            using var sqlCommand = new SqlCommand(sql, sqlConnection);
+            sqlCommand.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error ensuring RawTimestamp column size: {ex.Message}");
         }
     }
 

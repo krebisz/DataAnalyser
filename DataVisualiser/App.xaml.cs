@@ -85,7 +85,7 @@ public partial class App : Application
 
     private static string WriteCrashLog(string category, Exception? exception)
     {
-        var dir = Path.Combine(Path.GetTempPath(), "DataAnalyser", "crash-logs");
+        var dir = ResolveLogDirectory(AppContext.BaseDirectory);
         Directory.CreateDirectory(dir);
 
         var file = Path.Combine(dir, $"DataVisualiser-{DateTime.UtcNow:yyyyMMdd-HHmmssfff}-utc.log");
@@ -109,5 +109,22 @@ public partial class App : Application
 
         File.WriteAllText(file, sb.ToString());
         return file;
+    }
+
+    private static string ResolveLogDirectory(string startingDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(startingDirectory))
+            throw new ArgumentException("Starting directory is required.", nameof(startingDirectory));
+
+        var current = new DirectoryInfo(startingDirectory);
+        while (current != null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "DataAnalyser.sln")))
+                return Path.Combine(current.FullName, "documents", "logs");
+
+            current = current.Parent;
+        }
+
+        return Path.Combine(startingDirectory, "documents", "logs");
     }
 }

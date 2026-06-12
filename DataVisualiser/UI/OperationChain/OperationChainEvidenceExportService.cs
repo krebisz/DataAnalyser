@@ -7,6 +7,8 @@ internal sealed class OperationChainEvidenceExportService(
     EvidenceExportWriter writer,
     IEvidenceExportPathResolver pathResolver)
 {
+    private const string ExportFileNamePrefix = "operation-chain";
+
     public OperationChainEvidenceExportResult Export(
         OperationChainEvidenceExportSnapshot snapshot,
         DateTime utcNow)
@@ -14,7 +16,7 @@ internal sealed class OperationChainEvidenceExportService(
         ArgumentNullException.ThrowIfNull(snapshot);
 
         var payload = OperationChainEvidenceExportPayload.FromSnapshot(snapshot, utcNow);
-        var result = writer.Write(payload, pathResolver.ResolveDocumentsDirectory(), utcNow);
+        var result = writer.Write(payload, pathResolver.ResolveDocumentsDirectory(), utcNow, ExportFileNamePrefix);
         return new OperationChainEvidenceExportResult(result.FilePath);
     }
 }

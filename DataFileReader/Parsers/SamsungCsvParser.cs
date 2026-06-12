@@ -6,7 +6,7 @@ public class SamsungCsvParser : IHealthFileParser
 {
     public bool CanParse(FileInfo file)
     {
-        return file.Extension.Equals(".csv", StringComparison.OrdinalIgnoreCase) && SamsungHealthParser.IsSamsungHealthFile(file.FullName);
+        return file.Extension.Equals(".csv", StringComparison.OrdinalIgnoreCase);
     }
 
     public List<HealthMetric> Parse(string path, string content)

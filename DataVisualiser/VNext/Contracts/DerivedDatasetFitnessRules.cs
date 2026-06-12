@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace DataVisualiser.VNext.Contracts;
 
 public static class DerivedDatasetFitnessRules
@@ -39,9 +41,9 @@ public static class DerivedDatasetFitnessRules
             {
                 ["DatasetId"] = datasetId,
                 [ConstructionMetadataKeys.OperationSignature] = operationSignature,
-                ["RawFiniteCoverage"] = rawCoverage.ToString("0.###"),
-                ["SmoothedFiniteCoverage"] = smoothedCoverage.ToString("0.###"),
-                ["CriticalConfidenceAnnotations"] = confidence.CriticalCount.ToString(),
+                ["RawFiniteCoverage"] = rawCoverage.ToString("0.###", CultureInfo.InvariantCulture),
+                ["SmoothedFiniteCoverage"] = smoothedCoverage.ToString("0.###", CultureInfo.InvariantCulture),
+                ["CriticalConfidenceAnnotations"] = confidence.CriticalCount.ToString(CultureInfo.InvariantCulture),
                 ["Authoritative"] = "False"
             });
     }

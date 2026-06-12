@@ -1,3 +1,4 @@
+using System.Globalization;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.VNext.Application;
@@ -128,7 +129,7 @@ internal static class OperationChainInputGridPresenter
                     .OrderBy(item => item.NormalizedTimestamp)
                     .Select(item => new OperationChainInputGridRow(
                         item.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                        item.Value!.Value.ToString("F4")))
+                        item.Value!.Value.ToString("F4", CultureInfo.InvariantCulture)))
                     .ToArray()))
             .ToArray();
 
@@ -180,7 +181,7 @@ internal static class OperationChainResultGridPresenter
     private static string FormatValue(double value) =>
         double.IsNaN(value) || double.IsInfinity(value)
             ? string.Empty
-            : value.ToString("F4");
+            : value.ToString("F4", CultureInfo.InvariantCulture);
 }
 
 internal sealed record OperationChainComputationGridResult(
@@ -209,7 +210,7 @@ internal static class OperationChainCorrelationGridPresenter
             new OperationChainResultGridRow("Correlation", FormatValue(summary.Correlation), string.Empty),
             new OperationChainResultGridRow("95% CI lower", FormatValue(summary.ConfidenceLower), string.Empty),
             new OperationChainResultGridRow("95% CI upper", FormatValue(summary.ConfidenceUpper), string.Empty),
-            new OperationChainResultGridRow("Sample count", summary.SampleCount.ToString(), string.Empty)
+            new OperationChainResultGridRow("Sample count", summary.SampleCount.ToString(CultureInfo.InvariantCulture), string.Empty)
         };
 
         return new OperationChainComputationGridResult(
@@ -226,7 +227,7 @@ internal static class OperationChainCorrelationGridPresenter
     private static string FormatValue(double value) =>
         double.IsNaN(value) || double.IsInfinity(value)
             ? string.Empty
-            : value.ToString("F4");
+            : value.ToString("F4", CultureInfo.InvariantCulture);
 }
 
 internal sealed record OperationChainCorrelationSummary(

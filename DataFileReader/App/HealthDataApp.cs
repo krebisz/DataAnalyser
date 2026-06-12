@@ -1,6 +1,7 @@
 using System.Configuration;
 using DataFileReader.Models;
 using DataFileReader.Helper;
+using DataFileReader.Parsers;
 using DataFileReader.Services;
 
 namespace DataFileReader.App;
@@ -9,19 +10,32 @@ public sealed class HealthDataApp
 {
     private readonly MetricAggregator _aggregator;
     private readonly FileProcessingService _fileProcessor;
+    private readonly FileProcessingService _metricOnlyFileProcessor;
     private readonly IHealthMetricsMaintenanceService _healthMetricsMaintenanceService;
     private readonly IMetricCatalogRepository _metricCatalogRepository;
     private readonly IProcessedFileRegistry _processedFileRegistry;
 
     public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor, IMetricCatalogRepository metricCatalogRepository)
-        : this(aggregator, fileProcessor, metricCatalogRepository, new SqlHealthMetricsMaintenanceService(), new SqlProcessedFileRegistry())
+        : this(aggregator, fileProcessor, fileProcessor, metricCatalogRepository, new SqlHealthMetricsMaintenanceService(), new SqlProcessedFileRegistry())
     {
     }
 
     public HealthDataApp(MetricAggregator aggregator, FileProcessingService fileProcessor, IMetricCatalogRepository metricCatalogRepository, IHealthMetricsMaintenanceService healthMetricsMaintenanceService, IProcessedFileRegistry processedFileRegistry)
+        : this(aggregator, fileProcessor, fileProcessor, metricCatalogRepository, healthMetricsMaintenanceService, processedFileRegistry)
+    {
+    }
+
+    public HealthDataApp(
+        MetricAggregator aggregator,
+        FileProcessingService fileProcessor,
+        FileProcessingService metricOnlyFileProcessor,
+        IMetricCatalogRepository metricCatalogRepository,
+        IHealthMetricsMaintenanceService healthMetricsMaintenanceService,
+        IProcessedFileRegistry processedFileRegistry)
     {
         _aggregator = aggregator ?? throw new ArgumentNullException(nameof(aggregator));
         _fileProcessor = fileProcessor ?? throw new ArgumentNullException(nameof(fileProcessor));
+        _metricOnlyFileProcessor = metricOnlyFileProcessor ?? throw new ArgumentNullException(nameof(metricOnlyFileProcessor));
         _metricCatalogRepository = metricCatalogRepository ?? throw new ArgumentNullException(nameof(metricCatalogRepository));
         _healthMetricsMaintenanceService = healthMetricsMaintenanceService ?? throw new ArgumentNullException(nameof(healthMetricsMaintenanceService));
         _processedFileRegistry = processedFileRegistry ?? throw new ArgumentNullException(nameof(processedFileRegistry));
@@ -48,8 +62,16 @@ public sealed class HealthDataApp
                     AggregateData();
                     break;
 
-                case AppOption.ProcessFiles:
-                    ProcessFiles();
+                case AppOption.ProcessFilesAndHierarchy:
+                    ProcessFiles(_fileProcessor);
+                    break;
+
+                case AppOption.ProcessFilesOnly:
+                    ProcessFiles(_metricOnlyFileProcessor);
+                    break;
+
+                case AppOption.FlattenFiles:
+                    FlattenFiles();
                     break;
 
                 case AppOption.RemoveJunkFiles:
@@ -85,19 +107,23 @@ public sealed class HealthDataApp
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  1. Aggregate Metrics");
-        Console.WriteLine("  2. Process New Files");
-        Console.WriteLine("  3. Remove Junk Files");
-        Console.WriteLine("  4. Clean Database");
-        Console.WriteLine("  5. Exit");
+        Console.WriteLine("  2. Process New Files & Hierarchy");
+        Console.WriteLine("  3. Process New Files Only");
+        Console.WriteLine("  4. Flatten the Files");
+        Console.WriteLine("  5. Remove Junk Files");
+        Console.WriteLine("  6. Clean Database");
+        Console.WriteLine("  7. Exit");
         Console.Write("> ");
 
         return Console.ReadLine()?.Trim() switch
         {
                 "1" => AppOption.AggregateMetrics,
-                "2" => AppOption.ProcessFiles,
-                "3" => AppOption.RemoveJunkFiles,
-                "4" => AppOption.CleanDatabase,
-                "5" => AppOption.Exit,
+                "2" => AppOption.ProcessFilesAndHierarchy,
+                "3" => AppOption.ProcessFilesOnly,
+                "4" => AppOption.FlattenFiles,
+                "5" => AppOption.RemoveJunkFiles,
+                "6" => AppOption.CleanDatabase,
+                "7" => AppOption.Exit,
                 _ => AppOption.Invalid
         };
     }
@@ -146,7 +172,7 @@ public sealed class HealthDataApp
         Console.WriteLine("\n=== Aggregation Complete ===");
     }
 
-    private void ProcessFiles()
+    private void ProcessFiles(FileProcessingService fileProcessor)
     {
         var rootDirectory = GetRootDirectory();
 
@@ -165,12 +191,48 @@ public sealed class HealthDataApp
 
         Console.WriteLine($"Processing {newFiles.Count} new file(s)...");
 
-        var result = _fileProcessor.ProcessFiles(newFiles);
+        var result = fileProcessor.ProcessFiles(newFiles);
 
         Console.WriteLine("\n================================");
         Console.WriteLine("Processing complete!");
         Console.WriteLine($"Files processed: {result.FilesProcessed}");
         Console.WriteLine($"Total metrics inserted: {result.MetricsInserted}");
+        if (result.HasIssues && !string.IsNullOrWhiteSpace(result.IssueLogPath))
+            Console.WriteLine($"Issue log written to: {result.IssueLogPath}");
+    }
+
+    private void FlattenFiles()
+    {
+        var rootDirectory = GetRootDirectory();
+
+        if (rootDirectory is null)
+            return;
+
+        var jsonFiles = FileHelper.GetFileList(rootDirectory)
+            .Where(file => string.Equals(Path.GetExtension(file), ".json", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        Console.WriteLine($"Flattening {jsonFiles.Count} JSON file(s)...");
+
+        var parser = new AgnosticJsonParser();
+        var flattened = 0;
+
+        foreach (var file in jsonFiles)
+            try
+            {
+                var content = File.ReadAllText(file);
+                parser.ProcessHierarchy(file, content);
+                flattened++;
+                Console.WriteLine($"Flattened hierarchy from {FileHelper.GetFileName(file)}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error flattening {file}: {ex.Message}");
+            }
+
+        Console.WriteLine("\n================================");
+        Console.WriteLine("Flattening complete!");
+        Console.WriteLine($"Files flattened: {flattened}");
     }
 
     private void DeleteJunkFiles()
@@ -232,7 +294,9 @@ public sealed class HealthDataApp
     {
         Invalid,
         AggregateMetrics,
-        ProcessFiles,
+        ProcessFilesAndHierarchy,
+        ProcessFilesOnly,
+        FlattenFiles,
         RemoveJunkFiles,
         CleanDatabase,
         Exit

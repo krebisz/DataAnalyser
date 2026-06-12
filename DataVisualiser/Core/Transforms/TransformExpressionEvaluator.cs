@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Transforms.Expressions;
 using DataVisualiser.Shared.Models;
@@ -268,7 +269,7 @@ public static class TransformExpressionEvaluator
                                (d, r) => new
                                {
                                        Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                                       Value = double.IsNaN(r) ? "NaN" : r.ToString("F4")
+                                       Value = double.IsNaN(r) ? "NaN" : r.ToString("F4", CultureInfo.InvariantCulture)
                                })
                        .ToList<object>();
     }

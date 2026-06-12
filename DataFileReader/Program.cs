@@ -10,9 +10,14 @@ internal class Program
     {
         var parsers = new IHealthFileParser[]
         {
-                new SamsungJsonParser(),
+                new AgnosticJsonParser(processHierarchy: true),
                 new SamsungCsvParser(),
-                new LegacyJsonParser()
+        };
+
+        var metricOnlyParsers = new IHealthFileParser[]
+        {
+                new AgnosticJsonParser(processHierarchy: false),
+                new SamsungCsvParser(),
         };
 
         var metricCatalogRepository = new SqlMetricCatalogRepository();
@@ -21,13 +26,19 @@ internal class Program
         var healthMetricWriter = new SqlHealthMetricWriter();
         var aggregationWriter = new SqlMetricAggregationWriter();
         var aggregator = new MetricAggregator(metricCatalogRepository, aggregationWriter);
-        var fileProcessor = new FileProcessingService(parsers, healthMetricWriter, processedFileRegistry);
+        var issueLogger = new DataFileReaderIssueFileLogger();
+        var metricOnlyIssueLogger = new DataFileReaderIssueFileLogger();
+        var fileProcessor = new FileProcessingService(parsers, healthMetricWriter, processedFileRegistry, issueLogger);
+        var metricOnlyFileProcessor = new FileProcessingService(metricOnlyParsers, healthMetricWriter, processedFileRegistry, metricOnlyIssueLogger);
 
-        var app = new HealthDataApp(aggregator, fileProcessor, metricCatalogRepository, maintenanceService, processedFileRegistry);
+        var app = new HealthDataApp(aggregator, fileProcessor, metricOnlyFileProcessor, metricCatalogRepository, maintenanceService, processedFileRegistry);
 
         app.Run();
 
-        Console.WriteLine("\nPress any key to exit...");
-        Console.ReadKey();
+        if (!Console.IsInputRedirected)
+        {
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
     }
 }

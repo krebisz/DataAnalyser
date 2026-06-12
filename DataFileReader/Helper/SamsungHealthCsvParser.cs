@@ -223,10 +223,12 @@ public static class SamsungHealthCsvParser
         foreach (var field in timestampFieldPatterns)
             if (rowData.ContainsKey(field) && !string.IsNullOrEmpty(rowData[field]))
             {
-                rawTimestamp = rowData[field];
-                timestamp = TimeNormalizationHelper.ParseTimestamp(rowData[field]);
-                if (timestamp != null)
+                if (TryParseRawTimestamp(rowData[field], out var parsedTimestamp, out var parsedRawTimestamp))
+                {
+                    rawTimestamp = parsedRawTimestamp;
+                    timestamp = parsedTimestamp;
                     break;
+                }
             }
 
         // If no exact match, try partial matches (contains "start_time" or "end_time")
@@ -236,10 +238,12 @@ public static class SamsungHealthCsvParser
                 var fieldName = kvp.Key.ToLower();
                 if ((fieldName.Contains("start_time") || fieldName.Contains("end_time")) && !string.IsNullOrEmpty(kvp.Value))
                 {
-                    rawTimestamp = kvp.Value;
-                    timestamp = TimeNormalizationHelper.ParseTimestamp(kvp.Value);
-                    if (timestamp != null)
+                    if (TryParseRawTimestamp(kvp.Value, out var parsedTimestamp, out var parsedRawTimestamp))
+                    {
+                        rawTimestamp = parsedRawTimestamp;
+                        timestamp = parsedTimestamp;
                         break;
+                    }
                 }
             }
 
@@ -277,7 +281,7 @@ public static class SamsungHealthCsvParser
 
                 // Store additional fields as metadata
                 foreach (var otherField in rowData)
-                    if (otherField.Key != fieldName && !otherField.Key.Contains("time", StringComparison.OrdinalIgnoreCase))
+                    if (ShouldIncludeAdditionalField(otherField.Key, otherField.Value, fieldName))
                         metric.AdditionalFields[otherField.Key] = otherField.Value ?? "";
 
                 RawRecordFactory.Create("SamsungHealthCsv",
@@ -343,6 +347,60 @@ public static class SamsungHealthCsvParser
         }
 
         return metrics;
+    }
+
+    private static bool TryParseRawTimestamp(string value, out DateTime? timestamp, out string rawTimestamp)
+    {
+        timestamp = null;
+        rawTimestamp = string.Empty;
+
+        if (!IsCompactTimestampCandidate(value))
+            return false;
+
+        var parsed = TimeNormalizationHelper.ParseTimestamp(value);
+        if (parsed == null)
+            return false;
+
+        timestamp = parsed;
+        rawTimestamp = value.Trim();
+        return true;
+    }
+
+    private static bool IsCompactTimestampCandidate(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= 256 &&
+               !trimmed.StartsWith("[", StringComparison.Ordinal) &&
+               !trimmed.StartsWith("{", StringComparison.Ordinal) &&
+               !trimmed.Contains('{') &&
+               !trimmed.Contains('}');
+    }
+
+    private static bool ShouldIncludeAdditionalField(string key, string? value, string metricFieldName)
+    {
+        if (key == metricFieldName)
+            return false;
+
+        if (!key.Contains("time", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return IsStructuredOrOversizedValue(value);
+    }
+
+    private static bool IsStructuredOrOversizedValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var trimmed = value.Trim();
+        return trimmed.Length > 256 ||
+               trimmed.StartsWith("[", StringComparison.Ordinal) ||
+               trimmed.StartsWith("{", StringComparison.Ordinal) ||
+               trimmed.Contains('{') ||
+               trimmed.Contains('}');
     }
 
     /// <summary>

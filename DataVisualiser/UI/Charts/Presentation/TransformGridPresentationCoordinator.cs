@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
@@ -106,7 +107,7 @@ internal static class TransformGridPresentationCoordinator
             .Select(d => new
             {
                 Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                Value = d.Value!.Value.ToString("F4")
+                Value = d.Value!.Value.ToString("F4", CultureInfo.InvariantCulture)
             })
             .ToList();
 

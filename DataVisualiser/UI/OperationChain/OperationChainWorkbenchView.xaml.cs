@@ -412,7 +412,7 @@ public partial class OperationChainWorkbenchView : UserControl
 
     private static string ResolveConnectionString()
     {
-        return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
+        return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
     }
 
     private sealed record OperationChainInputSelectionRow(

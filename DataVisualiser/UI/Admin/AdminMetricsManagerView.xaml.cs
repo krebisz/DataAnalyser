@@ -28,7 +28,7 @@ public partial class AdminMetricsManagerView : UserControl
 
     private static string GetConnectionString()
     {
-        return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(local);Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
+        return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)

@@ -208,6 +208,7 @@ public sealed class OperationChainInputGridLoadServiceTests
 
             var result = service.Export(snapshot, new DateTime(2026, 5, 12, 10, 30, 0, DateTimeKind.Utc));
 
+            Assert.EndsWith("operation-chain-20260512-103000.json", result.FilePath, StringComparison.OrdinalIgnoreCase);
             using var json = JsonDocument.Parse(File.ReadAllText(result.FilePath));
             var root = json.RootElement;
             Assert.Equal("OperationChain", root.GetProperty("ExportScope").GetString());
