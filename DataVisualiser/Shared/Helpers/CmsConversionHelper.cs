@@ -22,15 +22,15 @@ public static class CmsConversionHelper
         if (cms == null)
             throw new ArgumentNullException(nameof(cms));
 
-        return cms.Samples.Where(s => s.Value.HasValue && (!from.HasValue || s.Timestamp.LocalDateTime >= from.Value) && (!to.HasValue || s.Timestamp.LocalDateTime <= to.Value))
-                  .Select(s => new MetricData
-                  {
-                          NormalizedTimestamp = s.Timestamp.LocalDateTime,
-                          Value = s.Value,
-                          Unit = cms.Unit.Symbol,
-                          Provider = cms.Provenance.SourceProvider
-                  })
-                  .OrderBy(d => d.NormalizedTimestamp);
+        return MetricDataSeriesHelper.CollapseDuplicateTimestamps(
+            cms.Samples.Where(s => s.Value.HasValue && (!from.HasValue || s.Timestamp.LocalDateTime >= from.Value) && (!to.HasValue || s.Timestamp.LocalDateTime <= to.Value))
+               .Select(s => new MetricData
+               {
+                       NormalizedTimestamp = s.Timestamp.LocalDateTime,
+                       Value = s.Value,
+                       Unit = cms.Unit.Symbol,
+                       Provider = cms.Provenance.SourceProvider
+               }));
     }
 
     /// <summary>
@@ -56,6 +56,6 @@ public static class CmsConversionHelper
             result.AddRange(ConvertSamplesToHealthMetricData(cms, from, to));
         }
 
-        return result.OrderBy(d => d.NormalizedTimestamp);
+        return MetricDataSeriesHelper.CollapseDuplicateTimestamps(result);
     }
 }

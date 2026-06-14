@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Transforms.Expressions;
+using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Transforms;
@@ -243,14 +244,16 @@ public static class TransformExpressionEvaluator
     ///     Aligns two metric series by timestamp, keeping only points that exist in both.
     ///     Required for transform expression evaluation which expects aligned data.
     /// </summary>
-    public static(List<MetricData>, List<MetricData>) AlignMetricsByTimestamp(List<MetricData> data1, List<MetricData> data2)
+    public static (List<MetricData>, List<MetricData>) AlignMetricsByTimestamp(List<MetricData> data1, List<MetricData> data2)
     {
         var aligned1 = new List<MetricData>();
         var aligned2 = new List<MetricData>();
 
-        var data2Lookup = data2.ToDictionary(d => d.NormalizedTimestamp, d => d);
+        var mediated1 = MetricDataSeriesHelper.CollapseDuplicateTimestamps(data1);
+        var mediated2 = MetricDataSeriesHelper.CollapseDuplicateTimestamps(data2);
+        var data2Lookup = mediated2.ToDictionary(d => d.NormalizedTimestamp, d => d);
 
-        foreach (var point1 in data1)
+        foreach (var point1 in mediated1)
             if (data2Lookup.TryGetValue(point1.NormalizedTimestamp, out var point2))
             {
                 aligned1.Add(point1);
@@ -265,12 +268,19 @@ public static class TransformExpressionEvaluator
     /// </summary>
     public static List<object> CreateTransformResultData(List<MetricData> dataList, List<double> results)
     {
+        return CreateTransformResultRows(dataList, results)
+            .Cast<object>()
+            .ToList();
+    }
+
+    public static List<TransformResultDataRow> CreateTransformResultRows(List<MetricData> dataList, List<double> results)
+    {
         return dataList.Zip(results,
-                               (d, r) => new
-                               {
-                                       Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                                       Value = double.IsNaN(r) ? "NaN" : r.ToString("F4", CultureInfo.InvariantCulture)
-                               })
-                       .ToList<object>();
+                               (d, r) => new TransformResultDataRow(
+                                   d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
+                                   double.IsNaN(r) ? "NaN" : r.ToString("F4", CultureInfo.InvariantCulture)))
+                       .ToList();
     }
 }
+
+public sealed record TransformResultDataRow(string Timestamp, string Value);

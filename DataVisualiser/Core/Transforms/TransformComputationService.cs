@@ -66,7 +66,7 @@ public sealed class TransformComputationService
 
     private static List<MetricData> PrepareMetricData(IEnumerable<MetricData> data)
     {
-        return data.Where(d => d.Value.HasValue).OrderBy(d => d.NormalizedTimestamp).ToList();
+        return MetricDataSeriesHelper.FilterValuedAndOrder(data);
     }
 
     private static List<double> EvaluateWithExpression(TransformExpression expression, List<IReadOnlyList<MetricData>> metricsList, string operation, bool isUnary)

@@ -11,8 +11,8 @@ public sealed record OperationChainRequest
     {
         ArgumentNullException.ThrowIfNull(selection);
         ArgumentNullException.ThrowIfNull(steps);
-        if (selection.Series.Count < 2)
-            throw new ArgumentException("Operation chain requires at least two input series.", nameof(selection));
+        if (selection.Series.Count == 0)
+            throw new ArgumentException("Operation chain requires at least one input series.", nameof(selection));
         if (steps.Count == 0)
             throw new ArgumentException("Operation chain requires at least one operation step.", nameof(steps));
         if (string.IsNullOrWhiteSpace(title))

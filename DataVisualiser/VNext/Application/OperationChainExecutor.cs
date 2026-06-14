@@ -30,8 +30,8 @@ public sealed class OperationChainExecutor
 
         var snapshot = await _engine.LoadAsync(request.Selection, cancellationToken);
         var aligned = _alignmentKernel.Align(snapshot);
-        if (aligned.Series.Count < 2)
-            throw new InvalidOperationException("Operation chain requires at least two loaded input series.");
+        if (aligned.Series.Count == 0)
+            throw new InvalidOperationException("Operation chain requires at least one loaded input series.");
 
         var program = new OperationChainProgram(
             request.Signature,

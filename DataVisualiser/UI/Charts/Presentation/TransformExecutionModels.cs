@@ -1,5 +1,6 @@
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
@@ -20,4 +21,5 @@ internal sealed record TransformExecutionResult(
     string OperationTag,
     int OperationArity,
     List<IReadOnlyList<MetricData>> Metrics,
-    string? OverrideLabel);
+    string? OverrideLabel,
+    ComputedSeriesResult? ComputedSeries = null);

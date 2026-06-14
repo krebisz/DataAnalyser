@@ -84,4 +84,46 @@ public sealed class TransformSeriesOperationRequestMapperTests
         Assert.False(mapped);
         Assert.Null(step);
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("None")]
+    public void IsPassThrough_ShouldAcceptEmptyAndNoneOperations(string? operationTag)
+    {
+        Assert.True(TransformSeriesOperationRequestMapper.IsPassThrough(operationTag));
+    }
+
+    [Fact]
+    public void TryCreateOperationChainStep_ShouldMapWorkbenchTernarySeriesOperation()
+    {
+        var mapped = TransformSeriesOperationRequestMapper.TryCreateOperationChainStep(
+            "Sum3",
+            [
+                new MetricSeriesRequest("Weight", "fat", "Weight", "Fat"),
+                new MetricSeriesRequest("Weight", "muscle", "Weight", "Muscle"),
+                new MetricSeriesRequest("Weight", "bone", "Weight", "Bone")
+            ],
+            out var step);
+
+        Assert.True(mapped);
+        Assert.NotNull(step);
+        Assert.Equal(SeriesOperationKind.Sum, step!.Operation.Kind);
+        Assert.Equal([0, 1, 2], step.Operation.InputIndexes);
+        Assert.Equal("Fat + Muscle + Bone", step.Operation.Label);
+        Assert.Equal("OperationChainWorkbench", step.Metadata["Source"]);
+        Assert.Equal("Sum3", step.Metadata["OperationTag"]);
+    }
+
+    [Fact]
+    public void TryCreateOperationChainStep_ShouldRejectWorkbenchBinaryOperationWithoutSecondSeries()
+    {
+        var mapped = TransformSeriesOperationRequestMapper.TryCreateOperationChainStep(
+            "Add",
+            [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
+            out var step);
+
+        Assert.False(mapped);
+        Assert.Null(step);
+    }
 }

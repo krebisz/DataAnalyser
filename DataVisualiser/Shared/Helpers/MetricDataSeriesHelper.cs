@@ -9,12 +9,37 @@ internal static class MetricDataSeriesHelper
         if (source == null)
             return new List<MetricData>();
 
-        return source.Where(data => IsIncluded(data, from, to)).OrderBy(data => data!.NormalizedTimestamp).ToList()!;
+        return CollapseDuplicateTimestamps(source.Where(data => IsIncluded(data, from, to))!);
     }
 
     public static Dictionary<DateTime, double> CreateTimestampValueDictionary(IEnumerable<MetricData> orderedData)
     {
-        return orderedData.GroupBy(data => data.NormalizedTimestamp).ToDictionary(group => group.Key, group => (double)group.First().Value!.Value);
+        return CollapseDuplicateTimestamps(orderedData)
+            .ToDictionary(data => data.NormalizedTimestamp, data => (double)data.Value!.Value);
+    }
+
+    public static List<MetricData> CollapseDuplicateTimestamps(IEnumerable<MetricData>? source)
+    {
+        if (source == null)
+            return new List<MetricData>();
+
+        return source
+            .Where(data => data != null && data.Value.HasValue)
+            .GroupBy(data => data.NormalizedTimestamp)
+            .OrderBy(group => group.Key)
+            .Select(group =>
+            {
+                var values = group.Select(data => data.Value!.Value).ToArray();
+                var first = group.First();
+                return new MetricData
+                {
+                    NormalizedTimestamp = group.Key,
+                    Value = values.Average(),
+                    Unit = group.Select(data => data.Unit).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? first.Unit,
+                    Provider = group.Select(data => data.Provider).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? first.Provider
+                };
+            })
+            .ToList();
     }
 
     public static string? GetPreferredUnit(IReadOnlyList<MetricData> primary, IReadOnlyList<MetricData> secondary)

@@ -17,9 +17,9 @@ public sealed class OperationChainWorkbenchPresenterTests
         Assert.Equal("Step 1", traceRow.StepLabel);
         Assert.Equal("Sum -> sum; lossiness: Lossless", traceRow.Detail);
         Assert.Equal(2, presentation.DatasetRows.Count);
-        Assert.Equal("Total", presentation.DatasetRows[0].Dataset);
+        Assert.Equal("Total", presentation.DatasetRows[0].Series);
         Assert.Equal("2026-01-01 00:00:00", presentation.DatasetRows[0].Timestamp);
-        Assert.Equal("3", presentation.DatasetRows[0].Raw);
+        Assert.Equal("3.0000", presentation.DatasetRows[0].Raw);
         Assert.Equal("NaN", presentation.DatasetRows[1].Smoothed);
         Assert.Equal("Plan: plan-sig | Trace: trace-sig | Contract: contract-sig", presentation.Evidence);
     }

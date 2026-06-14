@@ -11,9 +11,10 @@
     <SolidColorBrush x:Key="ThemeButtonBackgroundBrush" Color="#FF313944" />
     <SolidColorBrush x:Key="ThemeButtonForegroundBrush" Color="#FFF1F4F7" />
     <SolidColorBrush x:Key="ThemeButtonBorderBrush" Color="#FF6A7482" />
-    <SolidColorBrush x:Key="ThemeInputBackgroundBrush" Color="#FF11161C" />
+    <SolidColorBrush x:Key="ThemeInputBackgroundBrush" Color="#FF000000" />
     <SolidColorBrush x:Key="ThemeInputForegroundBrush" Color="#FFF1F4F7" />
     <SolidColorBrush x:Key="ThemeInputBorderBrush" Color="#FF6A7482" />
+    <SolidColorBrush x:Key="ThemeDropdownBackgroundBrush" Color="#FF000000" />
     <SolidColorBrush x:Key="ThemeDropdownItemHoverBrush" Color="#FF26303B" />
     <SolidColorBrush x:Key="ThemeDropdownItemSelectedBrush" Color="#FF354556" />
     <SolidColorBrush x:Key="ThemeGridHeaderBackgroundBrush" Color="#FF34404D" />
@@ -45,7 +46,7 @@
     <SolidColorBrush x:Key="ThemeLegendItemHoverBackgroundBrush" Color="#CC2A3441" />
     <SolidColorBrush x:Key="ThemeLegendItemCheckedBackgroundBrush" Color="#DD354556" />
     <SolidColorBrush x:Key="ThemeLegendSwatchBorderBrush" Color="#FFE6EDF5" />
-    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#FF11161C" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#FF000000" />
     <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#FFF1F4F7" />
     <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#FF232831" />
     <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#FFF1F4F7" />
@@ -53,4 +54,16 @@
     <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFF1F4F7" />
     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#FF26303B" />
     <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#FFF1F4F7" />
+    <SolidColorBrush x:Key="ComboBox.Static.Background" Color="#FF000000" />
+    <SolidColorBrush x:Key="ComboBox.Static.Border" Color="#FF6A7482" />
+    <SolidColorBrush x:Key="ComboBox.Static.Glyph" Color="#FFF1F4F7" />
+    <SolidColorBrush x:Key="ComboBox.MouseOver.Background" Color="#FF000000" />
+    <SolidColorBrush x:Key="ComboBox.MouseOver.Border" Color="#FF6A7482" />
+    <SolidColorBrush x:Key="ComboBox.MouseOver.Glyph" Color="#FFF1F4F7" />
+    <SolidColorBrush x:Key="ComboBox.Pressed.Background" Color="#FF000000" />
+    <SolidColorBrush x:Key="ComboBox.Pressed.Border" Color="#FF6A7482" />
+    <SolidColorBrush x:Key="ComboBox.Pressed.Glyph" Color="#FFF1F4F7" />
+    <SolidColorBrush x:Key="ComboBox.Disabled.Background" Color="#FF000000" />
+    <SolidColorBrush x:Key="ComboBox.Disabled.Border" Color="#FF3A424D" />
+    <SolidColorBrush x:Key="ComboBox.Disabled.Foreground" Color="#FF8E99A6" />
 </ResourceDictionary>

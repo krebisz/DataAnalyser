@@ -93,7 +93,7 @@ public sealed class OperationChainExecutorTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ShouldRejectLoadedSnapshotsWithoutTwoInputSeries()
+    public async Task ExecuteAsync_ShouldRejectLoadedSnapshotsWithoutAnyInputSeries()
     {
         var selection = new MetricSelectionRequest(
             "Weight",
@@ -102,21 +102,16 @@ public sealed class OperationChainExecutorTests
             new DateTime(2026, 1, 3),
             "HealthMetrics");
         var request = new OperationChainRequest(
-            new MetricSelectionRequest(
-                "Weight",
-                [
-                    new MetricSeriesRequest("Weight", "morning"),
-                    new MetricSeriesRequest("Weight", "evening")
-                ],
-                selection.From,
-                selection.To,
-                selection.ResolutionTableName),
-            [OperationChainStep.Lossless(SeriesOperationRequest.Sum([0, 1], "Total"))]);
-        var executor = new OperationChainExecutor(new StubReasoningEngine(CreateSnapshot(selection)));
+            selection,
+            [OperationChainStep.Lossless(SeriesOperationRequest.SquareRoot(0, "sqrt", "Sqrt"))]);
+        var executor = new OperationChainExecutor(new StubReasoningEngine(new MetricLoadSnapshot(
+            selection,
+            [],
+            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc))));
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => executor.ExecuteAsync(request));
 
-        Assert.Contains("at least two loaded input series", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("at least one loaded input series", ex.Message, StringComparison.Ordinal);
     }
 
     private static OperationChainExecutor CreateExecutor()

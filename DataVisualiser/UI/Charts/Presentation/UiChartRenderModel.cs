@@ -40,6 +40,9 @@ public sealed class ChartAxisModel
     public IReadOnlyList<string>? Labels { get; init; }
     public double? Min { get; init; }
     public double? Max { get; init; }
+    public double? Step { get; init; }
+    public bool? ShowLabels { get; init; }
+    public bool UseDisplayValueFormatter { get; init; }
 }
 
 public sealed class ChartLegendModel

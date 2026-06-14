@@ -15,22 +15,31 @@
                     BorderBrush="{DynamicResource ThemePanelHeaderBorderBrush}"
                     BorderThickness="1"
                     Padding="{x:Static ui:ChartUiDefaults.ChartHeaderPadding}">
-                <StackPanel Orientation="Horizontal" Margin="{x:Static ui:ChartUiDefaults.ChartHeaderMargin}">
+                <Grid Margin="{x:Static ui:ChartUiDefaults.ChartHeaderMargin}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <TextBlock x:Name="TitleTextBlock"
+                               Grid.Column="0"
                                Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                FontWeight="Bold"
                                FontSize="{x:Static ui:ChartUiDefaults.ChartHeaderFontSize}"
                                VerticalAlignment="Center" />
+                    <!-- Additional Header Controls -->
+                    <ContentPresenter x:Name="HeaderControlsPresenter"
+                                      Grid.Column="1"
+                                      Margin="{x:Static ui:ChartUiDefaults.ChartHeaderControlsMargin}"
+                                      VerticalAlignment="Center" />
                     <Button x:Name="ToggleButton"
+                            Grid.Column="2"
                             Content="{x:Static ui:UiDefaults.ToggleShowLabel}"
                             Margin="{x:Static ui:ChartUiDefaults.ChartHeaderToggleMargin}"
                             Padding="{x:Static ui:ChartUiDefaults.ChartHeaderTogglePadding}"
+                            HorizontalAlignment="Right"
                             Click="OnToggleButtonClick" />
-                    <!-- Additional Header Controls -->
-                    <ContentPresenter x:Name="HeaderControlsPresenter"
-                                      Margin="{x:Static ui:ChartUiDefaults.ChartHeaderControlsMargin}"
-                                      VerticalAlignment="Center" />
-                </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Behavioral Controls Section (Optional) -->

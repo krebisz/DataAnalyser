@@ -17,7 +17,7 @@ public sealed class DataPreparationService : IDataPreparationService
         if (source == null)
             return Array.Empty<MetricData>();
 
-        return source.Where(d => d != null && d.Value.HasValue && d.NormalizedTimestamp >= from && d.NormalizedTimestamp <= to).OrderBy(d => d.NormalizedTimestamp).ToList();
+        return MetricDataSeriesHelper.FilterValuedAndOrder(source, from, to);
     }
 
     public IReadOnlyList<MetricSample> PrepareCmsData(ICanonicalMetricSeries? cms, DateTime from, DateTime to)

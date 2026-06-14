@@ -162,71 +162,7 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
 
         renderedChart = chart;
 
-        foreach (var series in model.Series)
-        {
-            var values = new ChartValues<double>(series.Values.Select(value => value ?? 0d));
-            if (values.Count == 0)
-                continue;
-
-            var seriesBrush = CreateBrush(series.Color);
-            switch (series.SeriesType)
-            {
-                case ChartSeriesType.Column:
-                    chart.Series.Add(new ColumnSeries
-                    {
-                            Title = series.Name ?? string.Empty,
-                            Values = values,
-                            Fill = seriesBrush,
-                            Stroke = seriesBrush,
-                            LabelPoint = point => MathHelper.FormatDisplayedValue(point.Y)
-                    });
-                    break;
-                case ChartSeriesType.Line:
-                default:
-                    chart.Series.Add(new LineSeries
-                    {
-                            Title = series.Name ?? string.Empty,
-                            Values = values,
-                            Stroke = seriesBrush ?? Brushes.Gray,
-                            Fill = Brushes.Transparent
-                    });
-                    break;
-            }
-        }
-
-        if (model.AxesX.Count > 0)
-        {
-            var axisModel = model.AxesX[0];
-            var axis = new Axis
-            {
-                    Title = axisModel.Title ?? string.Empty
-            };
-            if (axisModel.Labels != null)
-                axis.Labels = axisModel.Labels.ToArray();
-            if (axisModel.Min.HasValue)
-                axis.MinValue = axisModel.Min.Value;
-            if (axisModel.Max.HasValue)
-                axis.MaxValue = axisModel.Max.Value;
-            chart.AxisX.Add(axis);
-        }
-
-        if (model.AxesY.Count > 0)
-        {
-            var axisModel = model.AxesY[0];
-            var axis = new Axis
-            {
-                    Title = axisModel.Title ?? string.Empty
-            };
-            if (axisModel.Labels != null)
-                axis.Labels = axisModel.Labels.ToArray();
-            if (axisModel.Min.HasValue)
-                axis.MinValue = axisModel.Min.Value;
-            if (axisModel.Max.HasValue)
-                axis.MaxValue = axisModel.Max.Value;
-            chart.AxisY.Add(axis);
-        }
-
-        ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
+        CartesianChartProjectionRenderer.Apply(chart, model);
 
         if (model.Legend?.IsVisible == true)
         {

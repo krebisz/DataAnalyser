@@ -1,6 +1,7 @@
 <UserControl x:Class="DataVisualiser.UI.OperationChain.OperationChainWorkbenchView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
              xmlns:ui="clr-namespace:DataVisualiser.UI">
     <UserControl.Resources>
         <Style TargetType="Button" BasedOn="{StaticResource ThemedButtonStyle}" />
@@ -41,17 +42,50 @@
                     BorderBrush="{DynamicResource ThemeOperationPanelBorderBrush}"
                     BorderThickness="1">
                 <StackPanel>
-                    <DockPanel Margin="0,0,0,6">
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
                         <TextBlock Text="Inputs"
                                    FontWeight="SemiBold"
-                                   DockPanel.Dock="Left" />
-                        <Button x:Name="AddInputButton"
-                                Content="Add input"
-                                Padding="10,4"
-                                HorizontalAlignment="Right"
-                                DockPanel.Dock="Right"
-                                Click="OnAddInputClicked" />
-                    </DockPanel>
+                                   VerticalAlignment="Center" />
+
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right">
+                            <TextBlock Margin="0,0,8,0"
+                                       VerticalAlignment="Center"
+                                       Text="Resolution" />
+                            <ComboBox x:Name="ResolutionCombo"
+                                      Width="110"
+                                      SelectionChanged="OnResolutionChanged" />
+                            <TextBlock Margin="0,0,8,0"
+                                       VerticalAlignment="Center"
+                                       Text="From" />
+                            <DatePicker x:Name="FromDate" />
+                            <TextBlock Margin="12,0,8,0"
+                                       VerticalAlignment="Center"
+                                       Text="To" />
+                            <DatePicker x:Name="ToDate" />
+                            <Button x:Name="ExportEvidenceButton"
+                                    Margin="12,0,0,0"
+                                    Padding="12,4"
+                                    Content="Export"
+                                    Click="OnExportEvidenceClicked" />
+                            <Button x:Name="ClearButton"
+                                    Margin="8,0,0,0"
+                                    Padding="12,4"
+                                    Content="Clear"
+                                    Click="OnClearClicked" />
+                            <Button x:Name="AddInputButton"
+                                    Margin="8,0,0,0"
+                                    Padding="10,4"
+                                    Content="Add input"
+                                    Click="OnAddInputClicked" />
+                        </StackPanel>
+                    </Grid>
                     <StackPanel x:Name="InputRowsPanel" />
                 </StackPanel>
             </Border>
@@ -65,13 +99,6 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="220" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="130" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="110" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
@@ -82,43 +109,20 @@
                     <ComboBox x:Name="OperationCombo"
                               Grid.Column="1"
                               SelectionChanged="OnOperationChanged" />
-                    <TextBlock Grid.Column="2"
-                               Margin="12,0,8,0"
-                               VerticalAlignment="Center"
-                               Text="From" />
-                    <DatePicker x:Name="FromDate"
-                                Grid.Column="3" />
-                    <TextBlock Grid.Column="4"
-                               Margin="12,0,8,0"
-                               VerticalAlignment="Center"
-                               Text="To" />
-                    <DatePicker x:Name="ToDate"
-                                Grid.Column="5" />
-                    <TextBlock Grid.Column="6"
-                               Margin="12,0,8,0"
-                               VerticalAlignment="Center"
-                               Text="Resolution" />
-                    <ComboBox x:Name="ResolutionCombo"
-                              Grid.Column="7"
-                              SelectionChanged="OnResolutionChanged" />
                     <Button x:Name="LoadInputsButton"
-                            Grid.Column="8"
+                            Grid.Column="2"
                             Margin="12,0,0,0"
                             Padding="12,4"
                             Content="Compute"
                             Click="OnLoadInputsClicked" />
-                    <Button x:Name="ExportEvidenceButton"
-                            Grid.Column="9"
-                            Margin="8,0,0,0"
-                            Padding="12,4"
-                            Content="Export"
-                            Click="OnExportEvidenceClicked" />
                 </Grid>
             </Border>
 
             <Grid Grid.Row="2"
                   ClipToBounds="True">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
@@ -142,6 +146,10 @@
                           CanUserResizeColumns="True"
                           CanUserReorderColumns="False">
                     <DataGrid.Columns>
+                        <DataGridTextColumn Header="Series"
+                                            Binding="{Binding Series}"
+                                            Width="Auto"
+                                            MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                         <DataGridTextColumn Header="Timestamp"
                                             Binding="{Binding Timestamp}"
                                             Width="Auto"
@@ -156,6 +164,48 @@
                                             MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <Border Grid.Row="2"
+                        Grid.RowSpan="2"
+                        Margin="0,10,0,10"
+                        BorderBrush="{DynamicResource ThemePanelBorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Vertical"
+                                Margin="{x:Static ui:ChartUiDefaults.ChartPanelStackMargin}">
+                        <Border Background="{DynamicResource ThemePanelHeaderBackgroundBrush}"
+                                BorderBrush="{DynamicResource ThemePanelHeaderBorderBrush}"
+                                BorderThickness="1"
+                                Padding="{x:Static ui:ChartUiDefaults.ChartHeaderPadding}">
+                            <Grid Margin="{x:Static ui:ChartUiDefaults.ChartHeaderMargin}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           FontSize="{x:Static ui:ChartUiDefaults.ChartHeaderFontSize}"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"
+                                           Text="Output Chart" />
+                                <Button x:Name="OutputChartToggleButton"
+                                        Grid.Column="1"
+                                        Content="{x:Static ui:UiDefaults.ToggleHideLabel}"
+                                        Margin="{x:Static ui:ChartUiDefaults.ChartHeaderToggleMargin}"
+                                        Padding="{x:Static ui:ChartUiDefaults.ChartHeaderTogglePadding}"
+                                        HorizontalAlignment="Right"
+                                        Click="OnOutputChartToggleClicked" />
+                            </Grid>
+                        </Border>
+                        <StackPanel x:Name="OutputChartContentPanel"
+                                    Orientation="Vertical">
+                            <lvc:CartesianChart x:Name="OutputChart"
+                                                MinHeight="260"
+                                                LegendLocation="Right"
+                                                Hoverable="True"
+                                                DisableAnimations="True"
+                                                Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <TextBlock x:Name="EvidenceText"

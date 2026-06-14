@@ -93,6 +93,9 @@ public sealed class TransformCoordinatorTests
         Assert.Equal("MetricA:SubA", result.OverrideLabel);
         Assert.Equal(2, result.DataList.Count);
         Assert.Equal([1d, 2d], result.Results);
+        Assert.NotNull(result.ComputedSeries);
+        Assert.Equal("MetricA:SubA", result.ComputedSeries!.Label);
+        Assert.Equal([1d, 2d], result.ComputedSeries.RawValues);
     }
 
     [Theory]
@@ -115,6 +118,8 @@ public sealed class TransformCoordinatorTests
         Assert.Equal(operation, result!.OperationTag);
         Assert.Equal(1, result.OperationArity);
         Assert.Equal([first, second], result.Results);
+        Assert.NotNull(result.ComputedSeries);
+        Assert.Equal(result.Results, result.ComputedSeries!.RawValues);
     }
 
     [Theory]
@@ -151,6 +156,9 @@ public sealed class TransformCoordinatorTests
         Assert.Equal(operation, result!.OperationTag);
         Assert.Equal(2, result.OperationArity);
         Assert.Equal([first, second], result.Results);
+        Assert.NotNull(result.ComputedSeries);
+        Assert.Equal(result.Results, result.ComputedSeries!.RawValues);
+        Assert.Equal(2, result.ComputedSeries.SourceSeriesSignatures.Count);
     }
 
     [Fact]

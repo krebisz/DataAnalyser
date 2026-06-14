@@ -194,4 +194,27 @@ public sealed class TransformExpressionEvaluatorTests
         Assert.Equal(new DateTime(2024, 1, 2), b2[0].NormalizedTimestamp);
         Assert.Equal(new DateTime(2024, 1, 3), b2[1].NormalizedTimestamp);
     }
+
+    [Fact]
+    public void AlignMetricsByTimestamp_ShouldMediateDuplicateTimestampsBeforeAligning()
+    {
+        var duplicate = new DateTime(2023, 9, 11, 17, 51, 0);
+        var a = Series(
+            (duplicate, 10m),
+            (duplicate, 14m),
+            (new DateTime(2023, 9, 11, 17, 52, 0), 20m));
+        var b = Series(
+            (duplicate, 2m),
+            (duplicate, 4m),
+            (new DateTime(2023, 9, 11, 17, 53, 0), 30m));
+
+        var (a2, b2) = TransformExpressionEvaluator.AlignMetricsByTimestamp(a, b);
+
+        var left = Assert.Single(a2);
+        var right = Assert.Single(b2);
+        Assert.Equal(duplicate, left.NormalizedTimestamp);
+        Assert.Equal(12m, left.Value);
+        Assert.Equal(duplicate, right.NormalizedTimestamp);
+        Assert.Equal(3m, right.Value);
+    }
 }

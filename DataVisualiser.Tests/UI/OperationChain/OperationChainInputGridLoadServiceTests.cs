@@ -1,5 +1,6 @@
 using DataFileReader.Canonical;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Export;
 using DataVisualiser.UI.OperationChain;
 using DataVisualiser.VNext.Application;
@@ -57,6 +58,46 @@ public sealed class OperationChainInputGridLoadServiceTests
         Assert.Equal(5, result.Rows.Count);
         Assert.Equal("-10.0000", result.Rows[0].Raw);
         Assert.Equal("Fat - Muscle: 5 result points computed.", result.Summary);
+        Assert.NotNull(result.Evidence);
+    }
+
+    [Fact]
+    public async Task ComputeAsync_ShouldLoadInputsForDefaultOperation()
+    {
+        var loader = new StubMetricSeriesLoader();
+        var service = new OperationChainInputGridLoadService(loader);
+
+        var result = await service.ComputeAsync(
+            [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics",
+            "None");
+
+        Assert.Equal("Input Series", result.Title);
+        Assert.NotNull(result.Inputs);
+        var input = Assert.Single(result.Inputs);
+        Assert.Equal("Weight - Fat", input.Title);
+        Assert.Equal("Weight - Fat", result.Rows[0].Series);
+        Assert.Equal("1.2500", result.Rows[0].Raw);
+        Assert.NotNull(result.InputSnapshot);
+    }
+
+    [Fact]
+    public async Task ComputeAsync_ShouldSupportUnaryOperationWithSingleInput()
+    {
+        var loader = new StubMetricSeriesLoader();
+        var service = new OperationChainInputGridLoadService(loader);
+
+        var result = await service.ComputeAsync(
+            [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics",
+            "Sqrt");
+
+        Assert.Equal("Sqrt(Fat)", result.Title);
+        Assert.Equal("1.1180", result.Rows[0].Raw);
         Assert.NotNull(result.Evidence);
     }
 
@@ -157,7 +198,7 @@ public sealed class OperationChainInputGridLoadServiceTests
     [Fact]
     public async Task ResolveAsync_ShouldAggregateDateRangeAcrossIndependentInputs()
     {
-        var resolver = new OperationChainInputDateRangeResolver((selection, _) =>
+        var resolver = new TransformInputDateRangeResolver((selection, _) =>
         {
             var range = selection.MetricType switch
             {

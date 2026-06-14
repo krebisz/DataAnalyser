@@ -1,3 +1,4 @@
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Export;
 using DataVisualiser.VNext.Contracts;
 
@@ -142,7 +143,7 @@ internal sealed record OperationChainCorrelationEvidence(
     double ConfidenceUpper,
     int SampleCount)
 {
-    public static OperationChainCorrelationEvidence? FromSummary(OperationChainCorrelationSummary? summary) =>
+    public static OperationChainCorrelationEvidence? FromSummary(TransformCorrelationSummary? summary) =>
         summary == null
             ? null
             : new OperationChainCorrelationEvidence(

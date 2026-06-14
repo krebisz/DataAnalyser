@@ -27,7 +27,7 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
-    public void ThemedComboBoxStyle_ShouldNotOverrideNativeSelectionTemplate()
+    public void ThemedComboBoxStyle_ShouldPreserveSelectionBoxTemplateParts()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Theming", "Theme.Styles.xaml");
         var styleStart = source.IndexOf("<Style x:Key=\"ThemedComboBoxStyle\"", StringComparison.Ordinal);
@@ -38,8 +38,26 @@ public sealed class ArchitectureGuardrailTests
 
         var styleBody = source.Substring(styleStart, styleEnd - styleStart);
 
-        Assert.DoesNotContain("Property=\"Template\"", styleBody, StringComparison.Ordinal);
-        Assert.DoesNotContain("TargetType=\"ComboBox\"", styleBody.Replace("<Style x:Key=\"ThemedComboBoxStyle\" TargetType=\"ComboBox\">", string.Empty, StringComparison.Ordinal), StringComparison.Ordinal);
+        Assert.Contains("Property=\"Template\"", styleBody, StringComparison.Ordinal);
+        Assert.Contains("SelectionBoxItem", styleBody, StringComparison.Ordinal);
+        Assert.Contains("SelectionBoxItemTemplate", styleBody, StringComparison.Ordinal);
+        Assert.Contains("SelectionBoxItemStringFormat", styleBody, StringComparison.Ordinal);
+        Assert.Contains("PART_Popup", styleBody, StringComparison.Ordinal);
+        Assert.Contains("ItemsPresenter", styleBody, StringComparison.Ordinal);
+        Assert.Contains("ThemeInputBackgroundBrush", styleBody, StringComparison.Ordinal);
+        Assert.Contains("ThemeDropdownBackgroundBrush", styleBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ThemedComboBoxItems_ShouldUseThemeDropdownBackground()
+    {
+        var styles = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Theming", "Theme.Styles.xaml");
+        var darkTheme = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Theming", "Theme.Dark.xaml");
+        var lightTheme = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Theming", "Theme.Light.xaml");
+
+        Assert.Contains("ThemeDropdownBackgroundBrush", styles, StringComparison.Ordinal);
+        Assert.Contains("<SolidColorBrush x:Key=\"ThemeDropdownBackgroundBrush\" Color=\"#FF000000\" />", darkTheme, StringComparison.Ordinal);
+        Assert.Contains("<SolidColorBrush x:Key=\"ThemeDropdownBackgroundBrush\" Color=\"#FFFFFFFF\" />", lightTheme, StringComparison.Ordinal);
     }
 
     [Fact]

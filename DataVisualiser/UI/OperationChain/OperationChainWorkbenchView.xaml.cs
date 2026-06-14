@@ -13,6 +13,7 @@ namespace DataVisualiser.UI.OperationChain;
 public partial class OperationChainWorkbenchView : UserControl
 {
     private readonly List<OperationChainInputSelectionRow> _inputRows = [];
+    private readonly OperationChainTransformOutputRenderer _outputRenderer = new();
     private MetricSelectionService? _metricSelectionService;
     private OperationChainInputGridLoadService? _inputLoader;
     private readonly OperationChainEvidenceExportService _exportService = new(new EvidenceExportWriter(), new EvidenceExportPathResolver());
@@ -24,10 +25,11 @@ public partial class OperationChainWorkbenchView : UserControl
     public OperationChainWorkbenchView()
     {
         InitializeComponent();
+        _ = _outputRenderer.ClearAsync(OutputChart);
         Loaded += OnLoaded;
     }
 
-    public void DisplayResult(OperationChainResult result)
+    public async void DisplayResult(OperationChainResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
@@ -35,6 +37,7 @@ public partial class OperationChainWorkbenchView : UserControl
         SummaryText.Text = presentation.Summary;
         ResultGrid.ItemsSource = presentation.DatasetRows;
         EvidenceText.Text = presentation.Evidence;
+        await _outputRenderer.RenderAsync(OutputChart, result);
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -79,20 +82,9 @@ public partial class OperationChainWorkbenchView : UserControl
 
     private void InitializeOperationOptions()
     {
-        OperationCombo.Items.Clear();
-        AddOperation("Logarithm", "Log");
-        AddOperation("Square Root", "Sqrt");
-        AddOperation("Add (+)", "Add");
-        AddOperation("Subtract (-)", "Subtract");
-        AddOperation("Divide (/)", "Divide");
-        AddOperation("Ternary Sum (+ +)", "Sum3");
-        AddOperation("Correlation", "Correlation");
-        AddOperation("Ternary Sum Correlation", "Sum3Correlation");
-        OperationCombo.SelectedIndex = 2;
+        TransformOperationOptions.Populate(OperationCombo, new OperationChainTransformOperationProvider());
+        OperationCombo.SelectedIndex = 0;
     }
-
-    private void AddOperation(string content, string tag) =>
-        OperationCombo.Items.Add(new ComboBoxItem { Content = content, Tag = tag });
 
     private void InitializeDateRange(SharedMainWindowViewModelContext shared)
     {
@@ -197,9 +189,9 @@ public partial class OperationChainWorkbenchView : UserControl
 
     private void RemoveInputRow(OperationChainInputSelectionRow row)
     {
-        if (_inputRows.Count <= 2)
+        if (_inputRows.Count <= 1)
         {
-            SummaryText.Text = "Operation Chain requires at least two selected inputs.";
+            SummaryText.Text = "Operation Chain requires at least one selected input.";
             return;
         }
 
@@ -288,6 +280,7 @@ public partial class OperationChainWorkbenchView : UserControl
         catch (Exception ex)
         {
             SummaryText.Text = $"Operation Chain compute failed: {ex.Message}";
+            await _outputRenderer.ClearAsync(OutputChart);
         }
         finally
         {
@@ -314,14 +307,31 @@ public partial class OperationChainWorkbenchView : UserControl
         }
     }
 
+    private void OnClearClicked(object sender, RoutedEventArgs e)
+    {
+        _lastExportSnapshot = null;
+        ResultGridTitle.Text = "Result";
+        ResultGrid.ItemsSource = null;
+        EvidenceText.Text = string.Empty;
+        SummaryText.Text = "Select inputs and an operation, then compute an Operation Chain result.";
+        _ = _outputRenderer.ClearAsync(OutputChart);
+    }
+
+    private void OnOutputChartToggleClicked(object sender, RoutedEventArgs e)
+    {
+        var isVisible = OutputChartContentPanel.Visibility == Visibility.Visible;
+        OutputChartContentPanel.Visibility = isVisible ? Visibility.Collapsed : Visibility.Visible;
+        OutputChartToggleButton.Content = isVisible ? UiDefaults.ToggleShowLabel : UiDefaults.ToggleHideLabel;
+    }
+
     private IReadOnlyList<MetricSeriesRequest> ResolveInputRequests()
     {
         var inputs = new List<MetricSeriesRequest>();
         for (var index = 0; index < _inputRows.Count; index++)
             inputs.Add(ResolveInputRequest(_inputRows[index], $"Input {index + 1}"));
 
-        if (inputs.Count < 2)
-            throw new InvalidOperationException("Operation Chain requires at least two inputs.");
+        if (inputs.Count == 0)
+            throw new InvalidOperationException("Operation Chain requires at least one input.");
 
         return inputs;
     }
@@ -364,7 +374,7 @@ public partial class OperationChainWorkbenchView : UserControl
     private bool TryResolveInputRequests(out IReadOnlyList<MetricSeriesRequest> inputs)
     {
         inputs = Array.Empty<MetricSeriesRequest>();
-        if (_inputRows.Count < 2)
+        if (_inputRows.Count == 0)
             return false;
 
         var resolved = new List<MetricSeriesRequest>();
@@ -381,12 +391,13 @@ public partial class OperationChainWorkbenchView : UserControl
         return true;
     }
 
-    private void DisplayComputationResult(OperationChainComputationGridResult result)
+    private async void DisplayComputationResult(OperationChainComputationGridResult result)
     {
         SummaryText.Text = result.Summary;
         ResultGridTitle.Text = result.Title;
         ResultGrid.ItemsSource = result.Rows;
         EvidenceText.Text = result.Evidence ?? $"Operation Chain evidence: {result.Result?.Evidence.TraceSignature}";
+        await _outputRenderer.RenderAsync(OutputChart, result);
     }
 
     private string ResolveOperationTag()

@@ -45,6 +45,65 @@ public sealed class LiveChartsChartRendererTests
     }
 
     [Fact]
+    public async Task ApplyAsync_ProjectsCartesianModelToSeriesAndAxes()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var renderer = new LiveChartsChartRenderer();
+            var surface = new TestTrackedSurface();
+
+            await renderer.ApplyAsync(surface, new UiChartRenderModel
+            {
+                Series =
+                [
+                    new ChartSeriesModel
+                    {
+                        Name = "Trend",
+                        SeriesType = ChartSeriesType.Line,
+                        Values = [1d, 2d]
+                    },
+                    new ChartSeriesModel
+                    {
+                        Name = "Buckets",
+                        SeriesType = ChartSeriesType.Column,
+                        Values = [3d, 4d]
+                    }
+                ],
+                AxesX =
+                [
+                    new ChartAxisModel
+                    {
+                        Title = "Day",
+                        Labels = ["Mon", "Tue"]
+                    }
+                ],
+                AxesY =
+                [
+                    new ChartAxisModel
+                    {
+                        Title = "Value",
+                        Min = 0,
+                        Max = 10
+                    }
+                ]
+            });
+
+            Assert.NotNull(surface.RenderedCartesianChart);
+            var chart = surface.RenderedCartesianChart!;
+            Assert.Equal(2, chart.Series.Count);
+            Assert.IsType<LineSeries>(chart.Series[0]);
+            Assert.IsType<ColumnSeries>(chart.Series[1]);
+            Assert.Equal("Trend", chart.Series[0].Title);
+            Assert.Equal("Buckets", chart.Series[1].Title);
+            Assert.Equal("Day", chart.AxisX[0].Title);
+            Assert.Equal(["Mon", "Tue"], chart.AxisX[0].Labels);
+            Assert.Equal("Value", chart.AxisY[0].Title);
+            Assert.Equal(0, chart.AxisY[0].MinValue);
+            Assert.Equal(10, chart.AxisY[0].MaxValue);
+        });
+    }
+
+    [Fact]
     public async Task ApplyAsync_ForBarPieColumnChart_UsesSimpleTooltipAndInteractiveLegend()
     {
         await StaTestHelper.RunAsync(async () =>

@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using DataVisualiser.Core.Orchestration;
@@ -102,16 +101,7 @@ internal static class TransformGridPresentationCoordinator
         if (data == null && !alwaysVisible)
             return;
 
-        var rows = data?.Where(d => d.Value.HasValue)
-            .OrderBy(d => d.NormalizedTimestamp)
-            .Select(d => new
-            {
-                Timestamp = d.NormalizedTimestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                Value = d.Value!.Value.ToString("F4", CultureInfo.InvariantCulture)
-            })
-            .ToList();
-
-        grid.ItemsSource = rows;
+        grid.ItemsSource = TransformGridDataProjector.ProjectMetricRows(data);
         title.Text = titleText;
 
         if (grid.Columns.Count < 2)

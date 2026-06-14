@@ -225,7 +225,7 @@ public sealed class StrategyComputationHelperTests
     }
 
     [Fact]
-    public void CreateTimestampValueDictionaries_ShouldKeepFirstValue_ForDuplicateTimestamps()
+    public void CreateTimestampValueDictionaries_ShouldAverageDuplicateTimestamps()
     {
         var timestamp = From;
         var ordered = new List<MetricData>
@@ -244,8 +244,39 @@ public sealed class StrategyComputationHelperTests
 
         var (dict1, dict2) = StrategyComputationHelper.CreateTimestampValueDictionaries(ordered, new List<MetricData>());
 
-        Assert.Equal(10.0, dict1[timestamp]);
+        Assert.Equal(15.0, dict1[timestamp]);
         Assert.Empty(dict2);
+    }
+
+    [Fact]
+    public void PrepareOrderedData_ShouldAverageDuplicateTimestamps()
+    {
+        var timestamp = From.AddHours(1);
+        var source = new[]
+        {
+                new MetricData
+                {
+                        NormalizedTimestamp = timestamp,
+                        Value = 10,
+                        Unit = "kg",
+                        Provider = "A"
+                },
+                new MetricData
+                {
+                        NormalizedTimestamp = timestamp,
+                        Value = 20,
+                        Unit = "kg",
+                        Provider = "A"
+                }
+        };
+
+        var result = StrategyComputationHelper.PrepareOrderedData(source);
+
+        var point = Assert.Single(result);
+        Assert.Equal(timestamp, point.NormalizedTimestamp);
+        Assert.Equal(15m, point.Value);
+        Assert.Equal("kg", point.Unit);
+        Assert.Equal("A", point.Provider);
     }
 
     [Fact]
