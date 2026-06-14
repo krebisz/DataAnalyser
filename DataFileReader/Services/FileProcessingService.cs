@@ -51,6 +51,14 @@ public class FileProcessingService
                 }
 
                 var content = File.ReadAllText(file);
+                var preflight = FileProcessingPreflightValidator.Validate(fileInfo, content);
+                if (!preflight.IsValid)
+                {
+                    _issueLogger.LogUnprocessableFile(file, preflight.Reason);
+                    Console.WriteLine($"Unprocessable file: {FileHelper.GetFileName(file)} - {preflight.Reason}");
+                    continue;
+                }
+
                 var metrics = parser.Parse(file, content);
 
                 // Only run shadow validation for CSV files
@@ -103,6 +111,10 @@ public class FileProcessingService
         }
 
         public void LogNoMetrics(string filePath)
+        {
+        }
+
+        public void LogUnprocessableFile(string filePath, string reason)
         {
         }
 

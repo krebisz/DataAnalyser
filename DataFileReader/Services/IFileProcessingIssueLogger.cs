@@ -10,5 +10,7 @@ public interface IFileProcessingIssueLogger
 
     void LogNoMetrics(string filePath);
 
+    void LogUnprocessableFile(string filePath, string reason);
+
     void LogProcessingError(string filePath, Exception exception);
 }

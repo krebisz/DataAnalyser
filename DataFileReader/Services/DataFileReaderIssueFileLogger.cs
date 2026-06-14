@@ -27,6 +27,11 @@ public sealed class DataFileReaderIssueFileLogger : IFileProcessingIssueLogger
         Write("NoMetrics", filePath, null);
     }
 
+    public void LogUnprocessableFile(string filePath, string reason)
+    {
+        Write("UnprocessableFile", filePath, new InvalidDataException(reason));
+    }
+
     public void LogProcessingError(string filePath, Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);

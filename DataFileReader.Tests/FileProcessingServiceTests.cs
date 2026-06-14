@@ -159,6 +159,66 @@ public sealed class FileProcessingServiceTests
     }
 
     [Fact]
+    public void ProcessFiles_LogsMalformedJsonAsUnprocessable_WithoutCallingParser()
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), "DataFileReader.Tests", $"{Guid.NewGuid():N}.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(tempFile)!);
+        File.WriteAllText(tempFile, "{\"broken\":true");
+
+        try
+        {
+            var logger = new FakeIssueLogger("issue-log-path.log");
+            var service = new FileProcessingService(
+                [new FakeParser(canParse: _ => true, parse: (_, _) => throw new InvalidOperationException("Parser should not be called."))],
+                new FakeHealthMetricWriter(),
+                new FakeProcessedFileRegistry(),
+                logger);
+
+            var result = service.ProcessFiles([tempFile]);
+
+            Assert.True(result.HasIssues);
+            Assert.Equal(0, result.FilesProcessed);
+            var issue = Assert.Single(logger.UnprocessableFiles);
+            Assert.Equal(tempFile, issue.FilePath);
+            Assert.Contains("Malformed JSON", issue.Reason);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public void ProcessFiles_LogsMalformedCsvAsUnprocessable_WithoutCallingParser()
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), "DataFileReader.Tests", $"{Guid.NewGuid():N}.csv");
+        Directory.CreateDirectory(Path.GetDirectoryName(tempFile)!);
+        File.WriteAllText(tempFile, "timestamp,value\n\"2026-06-05,84");
+
+        try
+        {
+            var logger = new FakeIssueLogger("issue-log-path.log");
+            var service = new FileProcessingService(
+                [new FakeParser(canParse: _ => true, parse: (_, _) => throw new InvalidOperationException("Parser should not be called."))],
+                new FakeHealthMetricWriter(),
+                new FakeProcessedFileRegistry(),
+                logger);
+
+            var result = service.ProcessFiles([tempFile]);
+
+            Assert.True(result.HasIssues);
+            Assert.Equal(0, result.FilesProcessed);
+            var issue = Assert.Single(logger.UnprocessableFiles);
+            Assert.Equal(tempFile, issue.FilePath);
+            Assert.Contains("unbalanced quotes", issue.Reason);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
     public void IssueFileLogger_ShouldResolveRepositoryRelativeDocumentsLogsDirectory()
     {
         var tempRoot = Path.Combine(Path.GetTempPath(), "DataFileReader.Tests", Guid.NewGuid().ToString("N"));
@@ -228,11 +288,13 @@ public sealed class FileProcessingServiceTests
     {
         public string LogFilePath { get; } = logFilePath;
 
-        public bool HasEntries => UnsupportedFiles.Count > 0 || NoMetricFiles.Count > 0 || Errors.Count > 0;
+        public bool HasEntries => UnsupportedFiles.Count > 0 || NoMetricFiles.Count > 0 || UnprocessableFiles.Count > 0 || Errors.Count > 0;
 
         public List<string> UnsupportedFiles { get; } = [];
 
         public List<string> NoMetricFiles { get; } = [];
+
+        public List<(string FilePath, string Reason)> UnprocessableFiles { get; } = [];
 
         public List<(string FilePath, Exception Exception)> Errors { get; } = [];
 
@@ -244,6 +306,11 @@ public sealed class FileProcessingServiceTests
         public void LogNoMetrics(string filePath)
         {
             NoMetricFiles.Add(filePath);
+        }
+
+        public void LogUnprocessableFile(string filePath, string reason)
+        {
+            UnprocessableFiles.Add((filePath, reason));
         }
 
         public void LogProcessingError(string filePath, Exception exception)
