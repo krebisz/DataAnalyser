@@ -1,5 +1,6 @@
 using System.Windows.Media;
 using System.Windows;
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.State;
@@ -87,7 +88,7 @@ public sealed class DistributionPolarRenderingService
         for (var ringIndex = 1; ringIndex <= GridRingCount; ringIndex++)
         {
             var normalizedRadius = OuterRadius * ringIndex / GridRingCount;
-            chart.Series.Add(CreateGridSeries(BuildCirclePoints(normalizedRadius), Color.FromRgb(210, 210, 210)));
+            chart.Series.Add(CreateGridSeries(BuildCirclePoints(normalizedRadius), ResolveThemeColor("ThemeChartGridLineBrush", Color.FromRgb(210, 210, 210))));
         }
 
         for (var bucketIndex = 0; bucketIndex < definition.XAxisLabels.Count; bucketIndex++)
@@ -99,7 +100,7 @@ public sealed class DistributionPolarRenderingService
                             new(0, 0),
                             ProjectPoint(angle, OuterRadius)
                     },
-                    Color.FromRgb(220, 220, 220)));
+                    ResolveThemeColor("ThemeChartGridLineBrush", Color.FromRgb(220, 220, 220))));
         }
     }
 
@@ -190,6 +191,14 @@ public sealed class DistributionPolarRenderingService
                 PointGeometrySize = 0,
                 StrokeThickness = 1
         };
+    }
+
+    private static Color ResolveThemeColor(string resourceKey, Color fallback)
+    {
+        if (ChartThemeStylingHelper.ResolveBrush(resourceKey, new SolidColorBrush(fallback)) is SolidColorBrush brush)
+            return brush.Color;
+
+        return fallback;
     }
 
     private static ChartValues<ObservablePoint> BuildCirclePoints(double normalizedRadius)

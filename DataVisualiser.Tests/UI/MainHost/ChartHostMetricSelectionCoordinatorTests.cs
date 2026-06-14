@@ -94,6 +94,27 @@ public sealed class ChartHostMetricSelectionCoordinatorTests
     }
 
     [Fact]
+    public void HandleMetricTypeSelectionChanged_ShouldIgnoreNullSelection()
+    {
+        var coordinator = new ChartHostMetricSelectionCoordinator();
+        var calls = new List<string>();
+
+        coordinator.HandleMetricTypeSelectionChanged(
+            null,
+            new ChartHostMetricSelectionCoordinator.MetricTypeSelectionChangedActions(
+                value => calls.Add($"pending:{value}"),
+                value => calls.Add($"sync:{value}"),
+                () => new TestScope(() => calls.Add("batch:dispose")),
+                () => calls.Add("reset"),
+                value => calls.Add($"metric:{value}"),
+                () => calls.Add("clear-subtypes"),
+                () => calls.Add("update-selected"),
+                () => calls.Add("load-subtypes")));
+
+        Assert.Empty(calls);
+    }
+
+    [Fact]
     public void HandleSubtypesLoaded_ShouldReturnLoadDateRangeWhenMetricTypeChangePending()
     {
         var coordinator = new ChartHostMetricSelectionCoordinator();
@@ -151,6 +172,32 @@ public sealed class ChartHostMetricSelectionCoordinatorTests
                 _ => { }));
 
         Assert.Equal(ChartHostMetricSelectionCoordinator.SubtypesFollowUp.ApplySelectionState, result);
+    }
+
+    [Fact]
+    public void HandleSubtypesLoaded_ShouldNotRefreshDateRangeWithoutMetricTypeChange()
+    {
+        var coordinator = new ChartHostMetricSelectionCoordinator();
+
+        var result = coordinator.HandleSubtypesLoaded(
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedInput(
+                [new MetricNameOption("Weight", "Weight")],
+                new MetricNameOption("Weight", "Weight"),
+                IsMetricTypeChangePending: false,
+                HasLoadedData: false,
+                ShouldRefreshDateRangeForCurrentSelection: true,
+                IsInitializing: false,
+                SelectedSeriesCount: 0),
+            new ChartHostMetricSelectionCoordinator.SubtypesLoadedActions(
+                _ => { },
+                () => new TestScope(() => { }),
+                () => new TestScope(() => { }),
+                (_, _, _) => { },
+                _ => { },
+                () => { },
+                _ => { }));
+
+        Assert.Equal(ChartHostMetricSelectionCoordinator.SubtypesFollowUp.None, result);
     }
 
     [Fact]

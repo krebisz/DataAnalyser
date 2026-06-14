@@ -73,7 +73,7 @@ public sealed class MainChartsViewSelectionCoordinatorTests
     }
 
     [Fact]
-    public async Task HandleSubtypeSelectionChangedAsync_ShouldRefreshDateRangeWhenLoadedContextIsNotReusable()
+    public async Task HandleSubtypeSelectionChangedAsync_ShouldPreserveDateRangeWhenLoadedContextIsNotReusable()
     {
         var coordinator = new MainChartsViewSelectionCoordinator();
         var calls = new List<string>();
@@ -99,6 +99,6 @@ public sealed class MainChartsViewSelectionCoordinatorTests
                     return Task.CompletedTask;
                 }));
 
-        Assert.Equal(["dateRange"], calls);
+        Assert.Empty(calls);
     }
 }

@@ -98,6 +98,7 @@ public partial class SyncfusionChartsView : UserControl
                 () => AddSubtypeComboBox(this, new RoutedEventArgs()),
                 (s, e) => OnResolutionSelectionChanged(s!, e),
                 (s, e) => OnMetricTypeSelectionChanged(s!, e),
+                () => OnMetricTypeSelectionCommitted(),
                 (s, e) => OnFromDateChanged(s!, e),
                 (s, e) => OnToDateChanged(s!, e),
                 (s, e) => OnCmsToggleChanged(s!, e),
@@ -287,19 +288,55 @@ public partial class SyncfusionChartsView : UserControl
         _selectorManager.ClearAllSubtypeControls();
 
         _viewModel.SetResolutionTableName(ChartUiHelper.GetTableNameFromResolution(ResolutionCombo));
-        _viewModel.LoadMetricsCommand.Execute(null);
+        _viewModel.RequestLatestMetricTypesReload();
     }
 
     private void OnMetricTypeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing || _isApplyingSelectionSync || _isChangingResolution)
-            return;
+        CommitMetricTypeSelection("SelectionChanged");
+    }
 
-        if (_viewModel.UiState.IsLoadingMetricTypes)
-            return;
+    private void OnMetricTypeSelectionCommitted()
+    {
+        CommitMetricTypeSelection("DropDownClosed");
+    }
 
+    private void CommitMetricTypeSelection(string origin)
+    {
+        if (_isInitializing || _isApplyingSelectionSync)
+        {
+            RecordSessionMilestone(
+                "SyncfusionMetricTypeSelectionSkipped",
+                "Info",
+                $"Origin={origin}; Selected={GetSelectedMetricValue(TablesCombo) ?? "<null>"}; Initializing={_isInitializing}; ApplyingSelectionSync={_isApplyingSelectionSync}; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
+            return;
+        }
+
+        var selectedMetricType = GetSelectedMetricValue(TablesCombo);
+        if (string.IsNullOrWhiteSpace(selectedMetricType))
+        {
+            RecordSessionMilestone(
+                "SyncfusionMetricTypeSelectionSkipped",
+                "Info",
+                $"Origin={origin}; Selected=<null>; Reason=NoSelectedMetricType; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
+            return;
+        }
+
+        if (string.Equals(selectedMetricType, _viewModel.MetricState.SelectedMetricType, StringComparison.OrdinalIgnoreCase))
+        {
+            RecordSessionMilestone(
+                "SyncfusionMetricTypeSelectionSkipped",
+                "Info",
+                $"Origin={origin}; Selected={selectedMetricType}; Reason=AlreadySelected; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
+            return;
+        }
+
+        RecordSessionMilestone(
+            "SyncfusionMetricTypeSelectionAccepted",
+            "Info",
+            $"Origin={origin}; Selected={selectedMetricType}; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
         _metricSelectionCoordinator.HandleMetricTypeSelectionChanged(
-            GetSelectedMetricValue(TablesCombo),
+            selectedMetricType,
             CreateMetricTypeSelectionChangedActions());
     }
 
@@ -315,6 +352,12 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnMetricTypesLoaded(object? sender, MetricTypesLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+        {
+            _isChangingResolution = false;
+            return;
+        }
+
         _isMetricTypeChangePending = false;
         _metricSelectionCoordinator.HandleMetricTypesLoaded(e.MetricTypes.ToList(), CreateMetricTypesLoadedActions());
         _isChangingResolution = false;
@@ -322,6 +365,9 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnSubtypesLoaded(object? sender, SubtypesLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         var subtypeListLocal = e.Subtypes.ToList();
 
         _subtypeList = subtypeListLocal;
@@ -359,12 +405,18 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         FromDate.SelectedDate = e.MinDate;
         ToDate.SelectedDate = e.MaxDate;
     }
 
     private void OnErrorOccured(object? sender, ErrorEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         if (_isChangingResolution)
             return;
 
@@ -385,9 +437,6 @@ public partial class SyncfusionChartsView : UserControl
             await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext ?? new ChartDataContext());
             return;
         }
-
-        if (ShouldRefreshDateRangeForCurrentSelection())
-            await LoadDateRangeForSelectedMetrics();
     }
 
     private bool HasLoadedData()
@@ -496,6 +545,9 @@ public partial class SyncfusionChartsView : UserControl
 
     private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         var ctx = e.DataContext ?? _viewModel.ChartState.LastContext;
         if (ctx == null)
             return;
@@ -507,6 +559,9 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnSelectionStateChanged(object? sender, EventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         if (_isInitializing || _isChangingResolution)
             return;
 
@@ -539,8 +594,6 @@ public partial class SyncfusionChartsView : UserControl
 
         if (HasRenderableSelection())
             await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, _viewModel.ChartState.LastContext ?? new ChartDataContext());
-        else if (ShouldRefreshDateRangeForCurrentSelection())
-            await LoadDateRangeForSelectedMetrics();
     }
 
     private void OnSunburstBucketCountChanged(object? sender, int bucketCount)
@@ -761,6 +814,9 @@ public partial class SyncfusionChartsView : UserControl
 
     private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         if (!SyncfusionChartsViewCoordinator.IsRegisteredKey(e.ChartName))
             return;
 
@@ -769,6 +825,9 @@ public partial class SyncfusionChartsView : UserControl
 
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         var ctx = _viewModel.ChartState.LastContext;
         if (_coordinator.ShouldRenderAfterVisibilityOnlyToggle(e, ctx))
             await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx!);
@@ -807,6 +866,11 @@ public partial class SyncfusionChartsView : UserControl
         {
             _isApplyingSelectionSync = false;
         }
+    }
+
+    private bool ShouldIgnoreSharedViewModelEvent()
+    {
+        return !_isInitializing && !IsVisible;
     }
 
     private MainChartsViewStateSyncCoordinator.Actions CreateStateSyncActions()

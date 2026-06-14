@@ -130,6 +130,9 @@ public sealed class LegendToggleManager
 
     private void RebuildItems()
     {
+        foreach (var item in Items)
+            item.Dispose();
+
         Items.Clear();
 
         var stackingState = _chart.Tag as ChartStackingTooltipState;
@@ -293,8 +296,10 @@ public sealed class LegendToggleManager
         return values;
     }
 
-    public sealed class LegendItem : INotifyPropertyChanged
+    public sealed class LegendItem : INotifyPropertyChanged, IDisposable
     {
+        private readonly DependencyPropertyDescriptor? _strokeDescriptor;
+        private readonly EventHandler _strokeChangedHandler;
         private bool _isVisible;
 
         public LegendItem(CartesianChart chart, Series series, string title, Brush stroke, bool isVisible, Action<bool>? storeVisibility, Thickness itemMargin)
@@ -302,10 +307,12 @@ public sealed class LegendToggleManager
             Chart = chart;
             Series = series;
             Title = title;
-            Stroke = stroke;
             _isVisible = isVisible;
             StoreVisibility = storeVisibility;
             ItemMargin = itemMargin;
+            _strokeChangedHandler = (_, _) => OnPropertyChanged(nameof(Stroke));
+            _strokeDescriptor = DependencyPropertyDescriptor.FromProperty(Series.StrokeProperty, typeof(Series));
+            _strokeDescriptor?.AddValueChanged(series, _strokeChangedHandler);
         }
 
         public CartesianChart Chart { get; }
@@ -314,7 +321,7 @@ public sealed class LegendToggleManager
 
         public string Title { get; }
 
-        public Brush Stroke { get; }
+        public Brush Stroke => Series.Stroke ?? Brushes.Gray;
 
         public Action<bool>? StoreVisibility { get; }
 
@@ -329,10 +336,20 @@ public sealed class LegendToggleManager
                     return;
 
                 _isVisible = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsVisible)));
+                OnPropertyChanged(nameof(IsVisible));
             }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        public void Dispose()
+        {
+            _strokeDescriptor?.RemoveValueChanged(Series, _strokeChangedHandler);
+        }
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

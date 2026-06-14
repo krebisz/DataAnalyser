@@ -226,6 +226,8 @@ public sealed class LiveChartsChartRenderer : IChartRenderer
             chart.AxisY.Add(axis);
         }
 
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
+
         if (model.Legend?.IsVisible == true)
         {
             var legendItems = BuildSeriesLegendItemsControl(chart);

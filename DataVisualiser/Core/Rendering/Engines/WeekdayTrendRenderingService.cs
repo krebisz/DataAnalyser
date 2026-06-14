@@ -41,6 +41,23 @@ public sealed class WeekdayTrendRenderingService
         }
     }
 
+    public static void ApplyAverageStroke(CartesianChart chart)
+    {
+        var stroke = ResolveAverageStroke();
+        foreach (var series in chart.Series)
+        {
+            switch (series)
+            {
+                case LineSeries { Title: "Ave" } lineSeries:
+                    lineSeries.Stroke = stroke;
+                    break;
+                case ScatterSeries { Title: "Ave" } scatterSeries:
+                    scatterSeries.Stroke = stroke;
+                    break;
+            }
+        }
+    }
+
     private void RenderCartesianChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
     {
         ChartHelper.ClearChart(chart, chartState.ChartTimestamps);
@@ -98,6 +115,8 @@ public sealed class WeekdayTrendRenderingService
 
         if (chartState.ShowAverage)
             AddAverageLineSeries(result, chartState, chart);
+
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
     }
 
     private void RenderPolarChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
@@ -176,6 +195,8 @@ public sealed class WeekdayTrendRenderingService
                     LabelPoint = point => $"{title}: {MathHelper.FormatDisplayedValue(point.Y)}"
             });
         }
+
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
     }
 
     private void RenderScatterChart(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
@@ -232,6 +253,8 @@ public sealed class WeekdayTrendRenderingService
 
         if (chartState.ShowAverage)
             AddAverageScatterSeries(result, chartState, chart);
+
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
     }
 
     private static void AddAverageLineSeries(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
@@ -240,7 +263,7 @@ public sealed class WeekdayTrendRenderingService
         if (values.Count == 0)
             return;
 
-        chart.Series.Add(new LineSeries
+        var series = new LineSeries
         {
                 Title = "Ave",
                 Values = values,
@@ -249,9 +272,10 @@ public sealed class WeekdayTrendRenderingService
                 LineSmoothness = ChartRenderDefaults.WeekdayLineSmoothness,
                 Fill = Brushes.Transparent,
                 StrokeThickness = ChartRenderDefaults.WeekdayLineStrokeThickness,
-                Stroke = Brushes.Black,
+                Stroke = ResolveAverageStroke(),
                 LabelPoint = point => $"Ave: {MathHelper.FormatDisplayedValue(point.Y)}"
-        });
+        };
+        chart.Series.Add(series);
     }
 
     private static void AddAverageScatterSeries(WeekdayTrendResult result, ChartState chartState, CartesianChart chart)
@@ -260,7 +284,7 @@ public sealed class WeekdayTrendRenderingService
         if (values.Count == 0)
             return;
 
-        chart.Series.Add(new ScatterSeries
+        var series = new ScatterSeries
         {
                 Title = "Ave",
                 Values = values,
@@ -268,10 +292,11 @@ public sealed class WeekdayTrendRenderingService
                 MinPointShapeDiameter = ChartRenderDefaults.WeekdayPointSize,
                 MaxPointShapeDiameter = ChartRenderDefaults.WeekdayPointSize,
                 StrokeThickness = ChartRenderDefaults.WeekdayLineStrokeThickness,
-                Stroke = Brushes.Black,
+                Stroke = ResolveAverageStroke(),
                 Fill = Brushes.Transparent,
                 LabelPoint = point => $"Ave: {MathHelper.FormatDisplayedValue(point.Y)}"
-        });
+        };
+        chart.Series.Add(series);
     }
 
     private static ChartValues<ObservablePoint> BuildRunningMeanObservablePoints(WeekdayTrendResult result, ChartState chartState, TimeSpan? window)
@@ -373,5 +398,10 @@ public sealed class WeekdayTrendRenderingService
             return brush;
 
         return fallback;
+    }
+
+    private static Brush ResolveAverageStroke()
+    {
+        return ResolveThemeBrush("ThemePrimaryTextBrush", Brushes.Black);
     }
 }

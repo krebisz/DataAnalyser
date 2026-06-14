@@ -36,6 +36,34 @@ public sealed class DataFetcherMetricDataQueriesTests
     }
 
     [Fact]
+    public void SamplingQuery_ResolvesMetricTypeDisplayNames()
+    {
+        var sql = new StringBuilder();
+        var parameters = new DynamicParameters();
+
+        InvokeBuildSamplingQuery(
+            sql,
+            parameters,
+            tableName: "HealthMetrics",
+            providerColumn: "hm.Provider AS Provider",
+            targetSamples: 1500,
+            baseType: "Heart Rate",
+            subtype: "Maximum Heart Rate",
+            from: new DateTime(2022, 01, 01),
+            to: new DateTime(2024, 01, 01));
+
+        var text = sql.ToString();
+        Assert.Contains("metricTypeName.MetricType = hm.MetricType", text);
+        Assert.Contains("MetricTypeName", text);
+        Assert.Contains("COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @BaseType", text);
+        Assert.Contains("subtypeName.MetricType = hm.MetricType", text);
+        Assert.Contains("subtypeName.MetricSubtype = hm.MetricSubtype", text);
+        Assert.Contains("COALESCE(NULLIF(subtypeName.MetricSubtypeName, ''), subtypeName.MetricSubtype) = @Subtype", text);
+        Assert.Contains("BaseType", parameters.ParameterNames);
+        Assert.Contains("Subtype", parameters.ParameterNames);
+    }
+
+    [Fact]
     public void SamplingQuery_RequiresBoundedDateRange()
     {
         var sql = new StringBuilder();

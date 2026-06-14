@@ -139,6 +139,7 @@ public sealed class MetricTypeUiDiagnosticsSnapshot
     public string? SelectedValue { get; set; }
     public string? SelectedDisplay { get; set; }
     public int OptionCount { get; set; }
+    public IReadOnlyList<string> OptionValues { get; set; } = Array.Empty<string>();
 }
 
 public sealed class DateRangeUiDiagnosticsSnapshot

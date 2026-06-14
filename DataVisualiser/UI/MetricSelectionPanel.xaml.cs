@@ -18,6 +18,7 @@ public partial class MetricSelectionPanel : UserControl
     public event EventHandler? AddSubtypeRequested;
     public event SelectionChangedEventHandler? ResolutionSelectionChanged;
     public event SelectionChangedEventHandler? MetricTypeSelectionChanged;
+    public event EventHandler? MetricTypeSelectionCommitted;
     public event EventHandler<SelectionChangedEventArgs>? FromDateChanged;
     public event EventHandler<SelectionChangedEventArgs>? ToDateChanged;
     public event RoutedEventHandler? CmsToggleChanged;
@@ -49,6 +50,7 @@ public partial class MetricSelectionPanel : UserControl
     private void OnAddSubtypeClick(object sender, RoutedEventArgs e) => AddSubtypeRequested?.Invoke(this, EventArgs.Empty);
     private void OnResolutionSelectionChanged(object sender, SelectionChangedEventArgs e) => ResolutionSelectionChanged?.Invoke(sender, e);
     private void OnMetricTypeSelectionChanged(object sender, SelectionChangedEventArgs e) => MetricTypeSelectionChanged?.Invoke(sender, e);
+    private void OnMetricTypeDropDownClosed(object sender, EventArgs e) => MetricTypeSelectionCommitted?.Invoke(sender, EventArgs.Empty);
     private void OnFromDateChanged(object? sender, SelectionChangedEventArgs e) => FromDateChanged?.Invoke(sender, e);
     private void OnToDateChanged(object? sender, SelectionChangedEventArgs e) => ToDateChanged?.Invoke(sender, e);
     private void OnCmsToggleChanged(object sender, RoutedEventArgs e) => CmsToggleChanged?.Invoke(sender, e);

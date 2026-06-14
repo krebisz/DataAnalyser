@@ -137,7 +137,8 @@ public partial class MainChartsView : UserControl
                     action();
                 else
                     Dispatcher.Invoke(action);
-            });
+            },
+            RefreshThemeSensitiveChartElements);
 
         InitializeInfrastructure();
         InitializeChartPipeline();
@@ -168,6 +169,7 @@ public partial class MainChartsView : UserControl
                 () => AddSubtypeComboBox(this, new RoutedEventArgs()),
                 (s, e) => OnResolutionSelectionChanged(s!, e),
                 (s, e) => OnMetricTypeSelectionChanged(s!, e),
+                () => OnMetricTypeSelectionCommitted(),
                 (s, e) => OnFromDateChanged(s!, e),
                 (s, e) => OnToDateChanged(s!, e),
                 (s, e) => OnCmsToggleChanged(s!, e),
@@ -218,6 +220,29 @@ public partial class MainChartsView : UserControl
             "ThemeToggled",
             "Success",
             $"Theme set to {AppThemeService.Default.CurrentTheme}.");
+    }
+
+    private void RefreshThemeSensitiveChartElements()
+    {
+        foreach (var chart in GetThemeSensitiveCartesianCharts())
+            ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
+
+        WeekdayTrendRenderingService.ApplyAverageStroke(WeekdayTrendChartController.Chart);
+        WeekdayTrendRenderingService.ApplyAverageStroke(WeekdayTrendChartController.PolarChart);
+    }
+
+    private IEnumerable<CartesianChart> GetThemeSensitiveCartesianCharts()
+    {
+        if (_chartControllerRegistry == null)
+            yield break;
+
+        foreach (var controller in _chartControllerRegistry.All())
+        {
+            if (controller is IWpfCartesianChartHost host)
+                yield return host.Chart;
+        }
+
+        yield return WeekdayTrendChartController.PolarChart;
     }
 
     private IDisposable BeginUiBusyScope()
@@ -333,6 +358,12 @@ public partial class MainChartsView : UserControl
 
     private void OnMetricTypesLoaded(object? sender, MetricTypesLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+        {
+            _isChangingResolution = false;
+            return;
+        }
+
         _isMetricTypeChangePending = false;
         _metricSelectionCoordinator.HandleMetricTypesLoaded(e.MetricTypes.ToList(), CreateMetricTypesLoadedActions());
         _isChangingResolution = false;
@@ -340,6 +371,9 @@ public partial class MainChartsView : UserControl
 
     private void OnSubtypesLoaded(object? sender, SubtypesLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         var subtypeListLocal = e.Subtypes.ToList();
 
         _subtypeList = subtypeListLocal;
@@ -374,7 +408,10 @@ public partial class MainChartsView : UserControl
 
     private void OnSelectionStateChanged(object? sender, EventArgs e)
     {
-        if (_isInitializing)
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
+        if (_isInitializing || _isChangingResolution)
             return;
 
         if (!Dispatcher.CheckAccess())
@@ -414,12 +451,18 @@ public partial class MainChartsView : UserControl
 
     private void OnDateRangeLoaded(object? sender, DateRangeLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         FromDate.SelectedDate = e.MinDate;
         ToDate.SelectedDate = e.MaxDate;
     }
 
     private async void OnDataLoaded(object? sender, DataLoadedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         var stopwatch = Stopwatch.StartNew();
         var ctx = e.DataContext ?? _viewModel.ChartState.LastContext;
 
@@ -456,6 +499,9 @@ public partial class MainChartsView : UserControl
 
     private async void OnChartUpdateRequested(object? sender, ChartUpdateRequestedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         if (await TryHandleVisibilityOnlyToggleAsync(e))
             return;
 
@@ -696,6 +742,9 @@ public partial class MainChartsView : UserControl
 
     private async Task RenderChartAsync(string key, ChartDataContext ctx)
     {
+        if (_isChangingResolution)
+            return;
+
         var stopwatch = Stopwatch.StartNew();
         await ResolveController(key).RenderAsync(ctx);
         stopwatch.Stop();
@@ -713,6 +762,9 @@ public partial class MainChartsView : UserControl
 
     private void OnChartVisibilityChanged(object? sender, ChartVisibilityChangedEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         if (_chartControllerRegistry == null)
             return;
 
@@ -722,6 +774,9 @@ public partial class MainChartsView : UserControl
 
     private void OnErrorOccured(object? sender, ErrorEventArgs e)
     {
+        if (ShouldIgnoreSharedViewModelEvent())
+            return;
+
         if (_isChangingResolution)
         {
             _resolutionResetCoordinator.HandleSuppressedError(
@@ -1106,7 +1161,7 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void OnResolutionSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isApplyingSelectionSync)
+        if (_isApplyingSelectionSync || _isChangingResolution)
             return;
 
         if (ResolutionCombo.SelectedItem == null)
@@ -1143,9 +1198,14 @@ public partial class MainChartsView : UserControl
                 () => SubtypeCombo.Items.Clear(),
                 () => SubtypeCombo.IsEnabled = false,
                 tableName => _viewModel.SetResolutionTableName(tableName),
-                () => _viewModel.LoadMetricsCommand.Execute(null),
+                _viewModel.RequestLatestMetricTypesReload,
                 UpdatePrimaryDataRequiredButtonStates,
                 UpdateSecondaryDataRequiredButtonStates));
+    }
+
+    private bool ShouldIgnoreSharedViewModelEvent()
+    {
+        return !_isInitializing && !IsVisible;
     }
 
     private void ResetDateRangeToDefault()
@@ -1158,13 +1218,48 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private void OnMetricTypeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isInitializing || _isApplyingSelectionSync)
-            return;
+        CommitMetricTypeSelection("SelectionChanged");
+    }
 
-        if (_viewModel.UiState.IsLoadingMetricTypes)
+    private void OnMetricTypeSelectionCommitted()
+    {
+        CommitMetricTypeSelection("DropDownClosed");
+    }
+
+    private void CommitMetricTypeSelection(string origin)
+    {
+        if (_isInitializing || _isApplyingSelectionSync)
+        {
+            _sessionDiagnosticsRecorder.RecordSessionMilestone(
+                "ChartsMetricTypeSelectionSkipped",
+                "Info",
+                $"Origin={origin}; Selected={GetSelectedMetricValue(TablesCombo) ?? "<null>"}; Initializing={_isInitializing}; ApplyingSelectionSync={_isApplyingSelectionSync}; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
             return;
+        }
 
         var selectedMetricType = GetSelectedMetricValue(TablesCombo);
+        if (string.IsNullOrWhiteSpace(selectedMetricType))
+        {
+            _sessionDiagnosticsRecorder.RecordSessionMilestone(
+                "ChartsMetricTypeSelectionSkipped",
+                "Info",
+                $"Origin={origin}; Selected=<null>; Reason=NoSelectedMetricType; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
+            return;
+        }
+
+        if (string.Equals(selectedMetricType, _viewModel.MetricState.SelectedMetricType, StringComparison.OrdinalIgnoreCase))
+        {
+            _sessionDiagnosticsRecorder.RecordSessionMilestone(
+                "ChartsMetricTypeSelectionSkipped",
+                "Info",
+                $"Origin={origin}; Selected={selectedMetricType}; Reason=AlreadySelected; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
+            return;
+        }
+
+        _sessionDiagnosticsRecorder.RecordSessionMilestone(
+            "ChartsMetricTypeSelectionAccepted",
+            "Info",
+            $"Origin={origin}; Selected={selectedMetricType}; ChangingResolution={_isChangingResolution}; LoadingMetricTypes={_viewModel.UiState.IsLoadingMetricTypes}.");
         _metricSelectionCoordinator.HandleMetricTypeSelectionChanged(
             selectedMetricType,
             CreateMetricTypeSelectionChangedActions());
@@ -1178,7 +1273,7 @@ public partial class MainChartsView : UserControl
     /// </summary>
     private async void OnAnySubtypeSelectionChanged(object? sender, SelectionChangedEventArgs? e)
     {
-        if (_isApplyingSelectionSync)
+        if (_isApplyingSelectionSync || _isChangingResolution)
             return;
 
         UpdateSelectedSubtypesInViewModel();

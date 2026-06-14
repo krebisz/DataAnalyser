@@ -54,6 +54,140 @@ public sealed class MetricLoadCoordinatorTests
     }
 
     [Fact]
+    public async Task LoadMetricsAsync_ShouldExposeLoadingFlagAsFalseInsideLoadedCallback()
+    {
+        var chartState = new ChartState();
+        var metricState = new MetricState
+        {
+            ResolutionTableName = "HealthMetrics"
+        };
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var service = new MetricSelectionService(new StubMetricSelectionDataQueries(), "TestConnection");
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message);
+
+        bool? loadingFlagInsideCallback = null;
+
+        await coordinator.LoadMetricsAsync(
+            _ => loadingFlagInsideCallback = uiState.IsLoadingMetricTypes,
+            message => throw new Xunit.Sdk.XunitException(message));
+
+        Assert.False(loadingFlagInsideCallback);
+        Assert.False(uiState.IsLoadingMetricTypes);
+    }
+
+    [Fact]
+    public async Task RequestLatestMetricTypesReload_ShouldReplayLatestResolutionWhenEarlierLoadIsStillRunning()
+    {
+        var chartState = new ChartState();
+        var metricState = new MetricState
+        {
+            ResolutionTableName = "HealthMetricsHour"
+        };
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var queries = new BlockingMetricTypeQueries();
+        var service = new MetricSelectionService(queries, "TestConnection");
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message);
+
+        var loaded = new List<IReadOnlyList<MetricNameOption>>();
+        var latestLoaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        coordinator.RequestLatestMetricTypesReload(
+            args =>
+            {
+                var metricTypes = args.MetricTypes.ToList();
+                loaded.Add(metricTypes);
+                if (metricTypes.Any(type => type.Value == "Weight"))
+                    latestLoaded.TrySetResult();
+            },
+            message => throw new Xunit.Sdk.XunitException(message));
+
+        await queries.FirstLoadStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        metricState.ResolutionTableName = "HealthMetrics";
+        coordinator.RequestLatestMetricTypesReload(
+            args =>
+            {
+                var metricTypes = args.MetricTypes.ToList();
+                loaded.Add(metricTypes);
+                if (metricTypes.Any(type => type.Value == "Weight"))
+                    latestLoaded.TrySetResult();
+            },
+            message => throw new Xunit.Sdk.XunitException(message));
+
+        queries.ReleaseFirstLoad.SetResult();
+        await latestLoaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(["HealthMetricsHour", "HealthMetrics"], queries.MetricTypeTableNames);
+        Assert.Equal(2, loaded.Count);
+        Assert.Empty(loaded[0]);
+        Assert.Equal("Weight", loaded[1].Single().Value);
+        Assert.False(uiState.IsLoadingMetricTypes);
+    }
+
+    [Fact]
+    public async Task RequestLatestMetricTypesReload_ShouldWaitForCommandLoadBeforeRunningLatestRequest()
+    {
+        var chartState = new ChartState();
+        var metricState = new MetricState
+        {
+            ResolutionTableName = "HealthMetricsHour"
+        };
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var queries = new BlockingMetricTypeQueries();
+        var service = new MetricSelectionService(queries, "TestConnection");
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message);
+
+        var loaded = new List<IReadOnlyList<MetricNameOption>>();
+        var commandLoad = coordinator.LoadMetricsAsync(
+            args => loaded.Add(args.MetricTypes.ToList()),
+            message => throw new Xunit.Sdk.XunitException(message));
+
+        await queries.FirstLoadStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var latestLoaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        metricState.ResolutionTableName = "HealthMetrics";
+        coordinator.RequestLatestMetricTypesReload(
+            args =>
+            {
+                var metricTypes = args.MetricTypes.ToList();
+                loaded.Add(metricTypes);
+                if (metricTypes.Any(type => type.Value == "Weight"))
+                    latestLoaded.TrySetResult();
+            },
+            message => throw new Xunit.Sdk.XunitException(message));
+
+        queries.ReleaseFirstLoad.SetResult();
+        await commandLoad.WaitAsync(TimeSpan.FromSeconds(5));
+        await latestLoaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(["HealthMetricsHour", "HealthMetrics"], queries.MetricTypeTableNames);
+        Assert.Equal(2, loaded.Count);
+        Assert.Empty(loaded[0]);
+        Assert.Equal("Weight", loaded[1].Single().Value);
+    }
+
+    [Fact]
     public async Task LoadMetricDataAsync_ShouldUseCapturedRequestInsteadOfAmbientMutableState()
     {
         var chartState = new ChartState();
@@ -566,6 +700,68 @@ public sealed class MetricLoadCoordinatorTests
             ];
 
             return Task.FromResult(results);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeFromCounts(string baseType, IReadOnlyCollection<string>? subtypes = null)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeForSubtypes(string baseType, IReadOnlyCollection<string>? subtypes, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+    }
+
+    private sealed class BlockingMetricTypeQueries : IMetricSelectionDataQueries
+    {
+        private int _metricTypeCallCount;
+
+        public TaskCompletionSource FirstLoadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource ReleaseFirstLoad { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public List<string> MetricTypeTableNames { get; } = [];
+
+        public Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
+        {
+            return Task.FromResult(0L);
+        }
+
+        public Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(
+            string baseType,
+            string? subtype,
+            DateTime? from,
+            DateTime? to,
+            string tableName,
+            int? maxRecords = null,
+            SamplingMode samplingMode = SamplingMode.None,
+            int? targetSamples = null)
+        {
+            return Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+        }
+
+        public async Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName)
+        {
+            MetricTypeTableNames.Add(tableName);
+            if (Interlocked.Increment(ref _metricTypeCallCount) == 1)
+            {
+                FirstLoadStarted.SetResult();
+                await ReleaseFirstLoad.Task;
+                return Array.Empty<MetricNameOption>();
+            }
+
+            return [new MetricNameOption("Weight", "Weight")];
+        }
+
+        public Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName)
+        {
+            return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
         }
 
         public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName)

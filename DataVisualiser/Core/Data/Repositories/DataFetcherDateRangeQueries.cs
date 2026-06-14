@@ -46,14 +46,14 @@ internal sealed class DataFetcherDateRangeQueries : DataFetcherQueryGroup
         var sql = new StringBuilder($@"
                 -- DataFetcher.GetBaseTypeDateRange
                 SELECT 
-                    MIN(NormalizedTimestamp) AS MinDate,
-                    MAX(NormalizedTimestamp) AS MaxDate
-                FROM [dbo].[{tableName}]
-                WHERE NormalizedTimestamp IS NOT NULL");
+                    MIN(hm.NormalizedTimestamp) AS MinDate,
+                    MAX(hm.NormalizedTimestamp) AS MaxDate
+                FROM [dbo].[{tableName}] hm
+                WHERE hm.NormalizedTimestamp IS NOT NULL");
 
         var parameters = new DynamicParameters();
-        SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
-        SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
+        SqlQueryBuilder.AddMetricTypeOrDisplayNameFilter(sql, parameters, baseType, "hm.MetricType");
+        SqlQueryBuilder.AddSubtypeOrDisplayNameFilter(sql, parameters, subtype, "hm.MetricType", "hm.MetricSubtype");
 
         var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql.ToString(), parameters);
         return result != null && result.MinDate.HasValue && result.MaxDate.HasValue
@@ -83,7 +83,16 @@ internal sealed class DataFetcherDateRangeQueries : DataFetcherQueryGroup
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = c.MetricType
                       AND m.MetricSubtype = c.MetricSubtype
-                WHERE c.MetricType = @MetricType
+                WHERE (
+                        c.MetricType = @MetricType
+                        OR EXISTS (
+                            SELECT 1
+                            FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                            WHERE metricTypeName.MetricType = c.MetricType
+                              AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)
+                              AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @MetricType
+                        )
+                    )
                   AND (m.Disabled IS NULL OR m.Disabled = 0)
                   AND c.RecordCount > 0
                   AND c.EarliestDateTime IS NOT NULL
@@ -94,8 +103,7 @@ internal sealed class DataFetcherDateRangeQueries : DataFetcherQueryGroup
 
         if (subtypeList.Count > 0)
         {
-            sql.Append(" AND c.MetricSubtype IN @Subtypes");
-            parameters.Add("Subtypes", subtypeList);
+            SqlQueryBuilder.AddSubtypesOrDisplayNameFilter(sql, parameters, subtypeList, "c.MetricType", "c.MetricSubtype");
         }
 
         var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql.ToString(), parameters);
@@ -122,18 +130,17 @@ internal sealed class DataFetcherDateRangeQueries : DataFetcherQueryGroup
         var sql = new StringBuilder($@"
                 -- DataFetcher.GetBaseTypeDateRangeForSubtypes
                 SELECT 
-                    MIN(NormalizedTimestamp) AS MinDate,
-                    MAX(NormalizedTimestamp) AS MaxDate
-                FROM [dbo].[{tableName}]
-                WHERE NormalizedTimestamp IS NOT NULL");
+                    MIN(hm.NormalizedTimestamp) AS MinDate,
+                    MAX(hm.NormalizedTimestamp) AS MaxDate
+                FROM [dbo].[{tableName}] hm
+                WHERE hm.NormalizedTimestamp IS NOT NULL");
 
         var parameters = new DynamicParameters();
-        SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
+        SqlQueryBuilder.AddMetricTypeOrDisplayNameFilter(sql, parameters, baseType, "hm.MetricType");
 
         if (subtypeList.Count > 0)
         {
-            sql.Append(" AND MetricSubtype IN @Subtypes");
-            parameters.Add("Subtypes", subtypeList);
+            SqlQueryBuilder.AddSubtypesOrDisplayNameFilter(sql, parameters, subtypeList, "hm.MetricType", "hm.MetricSubtype");
         }
 
         var result = await conn.QuerySingleOrDefaultAsync<DateRangeResult>(sql.ToString(), parameters);
@@ -152,9 +159,35 @@ internal sealed class DataFetcherDateRangeQueries : DataFetcherQueryGroup
         var sql = $@"
                 -- DataFetcher.GetRecordCount
                 SELECT SUM(RecordCount)
-                FROM {DataAccessDefaults.HealthMetricsCountsTable}
-                WHERE (@MetricType = '(All)' OR MetricType = @MetricType)
-                  AND (@MetricSubtype IS NULL OR @MetricSubtype = '' OR MetricSubtype = @MetricSubtype)";
+                FROM {DataAccessDefaults.HealthMetricsCountsTable} c
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
+                       ON m.MetricType = c.MetricType
+                      AND m.MetricSubtype = c.MetricSubtype
+                WHERE (
+                        @MetricType = '(All)'
+                        OR c.MetricType = @MetricType
+                        OR EXISTS (
+                            SELECT 1
+                            FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                            WHERE metricTypeName.MetricType = c.MetricType
+                              AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)
+                              AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @MetricType
+                        )
+                    )
+                  AND (m.Disabled IS NULL OR m.Disabled = 0)
+                  AND (
+                        @MetricSubtype IS NULL
+                        OR @MetricSubtype = ''
+                        OR c.MetricSubtype = @MetricSubtype
+                        OR EXISTS (
+                            SELECT 1
+                            FROM {DataAccessDefaults.HealthMetricsCanonicalTable} subtypeName
+                            WHERE subtypeName.MetricType = c.MetricType
+                              AND subtypeName.MetricSubtype = c.MetricSubtype
+                              AND (subtypeName.Disabled IS NULL OR subtypeName.Disabled = 0)
+                              AND COALESCE(NULLIF(subtypeName.MetricSubtypeName, ''), subtypeName.MetricSubtype) = @MetricSubtype
+                        )
+                    )";
 
         var result = await conn.QuerySingleOrDefaultAsync<long?>(sql, new
         {
@@ -203,10 +236,24 @@ internal sealed class DataFetcherDateRangeQueries : DataFetcherQueryGroup
 
         var sql = $@"
                 -- DataFetcher.GetRecordCountsBySubtype
-                SELECT MetricSubtype, RecordCount
-                FROM {DataAccessDefaults.HealthMetricsCountsTable}
-                WHERE MetricType = @MetricType
-                ORDER BY MetricSubtype";
+                SELECT c.MetricSubtype, SUM(c.RecordCount) AS RecordCount
+                FROM {DataAccessDefaults.HealthMetricsCountsTable} c
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
+                       ON m.MetricType = c.MetricType
+                      AND m.MetricSubtype = c.MetricSubtype
+                WHERE (
+                        c.MetricType = @MetricType
+                        OR EXISTS (
+                            SELECT 1
+                            FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                            WHERE metricTypeName.MetricType = c.MetricType
+                              AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)
+                              AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @MetricType
+                        )
+                    )
+                  AND (m.Disabled IS NULL OR m.Disabled = 0)
+                GROUP BY c.MetricSubtype
+                ORDER BY c.MetricSubtype";
 
         var results = await conn.QueryAsync<(string MetricSubtype, long RecordCount)>(sql, new { MetricType = metricType });
         return results.ToDictionary(r => r.MetricSubtype, r => r.RecordCount);

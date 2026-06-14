@@ -93,56 +93,7 @@
         <Setter Property="Background" Value="{DynamicResource ThemeInputBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeInputBorderBrush}" />
         <Setter Property="ItemContainerStyle" Value="{StaticResource ThemedComboBoxItemStyle}" />
-        <Setter Property="Padding" Value="6,3,28,3" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ComboBox">
-                    <Grid>
-                        <ToggleButton x:Name="ToggleButton"
-                                      Focusable="False"
-                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                      ClickMode="Press"
-                                      Template="{StaticResource ThemedComboBoxToggleButtonTemplate}" />
-                        <ContentPresenter x:Name="ContentSite"
-                                          Margin="{TemplateBinding Padding}"
-                                          IsHitTestVisible="False"
-                                          HorizontalAlignment="Left"
-                                          VerticalAlignment="Center"
-                                          Content="{TemplateBinding SelectionBoxItem}"
-                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                          RecognizesAccessKey="True"
-                                          TextElement.Foreground="{DynamicResource ThemeInputForegroundBrush}" />
-                        <Popup x:Name="Popup"
-                               Placement="Bottom"
-                               AllowsTransparency="True"
-                               Focusable="False"
-                               IsOpen="{TemplateBinding IsDropDownOpen}"
-                               PopupAnimation="Slide">
-                            <Grid MinWidth="{TemplateBinding ActualWidth}"
-                                  MaxHeight="{TemplateBinding MaxDropDownHeight}">
-                                <Border Background="{DynamicResource ThemeInputBackgroundBrush}"
-                                        BorderBrush="{DynamicResource ThemeInputBorderBrush}"
-                                        BorderThickness="1" />
-                                <ScrollViewer Margin="1"
-                                              SnapsToDevicePixels="True">
-                                    <StackPanel IsItemsHost="True"
-                                                KeyboardNavigation.DirectionalNavigation="Contained" />
-                                </ScrollViewer>
-                            </Grid>
-                        </Popup>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="HasItems" Value="False">
-                            <Setter TargetName="Popup" Property="MinHeight" Value="24" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.6" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="Padding" Value="6,3" />
     </Style>
 
     <Style x:Key="ThemedDatePickerStyle" TargetType="DatePicker">

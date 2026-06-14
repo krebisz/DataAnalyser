@@ -27,6 +27,7 @@ internal static class DistributionAxisCoordinator
             defaultYAxis.MinValue = 0;
             defaultYAxis.MaxValue = 100;
             defaultYAxis.ShowLabels = true;
+            ChartThemeStylingHelper.ApplyAxisTheme(defaultYAxis);
             return;
         }
 
@@ -52,6 +53,7 @@ internal static class DistributionAxisCoordinator
         yAxis.LabelFormatter = value => MathHelper.FormatDisplayedValue(value);
         yAxis.ShowLabels = true;
         yAxis.Title = "Value";
+        ChartThemeStylingHelper.ApplyAxisTheme(yAxis);
     }
 
     public static void ConfigureXAxis(CartesianChart chart, IReadOnlyList<string> bucketLabels, string xAxisTitle)
@@ -70,5 +72,6 @@ internal static class DistributionAxisCoordinator
             Step = 1,
             IsEnabled = false
         };
+        ChartThemeStylingHelper.ApplyAxisTheme(axis);
     }
 }

@@ -16,11 +16,15 @@ public sealed class MetricLoadCoordinator
 {
     private readonly ChartState _chartState;
     private readonly Func<Exception, string> _formatError;
+    private readonly object _metricReloadRequestGate = new();
+    private readonly SemaphoreSlim _metricReloadSemaphore = new(1, 1);
     private readonly MetricSelectionService _metricService;
     private readonly MetricState _metricState;
     private readonly UiState _uiState;
     private readonly DataLoadValidator _validator;
     private readonly VNextMetricLoadRouter _vnextMetricLoadRouter;
+    private bool _isLatestMetricReloadRunnerActive;
+    private int _latestMetricReloadRequestVersion;
 
     private MetricLoadCoordinator(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError, VNextMainChartIntegrationCoordinator? vnextMainChartIntegrationCoordinator = null)
     {
@@ -47,9 +51,74 @@ public sealed class MetricLoadCoordinator
 
     public async Task LoadMetricsAsync(Action<MetricTypesLoadedEventArgs> onLoaded, Action<string> onError)
     {
-        if (_uiState.IsLoadingMetricTypes)
+        if (!await _metricReloadSemaphore.WaitAsync(0))
             return;
 
+        try
+        {
+            await LoadMetricsOnceAsync(onLoaded, onError);
+        }
+        finally
+        {
+            _metricReloadSemaphore.Release();
+        }
+    }
+
+    public void RequestLatestMetricTypesReload(Action<MetricTypesLoadedEventArgs> onLoaded, Action<string> onError)
+    {
+        lock (_metricReloadRequestGate)
+        {
+            _latestMetricReloadRequestVersion++;
+            if (_isLatestMetricReloadRunnerActive)
+                return;
+
+            _isLatestMetricReloadRunnerActive = true;
+        }
+
+        _ = RunLatestMetricTypesReloadsAsync(onLoaded, onError);
+    }
+
+    private async Task RunLatestMetricTypesReloadsAsync(Action<MetricTypesLoadedEventArgs> onLoaded, Action<string> onError)
+    {
+        try
+        {
+            while (true)
+            {
+                int observedVersion;
+                lock (_metricReloadRequestGate)
+                    observedVersion = _latestMetricReloadRequestVersion;
+
+                await _metricReloadSemaphore.WaitAsync();
+                try
+                {
+                    await LoadMetricsOnceAsync(onLoaded, onError);
+                }
+                finally
+                {
+                    _metricReloadSemaphore.Release();
+                }
+
+                lock (_metricReloadRequestGate)
+                {
+                    if (observedVersion != _latestMetricReloadRequestVersion)
+                        continue;
+
+                    _isLatestMetricReloadRunnerActive = false;
+                    return;
+                }
+            }
+        }
+        catch
+        {
+            lock (_metricReloadRequestGate)
+                _isLatestMetricReloadRunnerActive = false;
+
+            throw;
+        }
+    }
+
+    private async Task LoadMetricsOnceAsync(Action<MetricTypesLoadedEventArgs> onLoaded, Action<string> onError)
+    {
         try
         {
             _uiState.IsLoadingMetricTypes = true;
@@ -63,6 +132,8 @@ public sealed class MetricLoadCoordinator
             }
 
             var metricTypes = await _metricService.LoadMetricTypesAsync(tableName);
+
+            _uiState.IsLoadingMetricTypes = false;
 
             onLoaded(new MetricTypesLoadedEventArgs
             {

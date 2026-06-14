@@ -36,6 +36,8 @@
     <SolidColorBrush x:Key="ThemeTooltipSecondaryTextBrush" Color="#FFC1CAD3" />
     <SolidColorBrush x:Key="ThemeTooltipSeparatorBrush" Color="#FF46515F" />
     <SolidColorBrush x:Key="ThemeTooltipSwatchBorderBrush" Color="#FFE6EDF5" />
+    <SolidColorBrush x:Key="ThemeChartAxisBrush" Color="#FFF1F4F7" />
+    <SolidColorBrush x:Key="ThemeChartGridLineBrush" Color="#FF46515F" />
     <SolidColorBrush x:Key="ThemePolarChartLabelBrush" Color="#FFE3EAF2" />
     <SolidColorBrush x:Key="ThemeLegendBackgroundBrush" Color="#E611161D" />
     <SolidColorBrush x:Key="ThemeLegendBorderBrush" Color="#FF4E5C6E" />

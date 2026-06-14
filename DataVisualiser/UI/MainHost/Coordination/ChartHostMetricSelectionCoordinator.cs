@@ -96,6 +96,9 @@ public sealed class ChartHostMetricSelectionCoordinator
     {
         ArgumentNullException.ThrowIfNull(actions);
 
+        if (string.IsNullOrWhiteSpace(selectedMetricType))
+            return;
+
         actions.SetMetricTypeChangePending(true);
         actions.SetApplyingSelectionSync(true);
         try
@@ -139,9 +142,6 @@ public sealed class ChartHostMetricSelectionCoordinator
             actions.SetMetricTypeChangePending(false);
             return SubtypesFollowUp.LoadDateRange;
         }
-
-        if (!input.HasLoadedData && input.ShouldRefreshDateRangeForCurrentSelection)
-            return SubtypesFollowUp.LoadDateRange;
 
         if (!input.IsInitializing && input.SelectedSeriesCount > 0)
             return SubtypesFollowUp.ApplySelectionState;

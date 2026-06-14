@@ -80,7 +80,7 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
 
         using var conn = await OpenConnectionAsync();
 
-        var providerColumn = SqlQueryBuilder.GetProviderColumn(tableName);
+        var providerColumn = tableName == DataAccessDefaults.DefaultTableName ? "hm.Provider AS Provider" : "NULL AS Provider";
         var sql = new StringBuilder();
         var parameters = new DynamicParameters();
         var mode = ResolveQueryMode(samplingMode, targetSamples, maxRecords);
@@ -147,17 +147,17 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
         WITH BucketedData AS (
             SELECT
                 DATEDIFF_BIG(second, @SamplingFromDate, NormalizedTimestamp) / @BucketSeconds AS BucketIndex,
-                NormalizedTimestamp,
-                Value,
-                Unit,
+                hm.NormalizedTimestamp,
+                hm.Value,
+                hm.Unit,
                 {providerColumn}
-            FROM [dbo].[{tableName}]
+            FROM [dbo].[{tableName}] hm
             WHERE 1=1");
 
-        SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
-        SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
-        SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
-        sql.Append(" AND Value IS NOT NULL");
+        SqlQueryBuilder.AddMetricTypeOrDisplayNameFilter(sql, parameters, baseType, "hm.MetricType");
+        SqlQueryBuilder.AddSubtypeOrDisplayNameFilter(sql, parameters, subtype, "hm.MetricType", "hm.MetricSubtype");
+        SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to, "hm.NormalizedTimestamp");
+        sql.Append(" AND hm.Value IS NOT NULL");
 
         sql.Append($@"
         )
@@ -187,11 +187,11 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
     {
         sql.Append($@"
         SELECT TOP {maxRecords}
-            NormalizedTimestamp,
-            Value,
-            Unit,
+            hm.NormalizedTimestamp,
+            hm.Value,
+            hm.Unit,
             {providerColumn}
-        FROM [dbo].[{tableName}]
+        FROM [dbo].[{tableName}] hm
         WHERE 1=1");
     }
 
@@ -199,20 +199,20 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
     {
         sql.Append($@"
         SELECT
-            NormalizedTimestamp,
-            Value,
-            Unit,
+            hm.NormalizedTimestamp,
+            hm.Value,
+            hm.Unit,
             {providerColumn}
-        FROM [dbo].[{tableName}]
+        FROM [dbo].[{tableName}] hm
         WHERE 1=1");
     }
 
     private static void ApplyCommonFilters(StringBuilder sql, DynamicParameters parameters, string baseType, string? subtype, DateTime? from, DateTime? to)
     {
-        SqlQueryBuilder.AddMetricTypeFilter(sql, parameters, baseType);
-        SqlQueryBuilder.AddSubtypeFilter(sql, parameters, subtype);
-        SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to);
-        sql.Append(" AND Value IS NOT NULL ORDER BY NormalizedTimestamp");
+        SqlQueryBuilder.AddMetricTypeOrDisplayNameFilter(sql, parameters, baseType, "hm.MetricType");
+        SqlQueryBuilder.AddSubtypeOrDisplayNameFilter(sql, parameters, subtype, "hm.MetricType", "hm.MetricSubtype");
+        SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to, "hm.NormalizedTimestamp");
+        sql.Append(" AND hm.Value IS NOT NULL ORDER BY hm.NormalizedTimestamp");
     }
 
     private static void ValidateArguments(string baseType, DateTime? from, DateTime? to)

@@ -14,6 +14,7 @@ public sealed class MetricSelectionPanelEventBinder
         Action AddSubtype,
         SelectionChangedEventHandler ResolutionSelectionChanged,
         SelectionChangedEventHandler MetricTypeSelectionChanged,
+        Action MetricTypeSelectionCommitted,
         EventHandler<SelectionChangedEventArgs> FromDateChanged,
         EventHandler<SelectionChangedEventArgs> ToDateChanged,
         RoutedEventHandler CmsToggleChanged,
@@ -32,6 +33,7 @@ public sealed class MetricSelectionPanelEventBinder
         panel.AddSubtypeRequested += (_, _) => actions.AddSubtype();
         panel.ResolutionSelectionChanged += actions.ResolutionSelectionChanged;
         panel.MetricTypeSelectionChanged += actions.MetricTypeSelectionChanged;
+        panel.MetricTypeSelectionCommitted += (_, _) => actions.MetricTypeSelectionCommitted();
         panel.FromDateChanged += actions.FromDateChanged;
         panel.ToDateChanged += actions.ToDateChanged;
         panel.CmsToggleChanged += actions.CmsToggleChanged;

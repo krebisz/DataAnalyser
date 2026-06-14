@@ -5,6 +5,7 @@ namespace DataVisualiser.UI.MainHost.Coordination;
 public sealed class MainChartsViewThemeCoordinator
 {
     private readonly Action<Action>? _invokeOnUiThread;
+    private readonly Action? _onThemeChanged;
     private readonly Action<string> _setToggleContent;
     private readonly AppThemeService _themeService;
     private bool _isAttached;
@@ -12,11 +13,13 @@ public sealed class MainChartsViewThemeCoordinator
     public MainChartsViewThemeCoordinator(
         AppThemeService themeService,
         Action<string> setToggleContent,
-        Action<Action>? invokeOnUiThread = null)
+        Action<Action>? invokeOnUiThread = null,
+        Action? onThemeChanged = null)
     {
         _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
         _setToggleContent = setToggleContent ?? throw new ArgumentNullException(nameof(setToggleContent));
         _invokeOnUiThread = invokeOnUiThread;
+        _onThemeChanged = onThemeChanged;
     }
 
     public void Attach()
@@ -52,15 +55,21 @@ public sealed class MainChartsViewThemeCoordinator
     {
         if (_invokeOnUiThread == null)
         {
-            UpdateToggleContent();
+            ApplyThemeChanged();
             return;
         }
 
-        _invokeOnUiThread(UpdateToggleContent);
+        _invokeOnUiThread(ApplyThemeChanged);
     }
 
     private void UpdateToggleContent()
     {
         _setToggleContent(GetToggleContent());
+    }
+
+    private void ApplyThemeChanged()
+    {
+        UpdateToggleContent();
+        _onThemeChanged?.Invoke();
     }
 }

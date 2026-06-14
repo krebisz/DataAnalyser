@@ -29,6 +29,7 @@ public sealed class MainChartsUiSurfaceDiagnosticsReaderTests
             var primarySubtypeCombo = new ComboBox();
             var panel = new StackPanel();
             var metricOption = new MetricNameOption("Weight", "Weight");
+            var secondMetricOption = new MetricNameOption("Activity", "Activity");
             var subtypeOptions = new[]
             {
                 new MetricNameOption("body_fat_mass", "Fat (mass)"),
@@ -36,6 +37,7 @@ public sealed class MainChartsUiSurfaceDiagnosticsReaderTests
             };
 
             metricCombo.Items.Add(metricOption);
+            metricCombo.Items.Add(secondMetricOption);
             metricCombo.SelectedItem = metricOption;
 
             var selectorManager = new SubtypeSelector(panel, primarySubtypeCombo);
@@ -65,6 +67,7 @@ public sealed class MainChartsUiSurfaceDiagnosticsReaderTests
                 transformController);
 
             Assert.Equal("Weight", snapshot.MetricType.SelectedValue);
+            Assert.Equal(["Weight", "Activity"], snapshot.MetricType.OptionValues);
             Assert.Equal(2, snapshot.Subtypes.ActiveComboCount);
             Assert.True(snapshot.Subtypes.PrimarySelectionMaterialized);
             Assert.True(snapshot.Subtypes.AllCombosBoundToSelectedMetricType);

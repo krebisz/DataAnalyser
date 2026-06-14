@@ -22,7 +22,10 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = c.MetricType
                       AND m.MetricSubtype = c.MetricSubtype
-                WHERE c.MetricType IS NOT NULL 
+                WHERE c.MetricType IS NOT NULL
+                  AND c.MetricType != ''
+                  AND c.MetricSubtype IS NOT NULL
+                  AND c.MetricSubtype != ''
                   AND (m.Disabled IS NULL OR m.Disabled = 0)
                   AND c.RecordCount > 0
                 ORDER BY c.MetricType";
@@ -40,16 +43,25 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
         {
             var sql = $@"
                     -- DataFetcher.GetBaseMetricTypeOptions (HealthMetrics)
-                    SELECT c.MetricType, MAX(m.MetricTypeName) AS MetricTypeName
-                    FROM {DataAccessDefaults.HealthMetricsCountsTable} c
-                    LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
-                           ON m.MetricType = c.MetricType
-                          AND m.MetricSubtype = c.MetricSubtype
-                    WHERE c.MetricType IS NOT NULL
-                      AND (m.Disabled IS NULL OR m.Disabled = 0)
-                      AND c.RecordCount > 0
-                    GROUP BY c.MetricType
-                    ORDER BY c.MetricType";
+                    WITH TypeNames AS (
+                        SELECT c.MetricType,
+                               COALESCE(NULLIF(MAX(m.MetricTypeName), ''), c.MetricType) AS MetricTypeName
+                        FROM {DataAccessDefaults.HealthMetricsCountsTable} c
+                        LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
+                               ON m.MetricType = c.MetricType
+                              AND m.MetricSubtype = c.MetricSubtype
+                        WHERE c.MetricType IS NOT NULL
+                          AND c.MetricType != ''
+                          AND c.MetricSubtype IS NOT NULL
+                          AND c.MetricSubtype != ''
+                          AND (m.Disabled IS NULL OR m.Disabled = 0)
+                          AND c.RecordCount > 0
+                        GROUP BY c.MetricType
+                    )
+                    SELECT MetricTypeName AS MetricType, MetricTypeName
+                    FROM TypeNames
+                    GROUP BY MetricTypeName
+                    ORDER BY MetricTypeName";
 
             var rows = await conn.QueryAsync<(string MetricType, string? MetricTypeName)>(sql);
             return rows.Select(row => new MetricNameOption(row.MetricType, string.IsNullOrWhiteSpace(row.MetricTypeName) ? row.MetricType : row.MetricTypeName));
@@ -57,13 +69,24 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
 
         var tableSql = $@"
                 -- DataFetcher.GetBaseMetricTypeOptions ({tableName})
-                SELECT t.MetricType, MAX(m.MetricTypeName) AS MetricTypeName
-                FROM [dbo].[{tableName}] t
-                LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
-                       ON m.MetricType = t.MetricType
-                WHERE t.MetricType IS NOT NULL
-                GROUP BY t.MetricType
-                ORDER BY t.MetricType";
+                WITH TypeNames AS (
+                    SELECT t.MetricType,
+                           COALESCE(NULLIF(MAX(m.MetricTypeName), ''), t.MetricType) AS MetricTypeName
+                    FROM [dbo].[{tableName}] t
+                    LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
+                           ON m.MetricType = t.MetricType
+                          AND m.MetricSubtype = t.MetricSubtype
+                    WHERE t.MetricType IS NOT NULL
+                      AND t.MetricType != ''
+                      AND t.MetricSubtype IS NOT NULL
+                      AND t.MetricSubtype != ''
+                      AND (m.Disabled IS NULL OR m.Disabled = 0)
+                    GROUP BY t.MetricType
+                )
+                SELECT MetricTypeName AS MetricType, MetricTypeName
+                FROM TypeNames
+                GROUP BY MetricTypeName
+                ORDER BY MetricTypeName";
 
         var tableRows = await conn.QueryAsync<(string MetricType, string? MetricTypeName)>(tableSql);
         return tableRows.Select(row => new MetricNameOption(row.MetricType, string.IsNullOrWhiteSpace(row.MetricTypeName) ? row.MetricType : row.MetricTypeName));
@@ -84,7 +107,10 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                     LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                            ON m.MetricType = c.MetricType
                           AND m.MetricSubtype = c.MetricSubtype
-                    WHERE c.MetricType IS NOT NULL 
+                    WHERE c.MetricType IS NOT NULL
+                      AND c.MetricType != ''
+                      AND c.MetricSubtype IS NOT NULL
+                      AND c.MetricSubtype != ''
                       AND (m.Disabled IS NULL OR m.Disabled = 0)
                       AND c.RecordCount > 0
                     ORDER BY c.MetricType";
@@ -97,6 +123,9 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                 SELECT DISTINCT MetricType 
                 FROM [dbo].[{tableName}]
                 WHERE MetricType IS NOT NULL
+                  AND MetricType != ''
+                  AND MetricSubtype IS NOT NULL
+                  AND MetricSubtype != ''
                 ORDER BY MetricType";
 
         return await conn.QueryAsync<string>(fallbackSql);
@@ -118,12 +147,21 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
         {
             var sql = $@"
                     -- DataFetcher.GetSubtypesForBaseType (HealthMetrics)
-                    SELECT DISTINCT c.MetricSubtype 
+                    SELECT DISTINCT COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype) AS MetricSubtype
                     FROM {DataAccessDefaults.HealthMetricsCountsTable} c
                     LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                            ON m.MetricType = c.MetricType
                           AND m.MetricSubtype = c.MetricSubtype
-                    WHERE c.MetricType = @BaseType
+                    WHERE (
+                            c.MetricType = @BaseType
+                            OR EXISTS (
+                                SELECT 1
+                                FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                                WHERE metricTypeName.MetricType = c.MetricType
+                                  AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)
+                                  AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @BaseType
+                            )
+                        )
                       AND (m.Disabled IS NULL OR m.Disabled = 0)
                       AND c.MetricSubtype IS NOT NULL
                       AND c.MetricSubtype != ''
@@ -140,7 +178,16 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = t.MetricType
                       AND m.MetricSubtype = t.MetricSubtype
-                WHERE t.MetricType = @BaseType
+                WHERE (
+                        t.MetricType = @BaseType
+                        OR EXISTS (
+                            SELECT 1
+                            FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                            WHERE metricTypeName.MetricType = t.MetricType
+                              AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)
+                              AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @BaseType
+                        )
+                    )
                   AND t.MetricSubtype IS NOT NULL
                   AND t.MetricSubtype != ''
                   AND (m.Disabled IS NULL OR m.Disabled = 0)
@@ -165,17 +212,28 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
         {
             var sql = $@"
                     -- DataFetcher.GetSubtypeOptionsForBaseType (HealthMetrics)
-                    SELECT DISTINCT c.MetricSubtype, ISNULL(m.MetricSubtypeName, c.MetricSubtype) AS MetricSubtypeName
+                    SELECT COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype) AS MetricSubtype,
+                           COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype) AS MetricSubtypeName
                     FROM {DataAccessDefaults.HealthMetricsCountsTable} c
                     LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                            ON m.MetricType = c.MetricType
                           AND m.MetricSubtype = c.MetricSubtype
-                    WHERE c.MetricType = @MetricType
+                    WHERE (
+                            c.MetricType = @MetricType
+                            OR EXISTS (
+                                SELECT 1
+                                FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                                WHERE metricTypeName.MetricType = c.MetricType
+                                  AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)
+                                  AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @MetricType
+                            )
+                        )
                       AND c.MetricSubtype IS NOT NULL
                       AND c.MetricSubtype != ''
                       AND (m.Disabled IS NULL OR m.Disabled = 0)
                       AND c.RecordCount > 0
-                    ORDER BY c.MetricSubtype";
+                    GROUP BY COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype)
+                    ORDER BY MetricSubtypeName";
 
             var rows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(sql, new { MetricType = baseType });
             return rows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
@@ -183,17 +241,27 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
 
         var tableSql = $@"
                 -- DataFetcher.GetSubtypeOptionsForBaseType ({tableName})
-                SELECT t.MetricSubtype, MAX(m.MetricSubtypeName) AS MetricSubtypeName
+                SELECT COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype) AS MetricSubtype,
+                       COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype) AS MetricSubtypeName
                 FROM [dbo].[{tableName}] t
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = t.MetricType
                       AND m.MetricSubtype = t.MetricSubtype
-                WHERE t.MetricType = @MetricType
+                WHERE (
+                        t.MetricType = @MetricType
+                        OR EXISTS (
+                            SELECT 1
+                            FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                            WHERE metricTypeName.MetricType = t.MetricType
+                              AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)
+                              AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @MetricType
+                        )
+                    )
                   AND t.MetricSubtype IS NOT NULL
                   AND t.MetricSubtype != ''
                   AND (m.Disabled IS NULL OR m.Disabled = 0)
-                GROUP BY t.MetricSubtype
-                ORDER BY t.MetricSubtype";
+                GROUP BY COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype)
+                ORDER BY MetricSubtypeName";
 
         var tableRows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(tableSql, new { MetricType = baseType });
         return tableRows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
@@ -209,7 +277,7 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
         {
             var sql = $@"
                     -- DataFetcher.GetAllSubtypes (HealthMetrics)
-                    SELECT DISTINCT c.MetricSubtype 
+                    SELECT DISTINCT COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype) AS MetricSubtype
                     FROM {DataAccessDefaults.HealthMetricsCountsTable} c
                     LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                            ON m.MetricType = c.MetricType
@@ -218,14 +286,14 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                       AND (m.Disabled IS NULL OR m.Disabled = 0)
                       AND c.MetricSubtype != ''
                       AND c.RecordCount > 0
-                    ORDER BY c.MetricSubtype";
+                    ORDER BY MetricSubtype";
 
             return await conn.QueryAsync<string>(sql);
         }
 
         var fallbackSql = $@"
                 -- DataFetcher.GetAllSubtypes ({tableName})
-                SELECT DISTINCT t.MetricSubtype
+                SELECT DISTINCT COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype) AS MetricSubtype
                 FROM [dbo].[{tableName}] t
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = t.MetricType
@@ -233,7 +301,7 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                 WHERE t.MetricSubtype IS NOT NULL
                   AND t.MetricSubtype != ''
                   AND (m.Disabled IS NULL OR m.Disabled = 0)
-                ORDER BY t.MetricSubtype";
+                ORDER BY MetricSubtype";
 
         return await conn.QueryAsync<string>(fallbackSql);
     }
@@ -248,7 +316,8 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
         {
             var sql = $@"
                     -- DataFetcher.GetAllSubtypeOptions (HealthMetrics)
-                    SELECT DISTINCT c.MetricSubtype, ISNULL(m.MetricSubtypeName, c.MetricSubtype) AS MetricSubtypeName
+                    SELECT DISTINCT COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype) AS MetricSubtype,
+                                    COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype) AS MetricSubtypeName
                     FROM {DataAccessDefaults.HealthMetricsCountsTable} c
                     LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                            ON m.MetricType = c.MetricType
@@ -257,7 +326,7 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                       AND (m.Disabled IS NULL OR m.Disabled = 0)
                       AND c.MetricSubtype != ''
                       AND c.RecordCount > 0
-                    ORDER BY c.MetricSubtype";
+                    ORDER BY MetricSubtype";
 
             var rows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(sql);
             return rows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
@@ -265,7 +334,8 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
 
         var fallbackSql = $@"
                 -- DataFetcher.GetAllSubtypeOptions ({tableName})
-                SELECT t.MetricSubtype, MAX(m.MetricSubtypeName) AS MetricSubtypeName
+                SELECT COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype) AS MetricSubtype,
+                       COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype) AS MetricSubtypeName
                 FROM [dbo].[{tableName}] t
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = t.MetricType
@@ -273,8 +343,8 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                 WHERE t.MetricSubtype IS NOT NULL
                   AND t.MetricSubtype != ''
                   AND (m.Disabled IS NULL OR m.Disabled = 0)
-                GROUP BY t.MetricSubtype
-                ORDER BY t.MetricSubtype";
+                GROUP BY COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype)
+                ORDER BY MetricSubtype";
 
         var fallbackRows = await conn.QueryAsync<(string MetricSubtype, string? MetricSubtypeName)>(fallbackSql);
         return fallbackRows.Select(row => new MetricNameOption(row.MetricSubtype, string.IsNullOrWhiteSpace(row.MetricSubtypeName) ? row.MetricSubtype : row.MetricSubtypeName));
@@ -291,7 +361,10 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = c.MetricType
                       AND m.MetricSubtype = c.MetricSubtype
-                WHERE c.MetricType IS NOT NULL 
+                WHERE c.MetricType IS NOT NULL
+                  AND c.MetricType != ''
+                  AND c.MetricSubtype IS NOT NULL
+                  AND c.MetricSubtype != ''
                   AND (m.Disabled IS NULL OR m.Disabled = 0)
                   AND c.RecordCount > 0";
 

@@ -17,9 +17,13 @@ internal sealed class DataFetcherAdminQueries : DataFetcherQueryGroup
 
         var sql = $@"
                 -- DataFetcher.GetCountsMetricTypesForAdmin
-                SELECT DISTINCT MetricType
-                FROM {DataAccessDefaults.HealthMetricsCountsTable}
-                WHERE MetricType IS NOT NULL AND MetricType != ''
+                SELECT COALESCE(NULLIF(m.MetricTypeName, ''), c.MetricType) AS MetricType
+                FROM {DataAccessDefaults.HealthMetricsCountsTable} c
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
+                       ON m.MetricType = c.MetricType
+                      AND m.MetricSubtype = c.MetricSubtype
+                WHERE c.MetricType IS NOT NULL AND c.MetricType != ''
+                GROUP BY COALESCE(NULLIF(m.MetricTypeName, ''), c.MetricType)
                 ORDER BY MetricType";
 
         var rows = await conn.QueryAsync<string>(sql);
@@ -45,7 +49,16 @@ internal sealed class DataFetcherAdminQueries : DataFetcherQueryGroup
                 LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
                        ON m.MetricType = c.MetricType
                       AND m.MetricSubtype = c.MetricSubtype
-                WHERE (@MetricType IS NULL OR c.MetricType = @MetricType)
+                WHERE (
+                        @MetricType IS NULL
+                        OR c.MetricType = @MetricType
+                        OR EXISTS (
+                            SELECT 1
+                            FROM {DataAccessDefaults.HealthMetricsCanonicalTable} metricTypeName
+                            WHERE metricTypeName.MetricType = c.MetricType
+                              AND COALESCE(NULLIF(metricTypeName.MetricTypeName, ''), metricTypeName.MetricType) = @MetricType
+                        )
+                    )
                 ORDER BY c.MetricType, c.MetricSubtype";
 
         var rows = await conn.QueryAsync<HealthMetricsCountEntry>(sql, new { MetricType = metricType });

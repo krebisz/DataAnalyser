@@ -4,6 +4,8 @@ using DataVisualiser.Core.Rendering.Engines;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
+using System.Windows;
+using System.Windows.Media;
 using DataVisualiser.UI.State;
 using LiveCharts.Wpf;
 
@@ -44,6 +46,47 @@ public sealed class WeekdayTrendChartUpdateCoordinatorTests
             var coordinator = new WeekdayTrendChartUpdateCoordinator(new WeekdayTrendRenderingService(), new Dictionary<CartesianChart, List<DateTime>>());
 
             Assert.False(coordinator.TryRefitActiveChart());
+        });
+    }
+
+    [Fact]
+    public void UpdateChart_ShouldBindAverageSeriesStrokeToThemeTextBrush()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var chartState = new ChartState
+            {
+                ShowAverage = true
+            };
+            var chart = new CartesianChart();
+            var initialBrush = Brushes.Black;
+            var updatedBrush = Brushes.White;
+            var app = Application.Current ?? new Application();
+            var resources = app.Resources;
+            var hadExisting = resources.Contains("ThemePrimaryTextBrush");
+            var existing = hadExisting ? resources["ThemePrimaryTextBrush"] : null;
+
+            try
+            {
+                resources["ThemePrimaryTextBrush"] = initialBrush;
+
+                new WeekdayTrendRenderingService().RenderWeekdayTrendChart(CreateResult(), chartState, chart, new CartesianChart());
+
+                var averageSeries = chart.Series.OfType<LineSeries>().Single(series => series.Title == "Ave");
+                Assert.Same(initialBrush, averageSeries.Stroke);
+
+                resources["ThemePrimaryTextBrush"] = updatedBrush;
+                WeekdayTrendRenderingService.ApplyAverageStroke(chart);
+
+                Assert.Same(updatedBrush, averageSeries.Stroke);
+            }
+            finally
+            {
+                if (hadExisting)
+                    resources["ThemePrimaryTextBrush"] = existing;
+                else
+                    resources.Remove("ThemePrimaryTextBrush");
+            }
         });
     }
 

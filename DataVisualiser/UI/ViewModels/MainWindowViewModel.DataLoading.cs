@@ -10,6 +10,11 @@ public partial class MainWindowViewModel
         return _metricLoadCoordinator.LoadMetricsAsync(args => MetricTypesLoaded?.Invoke(this, args), RaiseError);
     }
 
+    public void RequestLatestMetricTypesReload()
+    {
+        _metricLoadCoordinator.RequestLatestMetricTypesReload(args => MetricTypesLoaded?.Invoke(this, args), RaiseError);
+    }
+
     private Task LoadSubtypesAsync()
     {
         return _metricLoadCoordinator.LoadSubtypesAsync(args => SubtypesLoaded?.Invoke(this, args), RaiseError);

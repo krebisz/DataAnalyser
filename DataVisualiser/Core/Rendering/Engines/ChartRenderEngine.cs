@@ -43,6 +43,7 @@ public sealed class ChartRenderEngine
 
         ConfigureXAxis(targetChart, model);
         ConfigureYAxis(targetChart);
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(targetChart);
     }
 
     private static bool HasMultiSeriesMode(ChartRenderModel model)

@@ -27,6 +27,22 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void ThemedComboBoxStyle_ShouldNotOverrideNativeSelectionTemplate()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Theming", "Theme.Styles.xaml");
+        var styleStart = source.IndexOf("<Style x:Key=\"ThemedComboBoxStyle\"", StringComparison.Ordinal);
+        Assert.True(styleStart >= 0, "ThemedComboBoxStyle was not found.");
+
+        var styleEnd = source.IndexOf("</Style>", styleStart, StringComparison.Ordinal);
+        Assert.True(styleEnd > styleStart, "ThemedComboBoxStyle closing tag was not found.");
+
+        var styleBody = source.Substring(styleStart, styleEnd - styleStart);
+
+        Assert.DoesNotContain("Property=\"Template\"", styleBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("TargetType=\"ComboBox\"", styleBody.Replace("<Style x:Key=\"ThemedComboBoxStyle\" TargetType=\"ComboBox\">", string.Empty, StringComparison.Ordinal), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void DistributionCapabilitySlice_ShouldRemainOwnedByTargetSpine()
     {
         var capabilitySource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "VNext", "Contracts", "CapabilityRequest.cs");
@@ -719,10 +735,12 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
         var methodBody = ExtractMethodBody(source, "private void OnMetricTypeSelectionChanged");
+        var commitBody = ExtractMethodBody(source, "private void CommitMetricTypeSelection");
         var actionFactoryBody = ExtractMethodBody(source, "private ChartHostMetricSelectionCoordinator.MetricTypeSelectionChangedActions CreateMetricTypeSelectionChangedActions");
 
-        Assert.Contains("_metricSelectionCoordinator.HandleMetricTypeSelectionChanged", methodBody, StringComparison.Ordinal);
-        Assert.Contains("UpdateChartTitlesFromSelections();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("CommitMetricTypeSelection", methodBody, StringComparison.Ordinal);
+        Assert.Contains("_metricSelectionCoordinator.HandleMetricTypeSelectionChanged", commitBody, StringComparison.Ordinal);
+        Assert.Contains("UpdateChartTitlesFromSelections();", commitBody, StringComparison.Ordinal);
         Assert.DoesNotContain("ClearAllCharts();", methodBody, StringComparison.Ordinal);
         Assert.DoesNotContain("_viewModel.LoadSubtypesCommand.Execute(null);", methodBody, StringComparison.Ordinal);
 
@@ -1384,6 +1402,17 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void MainChartsView_ShouldRefreshChartAxesWhenThemeChanges()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private void RefreshThemeSensitiveChartElements");
+
+        Assert.Contains("ChartThemeStylingHelper.ApplyCartesianChartTheme", methodBody, StringComparison.Ordinal);
+        Assert.Contains("GetThemeSensitiveCartesianCharts()", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SyncfusionHost_ShouldRecordLoadRenderAndExportSmokeMilestones()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile(
@@ -1838,10 +1867,60 @@ public sealed class ArchitectureGuardrailTests
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
 
         Assert.Contains("_isChangingResolution = true", ExtractMethodBody(source, "private void ResetForResolutionChange"), StringComparison.Ordinal);
-        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private void OnMetricTypeSelectionChanged"), StringComparison.Ordinal);
         Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private async void OnAnySubtypeSelectionChanged"), StringComparison.Ordinal);
         Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private void OnSelectionStateChanged"), StringComparison.Ordinal);
         Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private async Task RenderChartAsync"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainChartsView_ShouldSuppressSelectionHandlersDuringResolutionReset()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+
+        Assert.Contains("_isChangingResolution = true", ExtractMethodBody(source, "private void ResetForResolutionChange"), StringComparison.Ordinal);
+        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private async void OnAnySubtypeSelectionChanged"), StringComparison.Ordinal);
+        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private void OnSelectionStateChanged"), StringComparison.Ordinal);
+        Assert.Contains("_isChangingResolution", ExtractMethodBody(source, "private async Task RenderChartAsync"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartMetricTypeSelectionHandlers_ShouldNotBeBlockedByAsyncLoadFlags()
+    {
+        var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        var mainBody = ExtractMethodBody(mainSource, "private void OnMetricTypeSelectionChanged");
+        var syncfusionBody = ExtractMethodBody(syncfusionSource, "private void OnMetricTypeSelectionChanged");
+
+        Assert.DoesNotContain("if (_viewModel.UiState.IsLoadingMetricTypes", mainBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (_isChangingResolution", mainBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (_viewModel.UiState.IsLoadingMetricTypes", syncfusionBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (_isChangingResolution", syncfusionBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ChartTabs_ShouldNotProjectSharedViewModelEventsWhileInactive()
+    {
+        var mainSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+
+        Assert.Contains("!_isInitializing && !IsVisible", ExtractMethodBody(mainSource, "private bool ShouldIgnoreSharedViewModelEvent"), StringComparison.Ordinal);
+        Assert.Contains("!_isInitializing && !IsVisible", ExtractMethodBody(syncfusionSource, "private bool ShouldIgnoreSharedViewModelEvent"), StringComparison.Ordinal);
+
+        foreach (var method in new[]
+                 {
+                     "private void OnMetricTypesLoaded",
+                     "private void OnSubtypesLoaded",
+                     "private void OnSelectionStateChanged",
+                     "private void OnDateRangeLoaded",
+                     "private async void OnDataLoaded",
+                     "private void OnChartVisibilityChanged",
+                     "private async void OnChartUpdateRequested"
+                 })
+        {
+            Assert.Contains("ShouldIgnoreSharedViewModelEvent()", ExtractMethodBody(mainSource, method), StringComparison.Ordinal);
+            Assert.Contains("ShouldIgnoreSharedViewModelEvent()", ExtractMethodBody(syncfusionSource, method), StringComparison.Ordinal);
+        }
     }
 
     [Fact]

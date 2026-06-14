@@ -64,7 +64,8 @@ internal sealed class MainChartsUiSurfaceDiagnosticsReader
             {
                 SelectedValue = selectedMetricValue,
                 SelectedDisplay = selectedMetricOption?.Display ?? metricTypeCombo.Text,
-                OptionCount = metricTypeCombo.Items.Count
+                OptionCount = metricTypeCombo.Items.Count,
+                OptionValues = ExtractComboOptionValues(metricTypeCombo)
             },
             DateRange = new DateRangeUiDiagnosticsSnapshot
             {

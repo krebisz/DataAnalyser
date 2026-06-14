@@ -57,14 +57,33 @@ public sealed class MetricSelectionPanelTests
         Assert.Contains("x:Name=\"TablesCombo\"", xaml);
         Assert.Contains("x:Name=\"FromDate\"", xaml);
         Assert.Contains("x:Name=\"ToDate\"", xaml);
-        Assert.Contains("x:Name=\"ThemeToggleButton\"", xaml);
 
         // Row 2: subtype panel
         Assert.Contains("x:Name=\"SubtypeCombo\"", xaml);
         Assert.Contains("x:Name=\"TopControlMetricSubtypePanel\"", xaml);
+        Assert.Contains("x:Name=\"ThemeToggleButton\"", xaml);
+        Assert.True(
+            xaml.IndexOf("Content=\"Export Reachability\"", StringComparison.Ordinal) <
+            xaml.IndexOf("x:Name=\"TopControlMetricSubtypePanel\"", StringComparison.Ordinal));
+        Assert.Contains("<Button Grid.Column=\"1\"", xaml);
+        Assert.Contains("Content=\"Export Reachability\"", xaml);
+        Assert.Contains("HorizontalAlignment=\"Right\"", xaml);
+        Assert.True(
+            xaml.IndexOf("x:Name=\"TopControlMetricSubtypePanel\"", StringComparison.Ordinal) <
+            xaml.IndexOf("x:Name=\"ThemeToggleButton\"", StringComparison.Ordinal));
+        Assert.Contains("Click=\"OnThemeToggleClick\"", xaml);
 
         // Row 3: CMS toggles
         Assert.Contains("x:Name=\"CmsEnableCheckBox\"", xaml);
         Assert.Contains("x:Name=\"CmsBarPieCheckBox\"", xaml);
+    }
+
+    [Fact]
+    public void MainWindow_ShouldUseReducedDefaultWidth()
+    {
+        var xaml = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "MainWindow.xaml");
+
+        Assert.Contains("Width=\"1620\"", xaml);
+        Assert.DoesNotContain("Width=\"1800\"", xaml);
     }
 }

@@ -13,81 +13,100 @@
             Padding="{StaticResource TopControlBorderPadding}">
         <StackPanel Orientation="Vertical">
             <!-- ====== TOP CONTROL BAR (Row 1) ====== -->
-            <StackPanel Orientation="Horizontal"
-                        Margin="{StaticResource TopBarMargin}">
-                <Label Content="Resolution:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                <ComboBox x:Name="ResolutionCombo" Width="{StaticResource ResolutionComboWidth}"
-                          Margin="{StaticResource ControlMargin}"
-                          IsEditable="False"
-                          SelectionChanged="OnResolutionSelectionChanged" />
+            <Grid Margin="{StaticResource TopBarMargin}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                <Label Content="Metric Type:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                <ComboBox x:Name="TablesCombo" Width="{StaticResource MetricTypeComboWidth}"
-                          Margin="{StaticResource ControlMargin}"
-                          IsEditable="False"
-                          DisplayMemberPath="Display"
-                          SelectedValuePath="Value"
-                          SelectionChanged="OnMetricTypeSelectionChanged" />
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Resolution:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
+                    <ComboBox x:Name="ResolutionCombo" Width="{StaticResource ResolutionComboWidth}"
+                              Margin="{StaticResource ControlMargin}"
+                              IsEditable="False"
+                              SelectionChanged="OnResolutionSelectionChanged" />
 
-                <Label Content="From:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                <DatePicker x:Name="FromDate"
-                            SelectedDateChanged="OnFromDateChanged"
-                            Width="{StaticResource DatePickerWidth}"
-                            Margin="{StaticResource ControlMargin}" />
+                    <Label Content="Metric Type:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
+                    <ComboBox x:Name="TablesCombo" Width="{StaticResource MetricTypeComboWidth}"
+                              Margin="{StaticResource ControlMargin}"
+                              IsEditable="False"
+                              DisplayMemberPath="Display"
+                              SelectedValuePath="Value"
+                              SelectionChanged="OnMetricTypeSelectionChanged"
+                              DropDownClosed="OnMetricTypeDropDownClosed" />
 
-                <Label Content="To:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
-                <DatePicker x:Name="ToDate"
-                            SelectedDateChanged="OnToDateChanged"
-                            Width="{StaticResource DatePickerWidth}"
-                            Margin="{StaticResource ControlMargin}" />
+                    <Label Content="From:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
+                    <DatePicker x:Name="FromDate"
+                                SelectedDateChanged="OnFromDateChanged"
+                                Width="{StaticResource DatePickerWidth}"
+                                Margin="{StaticResource ControlMargin}" />
 
-                <Button Content="Load Data"
-                        Click="OnLoadDataClick"
-                        Margin="{StaticResource ControlMargin}"
-                        Padding="{StaticResource ButtonPadding}" />
+                    <Label Content="To:" VerticalAlignment="Center" Margin="{StaticResource LabelMargin}" />
+                    <DatePicker x:Name="ToDate"
+                                SelectedDateChanged="OnToDateChanged"
+                                Width="{StaticResource DatePickerWidth}"
+                                Margin="{StaticResource ControlMargin}" />
 
-                <Separator Margin="{StaticResource SeparatorMargin}" />
+                    <Button Content="Load Data"
+                            Click="OnLoadDataClick"
+                            Margin="{StaticResource ControlMargin}"
+                            Padding="{StaticResource ButtonPadding}" />
 
-                <Button Content="Reset Zoom"
-                        Click="OnResetZoomClick"
-                        Margin="{StaticResource ControlMargin}"
-                        Padding="{StaticResource ButtonPadding}" />
-                <Button Content="Clear"
-                        Click="OnClearClick"
-                        Margin="{StaticResource ControlMargin}"
-                        Padding="{StaticResource ButtonPadding}" />
-                <Button Content="Export Reachability"
+                    <Separator Margin="{StaticResource SeparatorMargin}" />
+
+                    <Button Content="Reset Zoom"
+                            Click="OnResetZoomClick"
+                            Margin="{StaticResource ControlMargin}"
+                            Padding="{StaticResource ButtonPadding}" />
+                    <Button Content="Clear"
+                            Click="OnClearClick"
+                            Margin="{StaticResource ControlMargin}"
+                            Padding="{StaticResource ButtonPadding}" />
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="Export Reachability"
+                        HorizontalAlignment="Right"
                         Click="OnExportReachabilityClick"
                         Margin="{StaticResource ControlMargin}"
                         Padding="{StaticResource ButtonPadding}" />
-                <Button x:Name="ThemeToggleButton"
+            </Grid>
+
+            <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
+            <Grid Margin="{StaticResource SubtypePanelMargin}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal"
+                            x:Name="TopControlMetricSubtypePanel">
+
+                    <Label Content="Metric Subtype 1:"
+                           VerticalAlignment="Center"
+                           Margin="{StaticResource LabelMargin}" />
+
+                    <ComboBox x:Name="SubtypeCombo"
+                              Width="{StaticResource SubtypeComboWidth}"
+                              Margin="{StaticResource ControlMargin}"
+                              IsEditable="False"
+                              DisplayMemberPath="Display"
+                              SelectedValuePath="Value"
+                              IsEnabled="False" />
+
+                    <Button Content="Add Subtype"
+                            Click="OnAddSubtypeClick"
+                            Margin="{StaticResource ControlMargin}"
+                            Padding="{StaticResource ButtonPadding}" />
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        x:Name="ThemeToggleButton"
+                        HorizontalAlignment="Right"
                         Click="OnThemeToggleClick"
                         Margin="{StaticResource ControlMargin}"
                         Padding="{StaticResource ButtonPadding}" />
-            </StackPanel>
-
-            <!-- ====== SUBTYPE PANEL (Row 2) ====== -->
-            <StackPanel Orientation="Horizontal"
-                        x:Name="TopControlMetricSubtypePanel"
-                        Margin="{StaticResource SubtypePanelMargin}">
-
-                <Label Content="Metric Subtype 1:"
-                       VerticalAlignment="Center"
-                       Margin="{StaticResource LabelMargin}" />
-
-                <ComboBox x:Name="SubtypeCombo"
-                          Width="{StaticResource SubtypeComboWidth}"
-                          Margin="{StaticResource ControlMargin}"
-                          IsEditable="False"
-                          DisplayMemberPath="Display"
-                          SelectedValuePath="Value"
-                          IsEnabled="False" />
-
-                <Button Content="Add Subtype"
-                        Click="OnAddSubtypeClick"
-                        Margin="{StaticResource ControlMargin}"
-                        Padding="{StaticResource ButtonPadding}" />
-            </StackPanel>
+            </Grid>
 
             <!-- ====== CMS TOGGLES (Row 3) ====== -->
             <Expander Header="CMS" Margin="{StaticResource ExpanderMargin}" IsExpanded="False">

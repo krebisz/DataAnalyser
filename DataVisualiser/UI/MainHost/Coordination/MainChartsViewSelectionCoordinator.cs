@@ -44,8 +44,7 @@ public sealed class MainChartsViewSelectionCoordinator
             return;
         }
 
-        if (shouldRefreshDateRangeForCurrentSelection)
-            await actions.LoadDateRangeForSelectedMetricsAsync();
+        await Task.CompletedTask;
     }
 
     private static int CountSelectedSubtypes(IEnumerable<MetricSeriesSelection> selections)

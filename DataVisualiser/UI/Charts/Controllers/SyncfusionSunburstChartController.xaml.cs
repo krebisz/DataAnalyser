@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Syncfusion;
@@ -637,6 +638,8 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
         var radiusBase = Math.Min(width, height) * 0.5;
         var center = new Point(width * 0.5, height * 0.5);
 
+        DrawRadialGrid(center, radiusBase);
+
         for (var i = 0; i < _bucketRingCount; i++)
         {
             var label = i < _currentBucketLabels.Count ? _currentBucketLabels[i] : $"Bucket {i + 1}";
@@ -658,6 +661,46 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             Canvas.SetLeft(text, center.X + mid + 6);
             Canvas.SetTop(text, center.Y - (size.Height * 0.5));
             RingLabelCanvas.Children.Add(text);
+        }
+    }
+
+    private void DrawRadialGrid(Point center, double radius)
+    {
+        const int spokeCount = 12;
+
+        for (var i = 1; i <= _bucketRingCount; i++)
+        {
+            var ringRadius = radius * i / _bucketRingCount;
+            var ellipse = new Ellipse
+            {
+                    Width = ringRadius * 2,
+                    Height = ringRadius * 2,
+                    Fill = Brushes.Transparent,
+                    StrokeThickness = 0.75,
+                    Opacity = 0.35,
+                    IsHitTestVisible = false
+            };
+            ellipse.SetResourceReference(Shape.StrokeProperty, "ThemePolarChartLabelBrush");
+            Canvas.SetLeft(ellipse, center.X - ringRadius);
+            Canvas.SetTop(ellipse, center.Y - ringRadius);
+            RingLabelCanvas.Children.Add(ellipse);
+        }
+
+        for (var i = 0; i < spokeCount; i++)
+        {
+            var angle = (Math.PI * 2 * i) / spokeCount;
+            var line = new Line
+            {
+                    X1 = center.X,
+                    Y1 = center.Y,
+                    X2 = center.X + Math.Cos(angle) * radius,
+                    Y2 = center.Y + Math.Sin(angle) * radius,
+                    StrokeThickness = 0.75,
+                    Opacity = 0.35,
+                    IsHitTestVisible = false
+            };
+            line.SetResourceReference(Shape.StrokeProperty, "ThemePolarChartLabelBrush");
+            RingLabelCanvas.Children.Add(line);
         }
     }
 

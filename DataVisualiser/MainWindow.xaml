@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:DataVisualiser.UI"
         Title="Health Data Viz"
         SizeToContent="Height"
-        Width="1800"
+        Width="1620"
         FontSize="10"
         Background="{DynamicResource ThemeAppBackgroundBrush}">
 
