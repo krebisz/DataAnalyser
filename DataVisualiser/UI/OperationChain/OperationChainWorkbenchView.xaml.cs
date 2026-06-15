@@ -16,6 +16,8 @@ namespace DataVisualiser.UI.OperationChain;
 
 public partial class OperationChainWorkbenchView : UserControl
 {
+    private const string SummaryStatusBrushResourceKey = "ThemeSecondaryTextBrush";
+    private const string SummaryErrorBrushResourceKey = "ThemeValidationErrorBrush";
     private readonly List<TransformEquationTerm> _equationTerms = [];
     private readonly List<OperationChainInputSelectionRow> _inputRows = [];
     private readonly OperationChainTransformOutputRenderer _outputRenderer = new();
@@ -45,7 +47,7 @@ public partial class OperationChainWorkbenchView : UserControl
 
         var presentation = OperationChainWorkbenchPresenter.Build(result);
         _currentComputationResult = OperationChainResultGridPresenter.Build(result);
-        SummaryText.Text = presentation.Summary;
+        SetSummaryStatus(presentation.Summary);
         SetResultRows(presentation.DatasetRows);
         EvidenceText.Text = presentation.Evidence;
         await _outputRenderer.RenderAsync(OutputChart, result);
@@ -66,14 +68,14 @@ public partial class OperationChainWorkbenchView : UserControl
             InitializeResolutionOptions(shared);
             InitializeOperationOptions();
             InitializeDateRange(shared);
-            EnsureInputRowCount(3);
+            EnsureInputRowCount(1);
             RefreshEquationInputOptions();
             await LoadMetricOptionsAsync();
-            SummaryText.Text = "Select inputs and an operation, then compute an Operation Chain result.";
+            SetSummaryStatus("Select inputs and an operation, then compute an Operation Chain result.");
         }
         catch (Exception ex)
         {
-            SummaryText.Text = $"Operation Chain initialization failed: {ex.Message}";
+            SetSummaryError($"Operation Chain initialization failed: {ex.Message}");
         }
         finally
         {
@@ -210,7 +212,7 @@ public partial class OperationChainWorkbenchView : UserControl
     {
         if (_inputRows.Count <= 1)
         {
-            SummaryText.Text = "Operation Chain requires at least one selected input.";
+            SetSummaryError("Operation Chain requires at least one selected input.");
             return;
         }
 
@@ -274,12 +276,12 @@ public partial class OperationChainWorkbenchView : UserControl
     {
         if (_inputLoader == null)
         {
-            SummaryText.Text = "Operation Chain is still initializing.";
+            SetSummaryError("Operation Chain is still initializing.");
             return;
         }
 
         LoadInputsButton.IsEnabled = false;
-        SummaryText.Text = "Computing Operation Chain result...";
+        SetSummaryStatus("Computing Operation Chain result...");
         try
         {
             var inputs = ResolveInputRequests();
@@ -301,9 +303,14 @@ public partial class OperationChainWorkbenchView : UserControl
                 resolution,
                 result);
         }
+        catch (OperationChainEquationValidationException ex)
+        {
+            SetSummaryError($"Invalid equation: {ex.Message}");
+            await _outputRenderer.ClearAsync(OutputChart);
+        }
         catch (Exception ex)
         {
-            SummaryText.Text = $"Operation Chain compute failed: {ex.Message}";
+            SetSummaryError($"Operation Chain compute failed: {ex.Message}");
             await _outputRenderer.ClearAsync(OutputChart);
         }
         finally
@@ -316,18 +323,18 @@ public partial class OperationChainWorkbenchView : UserControl
     {
         if (_lastExportSnapshot == null)
         {
-            SummaryText.Text = "Compute an Operation Chain result before exporting evidence.";
+            SetSummaryError("Compute an Operation Chain result before exporting evidence.");
             return;
         }
 
         try
         {
             var result = _exportService.Export(_lastExportSnapshot, DateTime.UtcNow);
-            SummaryText.Text = $"Operation Chain evidence exported to {result.FilePath}.";
+            SetSummaryStatus($"Operation Chain evidence exported to {result.FilePath}.");
         }
         catch (Exception ex)
         {
-            SummaryText.Text = $"Operation Chain evidence export failed: {ex.Message}";
+            SetSummaryError($"Operation Chain evidence export failed: {ex.Message}");
         }
     }
 
@@ -342,7 +349,7 @@ public partial class OperationChainWorkbenchView : UserControl
 
         var compiled = TransformEquationCompiler.Compile(_equationTerms, inputs.Count);
         if (!compiled.IsValid)
-            throw new InvalidOperationException(compiled.Error);
+            throw new OperationChainEquationValidationException(compiled.Error);
 
         return await _inputLoader.ComputeAsync(
             inputs,
@@ -386,31 +393,76 @@ public partial class OperationChainWorkbenchView : UserControl
     private void ApplyOutputChartTheme() =>
         ChartThemeStylingHelper.ApplyCartesianChartTheme(OutputChart);
 
-    private void OnClearClicked(object sender, RoutedEventArgs e)
+    private async void OnClearClicked(object sender, RoutedEventArgs e)
     {
         _lastExportSnapshot = null;
         _currentComputationResult = null;
         _resultGridToggleCoordinator.Reset();
         ClearEquationTerms();
+        ClearEquationErrorState();
+        await ResetControlSelectionsToDefaultsAsync();
         ResultGridTitle.Text = "Result";
         SetResultRows(null);
         EvidenceText.Text = string.Empty;
-        SummaryText.Text = "Select inputs and an operation, then compute an Operation Chain result.";
+        ClearEquationErrorState();
         _ = _outputRenderer.ClearAsync(OutputChart);
+    }
+
+    private async Task ResetControlSelectionsToDefaultsAsync()
+    {
+        var wasInitializing = _isInitializing;
+        _isInitializing = true;
+        try
+        {
+            ResetInputRowsToInitialState();
+            ResolutionCombo.SelectedItem = "All";
+            FromDate.SelectedDate = null;
+            ToDate.SelectedDate = null;
+            if (OperationCombo.Items.Count > 0)
+                OperationCombo.SelectedIndex = 0;
+
+            EquationInputCombo.Items.Clear();
+
+            foreach (var row in _inputRows)
+            {
+                row.MetricCombo.SelectedIndex = -1;
+                row.SubtypeCombo.SelectedIndex = -1;
+                row.SubtypeCombo.Items.Clear();
+            }
+
+            await LoadMetricOptionsAsync();
+        }
+        finally
+        {
+            _isInitializing = wasInitializing;
+        }
+    }
+
+    private void ResetInputRowsToInitialState()
+    {
+        while (_inputRows.Count > 1)
+        {
+            var row = _inputRows[^1];
+            _inputRows.RemoveAt(_inputRows.Count - 1);
+            InputRowsPanel.Children.Remove(row.Container);
+        }
+
+        EnsureInputRowCount(1);
+        RenumberInputRows();
     }
 
     private void OnAddEquationTermClicked(object sender, RoutedEventArgs e)
     {
         if (EquationInputCombo.SelectedItem is not OperationChainInputOption input)
         {
-            SummaryText.Text = "Select an input before adding to the equation.";
+            SetSummaryError("Select an input before adding to the equation.");
             return;
         }
 
         var operationTag = ResolveOperationTag();
         if (!TransformEquationCompiler.IsSupportedEquationOperation(operationTag))
         {
-            SummaryText.Text = $"Operation '{ResolveOperationLabel()}' is not valid in the equation builder.";
+            SetSummaryError($"Operation '{ResolveOperationLabel()}' is not valid in the equation builder.");
             return;
         }
 
@@ -421,12 +473,13 @@ public partial class OperationChainWorkbenchView : UserControl
             input.Display,
             input.EquationLabel));
         EquationText.Text = TransformEquationCompiler.BuildExpression(_equationTerms);
+        SetSummaryStatus("Equation updated.");
     }
 
     private void OnClearEquationClicked(object sender, RoutedEventArgs e)
     {
         ClearEquationTerms();
-        SummaryText.Text = "Equation cleared.";
+        SetSummaryStatus("Equation cleared.");
     }
 
     private void OnOutputChartToggleClicked(object sender, RoutedEventArgs e)
@@ -434,6 +487,11 @@ public partial class OperationChainWorkbenchView : UserControl
         var isVisible = OutputChartContentPanel.Visibility == Visibility.Visible;
         OutputChartContentPanel.Visibility = isVisible ? Visibility.Collapsed : Visibility.Visible;
         OutputChartToggleButton.Content = isVisible ? UiDefaults.ToggleShowLabel : UiDefaults.ToggleHideLabel;
+    }
+
+    private void OnOutputChartResetZoomClicked(object sender, RoutedEventArgs e)
+    {
+        _outputRenderer.ResetZoom(OutputChart);
     }
 
     private IReadOnlyList<MetricSeriesRequest> ResolveInputRequests()
@@ -506,11 +564,28 @@ public partial class OperationChainWorkbenchView : UserControl
     private async void DisplayComputationResult(OperationChainComputationGridResult result)
     {
         _currentComputationResult = result;
-        SummaryText.Text = result.Summary;
+        SetSummaryStatus(result.Summary);
         ResultGridTitle.Text = result.Title;
         SetResultRows(result.Rows);
         EvidenceText.Text = result.Evidence ?? $"Operation Chain evidence: {result.Result?.Evidence.TraceSignature}";
         await _outputRenderer.RenderAsync(OutputChart, result);
+    }
+
+    private void SetSummaryStatus(string message)
+    {
+        SummaryText.SetResourceReference(TextBlock.ForegroundProperty, SummaryStatusBrushResourceKey);
+        SummaryText.Text = message;
+    }
+
+    private void SetSummaryError(string message)
+    {
+        SummaryText.SetResourceReference(TextBlock.ForegroundProperty, SummaryErrorBrushResourceKey);
+        SummaryText.Text = message;
+    }
+
+    private void ClearEquationErrorState()
+    {
+        SetSummaryStatus("Select inputs and an operation, then compute an Operation Chain result.");
     }
 
     private void SetResultRows(IReadOnlyList<OperationChainResultGridRow>? rows)
@@ -659,6 +734,14 @@ public partial class OperationChainWorkbenchView : UserControl
     private sealed record OperationChainInputOption(int Index, string Display, string EquationLabel)
     {
         public override string ToString() => Display;
+    }
+
+    private sealed class OperationChainEquationValidationException : InvalidOperationException
+    {
+        public OperationChainEquationValidationException(string? message)
+            : base(message)
+        {
+        }
     }
 
     private sealed class SelectableOperationChainResultGridRow : ISelectableGridRow, INotifyPropertyChanged

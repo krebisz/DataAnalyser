@@ -74,6 +74,13 @@ internal sealed class TransformOperationChainOutputRenderer
         return Task.CompletedTask;
     }
 
+    public void ResetZoom(CartesianChart chart)
+    {
+        ArgumentNullException.ThrowIfNull(chart);
+
+        _renderingContract.ResetView(TransformRenderingRoute.ResultCartesian, CreateHost(chart));
+    }
+
     public Task RenderInputSnapshotAsync(CartesianChart chart, MetricLoadSnapshot snapshot)
     {
         return RenderInputSnapshotAsync(chart, snapshot, null);

@@ -8,6 +8,7 @@
     <SolidColorBrush x:Key="ThemePanelHeaderBorderBrush" Color="#FF8A8480" />
     <SolidColorBrush x:Key="ThemePrimaryTextBrush" Color="#FF1F2328" />
     <SolidColorBrush x:Key="ThemeSecondaryTextBrush" Color="#FF5A646E" />
+    <SolidColorBrush x:Key="ThemeValidationErrorBrush" Color="#FFC62828" />
     <SolidColorBrush x:Key="ThemeButtonBackgroundBrush" Color="#FFFFFFFF" />
     <SolidColorBrush x:Key="ThemeButtonForegroundBrush" Color="#FF1F2328" />
     <SolidColorBrush x:Key="ThemeButtonBorderBrush" Color="#FF8A8480" />

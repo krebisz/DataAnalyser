@@ -248,13 +248,20 @@
                                            FontWeight="Bold"
                                            VerticalAlignment="Center"
                                            Text="Output Chart" />
-                                <Button x:Name="OutputChartToggleButton"
-                                        Grid.Column="1"
-                                        Content="{x:Static ui:UiDefaults.ToggleHideLabel}"
-                                        Margin="{x:Static ui:ChartUiDefaults.ChartHeaderToggleMargin}"
-                                        Padding="{x:Static ui:ChartUiDefaults.ChartHeaderTogglePadding}"
-                                        HorizontalAlignment="Right"
-                                        Click="OnOutputChartToggleClicked" />
+                                <StackPanel Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            HorizontalAlignment="Right">
+                                    <Button x:Name="OutputChartResetZoomButton"
+                                            Content="Reset Zoom"
+                                            Margin="{x:Static ui:ChartUiDefaults.ChartHeaderToggleMargin}"
+                                            Padding="{x:Static ui:ChartUiDefaults.ChartHeaderTogglePadding}"
+                                            Click="OnOutputChartResetZoomClicked" />
+                                    <Button x:Name="OutputChartToggleButton"
+                                            Content="{x:Static ui:UiDefaults.ToggleHideLabel}"
+                                            Margin="{x:Static ui:ChartUiDefaults.ChartHeaderToggleMargin}"
+                                            Padding="{x:Static ui:ChartUiDefaults.ChartHeaderTogglePadding}"
+                                            Click="OnOutputChartToggleClicked" />
+                                </StackPanel>
                             </Grid>
                         </Border>
                         <StackPanel x:Name="OutputChartContentPanel"
@@ -262,6 +269,8 @@
                             <lvc:CartesianChart x:Name="OutputChart"
                                                 MinHeight="260"
                                                 LegendLocation="Right"
+                                                Zoom="{x:Static ui:ChartUiDefaults.DefaultZoom}"
+                                                Pan="{x:Static ui:ChartUiDefaults.DefaultPan}"
                                                 Hoverable="True"
                                                 DisableAnimations="True"
                                                 Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}" />

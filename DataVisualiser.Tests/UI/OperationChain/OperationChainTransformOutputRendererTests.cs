@@ -111,6 +111,20 @@ public sealed class OperationChainTransformOutputRendererTests
     }
 
     [Fact]
+    public void ResetZoom_ShouldDelegateToTransformContract()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var contract = new FakeTransformRenderingContract();
+            var renderer = new OperationChainTransformOutputRenderer(new ChartState(), contract);
+
+            renderer.ResetZoom(new CartesianChart());
+
+            Assert.Equal(1, contract.ResetViewCalls);
+        });
+    }
+
+    [Fact]
     public async Task ClearAsync_ShouldApplySharedThemeBrushesToEmptyChartAxes()
     {
         await StaTestHelper.RunAsync(async () =>
@@ -205,6 +219,7 @@ public sealed class OperationChainTransformOutputRendererTests
     {
         public int RenderCalls { get; private set; }
         public int ClearCalls { get; private set; }
+        public int ResetViewCalls { get; private set; }
         public TransformChartRenderRequest? LastRequest { get; private set; }
 
         public IReadOnlyList<TransformBackendQualification> GetBackendQualificationMatrix() => [];
@@ -226,6 +241,7 @@ public sealed class OperationChainTransformOutputRendererTests
 
         public void ResetView(TransformRenderingRoute route, TransformChartRenderHost host)
         {
+            ResetViewCalls++;
         }
 
         public bool HasRenderableContent(TransformRenderingRoute route, TransformChartRenderHost host) => false;

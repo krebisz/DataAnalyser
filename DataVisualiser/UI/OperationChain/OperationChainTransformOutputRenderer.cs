@@ -62,4 +62,7 @@ internal sealed class OperationChainTransformOutputRenderer
 
     public Task ClearAsync(CartesianChart chart) =>
         _renderer.ClearAsync(chart);
+
+    public void ResetZoom(CartesianChart chart) =>
+        _renderer.ResetZoom(chart);
 }
