@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Orchestration;
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Strategies.Implementations;
@@ -36,12 +37,21 @@ internal sealed class TransformOperationChainOutputRenderer
 
     public Task RenderAsync(CartesianChart chart, OperationChainResult result)
     {
+        return RenderAsync(chart, result, null);
+    }
+
+    public Task RenderAsync(CartesianChart chart, OperationChainResult result, IReadOnlyList<bool>? includedRows)
+    {
         ArgumentNullException.ThrowIfNull(result);
 
         var dataset = result.DerivedDatasets.LastOrDefault();
         return dataset == null
             ? ClearAsync(chart)
-            : RenderComputedSeriesAsync(chart, ComputedSeriesResult.FromDerivedDataset(dataset), CreateContext(result, dataset.Label), result.Trace.Entries.LastOrDefault()?.OperationKind);
+            : RenderComputedSeriesAsync(
+                chart,
+                FilterComputedSeries(ComputedSeriesResult.FromDerivedDataset(dataset), includedRows),
+                CreateContext(result, dataset.Label),
+                result.Trace.Entries.LastOrDefault()?.OperationKind);
     }
 
     public Task RenderCorrelationAsync(CartesianChart chart, TransformCorrelationSummary summary)
@@ -50,6 +60,7 @@ internal sealed class TransformOperationChainOutputRenderer
         ArgumentNullException.ThrowIfNull(summary);
 
         CartesianChartProjectionRenderer.Apply(chart, TransformCorrelationChartModelBuilder.Build(summary));
+        ApplyOperationChartTheme(chart);
         return Task.CompletedTask;
     }
 
@@ -59,12 +70,19 @@ internal sealed class TransformOperationChainOutputRenderer
 
         _renderingContract.Clear(TransformRenderingRoute.ResultCartesian, CreateHost(chart));
         TransformChartEmptyStateHelper.Apply(chart);
+        ApplyOperationChartTheme(chart);
         return Task.CompletedTask;
     }
 
     public Task RenderInputSnapshotAsync(CartesianChart chart, MetricLoadSnapshot snapshot)
     {
-        var orderedSeries = snapshot.Series
+        return RenderInputSnapshotAsync(chart, snapshot, null);
+    }
+
+    public Task RenderInputSnapshotAsync(CartesianChart chart, MetricLoadSnapshot snapshot, IReadOnlyList<bool>? includedRows)
+    {
+        var filteredSnapshot = FilterInputSnapshot(snapshot, includedRows);
+        var orderedSeries = filteredSnapshot.Series
             .Select(series => MetricDataSeriesHelper.FilterValuedAndOrder(series.RawData).ToArray())
             .Where(series => series.Length > 0)
             .ToArray();
@@ -72,7 +90,7 @@ internal sealed class TransformOperationChainOutputRenderer
         if (orderedSeries.Length == 0)
             return ClearAsync(chart);
 
-        var labels = snapshot.Series
+        var labels = filteredSnapshot.Series
             .Take(orderedSeries.Length)
             .Select(series => series.Request.DisplayName)
             .ToArray();
@@ -97,6 +115,63 @@ internal sealed class TransformOperationChainOutputRenderer
             operationType: null,
             isOperationChart: false,
             TransformCapabilityContract.Create("Input Series"));
+    }
+
+    private static ComputedSeriesResult FilterComputedSeries(
+        ComputedSeriesResult series,
+        IReadOnlyList<bool>? includedRows)
+    {
+        if (includedRows == null)
+            return series;
+
+        var indexes = ResolveIncludedIndexes(includedRows, series.Timeline.Count);
+        return new ComputedSeriesResult(
+            series.Id,
+            series.Label,
+            indexes.Select(index => series.Timeline[index]).ToArray(),
+            indexes.Select(index => series.RawValues[index]).ToArray(),
+            indexes.Select(index => series.SmoothedValues[index]).ToArray(),
+            series.SourceSeriesSignatures,
+            series.OperationSignature,
+            series.Metadata);
+    }
+
+    private static MetricLoadSnapshot FilterInputSnapshot(
+        MetricLoadSnapshot snapshot,
+        IReadOnlyList<bool>? includedRows)
+    {
+        if (includedRows == null)
+            return snapshot;
+
+        var cursor = 0;
+        var filteredSeries = new List<MetricSeriesSnapshot>();
+        foreach (var series in snapshot.Series)
+        {
+            var orderedData = MetricDataSeriesHelper.FilterValuedAndOrder(series.RawData).ToArray();
+            var filteredData = new List<MetricData>();
+            for (var index = 0; index < orderedData.Length; index++)
+            {
+                var include = cursor >= includedRows.Count || includedRows[cursor];
+                if (include)
+                    filteredData.Add(orderedData[index]);
+
+                cursor++;
+            }
+
+            filteredSeries.Add(new MetricSeriesSnapshot(series.Request, filteredData, series.CanonicalSeries));
+        }
+
+        return new MetricLoadSnapshot(snapshot.Request, filteredSeries, snapshot.CreatedUtc);
+    }
+
+    private static IReadOnlyList<int> ResolveIncludedIndexes(IReadOnlyList<bool> includedRows, int count)
+    {
+        var indexes = new List<int>();
+        for (var index = 0; index < count; index++)
+            if (index >= includedRows.Count || includedRows[index])
+                indexes.Add(index);
+
+        return indexes;
     }
 
     private Task RenderComputedSeriesAsync(
@@ -130,7 +205,7 @@ internal sealed class TransformOperationChainOutputRenderer
                 TransformComputedSeriesPresentationAdapter.CreateOperationRequests(computedSeries, operationKind)));
     }
 
-    private Task RenderStrategyAsync(
+    private async Task RenderStrategyAsync(
         CartesianChart chart,
         IChartComputationStrategy strategy,
         ChartDataContext context,
@@ -139,7 +214,7 @@ internal sealed class TransformOperationChainOutputRenderer
         bool isOperationChart,
         TransformCapabilityContract capabilityContract)
     {
-        return _renderingContract.RenderAsync(
+        await _renderingContract.RenderAsync(
             new TransformChartRenderRequest(
                 TransformRenderingRoute.ResultCartesian,
                 context,
@@ -150,7 +225,11 @@ internal sealed class TransformOperationChainOutputRenderer
                 MinHeight: 260.0,
                 CapabilityContract: capabilityContract),
             CreateHost(chart));
+        ApplyOperationChartTheme(chart);
     }
+
+    private static void ApplyOperationChartTheme(CartesianChart chart) =>
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
 
     private TransformChartRenderHost CreateHost(CartesianChart chart) =>
         new(chart, _chartState);

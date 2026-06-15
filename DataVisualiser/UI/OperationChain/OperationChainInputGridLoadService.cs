@@ -11,6 +11,7 @@ namespace DataVisualiser.UI.OperationChain;
 internal sealed class OperationChainInputGridLoadService
 {
     private readonly MetricLoadSnapshotGateway _gateway;
+    private readonly TransformOperationChainExecutionService _transformExecutionService;
     private readonly TransformInputDateRangeResolver? _dateRangeResolver;
 
     public OperationChainInputGridLoadService(MetricSelectionService metricSelectionService)
@@ -27,6 +28,7 @@ internal sealed class OperationChainInputGridLoadService
     {
         ArgumentNullException.ThrowIfNull(loader);
         _gateway = new MetricLoadSnapshotGateway(loader);
+        _transformExecutionService = new TransformOperationChainExecutionService(_gateway);
         _dateRangeResolver = dateRangeResolver;
     }
 
@@ -78,9 +80,41 @@ internal sealed class OperationChainInputGridLoadService
         if (TransformCorrelationMapper.IsCorrelationOperation(operationTag))
             return await ComputeCorrelationAsync(request, operationTag, cancellationToken);
 
-        var executor = new OperationChainExecutor(new TransformSnapshotReasoningEngine(_gateway));
-        var result = await executor.ExecuteAsync(
-            new OperationChainRequest(request, [step], title: step.Operation.Label),
+        var result = await _transformExecutionService.ExecuteAsync(
+            request,
+            [step],
+            step.Operation.Label,
+            cancellationToken);
+
+        return OperationChainResultGridPresenter.Build(result);
+    }
+
+    public async Task<OperationChainComputationGridResult> ComputeAsync(
+        IReadOnlyList<MetricSeriesRequest> series,
+        DateTime from,
+        DateTime to,
+        string resolutionTableName,
+        IReadOnlyList<OperationChainStep> steps,
+        string title,
+        CancellationToken cancellationToken = default)
+    {
+        if (series == null || series.Count == 0)
+            throw new ArgumentException("At least one operation-chain input series is required.", nameof(series));
+        if (steps == null || steps.Count == 0)
+            throw new ArgumentException("At least one operation-chain equation step is required.", nameof(steps));
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Operation-chain equation title cannot be empty.", nameof(title));
+
+        var request = new MetricSelectionRequest(
+            ResolveSelectionMetricType(series),
+            series,
+            from,
+            to,
+            resolutionTableName);
+        var result = await _transformExecutionService.ExecuteAsync(
+            request,
+            steps,
+            title,
             cancellationToken);
 
         return OperationChainResultGridPresenter.Build(result);

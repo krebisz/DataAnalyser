@@ -9,6 +9,16 @@
         <Style TargetType="DatePicker" BasedOn="{StaticResource ThemedDatePickerStyle}" />
         <Style TargetType="DataGrid" BasedOn="{StaticResource ThemedDataGridStyle}" />
         <Style TargetType="TextBlock" BasedOn="{StaticResource ThemedTextBlockStyle}" />
+        <Style x:Key="SelectableResultGridCellStyle"
+               TargetType="DataGridCell"
+               BasedOn="{StaticResource ThemedDataGridCellStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsIncluded}" Value="False">
+                    <Setter Property="Foreground" Value="{DynamicResource ThemeSecondaryTextBrush}" />
+                    <Setter Property="Opacity" Value="0.65" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
     <ui:WorkspaceTabHost>
         <ui:WorkspaceTabHost.HeaderContent>
@@ -30,6 +40,7 @@
         <Grid Margin="10"
               Background="{DynamicResource ThemeAppBackgroundBrush}">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -98,6 +109,42 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Margin="0,0,8,0"
+                               VerticalAlignment="Center"
+                               Text="Equation" />
+                    <TextBox x:Name="EquationText"
+                             Grid.Column="1"
+                             Background="{DynamicResource ThemeInputBackgroundBrush}"
+                             BorderBrush="{DynamicResource ThemeInputBorderBrush}"
+                             Foreground="{DynamicResource ThemeInputForegroundBrush}"
+                             IsReadOnly="True"
+                             MinWidth="320"
+                             TextWrapping="NoWrap" />
+                    <Button x:Name="ClearEquationButton"
+                            Grid.Column="2"
+                            Margin="8,0,0,0"
+                            Padding="12,4"
+                            Content="Clear"
+                            Click="OnClearEquationClicked" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2"
+                    Margin="0,0,0,10"
+                    Padding="8"
+                    BorderBrush="{DynamicResource ThemeOperationPanelBorderBrush}"
+                    BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
@@ -109,8 +156,21 @@
                     <ComboBox x:Name="OperationCombo"
                               Grid.Column="1"
                               SelectionChanged="OnOperationChanged" />
+                    <TextBlock Grid.Column="2"
+                               Margin="12,0,8,0"
+                               VerticalAlignment="Center"
+                               Text="Input" />
+                    <ComboBox x:Name="EquationInputCombo"
+                              Grid.Column="3"
+                              MinWidth="160" />
+                    <Button x:Name="AddEquationTermButton"
+                            Grid.Column="4"
+                            Margin="12,0,0,0"
+                            Padding="12,4"
+                            Content="Add"
+                            Click="OnAddEquationTermClicked" />
                     <Button x:Name="LoadInputsButton"
-                            Grid.Column="2"
+                            Grid.Column="5"
                             Margin="12,0,0,0"
                             Padding="12,4"
                             Content="Compute"
@@ -118,7 +178,7 @@
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="2"
+            <Grid Grid.Row="3"
                   ClipToBounds="True">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -138,29 +198,31 @@
                           CanUserAddRows="False"
                           HeadersVisibility="Column"
                           IsReadOnly="True"
+                          CellStyle="{StaticResource SelectableResultGridCellStyle}"
                           MaxHeight="{x:Static ui:ChartUiDefaults.TransformGridMaxHeight}"
                           MinWidth="{x:Static ui:ChartUiDefaults.TransformGridMinWidth}"
                           VerticalAlignment="Top"
+                          SelectionMode="Extended"
+                          SelectionUnit="FullRow"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                           CanUserResizeColumns="True"
-                          CanUserReorderColumns="False">
+                          CanUserReorderColumns="False"
+                          KeyDown="OnResultGridKeyDown"
+                          PreviewMouseLeftButtonDown="OnResultGridPreviewMouseLeftButtonDown">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Series"
-                                            Binding="{Binding Series}"
-                                            Width="Auto"
-                                            MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                         <DataGridTextColumn Header="Timestamp"
                                             Binding="{Binding Timestamp}"
                                             Width="Auto"
                                             MinWidth="{x:Static ui:ChartUiDefaults.TransformGridTimestampMinWidth}" />
-                        <DataGridTextColumn Header="Raw"
+                        <DataGridTextColumn Header="Value"
                                             Binding="{Binding Raw}"
                                             Width="Auto"
                                             MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
-                        <DataGridTextColumn Header="Smoothed"
+                        <DataGridTextColumn x:Name="SmoothedResultColumn"
+                                            Header="Smoothed"
                                             Binding="{Binding Smoothed}"
-                                            Width="Auto"
+                                            Width="*"
                                             MinWidth="{x:Static ui:ChartUiDefaults.TransformGridValueMinWidth}" />
                     </DataGrid.Columns>
                 </DataGrid>
@@ -209,7 +271,7 @@
             </Grid>
 
             <TextBlock x:Name="EvidenceText"
-                       Grid.Row="3"
+                       Grid.Row="4"
                        Margin="0,10,0,0"
                        Foreground="{DynamicResource ThemeSecondaryTextBrush}"
                        TextWrapping="Wrap" />

@@ -123,6 +123,38 @@ public sealed class OperationChainInputGridLoadServiceTests
     }
 
     [Fact]
+    public async Task ComputeAsync_ShouldExecuteCompiledEquationSteps()
+    {
+        var loader = new StubMetricSeriesLoader();
+        var service = new OperationChainInputGridLoadService(loader);
+        var inputs = new[]
+        {
+            new MetricSeriesRequest("Weight", "fat", "Weight", "Fat"),
+            new MetricSeriesRequest("Weight", "muscle", "Weight", "Muscle"),
+            new MetricSeriesRequest("Weight", "bone", "Weight", "Bone")
+        };
+        var compiled = TransformEquationCompiler.Compile(
+            [
+                new TransformEquationTerm("None", "None", 0, "Fat"),
+                new TransformEquationTerm("Add", "Add", 1, "Muscle"),
+                new TransformEquationTerm("Divide", "Divide", 2, "Bone")
+            ],
+            inputs.Length);
+
+        var result = await service.ComputeAsync(
+            inputs,
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 2),
+            "HealthMetrics",
+            compiled.Steps,
+            compiled.Title);
+
+        Assert.Equal("Fat + Muscle / Bone", result.Title);
+        Assert.Equal("0.5882", result.Rows[0].Raw);
+        Assert.NotNull(result.Evidence);
+    }
+
+    [Fact]
     public async Task ComputeAsync_ShouldCorrelateTwoCanonicalInputsWithConfidenceInterval()
     {
         var loader = new StubMetricSeriesLoader();

@@ -1,3 +1,5 @@
+using System.Windows;
+using System.Windows.Media;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers.Infrastructure;
@@ -26,6 +28,41 @@ public sealed class OperationChainTransformOutputRendererTests
             Assert.Equal("Total", contract.LastRequest.PrimaryLabel);
             Assert.Equal("+", contract.LastRequest.OperationType);
             Assert.True(contract.LastRequest.IsOperationChart);
+        });
+    }
+
+    [Fact]
+    public async Task RenderAsync_ShouldFilterDerivedDatasetRowsForChart()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var contract = new FakeTransformRenderingContract();
+            var renderer = new OperationChainTransformOutputRenderer(new ChartState(), contract);
+            var result = new OperationChainComputationGridResult(CreateResult(), "Total", [], "computed");
+
+            await renderer.RenderAsync(new CartesianChart(), result, [false, true]);
+
+            var computed = contract.LastRequest!.Strategy.Compute();
+            Assert.NotNull(computed);
+            Assert.Single(computed!.Timestamps);
+            Assert.Equal(new DateTime(2026, 1, 2), computed.Timestamps[0]);
+            Assert.Equal(6d, computed.PrimaryRawValues[0]);
+        });
+    }
+
+    [Fact]
+    public async Task RenderAsync_ShouldClearChartWhenAllDerivedRowsAreExcluded()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var contract = new FakeTransformRenderingContract();
+            var renderer = new OperationChainTransformOutputRenderer(new ChartState(), contract);
+            var result = new OperationChainComputationGridResult(CreateResult(), "Total", [], "computed");
+
+            await renderer.RenderAsync(new CartesianChart(), result, [false, false]);
+
+            Assert.Equal(1, contract.ClearCalls);
+            Assert.Equal(0, contract.RenderCalls);
         });
     }
 
@@ -70,6 +107,26 @@ public sealed class OperationChainTransformOutputRendererTests
             await renderer.ClearAsync(new CartesianChart());
 
             Assert.Equal(1, contract.ClearCalls);
+        });
+    }
+
+    [Fact]
+    public async Task ClearAsync_ShouldApplySharedThemeBrushesToEmptyChartAxes()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var app = Application.Current ?? new Application();
+            app.Resources["ThemeChartAxisBrush"] = Brushes.White;
+            app.Resources["ThemeChartGridLineBrush"] = Brushes.DimGray;
+            var renderer = new OperationChainTransformOutputRenderer(new ChartState(), new FakeTransformRenderingContract());
+            var chart = new CartesianChart();
+
+            await renderer.ClearAsync(chart);
+
+            Assert.Same(Brushes.White, chart.AxisX[0].Foreground);
+            Assert.Same(Brushes.DimGray, chart.AxisX[0].Separator.Stroke);
+            Assert.Same(Brushes.White, chart.AxisY[0].Foreground);
+            Assert.Same(Brushes.DimGray, chart.AxisY[0].Separator.Stroke);
         });
     }
 

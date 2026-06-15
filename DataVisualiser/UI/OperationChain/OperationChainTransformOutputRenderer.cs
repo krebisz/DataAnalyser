@@ -30,6 +30,21 @@ internal sealed class OperationChainTransformOutputRenderer
     public Task RenderAsync(CartesianChart chart, OperationChainResult result) =>
         _renderer.RenderAsync(chart, result);
 
+    public Task RenderAsync(CartesianChart chart, OperationChainComputationGridResult result, IReadOnlyList<bool>? includedRows)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        if (result.Correlation != null)
+            return _renderer.RenderCorrelationAsync(chart, result.Correlation);
+
+        if (result.InputSnapshot != null)
+            return _renderer.RenderInputSnapshotAsync(chart, result.InputSnapshot, includedRows);
+
+        return result.Result == null
+            ? _renderer.ClearAsync(chart)
+            : _renderer.RenderAsync(chart, result.Result, includedRows);
+    }
+
     public Task RenderAsync(CartesianChart chart, OperationChainComputationGridResult result)
     {
         ArgumentNullException.ThrowIfNull(result);

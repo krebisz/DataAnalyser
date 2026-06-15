@@ -1,10 +1,14 @@
+using System.ComponentModel;
 using System.Configuration;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Export;
+using DataVisualiser.UI.Theming;
 using DataVisualiser.UI.ViewModels;
 using DataVisualiser.VNext.Contracts;
 
@@ -12,21 +16,27 @@ namespace DataVisualiser.UI.OperationChain;
 
 public partial class OperationChainWorkbenchView : UserControl
 {
+    private readonly List<TransformEquationTerm> _equationTerms = [];
     private readonly List<OperationChainInputSelectionRow> _inputRows = [];
     private readonly OperationChainTransformOutputRenderer _outputRenderer = new();
+    private readonly SelectableGridRowToggleCoordinator _resultGridToggleCoordinator = new();
     private MetricSelectionService? _metricSelectionService;
     private OperationChainInputGridLoadService? _inputLoader;
     private readonly OperationChainEvidenceExportService _exportService = new(new EvidenceExportWriter(), new EvidenceExportPathResolver());
     private IReadOnlyList<MetricNameOption> _metricOptions = [];
+    private OperationChainComputationGridResult? _currentComputationResult;
     private OperationChainEvidenceExportSnapshot? _lastExportSnapshot;
     private bool _isInitializing;
     private bool _isApplyingDateRange;
+    private bool _isThemeAttached;
 
     public OperationChainWorkbenchView()
     {
         InitializeComponent();
         _ = _outputRenderer.ClearAsync(OutputChart);
         Loaded += OnLoaded;
+        Loaded += OnThemeLoaded;
+        Unloaded += OnThemeUnloaded;
     }
 
     public async void DisplayResult(OperationChainResult result)
@@ -34,8 +44,9 @@ public partial class OperationChainWorkbenchView : UserControl
         ArgumentNullException.ThrowIfNull(result);
 
         var presentation = OperationChainWorkbenchPresenter.Build(result);
+        _currentComputationResult = OperationChainResultGridPresenter.Build(result);
         SummaryText.Text = presentation.Summary;
-        ResultGrid.ItemsSource = presentation.DatasetRows;
+        SetResultRows(presentation.DatasetRows);
         EvidenceText.Text = presentation.Evidence;
         await _outputRenderer.RenderAsync(OutputChart, result);
     }
@@ -56,6 +67,7 @@ public partial class OperationChainWorkbenchView : UserControl
             InitializeOperationOptions();
             InitializeDateRange(shared);
             EnsureInputRowCount(3);
+            RefreshEquationInputOptions();
             await LoadMetricOptionsAsync();
             SummaryText.Text = "Select inputs and an operation, then compute an Operation Chain result.";
         }
@@ -109,6 +121,7 @@ public partial class OperationChainWorkbenchView : UserControl
         }
 
         await RefreshDateRangeForSelectedInputsAsync();
+        RefreshEquationInputOptions();
     }
 
     private static void ApplyMetricOptions(ComboBox combo, IReadOnlyList<MetricNameOption> options)
@@ -166,13 +179,19 @@ public partial class OperationChainWorkbenchView : UserControl
             if (_isInitializing)
                 return;
 
+            ClearEquationTerms();
             await LoadSubtypeOptionsAsync(row);
             await RefreshDateRangeForSelectedInputsAsync();
+            RefreshEquationInputOptions();
         };
         subtypeCombo.SelectionChanged += async (_, _) =>
         {
             if (!_isInitializing)
+            {
+                ClearEquationTerms();
                 await RefreshDateRangeForSelectedInputsAsync();
+                RefreshEquationInputOptions();
+            }
         };
         removeButton.Click += (_, _) => RemoveInputRow(row);
 
@@ -198,6 +217,8 @@ public partial class OperationChainWorkbenchView : UserControl
         _inputRows.Remove(row);
         InputRowsPanel.Children.Remove(row.Container);
         RenumberInputRows();
+        ClearEquationTerms();
+        RefreshEquationInputOptions();
         _ = RefreshDateRangeForSelectedInputsAsync();
     }
 
@@ -217,6 +238,7 @@ public partial class OperationChainWorkbenchView : UserControl
             row.MetricCombo.SelectedIndex = Math.Min(rowIndex, _metricOptions.Count - 1);
             await LoadSubtypeOptionsAsync(row);
             await RefreshDateRangeForSelectedInputsAsync();
+            RefreshEquationInputOptions();
         }
     }
 
@@ -265,13 +287,15 @@ public partial class OperationChainWorkbenchView : UserControl
             var to = ToDate.SelectedDate ?? DateTime.UtcNow.Date;
             var resolution = ResolveResolutionTableName();
             var operationTag = ResolveOperationTag();
-            var result = await _inputLoader.ComputeAsync(inputs, from, to, resolution, operationTag);
+            var result = _equationTerms.Count > 0
+                ? await ComputeEquationAsync(inputs, from, to, resolution)
+                : await _inputLoader.ComputeAsync(inputs, from, to, resolution, operationTag);
 
             DisplayComputationResult(result);
             _lastExportSnapshot = new OperationChainEvidenceExportSnapshot(
                 inputs,
-                operationTag,
-                ResolveOperationLabel(),
+                _equationTerms.Count > 0 ? EquationText.Text : operationTag,
+                _equationTerms.Count > 0 ? EquationText.Text : ResolveOperationLabel(),
                 from,
                 to,
                 resolution,
@@ -307,14 +331,102 @@ public partial class OperationChainWorkbenchView : UserControl
         }
     }
 
+    private async Task<OperationChainComputationGridResult> ComputeEquationAsync(
+        IReadOnlyList<MetricSeriesRequest> inputs,
+        DateTime from,
+        DateTime to,
+        string resolution)
+    {
+        if (_inputLoader == null)
+            throw new InvalidOperationException("Operation Chain is still initializing.");
+
+        var compiled = TransformEquationCompiler.Compile(_equationTerms, inputs.Count);
+        if (!compiled.IsValid)
+            throw new InvalidOperationException(compiled.Error);
+
+        return await _inputLoader.ComputeAsync(
+            inputs,
+            from,
+            to,
+            resolution,
+            compiled.Steps,
+            compiled.Title);
+    }
+
+    private void OnThemeLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_isThemeAttached)
+            return;
+
+        AppThemeService.Default.ThemeChanged += OnThemeChanged;
+        _isThemeAttached = true;
+        ApplyOutputChartTheme();
+    }
+
+    private void OnThemeUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (!_isThemeAttached)
+            return;
+
+        AppThemeService.Default.ThemeChanged -= OnThemeChanged;
+        _isThemeAttached = false;
+    }
+
+    private void OnThemeChanged(object? sender, AppThemeChangedEventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(ApplyOutputChartTheme);
+            return;
+        }
+
+        ApplyOutputChartTheme();
+    }
+
+    private void ApplyOutputChartTheme() =>
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(OutputChart);
+
     private void OnClearClicked(object sender, RoutedEventArgs e)
     {
         _lastExportSnapshot = null;
+        _currentComputationResult = null;
+        _resultGridToggleCoordinator.Reset();
+        ClearEquationTerms();
         ResultGridTitle.Text = "Result";
-        ResultGrid.ItemsSource = null;
+        SetResultRows(null);
         EvidenceText.Text = string.Empty;
         SummaryText.Text = "Select inputs and an operation, then compute an Operation Chain result.";
         _ = _outputRenderer.ClearAsync(OutputChart);
+    }
+
+    private void OnAddEquationTermClicked(object sender, RoutedEventArgs e)
+    {
+        if (EquationInputCombo.SelectedItem is not OperationChainInputOption input)
+        {
+            SummaryText.Text = "Select an input before adding to the equation.";
+            return;
+        }
+
+        var operationTag = ResolveOperationTag();
+        if (!TransformEquationCompiler.IsSupportedEquationOperation(operationTag))
+        {
+            SummaryText.Text = $"Operation '{ResolveOperationLabel()}' is not valid in the equation builder.";
+            return;
+        }
+
+        _equationTerms.Add(new TransformEquationTerm(
+            operationTag,
+            ResolveOperationLabel(),
+            input.Index,
+            input.Display,
+            input.EquationLabel));
+        EquationText.Text = TransformEquationCompiler.BuildExpression(_equationTerms);
+    }
+
+    private void OnClearEquationClicked(object sender, RoutedEventArgs e)
+    {
+        ClearEquationTerms();
+        SummaryText.Text = "Equation cleared.";
     }
 
     private void OnOutputChartToggleClicked(object sender, RoutedEventArgs e)
@@ -393,11 +505,123 @@ public partial class OperationChainWorkbenchView : UserControl
 
     private async void DisplayComputationResult(OperationChainComputationGridResult result)
     {
+        _currentComputationResult = result;
         SummaryText.Text = result.Summary;
         ResultGridTitle.Text = result.Title;
-        ResultGrid.ItemsSource = result.Rows;
+        SetResultRows(result.Rows);
         EvidenceText.Text = result.Evidence ?? $"Operation Chain evidence: {result.Result?.Evidence.TraceSignature}";
         await _outputRenderer.RenderAsync(OutputChart, result);
+    }
+
+    private void SetResultRows(IReadOnlyList<OperationChainResultGridRow>? rows)
+    {
+        _resultGridToggleCoordinator.Reset();
+        var selectableRows = new List<SelectableOperationChainResultGridRow>();
+        if (rows != null)
+        {
+            foreach (var row in rows)
+                selectableRows.Add(new SelectableOperationChainResultGridRow(row));
+        }
+
+        ResultGrid.ItemsSource = selectableRows.Count == 0 ? null : selectableRows;
+        SmoothedResultColumn.Visibility = selectableRows.Any(row => !string.IsNullOrWhiteSpace(row.Smoothed)) == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private async void OnResultGridPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!_resultGridToggleCoordinator.HandlePreviewMouseLeftButtonDown(ResultGrid, e))
+            return;
+
+        await RefreshOutputChartForIncludedRowsAsync();
+    }
+
+    private async void OnResultGridKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!_resultGridToggleCoordinator.HandleKeyDown(ResultGrid, e))
+            return;
+
+        await RefreshOutputChartForIncludedRowsAsync();
+    }
+
+    private async Task RefreshOutputChartForIncludedRowsAsync()
+    {
+        if (_currentComputationResult == null)
+            return;
+
+        var rows = GetSelectableResultRows();
+        if (rows.Count == 0)
+        {
+            await _outputRenderer.ClearAsync(OutputChart);
+            return;
+        }
+
+        var includedRows = new bool[rows.Count];
+        for (var index = 0; index < rows.Count; index++)
+            includedRows[index] = rows[index].IsIncluded;
+        if (!includedRows.Any(included => included))
+        {
+            await _outputRenderer.ClearAsync(OutputChart);
+            return;
+        }
+
+        await _outputRenderer.RenderAsync(OutputChart, _currentComputationResult, includedRows);
+    }
+
+    private IReadOnlyList<SelectableOperationChainResultGridRow> GetSelectableResultRows() =>
+        ResultGrid.ItemsSource is IEnumerable<SelectableOperationChainResultGridRow> rows
+            ? rows.ToArray()
+            : Array.Empty<SelectableOperationChainResultGridRow>();
+
+    private void ClearEquationTerms()
+    {
+        _equationTerms.Clear();
+        EquationText.Text = string.Empty;
+    }
+
+    private void RefreshEquationInputOptions()
+    {
+        var selectedIndex = EquationInputCombo.SelectedItem is OperationChainInputOption selected
+            ? selected.Index
+            : 0;
+
+        EquationInputCombo.Items.Clear();
+        for (var index = 0; index < _inputRows.Count; index++)
+            EquationInputCombo.Items.Add(new OperationChainInputOption(
+                index,
+                ResolveInputDisplayLabel(_inputRows[index], index),
+                ResolveInputEquationLabel(index)));
+
+        if (EquationInputCombo.Items.Count > 0)
+            EquationInputCombo.SelectedIndex = Math.Min(selectedIndex, EquationInputCombo.Items.Count - 1);
+    }
+
+    private static string ResolveInputDisplayLabel(OperationChainInputSelectionRow row, int index)
+    {
+        var metric = row.MetricCombo.SelectedItem is MetricNameOption metricOption
+            ? metricOption.Display
+            : $"Input {index + 1}";
+        var subtype = row.SubtypeCombo.SelectedItem is MetricNameOption subtypeOption
+            ? subtypeOption.Display
+            : string.Empty;
+
+        return string.IsNullOrWhiteSpace(subtype)
+            ? metric
+            : $"{metric} - {subtype}";
+    }
+
+    private static string ResolveInputEquationLabel(int index) =>
+        $"S{ToSubscript(index + 1)}";
+
+    private static string ToSubscript(int value)
+    {
+        const string digits = "\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089";
+        var result = string.Empty;
+        foreach (var character in value.ToString())
+            result += digits[character - '0'];
+
+        return result;
     }
 
     private string ResolveOperationTag()
@@ -431,4 +655,42 @@ public partial class OperationChainWorkbenchView : UserControl
         TextBlock Label,
         ComboBox MetricCombo,
         ComboBox SubtypeCombo);
+
+    private sealed record OperationChainInputOption(int Index, string Display, string EquationLabel)
+    {
+        public override string ToString() => Display;
+    }
+
+    private sealed class SelectableOperationChainResultGridRow : ISelectableGridRow, INotifyPropertyChanged
+    {
+        private bool _isIncluded = true;
+
+        public SelectableOperationChainResultGridRow(OperationChainResultGridRow row)
+        {
+            Timestamp = row.Timestamp;
+            Raw = row.Raw;
+            Smoothed = row.Smoothed;
+            Series = row.Series;
+        }
+
+        public string Timestamp { get; }
+        public string Raw { get; }
+        public string Smoothed { get; }
+        public string Series { get; }
+
+        public bool IsIncluded
+        {
+            get => _isIncluded;
+            set
+            {
+                if (_isIncluded == value)
+                    return;
+
+                _isIncluded = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsIncluded)));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
 }

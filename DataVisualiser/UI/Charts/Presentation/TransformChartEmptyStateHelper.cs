@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 using LiveCharts.Wpf;
@@ -29,5 +30,6 @@ internal static class TransformChartEmptyStateHelper
             LabelFormatter = value => MathHelper.FormatDisplayedValue(value),
             ShowLabels = true
         });
+        ChartThemeStylingHelper.ApplyCartesianChartTheme(chart);
     }
 }
