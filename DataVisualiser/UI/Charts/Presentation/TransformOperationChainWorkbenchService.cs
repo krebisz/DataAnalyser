@@ -1,20 +1,19 @@
 using System.Globalization;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Shared.Models;
-using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.VNext.Application;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Kernel;
 
-namespace DataVisualiser.UI.OperationChain;
+namespace DataVisualiser.UI.Charts.Presentation;
 
-internal sealed class OperationChainInputGridLoadService
+internal sealed class TransformOperationChainWorkbenchService
 {
     private readonly MetricLoadSnapshotGateway _gateway;
     private readonly TransformOperationChainExecutionService _transformExecutionService;
     private readonly TransformInputDateRangeResolver? _dateRangeResolver;
 
-    public OperationChainInputGridLoadService(MetricSelectionService metricSelectionService)
+    public TransformOperationChainWorkbenchService(MetricSelectionService metricSelectionService)
         : this(
             new MetricSelectionServiceSeriesLoader(metricSelectionService),
             new TransformInputDateRangeResolver((selection, tableName) =>
@@ -22,7 +21,7 @@ internal sealed class OperationChainInputGridLoadService
     {
     }
 
-    internal OperationChainInputGridLoadService(
+    internal TransformOperationChainWorkbenchService(
         IMetricSeriesLoader loader,
         TransformInputDateRangeResolver? dateRangeResolver = null)
     {
@@ -32,7 +31,7 @@ internal sealed class OperationChainInputGridLoadService
         _dateRangeResolver = dateRangeResolver;
     }
 
-    public async Task<OperationChainInputGridLoadResult> LoadAsync(
+    public async Task<TransformInputGridLoadResult> LoadAsync(
         IReadOnlyList<MetricSeriesRequest> series,
         DateTime from,
         DateTime to,
@@ -42,18 +41,13 @@ internal sealed class OperationChainInputGridLoadService
         if (series == null || series.Count == 0)
             throw new ArgumentException("At least one operation-chain input series is required.", nameof(series));
 
-        var request = new MetricSelectionRequest(
-            ResolveSelectionMetricType(series),
-            series,
-            from,
-            to,
-            resolutionTableName);
+        var request = TransformMetricSelectionRequestFactory.Create(series, from, to, resolutionTableName);
 
         var snapshot = await _gateway.LoadAsync(request, cancellationToken);
-        return OperationChainInputGridPresenter.Build(snapshot);
+        return TransformInputGridPresenter.Build(snapshot);
     }
 
-    public async Task<OperationChainComputationGridResult> ComputeAsync(
+    public async Task<TransformOperationChainComputationGridResult> ComputeAsync(
         IReadOnlyList<MetricSeriesRequest> series,
         DateTime from,
         DateTime to,
@@ -64,18 +58,13 @@ internal sealed class OperationChainInputGridLoadService
         if (series == null || series.Count == 0)
             throw new ArgumentException("At least one operation-chain input series is required.", nameof(series));
         if (TransformSeriesOperationRequestMapper.IsPassThrough(operationTag))
-            return OperationChainInputGridPresenter.BuildComputationResult(
+            return TransformInputGridPresenter.BuildComputationResult(
                 await LoadAsync(series, from, to, resolutionTableName, cancellationToken));
 
         if (!TransformSeriesOperationRequestMapper.TryCreateOperationChainStep(operationTag, series, out var step) || step == null)
             throw new InvalidOperationException($"Operation Chain operation '{operationTag}' is not valid for {series.Count} selected input series.");
 
-        var request = new MetricSelectionRequest(
-            ResolveSelectionMetricType(series),
-            series,
-            from,
-            to,
-            resolutionTableName);
+        var request = TransformMetricSelectionRequestFactory.Create(series, from, to, resolutionTableName);
 
         if (TransformCorrelationMapper.IsCorrelationOperation(operationTag))
             return await ComputeCorrelationAsync(request, operationTag, cancellationToken);
@@ -86,10 +75,10 @@ internal sealed class OperationChainInputGridLoadService
             step.Operation.Label,
             cancellationToken);
 
-        return OperationChainResultGridPresenter.Build(result);
+        return TransformOperationChainResultGridPresenter.Build(result);
     }
 
-    public async Task<OperationChainComputationGridResult> ComputeAsync(
+    public async Task<TransformOperationChainComputationGridResult> ComputeAsync(
         IReadOnlyList<MetricSeriesRequest> series,
         DateTime from,
         DateTime to,
@@ -105,22 +94,17 @@ internal sealed class OperationChainInputGridLoadService
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Operation-chain equation title cannot be empty.", nameof(title));
 
-        var request = new MetricSelectionRequest(
-            ResolveSelectionMetricType(series),
-            series,
-            from,
-            to,
-            resolutionTableName);
+        var request = TransformMetricSelectionRequestFactory.Create(series, from, to, resolutionTableName);
         var result = await _transformExecutionService.ExecuteAsync(
             request,
             steps,
             title,
             cancellationToken);
 
-        return OperationChainResultGridPresenter.Build(result);
+        return TransformOperationChainResultGridPresenter.Build(result);
     }
 
-    private async Task<OperationChainComputationGridResult> ComputeCorrelationAsync(
+    private async Task<TransformOperationChainComputationGridResult> ComputeCorrelationAsync(
         MetricSelectionRequest request,
         string operationTag,
         CancellationToken cancellationToken)
@@ -128,7 +112,7 @@ internal sealed class OperationChainInputGridLoadService
         var snapshot = await _gateway.LoadAsync(request, cancellationToken);
         var aligned = new TimeSeriesAlignmentKernel().Align(snapshot);
         var summary = TransformCorrelationMapper.Compute(aligned, operationTag);
-        return OperationChainCorrelationGridPresenter.Build(summary, snapshot.Signature);
+        return TransformOperationChainCorrelationGridPresenter.Build(summary, snapshot.Signature);
     }
 
     public Task<TransformInputDateRange?> ResolveDateRangeAsync(
@@ -142,49 +126,39 @@ internal sealed class OperationChainInputGridLoadService
         return _dateRangeResolver.ResolveAsync(series, resolutionTableName, cancellationToken);
     }
 
-    private static string ResolveSelectionMetricType(IReadOnlyList<MetricSeriesRequest> series)
-    {
-        var distinct = series
-            .Select(item => item.MetricType)
-            .Where(item => !string.IsNullOrWhiteSpace(item))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        return distinct.Length == 1 ? distinct[0] : "Mixed";
-    }
 }
 
-internal static class OperationChainInputGridPresenter
+internal static class TransformInputGridPresenter
 {
-    public static OperationChainInputGridLoadResult Build(MetricLoadSnapshot snapshot)
+    public static TransformInputGridLoadResult Build(MetricLoadSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
         var inputs = snapshot.Series
-            .Select(series => new OperationChainInputGrid(
+            .Select(series => new TransformInputGrid(
                 series.Request.DisplayName,
-                OperationChainGridRowProjector.BuildInputRows(series.RawData)))
+                TransformGridRowProjector.BuildInputRows(series.RawData)))
             .ToArray();
 
-        return new OperationChainInputGridLoadResult(
+        return new TransformInputGridLoadResult(
             snapshot,
             inputs,
             $"{inputs.Length} input series loaded for Operation Chain.");
     }
 
-    public static OperationChainComputationGridResult BuildComputationResult(OperationChainInputGridLoadResult result)
+    public static TransformOperationChainComputationGridResult BuildComputationResult(TransformInputGridLoadResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
         var rows = result.Inputs
-            .SelectMany(input => input.Rows.Select(row => new OperationChainResultGridRow(
+            .SelectMany(input => input.Rows.Select(row => new TransformResultGridRow(
                 row.Timestamp,
                 row.Value,
                 string.Empty,
                 input.Title)))
             .ToArray();
 
-        return new OperationChainComputationGridResult(
+        return new TransformOperationChainComputationGridResult(
             null,
             "Input Series",
             rows,
@@ -197,31 +171,31 @@ internal static class OperationChainInputGridPresenter
     }
 }
 
-internal sealed record OperationChainInputGridLoadResult(
+internal sealed record TransformInputGridLoadResult(
     MetricLoadSnapshot Snapshot,
-    IReadOnlyList<OperationChainInputGrid> Inputs,
+    IReadOnlyList<TransformInputGrid> Inputs,
     string Summary);
 
-internal sealed record OperationChainInputGrid(
+internal sealed record TransformInputGrid(
     string Title,
-    IReadOnlyList<OperationChainInputGridRow> Rows);
+    IReadOnlyList<TransformInputGridRow> Rows);
 
-internal sealed record OperationChainInputGridRow(
+internal sealed record TransformInputGridRow(
     string Timestamp,
     string Value);
 
-internal static class OperationChainResultGridPresenter
+internal static class TransformOperationChainResultGridPresenter
 {
-    public static OperationChainComputationGridResult Build(OperationChainResult result)
+    public static TransformOperationChainComputationGridResult Build(OperationChainResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
         var dataset = result.DerivedDatasets.LastOrDefault()
             ?? throw new InvalidOperationException("Operation Chain did not produce a derived dataset.");
         var computedSeries = ComputedSeriesResult.FromDerivedDataset(dataset);
-        var rows = OperationChainGridRowProjector.BuildComputedRows(computedSeries);
+        var rows = TransformGridRowProjector.BuildComputedRows(computedSeries);
 
-        return new OperationChainComputationGridResult(
+        return new TransformOperationChainComputationGridResult(
             result,
             dataset.Label,
             rows,
@@ -232,37 +206,37 @@ internal static class OperationChainResultGridPresenter
     }
 }
 
-internal sealed record OperationChainComputationGridResult(
+internal sealed record TransformOperationChainComputationGridResult(
     OperationChainResult? Result,
     string Title,
-    IReadOnlyList<OperationChainResultGridRow> Rows,
+    IReadOnlyList<TransformResultGridRow> Rows,
     string Summary)
 {
     public string? Evidence { get; init; }
     public TransformCorrelationSummary? Correlation { get; init; }
-    public IReadOnlyList<OperationChainInputGrid>? Inputs { get; init; }
+    public IReadOnlyList<TransformInputGrid>? Inputs { get; init; }
     public MetricLoadSnapshot? InputSnapshot { get; init; }
 }
 
-internal sealed record OperationChainResultGridRow(
+internal sealed record TransformResultGridRow(
     string Timestamp,
     string Raw,
     string Smoothed,
     string Series = "");
 
-internal static class OperationChainGridRowProjector
+internal static class TransformGridRowProjector
 {
-    public static IReadOnlyList<OperationChainInputGridRow> BuildInputRows(IReadOnlyList<MetricData> data) =>
+    public static IReadOnlyList<TransformInputGridRow> BuildInputRows(IReadOnlyList<MetricData> data) =>
         TransformGridDataProjector.ProjectMetricRows(data)
-            .Select(row => new OperationChainInputGridRow(row.Timestamp, row.Value))
+            .Select(row => new TransformInputGridRow(row.Timestamp, row.Value))
             .ToArray();
 
-    public static IReadOnlyList<OperationChainResultGridRow> BuildComputedRows(ComputedSeriesResult result, string series = "")
+    public static IReadOnlyList<TransformResultGridRow> BuildComputedRows(ComputedSeriesResult result, string series = "")
     {
         ArgumentNullException.ThrowIfNull(result);
 
         return TransformGridDataProjector.ProjectComputedRows(result)
-            .Select(row => new OperationChainResultGridRow(
+            .Select(row => new TransformResultGridRow(
                 row.Timestamp,
                 row.Raw,
                 row.Smoothed,
@@ -271,21 +245,21 @@ internal static class OperationChainGridRowProjector
     }
 }
 
-internal static class OperationChainCorrelationGridPresenter
+internal static class TransformOperationChainCorrelationGridPresenter
 {
-    public static OperationChainComputationGridResult Build(
+    public static TransformOperationChainComputationGridResult Build(
         TransformCorrelationSummary summary,
         string sourceSignature)
     {
         var rows = new[]
         {
-            new OperationChainResultGridRow("Correlation", FormatValue(summary.Correlation), string.Empty),
-            new OperationChainResultGridRow("95% CI lower", FormatValue(summary.ConfidenceLower), string.Empty),
-            new OperationChainResultGridRow("95% CI upper", FormatValue(summary.ConfidenceUpper), string.Empty),
-            new OperationChainResultGridRow("Sample count", summary.SampleCount.ToString(CultureInfo.InvariantCulture), string.Empty)
+            new TransformResultGridRow("Correlation", FormatValue(summary.Correlation), string.Empty),
+            new TransformResultGridRow("95% CI lower", FormatValue(summary.ConfidenceLower), string.Empty),
+            new TransformResultGridRow("95% CI upper", FormatValue(summary.ConfidenceUpper), string.Empty),
+            new TransformResultGridRow("Sample count", summary.SampleCount.ToString(CultureInfo.InvariantCulture), string.Empty)
         };
 
-        return new OperationChainComputationGridResult(
+        return new TransformOperationChainComputationGridResult(
             null,
             summary.Label,
             rows,

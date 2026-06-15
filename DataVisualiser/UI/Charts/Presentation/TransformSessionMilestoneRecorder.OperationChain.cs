@@ -1,15 +1,8 @@
 using DataVisualiser.UI.MainHost.Evidence;
-using DataVisualiser.UI.ViewModels;
+namespace DataVisualiser.UI.Charts.Presentation;
 
-namespace DataVisualiser.UI.OperationChain;
-
-internal sealed class OperationChainSessionMilestoneRecorder(Func<SharedMainWindowViewModelContext?> getContext)
+internal sealed partial class TransformSessionMilestoneRecorder
 {
-    public OperationChainSessionMilestoneRecorder()
-        : this(() => SharedMainWindowViewModelProvider.Current)
-    {
-    }
-
     public void RecordInitialized(int inputCount, string resolution) =>
         Record("OperationChainInitialized", "Success", $"Initialized with {inputCount} input row(s); resolution {resolution}.", inputCount: inputCount);
 
@@ -75,7 +68,7 @@ internal sealed class OperationChainSessionMilestoneRecorder(Func<SharedMainWind
         int? inputCount = null,
         int? resultPointCount = null)
     {
-        var context = getContext();
+        var context = _sharedContextProvider?.Invoke();
         if (context == null)
             return;
 

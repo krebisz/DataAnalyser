@@ -3,21 +3,21 @@ using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Shared.Models;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Evidence;
-using DataVisualiser.UI.OperationChain;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
 
-namespace DataVisualiser.Tests.UI.OperationChain;
+namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
-public sealed class OperationChainSessionMilestoneRecorderTests
+public sealed class TransformSessionMilestoneRecorderOperationChainTests
 {
     [Fact]
     public void RecordActions_ShouldUseStableOperationChainMilestoneKinds()
     {
         var context = CreateContext();
-        var recorder = new OperationChainSessionMilestoneRecorder(() => context);
+        var recorder = new TransformSessionMilestoneRecorder(() => context);
 
         recorder.RecordInitialized(1, "HealthMetrics");
         recorder.RecordInputAdded(2);
@@ -52,7 +52,7 @@ public sealed class OperationChainSessionMilestoneRecorderTests
         context.MetricState.SelectedMetricType = "Weight";
         context.MetricState.SetSeriesSelections([new MetricSeriesSelection("Weight", "body_fat_mass", "Weight", "Fat")]);
         context.ChartState.LastLoadRuntime = new LoadRuntimeState(EvidenceRuntimePath.VNextMain, "request", "snapshot", null, null, null, null, false);
-        var recorder = new OperationChainSessionMilestoneRecorder(() => context);
+        var recorder = new TransformSessionMilestoneRecorder(() => context);
 
         recorder.RecordComputeCompleted("Divide", 3, 12, "(S\u2081 + S\u2082) / S\u2083");
 
@@ -71,7 +71,7 @@ public sealed class OperationChainSessionMilestoneRecorderTests
     [Fact]
     public void Record_ShouldNoOpWhenSharedContextIsUnavailable()
     {
-        var recorder = new OperationChainSessionMilestoneRecorder(() => null);
+        var recorder = new TransformSessionMilestoneRecorder(() => null);
 
         recorder.RecordClearRequested();
         recorder.RecordComputeFailed("Add", 2, "blocked", null);

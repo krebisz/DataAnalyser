@@ -1,16 +1,16 @@
-using DataVisualiser.UI.OperationChain;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.VNext.Contracts;
 
-namespace DataVisualiser.Tests.UI.OperationChain;
+namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
-public sealed class OperationChainWorkbenchPresenterTests
+public sealed class TransformOperationChainWorkbenchPresenterTests
 {
     [Fact]
     public void Build_ShouldProjectResultToDisplayRowsWithoutExecutingOperations()
     {
         var result = CreateResult();
 
-        var presentation = OperationChainWorkbenchPresenter.Build(result);
+        var presentation = TransformOperationChainWorkbenchPresenter.Build(result);
 
         Assert.Equal("1 derived dataset(s) from 2 source series.", presentation.Summary);
         var traceRow = Assert.Single(presentation.TraceRows);

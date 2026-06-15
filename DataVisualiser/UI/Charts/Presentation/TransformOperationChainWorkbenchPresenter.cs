@@ -1,22 +1,22 @@
 using DataVisualiser.VNext.Contracts;
 
-namespace DataVisualiser.UI.OperationChain;
+namespace DataVisualiser.UI.Charts.Presentation;
 
-internal static class OperationChainWorkbenchPresenter
+internal static class TransformOperationChainWorkbenchPresenter
 {
-    public static OperationChainWorkbenchPresentation Build(OperationChainResult result)
+    public static TransformOperationChainWorkbenchPresentation Build(OperationChainResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        return new OperationChainWorkbenchPresentation(
+        return new TransformOperationChainWorkbenchPresentation(
             $"{result.DerivedDatasets.Count} derived dataset(s) from {result.Plan.SourceSeriesSignatures.Count} source series.",
             result.Trace.Entries
-                .Select(entry => new OperationChainTraceRow(
+                .Select(entry => new TransformOperationChainTraceRow(
                     $"Step {entry.StepIndex + 1}",
                     $"{entry.OperationKind} -> {entry.OutputDatasetId}; lossiness: {entry.Lossiness}"))
                 .ToArray(),
             result.DerivedDatasets
-                .SelectMany(dataset => OperationChainGridRowProjector.BuildComputedRows(
+                .SelectMany(dataset => TransformGridRowProjector.BuildComputedRows(
                     ComputedSeriesResult.FromDerivedDataset(dataset),
                     dataset.Label))
                 .ToArray(),
@@ -24,10 +24,10 @@ internal static class OperationChainWorkbenchPresenter
     }
 }
 
-internal sealed record OperationChainWorkbenchPresentation(
+internal sealed record TransformOperationChainWorkbenchPresentation(
     string Summary,
-    IReadOnlyList<OperationChainTraceRow> TraceRows,
-    IReadOnlyList<OperationChainResultGridRow> DatasetRows,
+    IReadOnlyList<TransformOperationChainTraceRow> TraceRows,
+    IReadOnlyList<TransformResultGridRow> DatasetRows,
     string Evidence);
 
-internal sealed record OperationChainTraceRow(string StepLabel, string Detail);
+internal sealed record TransformOperationChainTraceRow(string StepLabel, string Detail);

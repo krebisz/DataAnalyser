@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Configuration;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,14 +19,14 @@ public partial class OperationChainWorkbenchView : UserControl
     private const string SummaryErrorBrushResourceKey = "ThemeValidationErrorBrush";
     private readonly List<TransformEquationTerm> _equationTerms = [];
     private readonly List<OperationChainInputSelectionRow> _inputRows = [];
-    private readonly OperationChainTransformOutputRenderer _outputRenderer = new();
+    private readonly TransformOperationChainOutputRenderer _outputRenderer = new();
     private readonly SelectableGridRowToggleCoordinator _resultGridToggleCoordinator = new();
-    private readonly OperationChainSessionMilestoneRecorder _sessionMilestoneRecorder = new();
+    private readonly TransformSessionMilestoneRecorder _sessionMilestoneRecorder = new();
     private MetricSelectionService? _metricSelectionService;
-    private OperationChainInputGridLoadService? _inputLoader;
+    private TransformOperationChainWorkbenchService? _inputLoader;
     private readonly OperationChainEvidenceExportService _exportService = new(new EvidenceExportWriter(), new EvidenceExportPathResolver());
     private IReadOnlyList<MetricNameOption> _metricOptions = [];
-    private OperationChainComputationGridResult? _currentComputationResult;
+    private TransformOperationChainComputationGridResult? _currentComputationResult;
     private OperationChainEvidenceExportSnapshot? _lastExportSnapshot;
     private bool _isInitializing;
     private bool _isApplyingDateRange;
@@ -46,8 +45,8 @@ public partial class OperationChainWorkbenchView : UserControl
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        var presentation = OperationChainWorkbenchPresenter.Build(result);
-        _currentComputationResult = OperationChainResultGridPresenter.Build(result);
+        var presentation = TransformOperationChainWorkbenchPresenter.Build(result);
+        _currentComputationResult = TransformOperationChainResultGridPresenter.Build(result);
         SetSummaryStatus(presentation.Summary);
         SetResultRows(presentation.DatasetRows);
         EvidenceText.Text = presentation.Evidence;
@@ -64,7 +63,7 @@ public partial class OperationChainWorkbenchView : UserControl
         {
             var shared = SharedMainWindowViewModelProvider.GetOrCreate(ResolveConnectionString());
             _metricSelectionService = shared.MetricSelectionService;
-            _inputLoader = new OperationChainInputGridLoadService(_metricSelectionService);
+            _inputLoader = new TransformOperationChainWorkbenchService(_metricSelectionService);
 
             InitializeResolutionOptions(shared);
             InitializeOperationOptions();
@@ -295,7 +294,7 @@ public partial class OperationChainWorkbenchView : UserControl
         var inputCount = 0;
         try
         {
-            var inputs = ResolveInputRequests();
+            var inputs = TransformInputSelectionResolver.ResolveRequests(_inputRows);
             inputCount = inputs.Count;
             var from = FromDate.SelectedDate ?? DateTime.UtcNow.Date.AddDays(-30);
             var to = ToDate.SelectedDate ?? DateTime.UtcNow.Date;
@@ -359,7 +358,7 @@ public partial class OperationChainWorkbenchView : UserControl
         }
     }
 
-    private async Task<OperationChainComputationGridResult> ComputeEquationAsync(
+    private async Task<TransformOperationChainComputationGridResult> ComputeEquationAsync(
         IReadOnlyList<MetricSeriesRequest> inputs,
         DateTime from,
         DateTime to,
@@ -475,7 +474,7 @@ public partial class OperationChainWorkbenchView : UserControl
 
     private void OnAddEquationTermClicked(object sender, RoutedEventArgs e)
     {
-        if (EquationInputCombo.SelectedItem is not OperationChainInputOption input)
+        if (EquationInputCombo.SelectedItem is not TransformInputOption input)
         {
             SetSummaryError("Select an input before adding to the equation.");
             return;
@@ -520,35 +519,12 @@ public partial class OperationChainWorkbenchView : UserControl
         _sessionMilestoneRecorder.RecordOutputChartResetZoom();
     }
 
-    private IReadOnlyList<MetricSeriesRequest> ResolveInputRequests()
-    {
-        var inputs = new List<MetricSeriesRequest>();
-        for (var index = 0; index < _inputRows.Count; index++)
-            inputs.Add(ResolveInputRequest(_inputRows[index], $"Input {index + 1}"));
-
-        if (inputs.Count == 0)
-            throw new InvalidOperationException("Operation Chain requires at least one input.");
-
-        return inputs;
-    }
-
-    private static MetricSeriesRequest ResolveInputRequest(OperationChainInputSelectionRow row, string label)
-    {
-        if (row.MetricCombo.SelectedItem is not MetricNameOption metric)
-            throw new InvalidOperationException($"{label} requires a metric.");
-
-        if (row.SubtypeCombo.SelectedItem is not MetricNameOption subtype)
-            throw new InvalidOperationException($"{label} requires a submetric.");
-
-        return new MetricSeriesRequest(metric.Value, subtype.Value, metric.Display, subtype.Display);
-    }
-
     private async Task RefreshDateRangeForSelectedInputsAsync()
     {
         if (_inputLoader == null || _isApplyingDateRange)
             return;
 
-        if (!TryResolveInputRequests(out var inputs))
+        if (!TransformInputSelectionResolver.TryResolveRequests(_inputRows, out var inputs))
             return;
 
         var range = await _inputLoader.ResolveDateRangeAsync(inputs, ResolveResolutionTableName());
@@ -567,27 +543,7 @@ public partial class OperationChainWorkbenchView : UserControl
         }
     }
 
-    private bool TryResolveInputRequests(out IReadOnlyList<MetricSeriesRequest> inputs)
-    {
-        inputs = Array.Empty<MetricSeriesRequest>();
-        if (_inputRows.Count == 0)
-            return false;
-
-        var resolved = new List<MetricSeriesRequest>();
-        foreach (var row in _inputRows)
-        {
-            if (row.MetricCombo.SelectedItem is not MetricNameOption metric ||
-                row.SubtypeCombo.SelectedItem is not MetricNameOption subtype)
-                return false;
-
-            resolved.Add(new MetricSeriesRequest(metric.Value, subtype.Value, metric.Display, subtype.Display));
-        }
-
-        inputs = resolved;
-        return true;
-    }
-
-    private async void DisplayComputationResult(OperationChainComputationGridResult result)
+    private async void DisplayComputationResult(TransformOperationChainComputationGridResult result)
     {
         _currentComputationResult = result;
         SetSummaryStatus(result.Summary);
@@ -614,14 +570,14 @@ public partial class OperationChainWorkbenchView : UserControl
         SetSummaryStatus("Select inputs and an operation, then compute an Operation Chain result.");
     }
 
-    private void SetResultRows(IReadOnlyList<OperationChainResultGridRow>? rows)
+    private void SetResultRows(IReadOnlyList<TransformResultGridRow>? rows)
     {
         _resultGridToggleCoordinator.Reset();
-        var selectableRows = new List<SelectableOperationChainResultGridRow>();
+        var selectableRows = new List<TransformSelectableResultGridRow>();
         if (rows != null)
         {
             foreach (var row in rows)
-                selectableRows.Add(new SelectableOperationChainResultGridRow(row));
+                selectableRows.Add(new TransformSelectableResultGridRow(row));
         }
 
         ResultGrid.ItemsSource = selectableRows.Count == 0 ? null : selectableRows;
@@ -658,14 +614,9 @@ public partial class OperationChainWorkbenchView : UserControl
             return;
         }
 
-        var includedRows = new bool[rows.Count];
-        for (var index = 0; index < rows.Count; index++)
-            includedRows[index] = rows[index].IsIncluded;
-        var includedCount = 0;
-        for (var index = 0; index < includedRows.Length; index++)
-            if (includedRows[index])
-                includedCount++;
-        _sessionMilestoneRecorder.RecordResultRowsToggled(includedCount, includedRows.Length);
+        var includedRows = TransformResultRowSelection.ResolveIncludedRows(rows);
+        var includedCount = TransformResultRowSelection.CountIncluded(includedRows);
+        _sessionMilestoneRecorder.RecordResultRowsToggled(includedCount, includedRows.Count);
         if (!includedRows.Any(included => included))
         {
             await _outputRenderer.ClearAsync(OutputChart);
@@ -675,10 +626,10 @@ public partial class OperationChainWorkbenchView : UserControl
         await _outputRenderer.RenderAsync(OutputChart, _currentComputationResult, includedRows);
     }
 
-    private IReadOnlyList<SelectableOperationChainResultGridRow> GetSelectableResultRows() =>
-        ResultGrid.ItemsSource is IEnumerable<SelectableOperationChainResultGridRow> rows
+    private IReadOnlyList<TransformSelectableResultGridRow> GetSelectableResultRows() =>
+        ResultGrid.ItemsSource is IEnumerable<TransformSelectableResultGridRow> rows
             ? rows.ToArray()
-            : Array.Empty<SelectableOperationChainResultGridRow>();
+            : Array.Empty<TransformSelectableResultGridRow>();
 
     private void ClearEquationTerms()
     {
@@ -688,46 +639,16 @@ public partial class OperationChainWorkbenchView : UserControl
 
     private void RefreshEquationInputOptions()
     {
-        var selectedIndex = EquationInputCombo.SelectedItem is OperationChainInputOption selected
+        var selectedIndex = EquationInputCombo.SelectedItem is TransformInputOption selected
             ? selected.Index
             : 0;
 
         EquationInputCombo.Items.Clear();
-        for (var index = 0; index < _inputRows.Count; index++)
-            EquationInputCombo.Items.Add(new OperationChainInputOption(
-                index,
-                ResolveInputDisplayLabel(_inputRows[index], index),
-                ResolveInputEquationLabel(index)));
+        foreach (var option in TransformInputSelectionResolver.BuildInputOptions(_inputRows))
+            EquationInputCombo.Items.Add(option);
 
         if (EquationInputCombo.Items.Count > 0)
             EquationInputCombo.SelectedIndex = Math.Min(selectedIndex, EquationInputCombo.Items.Count - 1);
-    }
-
-    private static string ResolveInputDisplayLabel(OperationChainInputSelectionRow row, int index)
-    {
-        var metric = row.MetricCombo.SelectedItem is MetricNameOption metricOption
-            ? metricOption.Display
-            : $"Input {index + 1}";
-        var subtype = row.SubtypeCombo.SelectedItem is MetricNameOption subtypeOption
-            ? subtypeOption.Display
-            : string.Empty;
-
-        return string.IsNullOrWhiteSpace(subtype)
-            ? metric
-            : $"{metric} - {subtype}";
-    }
-
-    private static string ResolveInputEquationLabel(int index) =>
-        $"S{ToSubscript(index + 1)}";
-
-    private static string ToSubscript(int value)
-    {
-        const string digits = "\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089";
-        var result = string.Empty;
-        foreach (var character in value.ToString())
-            result += digits[character - '0'];
-
-        return result;
     }
 
     private string ResolveOperationTag()
@@ -760,11 +681,10 @@ public partial class OperationChainWorkbenchView : UserControl
         Grid Container,
         TextBlock Label,
         ComboBox MetricCombo,
-        ComboBox SubtypeCombo);
-
-    private sealed record OperationChainInputOption(int Index, string Display, string EquationLabel)
+        ComboBox SubtypeCombo) : ITransformInputSelection
     {
-        public override string ToString() => Display;
+        public MetricNameOption? SelectedMetric => MetricCombo.SelectedItem as MetricNameOption;
+        public MetricNameOption? SelectedSubtype => SubtypeCombo.SelectedItem as MetricNameOption;
     }
 
     private sealed class OperationChainEquationValidationException : InvalidOperationException
@@ -775,36 +695,4 @@ public partial class OperationChainWorkbenchView : UserControl
         }
     }
 
-    private sealed class SelectableOperationChainResultGridRow : ISelectableGridRow, INotifyPropertyChanged
-    {
-        private bool _isIncluded = true;
-
-        public SelectableOperationChainResultGridRow(OperationChainResultGridRow row)
-        {
-            Timestamp = row.Timestamp;
-            Raw = row.Raw;
-            Smoothed = row.Smoothed;
-            Series = row.Series;
-        }
-
-        public string Timestamp { get; }
-        public string Raw { get; }
-        public string Smoothed { get; }
-        public string Series { get; }
-
-        public bool IsIncluded
-        {
-            get => _isIncluded;
-            set
-            {
-                if (_isIncluded == value)
-                    return;
-
-                _isIncluded = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsIncluded)));
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-    }
 }

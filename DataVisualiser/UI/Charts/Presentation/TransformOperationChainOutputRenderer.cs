@@ -54,6 +54,24 @@ internal sealed class TransformOperationChainOutputRenderer
                 result.Trace.Entries.LastOrDefault()?.OperationKind);
     }
 
+    public Task RenderAsync(
+        CartesianChart chart,
+        TransformOperationChainComputationGridResult result,
+        IReadOnlyList<bool>? includedRows = null)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        if (result.Correlation != null)
+            return RenderCorrelationAsync(chart, result.Correlation);
+
+        if (result.InputSnapshot != null)
+            return RenderInputSnapshotAsync(chart, result.InputSnapshot, includedRows);
+
+        return result.Result == null
+            ? ClearAsync(chart)
+            : RenderAsync(chart, result.Result, includedRows);
+    }
+
     public Task RenderCorrelationAsync(CartesianChart chart, TransformCorrelationSummary summary)
     {
         ArgumentNullException.ThrowIfNull(chart);

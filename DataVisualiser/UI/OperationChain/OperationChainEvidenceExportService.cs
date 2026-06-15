@@ -31,7 +31,7 @@ internal sealed record OperationChainEvidenceExportSnapshot(
     DateTime From,
     DateTime To,
     string ResolutionTableName,
-    OperationChainComputationGridResult Result);
+    TransformOperationChainComputationGridResult Result);
 
 internal sealed record OperationChainEvidenceExportPayload(
     DateTime ExportedAtUtc,
@@ -132,7 +132,7 @@ internal sealed record OperationChainEvidenceDiagnostics(
     IReadOnlyList<string> FinalDatasetSourceSeriesSignatures,
     IReadOnlyList<int> ConsumedInputIndexes,
     int ResultRowCount,
-    IReadOnlyList<OperationChainResultGridRow> ResultRows);
+    IReadOnlyList<TransformResultGridRow> ResultRows);
 
 internal sealed record OperationChainCorrelationEvidence(
     string Label,

@@ -5,33 +5,45 @@ using DataVisualiser.UI.ViewModels;
 
 namespace DataVisualiser.UI.Charts.Presentation;
 
-internal sealed class TransformSessionMilestoneRecorder
+internal sealed partial class TransformSessionMilestoneRecorder
 {
-    private readonly MainWindowViewModel _viewModel;
+    private readonly MainWindowViewModel? _viewModel;
+    private readonly Func<SharedMainWindowViewModelContext?>? _sharedContextProvider;
 
     public TransformSessionMilestoneRecorder(MainWindowViewModel viewModel)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
     }
 
+    public TransformSessionMilestoneRecorder(Func<SharedMainWindowViewModelContext?> sharedContextProvider)
+    {
+        _sharedContextProvider = sharedContextProvider ?? throw new ArgumentNullException(nameof(sharedContextProvider));
+    }
+
+    public TransformSessionMilestoneRecorder()
+        : this(() => SharedMainWindowViewModelProvider.Current)
+    {
+    }
+
     public void RecordExecution(TransformExecutionResult execution, TransformResolutionResult resolution)
     {
-        var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
+        var viewModel = _viewModel ?? throw new InvalidOperationException("Transform chart milestone recording requires a view model.");
+        var selectedSeries = viewModel.MetricState.SelectedSeries.ToList();
         var context = resolution.Context;
         var primarySelection = resolution.Selection.PrimarySelection;
         var secondarySelection = resolution.Selection.SecondarySelection;
 
-        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+        viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
         {
             TimestampUtc = DateTime.UtcNow,
             Kind = string.IsNullOrWhiteSpace(execution.OperationTag) ? "TransformPrimaryProjectionRendered" : "TransformOperationRendered",
             Outcome = "Success",
-            MetricType = _viewModel.MetricState.SelectedMetricType,
+            MetricType = viewModel.MetricState.SelectedMetricType,
             SelectedSeriesCount = selectedSeries.Count,
             SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
-            LoadedSeriesCount = _viewModel.ChartState.LastLoadedData.ActualSeriesCount,
-            ContextSignature = _viewModel.ChartState.LastLoadedData.ContextSignature,
+            RuntimePath = viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+            LoadedSeriesCount = viewModel.ChartState.LastLoadedData.ActualSeriesCount,
+            ContextSignature = viewModel.ChartState.LastLoadedData.ContextSignature,
             Operation = string.IsNullOrWhiteSpace(execution.OperationTag) ? null : execution.OperationTag,
             OperationArity = execution.OperationArity,
             PrimarySeriesDisplayKey = primarySelection?.DisplayKey ?? BuildSeriesDisplayKey(context.PrimaryMetricType ?? context.MetricType, context.PrimarySubtype),
@@ -43,19 +55,20 @@ internal sealed class TransformSessionMilestoneRecorder
 
     public void RecordToggle()
     {
-        var selectedSeries = _viewModel.MetricState.SelectedSeries.ToList();
-        var loadedData = _viewModel.ChartState.LastLoadedData;
-        var isVisible = _viewModel.ChartState.IsTransformPanelVisible;
+        var viewModel = _viewModel ?? throw new InvalidOperationException("Transform chart milestone recording requires a view model.");
+        var selectedSeries = viewModel.MetricState.SelectedSeries.ToList();
+        var loadedData = viewModel.ChartState.LastLoadedData;
+        var isVisible = viewModel.ChartState.IsTransformPanelVisible;
 
-        _viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
+        viewModel.ChartState.RecordSessionMilestone(new SessionMilestoneSnapshot
         {
             TimestampUtc = DateTime.UtcNow,
             Kind = "TransformToggleRequested",
             Outcome = "Info",
-            MetricType = _viewModel.MetricState.SelectedMetricType,
+            MetricType = viewModel.MetricState.SelectedMetricType,
             SelectedSeriesCount = selectedSeries.Count,
             SelectedDisplayKeys = selectedSeries.Select(series => series.DisplayKey).ToList(),
-            RuntimePath = _viewModel.ChartState.LastLoadRuntime?.RuntimePath,
+            RuntimePath = viewModel.ChartState.LastLoadRuntime?.RuntimePath,
             LoadedSeriesCount = loadedData.ActualSeriesCount,
             ContextSignature = loadedData.ContextSignature,
             Note = isVisible ? "Transform panel visible." : "Transform panel hidden."

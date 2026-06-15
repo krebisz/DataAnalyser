@@ -1577,7 +1577,15 @@ public sealed class ArchitectureGuardrailTests
 
         Assert.Contains("OperationChainWorkbenchView", mainWindowSource, StringComparison.Ordinal);
         Assert.Contains("DisplayResult(OperationChainResult result)", viewSource, StringComparison.Ordinal);
-        Assert.Contains("OperationChainWorkbenchPresenter.Build(result)", viewSource, StringComparison.Ordinal);
+        Assert.Contains("TransformOperationChainWorkbenchPresenter.Build(result)", viewSource, StringComparison.Ordinal);
+        Assert.Contains("TransformOperationChainWorkbenchService", viewSource, StringComparison.Ordinal);
+        Assert.Contains("TransformOperationChainOutputRenderer", viewSource, StringComparison.Ordinal);
+        Assert.Contains("TransformInputSelectionResolver", viewSource, StringComparison.Ordinal);
+        Assert.Contains("TransformSelectableResultGridRow", viewSource, StringComparison.Ordinal);
+        Assert.Contains("TransformSessionMilestoneRecorder", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OperationChainInputGridLoadService", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("OperationChainTransformOutputRenderer", viewSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("new OperationChainSessionMilestoneRecorder", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("OperationChainExecutor", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain(".Select(", viewSource, StringComparison.Ordinal);
         Assert.DoesNotContain("ChartDataContext", viewSource, StringComparison.Ordinal);

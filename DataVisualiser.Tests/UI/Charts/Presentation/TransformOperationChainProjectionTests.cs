@@ -3,7 +3,7 @@ using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.OperationChain;
 using DataVisualiser.VNext.Contracts;
 
-namespace DataVisualiser.Tests.UI.OperationChain;
+namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
 public sealed class OperationChainTransformProjectionTests
 {
@@ -12,7 +12,7 @@ public sealed class OperationChainTransformProjectionTests
     {
         var data = CreateData([2m, 1m], [new DateTime(2026, 1, 2), new DateTime(2026, 1, 1)]);
 
-        var operationRows = OperationChainGridRowProjector.BuildInputRows(data);
+        var operationRows = TransformGridRowProjector.BuildInputRows(data);
         var transformRows = TransformGridDataProjector.ProjectMetricRows(data);
 
         Assert.Equal(transformRows.Count, operationRows.Count);
@@ -33,7 +33,7 @@ public sealed class OperationChainTransformProjectionTests
             [3d, 6d],
             [3d, 4.5d]);
 
-        var operationRows = OperationChainGridRowProjector.BuildComputedRows(result, "Total");
+        var operationRows = TransformGridRowProjector.BuildComputedRows(result, "Total");
         var transformRows = TransformGridDataProjector.ProjectComputedRows(result);
 
         Assert.Equal(transformRows.Count, operationRows.Count);
