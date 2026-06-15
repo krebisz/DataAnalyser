@@ -18,16 +18,16 @@ public partial class OperationChainWorkbenchView : UserControl
     private const string SummaryStatusBrushResourceKey = "ThemeSecondaryTextBrush";
     private const string SummaryErrorBrushResourceKey = "ThemeValidationErrorBrush";
     private readonly List<TransformEquationTerm> _equationTerms = [];
-    private readonly List<OperationChainInputSelectionRow> _inputRows = [];
-    private readonly TransformOperationChainOutputRenderer _outputRenderer = new();
+    private readonly List<TransformWorkbenchInputSelectionRow> _inputRows = [];
+    private readonly TransformComputationOutputRenderer _outputRenderer = new();
     private readonly SelectableGridRowToggleCoordinator _resultGridToggleCoordinator = new();
     private readonly TransformSessionMilestoneRecorder _sessionMilestoneRecorder = new();
     private MetricSelectionService? _metricSelectionService;
-    private TransformOperationChainWorkbenchService? _inputLoader;
-    private readonly OperationChainEvidenceExportService _exportService = new(new EvidenceExportWriter(), new EvidenceExportPathResolver());
+    private TransformWorkbenchService? _inputLoader;
+    private readonly TransformEvidenceExportService _exportService = new(new EvidenceExportWriter(), new EvidenceExportPathResolver());
     private IReadOnlyList<MetricNameOption> _metricOptions = [];
-    private TransformOperationChainComputationGridResult? _currentComputationResult;
-    private OperationChainEvidenceExportSnapshot? _lastExportSnapshot;
+    private TransformComputationResult? _currentComputationResult;
+    private TransformEvidenceExportSnapshot? _lastExportSnapshot;
     private bool _isInitializing;
     private bool _isApplyingDateRange;
     private bool _isThemeAttached;
@@ -45,12 +45,12 @@ public partial class OperationChainWorkbenchView : UserControl
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        var presentation = TransformOperationChainWorkbenchPresenter.Build(result);
-        _currentComputationResult = TransformOperationChainResultGridPresenter.Build(result);
+        var presentation = TransformWorkbenchPresenter.Build(result);
+        _currentComputationResult = TransformComputationResultProjector.FromOperationChainResult(result);
         SetSummaryStatus(presentation.Summary);
         SetResultRows(presentation.DatasetRows);
         EvidenceText.Text = presentation.Evidence;
-        await _outputRenderer.RenderAsync(OutputChart, result);
+        await _outputRenderer.RenderAsync(OutputChart, _currentComputationResult);
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -63,7 +63,7 @@ public partial class OperationChainWorkbenchView : UserControl
         {
             var shared = SharedMainWindowViewModelProvider.GetOrCreate(ResolveConnectionString());
             _metricSelectionService = shared.MetricSelectionService;
-            _inputLoader = new TransformOperationChainWorkbenchService(_metricSelectionService);
+            _inputLoader = new TransformWorkbenchService(_metricSelectionService);
 
             InitializeResolutionOptions(shared);
             InitializeOperationOptions();
@@ -98,7 +98,7 @@ public partial class OperationChainWorkbenchView : UserControl
 
     private void InitializeOperationOptions()
     {
-        TransformOperationOptions.Populate(OperationCombo, new OperationChainTransformOperationProvider());
+        TransformOperationOptions.Populate(OperationCombo, new TransformWorkbenchOperationProvider());
         OperationCombo.SelectedIndex = 0;
     }
 
@@ -174,7 +174,7 @@ public partial class OperationChainWorkbenchView : UserControl
         grid.Children.Add(subtypeCombo);
         grid.Children.Add(removeButton);
 
-        var row = new OperationChainInputSelectionRow(grid, label, metricCombo, subtypeCombo);
+        var row = new TransformWorkbenchInputSelectionRow(grid, label, metricCombo, subtypeCombo);
         _inputRows.Add(row);
         InputRowsPanel.Children.Add(grid);
 
@@ -210,7 +210,7 @@ public partial class OperationChainWorkbenchView : UserControl
             SelectedValuePath = "Value"
         };
 
-    private void RemoveInputRow(OperationChainInputSelectionRow row)
+    private void RemoveInputRow(TransformWorkbenchInputSelectionRow row)
     {
         if (_inputRows.Count <= 1)
         {
@@ -265,7 +265,7 @@ public partial class OperationChainWorkbenchView : UserControl
         await LoadMetricOptionsAsync();
     }
 
-    private async Task LoadSubtypeOptionsAsync(OperationChainInputSelectionRow row)
+    private async Task LoadSubtypeOptionsAsync(TransformWorkbenchInputSelectionRow row)
     {
         if (_metricSelectionService == null || row.MetricCombo.SelectedItem is not MetricNameOption metric)
             return;
@@ -308,7 +308,7 @@ public partial class OperationChainWorkbenchView : UserControl
 
             DisplayComputationResult(result);
             _sessionMilestoneRecorder.RecordComputeCompleted(operationTag, inputCount, result.Rows.Count, equation);
-            _lastExportSnapshot = new OperationChainEvidenceExportSnapshot(
+            _lastExportSnapshot = new TransformEvidenceExportSnapshot(
                 inputs,
                 _equationTerms.Count > 0 ? EquationText.Text : operationTag,
                 _equationTerms.Count > 0 ? EquationText.Text : ResolveOperationLabel(),
@@ -317,7 +317,7 @@ public partial class OperationChainWorkbenchView : UserControl
                 resolution,
                 result);
         }
-        catch (OperationChainEquationValidationException ex)
+        catch (TransformEquationValidationException ex)
         {
             _sessionMilestoneRecorder.RecordInvalidEquation(ex.Message, equation ?? EquationText.Text);
             SetSummaryError($"Invalid equation: {ex.Message}");
@@ -358,7 +358,7 @@ public partial class OperationChainWorkbenchView : UserControl
         }
     }
 
-    private async Task<TransformOperationChainComputationGridResult> ComputeEquationAsync(
+    private async Task<TransformComputationResult> ComputeEquationAsync(
         IReadOnlyList<MetricSeriesRequest> inputs,
         DateTime from,
         DateTime to,
@@ -369,7 +369,7 @@ public partial class OperationChainWorkbenchView : UserControl
 
         var compiled = TransformEquationCompiler.Compile(_equationTerms, inputs.Count);
         if (!compiled.IsValid)
-            throw new OperationChainEquationValidationException(compiled.Error);
+            throw new TransformEquationValidationException(compiled.Error);
 
         return await _inputLoader.ComputeAsync(
             inputs,
@@ -543,13 +543,13 @@ public partial class OperationChainWorkbenchView : UserControl
         }
     }
 
-    private async void DisplayComputationResult(TransformOperationChainComputationGridResult result)
+    private async void DisplayComputationResult(TransformComputationResult result)
     {
         _currentComputationResult = result;
         SetSummaryStatus(result.Summary);
         ResultGridTitle.Text = result.Title;
         SetResultRows(result.Rows);
-        EvidenceText.Text = result.Evidence ?? $"Operation Chain evidence: {result.Result?.Evidence.TraceSignature}";
+        EvidenceText.Text = result.Evidence ?? $"Transform evidence: {result.ComputationEvidence?.TraceSignature}";
         await _outputRenderer.RenderAsync(OutputChart, result);
     }
 
@@ -677,7 +677,7 @@ public partial class OperationChainWorkbenchView : UserControl
         return ConfigurationManager.AppSettings["HealthDB"] ?? "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Health;Integrated Security=SSPI;TrustServerCertificate=True";
     }
 
-    private sealed record OperationChainInputSelectionRow(
+    private sealed record TransformWorkbenchInputSelectionRow(
         Grid Container,
         TextBlock Label,
         ComboBox MetricCombo,
@@ -687,9 +687,9 @@ public partial class OperationChainWorkbenchView : UserControl
         public MetricNameOption? SelectedSubtype => SubtypeCombo.SelectedItem as MetricNameOption;
     }
 
-    private sealed class OperationChainEquationValidationException : InvalidOperationException
+    private sealed class TransformEquationValidationException : InvalidOperationException
     {
-        public OperationChainEquationValidationException(string? message)
+        public TransformEquationValidationException(string? message)
             : base(message)
         {
         }

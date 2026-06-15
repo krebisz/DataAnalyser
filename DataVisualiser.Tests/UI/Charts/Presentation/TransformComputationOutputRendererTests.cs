@@ -10,7 +10,7 @@ using LiveCharts.Wpf;
 
 namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
-public sealed class TransformOperationChainOutputRendererTests
+public sealed class TransformComputationOutputRendererTests
 {
     [Fact]
     public async Task RenderAsync_ShouldUseTransformContractForDerivedDataset()
@@ -18,10 +18,10 @@ public sealed class TransformOperationChainOutputRendererTests
         await StaTestHelper.RunAsync(async () =>
         {
             var contract = new FakeTransformRenderingContract();
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), contract);
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), contract);
             var chart = new CartesianChart();
 
-            await renderer.RenderAsync(chart, CreateResult());
+            await renderer.RenderAsync(chart, TransformComputationResultProjector.FromOperationChainResult(CreateResult()));
 
             Assert.Equal(1, contract.RenderCalls);
             Assert.Equal(TransformRenderingRoute.ResultCartesian, contract.LastRequest!.Route);
@@ -37,8 +37,8 @@ public sealed class TransformOperationChainOutputRendererTests
         await StaTestHelper.RunAsync(async () =>
         {
             var contract = new FakeTransformRenderingContract();
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), contract);
-            var result = new TransformOperationChainComputationGridResult(CreateResult(), "Total", [], "computed");
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), contract);
+            var result = TransformComputationResultProjector.FromOperationChainResult(CreateResult());
 
             await renderer.RenderAsync(new CartesianChart(), result, [false, true]);
 
@@ -56,8 +56,8 @@ public sealed class TransformOperationChainOutputRendererTests
         await StaTestHelper.RunAsync(async () =>
         {
             var contract = new FakeTransformRenderingContract();
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), contract);
-            var result = new TransformOperationChainComputationGridResult(CreateResult(), "Total", [], "computed");
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), contract);
+            var result = TransformComputationResultProjector.FromOperationChainResult(CreateResult());
 
             await renderer.RenderAsync(new CartesianChart(), result, [false, false]);
 
@@ -72,7 +72,7 @@ public sealed class TransformOperationChainOutputRendererTests
         await StaTestHelper.RunAsync(async () =>
         {
             var contract = new FakeTransformRenderingContract();
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), contract);
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), contract);
             var selection = new MetricSelectionRequest(
                 "Weight",
                 [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
@@ -83,7 +83,7 @@ public sealed class TransformOperationChainOutputRendererTests
                 selection,
                 [new MetricSeriesSnapshot(selection.Series[0], CreateData([1m, 2m]), null)],
                 DateTime.UtcNow);
-            var result = new TransformOperationChainComputationGridResult(null, "Input Series", [], "loaded")
+            var result = new TransformComputationResult("Input Series", [], "loaded")
             {
                 InputSnapshot = snapshot
             };
@@ -102,7 +102,7 @@ public sealed class TransformOperationChainOutputRendererTests
         await StaTestHelper.RunAsync(async () =>
         {
             var contract = new FakeTransformRenderingContract();
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), contract);
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), contract);
             var selection = new MetricSelectionRequest(
                 "Weight",
                 [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
@@ -113,7 +113,7 @@ public sealed class TransformOperationChainOutputRendererTests
                 selection,
                 [new MetricSeriesSnapshot(selection.Series[0], CreateData([1m, 2m]), null)],
                 DateTime.UtcNow);
-            var result = new TransformOperationChainComputationGridResult(null, "Input Series", [], "loaded")
+            var result = new TransformComputationResult("Input Series", [], "loaded")
             {
                 InputSnapshot = snapshot
             };
@@ -131,7 +131,7 @@ public sealed class TransformOperationChainOutputRendererTests
         await StaTestHelper.RunAsync(async () =>
         {
             var contract = new FakeTransformRenderingContract();
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), contract);
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), contract);
 
             await renderer.ClearAsync(new CartesianChart());
 
@@ -145,7 +145,7 @@ public sealed class TransformOperationChainOutputRendererTests
         StaTestHelper.Run(() =>
         {
             var contract = new FakeTransformRenderingContract();
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), contract);
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), contract);
 
             renderer.ResetZoom(new CartesianChart());
 
@@ -161,7 +161,7 @@ public sealed class TransformOperationChainOutputRendererTests
             var app = Application.Current ?? new Application();
             app.Resources["ThemeChartAxisBrush"] = Brushes.White;
             app.Resources["ThemeChartGridLineBrush"] = Brushes.DimGray;
-            var renderer = new TransformOperationChainOutputRenderer(new ChartState(), new FakeTransformRenderingContract());
+            var renderer = new TransformComputationOutputRenderer(new ChartState(), new FakeTransformRenderingContract());
             var chart = new CartesianChart();
 
             await renderer.ClearAsync(chart);

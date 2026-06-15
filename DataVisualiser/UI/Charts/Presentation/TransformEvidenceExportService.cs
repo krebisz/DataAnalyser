@@ -1,67 +1,66 @@
-using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Export;
 using DataVisualiser.VNext.Contracts;
 
-namespace DataVisualiser.UI.OperationChain;
+namespace DataVisualiser.UI.Charts.Presentation;
 
-internal sealed class OperationChainEvidenceExportService(
+internal sealed class TransformEvidenceExportService(
     EvidenceExportWriter writer,
     IEvidenceExportPathResolver pathResolver)
 {
     private const string ExportFileNamePrefix = "operation-chain";
+    private const string ExportScope = "OperationChain";
 
-    public OperationChainEvidenceExportResult Export(
-        OperationChainEvidenceExportSnapshot snapshot,
+    public TransformEvidenceExportResult Export(
+        TransformEvidenceExportSnapshot snapshot,
         DateTime utcNow)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
-        var payload = OperationChainEvidenceExportPayload.FromSnapshot(snapshot, utcNow);
+        var payload = TransformEvidenceExportPayload.FromSnapshot(snapshot, utcNow, ExportScope);
         var result = writer.Write(payload, pathResolver.ResolveDocumentsDirectory(), utcNow, ExportFileNamePrefix);
-        return new OperationChainEvidenceExportResult(result.FilePath);
+        return new TransformEvidenceExportResult(result.FilePath);
     }
 }
 
-internal sealed record OperationChainEvidenceExportResult(string FilePath);
+internal sealed record TransformEvidenceExportResult(string FilePath);
 
-internal sealed record OperationChainEvidenceExportSnapshot(
+internal sealed record TransformEvidenceExportSnapshot(
     IReadOnlyList<MetricSeriesRequest> Inputs,
     string OperationTag,
     string OperationLabel,
     DateTime From,
     DateTime To,
     string ResolutionTableName,
-    TransformOperationChainComputationGridResult Result);
+    TransformComputationResult Result);
 
-internal sealed record OperationChainEvidenceExportPayload(
+internal sealed record TransformEvidenceExportPayload(
     DateTime ExportedAtUtc,
     string ExportScope,
-    OperationChainEvidenceDiagnostics Diagnostics)
+    TransformEvidenceDiagnostics Diagnostics)
 {
-    public static OperationChainEvidenceExportPayload FromSnapshot(
-        OperationChainEvidenceExportSnapshot snapshot,
-        DateTime utcNow)
+    public static TransformEvidenceExportPayload FromSnapshot(
+        TransformEvidenceExportSnapshot snapshot,
+        DateTime utcNow,
+        string exportScope)
     {
-        var result = snapshot.Result.Result;
+        var computationEvidence = snapshot.Result.ComputationEvidence;
         var consumedInputIndexes = ResolveConsumedInputIndexes(snapshot).ToArray();
         var consumedInputSet = consumedInputIndexes.ToHashSet();
-        var finalDataset = result?.DerivedDatasets.LastOrDefault();
-        var finalTraceEntry = result?.Trace.Entries.LastOrDefault();
 
-        return new OperationChainEvidenceExportPayload(
+        return new TransformEvidenceExportPayload(
             utcNow,
-            "OperationChain",
-            new OperationChainEvidenceDiagnostics(
+            exportScope,
+            new TransformEvidenceDiagnostics(
                 snapshot.OperationTag,
                 snapshot.OperationLabel,
-                finalTraceEntry?.OperationKind.ToString(),
-                finalTraceEntry?.Metadata.TryGetValue(ConstructionMetadataKeys.OperationId, out var operationId) == true ? operationId : null,
-                finalDataset?.OperationSignature,
+                computationEvidence?.OperationKind?.ToString(),
+                computationEvidence?.OperationId,
+                computationEvidence?.OperationSignature,
                 snapshot.ResolutionTableName,
                 snapshot.From,
                 snapshot.To,
                 snapshot.Inputs
-                    .Select((input, index) => new OperationChainInputEvidence(
+                    .Select((input, index) => new TransformInputEvidence(
                         input.MetricType,
                         input.Subtype,
                         input.DisplayMetricType,
@@ -73,27 +72,27 @@ internal sealed record OperationChainEvidenceExportPayload(
                 snapshot.Result.Title,
                 snapshot.Result.Summary,
                 snapshot.Result.Evidence,
-                OperationChainCorrelationEvidence.FromSummary(snapshot.Result.Correlation),
-                result?.Evidence.SourceSignature,
-                result?.Evidence.PlanSignature,
-                result?.Evidence.TraceSignature,
-                result?.Evidence.ContractSignature,
-                result?.Evidence.SourceSeriesSignatures ?? [],
-                result?.Evidence.DerivedDatasetIds ?? [],
-                result?.Evidence.Metadata ?? new Dictionary<string, string>(),
-                finalDataset?.Id,
-                finalDataset?.Label,
-                finalDataset?.SourceSeriesSignatures ?? [],
+                TransformCorrelationEvidence.FromSummary(snapshot.Result.Correlation),
+                computationEvidence?.SourceSignature,
+                computationEvidence?.PlanSignature,
+                computationEvidence?.TraceSignature,
+                computationEvidence?.ContractSignature,
+                computationEvidence?.SourceSeriesSignatures ?? [],
+                computationEvidence?.DerivedDatasetIds ?? [],
+                computationEvidence?.Metadata ?? new Dictionary<string, string>(),
+                computationEvidence?.FinalDatasetId,
+                computationEvidence?.FinalDatasetLabel,
+                computationEvidence?.FinalDatasetSourceSeriesSignatures ?? [],
                 consumedInputIndexes,
                 snapshot.Result.Rows.Count,
                 snapshot.Result.Rows));
     }
 
-    private static IReadOnlyList<int> ResolveConsumedInputIndexes(OperationChainEvidenceExportSnapshot snapshot)
+    private static IReadOnlyList<int> ResolveConsumedInputIndexes(TransformEvidenceExportSnapshot snapshot)
     {
-        var traceIndexes = snapshot.Result.Result?.Trace.Entries.LastOrDefault()?.InputIndexes;
-        if (traceIndexes is { Count: > 0 })
-            return traceIndexes;
+        var evidenceIndexes = snapshot.Result.ComputationEvidence?.ConsumedInputIndexes;
+        if (evidenceIndexes is { Count: > 0 })
+            return evidenceIndexes;
 
         return snapshot.OperationTag switch
         {
@@ -106,7 +105,7 @@ internal sealed record OperationChainEvidenceExportPayload(
     }
 }
 
-internal sealed record OperationChainEvidenceDiagnostics(
+internal sealed record TransformEvidenceDiagnostics(
     string OperationTag,
     string OperationLabel,
     string? OperationKind,
@@ -115,18 +114,18 @@ internal sealed record OperationChainEvidenceDiagnostics(
     string ResolutionTableName,
     DateTime From,
     DateTime To,
-    IReadOnlyList<OperationChainInputEvidence> Inputs,
+    IReadOnlyList<TransformInputEvidence> Inputs,
     string ResultTitle,
     string Summary,
     string? Evidence,
-    OperationChainCorrelationEvidence? Correlation,
+    TransformCorrelationEvidence? Correlation,
     string? SourceSignature,
     string? PlanSignature,
     string? TraceSignature,
     string? ContractSignature,
     IReadOnlyList<string> SourceSeriesSignatures,
     IReadOnlyList<string> DerivedDatasetIds,
-    IReadOnlyDictionary<string, string> OperationChainEvidenceMetadata,
+    IReadOnlyDictionary<string, string> ComputationEvidenceMetadata,
     string? FinalDatasetId,
     string? FinalDatasetLabel,
     IReadOnlyList<string> FinalDatasetSourceSeriesSignatures,
@@ -134,7 +133,7 @@ internal sealed record OperationChainEvidenceDiagnostics(
     int ResultRowCount,
     IReadOnlyList<TransformResultGridRow> ResultRows);
 
-internal sealed record OperationChainCorrelationEvidence(
+internal sealed record TransformCorrelationEvidence(
     string Label,
     string SourceLabel,
     string TargetLabel,
@@ -143,10 +142,10 @@ internal sealed record OperationChainCorrelationEvidence(
     double ConfidenceUpper,
     int SampleCount)
 {
-    public static OperationChainCorrelationEvidence? FromSummary(TransformCorrelationSummary? summary) =>
+    public static TransformCorrelationEvidence? FromSummary(TransformCorrelationSummary? summary) =>
         summary == null
             ? null
-            : new OperationChainCorrelationEvidence(
+            : new TransformCorrelationEvidence(
                 summary.Label,
                 summary.SourceLabel,
                 summary.TargetLabel,
@@ -156,7 +155,7 @@ internal sealed record OperationChainCorrelationEvidence(
                 summary.SampleCount);
 }
 
-internal sealed record OperationChainInputEvidence(
+internal sealed record TransformInputEvidence(
     string MetricType,
     string? Subtype,
     string? DisplayMetricType,

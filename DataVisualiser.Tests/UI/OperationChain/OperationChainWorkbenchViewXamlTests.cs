@@ -77,7 +77,7 @@ public sealed class OperationChainWorkbenchViewXamlTests
 
         Assert.Contains("ThemeValidationErrorBrush", lightTheme, StringComparison.Ordinal);
         Assert.Contains("ThemeValidationErrorBrush", darkTheme, StringComparison.Ordinal);
-        Assert.Contains("OperationChainEquationValidationException", source, StringComparison.Ordinal);
+        Assert.Contains("TransformEquationValidationException", source, StringComparison.Ordinal);
         Assert.Contains("SetSummaryError($\"Invalid equation: {ex.Message}\");", source, StringComparison.Ordinal);
         Assert.Contains("SummaryText.SetResourceReference(TextBlock.ForegroundProperty, SummaryErrorBrushResourceKey);", source, StringComparison.Ordinal);
         Assert.Contains("SummaryText.SetResourceReference(TextBlock.ForegroundProperty, SummaryStatusBrushResourceKey);", source, StringComparison.Ordinal);

@@ -1,6 +1,6 @@
 namespace DataVisualiser.UI.Charts.Presentation;
 
-internal sealed class OperationChainTransformOperationProvider : ITransformOperationProvider
+internal sealed class TransformWorkbenchOperationProvider : ITransformOperationProvider
 {
     private static readonly IReadOnlyList<(string Content, string Tag)> Operations =
     [

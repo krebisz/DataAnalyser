@@ -26,7 +26,7 @@ public sealed class TransformCorrelationMapperTests
     [Fact]
     public void OperationChainProvider_ShouldExposeNoneAndExtendedTransformOperations()
     {
-        var tags = new OperationChainTransformOperationProvider()
+        var tags = new TransformWorkbenchOperationProvider()
             .GetOperations()
             .Select(item => item.Tag)
             .ToArray();

@@ -2,7 +2,6 @@ using DataFileReader.Canonical;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.Export;
-using DataVisualiser.UI.OperationChain;
 using DataVisualiser.VNext.Application;
 using DataVisualiser.VNext.Contracts;
 using System.IO;
@@ -10,13 +9,13 @@ using System.Text.Json;
 
 namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
-public sealed class TransformOperationChainWorkbenchServiceTests
+public sealed class TransformWorkbenchServiceTests
 {
     [Fact]
     public async Task LoadAsync_ShouldLoadIndependentMetricSeriesIntoInputGrids()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
         var series = new[]
         {
             new MetricSeriesRequest("Weight", "body_fat_mass", "Weight", "Fat"),
@@ -42,7 +41,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
     public async Task ComputeAsync_ShouldReturnSingleResultGridForBinaryOperation()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
 
         var result = await service.ComputeAsync(
             [
@@ -65,7 +64,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
     public async Task ComputeAsync_ShouldLoadInputsForDefaultOperation()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
 
         var result = await service.ComputeAsync(
             [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
@@ -87,7 +86,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
     public async Task ComputeAsync_ShouldSupportUnaryOperationWithSingleInput()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
 
         var result = await service.ComputeAsync(
             [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
@@ -105,7 +104,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
     public async Task ComputeAsync_ShouldSupportTernarySum()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
 
         var result = await service.ComputeAsync(
             [
@@ -126,7 +125,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
     public async Task ComputeAsync_ShouldExecuteCompiledEquationSteps()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
         var inputs = new[]
         {
             new MetricSeriesRequest("Weight", "fat", "Weight", "Fat"),
@@ -158,7 +157,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
     public async Task ComputeAsync_ShouldCorrelateTwoCanonicalInputsWithConfidenceInterval()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
 
         var result = await service.ComputeAsync(
             [
@@ -185,7 +184,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
     public async Task ComputeAsync_ShouldCorrelateTernaryDerivedSetWithFourthInput()
     {
         var loader = new StubMetricSeriesLoader();
-        var service = new TransformOperationChainWorkbenchService(loader);
+        var service = new TransformWorkbenchService(loader);
 
         var result = await service.ComputeAsync(
             [
@@ -260,18 +259,17 @@ public sealed class TransformOperationChainWorkbenchServiceTests
         var target = Path.Combine(Path.GetTempPath(), $"operation-chain-export-{Guid.NewGuid():N}");
         try
         {
-            var service = new OperationChainEvidenceExportService(
+            var service = new TransformEvidenceExportService(
                 new EvidenceExportWriter(),
                 new StubPathResolver(target));
-            var snapshot = new OperationChainEvidenceExportSnapshot(
+            var snapshot = new TransformEvidenceExportSnapshot(
                 [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
                 "Correlation",
                 "Correlation",
                 new DateTime(2026, 1, 1),
                 new DateTime(2026, 1, 5),
                 "HealthMetrics",
-                new TransformOperationChainComputationGridResult(
-                    null,
+                new TransformComputationResult(
                     "Weight - Fat ~ Weight - Muscle",
                     [new TransformResultGridRow("Correlation", "1.0000", string.Empty)],
                     "Correlation computed.")
@@ -305,18 +303,17 @@ public sealed class TransformOperationChainWorkbenchServiceTests
         var target = Path.Combine(Path.GetTempPath(), $"operation-chain-export-{Guid.NewGuid():N}", "documents", "logs");
         try
         {
-            var service = new OperationChainEvidenceExportService(
+            var service = new TransformEvidenceExportService(
                 new EvidenceExportWriter(),
                 new StubPathResolver(target));
-            var snapshot = new OperationChainEvidenceExportSnapshot(
+            var snapshot = new TransformEvidenceExportSnapshot(
                 [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
                 "None",
                 "None",
                 new DateTime(2026, 1, 1),
                 new DateTime(2026, 1, 5),
                 "HealthMetrics",
-                new TransformOperationChainComputationGridResult(
-                    null,
+                new TransformComputationResult(
                     "Input Series",
                     [new TransformResultGridRow("2026-01-01 00:00:00", "1.0000", string.Empty)],
                     "Loaded."));
@@ -342,8 +339,8 @@ public sealed class TransformOperationChainWorkbenchServiceTests
         try
         {
             var loader = new StubMetricSeriesLoader();
-            var computeService = new TransformOperationChainWorkbenchService(loader);
-            var exportService = new OperationChainEvidenceExportService(
+            var computeService = new TransformWorkbenchService(loader);
+            var exportService = new TransformEvidenceExportService(
                 new EvidenceExportWriter(),
                 new StubPathResolver(target));
             var inputs = new[]
@@ -358,7 +355,7 @@ public sealed class TransformOperationChainWorkbenchServiceTests
                 new DateTime(2026, 1, 5),
                 "HealthMetrics",
                 "Add");
-            var snapshot = new OperationChainEvidenceExportSnapshot(
+            var snapshot = new TransformEvidenceExportSnapshot(
                 inputs,
                 "Add",
                 "Add",
