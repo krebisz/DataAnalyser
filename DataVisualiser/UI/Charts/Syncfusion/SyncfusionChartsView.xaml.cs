@@ -842,6 +842,9 @@ public partial class SyncfusionChartsView : UserControl
         else
             _viewModelEventBinder?.Unbind();
 
+        if (isVisible)
+            EnsureMetricTypesLoadedForVisibleView();
+
         var ctx = _viewModel.ChartState.LastContext;
         if (_coordinator.ShouldRenderWhenViewBecomesVisible(
                 _isInitializing,
@@ -849,6 +852,17 @@ public partial class SyncfusionChartsView : UserControl
                 _viewModel.ChartState.IsSyncfusionSunburstVisible,
                 ctx))
             await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx!);
+    }
+
+    private void EnsureMetricTypesLoadedForVisibleView()
+    {
+        if (_isInitializing || TablesCombo.Items.Count > 0 || _viewModel.UiState.IsLoadingMetricTypes)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_viewModel.MetricState.ResolutionTableName))
+            _viewModel.SetResolutionTableName(ChartUiHelper.GetTableNameFromResolution(ResolutionCombo));
+
+        _viewModel.RequestLatestMetricTypesReload();
     }
 
 

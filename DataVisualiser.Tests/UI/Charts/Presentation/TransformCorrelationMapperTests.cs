@@ -18,7 +18,7 @@ public sealed class TransformCorrelationMapperTests
 
         var summary = TransformCorrelationMapper.Compute(aligned, "Correlation");
 
-        Assert.Equal("Weight - Fat ~ Weight - Muscle", summary.Label);
+        Assert.Equal("Weight : Fat ~ Weight : Muscle", summary.Label);
         Assert.Equal(1d, summary.Correlation, precision: 8);
         Assert.Equal(3, summary.SampleCount);
     }

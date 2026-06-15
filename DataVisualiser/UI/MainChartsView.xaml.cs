@@ -1351,8 +1351,6 @@ public partial class MainChartsView : UserControl
         // the full selection. Render if any context data exists.
         if (_viewModel.ChartState.LastContext != null)
             await RenderChartsFromLastContext();
-        else if (ShouldRefreshDateRangeForCurrentSelection())
-            await LoadDateRangeForSelectedMetrics();
     }
 
     #endregion

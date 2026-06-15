@@ -55,10 +55,9 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
         _unitResolutionService = unitResolutionService ?? new UnitResolutionService();
     }
 
-    public string PrimaryLabel => $"{_labelLeft} ~ {_labelRight}";
+    public string PrimaryLabel => _labelLeft;
 
-    // For RelativeToMax we *do* want a proper label for the baseline series.
-    public string SecondaryLabel => _mode == NormalizationMode.RelativeToMax ? $"{_labelRight} (baseline)" : string.Empty;
+    public string SecondaryLabel => _labelRight;
 
     public string? Unit { get; private set; }
 
@@ -84,9 +83,6 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
         var interpSmoothed2 = _smoothingService.SmoothSeries(ordered2, timestamps, _from, _to).ToList();
 
         var (rawValues1, rawValues2) = ExtractAlignedRawValues(ordered1, ordered2, timestamps);
-
-        if (!HasAnyOverlappingRawValue(rawValues1, rawValues2))
-            return CreateNoOverlapResult(timestamps, intervalIndices, timeline);
 
         var normalization = NormalizeSeries(rawValues1, rawValues2, interpSmoothed1, interpSmoothed2);
 
@@ -116,41 +112,6 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
     {
         var (dict1, dict2) = StrategyComputationHelper.CreateTimestampValueDictionaries(ordered1, ordered2);
         return StrategyComputationHelper.ExtractAlignedRawValues(timestamps, dict1, dict2);
-    }
-
-    private static bool HasAnyOverlappingRawValue(IReadOnlyList<double> raw1, IReadOnlyList<double> raw2)
-    {
-        var count = Math.Min(raw1.Count, raw2.Count);
-        for (var i = 0; i < count; i++)
-        {
-            if (!double.IsNaN(raw1[i]) && !double.IsNaN(raw2[i]))
-                return true;
-        }
-
-        return false;
-    }
-
-    private ChartComputationResult CreateNoOverlapResult(
-        IReadOnlyList<DateTime> timestamps,
-        IReadOnlyList<int> intervalIndices,
-        TimelineResult timeline)
-    {
-        var nanValues = Enumerable.Repeat(double.NaN, timestamps.Count).ToList();
-        Unit = string.Empty;
-
-        return new ChartComputationResult
-        {
-                Timestamps = timestamps.ToList(),
-                IntervalIndices = intervalIndices.ToList(),
-                NormalizedIntervals = timeline.NormalizedIntervals.ToList(),
-                PrimaryRawValues = nanValues.ToList(),
-                PrimarySmoothed = nanValues.ToList(),
-                SecondaryRawValues = nanValues.ToList(),
-                SecondarySmoothed = nanValues.ToList(),
-                TickInterval = timeline.TickInterval,
-                DateRange = timeline.DateRange,
-                Unit = Unit
-        };
     }
 
     private(List<double> Raw1, List<double> Raw2, List<double> Smoothed1, List<double> Smoothed2)? NormalizeSeries(List<double> raw1, List<double> raw2, List<double> smoothed1, List<double> smoothed2)

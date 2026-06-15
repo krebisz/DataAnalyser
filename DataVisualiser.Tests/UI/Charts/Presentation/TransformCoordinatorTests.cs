@@ -203,7 +203,7 @@ public sealed class TransformCoordinatorTests
             Assert.NotNull(result.SecondaryData);
             Assert.Single(result.SecondaryData!);
             Assert.Equal("MetricB", result.Context.SecondaryMetricType);
-            Assert.Equal("MetricB - SubB", result.Context.DisplayName2);
+            Assert.Equal("MetricB : SubB", result.Context.DisplayName2);
 
             tooltipManager.Dispose();
             window.Close();

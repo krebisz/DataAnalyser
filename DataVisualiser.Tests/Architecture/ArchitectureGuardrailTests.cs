@@ -802,6 +802,18 @@ public sealed class ArchitectureGuardrailTests
     }
 
     [Fact]
+    public void MainChartsView_AddSubtypeComboBox_ShouldNotRefreshDateRange()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
+        var methodBody = ExtractMethodBody(source, "private async void AddSubtypeComboBox");
+
+        Assert.Contains("UpdateSelectedSubtypesInViewModel();", methodBody, StringComparison.Ordinal);
+        Assert.Contains("RenderChartsFromLastContext", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadDateRangeForSelectedMetrics", methodBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("RefreshDateRangeForCurrentSelectionAsync", methodBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void MainChartsView_ToggleEnablement_ShouldUseLoadedContextCapabilities_NotSelectionCompatibility()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "MainChartsView.xaml.cs");
@@ -1119,6 +1131,7 @@ public sealed class ArchitectureGuardrailTests
         var mainAddSubtypeBody = ExtractMethodBody(mainSource, "private async void AddSubtypeComboBox");
         Assert.Contains("_selectorManager.SuppressSelectionChanged()", mainAddSubtypeBody, StringComparison.Ordinal);
         Assert.Contains("RenderChartsFromLastContext", mainAddSubtypeBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadDateRangeForSelectedMetrics", mainAddSubtypeBody, StringComparison.Ordinal);
 
         var syncfusionSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
         Assert.Contains("ChartHostMetricSelectionCoordinator", syncfusionSource, StringComparison.Ordinal);
@@ -1198,6 +1211,18 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("HasRenderableSelection()", addSubtypeBody, StringComparison.Ordinal);
         Assert.Contains("LastContext ?? new ChartDataContext()", addSubtypeBody, StringComparison.Ordinal);
         Assert.DoesNotContain("ShouldRenderAfterSubtypeSelectionChange(_isApplyingSelectionSync, HasRenderableContext()", subtypeChangedBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionChartsView_ShouldReloadMetricTypesWhenVisibleWithEmptyMetricCombo()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var visibilityBody = ExtractMethodBody(source, "private async void OnViewVisibilityChanged");
+        var ensureBody = ExtractMethodBody(source, "private void EnsureMetricTypesLoadedForVisibleView");
+
+        Assert.Contains("EnsureMetricTypesLoadedForVisibleView();", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("TablesCombo.Items.Count > 0", ensureBody, StringComparison.Ordinal);
+        Assert.Contains("_viewModel.RequestLatestMetricTypesReload();", ensureBody, StringComparison.Ordinal);
     }
 
     [Fact]

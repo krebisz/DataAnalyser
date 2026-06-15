@@ -27,7 +27,7 @@ public sealed record MetricSeriesSelection
             if (string.IsNullOrWhiteSpace(subtypeDisplay) || subtypeDisplay == "(All)")
                 return metricDisplay;
 
-            return $"{metricDisplay} - {subtypeDisplay}";
+            return $"{metricDisplay} : {subtypeDisplay}";
         }
     }
 

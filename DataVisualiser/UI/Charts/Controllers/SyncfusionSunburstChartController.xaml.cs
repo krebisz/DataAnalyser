@@ -149,6 +149,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
     private void UpdateLegendVisibility()
     {
         SubmetricLegendPanel.Visibility = ShowLegendCheckBox.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        RingLegendPanel.Visibility = ShowLegendCheckBox.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateSubmetricBrushes(IEnumerable<SunburstItem>? items)
@@ -327,6 +328,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             _tooltipContextByChart.Clear();
             _tooltipModelByChart.Clear();
             _currentBucketLabels.Clear();
+            RingLegendPanel.Children.Clear();
 
             if (_bucketRingCount <= 0)
                 return;
@@ -337,6 +339,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
                 .Distinct()
                 .ToList();
             _currentBucketLabels.AddRange(bucketLabels);
+            UpdateRingLegend();
 
             for (var i = 0; i < _bucketRingCount; i++)
             {
@@ -642,7 +645,7 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
 
         for (var i = 0; i < _bucketRingCount; i++)
         {
-            var label = i < _currentBucketLabels.Count ? _currentBucketLabels[i] : $"Bucket {i + 1}";
+            var label = (i + 1).ToString(CultureInfo.InvariantCulture);
             var inner = (double)i / _bucketRingCount;
             var outer = (double)(i + 1) / _bucketRingCount;
             var mid = (inner + outer) * 0.5 * radiusBase;
@@ -661,6 +664,28 @@ public partial class SyncfusionSunburstChartController : UserControl, IChartPane
             Canvas.SetLeft(text, center.X + mid + 6);
             Canvas.SetTop(text, center.Y - (size.Height * 0.5));
             RingLabelCanvas.Children.Add(text);
+        }
+    }
+
+    private void UpdateRingLegend()
+    {
+        RingLegendPanel.Children.Clear();
+
+        for (var index = 0; index < _bucketRingCount; index++)
+        {
+            var periodLabel = index < _currentBucketLabels.Count
+                ? _currentBucketLabels[index]
+                : $"Bucket {index + 1}";
+
+            var label = new TextBlock
+            {
+                    Text = $"{index + 1} : {periodLabel}",
+                    Margin = new Thickness(0, 0, 0, 6),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TextWrapping = TextWrapping.Wrap
+            };
+            label.SetResourceReference(TextBlock.ForegroundProperty, "ThemeSecondaryTextBrush");
+            RingLegendPanel.Children.Add(label);
         }
     }
 

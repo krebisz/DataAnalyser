@@ -20,7 +20,7 @@ public sealed class TransformSelectionModelsTests
         var request = Assert.Single(requests);
         Assert.Equal("Weight", request.MetricType);
         Assert.Equal("fat", request.Subtype);
-        Assert.Equal("Weight - Fat", request.DisplayName);
+        Assert.Equal("Weight : Fat", request.DisplayName);
     }
 
     [Fact]
@@ -34,9 +34,9 @@ public sealed class TransformSelectionModelsTests
 
         var options = TransformInputSelectionResolver.BuildInputOptions(rows);
 
-        Assert.Equal("Weight - Fat", options[0].Display);
+        Assert.Equal("Weight : Fat", options[0].Display);
         Assert.Equal("S\u2081", options[0].EquationLabel);
-        Assert.Equal("Weight - Lean", options[1].Display);
+        Assert.Equal("Weight : Lean", options[1].Display);
         Assert.Equal("S\u2082", options[1].EquationLabel);
     }
 

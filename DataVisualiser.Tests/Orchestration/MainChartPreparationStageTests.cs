@@ -84,12 +84,12 @@ public sealed class MainChartPreparationStageTests
                 ResolutionTableName: "HealthMetrics"));
 
         Assert.Single(prepared.Series);
-        Assert.Equal(["Weight - Morning"], prepared.Labels);
+        Assert.Equal(["Weight : Morning"], prepared.Labels);
         Assert.Equal(1, prepared.WorkingContext.ActualSeriesCount);
         Assert.Equal("Weight", prepared.WorkingContext.PrimaryMetricType);
         Assert.Equal("morning", prepared.WorkingContext.PrimarySubtype);
         Assert.Null(prepared.WorkingContext.SecondarySubtype);
-        Assert.Equal("Weight - Morning", prepared.WorkingContext.DisplayName1);
+        Assert.Equal("Weight : Morning", prepared.WorkingContext.DisplayName1);
         Assert.Equal("Weight::HealthMetrics::2024-01-01T00:00:00.0000000->2024-01-02T00:00:00.0000000::Weight:morning", prepared.WorkingContext.LoadRequestSignature);
         Assert.Equal(2, prepared.WorkingContext.Data1!.Count);
         Assert.Null(prepared.WorkingContext.Data2);

@@ -188,12 +188,11 @@ public partial class OperationChainWorkbenchView : UserControl
             await RefreshDateRangeForSelectedInputsAsync();
             RefreshEquationInputOptions();
         };
-        subtypeCombo.SelectionChanged += async (_, _) =>
+        subtypeCombo.SelectionChanged += (_, _) =>
         {
             if (!_isInitializing)
             {
                 ClearEquationTerms();
-                await RefreshDateRangeForSelectedInputsAsync();
                 RefreshEquationInputOptions();
             }
         };
@@ -225,7 +224,6 @@ public partial class OperationChainWorkbenchView : UserControl
         ClearEquationTerms();
         RefreshEquationInputOptions();
         _sessionMilestoneRecorder.RecordInputRemoved(_inputRows.Count);
-        _ = RefreshDateRangeForSelectedInputsAsync();
     }
 
     private void RenumberInputRows()
@@ -243,17 +241,14 @@ public partial class OperationChainWorkbenchView : UserControl
         {
             row.MetricCombo.SelectedIndex = Math.Min(rowIndex, _metricOptions.Count - 1);
             await LoadSubtypeOptionsAsync(row);
-            await RefreshDateRangeForSelectedInputsAsync();
             RefreshEquationInputOptions();
         }
 
         _sessionMilestoneRecorder.RecordInputAdded(_inputRows.Count);
     }
 
-    private async void OnOperationChanged(object sender, SelectionChangedEventArgs e)
+    private void OnOperationChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_isInitializing)
-            await RefreshDateRangeForSelectedInputsAsync();
     }
 
     private async void OnResolutionChanged(object sender, SelectionChangedEventArgs e)

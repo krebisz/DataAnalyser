@@ -30,8 +30,8 @@ public sealed class TransformWorkbenchServiceTests
 
         Assert.Equal("Mixed", result.Snapshot.Request.MetricType);
         Assert.Equal(2, result.Inputs.Count);
-        Assert.Equal("Weight - Fat", result.Inputs[0].Title);
-        Assert.Equal("Steps - Count", result.Inputs[1].Title);
+        Assert.Equal("Weight : Fat", result.Inputs[0].Title);
+        Assert.Equal("Steps : Count", result.Inputs[1].Title);
         Assert.Equal("2026-01-01 00:00:00", result.Inputs[0].Rows[0].Timestamp);
         Assert.Equal("1.2500", result.Inputs[0].Rows[0].Value);
         Assert.Equal("2 input series loaded for Operation Chain.", result.Summary);
@@ -76,8 +76,8 @@ public sealed class TransformWorkbenchServiceTests
         Assert.Equal("Input Series", result.Title);
         Assert.NotNull(result.Inputs);
         var input = Assert.Single(result.Inputs);
-        Assert.Equal("Weight - Fat", input.Title);
-        Assert.Equal("Weight - Fat", result.Rows[0].Series);
+        Assert.Equal("Weight : Fat", input.Title);
+        Assert.Equal("Weight : Fat", result.Rows[0].Series);
         Assert.Equal("1.2500", result.Rows[0].Raw);
         Assert.NotNull(result.InputSnapshot);
     }
@@ -169,15 +169,15 @@ public sealed class TransformWorkbenchServiceTests
             "HealthMetrics",
             "Correlation");
 
-        Assert.Equal("Weight - Fat ~ Weight - Muscle", result.Title);
+        Assert.Equal("Weight : Fat ~ Weight : Muscle", result.Title);
         Assert.Equal("Correlation", result.Rows[0].Timestamp);
         Assert.Equal("1.0000", result.Rows[0].Raw);
         Assert.Equal("Sample count", result.Rows[3].Timestamp);
         Assert.Equal("5", result.Rows[3].Raw);
         Assert.Contains("95% CI", result.Summary);
         Assert.NotNull(result.Correlation);
-        Assert.Equal("Weight - Fat", result.Correlation.SourceLabel);
-        Assert.Equal("Weight - Muscle", result.Correlation.TargetLabel);
+        Assert.Equal("Weight : Fat", result.Correlation.SourceLabel);
+        Assert.Equal("Weight : Muscle", result.Correlation.TargetLabel);
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public sealed class TransformWorkbenchServiceTests
         var result = TransformInputGridPresenter.Build(snapshot);
 
         var input = Assert.Single(result.Inputs);
-        Assert.Equal("Weight - Fat", input.Title);
+        Assert.Equal("Weight : Fat", input.Title);
         Assert.Equal(2, input.Rows.Count);
         Assert.Equal("2.0000", input.Rows[1].Value);
     }
@@ -270,7 +270,7 @@ public sealed class TransformWorkbenchServiceTests
                 new DateTime(2026, 1, 5),
                 "HealthMetrics",
                 new TransformComputationResult(
-                    "Weight - Fat ~ Weight - Muscle",
+                    "Weight : Fat ~ Weight : Muscle",
                     [new TransformResultGridRow("Correlation", "1.0000", string.Empty)],
                     "Correlation computed.")
                 {

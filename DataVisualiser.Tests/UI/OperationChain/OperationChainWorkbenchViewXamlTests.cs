@@ -82,4 +82,25 @@ public sealed class OperationChainWorkbenchViewXamlTests
         Assert.Contains("SummaryText.SetResourceReference(TextBlock.ForegroundProperty, SummaryErrorBrushResourceKey);", source, StringComparison.Ordinal);
         Assert.Contains("SummaryText.SetResourceReference(TextBlock.ForegroundProperty, SummaryStatusBrushResourceKey);", source, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void ControlOnlyChanges_ShouldNotRefreshSelectedDateRange()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "UI",
+            "OperationChain",
+            "OperationChainWorkbenchView.xaml.cs");
+
+        var operationChangedIndex = source.IndexOf("private void OnOperationChanged", StringComparison.Ordinal);
+        var resolutionChangedIndex = source.IndexOf("private async void OnResolutionChanged", StringComparison.Ordinal);
+        Assert.True(operationChangedIndex >= 0);
+        Assert.True(resolutionChangedIndex > operationChangedIndex);
+
+        var operationChangedBody = source.Substring(operationChangedIndex, resolutionChangedIndex - operationChangedIndex);
+        Assert.DoesNotContain("RefreshDateRangeForSelectedInputsAsync", operationChangedBody, StringComparison.Ordinal);
+
+        Assert.Contains("subtypeCombo.SelectionChanged += (_, _) =>", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("subtypeCombo.SelectionChanged += async", source, StringComparison.Ordinal);
+    }
 }

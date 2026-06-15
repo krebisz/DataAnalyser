@@ -24,7 +24,7 @@ public sealed class NormalizedStrategyTests
     }
 
     [Fact]
-    public void Compute_ShouldReturnResult_WithNaNs_WhenNoOverlappingTimestamps()
+    public void Compute_ShouldNormalizeSparseSeries_WhenTimestampsDoNotOverlap()
     {
         var left = new List<MetricData>
         {
@@ -33,6 +33,12 @@ public sealed class NormalizedStrategyTests
                 NormalizedTimestamp = From,
                 Value = 10m,
                 Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(2),
+                Value = 20m,
+                Unit = "kg"
             }
         };
 
@@ -40,8 +46,14 @@ public sealed class NormalizedStrategyTests
         {
             new()
             {
-                NormalizedTimestamp = To.AddDays(5),
-                Value = 20m,
+                NormalizedTimestamp = From.AddDays(1),
+                Value = 100m,
+                Unit = "kg"
+            },
+            new()
+            {
+                NormalizedTimestamp = From.AddDays(3),
+                Value = 200m,
                 Unit = "kg"
             }
         };
@@ -51,8 +63,34 @@ public sealed class NormalizedStrategyTests
         var result = strategy.Compute();
 
         Assert.NotNull(result);
-        Assert.True(result!.PrimaryRawValues.All(double.IsNaN));
-        Assert.True(result.PrimarySmoothed.All(double.IsNaN));
+        Assert.Equal([50.0, double.NaN, 100.0, double.NaN], result!.PrimaryRawValues);
+        Assert.Equal([double.NaN, 50.0, double.NaN, 100.0], result.SecondaryRawValues!);
+    }
+
+    [Theory]
+    [InlineData(NormalizationMode.ZeroToOne)]
+    [InlineData(NormalizationMode.PercentageOfMax)]
+    [InlineData(NormalizationMode.RelativeToMax)]
+    public void Compute_ShouldRenderAvailableValuesForEveryMode_WhenSelectedSeriesDoNotOverlap(NormalizationMode mode)
+    {
+        var left = new List<MetricData>
+        {
+            new() { NormalizedTimestamp = From, Value = 10m, Unit = "kg" },
+            new() { NormalizedTimestamp = From.AddDays(2), Value = 20m, Unit = "kg" }
+        };
+        var right = new List<MetricData>
+        {
+            new() { NormalizedTimestamp = From.AddDays(1), Value = 100m, Unit = "kg" },
+            new() { NormalizedTimestamp = From.AddDays(3), Value = 200m, Unit = "kg" }
+        };
+
+        var strategy = new NormalizedStrategy(left, right, "L", "R", From, To, mode);
+
+        var result = strategy.Compute();
+
+        Assert.NotNull(result);
+        Assert.Contains(result!.PrimaryRawValues, value => !double.IsNaN(value));
+        Assert.Contains(result.SecondaryRawValues!, value => !double.IsNaN(value));
     }
 
     [Fact]
@@ -259,11 +297,12 @@ public sealed class NormalizedStrategyTests
     }
 
     [Fact]
-    public void SecondaryLabel_ShouldBeSet_ForRelativeToMax()
+    public void Labels_ShouldExposeIndependentSeriesNames()
     {
         var strategy = new NormalizedStrategy(Enumerable.Empty<MetricData>(), Enumerable.Empty<MetricData>(), "L", "R", From, To, NormalizationMode.RelativeToMax);
 
-        Assert.Equal("R (baseline)", strategy.SecondaryLabel);
+        Assert.Equal("L", strategy.PrimaryLabel);
+        Assert.Equal("R", strategy.SecondaryLabel);
     }
 
     [Fact]

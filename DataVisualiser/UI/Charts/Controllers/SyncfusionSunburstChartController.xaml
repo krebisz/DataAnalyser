@@ -37,12 +37,29 @@
 
         <ContentControl x:Name="ChartPresenter" Visibility="Collapsed">
             <Grid Margin="{x:Static ui:ChartUiDefaults.ChartContentMargin}">
-                <!-- Disable WPF ToolTips at the host level. Syncfusion may use ToolTipService internally. -->
-                <Grid x:Name="SunburstHost"
-                      ToolTipService.IsEnabled="False" />
-                <Canvas x:Name="RingLabelCanvas"
-                        Panel.ZIndex="10"
-                        IsHitTestVisible="False" />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <!-- Disable WPF ToolTips at the host level. Syncfusion may use ToolTipService internally. -->
+                    <Grid x:Name="SunburstHost"
+                          ToolTipService.IsEnabled="False" />
+                    <Canvas x:Name="RingLabelCanvas"
+                            Panel.ZIndex="10"
+                            IsHitTestVisible="False" />
+                </Grid>
+
+                <Border Grid.Column="1"
+                        MinWidth="220"
+                        MaxWidth="320"
+                        Margin="16,0,0,0"
+                        VerticalAlignment="Top">
+                    <StackPanel x:Name="RingLegendPanel"
+                                Orientation="Vertical"
+                                Margin="{x:Static ui:ChartUiDefaults.LabelMargin}" />
+                </Border>
             </Grid>
         </ContentControl>
 

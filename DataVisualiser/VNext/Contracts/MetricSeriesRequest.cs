@@ -39,7 +39,7 @@ public sealed record MetricSeriesRequest
             if (string.IsNullOrWhiteSpace(subtypeDisplay) || string.Equals(subtypeDisplay, "(All)", StringComparison.OrdinalIgnoreCase))
                 return metricDisplay;
 
-            return $"{metricDisplay} - {subtypeDisplay}";
+            return $"{metricDisplay} : {subtypeDisplay}";
         }
     }
 

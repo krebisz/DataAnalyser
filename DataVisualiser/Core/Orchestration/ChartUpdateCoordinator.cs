@@ -155,8 +155,8 @@ public class ChartUpdateCoordinator
     {
         return new ChartRenderModel
         {
-                PrimarySeriesName = strategy.PrimaryLabel ?? primaryLabel,
-                SecondarySeriesName = strategy.SecondaryLabel ?? secondaryLabel ?? string.Empty,
+                PrimarySeriesName = ResolveSeriesLabel(strategy.PrimaryLabel, primaryLabel),
+                SecondarySeriesName = ResolveSeriesLabel(strategy.SecondaryLabel, secondaryLabel),
 
                 PrimaryRaw = result.PrimaryRawValues ?? new List<double>(),
                 PrimarySmoothed = result.PrimarySmoothed ?? new List<double>(),
@@ -194,6 +194,13 @@ public class ChartUpdateCoordinator
                 Series = overrideSeries ?? result.Series,
                 OverlaySeries = overlaySeries?.ToList()
         };
+    }
+
+    private static string ResolveSeriesLabel(string? strategyLabel, string? fallbackLabel)
+    {
+        return !string.IsNullOrWhiteSpace(strategyLabel)
+            ? strategyLabel
+            : fallbackLabel ?? string.Empty;
     }
 
     private(List<SeriesResult>? RenderSeries, List<SeriesResult>? OriginalSeries) BuildCumulativeSeries(ChartComputationResult result, IChartComputationStrategy strategy, string primaryLabel, string? secondaryLabel)

@@ -78,7 +78,7 @@ internal static class TransformInputSelectionResolver
 
         return string.IsNullOrWhiteSpace(subtype)
             ? metric
-            : $"{metric} - {subtype}";
+            : $"{metric} : {subtype}";
     }
 
     private static string ResolveEquationLabel(int index) =>

@@ -9,6 +9,8 @@ using DataVisualiser.UI.Charts.Interaction;
 using DataVisualiser.Core.Rendering.Transform;
 using DataVisualiser.Core.Services.Abstractions;
 using DataVisualiser.Core.Strategies.Abstractions;
+using DataVisualiser.Core.Strategies.Implementations;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
 using DataVisualiser.UI.State;
@@ -131,6 +133,97 @@ public sealed class ChartUpdateCoordinatorTests
                 Assert.Equal(3, chart.Series.Count);
                 Assert.Equal(4, coordinator.LastRenderPlanAdapterResult?.RenderedPointCount);
                 Assert.Equal(2, chartTimestamps[chart].Count);
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public async Task UpdateChartUsingStrategyAsync_ShouldUseRequestSecondaryLabel_WhenStrategySecondaryLabelIsBlank()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var coordinator = new ChartUpdateCoordinator(
+                    new ChartComputationEngine(),
+                    new ChartRenderEngine(),
+                    tooltipManager,
+                    chartTimestamps,
+                    new CapturingNotificationService());
+
+                await coordinator.UpdateChartUsingStrategyAsync(
+                    chart,
+                    new StubStrategy(CreateDualSeriesResult()),
+                    new ChartUpdateRequest { PrimaryLabel = "Primary", SecondaryLabel = "Secondary" });
+                await FlushChartAsync(chart);
+
+                Assert.Contains(chart.Series, series => series.Title.Contains("Secondary", StringComparison.Ordinal));
+            }
+            finally
+            {
+                tooltipManager.Dispose();
+                window.Close();
+            }
+        });
+    }
+
+    [Theory]
+    [InlineData(NormalizationMode.ZeroToOne)]
+    [InlineData(NormalizationMode.PercentageOfMax)]
+    [InlineData(NormalizationMode.RelativeToMax)]
+    public async Task UpdateChartUsingStrategyAsync_WithNormalizedStrategy_ShouldRenderBothSelectedSubtypes(NormalizationMode mode)
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var chartTimestamps = new Dictionary<CartesianChart, List<DateTime>>();
+            var (window, chart) = await CreateHostedChartAsync();
+            var tooltipManager = new ChartTooltipManager(window);
+
+            try
+            {
+                var coordinator = new ChartUpdateCoordinator(
+                    new ChartComputationEngine(),
+                    new ChartRenderEngine(),
+                    tooltipManager,
+                    chartTimestamps,
+                    new CapturingNotificationService());
+
+                var strategy = new NormalizedStrategy(
+                    CreateMetricData([10m, 12m]),
+                    CreateMetricData([20m, 24m]),
+                    "Weight : Fat Mass",
+                    "Weight : Fat Free Mass",
+                    new DateTime(2024, 1, 1),
+                    new DateTime(2024, 1, 2),
+                    mode);
+
+                await coordinator.UpdateChartUsingStrategyAsync(
+                    chart,
+                    strategy,
+                    new ChartUpdateRequest
+                    {
+                        PrimaryLabel = "Weight : Fat Mass",
+                        SecondaryLabel = "Weight : Fat Free Mass",
+                        MetricType = "Weight",
+                        PrimarySubtype = "Fat Mass",
+                        SecondaryMetricType = "Weight",
+                        SecondarySubtype = "Fat Free Mass",
+                        RenderProgramKind = ChartProgramKind.Normalized
+                    });
+                await FlushChartAsync(chart);
+
+                Assert.Contains(chart.Series, series => series.Title.Contains("Weight : Fat Mass", StringComparison.Ordinal));
+                Assert.Contains(chart.Series, series => series.Title.Contains("Weight : Fat Free Mass", StringComparison.Ordinal));
+                Assert.True(chart.Series.Count >= 4);
             }
             finally
             {
@@ -381,6 +474,30 @@ public sealed class ChartUpdateCoordinatorTests
             PrimaryRawValues = [10d, 12d],
             PrimarySmoothed = [10d, 12d]
         };
+    }
+
+    private static ChartComputationResult CreateDualSeriesResult()
+    {
+        return new ChartComputationResult
+        {
+            Timestamps = [new DateTime(2024, 1, 1), new DateTime(2024, 1, 2)],
+            PrimaryRawValues = [10d, 12d],
+            PrimarySmoothed = [10d, 12d],
+            SecondaryRawValues = [20d, 24d],
+            SecondarySmoothed = [20d, 24d]
+        };
+    }
+
+    private static List<MetricData> CreateMetricData(IReadOnlyList<decimal> values)
+    {
+        return values
+            .Select((value, index) => new MetricData
+            {
+                NormalizedTimestamp = new DateTime(2024, 1, 1).AddDays(index),
+                Value = value,
+                Unit = "kg"
+            })
+            .ToList();
     }
 
     private static SeriesResult CreateOverlaySeriesResult()

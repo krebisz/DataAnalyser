@@ -241,6 +241,29 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
     }
 
     [Fact]
+    public void NormalizedSubtypeChanged_ShouldPreserveLastContextDateRange()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var primary = new MetricSeriesSelection("weight", "avg");
+            var secondary = new MetricSeriesSelection("steps", "(All)");
+            var setup = CreateNormalizedAdapter();
+            setup.MetricState.SetSeriesSelections([primary, secondary]);
+            setup.Adapter.UpdateSubtypeOptions();
+            var context = CreateComparisonContext(new DateTime(2025, 3, 1), new DateTime(2025, 3, 31));
+            setup.ChartState.LastContext = context;
+            setup.Controller.NormalizedPrimarySubtypeCombo.SelectedIndex = 1;
+
+            setup.Adapter.OnPrimarySubtypeChanged(null, EventArgs.Empty);
+
+            var request = Assert.IsType<CartesianMetricChartRenderRequest>(setup.RenderingContract.LastRenderRequest);
+            Assert.Equal(new DateTime(2025, 3, 1), request.Context.From);
+            Assert.Equal(new DateTime(2025, 3, 31), request.Context.To);
+            Assert.Equal(1, setup.RenderingContract.RenderCallCount);
+        });
+    }
+
+    [Fact]
     public void NormalizedOnSecondarySubtypeChanged_ShouldUpdateState_WithoutRerenderWhenNoLastContext()
     {
         StaTestHelper.Run(() =>
@@ -307,7 +330,7 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
         return new NormalizedSetup(chartState, metricState, controller, adapter, renderingContract);
     }
 
-    private static ChartDataContext CreateComparisonContext()
+    private static ChartDataContext CreateComparisonContext(DateTime? from = null, DateTime? to = null)
     {
         var primaryData = new List<MetricData>
         {
@@ -344,8 +367,8 @@ public sealed class DiffRatioNormalizedSelectionAdapterTests
                 DisplayPrimarySubtype = "Avg",
                 DisplaySecondaryMetricType = "Steps",
                 DisplaySecondarySubtype = "(All)",
-                From = new DateTime(2026, 1, 1),
-                To = new DateTime(2026, 1, 7)
+                From = from ?? new DateTime(2026, 1, 1),
+                To = to ?? new DateTime(2026, 1, 7)
         };
     }
 

@@ -91,7 +91,7 @@ public sealed class DistributionSessionMilestoneRecorderTests
 
         var milestone = Assert.Single(chartState.SessionMilestones);
         Assert.Equal("DistributionSubtypeChanged", milestone.Kind);
-        Assert.Contains("Weight - Water", milestone.Note);
+        Assert.Contains("Weight : Water", milestone.Note);
     }
 
     [Fact]
