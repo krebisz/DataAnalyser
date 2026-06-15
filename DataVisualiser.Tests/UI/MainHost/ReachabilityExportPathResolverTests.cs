@@ -18,7 +18,7 @@ public sealed class ReachabilityExportPathResolverTests
         try
         {
             var resolved = InvokeResolveDocumentsDirectory(nested);
-            Assert.Equal(Path.Combine(tempRoot, "documents"), resolved);
+            Assert.Equal(Path.Combine(tempRoot, "documents", "logs"), resolved);
         }
         finally
         {
@@ -35,7 +35,7 @@ public sealed class ReachabilityExportPathResolverTests
         try
         {
             var resolved = InvokeResolveDocumentsDirectory(tempRoot);
-            Assert.Equal(Path.Combine(tempRoot, "documents"), resolved);
+            Assert.Equal(Path.Combine(tempRoot, "documents", "logs"), resolved);
         }
         finally
         {

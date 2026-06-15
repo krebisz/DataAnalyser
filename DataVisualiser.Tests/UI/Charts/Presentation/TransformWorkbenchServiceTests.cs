@@ -289,6 +289,12 @@ public sealed class TransformWorkbenchServiceTests
             Assert.Equal(1, diagnostics.GetProperty("ResultRowCount").GetInt32());
             Assert.Equal("Correlation source: snapshot", diagnostics.GetProperty("Evidence").GetString());
             Assert.True(diagnostics.GetProperty("Inputs")[0].GetProperty("IsConsumed").GetBoolean());
+            Assert.Equal(0, diagnostics.GetProperty("Inputs")[0].GetProperty("Index").GetInt32());
+            var coverage = diagnostics.GetProperty("EvidenceCoverage");
+            Assert.Equal(1, coverage.GetProperty("InputCount").GetInt32());
+            Assert.Equal(1, coverage.GetProperty("ConsumedInputCount").GetInt32());
+            Assert.False(coverage.GetProperty("ComputationEvidencePresent").GetBoolean());
+            Assert.True(coverage.GetProperty("ResultEvidencePresent").GetBoolean());
         }
         finally
         {

@@ -110,7 +110,7 @@ public sealed class MathHelperTests
     }
 
     [Fact]
-    public void ReturnValueNormalized_RelativeToMax_ShouldRenderConstantBaselineAsFlatHundredLine()
+    public void ReturnValueNormalized_RelativeToMax_ShouldScaleBothSeriesBySharedMaximum()
     {
         var first = new List<double>
         {
@@ -127,7 +127,7 @@ public sealed class MathHelperTests
 
         Assert.NotNull(relative);
         Assert.NotNull(baseline);
-        Assert.All(baseline!, v => Assert.Equal(100.0, v));
+        Assert.Equal([100.0, 100.0], baseline!);
         Assert.Equal([50.0, 100.0], relative!);
     }
 

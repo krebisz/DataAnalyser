@@ -106,8 +106,18 @@ public sealed class MainChartsEvidenceExportService
                 chartState.IsTransformPanelVisible,
                 chartState.IsBarPieVisible,
                 chartState.MainChartDisplayMode,
+                SelectedNormalizationMode = chartState.SelectedNormalizationMode.ToString(),
                 chartState.IsDiffRatioDifferenceMode,
                 chartState.SelectedDistributionMode,
+                chartState.SelectedDistributionSeries,
+                chartState.SelectedWeekdayTrendSeries,
+                chartState.SelectedStackedOverlaySeries,
+                chartState.SelectedNormalizedPrimarySeries,
+                chartState.SelectedNormalizedSecondarySeries,
+                chartState.SelectedDiffRatioPrimarySeries,
+                chartState.SelectedDiffRatioSecondarySeries,
+                chartState.SelectedTransformPrimarySeries,
+                chartState.SelectedTransformSecondarySeries,
                 SelectedDistributionSettings = new
                 {
                     selectedDistributionSettings.UseFrequencyShading,

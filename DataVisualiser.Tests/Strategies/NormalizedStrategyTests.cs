@@ -155,8 +155,9 @@ public sealed class NormalizedStrategyTests
         Assert.NotNull(result);
         Assert.NotNull(result!.SecondaryRawValues);
         Assert.NotNull(result.SecondarySmoothed);
-        Assert.All(result.SecondaryRawValues!, v => Assert.Equal(100.0, v));
-        Assert.All(result.SecondarySmoothed!, v => Assert.Equal(100.0, v));
+        Assert.Equal([50.0, 100.0], result.PrimaryRawValues);
+        Assert.Equal([25.0, 50.0], result.SecondaryRawValues!);
+        Assert.All(result.SecondarySmoothed!, v => Assert.InRange(v, 0.0, 100.0));
     }
 
     [Fact]

@@ -18,11 +18,11 @@ public sealed class ReachabilityExportPathResolver : IReachabilityExportPathReso
         while (current != null)
         {
             if (File.Exists(Path.Combine(current.FullName, "DataAnalyser.sln")))
-                return Path.Combine(current.FullName, "documents");
+                return Path.Combine(current.FullName, "documents", "logs");
 
             current = current.Parent;
         }
 
-        return Path.Combine(startingDirectory, "documents");
+        return Path.Combine(startingDirectory, "documents", "logs");
     }
 }

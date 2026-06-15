@@ -246,31 +246,28 @@ public static class MathHelper
             return (null, null);
 
         var count = Math.Min(first.Count, second.Count);
-        var firstPercent = ReturnValueNormalized(first, NormalizationMode.PercentageOfMax);
-        var secondPercent = ReturnValueNormalized(second, NormalizationMode.PercentageOfMax);
+        var validValues = first.Take(count)
+            .Concat(second.Take(count))
+            .Where(v => !double.IsNaN(v))
+            .ToList();
 
-        if (firstPercent == null || secondPercent == null)
-            return (null, null);
+        if (validValues.Count == 0)
+            return (first.Take(count).Select(_ => double.NaN).ToList(), second.Take(count).Select(_ => double.NaN).ToList());
 
-        var relative = new List<double>(count);
+        var sharedMax = validValues.Max();
+        if (sharedMax == 0)
+            return (first.Take(count).Select(v => double.IsNaN(v) ? double.NaN : 0.0).ToList(), second.Take(count).Select(v => double.IsNaN(v) ? double.NaN : 0.0).ToList());
+
+        var firstNormalized = new List<double>(count);
+        var secondNormalized = new List<double>(count);
 
         for (var i = 0; i < count; i++)
         {
-            var a = firstPercent[i];
-            var b = secondPercent[i];
-
-            if (double.IsNaN(a) || double.IsNaN(b) || b == 0)
-            {
-                relative.Add(double.NaN);
-                continue;
-            }
-
-            relative.Add(a / b * 100.0);
+            firstNormalized.Add(double.IsNaN(first[i]) ? double.NaN : first[i] / sharedMax * 100.0);
+            secondNormalized.Add(double.IsNaN(second[i]) ? double.NaN : second[i] / sharedMax * 100.0);
         }
 
-        var straight100 = Enumerable.Repeat(100.0, count).ToList();
-
-        return (relative, straight100);
+        return (firstNormalized, secondNormalized);
     }
 
     /// <summary>

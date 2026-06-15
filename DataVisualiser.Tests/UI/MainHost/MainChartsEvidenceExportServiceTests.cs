@@ -50,6 +50,10 @@ public sealed class MainChartsEvidenceExportServiceTests
             Assert.Contains("\"RenderPlans\"", contents);
             Assert.Contains("\"SessionMilestones\"", contents);
             Assert.Contains("\"PerformanceTimings\"", contents);
+
+            using var document = JsonDocument.Parse(contents);
+            var chartState = document.RootElement.GetProperty("ChartState");
+            Assert.Equal("PercentageOfMax", chartState.GetProperty("SelectedNormalizationMode").GetString());
         }
         finally
         {

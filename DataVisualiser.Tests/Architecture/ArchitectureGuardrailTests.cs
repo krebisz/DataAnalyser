@@ -853,9 +853,13 @@ public sealed class ArchitectureGuardrailTests
     {
         var barPieBuilderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "BarPieRenderModelBuilder.cs");
         var syncfusionBuilderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "SyncfusionSunburstRenderModelBuilder.cs");
+        var bucketedSeriesSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "BucketedSeriesPresentationPipeline.cs");
 
-        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", barPieBuilderSource, StringComparison.Ordinal);
-        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", syncfusionBuilderSource, StringComparison.Ordinal);
+        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", bucketedSeriesSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesLegacyTotalsLoader", barPieBuilderSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesLegacyTotalsLoader", syncfusionBuilderSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesInputPlanner.BuildBucketPlan", barPieBuilderSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesInputPlanner.BuildBucketPlan", syncfusionBuilderSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private static double?[] BuildBucketTotals", barPieBuilderSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private static double?[] BuildBucketTotals", syncfusionBuilderSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private static int ResolveBucketIndex", barPieBuilderSource, StringComparison.Ordinal);
@@ -878,9 +882,9 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("private static BarPieBucketPlan BuildBarPieBucketPlan", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("private async Task<IReadOnlyList<BarPieSeriesTotals>> LoadBarPieSeriesTotalsAsync", adapterSource, StringComparison.Ordinal);
 
-        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", builderSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesLegacyTotalsLoader", builderSource, StringComparison.Ordinal);
         Assert.Contains("LoadSeriesTotalsAsync", builderSource, StringComparison.Ordinal);
-        Assert.Contains("BuildBucketPlan", builderSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesInputPlanner.BuildBucketPlan", builderSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -896,8 +900,8 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("BuildBucketPlan", adapterSource, StringComparison.Ordinal);
 
         Assert.Contains("LoadSeriesTotalsAsync", builderSource, StringComparison.Ordinal);
-        Assert.Contains("BuildBucketPlan", builderSource, StringComparison.Ordinal);
-        Assert.Contains("TimeBucketAggregationHelper.BuildAverageTotals", builderSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesInputPlanner.BuildBucketPlan", builderSource, StringComparison.Ordinal);
+        Assert.Contains("BucketedSeriesLegacyTotalsLoader", builderSource, StringComparison.Ordinal);
     }
 
     [Fact]

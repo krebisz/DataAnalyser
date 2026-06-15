@@ -8,6 +8,17 @@ namespace DataVisualiser.UI.MainHost.Coordination;
 
 public sealed class MainChartsViewChartUpdateCoordinator
 {
+    private static readonly IReadOnlyList<ChartRenderPolicy> RenderPolicies =
+    [
+        new(ChartControllerKeys.Main, state => state.IsMainVisible),
+        new(ChartControllerKeys.Normalized, state => state.IsNormalizedVisible, RequiresSecondaryData: true),
+        new(ChartControllerKeys.DiffRatio, state => state.IsDiffRatioVisible, RequiresSecondaryData: true),
+        new(ChartControllerKeys.Distribution, state => state.IsDistributionVisible),
+        new(ChartControllerKeys.WeeklyTrend, state => state.IsWeeklyTrendVisible),
+        new(ChartControllerKeys.Transform, state => state.IsTransformPanelVisible),
+        new(ChartControllerKeys.BarPie, state => state.IsBarPieVisible)
+    ];
+
     public sealed class Actions(
         Action<string, bool> setChartVisibility,
         Action updateDistributionChartTypeVisibility,
@@ -82,34 +93,16 @@ public sealed class MainChartsViewChartUpdateCoordinator
         var safeContext = context!;
         var hasSecondaryData = HasSecondaryData(safeContext);
 
-        if (chartState.IsMainVisible)
-            await actions.RenderChartAsync(ChartControllerKeys.Main, safeContext);
+        if (!hasSecondaryData)
+            ClearSecondaryDataCharts(actions);
 
-        if (hasSecondaryData)
+        foreach (var policy in RenderPolicies)
         {
-            if (chartState.IsNormalizedVisible)
-                await actions.RenderChartAsync(ChartControllerKeys.Normalized, safeContext);
+            if (!ShouldRenderPolicy(policy, chartState, hasSecondaryData))
+                continue;
 
-            if (chartState.IsDiffRatioVisible)
-                await actions.RenderChartAsync(ChartControllerKeys.DiffRatio, safeContext);
+            await actions.RenderChartAsync(policy.ChartKey, safeContext);
         }
-        else
-        {
-            actions.ClearChart(ChartControllerKeys.Normalized);
-            actions.ClearChart(ChartControllerKeys.DiffRatio);
-        }
-
-        if (chartState.IsDistributionVisible)
-            await actions.RenderChartAsync(ChartControllerKeys.Distribution, safeContext);
-
-        if (chartState.IsWeeklyTrendVisible)
-            await actions.RenderChartAsync(ChartControllerKeys.WeeklyTrend, safeContext);
-
-        if (chartState.IsTransformPanelVisible)
-            await actions.RenderChartAsync(ChartControllerKeys.Transform, safeContext);
-
-        if (chartState.IsBarPieVisible)
-            await actions.RenderChartAsync(ChartControllerKeys.BarPie, safeContext);
     }
 
     public static bool ShouldRestoreChartsWhenViewLoads(bool isInitializing, ChartDataContext? context)
@@ -124,35 +117,14 @@ public sealed class MainChartsViewChartUpdateCoordinator
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(actions);
 
-        var hasSecondaryData = HasSecondaryData(context);
-
-        switch (chartName)
+        var policy = FindRenderPolicy(chartName);
+        if (policy != null && ShouldRenderPolicy(policy, chartState, HasSecondaryData(context)))
         {
-            case ChartControllerKeys.Main when chartState.IsMainVisible:
-                await actions.RenderChartAsync(ChartControllerKeys.Main, context);
-                break;
-            case ChartControllerKeys.Normalized when chartState.IsNormalizedVisible && hasSecondaryData:
-                await actions.RenderChartAsync(ChartControllerKeys.Normalized, context);
-                break;
-            case ChartControllerKeys.DiffRatio when chartState.IsDiffRatioVisible && hasSecondaryData:
-                await actions.RenderChartAsync(ChartControllerKeys.DiffRatio, context);
-                break;
-            case ChartControllerKeys.Distribution when chartState.IsDistributionVisible:
-                await actions.RenderChartAsync(ChartControllerKeys.Distribution, context);
-                break;
-            case ChartControllerKeys.WeeklyTrend when chartState.IsWeeklyTrendVisible:
-                await actions.RenderChartAsync(ChartControllerKeys.WeeklyTrend, context);
-                break;
-            case ChartControllerKeys.Transform when chartState.IsTransformPanelVisible:
-                await actions.RenderChartAsync(ChartControllerKeys.Transform, context);
-                break;
-            case ChartControllerKeys.BarPie when chartState.IsBarPieVisible:
-                await actions.RenderChartAsync(ChartControllerKeys.BarPie, context);
-                break;
-            default:
-                Debug.WriteLine($"[ChartRegistry] RenderSingleChart called with unknown or hidden key '{chartName}'.");
-                break;
+            await actions.RenderChartAsync(policy.ChartKey, context);
+            return;
         }
+
+        Debug.WriteLine($"[ChartRegistry] RenderSingleChart called with unknown or hidden key '{chartName}'.");
     }
 
     public static bool ShouldRenderCharts(ChartDataContext? context)
@@ -197,17 +169,7 @@ public sealed class MainChartsViewChartUpdateCoordinator
 
     private static bool IsChartVisible(ChartState chartState, string chartName)
     {
-        return chartName switch
-        {
-            ChartControllerKeys.Main => chartState.IsMainVisible,
-            ChartControllerKeys.Normalized => chartState.IsNormalizedVisible,
-            ChartControllerKeys.DiffRatio => chartState.IsDiffRatioVisible,
-            ChartControllerKeys.Distribution => chartState.IsDistributionVisible,
-            ChartControllerKeys.WeeklyTrend => chartState.IsWeeklyTrendVisible,
-            ChartControllerKeys.Transform => chartState.IsTransformPanelVisible,
-            ChartControllerKeys.BarPie => chartState.IsBarPieVisible,
-            _ => false
-        };
+        return FindRenderPolicy(chartName)?.IsVisible(chartState) ?? false;
     }
 
     private static bool HasSecondaryData(ChartDataContext context)
@@ -215,25 +177,28 @@ public sealed class MainChartsViewChartUpdateCoordinator
         return context.Data2 != null && context.Data2.Any();
     }
 
+    private static ChartRenderPolicy? FindRenderPolicy(string chartName)
+    {
+        return RenderPolicies.FirstOrDefault(policy => string.Equals(policy.ChartKey, chartName, StringComparison.Ordinal));
+    }
+
+    private static bool ShouldRenderPolicy(ChartRenderPolicy policy, ChartState chartState, bool hasSecondaryData)
+    {
+        return policy.IsVisible(chartState) && (!policy.RequiresSecondaryData || hasSecondaryData);
+    }
+
+    private static void ClearSecondaryDataCharts(Actions actions)
+    {
+        foreach (var policy in RenderPolicies.Where(policy => policy.RequiresSecondaryData))
+            actions.ClearChart(policy.ChartKey);
+    }
+
 
     private static void ClearExtendedCharts(ChartState chartState, Actions actions)
     {
-        if (chartState.IsNormalizedVisible)
-            actions.ClearChart(ChartControllerKeys.Normalized);
-
-        if (chartState.IsDiffRatioVisible)
-            actions.ClearChart(ChartControllerKeys.DiffRatio);
-
-        if (chartState.IsDistributionVisible)
-            actions.ClearChart(ChartControllerKeys.Distribution);
-
-        if (chartState.IsWeeklyTrendVisible)
-            actions.ClearChart(ChartControllerKeys.WeeklyTrend);
-
-        if (chartState.IsTransformPanelVisible)
-            actions.ClearChart(ChartControllerKeys.Transform);
-
-        if (chartState.IsBarPieVisible)
-            actions.ClearChart(ChartControllerKeys.BarPie);
+        foreach (var policy in RenderPolicies.Where(policy => policy.ChartKey != ChartControllerKeys.Main && policy.IsVisible(chartState)))
+            actions.ClearChart(policy.ChartKey);
     }
+
+    private sealed record ChartRenderPolicy(string ChartKey, Func<ChartState, bool> IsVisible, bool RequiresSecondaryData = false);
 }

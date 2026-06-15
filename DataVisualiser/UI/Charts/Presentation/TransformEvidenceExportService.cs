@@ -46,6 +46,7 @@ internal sealed record TransformEvidenceExportPayload(
         var computationEvidence = snapshot.Result.ComputationEvidence;
         var consumedInputIndexes = ResolveConsumedInputIndexes(snapshot).ToArray();
         var consumedInputSet = consumedInputIndexes.ToHashSet();
+        var evidenceCoverage = TransformEvidenceCoverage.From(snapshot, consumedInputIndexes);
 
         return new TransformEvidenceExportPayload(
             utcNow,
@@ -61,6 +62,7 @@ internal sealed record TransformEvidenceExportPayload(
                 snapshot.To,
                 snapshot.Inputs
                     .Select((input, index) => new TransformInputEvidence(
+                        index,
                         input.MetricType,
                         input.Subtype,
                         input.DisplayMetricType,
@@ -84,6 +86,7 @@ internal sealed record TransformEvidenceExportPayload(
                 computationEvidence?.FinalDatasetLabel,
                 computationEvidence?.FinalDatasetSourceSeriesSignatures ?? [],
                 consumedInputIndexes,
+                evidenceCoverage,
                 snapshot.Result.Rows.Count,
                 snapshot.Result.Rows));
     }
@@ -130,8 +133,66 @@ internal sealed record TransformEvidenceDiagnostics(
     string? FinalDatasetLabel,
     IReadOnlyList<string> FinalDatasetSourceSeriesSignatures,
     IReadOnlyList<int> ConsumedInputIndexes,
+    TransformEvidenceCoverage EvidenceCoverage,
     int ResultRowCount,
     IReadOnlyList<TransformResultGridRow> ResultRows);
+
+internal sealed record TransformEvidenceCoverage(
+    int InputCount,
+    int ConsumedInputCount,
+    IReadOnlyList<int> UnusedInputIndexes,
+    IReadOnlyList<int> InvalidConsumedInputIndexes,
+    bool ResultRowsPresent,
+    bool ResultEvidencePresent,
+    bool ComputationEvidencePresent,
+    bool OperationSignaturePresent,
+    bool SourceSignaturePresent,
+    bool PlanSignaturePresent,
+    bool TraceSignaturePresent,
+    bool ContractSignaturePresent,
+    int SourceSeriesSignatureCount,
+    int DerivedDatasetCount,
+    bool FinalDatasetIdPresent,
+    bool FinalDatasetLabelPresent,
+    bool CorrelationSummaryPresent)
+{
+    public static TransformEvidenceCoverage From(TransformEvidenceExportSnapshot snapshot, IReadOnlyList<int> consumedInputIndexes)
+    {
+        var validConsumedIndexes = consumedInputIndexes
+            .Where(index => index >= 0 && index < snapshot.Inputs.Count)
+            .Distinct()
+            .OrderBy(index => index)
+            .ToArray();
+        var unusedInputIndexes = Enumerable.Range(0, snapshot.Inputs.Count)
+            .Except(validConsumedIndexes)
+            .ToArray();
+        var invalidConsumedIndexes = consumedInputIndexes
+            .Where(index => index < 0 || index >= snapshot.Inputs.Count)
+            .Distinct()
+            .OrderBy(index => index)
+            .ToArray();
+        var evidence = snapshot.Result.ComputationEvidence;
+
+        return new TransformEvidenceCoverage(
+            snapshot.Inputs.Count,
+            validConsumedIndexes.Length,
+            unusedInputIndexes,
+            invalidConsumedIndexes,
+            snapshot.Result.Rows.Count > 0,
+            !string.IsNullOrWhiteSpace(snapshot.Result.Evidence),
+            evidence != null,
+            !string.IsNullOrWhiteSpace(evidence?.OperationSignature),
+            !string.IsNullOrWhiteSpace(evidence?.SourceSignature),
+            !string.IsNullOrWhiteSpace(evidence?.PlanSignature),
+            !string.IsNullOrWhiteSpace(evidence?.TraceSignature),
+            !string.IsNullOrWhiteSpace(evidence?.ContractSignature),
+            evidence?.SourceSeriesSignatures.Count ?? 0,
+            evidence?.DerivedDatasetIds.Count ?? 0,
+            !string.IsNullOrWhiteSpace(evidence?.FinalDatasetId),
+            !string.IsNullOrWhiteSpace(evidence?.FinalDatasetLabel),
+            snapshot.Result.Correlation != null);
+    }
+}
 
 internal sealed record TransformCorrelationEvidence(
     string Label,
@@ -156,6 +217,7 @@ internal sealed record TransformCorrelationEvidence(
 }
 
 internal sealed record TransformInputEvidence(
+    int Index,
     string MetricType,
     string? Subtype,
     string? DisplayMetricType,
