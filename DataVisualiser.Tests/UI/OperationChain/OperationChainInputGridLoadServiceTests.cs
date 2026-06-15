@@ -300,6 +300,42 @@ public sealed class OperationChainInputGridLoadServiceTests
     }
 
     [Fact]
+    public void Export_ShouldCreateOperationChainEvidenceInsideLogsDirectory()
+    {
+        var target = Path.Combine(Path.GetTempPath(), $"operation-chain-export-{Guid.NewGuid():N}", "documents", "logs");
+        try
+        {
+            var service = new OperationChainEvidenceExportService(
+                new EvidenceExportWriter(),
+                new StubPathResolver(target));
+            var snapshot = new OperationChainEvidenceExportSnapshot(
+                [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
+                "None",
+                "None",
+                new DateTime(2026, 1, 1),
+                new DateTime(2026, 1, 5),
+                "HealthMetrics",
+                new OperationChainComputationGridResult(
+                    null,
+                    "Input Series",
+                    [new OperationChainResultGridRow("2026-01-01 00:00:00", "1.0000", string.Empty)],
+                    "Loaded."));
+
+            var result = service.Export(snapshot, new DateTime(2026, 5, 12, 10, 30, 0, DateTimeKind.Utc));
+
+            Assert.Equal(target, Path.GetDirectoryName(result.FilePath));
+            Assert.True(Directory.Exists(target));
+            Assert.True(File.Exists(result.FilePath));
+        }
+        finally
+        {
+            var root = Directory.GetParent(Directory.GetParent(target)!.FullName)!.FullName;
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Export_ShouldWriteComputedOperationChainTraceEvidence()
     {
         var target = Path.Combine(Path.GetTempPath(), $"operation-chain-export-{Guid.NewGuid():N}");

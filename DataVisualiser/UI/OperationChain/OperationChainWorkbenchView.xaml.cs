@@ -22,6 +22,7 @@ public partial class OperationChainWorkbenchView : UserControl
     private readonly List<OperationChainInputSelectionRow> _inputRows = [];
     private readonly OperationChainTransformOutputRenderer _outputRenderer = new();
     private readonly SelectableGridRowToggleCoordinator _resultGridToggleCoordinator = new();
+    private readonly OperationChainSessionMilestoneRecorder _sessionMilestoneRecorder = new();
     private MetricSelectionService? _metricSelectionService;
     private OperationChainInputGridLoadService? _inputLoader;
     private readonly OperationChainEvidenceExportService _exportService = new(new EvidenceExportWriter(), new EvidenceExportPathResolver());
@@ -72,9 +73,11 @@ public partial class OperationChainWorkbenchView : UserControl
             RefreshEquationInputOptions();
             await LoadMetricOptionsAsync();
             SetSummaryStatus("Select inputs and an operation, then compute an Operation Chain result.");
+            _sessionMilestoneRecorder.RecordInitialized(_inputRows.Count, ResolveResolutionTableName());
         }
         catch (Exception ex)
         {
+            _sessionMilestoneRecorder.RecordInitializationFailed(ex.Message);
             SetSummaryError($"Operation Chain initialization failed: {ex.Message}");
         }
         finally
@@ -212,6 +215,7 @@ public partial class OperationChainWorkbenchView : UserControl
     {
         if (_inputRows.Count <= 1)
         {
+            _sessionMilestoneRecorder.RecordInputRemoveBlocked();
             SetSummaryError("Operation Chain requires at least one selected input.");
             return;
         }
@@ -221,6 +225,7 @@ public partial class OperationChainWorkbenchView : UserControl
         RenumberInputRows();
         ClearEquationTerms();
         RefreshEquationInputOptions();
+        _sessionMilestoneRecorder.RecordInputRemoved(_inputRows.Count);
         _ = RefreshDateRangeForSelectedInputsAsync();
     }
 
@@ -242,6 +247,8 @@ public partial class OperationChainWorkbenchView : UserControl
             await RefreshDateRangeForSelectedInputsAsync();
             RefreshEquationInputOptions();
         }
+
+        _sessionMilestoneRecorder.RecordInputAdded(_inputRows.Count);
     }
 
     private async void OnOperationChanged(object sender, SelectionChangedEventArgs e)
@@ -255,6 +262,7 @@ public partial class OperationChainWorkbenchView : UserControl
         if (_isInitializing)
             return;
 
+        _sessionMilestoneRecorder.RecordResolutionChanged(ResolutionCombo.SelectedItem?.ToString() ?? "All");
         await LoadMetricOptionsAsync();
     }
 
@@ -282,18 +290,25 @@ public partial class OperationChainWorkbenchView : UserControl
 
         LoadInputsButton.IsEnabled = false;
         SetSummaryStatus("Computing Operation Chain result...");
+        string operationTag = "Unknown";
+        string? equation = null;
+        var inputCount = 0;
         try
         {
             var inputs = ResolveInputRequests();
+            inputCount = inputs.Count;
             var from = FromDate.SelectedDate ?? DateTime.UtcNow.Date.AddDays(-30);
             var to = ToDate.SelectedDate ?? DateTime.UtcNow.Date;
             var resolution = ResolveResolutionTableName();
-            var operationTag = ResolveOperationTag();
+            operationTag = ResolveOperationTag();
+            equation = _equationTerms.Count > 0 ? EquationText.Text : null;
+            _sessionMilestoneRecorder.RecordComputeRequested(operationTag, inputCount, equation);
             var result = _equationTerms.Count > 0
                 ? await ComputeEquationAsync(inputs, from, to, resolution)
                 : await _inputLoader.ComputeAsync(inputs, from, to, resolution, operationTag);
 
             DisplayComputationResult(result);
+            _sessionMilestoneRecorder.RecordComputeCompleted(operationTag, inputCount, result.Rows.Count, equation);
             _lastExportSnapshot = new OperationChainEvidenceExportSnapshot(
                 inputs,
                 _equationTerms.Count > 0 ? EquationText.Text : operationTag,
@@ -305,11 +320,13 @@ public partial class OperationChainWorkbenchView : UserControl
         }
         catch (OperationChainEquationValidationException ex)
         {
+            _sessionMilestoneRecorder.RecordInvalidEquation(ex.Message, equation ?? EquationText.Text);
             SetSummaryError($"Invalid equation: {ex.Message}");
             await _outputRenderer.ClearAsync(OutputChart);
         }
         catch (Exception ex)
         {
+            _sessionMilestoneRecorder.RecordComputeFailed(operationTag, inputCount, ex.Message, equation ?? EquationText.Text);
             SetSummaryError($"Operation Chain compute failed: {ex.Message}");
             await _outputRenderer.ClearAsync(OutputChart);
         }
@@ -323,17 +340,21 @@ public partial class OperationChainWorkbenchView : UserControl
     {
         if (_lastExportSnapshot == null)
         {
+            _sessionMilestoneRecorder.RecordEvidenceExportFailed("No computed Operation Chain result is available.");
             SetSummaryError("Compute an Operation Chain result before exporting evidence.");
             return;
         }
 
         try
         {
+            _sessionMilestoneRecorder.RecordEvidenceExportRequested(_lastExportSnapshot.OperationTag, _lastExportSnapshot.Inputs.Count);
             var result = _exportService.Export(_lastExportSnapshot, DateTime.UtcNow);
+            _sessionMilestoneRecorder.RecordEvidenceExportCompleted(_lastExportSnapshot.OperationTag, _lastExportSnapshot.Inputs.Count, result.FilePath);
             SetSummaryStatus($"Operation Chain evidence exported to {result.FilePath}.");
         }
         catch (Exception ex)
         {
+            _sessionMilestoneRecorder.RecordEvidenceExportFailed(ex.Message);
             SetSummaryError($"Operation Chain evidence export failed: {ex.Message}");
         }
     }
@@ -398,6 +419,7 @@ public partial class OperationChainWorkbenchView : UserControl
         _lastExportSnapshot = null;
         _currentComputationResult = null;
         _resultGridToggleCoordinator.Reset();
+        _sessionMilestoneRecorder.RecordClearRequested();
         ClearEquationTerms();
         ClearEquationErrorState();
         await ResetControlSelectionsToDefaultsAsync();
@@ -473,12 +495,14 @@ public partial class OperationChainWorkbenchView : UserControl
             input.Display,
             input.EquationLabel));
         EquationText.Text = TransformEquationCompiler.BuildExpression(_equationTerms);
+        _sessionMilestoneRecorder.RecordEquationUpdated(EquationText.Text, _equationTerms.Count);
         SetSummaryStatus("Equation updated.");
     }
 
     private void OnClearEquationClicked(object sender, RoutedEventArgs e)
     {
         ClearEquationTerms();
+        _sessionMilestoneRecorder.RecordEquationCleared();
         SetSummaryStatus("Equation cleared.");
     }
 
@@ -487,11 +511,13 @@ public partial class OperationChainWorkbenchView : UserControl
         var isVisible = OutputChartContentPanel.Visibility == Visibility.Visible;
         OutputChartContentPanel.Visibility = isVisible ? Visibility.Collapsed : Visibility.Visible;
         OutputChartToggleButton.Content = isVisible ? UiDefaults.ToggleShowLabel : UiDefaults.ToggleHideLabel;
+        _sessionMilestoneRecorder.RecordOutputChartVisibilityChanged(OutputChartContentPanel.Visibility == Visibility.Visible);
     }
 
     private void OnOutputChartResetZoomClicked(object sender, RoutedEventArgs e)
     {
         _outputRenderer.ResetZoom(OutputChart);
+        _sessionMilestoneRecorder.RecordOutputChartResetZoom();
     }
 
     private IReadOnlyList<MetricSeriesRequest> ResolveInputRequests()
@@ -635,6 +661,11 @@ public partial class OperationChainWorkbenchView : UserControl
         var includedRows = new bool[rows.Count];
         for (var index = 0; index < rows.Count; index++)
             includedRows[index] = rows[index].IsIncluded;
+        var includedCount = 0;
+        for (var index = 0; index < includedRows.Length; index++)
+            if (includedRows[index])
+                includedCount++;
+        _sessionMilestoneRecorder.RecordResultRowsToggled(includedCount, includedRows.Length);
         if (!includedRows.Any(included => included))
         {
             await _outputRenderer.ClearAsync(OutputChart);

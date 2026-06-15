@@ -97,6 +97,35 @@ public sealed class OperationChainTransformOutputRendererTests
     }
 
     [Fact]
+    public async Task RenderAsync_ShouldClearChartWhenAllInputSnapshotRowsAreExcluded()
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var contract = new FakeTransformRenderingContract();
+            var renderer = new OperationChainTransformOutputRenderer(new ChartState(), contract);
+            var selection = new MetricSelectionRequest(
+                "Weight",
+                [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
+                new DateTime(2026, 1, 1),
+                new DateTime(2026, 1, 2),
+                "HealthMetrics");
+            var snapshot = new MetricLoadSnapshot(
+                selection,
+                [new MetricSeriesSnapshot(selection.Series[0], CreateData([1m, 2m]), null)],
+                DateTime.UtcNow);
+            var result = new OperationChainComputationGridResult(null, "Input Series", [], "loaded")
+            {
+                InputSnapshot = snapshot
+            };
+
+            await renderer.RenderAsync(new CartesianChart(), result, [false, false]);
+
+            Assert.Equal(1, contract.ClearCalls);
+            Assert.Equal(0, contract.RenderCalls);
+        });
+    }
+
+    [Fact]
     public async Task ClearAsync_ShouldDelegateToTransformContract()
     {
         await StaTestHelper.RunAsync(async () =>
