@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Computation.TimeSeries;
 using DataVisualiser.VNext.Kernel;
 
 namespace DataVisualiser.UI.Charts.Presentation;
@@ -47,44 +48,12 @@ internal static class TransformCorrelationMapper
         string rightLabel,
         string label)
     {
-        var pairs = left.Zip(right)
-            .Where(pair => double.IsFinite(pair.First) && double.IsFinite(pair.Second))
-            .ToArray();
-        if (pairs.Length < 2)
-            return new TransformCorrelationSummary(label, leftLabel, rightLabel, double.NaN, double.NaN, double.NaN, pairs.Length);
-
-        var leftMean = pairs.Average(pair => pair.First);
-        var rightMean = pairs.Average(pair => pair.Second);
-        var numerator = pairs.Sum(pair => (pair.First - leftMean) * (pair.Second - rightMean));
-        var leftVariance = pairs.Sum(pair => Math.Pow(pair.First - leftMean, 2));
-        var rightVariance = pairs.Sum(pair => Math.Pow(pair.Second - rightMean, 2));
-        var denominator = Math.Sqrt(leftVariance * rightVariance);
-        var correlation = denominator <= double.Epsilon ? double.NaN : numerator / denominator;
-        var (lower, upper) = CalculateConfidenceInterval(correlation, pairs.Length);
-
-        return new TransformCorrelationSummary(label, leftLabel, rightLabel, correlation, lower, upper, pairs.Length);
+        var result = CorrelationCalculator.Pearson(left, right);
+        return new TransformCorrelationSummary(label, leftLabel, rightLabel, result.Correlation, result.ConfidenceLower, result.ConfidenceUpper, result.SampleCount);
     }
 
-    private static (double Lower, double Upper) CalculateConfidenceInterval(double correlation, int sampleCount)
-    {
-        if (!double.IsFinite(correlation) || sampleCount < 4)
-            return (double.NaN, double.NaN);
-
-        var bounded = Math.Clamp(correlation, -0.999999d, 0.999999d);
-        var z = 0.5d * Math.Log((1d + bounded) / (1d - bounded));
-        var delta = 1.96d / Math.Sqrt(sampleCount - 3d);
-        return (Math.Tanh(z - delta), Math.Tanh(z + delta));
-    }
-
-    private static IReadOnlyList<double> Sum(IEnumerable<IReadOnlyList<double>> seriesValues, int count)
-    {
-        var inputs = seriesValues.ToArray();
-        var result = new double[count];
-        for (var index = 0; index < count; index++)
-            result[index] = inputs.Sum(values => double.IsNaN(values[index]) ? 0d : values[index]);
-
-        return result;
-    }
+    private static IReadOnlyList<double> Sum(IEnumerable<IReadOnlyList<double>> seriesValues, int count) =>
+        SeriesMath.SumByIndex(seriesValues, count);
 
     private static string ResolveShortLabel(AlignedMetricSeries series) =>
         string.IsNullOrWhiteSpace(series.Request.DisplaySubtype)

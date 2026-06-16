@@ -70,7 +70,7 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
         UpdateTransformSubtypeOptions();
         var resolution = await _transformDataResolutionCoordinator.ResolveAsync(context, _isTransformSelectionPendingLoad);
         PopulateTransformGrids(resolution);
-        UpdateTransformComputeButtonState();
+        UpdateTransformComputeButtonState(resolution);
     }
 
     public override void Clear(ChartState state)
@@ -157,6 +157,16 @@ public sealed class TransformDataPanelControllerAdapter : CartesianChartControll
             _viewModel.ChartState.LastContext,
             _isTransformSelectionPendingLoad,
             ctx => _transformDataResolutionCoordinator.ResolveSelections(ctx, _isTransformSelectionPendingLoad),
+            _transformOperationExecutionCoordinator);
+    }
+
+    private void UpdateTransformComputeButtonState(TransformResolutionResult resolution)
+    {
+        _transformOperationStateCoordinator.UpdateComputeButtonState(
+            _controller,
+            resolution.Context,
+            _isTransformSelectionPendingLoad,
+            _ => resolution.Selection,
             _transformOperationExecutionCoordinator);
     }
 

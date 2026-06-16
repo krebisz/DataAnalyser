@@ -39,6 +39,23 @@ public sealed class DataFetcherMetricCatalogQueriesTests
     }
 
     [Fact]
+    public void BaseMetricTypesFallback_ShouldExcludeDisabledSubtypes()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "Core",
+            "Data",
+            "Repositories",
+            "DataFetcherMetricCatalogQueries.cs");
+
+        Assert.Contains("-- DataFetcher.GetBaseMetricTypes ({tableName})", source);
+        Assert.Contains("LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m", source);
+        Assert.Contains("m.MetricType = t.MetricType", source);
+        Assert.Contains("m.MetricSubtype = t.MetricSubtype", source);
+        Assert.Contains("AND (m.Disabled IS NULL OR m.Disabled = 0)", source);
+    }
+
+    [Fact]
     public void SubtypeOptions_ShouldResolveRawMetricTypeOrDisplayName()
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile(
@@ -68,6 +85,21 @@ public sealed class DataFetcherMetricCatalogQueriesTests
         Assert.Contains("GROUP BY COALESCE(NULLIF(m.MetricSubtypeName, ''), c.MetricSubtype)", source);
         Assert.Contains("GROUP BY COALESCE(NULLIF(m.MetricSubtypeName, ''), t.MetricSubtype)", source);
         Assert.DoesNotContain("MAX(m.MetricSubtypeName)", source);
+    }
+
+    [Fact]
+    public void SubtypeOptions_ShouldExcludeDisabledRowsBeforeGroupingDisplayedSubtypeNames()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "Core",
+            "Data",
+            "Repositories",
+            "DataFetcherMetricCatalogQueries.cs");
+
+        Assert.Contains("AND (m.Disabled IS NULL OR m.Disabled = 0)", source);
+        Assert.Contains("AND (metricTypeName.Disabled IS NULL OR metricTypeName.Disabled = 0)", source);
+        Assert.DoesNotContain("HAVING", source);
     }
 
     [Fact]

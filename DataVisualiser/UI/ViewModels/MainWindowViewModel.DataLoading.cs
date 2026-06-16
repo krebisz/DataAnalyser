@@ -20,6 +20,11 @@ public partial class MainWindowViewModel
         return _metricLoadCoordinator.LoadSubtypesAsync(args => SubtypesLoaded?.Invoke(this, args), RaiseError);
     }
 
+    public void RequestLatestSubtypesReload()
+    {
+        _metricLoadCoordinator.RequestLatestSubtypesReload(args => SubtypesLoaded?.Invoke(this, args), RaiseError);
+    }
+
     /// <summary>
     ///     Phase 6 - Step 2.1
     ///     Centralized data load for the currently selected metric + subtypes + date range.

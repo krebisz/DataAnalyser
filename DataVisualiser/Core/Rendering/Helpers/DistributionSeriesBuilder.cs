@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Computation.TimeSeries;
 using DataVisualiser.Core.Configuration.Defaults;
 using LiveCharts;
 using LiveCharts.Wpf;
@@ -36,8 +37,7 @@ internal static class DistributionSeriesBuilder
         for (var i = 0; i < bucketCount; i++)
         {
             var values = bucketValues.TryGetValue(i, out var bucket) ? bucket : [];
-            var validValues = values.Where(v => !double.IsNaN(v)).ToList();
-            series.Values.Add(validValues.Count > 0 ? validValues.Average() : double.NaN);
+            series.Values.Add(SeriesMath.AverageFinite(values));
         }
 
         chart.Series.Add(series);

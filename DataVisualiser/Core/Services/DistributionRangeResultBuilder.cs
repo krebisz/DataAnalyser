@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Computation.TimeSeries;
 using DataVisualiser.Shared.Models;
 
 namespace DataVisualiser.Core.Services;
@@ -44,8 +45,7 @@ internal static class DistributionRangeResultBuilder
         {
             if (extendedResult?.BucketValues.TryGetValue(i, out var values) == true)
             {
-                var validValues = values.Where(v => !double.IsNaN(v)).ToList();
-                averages.Add(validValues.Count > 0 ? validValues.Average() : double.NaN);
+                averages.Add(SeriesMath.AverageFinite(values));
             }
             else
             {

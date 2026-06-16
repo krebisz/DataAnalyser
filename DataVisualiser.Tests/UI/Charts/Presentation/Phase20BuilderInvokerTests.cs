@@ -7,8 +7,10 @@ using DataVisualiser.Core.Strategies.Abstractions;
 using DataVisualiser.Core.Validation;
 using DataVisualiser.Shared.Models;
 using DataVisualiser.UI.Charts.Presentation;
+using DataVisualiser.UI.MainHost.Evidence;
 using DataVisualiser.UI.State;
 using DataVisualiser.UI.ViewModels;
+using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.Tests.UI.Charts.Presentation;
 
@@ -188,6 +190,63 @@ public sealed class Phase20BuilderInvokerTests
         Assert.Equal("Weight - fat", result.DisplayName);
     }
 
+    // ─── TemporalMetricSeriesInputBuilder ───────────────────────────────────
+
+    [Fact]
+    public async Task TemporalInputBuilder_WithNoContextData_ReturnsNull()
+    {
+        var builder = CreateTemporalInputBuilder(out _);
+        var ctx = new ChartDataContext { Data1 = null, From = new DateTime(2026, 1, 1), To = new DateTime(2026, 1, 7) };
+
+        var request = builder.CreateRequest(
+            ctx,
+            selectedSeries: null,
+            displayName: "Weight",
+            ChartProgramKind.Distribution,
+            EvidenceRuntimePath.VNextDistribution,
+            (_, _, _, _, _) => Task.FromResult(((IReadOnlyList<MetricData>)Array.Empty<MetricData>(), (DataFileReader.Canonical.ICanonicalMetricSeries?)null)));
+
+        var result = await builder.BuildAsync(request);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task TemporalInputBuilder_WithMatchingSelection_MapsSharedContext()
+    {
+        var builder = CreateTemporalInputBuilder(out _);
+        var data = new List<MetricData> { new() { NormalizedTimestamp = new DateTime(2026, 1, 1), Value = 5m } };
+        var selection = new MetricSeriesSelection("Weight", "fat", "Weight", "Fat Mass");
+        var ctx = new ChartDataContext
+        {
+            Data1 = data,
+            DisplayName1 = "Weight : Fat Mass",
+            MetricType = "Weight",
+            PrimaryMetricType = "Weight",
+            PrimarySubtype = "fat",
+            From = new DateTime(2026, 1, 1),
+            To = new DateTime(2026, 1, 7)
+        };
+
+        var request = builder.CreateRequest(
+            ctx,
+            selection,
+            "Weight : Fat Mass",
+            ChartProgramKind.WeekdayTrend,
+            EvidenceRuntimePath.VNextWeekdayTrend,
+            (_, _, _, _, _) => throw new InvalidOperationException("Matching context should not reload data."));
+
+        var result = await builder.BuildAsync(request);
+
+        Assert.NotNull(result);
+        Assert.Same(data, result.Data);
+        Assert.Equal("Weight : Fat Mass", result.DisplayName);
+        Assert.Equal("Weight", result.RenderingContext.PrimaryMetricType);
+        Assert.Equal("fat", result.RenderingContext.PrimarySubtype);
+        Assert.Equal(new DateTime(2026, 1, 1), result.RenderingContext.From);
+        Assert.Equal(new DateTime(2026, 1, 7), result.RenderingContext.To);
+    }
+
     // ─── WeekdayTrendComputationInvoker ─────────────────────────────────────
 
     [Fact]
@@ -274,6 +333,13 @@ public sealed class Phase20BuilderInvokerTests
         var metricService = new MetricSelectionService("Server=(localdb)\\MSSQLLocalDB;Database=Fake;Trusted_Connection=True;");
         viewModel = new MainWindowViewModel(new ChartState(), new MetricState(), new UiState(), metricService);
         return new DistributionRenderInputBuilder(viewModel, metricService);
+    }
+
+    private static TemporalMetricSeriesInputBuilder CreateTemporalInputBuilder(out MainWindowViewModel viewModel)
+    {
+        var metricService = new MetricSelectionService("Server=(localdb)\\MSSQLLocalDB;Database=Fake;Trusted_Connection=True;");
+        viewModel = new MainWindowViewModel(new ChartState(), new MetricState(), new UiState(), metricService);
+        return new TemporalMetricSeriesInputBuilder(viewModel, metricService);
     }
 
     private static WeekdayTrendComputationInvoker CreateWeekdayTrendInvoker(WeekdayTrendResult? result)

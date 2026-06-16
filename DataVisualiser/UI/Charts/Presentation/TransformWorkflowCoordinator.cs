@@ -41,7 +41,7 @@ internal sealed class TransformWorkflowCoordinator(
         ChartDataContext? context,
         bool isSelectionPendingLoad,
         Action<TransformResolutionResult> populateTransformGrids,
-        Action updateTransformComputeButtonState)
+        Action<TransformResolutionResult> updateTransformComputeButtonState)
     {
         ArgumentNullException.ThrowIfNull(populateTransformGrids);
         ArgumentNullException.ThrowIfNull(updateTransformComputeButtonState);
@@ -51,7 +51,7 @@ internal sealed class TransformWorkflowCoordinator(
 
         var resolution = await _transformDataResolutionCoordinator.ResolveAsync(context, isSelectionPendingLoad);
         populateTransformGrids(resolution);
-        updateTransformComputeButtonState();
+        updateTransformComputeButtonState(resolution);
     }
 
     private async Task RenderResultsAsync(TransformExecutionResult execution, TransformResolutionResult resolution)

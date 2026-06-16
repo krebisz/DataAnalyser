@@ -17,14 +17,18 @@ public sealed class MetricLoadCoordinator
     private readonly ChartState _chartState;
     private readonly Func<Exception, string> _formatError;
     private readonly object _metricReloadRequestGate = new();
+    private readonly object _subtypeReloadRequestGate = new();
     private readonly SemaphoreSlim _metricReloadSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _subtypeReloadSemaphore = new(1, 1);
     private readonly MetricSelectionService _metricService;
     private readonly MetricState _metricState;
     private readonly UiState _uiState;
     private readonly DataLoadValidator _validator;
     private readonly VNextMetricLoadRouter _vnextMetricLoadRouter;
     private bool _isLatestMetricReloadRunnerActive;
+    private bool _isLatestSubtypeReloadRunnerActive;
     private int _latestMetricReloadRequestVersion;
+    private int _latestSubtypeReloadRequestVersion;
 
     private MetricLoadCoordinator(ChartState chartState, MetricState metricState, UiState uiState, MetricSelectionService metricService, DataLoadValidator validator, Func<Exception, string> formatError, VNextMainChartIntegrationCoordinator? vnextMainChartIntegrationCoordinator = null)
     {
@@ -152,9 +156,74 @@ public sealed class MetricLoadCoordinator
 
     public async Task LoadSubtypesAsync(Action<SubtypesLoadedEventArgs> onLoaded, Action<string> onError)
     {
-        if (_uiState.IsLoadingSubtypes)
+        if (!await _subtypeReloadSemaphore.WaitAsync(0))
             return;
 
+        try
+        {
+            await LoadSubtypesOnceAsync(onLoaded, onError);
+        }
+        finally
+        {
+            _subtypeReloadSemaphore.Release();
+        }
+    }
+
+    public void RequestLatestSubtypesReload(Action<SubtypesLoadedEventArgs> onLoaded, Action<string> onError)
+    {
+        lock (_subtypeReloadRequestGate)
+        {
+            _latestSubtypeReloadRequestVersion++;
+            if (_isLatestSubtypeReloadRunnerActive)
+                return;
+
+            _isLatestSubtypeReloadRunnerActive = true;
+        }
+
+        _ = RunLatestSubtypesReloadsAsync(onLoaded, onError);
+    }
+
+    private async Task RunLatestSubtypesReloadsAsync(Action<SubtypesLoadedEventArgs> onLoaded, Action<string> onError)
+    {
+        try
+        {
+            while (true)
+            {
+                int observedVersion;
+                lock (_subtypeReloadRequestGate)
+                    observedVersion = _latestSubtypeReloadRequestVersion;
+
+                await _subtypeReloadSemaphore.WaitAsync();
+                try
+                {
+                    await LoadSubtypesOnceAsync(onLoaded, onError);
+                }
+                finally
+                {
+                    _subtypeReloadSemaphore.Release();
+                }
+
+                lock (_subtypeReloadRequestGate)
+                {
+                    if (observedVersion != _latestSubtypeReloadRequestVersion)
+                        continue;
+
+                    _isLatestSubtypeReloadRunnerActive = false;
+                    return;
+                }
+            }
+        }
+        catch
+        {
+            lock (_subtypeReloadRequestGate)
+                _isLatestSubtypeReloadRunnerActive = false;
+
+            throw;
+        }
+    }
+
+    private async Task LoadSubtypesOnceAsync(Action<SubtypesLoadedEventArgs> onLoaded, Action<string> onError)
+    {
         try
         {
             _uiState.IsLoadingSubtypes = true;

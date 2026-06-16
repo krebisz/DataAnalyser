@@ -75,12 +75,27 @@ internal sealed class MainChartsViewStateSyncCoordinator
         selectorManager.ClearDynamic();
         selectorManager.SetPrimaryMetricType(selectedMetricType);
 
-        ApplyComboSelectionByValue(primaryCombo, selections[0].QuerySubtype);
+        var availableSubtypeValues = subtypeList
+            .Select(subtype => subtype.Value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        for (var i = 1; i < selections.Count; i++)
+        var availableSelections = selections
+            .Where(selection => selection.QuerySubtype != null && availableSubtypeValues.Contains(selection.QuerySubtype))
+            .ToList();
+
+        if (availableSelections.Count == 0)
+        {
+            ApplyComboSelectionByValue(primaryCombo, null);
+            return;
+        }
+
+        ApplyComboSelectionByValue(primaryCombo, availableSelections[0].QuerySubtype);
+
+        for (var i = 1; i < availableSelections.Count; i++)
         {
             var combo = selectorManager.AddSubtypeCombo(subtypeList, selectedMetricType);
-            ApplyComboSelectionByValue(combo, selections[i].QuerySubtype);
+            ApplyComboSelectionByValue(combo, availableSelections[i].QuerySubtype);
         }
     }
 

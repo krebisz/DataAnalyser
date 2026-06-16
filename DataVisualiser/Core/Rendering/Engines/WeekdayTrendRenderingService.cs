@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using DataVisualiser.Core.Computation.TimeSeries;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Core.Rendering.Helpers;
 using DataVisualiser.Shared.Helpers;
@@ -302,8 +303,8 @@ public sealed class WeekdayTrendRenderingService
     private static ChartValues<ObservablePoint> BuildRunningMeanObservablePoints(WeekdayTrendResult result, ChartState chartState, TimeSpan? window)
     {
         var values = new ChartValues<ObservablePoint>();
-        foreach (var point in BuildRunningMeanPoints(result, chartState, window))
-            values.Add(new ObservablePoint(point.Ticks, point.Value));
+        foreach (var point in RunningAverageCalculator.Calculate(GetEnabledPoints(result, chartState), window))
+            values.Add(new ObservablePoint(point.Timestamp.Ticks, point.Value));
 
         return values;
     }
@@ -311,59 +312,21 @@ public sealed class WeekdayTrendRenderingService
     private static ChartValues<ScatterPoint> BuildRunningMeanScatterPoints(WeekdayTrendResult result, ChartState chartState, TimeSpan? window)
     {
         var values = new ChartValues<ScatterPoint>();
-        foreach (var point in BuildRunningMeanPoints(result, chartState, window))
-            values.Add(new ScatterPoint(point.Ticks, point.Value, 1));
+        foreach (var point in RunningAverageCalculator.Calculate(GetEnabledPoints(result, chartState), window))
+            values.Add(new ScatterPoint(point.Timestamp.Ticks, point.Value, 1));
 
         return values;
     }
 
-    private static IEnumerable<(long Ticks, double Value)> BuildRunningMeanPoints(WeekdayTrendResult result, ChartState chartState, TimeSpan? window)
+    private static IEnumerable<TimeSeriesPoint> GetEnabledPoints(WeekdayTrendResult result, ChartState chartState)
     {
-        var points = new List<(long Ticks, double Value)>();
         foreach (var entry in result.SeriesByDay)
         {
             if (!IsDayEnabled(entry.Key, chartState))
                 continue;
 
             foreach (var point in entry.Value.Points)
-                points.Add((point.Date.Ticks, point.Value));
-        }
-
-        if (points.Count == 0)
-            yield break;
-
-        points.Sort((a, b) => a.Ticks.CompareTo(b.Ticks));
-
-        if (window == null)
-        {
-            var runningSum = 0.0;
-            var runningCount = 0;
-            foreach (var point in points)
-            {
-                runningSum += point.Value;
-                runningCount++;
-                yield return (point.Ticks, runningSum / runningCount);
-            }
-
-            yield break;
-        }
-
-        var windowQueue = new Queue<(long Ticks, double Value)>();
-        var windowSum = 0.0;
-        var windowTicks = window.Value.Ticks;
-
-        foreach (var point in points)
-        {
-            windowQueue.Enqueue(point);
-            windowSum += point.Value;
-
-            while (windowQueue.Count > 0 && point.Ticks - windowQueue.Peek().Ticks > windowTicks)
-            {
-                var removed = windowQueue.Dequeue();
-                windowSum -= removed.Value;
-            }
-
-            yield return (point.Ticks, windowSum / windowQueue.Count);
+                yield return new TimeSeriesPoint(point.Date, point.Value);
         }
     }
 

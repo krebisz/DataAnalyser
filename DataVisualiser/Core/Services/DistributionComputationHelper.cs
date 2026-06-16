@@ -1,4 +1,5 @@
 using DataVisualiser.Core.Computation.Results;
+using DataVisualiser.Core.Computation.TimeSeries;
 using DataVisualiser.Shared.Helpers;
 using DataVisualiser.Shared.Models;
 
@@ -133,8 +134,7 @@ internal static class DistributionComputationHelper
         for (var i = 0; i < bucketCount; i++)
         {
             var values = bucketValues.TryGetValue(i, out var bucket) ? bucket : [];
-            var validValues = values.Where(v => !double.IsNaN(v)).ToList();
-            averages[i] = validValues.Count > 0 ? validValues.Average() : double.NaN;
+            averages[i] = SeriesMath.AverageFinite(values);
         }
 
         return averages;

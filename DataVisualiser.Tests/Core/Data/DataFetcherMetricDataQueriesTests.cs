@@ -64,6 +64,30 @@ public sealed class DataFetcherMetricDataQueriesTests
     }
 
     [Fact]
+    public void SamplingQuery_ExcludesDisabledCanonicalMetricRows()
+    {
+        var sql = new StringBuilder();
+        var parameters = new DynamicParameters();
+
+        InvokeBuildSamplingQuery(
+            sql,
+            parameters,
+            tableName: "HealthMetrics",
+            providerColumn: "hm.Provider AS Provider",
+            targetSamples: 1500,
+            baseType: "Weight",
+            subtype: "Fat",
+            from: new DateTime(2022, 01, 01),
+            to: new DateTime(2024, 01, 01));
+
+        var text = sql.ToString();
+        Assert.Contains("NOT EXISTS", text);
+        Assert.Contains("disabledMetric.MetricType = hm.MetricType", text);
+        Assert.Contains("disabledMetric.MetricSubtype = hm.MetricSubtype", text);
+        Assert.Contains("disabledMetric.Disabled = 1", text);
+    }
+
+    [Fact]
     public void SamplingQuery_RequiresBoundedDateRange()
     {
         var sql = new StringBuilder();

@@ -2,6 +2,7 @@ using System.Windows.Controls;
 using DataVisualiser.Core.Configuration.Defaults;
 using DataVisualiser.Tests.Helpers;
 using DataVisualiser.Tests.Helpers.Infrastructure;
+using DataVisualiser.UI.Charts.Presentation;
 using DataVisualiser.UI.MainHost;
 using DataVisualiser.UI.MainHost.Coordination;
 using DataVisualiser.UI.State;
@@ -128,6 +129,49 @@ public sealed class MainChartsViewStateSyncCoordinatorTests
 
             var selected = Assert.IsType<DataVisualiser.Shared.Models.MetricNameOption>(combo.SelectedItem);
             Assert.Equal("fat_free_mass", selected.Value);
+        });
+    }
+
+    [Fact]
+    public void ApplySubtypeSelections_ShouldIgnoreSavedSelectionsMissingFromFilteredSubtypeOptions()
+    {
+        StaTestHelper.Run(() =>
+        {
+            var panel = new StackPanel();
+            var primaryCombo = new ComboBox
+            {
+                DisplayMemberPath = "Display",
+                SelectedValuePath = "Value"
+            };
+            panel.Children.Add(new Label());
+            panel.Children.Add(primaryCombo);
+            panel.Children.Add(new Button { Content = "Add Subtype" });
+
+            var selector = new SubtypeSelector(panel, primaryCombo);
+            var metricType = new DataVisualiser.Shared.Models.MetricNameOption("Weight", "Weight");
+            var availableSubtypes = new[]
+            {
+                new DataVisualiser.Shared.Models.MetricNameOption("Total Mass", "Total Mass"),
+                new DataVisualiser.Shared.Models.MetricNameOption("BMI", "BMI")
+            };
+
+            selector.ReplacePrimaryItems(availableSubtypes, metricType, preserveSelection: false);
+
+            MainChartsViewStateSyncCoordinator.ApplySubtypeSelections(
+                selector,
+                primaryCombo,
+                availableSubtypes,
+                [
+                    new DataVisualiser.Shared.Models.MetricSeriesSelection("Weight", "Fat"),
+                    new DataVisualiser.Shared.Models.MetricSeriesSelection("Weight", "Total Mass")
+                ],
+                metricType);
+
+            var selections = selector.GetSelectedSeries();
+
+            Assert.Single(selector.GetActiveCombos());
+            Assert.Single(selections);
+            Assert.Equal("Total Mass", selections[0].QuerySubtype);
         });
     }
 }

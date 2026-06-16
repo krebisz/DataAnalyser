@@ -139,6 +139,63 @@ public sealed class MetricLoadCoordinatorTests
     }
 
     [Fact]
+    public async Task RequestLatestSubtypesReload_ShouldReplayLatestMetricTypeWhenEarlierLoadIsStillRunning()
+    {
+        var chartState = new ChartState();
+        var metricState = new MetricState
+        {
+            SelectedMetricType = "Weight",
+            ResolutionTableName = "HealthMetrics"
+        };
+        var uiState = new UiState();
+        var validator = new DataLoadValidator(metricState);
+        var queries = new BlockingSubtypeQueries();
+        var service = new MetricSelectionService(queries, "TestConnection");
+        var coordinator = MetricLoadCoordinator.CreateInstance(
+            chartState,
+            metricState,
+            uiState,
+            service,
+            validator,
+            ex => ex.Message);
+
+        var loaded = new List<IReadOnlyList<MetricNameOption>>();
+        var latestLoaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        coordinator.RequestLatestSubtypesReload(
+            args =>
+            {
+                var subtypes = args.Subtypes.ToList();
+                loaded.Add(subtypes);
+                if (subtypes.Any(subtype => subtype.Value == "Steps"))
+                    latestLoaded.TrySetResult();
+            },
+            message => throw new Xunit.Sdk.XunitException(message));
+
+        await queries.FirstLoadStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        metricState.SelectedMetricType = "Activity";
+        coordinator.RequestLatestSubtypesReload(
+            args =>
+            {
+                var subtypes = args.Subtypes.ToList();
+                loaded.Add(subtypes);
+                if (subtypes.Any(subtype => subtype.Value == "Steps"))
+                    latestLoaded.TrySetResult();
+            },
+            message => throw new Xunit.Sdk.XunitException(message));
+
+        queries.ReleaseFirstLoad.SetResult();
+        await latestLoaded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(["Weight", "Activity"], queries.SubtypeMetricTypes);
+        Assert.Equal(2, loaded.Count);
+        Assert.Equal("Fat", loaded[0].Single().Value);
+        Assert.Equal("Steps", loaded[1].Single().Value);
+        Assert.False(uiState.IsLoadingSubtypes);
+    }
+
+    [Fact]
     public async Task RequestLatestMetricTypesReload_ShouldWaitForCommandLoadBeforeRunningLatestRequest()
     {
         var chartState = new ChartState();
@@ -762,6 +819,68 @@ public sealed class MetricLoadCoordinatorTests
         public Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName)
         {
             return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeFromCounts(string baseType, IReadOnlyCollection<string>? subtypes = null)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+
+        public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRangeForSubtypes(string baseType, IReadOnlyCollection<string>? subtypes, string tableName)
+        {
+            return Task.FromResult<(DateTime MinDate, DateTime MaxDate)?>(null);
+        }
+    }
+
+    private sealed class BlockingSubtypeQueries : IMetricSelectionDataQueries
+    {
+        private int _subtypeCallCount;
+
+        public TaskCompletionSource FirstLoadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource ReleaseFirstLoad { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public List<string> SubtypeMetricTypes { get; } = [];
+
+        public Task<long> GetRecordCount(string metricType, string? metricSubtype = null)
+        {
+            return Task.FromResult(0L);
+        }
+
+        public Task<IEnumerable<MetricData>> GetHealthMetricsDataByBaseType(
+            string baseType,
+            string? subtype,
+            DateTime? from,
+            DateTime? to,
+            string tableName,
+            int? maxRecords = null,
+            SamplingMode samplingMode = SamplingMode.None,
+            int? targetSamples = null)
+        {
+            return Task.FromResult<IEnumerable<MetricData>>(Array.Empty<MetricData>());
+        }
+
+        public Task<IEnumerable<MetricNameOption>> GetBaseMetricTypeOptions(string tableName)
+        {
+            return Task.FromResult<IEnumerable<MetricNameOption>>(Array.Empty<MetricNameOption>());
+        }
+
+        public async Task<IEnumerable<MetricNameOption>> GetSubtypeOptionsForBaseType(string baseType, string tableName)
+        {
+            SubtypeMetricTypes.Add(baseType);
+            if (Interlocked.Increment(ref _subtypeCallCount) == 1)
+            {
+                FirstLoadStarted.SetResult();
+                await ReleaseFirstLoad.Task;
+                return [new MetricNameOption("Fat", "Fat")];
+            }
+
+            return [new MetricNameOption("Steps", "Steps")];
         }
 
         public Task<(DateTime MinDate, DateTime MaxDate)?> GetBaseTypeDateRange(string baseType, string? subtype, string tableName)

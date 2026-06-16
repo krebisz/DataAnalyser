@@ -157,6 +157,7 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
         SqlQueryBuilder.AddMetricTypeOrDisplayNameFilter(sql, parameters, baseType, "hm.MetricType");
         SqlQueryBuilder.AddSubtypeOrDisplayNameFilter(sql, parameters, subtype, "hm.MetricType", "hm.MetricSubtype");
         SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to, "hm.NormalizedTimestamp");
+        SqlQueryBuilder.AddEnabledCanonicalFilter(sql, "hm.MetricType", "hm.MetricSubtype");
         sql.Append(" AND hm.Value IS NOT NULL");
 
         sql.Append($@"
@@ -212,6 +213,7 @@ internal sealed class DataFetcherMetricDataQueries : DataFetcherQueryGroup
         SqlQueryBuilder.AddMetricTypeOrDisplayNameFilter(sql, parameters, baseType, "hm.MetricType");
         SqlQueryBuilder.AddSubtypeOrDisplayNameFilter(sql, parameters, subtype, "hm.MetricType", "hm.MetricSubtype");
         SqlQueryBuilder.AddDateRangeFilters(sql, parameters, from, to, "hm.NormalizedTimestamp");
+        SqlQueryBuilder.AddEnabledCanonicalFilter(sql, "hm.MetricType", "hm.MetricSubtype");
         sql.Append(" AND hm.Value IS NOT NULL ORDER BY hm.NormalizedTimestamp");
     }
 

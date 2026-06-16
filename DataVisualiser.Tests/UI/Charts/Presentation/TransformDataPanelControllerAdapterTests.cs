@@ -507,6 +507,81 @@ public sealed class TransformDataPanelControllerAdapterTests
         });
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RefreshTransformGridsFromSelectionAsync_KeepsBinaryComputeEnabled_WhenFirstSubtypeIsSelected(bool selectPrimaryFirst)
+    {
+        await StaTestHelper.RunAsync(async () =>
+        {
+            var adapter = CreateAdapter(
+                out var viewModel,
+                out var controller,
+                out var tooltipManager,
+                out var window,
+                new ReturningMetricSelectionDataQueries());
+
+            viewModel.MetricState.SetSeriesSelections(new List<MetricSeriesSelection>
+            {
+                new("MetricA", "SubA", "MetricA", "SubA"),
+                new("MetricB", "SubB", "MetricB", "SubB")
+            });
+
+            controller.TransformOperationCombo.Items.Add(new ComboBoxItem
+            {
+                Tag = "Add",
+                Content = "Add"
+            });
+
+            var data = new List<MetricData>
+            {
+                new()
+                {
+                    NormalizedTimestamp = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Value = 1m
+                }
+            };
+
+            viewModel.ChartState.LastContext = new ChartDataContext
+            {
+                Data1 = data,
+                MetricType = "MetricA",
+                PrimaryMetricType = "MetricA",
+                PrimarySubtype = "SubA",
+                DisplayPrimaryMetricType = "MetricA",
+                DisplayPrimarySubtype = "SubA",
+                DisplayName1 = "MetricA:SubA",
+                From = data[0].NormalizedTimestamp,
+                To = data[0].NormalizedTimestamp
+            };
+
+            adapter.UpdateTransformSubtypeOptions();
+            controller.TransformOperationCombo.SelectedIndex = 0;
+
+            if (selectPrimaryFirst)
+            {
+                controller.TransformPrimarySubtypeCombo.SelectedIndex = 1;
+                controller.TransformPrimarySubtypeCombo.SelectedIndex = 0;
+            }
+            else
+            {
+                controller.TransformSecondarySubtypeCombo.SelectedIndex = 0;
+            }
+
+            if (selectPrimaryFirst)
+                adapter.OnPrimarySubtypeChanged(null, EventArgs.Empty);
+            else
+                adapter.OnSecondarySubtypeChanged(null, EventArgs.Empty);
+
+            await Task.Delay(25);
+
+            Assert.True(controller.TransformComputeButton.IsEnabled);
+
+            tooltipManager.Dispose();
+            window.Close();
+        });
+    }
+
     private static TransformDataPanelControllerAdapter CreateAdapter(out MainWindowViewModel viewModel, out ITransformDataPanelController controller, out ChartTooltipManager tooltipManager, out Window window, IMetricSelectionDataQueries? queries = null)
     {
         var chartState = new ChartState

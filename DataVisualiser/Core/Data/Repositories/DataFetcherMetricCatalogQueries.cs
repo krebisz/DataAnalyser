@@ -120,13 +120,17 @@ internal sealed class DataFetcherMetricCatalogQueries : DataFetcherQueryGroup
 
         var fallbackSql = $@"
                 -- DataFetcher.GetBaseMetricTypes ({tableName})
-                SELECT DISTINCT MetricType 
-                FROM [dbo].[{tableName}]
-                WHERE MetricType IS NOT NULL
-                  AND MetricType != ''
-                  AND MetricSubtype IS NOT NULL
-                  AND MetricSubtype != ''
-                ORDER BY MetricType";
+                SELECT DISTINCT t.MetricType 
+                FROM [dbo].[{tableName}] t
+                LEFT JOIN {DataAccessDefaults.HealthMetricsCanonicalTable} m
+                       ON m.MetricType = t.MetricType
+                      AND m.MetricSubtype = t.MetricSubtype
+                WHERE t.MetricType IS NOT NULL
+                  AND t.MetricType != ''
+                  AND t.MetricSubtype IS NOT NULL
+                  AND t.MetricSubtype != ''
+                  AND (m.Disabled IS NULL OR m.Disabled = 0)
+                ORDER BY t.MetricType";
 
         return await conn.QueryAsync<string>(fallbackSql);
     }

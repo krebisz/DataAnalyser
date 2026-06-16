@@ -85,6 +85,12 @@ public sealed class ArchitectureGuardrailTests
             "Charts",
             "Presentation",
             "DistributionRenderInputBuilder.cs");
+        var temporalBuilderSource = SourceTreeTestHelper.ReadRepositoryFile(
+            "DataVisualiser",
+            "UI",
+            "Charts",
+            "Presentation",
+            "TemporalMetricSeriesInputBuilder.cs");
 
         Assert.Contains("ChartProgramKind.Distribution => new CapabilityRequest", capabilitySource, StringComparison.Ordinal);
         Assert.Contains("AnalyticalCapabilityKind.Distribution", capabilitySource, StringComparison.Ordinal);
@@ -92,7 +98,8 @@ public sealed class ArchitectureGuardrailTests
         Assert.Contains("public AnalyticalIntent Distribution(", intentFactorySource, StringComparison.Ordinal);
         Assert.Contains("ChartProgramRequest.Distribution()", intentFactorySource, StringComparison.Ordinal);
         Assert.Contains("ChartProgramRequest.Distribution()", plannerSource, StringComparison.Ordinal);
-        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", builderSource, StringComparison.Ordinal);
+        Assert.Contains("TemporalMetricSeriesInputBuilder", builderSource, StringComparison.Ordinal);
+        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", temporalBuilderSource, StringComparison.Ordinal);
         Assert.Contains("ChartProgramKind.Distribution", adapterSource, StringComparison.Ordinal);
         Assert.Contains("EvidenceRuntimePath.VNextDistribution", builderSource, StringComparison.Ordinal);
         Assert.Contains("ChartRenderPlanVocabularyMetadata.AddTo", renderingContractSource, StringComparison.Ordinal);
@@ -921,13 +928,15 @@ public sealed class ArchitectureGuardrailTests
     {
         var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "DistributionChartControllerAdapter.cs");
         var builderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "DistributionRenderInputBuilder.cs");
+        var temporalBuilderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TemporalMetricSeriesInputBuilder.cs");
 
         Assert.Contains("DistributionRenderInputBuilder", adapterSource, StringComparison.Ordinal);
         Assert.Contains("_renderInputBuilder.BuildAsync", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("LoadMetricDataAsync", adapterSource, StringComparison.Ordinal);
         Assert.DoesNotContain("VNextDataResolutionHelper.ResolveSeriesDataAsync", adapterSource, StringComparison.Ordinal);
 
-        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", builderSource, StringComparison.Ordinal);
+        Assert.Contains("TemporalMetricSeriesInputBuilder", builderSource, StringComparison.Ordinal);
+        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", temporalBuilderSource, StringComparison.Ordinal);
         Assert.Contains("LoadMetricDataWithCmsAsync", builderSource, StringComparison.Ordinal);
     }
 
@@ -936,6 +945,7 @@ public sealed class ArchitectureGuardrailTests
     {
         var adapterSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "WeekdayTrendChartControllerAdapter.cs");
         var invokerSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "WeekdayTrendComputationInvoker.cs");
+        var temporalBuilderSource = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Presentation", "TemporalMetricSeriesInputBuilder.cs");
 
         Assert.Contains("WeekdayTrendComputationInvoker", adapterSource, StringComparison.Ordinal);
         Assert.Contains("_computationInvoker.ComputeAsync", adapterSource, StringComparison.Ordinal);
@@ -944,7 +954,8 @@ public sealed class ArchitectureGuardrailTests
         Assert.DoesNotContain("VNextDataResolutionHelper", adapterSource, StringComparison.Ordinal);
 
         Assert.Contains("CreateStrategy", invokerSource, StringComparison.Ordinal);
-        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", invokerSource, StringComparison.Ordinal);
+        Assert.Contains("TemporalMetricSeriesInputBuilder", invokerSource, StringComparison.Ordinal);
+        Assert.Contains("VNextDataResolutionHelper.ResolveSeriesDataAsync", temporalBuilderSource, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1218,11 +1229,41 @@ public sealed class ArchitectureGuardrailTests
     {
         var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
         var visibilityBody = ExtractMethodBody(source, "private async void OnViewVisibilityChanged");
+        var restoreBody = ExtractMethodBody(source, "private async Task RestoreSyncfusionFromSharedStateAsync");
         var ensureBody = ExtractMethodBody(source, "private void EnsureMetricTypesLoadedForVisibleView");
 
-        Assert.Contains("EnsureMetricTypesLoadedForVisibleView();", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("RestoreSyncfusionFromSharedStateAsync", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("EnsureMetricTypesLoadedForVisibleView();", restoreBody, StringComparison.Ordinal);
         Assert.Contains("TablesCombo.Items.Count > 0", ensureBody, StringComparison.Ordinal);
         Assert.Contains("_viewModel.RequestLatestMetricTypesReload();", ensureBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SyncfusionChartsView_ShouldRestoreSharedSelectionsBeforeRenderingAfterTabSwitch()
+    {
+        var source = SourceTreeTestHelper.ReadRepositoryFile("DataVisualiser", "UI", "Charts", "Syncfusion", "SyncfusionChartsView.xaml.cs");
+        var visibilityBody = ExtractMethodBody(source, "private async void OnViewVisibilityChanged");
+        var restoreBody = ExtractMethodBody(source, "private async Task RestoreSyncfusionFromSharedStateAsync");
+        var completeRestoreBody = ExtractMethodBody(source, "private async Task CompleteTabSwitchRestoreAsync");
+        var subtypesLoadedBody = ExtractMethodBody(source, "private void OnSubtypesLoaded");
+        var subtypesLoadedActionsBody = ExtractMethodBody(source, "private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions");
+        var metricTypesLoadedActionsBody = ExtractMethodBody(source, "private ChartHostMetricSelectionCoordinator.MetricTypesLoadedActions CreateMetricTypesLoadedActions");
+
+        Assert.Contains("RestoreSyncfusionFromSharedStateAsync", visibilityBody, StringComparison.Ordinal);
+        Assert.Contains("needsSubtypeReload", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("_pendingTabSwitchRestore = true", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("LoadSubtypesCommand", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("CompleteTabSwitchRestoreAsync", restoreBody, StringComparison.Ordinal);
+        Assert.Contains("ApplySelectionStateToUi()", completeRestoreBody, StringComparison.Ordinal);
+        Assert.Contains("RenderChartAsync", completeRestoreBody, StringComparison.Ordinal);
+        Assert.Contains("_pendingTabSwitchRestore", metricTypesLoadedActionsBody, StringComparison.Ordinal);
+
+        var pendingFlagIndex = subtypesLoadedBody.IndexOf("_pendingTabSwitchRestore", StringComparison.Ordinal);
+        var applySelectionBranchIndex = subtypesLoadedBody.IndexOf("SubtypesFollowUp.ApplySelectionState", StringComparison.Ordinal);
+        Assert.True(pendingFlagIndex >= 0, "_pendingTabSwitchRestore check missing from Syncfusion OnSubtypesLoaded");
+        Assert.True(pendingFlagIndex < applySelectionBranchIndex, "_pendingTabSwitchRestore must be checked before Syncfusion ApplySelectionState branch");
+        Assert.Contains("_pendingTabSwitchRestore", subtypesLoadedActionsBody, StringComparison.Ordinal);
+        Assert.Contains("UpdateSelectedSubtypesInViewModel", subtypesLoadedActionsBody, StringComparison.Ordinal);
     }
 
     [Fact]

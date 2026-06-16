@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Orchestration;
 using DataVisualiser.Core.Transforms;
 using DataVisualiser.Core.Transforms.Operations;
@@ -155,13 +156,14 @@ internal sealed class TransformOperationExecutor
             1,
             computation.MetricsList,
             null,
-            BuildComputedSeries(
+            ComputedSeriesResultBuilder.Build(
                 operationTag,
                 operationTag,
                 computation.DataList,
                 computation.ComputedResults,
                 computation.ComputedResults,
-                computation.MetricsList));
+                computation.MetricsList,
+                operationTag));
     }
 
     private TransformExecutionResult? BuildBinaryExecution(IEnumerable<MetricData> primaryData, IEnumerable<MetricData> secondaryData, string operationTag)
@@ -177,13 +179,14 @@ internal sealed class TransformOperationExecutor
             2,
             computation.MetricsList,
             null,
-            BuildComputedSeries(
+            ComputedSeriesResultBuilder.Build(
                 operationTag,
                 operationTag,
                 computation.DataList,
                 computation.ComputedResults,
                 computation.ComputedResults,
-                computation.MetricsList));
+                computation.MetricsList,
+                operationTag));
     }
 
     private static TransformExecutionResult? BuildPrimaryProjection(TransformResolutionResult resolution)
@@ -207,13 +210,14 @@ internal sealed class TransformOperationExecutor
             1,
             metrics,
             label,
-            BuildComputedSeries(
+            ComputedSeriesResultBuilder.Build(
                 "identity",
                 label,
                 dataList,
                 results,
                 results,
-                metrics));
+                metrics,
+                "identity"));
     }
 
     private static List<MetricData> PrepareMetricData(IEnumerable<MetricData>? data)
@@ -234,24 +238,6 @@ internal sealed class TransformOperationExecutor
             .ToList();
 
         return new AlignedSeriesBundle(timeline, series);
-    }
-
-    private static ComputedSeriesResult BuildComputedSeries(
-        string id,
-        string label,
-        IReadOnlyList<MetricData> dataList,
-        IReadOnlyList<double> rawValues,
-        IReadOnlyList<double> smoothedValues,
-        IReadOnlyList<IReadOnlyList<MetricData>> sourceMetrics)
-    {
-        return new ComputedSeriesResult(
-            string.IsNullOrWhiteSpace(id) ? "computed" : id,
-            string.IsNullOrWhiteSpace(label) ? "Computed Series" : label,
-            dataList.Select(point => point.NormalizedTimestamp).ToArray(),
-            rawValues,
-            smoothedValues,
-            sourceMetrics.Select((_, index) => $"input-{index}").ToArray(),
-            id);
     }
 
     private static string BuildOperationSignature(SeriesOperationRequest operation) =>

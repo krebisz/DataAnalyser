@@ -95,7 +95,7 @@ public sealed class TransformWorkflowCoordinatorTests
                 CreatePrimaryOnlyContext(),
                 false,
                 _ => calls.Add("populate"),
-                () => calls.Add("compute"));
+                _ => calls.Add("compute"));
 
             Assert.Equal(["populate", "compute"], calls);
 

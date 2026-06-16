@@ -45,6 +45,7 @@ public partial class SyncfusionChartsView : UserControl
     private bool _isInitializing = true;
     private bool _isMetricTypeChangePending;
     private bool _isApplyingSelectionSync;
+    private bool _pendingTabSwitchRestore;
     private MainChartsViewEventBinder? _viewModelEventBinder;
     private MetricSelectionService _metricSelectionService = null!;
     private SubtypeSelector _selectorManager = null!;
@@ -382,6 +383,13 @@ public partial class SyncfusionChartsView : UserControl
                 _isInitializing,
                 _viewModel.MetricState.SelectedSeries.Count),
             CreateSubtypesLoadedActions());
+
+        if (_pendingTabSwitchRestore)
+        {
+            _pendingTabSwitchRestore = false;
+            _ = CompleteTabSwitchRestoreAsync();
+            return;
+        }
 
         if (followUp == ChartHostMetricSelectionCoordinator.SubtypesFollowUp.LoadDateRange)
         {
@@ -843,15 +851,7 @@ public partial class SyncfusionChartsView : UserControl
             _viewModelEventBinder?.Unbind();
 
         if (isVisible)
-            EnsureMetricTypesLoadedForVisibleView();
-
-        var ctx = _viewModel.ChartState.LastContext;
-        if (_coordinator.ShouldRenderWhenViewBecomesVisible(
-                _isInitializing,
-                isVisible,
-                _viewModel.ChartState.IsSyncfusionSunburstVisible,
-                ctx))
-            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx!);
+            await RestoreSyncfusionFromSharedStateAsync();
     }
 
     private void EnsureMetricTypesLoadedForVisibleView()
@@ -863,6 +863,68 @@ public partial class SyncfusionChartsView : UserControl
             _viewModel.SetResolutionTableName(ChartUiHelper.GetTableNameFromResolution(ResolutionCombo));
 
         _viewModel.RequestLatestMetricTypesReload();
+    }
+
+    private async Task RestoreSyncfusionFromSharedStateAsync()
+    {
+        if (_isInitializing)
+            return;
+
+        var savedMetricType = _viewModel.MetricState.SelectedMetricType;
+        if (string.IsNullOrWhiteSpace(savedMetricType))
+        {
+            EnsureMetricTypesLoadedForVisibleView();
+            return;
+        }
+
+        var currentMetricType = GetSelectedMetricValue(TablesCombo);
+        var needsSubtypeReload = TablesCombo.Items.Count == 0
+            || _subtypeList == null
+            || !string.Equals(savedMetricType, currentMetricType, StringComparison.OrdinalIgnoreCase);
+
+        if (needsSubtypeReload)
+        {
+            _pendingTabSwitchRestore = true;
+            if (TablesCombo.Items.Count == 0)
+            {
+                EnsureMetricTypesLoadedForVisibleView();
+            }
+            else
+            {
+                _isApplyingSelectionSync = true;
+                try
+                {
+                    var savedOption = TablesCombo.Items.OfType<MetricNameOption>()
+                        .FirstOrDefault(option => string.Equals(option.Value, savedMetricType, StringComparison.OrdinalIgnoreCase));
+                    if (savedOption != null)
+                        TablesCombo.SelectedItem = savedOption;
+                }
+                finally
+                {
+                    _isApplyingSelectionSync = false;
+                }
+
+                _viewModel.LoadSubtypesCommand.Execute(null);
+            }
+
+            return;
+        }
+
+        await CompleteTabSwitchRestoreAsync();
+    }
+
+    private async Task CompleteTabSwitchRestoreAsync()
+    {
+        ApplySelectionStateToUi();
+        UpdateSyncfusionToggleEnabled();
+
+        var ctx = _viewModel.ChartState.LastContext;
+        if (_coordinator.ShouldRenderWhenViewBecomesVisible(
+                _isInitializing,
+                IsVisible,
+                _viewModel.ChartState.IsSyncfusionSunburstVisible,
+                ctx))
+            await RenderChartAsync(SyncfusionChartsViewCoordinator.ManagedChartKey, ctx!);
     }
 
 
@@ -939,7 +1001,26 @@ public partial class SyncfusionChartsView : UserControl
             () => TablesCombo.Items.Count,
             value => _isApplyingSelectionSync = value,
             _viewModel.BeginSelectionStateBatch,
-            index => TablesCombo.SelectedIndex = index,
+            index =>
+            {
+                if (_pendingTabSwitchRestore)
+                {
+                    var savedMetricType = _viewModel.MetricState.SelectedMetricType;
+                    if (!string.IsNullOrWhiteSpace(savedMetricType))
+                    {
+                        var items = TablesCombo.Items.OfType<MetricNameOption>().ToList();
+                        var savedIndex = items.FindIndex(item =>
+                            string.Equals(item.Value, savedMetricType, StringComparison.OrdinalIgnoreCase));
+                        if (savedIndex >= 0)
+                        {
+                            TablesCombo.SelectedIndex = savedIndex;
+                            return;
+                        }
+                    }
+                }
+
+                TablesCombo.SelectedIndex = index;
+            },
             () => GetSelectedMetricValue(TablesCombo),
             _viewModel.SetSelectedMetricType,
             () => _viewModel.LoadSubtypesCommand.Execute(null),
@@ -964,7 +1045,7 @@ public partial class SyncfusionChartsView : UserControl
             _viewModel.SetSelectedMetricType,
             () => _selectorManager.ClearAllSubtypeControls(),
             UpdateSelectedSubtypesInViewModel,
-            () => _viewModel.LoadSubtypesCommand.Execute(null));
+            _viewModel.RequestLatestSubtypesReload);
     }
 
     private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions()
@@ -975,7 +1056,7 @@ public partial class SyncfusionChartsView : UserControl
             _viewModel.BeginSelectionStateBatch,
             (subtypes, preserveSelection, selectedMetricType) => RefreshPrimarySubtypeCombo(subtypes, preserveSelection, selectedMetricType),
             subtypes => BuildDynamicSubtypeControls(subtypes),
-            UpdateSelectedSubtypesInViewModel,
+            () => { if (!_pendingTabSwitchRestore) UpdateSelectedSubtypesInViewModel(); },
             value => _isMetricTypeChangePending = value);
     }
 

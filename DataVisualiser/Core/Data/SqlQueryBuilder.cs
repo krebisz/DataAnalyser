@@ -72,6 +72,18 @@ public static class SqlQueryBuilder
         parameters.Add("Subtype", subtype);
     }
 
+    public static void AddEnabledCanonicalFilter(StringBuilder sql, string metricTypeColumn, string subtypeColumn)
+    {
+        sql.Append($@"
+            AND NOT EXISTS (
+                SELECT 1
+                FROM {DataAccessDefaults.HealthMetricsCanonicalTable} disabledMetric
+                WHERE disabledMetric.MetricType = {metricTypeColumn}
+                  AND disabledMetric.MetricSubtype = {subtypeColumn}
+                  AND disabledMetric.Disabled = 1
+            )");
+    }
+
     public static void AddSubtypesOrDisplayNameFilter(StringBuilder sql, DynamicParameters parameters, IReadOnlyCollection<string> subtypes, string metricTypeColumn, string subtypeColumn)
     {
         if (subtypes.Count == 0)

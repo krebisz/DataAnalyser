@@ -1525,7 +1525,7 @@ public partial class MainChartsView : UserControl
             _viewModel.SetSelectedMetricType,
             () => _selectorManager.ClearAllSubtypeControls(),
             UpdateSelectedSubtypesInViewModel,
-            () => _viewModel.LoadSubtypesCommand.Execute(null));
+            _viewModel.RequestLatestSubtypesReload);
     }
 
     private ChartHostMetricSelectionCoordinator.SubtypesLoadedActions CreateSubtypesLoadedActions()
