@@ -10,6 +10,9 @@ internal sealed class TransformWorkbenchOperationProvider : ITransformOperationP
         ("Add (+)", "Add"),
         ("Subtract (-)", "Subtract"),
         ("Divide (/)", "Divide"),
+        ("Zero-To-One", "NormalizeZeroToOne"),
+        ("% of Max", "NormalizePercentageOfMax"),
+        ("Relative to Max", "NormalizeRelativeToMax"),
         ("Ternary Sum (+ +)", "Sum3"),
         ("Correlation", "Correlation"),
         ("Ternary Sum Correlation", "Sum3Correlation")

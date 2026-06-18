@@ -31,6 +31,21 @@ public sealed class TransformCorrelationMapperTests
             .Select(item => item.Tag)
             .ToArray();
 
-        Assert.Equal(["None", "Log", "Sqrt", "Add", "Subtract", "Divide", "Sum3", "Correlation", "Sum3Correlation"], tags);
+        Assert.Equal(
+            [
+                "None",
+                "Log",
+                "Sqrt",
+                "Add",
+                "Subtract",
+                "Divide",
+                "NormalizeZeroToOne",
+                "NormalizePercentageOfMax",
+                "NormalizeRelativeToMax",
+                "Sum3",
+                "Correlation",
+                "Sum3Correlation"
+            ],
+            tags);
     }
 }

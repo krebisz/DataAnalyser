@@ -48,6 +48,9 @@ internal sealed class TransformComputationOutputRenderer
         if (result.InputSnapshot != null)
             return RenderInputSnapshotAsync(chart, result.InputSnapshot, includedRows);
 
+        if (result.ComputedSnapshot != null)
+            return RenderInputSnapshotAsync(chart, result.ComputedSnapshot, includedRows);
+
         if (result.DerivedDataset == null)
             return ClearAsync(chart);
 

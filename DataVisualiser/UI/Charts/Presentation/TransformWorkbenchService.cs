@@ -1,4 +1,6 @@
 using DataVisualiser.Core.Services;
+using DataVisualiser.Core.Computation.TimeSeries;
+using DataVisualiser.Shared.Models;
 using DataVisualiser.VNext.Application;
 using DataVisualiser.VNext.Contracts;
 using DataVisualiser.VNext.Kernel;
@@ -59,6 +61,16 @@ internal sealed class TransformWorkbenchService
             return TransformInputGridPresenter.BuildComputationResult(
                 await LoadAsync(series, from, to, resolutionTableName, cancellationToken));
 
+        if (TryResolveOperationChainNormalizationMode(operationTag, out var normalizationMode))
+            return await ComputeOperationChainNormalizationAsync(
+                series,
+                from,
+                to,
+                resolutionTableName,
+                normalizationMode,
+                operationTag,
+                cancellationToken);
+
         if (!TransformSeriesOperationRequestMapper.TryCreateOperationChainStep(operationTag, series, out var step) || step == null)
             throw new InvalidOperationException($"Transform operation '{operationTag}' is not valid for {series.Count} selected input series.");
 
@@ -112,6 +124,129 @@ internal sealed class TransformWorkbenchService
         var summary = TransformCorrelationMapper.Compute(aligned, operationTag);
         return TransformCorrelationGridPresenter.Build(summary, snapshot.Signature);
     }
+
+    private async Task<TransformComputationResult> ComputeOperationChainNormalizationAsync(
+        IReadOnlyList<MetricSeriesRequest> series,
+        DateTime from,
+        DateTime to,
+        string resolutionTableName,
+        NormalizationMode mode,
+        string operationTag,
+        CancellationToken cancellationToken)
+    {
+        var request = TransformMetricSelectionRequestFactory.Create(series, from, to, resolutionTableName);
+        var snapshot = await _gateway.LoadAsync(request, cancellationToken);
+        var aligned = new TimeSeriesAlignmentKernel().Align(snapshot);
+        var computedSeries = OperationChainNormalizationCalculator.Compute(aligned, mode);
+        var computedSnapshot = BuildComputedSnapshot(snapshot, aligned.Timeline, computedSeries, operationTag);
+        var inputs = TransformInputGridPresenter.Build(computedSnapshot).Inputs;
+        var rows = inputs
+            .SelectMany(input => input.Rows.Select(row => new TransformResultGridRow(
+                row.Timestamp,
+                row.Value,
+                string.Empty,
+                input.Title)))
+            .ToArray();
+        var title = ResolveNormalizationTitle(mode);
+
+        return new TransformComputationResult(
+            title,
+            rows,
+            $"{title}: {rows.Length} result points computed across {computedSeries.Count} series.")
+        {
+            Evidence = $"Operation Chain normalization source: {snapshot.Signature}; mode: {mode}",
+            ComputedSnapshot = computedSnapshot,
+            Selection = snapshot.Request
+        };
+    }
+
+    private static MetricLoadSnapshot BuildComputedSnapshot(
+        MetricLoadSnapshot source,
+        IReadOnlyList<DateTime> timeline,
+        IReadOnlyList<OperationChainNormalizedSeries> computedSeries,
+        string operationTag)
+    {
+        var requests = computedSeries
+            .Select(series => new MetricSeriesRequest(
+                series.Id,
+                null,
+                series.Label,
+                null))
+            .ToArray();
+
+        var selection = new MetricSelectionRequest(
+            "Operation Chain",
+            requests,
+            source.Request.From,
+            source.Request.To,
+            source.Request.ResolutionTableName);
+
+        var snapshots = computedSeries
+            .Zip(requests, (series, request) => new MetricSeriesSnapshot(
+                request,
+                ProjectMetricData(timeline, series.RawValues, operationTag),
+                CanonicalSeries: null))
+            .ToArray();
+
+        return new MetricLoadSnapshot(selection, snapshots, DateTime.UtcNow);
+    }
+
+    private static IReadOnlyList<MetricData> ProjectMetricData(
+        IReadOnlyList<DateTime> timeline,
+        IReadOnlyList<double> values,
+        string operationTag)
+    {
+        var count = Math.Min(timeline.Count, values.Count);
+        var data = new List<MetricData>(count);
+        for (var index = 0; index < count; index++)
+        {
+            var value = values[index];
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                continue;
+
+            data.Add(new MetricData
+            {
+                NormalizedTimestamp = timeline[index],
+                Value = Convert.ToDecimal(value),
+                Unit = ResolveNormalizationUnit(operationTag),
+                Provider = "Transform"
+            });
+        }
+
+        return data;
+    }
+
+    private static bool TryResolveOperationChainNormalizationMode(
+        string? operationTag,
+        out NormalizationMode mode)
+    {
+        mode = operationTag switch
+        {
+            "NormalizeZeroToOne" => NormalizationMode.ZeroToOne,
+            "NormalizePercentageOfMax" => NormalizationMode.PercentageOfMax,
+            "NormalizeRelativeToMax" => NormalizationMode.RelativeToMax,
+            _ => default
+        };
+
+        return operationTag is "NormalizeZeroToOne" or "NormalizePercentageOfMax" or "NormalizeRelativeToMax";
+    }
+
+    private static string ResolveNormalizationTitle(NormalizationMode mode)
+    {
+        return mode switch
+        {
+            NormalizationMode.ZeroToOne => "Zero-To-One",
+            NormalizationMode.PercentageOfMax => "% of Max",
+            NormalizationMode.RelativeToMax => "Relative to Max",
+            _ => "Normalized"
+        };
+    }
+
+    private static string ResolveNormalizationUnit(string operationTag) =>
+        string.Equals(operationTag, "NormalizePercentageOfMax", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(operationTag, "NormalizeRelativeToMax", StringComparison.OrdinalIgnoreCase)
+            ? "%"
+            : string.Empty;
 
     public Task<TransformInputDateRange?> ResolveDateRangeAsync(
         IReadOnlyList<MetricSeriesRequest> series,

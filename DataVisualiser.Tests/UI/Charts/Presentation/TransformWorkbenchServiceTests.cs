@@ -121,6 +121,63 @@ public sealed class TransformWorkbenchServiceTests
         Assert.Equal("33.7500", result.Rows[0].Raw);
     }
 
+    [Theory]
+    [InlineData("NormalizeZeroToOne", "Zero-To-One", "Weight : Fat (Zero-To-One)", "0.0000", "Weight : Muscle (Zero-To-One)", "0.0000")]
+    [InlineData("NormalizePercentageOfMax", "% of Max", "Weight : Fat (% of Max)", "20.0000", "Weight : Muscle (% of Max)", "69.2308")]
+    [InlineData("NormalizeRelativeToMax", "Relative to Max", "Weight : Fat (Relative to Max)", "7.6923", "Weight : Muscle (Relative to Max)", "69.2308")]
+    public async Task ComputeAsync_ShouldApplyNormalizationChartModesToSelectedInputs(
+        string operationTag,
+        string expectedTitle,
+        string expectedPrimarySeries,
+        string expectedPrimaryFirstValue,
+        string expectedSecondarySeries,
+        string expectedSecondaryFirstValue)
+    {
+        var loader = new StubMetricSeriesLoader();
+        var service = new TransformWorkbenchService(loader);
+
+        var result = await service.ComputeAsync(
+            [
+                new MetricSeriesRequest("Weight", "fat", "Weight", "Fat"),
+                new MetricSeriesRequest("Weight", "muscle", "Weight", "Muscle")
+            ],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 5),
+            "HealthMetrics",
+            operationTag);
+
+        Assert.Equal(expectedTitle, result.Title);
+        Assert.NotNull(result.ComputedSnapshot);
+        Assert.Null(result.InputSnapshot);
+        Assert.Equal(10, result.Rows.Count);
+        Assert.Contains(
+            expectedTitle == "% of Max" ? "PercentageOfMax" : expectedTitle.Replace("-", string.Empty).Replace(" ", string.Empty),
+            result.Evidence!.Replace(" ", string.Empty).Replace("-", string.Empty),
+            StringComparison.OrdinalIgnoreCase);
+
+        var firstPrimary = result.Rows.First(row => row.Series == expectedPrimarySeries);
+        var firstSecondary = result.Rows.First(row => row.Series == expectedSecondarySeries);
+        Assert.Equal(expectedPrimaryFirstValue, firstPrimary.Raw);
+        Assert.Equal(expectedSecondaryFirstValue, firstSecondary.Raw);
+    }
+
+    [Fact]
+    public async Task ComputeAsync_ShouldAllowSingleInputForNormalizationChartModes()
+    {
+        var loader = new StubMetricSeriesLoader();
+        var service = new TransformWorkbenchService(loader);
+
+        var result = await service.ComputeAsync(
+            [new MetricSeriesRequest("Weight", "fat", "Weight", "Fat")],
+            new DateTime(2026, 1, 1),
+            new DateTime(2026, 1, 5),
+            "HealthMetrics",
+            "NormalizeZeroToOne");
+
+        Assert.Equal("Zero-To-One", result.Title);
+        Assert.Single(result.ComputedSnapshot!.Series);
+    }
+
     [Fact]
     public async Task ComputeAsync_ShouldExecuteCompiledEquationSteps()
     {

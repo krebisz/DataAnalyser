@@ -75,6 +75,7 @@ internal sealed record TransformComputationResult(
     public MetricLoadSnapshot? InputSnapshot { get; init; }
     public MetricSelectionRequest? Selection { get; init; }
     public DerivedDataset? DerivedDataset { get; init; }
+    public MetricLoadSnapshot? ComputedSnapshot { get; init; }
     public TransformComputationEvidence? ComputationEvidence { get; init; }
 }
 
