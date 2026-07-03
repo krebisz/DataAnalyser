@@ -36,6 +36,36 @@ public sealed class OperationKernelTests
     }
 
     [Fact]
+    public void BuildSeries_ModeAwareNormalize_ShouldUseZeroToOneSemantics()
+    {
+        var kernel = new OperationKernel();
+        var bundle = CreateBundle(CreateAlignedSeries("Weight", "a", [2d, 4d, 6d], [10d, 15d, 20d]));
+
+        var program = kernel.BuildSeries(
+            bundle,
+            SeriesOperationRequest.Normalize(0, "n", "Normalized", NormalizationMode.ZeroToOne));
+
+        Assert.Equal([0d, 0.5d, 1d], program.RawValues);
+        Assert.Equal([0d, 0.5d, 1d], program.SmoothedValues);
+    }
+
+    [Fact]
+    public void BuildSeries_ModeAwareNormalize_ShouldUseSharedMaximumForRelativeToMax()
+    {
+        var kernel = new OperationKernel();
+        var bundle = CreateBundle(
+            CreateAlignedSeries("Weight", "a", [1d, 2d], [10d, 20d]),
+            CreateAlignedSeries("Weight", "b", [10d, 20d], [100d, 200d]));
+
+        var program = kernel.BuildSeries(
+            bundle,
+            SeriesOperationRequest.Normalize(0, "n", "Normalized", NormalizationMode.RelativeToMax, [0, 1]));
+
+        Assert.Equal([5d, 10d], program.RawValues);
+        Assert.Equal([5d, 10d], program.SmoothedValues);
+    }
+
+    [Fact]
     public void BuildSeries_Difference_ShouldUseDistinctRawAndSmoothedResults()
     {
         var kernel = new OperationKernel();

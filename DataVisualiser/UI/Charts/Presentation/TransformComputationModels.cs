@@ -128,6 +128,9 @@ internal static class TransformComputationResultProjector
     {
         ArgumentNullException.ThrowIfNull(result);
 
+        if (ShouldProjectAllDatasets(result))
+            return FromOperationChainDatasets(result);
+
         var dataset = result.DerivedDatasets.LastOrDefault()
             ?? throw new InvalidOperationException("Operation Chain did not produce a derived dataset.");
         var finalTraceEntry = result.Trace.Entries.LastOrDefault();
@@ -144,6 +147,93 @@ internal static class TransformComputationResultProjector
             DerivedDataset = dataset,
             ComputationEvidence = TransformComputationEvidence.FromOperationChain(result, dataset, finalTraceEntry)
         };
+    }
+
+    private static TransformComputationResult FromOperationChainDatasets(OperationChainResult result)
+    {
+        var snapshot = BuildComputedSnapshot(result);
+        var inputs = TransformInputGridPresenter.Build(snapshot).Inputs;
+        var rows = inputs
+            .SelectMany(input => input.Rows.Select(row => new TransformResultGridRow(
+                row.Timestamp,
+                row.Value,
+                string.Empty,
+                input.Title)))
+            .ToArray();
+        var finalDataset = result.DerivedDatasets.LastOrDefault();
+        var finalTraceEntry = result.Trace.Entries.LastOrDefault();
+        var mode = finalDataset?.Metadata.TryGetValue("NormalizationMode", out var normalizationMode) == true
+            ? normalizationMode
+            : null;
+
+        return new TransformComputationResult(
+            result.Request.Title,
+            rows,
+            $"{result.Request.Title}: {rows.Length} result points computed across {result.DerivedDatasets.Count} series.")
+        {
+            Evidence = $"OperationChain trace: {result.Evidence.TraceSignature}; plan: {result.Evidence.PlanSignature}; contract: {result.Evidence.ContractSignature}; mode: {mode}",
+            Selection = result.Request.Selection,
+            ComputedSnapshot = snapshot,
+            ComputationEvidence = TransformComputationEvidence.FromOperationChain(result, finalDataset, finalTraceEntry)
+        };
+    }
+
+    private static bool ShouldProjectAllDatasets(OperationChainResult result) =>
+        result.DerivedDatasets.Count > 0 &&
+        result.Trace.Entries.Count == result.DerivedDatasets.Count &&
+        result.Trace.Entries.All(entry => entry.OperationKind == SeriesOperationKind.Normalize) &&
+        result.DerivedDatasets.All(dataset => dataset.Metadata.ContainsKey("NormalizationMode"));
+
+    private static MetricLoadSnapshot BuildComputedSnapshot(OperationChainResult result)
+    {
+        var requests = result.DerivedDatasets
+            .Select(dataset => new MetricSeriesRequest(
+                dataset.Label,
+                null,
+                dataset.Label,
+                null))
+            .ToArray();
+        var selection = new MetricSelectionRequest(
+            "Operation Chain",
+            requests,
+            result.Request.Selection.From,
+            result.Request.Selection.To,
+            result.Request.Selection.ResolutionTableName);
+        var snapshots = result.DerivedDatasets
+            .Zip(requests, (dataset, request) => new MetricSeriesSnapshot(
+                request,
+                ProjectMetricData(dataset),
+                CanonicalSeries: null))
+            .ToArray();
+
+        return new MetricLoadSnapshot(selection, snapshots, DateTime.UtcNow);
+    }
+
+    private static IReadOnlyList<MetricData> ProjectMetricData(DerivedDataset dataset)
+    {
+        var unit = dataset.Metadata.TryGetValue("NormalizationMode", out var mode) &&
+                   (string.Equals(mode, "PercentageOfMax", StringComparison.Ordinal) ||
+                    string.Equals(mode, "RelativeToMax", StringComparison.Ordinal))
+            ? "%"
+            : string.Empty;
+        var count = Math.Min(dataset.Timeline.Count, dataset.RawValues.Count);
+        var data = new List<MetricData>(count);
+        for (var index = 0; index < count; index++)
+        {
+            var value = dataset.RawValues[index];
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                continue;
+
+            data.Add(new MetricData
+            {
+                NormalizedTimestamp = dataset.Timeline[index],
+                Value = Convert.ToDecimal(value),
+                Unit = unit,
+                Provider = "Transform"
+            });
+        }
+
+        return data;
     }
 }
 

@@ -82,7 +82,7 @@ public sealed record OperationChainStep
     public IReadOnlyDictionary<string, string> Metadata { get; }
 
     public string Signature =>
-        $"{Operation.Kind}:{Operation.Id}:{string.Join(",", Operation.InputIndexes)}:{Operation.WindowSize}:{Reversible}:{Lossiness}";
+        $"{Operation.Kind}:{Operation.Id}:{string.Join(",", Operation.InputIndexes)}:{Operation.WindowSize}:{Operation.NormalizationMode}:{string.Join(",", Operation.NormalizationReferenceIndexes)}:{Reversible}:{Lossiness}";
 
     public static OperationChainStep Lossless(SeriesOperationRequest operation, bool reversible = false) =>
         new(operation, reversible, SeriesOperationRules.Lossless);

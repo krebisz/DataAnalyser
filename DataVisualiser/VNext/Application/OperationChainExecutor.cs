@@ -182,7 +182,7 @@ public sealed class OperationChainExecutor
 
     private static string BuildOperationSignature(SeriesOperationRequest operation)
     {
-        return $"{operation.Kind}:{operation.Id}:{string.Join(",", operation.InputIndexes)}:{operation.WindowSize}";
+        return $"{operation.Kind}:{operation.Id}:{string.Join(",", operation.InputIndexes)}:{operation.WindowSize}:{operation.NormalizationMode}:{string.Join(",", operation.NormalizationReferenceIndexes)}";
     }
 
     private static IReadOnlyDictionary<string, string> BuildDatasetMetadata(
@@ -201,6 +201,12 @@ public sealed class OperationChainExecutor
             [ConstructionMetadataKeys.Reversible] = step.Reversible.ToString(),
             [ConstructionMetadataKeys.Lossiness] = step.Lossiness
         };
+
+        if (step.Operation.NormalizationMode != null)
+        {
+            metadata["NormalizationMode"] = step.Operation.NormalizationMode.Value.ToString();
+            metadata["NormalizationReferenceIndexes"] = string.Join(",", step.Operation.NormalizationReferenceIndexes);
+        }
 
         foreach (var pair in step.Metadata)
             metadata[$"Step.{pair.Key}"] = pair.Value;

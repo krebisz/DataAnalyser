@@ -1,3 +1,4 @@
+using DataVisualiser.Core.Computation.TimeSeries;
 using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.VNext.Kernel;
@@ -14,7 +15,7 @@ public sealed class OperationKernel
         return request.Kind switch
         {
             SeriesOperationKind.Identity => CreateSeriesProgram(request, indexes[0].RawValues, indexes[0].SmoothedValues),
-            SeriesOperationKind.Normalize => CreateSeriesProgram(request, Normalize(indexes[0].RawValues), Normalize(indexes[0].SmoothedValues)),
+            SeriesOperationKind.Normalize => BuildNormalizedSeries(bundle, request),
             SeriesOperationKind.Logarithm => CreateSeriesProgram(request, ApplyUnary(indexes[0].RawValues, value => value <= 0d ? double.NaN : Math.Log(value)), ApplyUnary(indexes[0].SmoothedValues, value => value <= 0d ? double.NaN : Math.Log(value))),
             SeriesOperationKind.SquareRoot => CreateSeriesProgram(request, ApplyUnary(indexes[0].RawValues, value => value < 0d ? double.NaN : Math.Sqrt(value)), ApplyUnary(indexes[0].SmoothedValues, value => value < 0d ? double.NaN : Math.Sqrt(value))),
             SeriesOperationKind.Sum => CreateSeriesProgram(request, Sum(indexes.Select(series => series.RawValues), bundle.Timeline.Count), Sum(indexes.Select(series => series.SmoothedValues), bundle.Timeline.Count)),
@@ -56,6 +57,34 @@ public sealed class OperationKernel
             SeriesOperationRequest.Normalize(0, $"normalized::{series.Request.SignatureToken}", $"{series.Request.DisplayName} (normalized)"),
             Normalize(series.RawValues),
             Normalize(series.SmoothedValues));
+    }
+
+    private ChartSeriesProgram BuildNormalizedSeries(AlignedSeriesBundle bundle, SeriesOperationRequest request)
+    {
+        var target = GetSeries(bundle, request.InputIndexes[0]);
+        if (request.NormalizationMode == null)
+            return CreateSeriesProgram(request, Normalize(target.RawValues), Normalize(target.SmoothedValues));
+
+        var referenceIndexes = request.NormalizationReferenceIndexes.Count == 0
+            ? request.InputIndexes
+            : request.NormalizationReferenceIndexes;
+        var referenceIndexArray = referenceIndexes.ToArray();
+        var referenceSeries = referenceIndexArray.Select(index => GetSeries(bundle, index)).ToArray();
+        var targetReferenceIndex = Array.IndexOf(referenceIndexArray, request.InputIndexes[0]);
+        if (targetReferenceIndex < 0)
+            throw new InvalidOperationException("Normalization references must include the target input index.");
+
+        var normalizedRaw = TimeSeriesNormalizationKernel.NormalizeSeries(
+            referenceSeries.Select(series => series.RawValues).ToArray(),
+            request.NormalizationMode.Value);
+        var normalizedSmoothed = TimeSeriesNormalizationKernel.NormalizeSeries(
+            referenceSeries.Select(series => series.SmoothedValues).ToArray(),
+            request.NormalizationMode.Value);
+
+        return CreateSeriesProgram(
+            request,
+            normalizedRaw[targetReferenceIndex],
+            normalizedSmoothed[targetReferenceIndex]);
     }
 
     private static AlignedMetricSeries GetSeries(AlignedSeriesBundle bundle, int index)

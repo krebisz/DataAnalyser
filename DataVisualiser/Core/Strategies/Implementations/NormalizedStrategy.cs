@@ -1,4 +1,5 @@
 using DataFileReader.Canonical;
+using DataVisualiser.Core.Computation.TimeSeries;
 using DataVisualiser.Core.Computation.Results;
 using DataVisualiser.Core.Services;
 using DataVisualiser.Core.Services.Abstractions;
@@ -116,26 +117,13 @@ public sealed class NormalizedStrategy : IChartComputationStrategy
 
     private(List<double> Raw1, List<double> Raw2, List<double> Smoothed1, List<double> Smoothed2)? NormalizeSeries(List<double> raw1, List<double> raw2, List<double> smoothed1, List<double> smoothed2)
     {
-        if (_mode != NormalizationMode.RelativeToMax)
-        {
-            var nRaw1 = MathHelper.ReturnValueNormalized(raw1, _mode);
-            var nRaw2 = MathHelper.ReturnValueNormalized(raw2, _mode);
-            var nSmooth1 = MathHelper.ReturnValueNormalized(smoothed1, _mode);
-            var nSmooth2 = MathHelper.ReturnValueNormalized(smoothed2, _mode);
+        var raw = TimeSeriesNormalizationKernel.NormalizeSeries([raw1, raw2], _mode);
+        var smoothed = TimeSeriesNormalizationKernel.NormalizeSeries([smoothed1, smoothed2], _mode);
 
-            if (nRaw1 == null || nRaw2 == null || nSmooth1 == null || nSmooth2 == null)
-                return null;
-
-            return (nRaw1, nRaw2, nSmooth1, nSmooth2);
-        }
-
-        // RelativeToMax mode
-        var rawNorm = MathHelper.ReturnValueNormalized(raw1, raw2, _mode);
-        var smoothNorm = MathHelper.ReturnValueNormalized(smoothed1, smoothed2, _mode);
-
-        if (rawNorm.FirstNormalized == null || rawNorm.SecondNormalized == null || smoothNorm.FirstNormalized == null || smoothNorm.SecondNormalized == null)
-            return null;
-
-        return (rawNorm.FirstNormalized, rawNorm.SecondNormalized, smoothNorm.FirstNormalized, smoothNorm.SecondNormalized);
+        return (
+            raw[0].ToList(),
+            raw[1].ToList(),
+            smoothed[0].ToList(),
+            smoothed[1].ToList());
     }
 }

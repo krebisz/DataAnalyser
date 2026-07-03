@@ -1,3 +1,5 @@
+using DataVisualiser.Shared.Models;
+
 namespace DataVisualiser.VNext.Contracts;
 
 public enum SeriesOperationKind
@@ -37,12 +39,36 @@ public sealed record SeriesOperationRequest
     public string Id { get; }
     public string Label { get; }
     public int WindowSize { get; init; }
+    public NormalizationMode? NormalizationMode { get; init; }
+    public IReadOnlyList<int> NormalizationReferenceIndexes { get; init; } = [];
 
     public static SeriesOperationRequest Identity(int index, string id, string label) =>
         new(SeriesOperationKind.Identity, [index], id, label);
 
     public static SeriesOperationRequest Normalize(int index, string id, string label) =>
         new(SeriesOperationKind.Normalize, [index], id, label);
+
+    public static SeriesOperationRequest Normalize(
+        int index,
+        string id,
+        string label,
+        NormalizationMode mode,
+        IReadOnlyList<int>? referenceIndexes = null)
+    {
+        var references = referenceIndexes?.ToArray() ?? [index];
+        if (references.Length == 0)
+            throw new ArgumentException("Normalization requires at least one reference index.", nameof(referenceIndexes));
+        if (references.Any(reference => reference < 0))
+            throw new ArgumentException("Normalization reference indexes cannot be negative.", nameof(referenceIndexes));
+        if (!references.Contains(index))
+            throw new ArgumentException("Normalization reference indexes must include the normalized input index.", nameof(referenceIndexes));
+
+        return new SeriesOperationRequest(SeriesOperationKind.Normalize, [index], id, label)
+        {
+            NormalizationMode = mode,
+            NormalizationReferenceIndexes = references
+        };
+    }
 
     public static SeriesOperationRequest Logarithm(int index, string id, string label) =>
         new(SeriesOperationKind.Logarithm, [index], id, label);

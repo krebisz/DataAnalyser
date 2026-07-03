@@ -1,3 +1,4 @@
+using DataVisualiser.Shared.Models;
 using DataVisualiser.VNext.Contracts;
 
 namespace DataVisualiser.UI.Charts.Presentation;
@@ -69,6 +70,45 @@ internal static class TransformSeriesOperationRequestMapper
         return true;
     }
 
+    public static bool TryCreateOperationChainSteps(
+        string? operationTag,
+        IReadOnlyList<MetricSeriesRequest> series,
+        out IReadOnlyList<OperationChainStep> steps,
+        out string title)
+    {
+        steps = [];
+        title = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(operationTag) || series.Count == 0)
+            return false;
+
+        if (TryResolveNormalizationMode(operationTag, out var mode))
+        {
+            title = ResolveNormalizationTitle(mode);
+            var normalizationTitle = title;
+            var references = Enumerable.Range(0, series.Count).ToArray();
+            steps = series
+                .Select((request, index) => CreateStep(
+                    SeriesOperationRequest.Normalize(
+                        index,
+                        $"operation-chain::normalize::{mode}::{index}::{request.SignatureToken}",
+                        $"{request.DisplayName} ({normalizationTitle})",
+                        mode,
+                        references),
+                    operationTag,
+                    "OperationChainWorkbench"))
+                .ToArray();
+            return true;
+        }
+
+        if (!TryCreateOperationChainStep(operationTag, series, out var step) || step == null)
+            return false;
+
+        steps = [step];
+        title = step.Operation.Label;
+        return true;
+    }
+
     public static bool TryCreateOperationChainStep(
         string? operationTag,
         string primaryLabel,
@@ -98,6 +138,32 @@ internal static class TransformSeriesOperationRequestMapper
                 ["Source"] = source,
                 ["OperationTag"] = operationTag ?? string.Empty
             });
+    }
+
+    public static bool TryResolveNormalizationMode(
+        string? operationTag,
+        out NormalizationMode mode)
+    {
+        mode = operationTag switch
+        {
+            "NormalizeZeroToOne" => NormalizationMode.ZeroToOne,
+            "NormalizePercentageOfMax" => NormalizationMode.PercentageOfMax,
+            "NormalizeRelativeToMax" => NormalizationMode.RelativeToMax,
+            _ => default
+        };
+
+        return operationTag is "NormalizeZeroToOne" or "NormalizePercentageOfMax" or "NormalizeRelativeToMax";
+    }
+
+    public static string ResolveNormalizationTitle(NormalizationMode mode)
+    {
+        return mode switch
+        {
+            NormalizationMode.ZeroToOne => "Zero-To-One",
+            NormalizationMode.PercentageOfMax => "% of Max",
+            NormalizationMode.RelativeToMax => "Relative to Max",
+            _ => "Normalized"
+        };
     }
 
     private static string ResolveLabel(MetricSeriesRequest request) =>
