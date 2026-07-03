@@ -1,0 +1,16 @@
+{
+  "servers": {
+    "dataanalyser_sql": {
+      "type": "stdio",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$env:ASPNETCORE_URLS='http://127.0.0.1:5010'; cd 'C:\\Development\\DataAnalyser\\.mcp'; dab start --mcp-stdio role:anonymous --LogLevel error --config dab-config.json"
+      ],
+      "cwd": "C:\\Development\\DataAnalyser\\.mcp"
+    }
+  }
+}

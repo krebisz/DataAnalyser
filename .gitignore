@@ -362,3 +362,15 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Local MCP / Data API Builder secrets
+.mcp/.env
+
+# Local Codex MCP config
+.codex/config.toml
+
+# Generated Steam library enrichment data
+steam-library-enrichment/.steam-library-cache/
+steam-library-enrichment/steam-library-owned.json
+steam-library-enrichment/steam-library-enriched.json
+steam-library-enrichment/steam-library-analysis.json

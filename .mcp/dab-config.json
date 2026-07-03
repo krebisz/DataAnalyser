@@ -1,0 +1,422 @@
+{
+  "$schema": "https://github.com/Azure/data-api-builder/releases/download/v2.0.8/dab.draft.schema.json",
+  "data-source": {
+    "database-type": "mssql",
+    "connection-string": "@env('MSSQL_CONNECTION_STRING')",
+    "options": {
+      "set-session-context": false
+    }
+  },
+  "runtime": {
+    "rest": {
+      "enabled": true,
+      "path": "/api",
+      "request-body-strict": false
+    },
+    "graphql": {
+      "enabled": true,
+      "path": "/graphql",
+      "allow-introspection": true
+    },
+    "mcp": {
+      "enabled": true,
+      "path": "/mcp"
+    },
+    "host": {
+      "cors": {
+        "origins": [],
+        "allow-credentials": false
+      },
+      "authentication": {
+        "provider": "Unauthenticated"
+      },
+      "mode": "development"
+    },
+    "telemetry": {
+      "open-telemetry": {
+        "enabled": true,
+        "endpoint": "@env('OTEL_EXPORTER_OTLP_ENDPOINT')",
+        "headers": "@env('OTEL_EXPORTER_OTLP_HEADERS')",
+        "service-name": "@env('OTEL_SERVICE_NAME')"
+      }
+    }
+  },
+  "autoentities": {},
+  "entities": {
+    "HealthMetrics": {
+      "description": "Read-only raw health metric records for longitudinal physiological analysis.",
+      "source": {
+        "object": "dbo.HealthMetrics",
+        "type": "table"
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "AiHealthMetrics": {
+      "description": "Read-only health metric records exposed for AI-assisted DataAnalyser exploration.",
+      "source": {
+        "object": "dbo.vw_AiHealthMetrics",
+        "type": "view"
+      },
+      "fields": [
+        {
+          "name": "Id",
+          "description": "Unique health metric record identifier.",
+          "primary-key": true
+        },
+        {
+          "name": "Provider",
+          "description": "Data provider or source system that produced the metric.",
+          "primary-key": false
+        },
+        {
+          "name": "MetricType",
+          "description": "Primary metric category",
+          "primary-key": false
+        },
+        {
+          "name": "MetricSubtype",
+          "description": "More specific subtype or classification of the metric within MetricType.",
+          "primary-key": false
+        },
+        {
+          "name": "SourceFile",
+          "description": "Original imported source file associated with the metric record.",
+          "primary-key": false
+        },
+        {
+          "name": "NormalizedTimestamp",
+          "description": "Normalized timestamp used by DataAnalyser for chronological analysis and charting.",
+          "primary-key": false
+        },
+        {
+          "name": "RawTimestamp",
+          "description": "Original timestamp value as supplied by the source data before normalization.",
+          "primary-key": false
+        },
+        {
+          "name": "Value",
+          "description": "Metric value captured for the health measurement. Interpret together with Unit",
+          "primary-key": false
+        },
+        {
+          "name": "Unit",
+          "description": "Unit of measurement for Value",
+          "primary-key": false
+        },
+        {
+          "name": "MetaDataId",
+          "description": "Identifier linking this metric record to additional metadata",
+          "primary-key": false
+        },
+        {
+          "name": "CreatedDate",
+          "description": "Date and time when this record was created or imported into the Health database.",
+          "primary-key": false
+        }
+      ],
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "AiHealthMetrics",
+          "plural": "AiHealthMetrics"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "AiHealthMetricProviders": {
+      "description": "Read-only provider distribution across all health metric records.",
+      "source": {
+        "object": "dbo.vw_AiHealthMetricProviders",
+        "type": "view"
+      },
+      "fields": [
+        {
+          "name": "ProviderKey",
+          "description": "Stable key for Provider, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "Provider",
+          "description": "Data provider or source system that produced the metric.",
+          "primary-key": false
+        },
+        {
+          "name": "RecordCount",
+          "description": "Number of health metric records for this provider.",
+          "primary-key": false
+        }
+      ],
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "AiHealthMetricTypes": {
+      "description": "Read-only metric type distribution across all health metric records.",
+      "source": {
+        "object": "dbo.vw_AiHealthMetricTypes",
+        "type": "view"
+      },
+      "fields": [
+        {
+          "name": "MetricTypeKey",
+          "description": "Stable key for MetricType, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "MetricType",
+          "description": "Primary metric category.",
+          "primary-key": false
+        },
+        {
+          "name": "RecordCount",
+          "description": "Number of health metric records for this metric type.",
+          "primary-key": false
+        }
+      ],
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "AiHealthMetricSubtypes": {
+      "description": "Read-only metric subtype distribution across all health metric records.",
+      "source": {
+        "object": "dbo.vw_AiHealthMetricSubtypes",
+        "type": "view"
+      },
+      "fields": [
+        {
+          "name": "MetricSubtypeKey",
+          "description": "Stable key for MetricSubtype, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "MetricSubtype",
+          "description": "More specific metric classification within MetricType.",
+          "primary-key": false
+        },
+        {
+          "name": "RecordCount",
+          "description": "Number of health metric records for this metric subtype.",
+          "primary-key": false
+        }
+      ],
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "AiHealthMetricUnits": {
+      "description": "Read-only unit distribution across all health metric records.",
+      "source": {
+        "object": "dbo.vw_AiHealthMetricUnits",
+        "type": "view"
+      },
+      "fields": [
+        {
+          "name": "UnitKey",
+          "description": "Stable key for Unit, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "Unit",
+          "description": "Unit of measurement for metric values.",
+          "primary-key": false
+        },
+        {
+          "name": "RecordCount",
+          "description": "Number of health metric records for this unit.",
+          "primary-key": false
+        }
+      ],
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "AiHealthMetricShapeCounts": {
+      "description": "Read-only counts by Provider, MetricType, MetricSubtype, and Unit.",
+      "source": {
+        "object": "dbo.vw_AiHealthMetricShapeCounts",
+        "type": "view"
+      },
+      "fields": [
+        {
+          "name": "ProviderKey",
+          "description": "Stable key for Provider, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "MetricTypeKey",
+          "description": "Stable key for MetricType, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "MetricSubtypeKey",
+          "description": "Stable key for MetricSubtype, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "UnitKey",
+          "description": "Stable key for Unit, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "Provider",
+          "description": "Metric provider.",
+          "primary-key": false
+        },
+        {
+          "name": "MetricType",
+          "description": "Primary metric category.",
+          "primary-key": false
+        },
+        {
+          "name": "MetricSubtype",
+          "description": "More specific metric classification.",
+          "primary-key": false
+        },
+        {
+          "name": "Unit",
+          "description": "Unit of measurement.",
+          "primary-key": false
+        },
+        {
+          "name": "RecordCount",
+          "description": "Number of health metric records in this shape.",
+          "primary-key": false
+        }
+      ],
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "AiHealthMetricDuplicatePatterns": {
+      "description": "Read-only duplicate candidate keys by Provider, MetricType, MetricSubtype, Unit, and NormalizedTimestamp.",
+      "source": {
+        "object": "dbo.vw_AiHealthMetricDuplicatePatterns",
+        "type": "view"
+      },
+      "fields": [
+        {
+          "name": "ProviderKey",
+          "description": "Stable key for Provider, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "MetricTypeKey",
+          "description": "Stable key for MetricType, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "MetricSubtypeKey",
+          "description": "Stable key for MetricSubtype, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "UnitKey",
+          "description": "Stable key for Unit, preserving null and empty values.",
+          "primary-key": true
+        },
+        {
+          "name": "NormalizedTimestampKey",
+          "description": "Stable key for NormalizedTimestamp, preserving null values.",
+          "primary-key": true
+        },
+        {
+          "name": "Provider",
+          "description": "Metric provider.",
+          "primary-key": false
+        },
+        {
+          "name": "MetricType",
+          "description": "Primary metric category.",
+          "primary-key": false
+        },
+        {
+          "name": "MetricSubtype",
+          "description": "More specific metric classification.",
+          "primary-key": false
+        },
+        {
+          "name": "Unit",
+          "description": "Unit of measurement.",
+          "primary-key": false
+        },
+        {
+          "name": "NormalizedTimestamp",
+          "description": "Normalized timestamp used for chronological analysis.",
+          "primary-key": false
+        },
+        {
+          "name": "DuplicateCount",
+          "description": "Number of records sharing the duplicate candidate key.",
+          "primary-key": false
+        }
+      ],
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
